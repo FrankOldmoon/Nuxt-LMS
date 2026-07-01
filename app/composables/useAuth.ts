@@ -9,6 +9,9 @@ interface User {
   preferName?: string | null
   englishName?: string | null
   gender?: string | null
+  rollNumber?: string | null
+  classId?: number | null
+  telephone?: string | null
   defaultLocale?: string | null
 }
 

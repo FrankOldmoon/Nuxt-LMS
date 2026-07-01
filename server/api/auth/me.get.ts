@@ -35,6 +35,10 @@ export default defineEventHandler(async (event) => {
       avatarImg: schema.users.avatarImg,
       preferName: schema.users.preferName,
       englishName: schema.users.englishName,
+      gender: schema.users.gender,
+      rollNumber: schema.users.rollNumber,
+      classId: schema.users.classId,
+      telephone: schema.users.telephone,
       defaultLocale: schema.users.defaultLocale,
     })
     .from(schema.users)

@@ -14,6 +14,9 @@ export default defineEventHandler(async (event) => {
     'englishName',
     'email',
     'gender',
+    'rollNumber',
+    'classId',
+    'telephone',
     'defaultLocale',
     'avatarImg',
   ]

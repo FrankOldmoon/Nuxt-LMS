@@ -1,5 +1,5 @@
 <template>
-  <UModal v-model:open="isOpen" :ui="{ content: 'sm:max-w-lg' }">
+  <UModal v-model:open="isOpen" :ui="{ content: 'sm:max-w-lg' }" scrollable>
     <template #content>
       <div class="p-6">
         <div class="flex items-center justify-between mb-6">
@@ -31,6 +31,20 @@
               v-model="form.gender"
               :items="genderOptions"
               :placeholder="$t('profile.genderPlaceholder')"
+              class="w-full"
+            />
+          </UFormField>
+          <UFormField :label="$t('profile.rollNumber')" class="w-full">
+            <UInput v-model="form.rollNumber" :placeholder="$t('profile.rollNumberPlaceholder')" class="w-full" />
+          </UFormField>
+          <UFormField :label="$t('profile.telephone')" class="w-full">
+            <UInput v-model="form.telephone" :placeholder="$t('profile.telephonePlaceholder')" class="w-full" />
+          </UFormField>
+          <UFormField :label="$t('profile.class')" class="w-full">
+            <USelect
+              v-model="form.classId"
+              :items="classOptions"
+              :placeholder="$t('profile.classPlaceholder')"
               class="w-full"
             />
           </UFormField>
@@ -77,12 +91,38 @@ const form = ref({
   email: '',
   gender: '',
   avatarImg: '',
+  rollNumber: '',
+  telephone: '',
+  classId: null as number | null,
 })
+
+// 班级列表
+interface ClassItem {
+  id: number
+  name: string
+  code: string
+}
+const classes = ref<ClassItem[]>([])
+
+const classOptions = computed(() => [
+  { label: '', value: null },
+  ...classes.value.map((c) => ({ label: c.name, value: c.id })),
+])
+
+async function loadClasses() {
+  try {
+    const data = await cRequest<ClassItem[]>('/api/lms/classes/list')
+    classes.value = data || []
+  } catch {
+    classes.value = []
+  }
+}
 
 // 弹窗打开时自动加载表单数据
 watch(isOpen, (val) => {
   if (val && user.value) {
     loadFormData()
+    loadClasses()
   }
 })
 
@@ -94,6 +134,9 @@ function loadFormData() {
     email: user.value?.email || '',
     gender: user.value?.gender || '',
     avatarImg: user.value?.avatarImg || '',
+    rollNumber: user.value?.rollNumber || '',
+    telephone: user.value?.telephone || '',
+    classId: user.value?.classId ?? null,
   }
 }
 
