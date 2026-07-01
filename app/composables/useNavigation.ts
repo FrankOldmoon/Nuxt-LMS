@@ -219,23 +219,7 @@ export function useFooterNav() {
           to: `/?category=${s.id}#${s.id}`,
           icon: s.icon,
         })),
-      },
-      {
-        label: '社区',
-        children: [
-          { label: 'GitHub', to: 'https://github.com', icon: 'i-lucide-github' },
-          { label: 'Discord', to: 'https://discord.com', icon: 'i-lucide-message-circle' },
-          { label: 'X (Twitter)', to: 'https://x.com', icon: 'i-lucide-twitter' },
-        ],
-      },
-      {
-        label: '关于',
-        children: [
-          { label: '博客', to: '/blog', icon: 'i-lucide-newspaper' },
-          { label: '更新日志', to: '/changelog', icon: 'i-lucide-history' },
-          { label: '许可证', to: '/license', icon: 'i-lucide-scale' },
-        ],
-      },
+      }
     ]
   })
 
@@ -256,25 +240,30 @@ export function useCourseDetail() {
   const { setToc, setEditableContent, setEditableMeta, contentVersion } = useLayoutState()
 
   const { data: resp, pending, refresh } = useCRequest<LmsCourseDetail | null>(
-    () => courseId.value ? `/api/lms/course/${courseId.value}` : '',
+    () => `/api/lms/course/${courseId.value}`,
     {
       default: () => null,
-      transform: (detail: LmsCourseDetail | null) => {
-        // 数据到达时立刻设置 TOC + 可编辑内容，不依赖 watch
-        const content = detail?.content
-        if (!content) {
-          setToc([{ id: 'chapters', text: '课程章节' }])
-        } else {
-          setToc([...extractTocFromContent(content), { id: 'chapters', text: '课程章节' }])
-        }
-        setEditableContent(content ?? null)
-        if (detail?.id) setEditableMeta('courses', detail.id)
-        return detail
-      },
     }
   )
 
   const course = computed(() => resp.value as LmsCourseDetail | null)
+
+  // 数据变化时设置 TOC + 可编辑内容（首次获取 + 缓存命中都会触发）
+  watch(resp, (detail) => {
+    // 跳过初始的 null/undefined，等实际数据到达后再处理
+    if (!detail) return
+
+    const content = detail?.content
+    console.log('detail', detail)
+    if (!content) {
+      setToc([{ id: 'chapters', text: '课程章节' }])
+    } else {
+      setToc([...extractTocFromContent(content), { id: 'chapters', text: '课程章节' }])
+    }
+    setEditableContent(content ?? null)
+    console.log('content', content)
+    if (detail?.id) setEditableMeta('courses', detail.id)
+  }, { immediate: true })
 
   // 监听内容版本号，保存成功后重新获取数据
   watch(contentVersion, () => refresh())
@@ -299,17 +288,20 @@ export function useChapterPageData() {
     () => chapterId.value ? `/api/lms/chapter/${chapterId.value}` : '',
     {
       default: () => null,
-      transform: (d: LmsChapterPageData | null) => {
-        // 数据到达时立刻设置 TOC + 可编辑内容，不依赖 watch
-        setToc(extractTocFromContent(d?.chapter?.content))
-        setEditableContent(d?.chapter?.content ?? null)
-        if (d?.chapter?.id) setEditableMeta('chapters', d.chapter.id)
-        return d
-      },
     }
   )
 
   const data = computed(() => resp.value as LmsChapterPageData | null)
+
+  // 数据变化时设置 TOC + 可编辑内容（首次获取 + 缓存命中都会触发）
+  watch(resp, (d) => {
+    // 跳过初始的 null/undefined，等实际数据到达后再处理
+    if (!d) return
+
+    setToc(extractTocFromContent(d?.chapter?.content))
+    setEditableContent(d?.chapter?.content ?? null)
+    if (d?.chapter?.id) setEditableMeta('chapters', d.chapter.id)
+  }, { immediate: true })
 
   // 监听内容版本号，保存成功后重新获取数据
   watch(contentVersion, () => refresh())
