@@ -1,0 +1,35 @@
+{
+  "name": "hub",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.3",
+    "@nuxt/ui": "^4.9.0",
+    "@nuxthub/core": "0.10.7",
+    "@nuxtjs/i18n": "10.4.0",
+    "@tiptap/core": "^3.27.1",
+    "@tiptap/markdown": "^3.27.1",
+    "@tiptap/vue-3": "^3.27.1",
+    "@umoteam/editor": "^10.2.1",
+    "drizzle-kit": "^0.31.10",
+    "drizzle-orm": "^0.45.2",
+    "lowlight": "^3.3.0",
+    "nuxt": "^4.4.8",
+    "postgres": "^3.4.9",
+    "tailwindcss": "^4.3.2",
+    "vue": "^3.5.38",
+    "vue-router": "^5.1.0"
+  },
+  "devDependencies": {
+    "@iconify-json/lucide": "^1.2.115",
+    "less": "^4.6.7",
+    "typescript": "^6.0.3"
+  }
+}
