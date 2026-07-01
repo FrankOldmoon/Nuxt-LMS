@@ -53,6 +53,30 @@
     "deleteWithChildren": "删除（含子项）",
     "addRoot": "添加一级目录"
   },
+  "auth": {
+    "login": "登录",
+    "register": "注册",
+    "logout": "退出登录",
+    "username": "用户名",
+    "password": "密码",
+    "confirmPassword": "确认密码",
+    "name": "姓名",
+    "email": "邮箱",
+    "loginTitle": "欢迎回来",
+    "loginSubtitle": "登录你的账号",
+    "registerTitle": "创建账号",
+    "registerSubtitle": "加入我们开始学习",
+    "noAccount": "还没有账号？",
+    "hasAccount": "已有账号？",
+    "loginSuccess": "登录成功",
+    "registerSuccess": "注册成功",
+    "loginFailed": "登录失败",
+    "registerFailed": "注册失败",
+    "passwordMismatch": "两次密码不一致",
+    "usernameRequired": "请输入用户名",
+    "passwordRequired": "请输入密码",
+    "nameRequired": "请输入姓名"
+  },
   "ueditor": {
     "markdown": {
       "title": "输入 Markdown 内容",

@@ -86,7 +86,7 @@ export function useSidebarNav() {
 
   // 获取课程详情（包含 orders 字段）
   const { data: courseData, refresh } = cRequest.use<LmsCourseDetail | null>(
-    () => courseId.value ? `/api/lms/course/${courseId.value}` : '',
+    () => courseId.value ? `/api/lms/course/show?id=${courseId.value}` : '',
     { default: () => null }
   )
 
@@ -248,7 +248,7 @@ export function useCourseDetail() {
   const { setToc, setEditableContent, setEditableMeta, contentVersion } = useLayoutState()
 
   const { data: resp, pending, refresh } = cRequest.use<LmsCourseDetail | null>(
-    () => `/api/lms/course/${courseId.value}`,
+    () => `/api/lms/course/show?id=${courseId.value}`,
     {
       default: () => null,
     }
@@ -293,7 +293,7 @@ export function useChapterPageData() {
   const { setToc, setEditableContent, setEditableMeta, contentVersion } = useLayoutState()
 
   const { data: resp, pending, refresh } = cRequest.use<LmsChapterPageData | null>(
-    () => chapterId.value ? `/api/lms/chapter/${chapterId.value}` : '',
+    () => chapterId.value ? `/api/lms/chapter/show?id=${chapterId.value}` : '',
     {
       default: () => null,
     }

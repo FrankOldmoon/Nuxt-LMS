@@ -1,7 +1,8 @@
 <template>
   <UPageAside>
-    <!-- 编辑导航组件 -->
+    <!-- 编辑导航组件（教师/管理员可见） -->
     <LayoutNavigationEditor
+      v-if="hasAnyRole(['teacher', 'admin'])"
       mode="course"
       :course-id="courseId"
       :navigation="navigation.slice(1)"
@@ -24,7 +25,7 @@
 
 <script setup lang="ts">
 
-
+const { hasAnyRole } = useAuth()
 const { navigation, courseId, refresh } = useSidebarNav()
 
 // 保存成功后的处理

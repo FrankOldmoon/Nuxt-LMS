@@ -1,9 +1,9 @@
-import { db, schema } from "@nuxthub/db";
-
 export default eventHandler(async (event) => {
-    const query = getQuery(event)
-    const table = getRouterParam(event, 'table')
-    const id = query.id
-    const data = await db.query[table].findFirst({ where: { id } })
-    return cResp(data)
-});
+  const table = validateTable(getRouterParam(event, 'table')!)
+  const id = Number(getQuery(event).id)
+  if (!id) {
+    return cResp(null, '缺少 id 参数', false)
+  }
+  const data = await showTable(table, id)
+  return cResp(data)
+})

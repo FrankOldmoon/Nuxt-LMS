@@ -16,7 +16,7 @@
       </ULink>
     </template>
 
-    <!-- 中间：水平导航菜单（仅桌面端显示） + 编辑按钮 -->
+    <!-- 中间：水平导航菜单（仅桌面端显示） -->
     <div class="flex items-center gap-2">
       <LayoutNav orientation="horizontal" />
     </div>
@@ -33,16 +33,73 @@
       </UTooltip>
       <UColorModeButton />
 
-      
+      <!-- SSR 直接渲染：未登录 → Login 按钮，已登录 → 用户名 + 下拉菜单 -->
+      <UButton
+        v-if="!isLoggedIn"
+        :label="$t('auth.login')"
+        color="neutral"
+        variant="ghost"
+        icon="i-lucide-log-in"
+        @click="() => { showLoginModal = true }"
+      />
+
+      <UDropdownMenu
+        v-else
+        :items="userMenuItems"
+      >
+        <UButton
+          color="neutral"
+          variant="ghost"
+          icon="i-lucide-circle-user"
+          :label="user?.name"
+          class="font-medium"
+        />
+      </UDropdownMenu>
     </template>
 
-    <!-- 移动端菜单内容：显示 header 中间的导航菜单 -->
+    <!-- 移动端菜单内容 -->
     <template #body>
       <LayoutNav orientation="vertical" class="w-full" />
     </template>
   </UHeader>
+
+  <!-- 登录/注册弹窗 -->
+  <AuthLoginModal
+    v-model:open="showLoginModal"
+    @success="onLoginSuccess"
+  />
 </template>
 
 <script setup lang="ts">
+const { user, isLoggedIn, logout } = useAuth()
+const toast = useToast()
+const { t } = useI18n()
 
+const showLoginModal = ref(false)
+
+function onLoginSuccess() {
+  showLoginModal.value = false
+}
+
+const userMenuItems = computed(() => [
+  [
+    {
+      label: user.value?.name || user.value?.username || '',
+      type: 'label' as const,
+    },
+  ],
+  [
+    {
+      label: t('auth.logout'),
+      icon: 'i-lucide-log-out',
+      onSelect: async () => {
+        await logout()
+        toast.add({
+          title: t('auth.logout'),
+          color: 'neutral',
+        })
+      },
+    },
+  ],
+])
 </script>

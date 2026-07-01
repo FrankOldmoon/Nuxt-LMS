@@ -8,8 +8,8 @@
     />
 
     <template #bottom>
-      <div class="hidden lg:flex flex-col gap-3 pt-4 mt-4 border-t border-default">
-        <!-- 使用 UModal 包裹触发按钮，并通过 #content 插槽放入编辑器 -->
+      <!-- 页面内容编辑器（教师/管理员可见） -->
+      <div v-if="hasAnyRole(['teacher', 'admin'])" class="hidden lg:flex flex-col gap-3 pt-4 mt-4 border-t border-default">
         <UModal fullscreen scrollable>
           <UButton
             icon="i-lucide-edit"
@@ -32,6 +32,8 @@
 </template>
 
 <script setup lang="ts">
+
+const { hasAnyRole } = useAuth()
 
 // 使用全局可编辑内容，由 course/chapter 页面设置
 const { tocLinks, editableContent, editableTable, editableId, notifyContentSaved } = useLayoutState()
