@@ -68,6 +68,27 @@ export function useHeaderNav() {
 }
 
 /**
+ * 递归标记包含当前路由的导航项为默认展开（defaultOpen: true）
+ * 如果某项自身或其任意子项的 to 匹配 currentPath，则该项 defaultOpen
+ */
+function markDefaultOpen(items: NavigationMenuItem[], currentPath: string): boolean {
+  let hasActive = false
+  for (const item of items) {
+    let childActive = false
+    if (item.children?.length) {
+      childActive = markDefaultOpen(item.children, currentPath)
+    }
+    const selfActive = !!item.to && item.to === currentPath
+    if (childActive || selfActive) {
+      ;(item as any).defaultOpen = true
+      hasActive = true
+    }
+    if (selfActive) hasActive = true
+  }
+  return hasActive
+}
+
+/**
  * 左侧边栏导航树（垂直导航菜单）
  * 根据当前路由匹配 /course/:id，自行 useFetch 获取章节列表
  * 优先使用 courses 表的 orders 字段（自定义排序），否则使用默认章节顺序
@@ -97,6 +118,7 @@ export function useSidebarNav() {
     const course = courseData.value
     if (!course) return []
 
+    const currentPath = route.path
     const orders = course.orders ?? []
     const chapters = course.chapters ?? []
     const result: NavigationMenuItem[] = [{ label: '课程', to: `/course/${cid}` }]
@@ -139,7 +161,10 @@ export function useSidebarNav() {
         }
         return menuItem
       })
-      return result.concat(tree)
+      const nav = result.concat(tree)
+      // 自动展开包含当前路由的父级
+      markDefaultOpen(nav, currentPath)
+      return nav
     }
 
     // 默认：课程首页 + 章节列表
