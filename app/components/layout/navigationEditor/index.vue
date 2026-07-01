@@ -1,13 +1,15 @@
 <template>
   <UModal v-model:open="open">
-    <UButton
-      :label="$t('navEditor.title')"
-      color="primary"
-      variant="ghost"
-      size="xs"
-      icon="i-lucide-edit"
-      @click="openModal"
-    />
+    <UTooltip :text="$t('navEditor.title')" :content="{ side: 'bottom' }">
+      <UButton
+        color="primary"
+        variant="ghost"
+        size="sm"
+        icon="i-lucide-list-tree"
+        :aria-label="$t('navEditor.title')"
+        @click="openModal"
+      />
+    </UTooltip>
 
     <template #content>
       <div class="p-6 space-y-4 min-w-[520px] max-h-[70vh] overflow-y-auto">

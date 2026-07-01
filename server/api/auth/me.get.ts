@@ -39,6 +39,7 @@ export default defineEventHandler(async (event) => {
       rollNumber: schema.users.rollNumber,
       classId: schema.users.classId,
       telephone: schema.users.telephone,
+      defaultClass: schema.users.defaultClass,
       defaultLocale: schema.users.defaultLocale,
     })
     .from(schema.users)

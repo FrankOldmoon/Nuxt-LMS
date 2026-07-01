@@ -111,7 +111,9 @@
     "avatarImg": "Avatar",
     "avatarImgPlaceholder": "Enter avatar URL",
     "updateSuccess": "Profile updated successfully",
-    "updateFailed": "Failed to update profile"
+    "updateFailed": "Failed to update profile",
+    "loading": "Loading...",
+    "loadFailed": "Failed to load profile"
   },
   "settings": {
     "title": "System Settings",
@@ -129,6 +131,21 @@
     "siteLogoPlaceholder": "Enter logo URL",
     "pageSize": "Page Size",
     "pageSizePlaceholder": "Enter page size"
+  },
+  "classSelector": {
+    "selectClass": "Select Class",
+    "searchPlaceholder": "Search by class name...",
+    "loading": "Loading...",
+    "noClasses": "No classes",
+    "noUsers": "No members in this class",
+    "roleTeacher": "Teacher",
+    "colName": "Name",
+    "colPreferName": "Nickname",
+    "colRollNumber": "Roll Number",
+    "colEmail": "Email",
+    "colTelephone": "Telephone",
+    "updateSuccess": "Class updated",
+    "updateFailed": "Update failed"
   },
   "courseEditor": {
     "title": "Course Settings",

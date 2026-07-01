@@ -111,7 +111,9 @@
     "avatarImg": "头像",
     "avatarImgPlaceholder": "请输入头像链接",
     "updateSuccess": "资料更新成功",
-    "updateFailed": "资料更新失败"
+    "updateFailed": "资料更新失败",
+    "loading": "加载中...",
+    "loadFailed": "加载资料失败"
   },
   "settings": {
     "title": "系统设置",
@@ -129,6 +131,21 @@
     "siteLogoPlaceholder": "请输入 Logo 链接",
     "pageSize": "每页显示数量",
     "pageSizePlaceholder": "请输入每页显示数量"
+  },
+  "classSelector": {
+    "selectClass": "选择班级",
+    "searchPlaceholder": "输入班级名称搜索...",
+    "loading": "加载中...",
+    "noClasses": "暂无班级",
+    "noUsers": "该班级暂无成员",
+    "roleTeacher": "教师",
+    "colName": "姓名",
+    "colPreferName": "昵称",
+    "colRollNumber": "学号",
+    "colEmail": "邮箱",
+    "colTelephone": "电话",
+    "updateSuccess": "班级已更新",
+    "updateFailed": "更新失败"
   },
   "courseEditor": {
     "title": "课程设置",

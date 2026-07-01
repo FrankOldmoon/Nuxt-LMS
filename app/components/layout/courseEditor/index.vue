@@ -1,14 +1,16 @@
 <template>
   <UModal v-model:open="open" :ui="{ content: 'sm:max-w-lg' }">
-    <UButton
-      :label="$t('courseEditor.editCourse')"
-      color="neutral"
-      variant="ghost"
-      size="sm"
-      icon="i-lucide-settings"
-      :disabled="!canEdit"
-      @click.prevent.stop="openModal"
-    />
+    <UTooltip :text="$t('courseEditor.editCourse')" :content="{ side: 'bottom' }">
+      <UButton
+        color="neutral"
+        variant="ghost"
+        size="sm"
+        icon="i-lucide-settings"
+        :disabled="!canEdit"
+        :aria-label="$t('courseEditor.editCourse')"
+        @click.prevent.stop="openModal"
+      />
+    </UTooltip>
 
     <template #content>
       <div class="p-6 max-h-[80vh] overflow-y-auto">

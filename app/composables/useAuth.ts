@@ -12,6 +12,7 @@ interface User {
   rollNumber?: string | null
   classId?: number | null
   telephone?: string | null
+  defaultClass?: { id: number; name: string } | null
   defaultLocale?: string | null
 }
 

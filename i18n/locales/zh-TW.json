@@ -111,7 +111,9 @@
     "avatarImg": "頭像",
     "avatarImgPlaceholder": "請輸入頭像連結",
     "updateSuccess": "資料更新成功",
-    "updateFailed": "資料更新失敗"
+    "updateFailed": "資料更新失敗",
+    "loading": "載入中...",
+    "loadFailed": "載入資料失敗"
   },
   "settings": {
     "title": "系統設定",
@@ -120,6 +122,21 @@
     "updateSuccess": "設定更新成功",
     "updateFailed": "設定更新失敗",
     "invalidJson": "JSON 格式無效"
+  },
+  "classSelector": {
+    "selectClass": "選擇班級",
+    "searchPlaceholder": "輸入班級名稱搜尋...",
+    "loading": "載入中...",
+    "noClasses": "暫無班級",
+    "noUsers": "該班級暫無成員",
+    "roleTeacher": "教師",
+    "colName": "姓名",
+    "colPreferName": "暱稱",
+    "colRollNumber": "學號",
+    "colEmail": "電子郵件",
+    "colTelephone": "電話",
+    "updateSuccess": "班級已更新",
+    "updateFailed": "更新失敗"
   },
   "courseEditor": {
     "title": "課程設定",

@@ -17,6 +17,7 @@ export default defineEventHandler(async (event) => {
     'rollNumber',
     'classId',
     'telephone',
+    'defaultClass',
     'defaultLocale',
     'avatarImg',
   ]
