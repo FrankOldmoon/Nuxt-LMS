@@ -31,19 +31,9 @@
           :aria-label="$t('common.search')"
         />
       </UTooltip>
-
       <UColorModeButton />
 
-      <UTooltip text="GitHub" :content="{ side: 'bottom' }">
-        <UButton
-          icon="i-lucide-github"
-          color="neutral"
-          variant="ghost"
-          to="https://github.com"
-          target="_blank"
-          aria-label="GitHub"
-        />
-      </UTooltip>
+      
     </template>
 
     <!-- 移动端菜单内容：显示 header 中间的导航菜单 -->

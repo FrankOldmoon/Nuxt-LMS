@@ -38,9 +38,9 @@ const { tocLinks, editableContent, editableTable, editableId, notifyContentSaved
 
 // 保存回调：调用 update API 将内容写回数据库
 async function handleSave(content: Record<string, any>) {
-  await cRequest.post(`/api/lms/${editableTable.value}/update`, {
-    id: editableId.value,
-    content: content.json,
+  await cRequest(`/api/lms/${editableTable.value}/update`, {
+    method: 'POST',
+    body: { id: editableId.value, content: content.json },
   })
   // 通知页面刷新数据
   notifyContentSaved()

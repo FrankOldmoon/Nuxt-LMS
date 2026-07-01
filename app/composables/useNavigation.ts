@@ -17,7 +17,7 @@ export type { LmsSeries, LmsCourseSummary, LmsCourseDetail, LmsChapterSummary, L
  * useFetch 默认 SSR：服务端执行并序列化到客户端
  */
 export function useHome() {
-  return useCRequest<LmsHomeData>('/api/lms/home', {
+  return cRequest.use<LmsHomeData>('/api/lms/home', {
     default: () => ({ categories: [], courses: [] }),
   })
 }
@@ -85,15 +85,9 @@ export function useSidebarNav() {
   })
 
   // 获取课程详情（包含 orders 字段）
-  const { data: courseData, refresh } = useAsyncData<LmsCourseDetail | null>(
-    () => {
-      if (!courseId.value) return Promise.resolve(null)
-      return cRequest.get<LmsCourseDetail>(`/api/lms/course/${courseId.value}`)
-    },
-    {
-      watch: [courseId],
-      default: () => null,
-    }
+  const { data: courseData, refresh } = cRequest.use<LmsCourseDetail | null>(
+    () => courseId.value ? `/api/lms/course/${courseId.value}` : '',
+    { default: () => null }
   )
 
   // 构建导航数据：优先使用 orders，否则使用默认章节顺序
@@ -253,7 +247,7 @@ export function useCourseDetail() {
   // 布局共享状态（必须在 useFetch 之前调用）
   const { setToc, setEditableContent, setEditableMeta, contentVersion } = useLayoutState()
 
-  const { data: resp, pending, refresh } = useCRequest<LmsCourseDetail | null>(
+  const { data: resp, pending, refresh } = cRequest.use<LmsCourseDetail | null>(
     () => `/api/lms/course/${courseId.value}`,
     {
       default: () => null,
@@ -298,7 +292,7 @@ export function useChapterPageData() {
   // 布局共享状态（必须在 useFetch 之前调用）
   const { setToc, setEditableContent, setEditableMeta, contentVersion } = useLayoutState()
 
-  const { data: resp, pending, refresh } = useCRequest<LmsChapterPageData | null>(
+  const { data: resp, pending, refresh } = cRequest.use<LmsChapterPageData | null>(
     () => chapterId.value ? `/api/lms/chapter/${chapterId.value}` : '',
     {
       default: () => null,

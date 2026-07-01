@@ -37,7 +37,7 @@ const options = computed(() => ({
         if (!file) throw new Error('File not found')
         const formData = new FormData()
         formData.append('files', file)
-        const res = await cRequest.raw('/api/upload', {
+        const res = await $fetch('/api/upload', {
             method: 'POST',
             body: formData,
         })

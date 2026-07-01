@@ -226,10 +226,13 @@ async function saveCourseMode() {
   // 1. 为新建项调用 add API 创建记录
   for (const item of flatItems.value) {
     if (item.isNew && item.label.trim()) {
-      const resp = await cRequest.post<any[]>('/api/lms/chapters/add', {
-        name: item.label.trim(),
-        courseId: Number(courseId),
-        isOpen: true,
+      const resp = await cRequest<any[]>('/api/lms/chapters/add', {
+        method: 'POST',
+        body: {
+          name: item.label.trim(),
+          courseId: Number(courseId),
+          isOpen: true,
+        },
       })
       if (resp && resp.length > 0) {
         const newId = resp[0].id
@@ -257,9 +260,9 @@ async function saveCourseMode() {
 
   // 3. 转为 orders 并保存
   const orders = toOrders()
-  await cRequest.post('/api/lms/courses/update', {
-    id: courseId,
-    orders,
+  await cRequest('/api/lms/courses/update', {
+    method: 'POST',
+    body: { id: courseId, orders },
   })
 }
 
@@ -280,9 +283,9 @@ async function saveCategoryMode() {
   await Promise.all(
     groups.map((group) => {
       const orders = toOrdersForGroup(group.items, 0)
-      return cRequest.post('/api/lms/categories/update', {
-        id: group.categoryId,
-        orders,
+      return cRequest('/api/lms/categories/update', {
+        method: 'POST',
+        body: { id: group.categoryId, orders },
       })
     })
   )
