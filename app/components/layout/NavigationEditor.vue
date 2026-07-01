@@ -12,82 +12,77 @@
     <template #content>
       <div class="p-6 space-y-4 min-w-[520px] max-h-[70vh] overflow-y-auto">
         <h3 class="text-lg font-medium">编辑课程导航</h3>
-        <p class="text-sm text-gray-500">支持最多三层目录。点击按钮排序、添加、编辑或删除</p>
+        <p class="text-sm text-gray-500">支持最多三层目录。拖拽手柄排序，悬停显示添加/删除按钮</p>
 
-        <!-- 树形列表 -->
-        <div class="space-y-1.5">
-          <div
-            v-for="(item, index) in flatItems"
-            :key="item._key"
-            class="flex items-center gap-1.5 p-2 rounded-lg border border-transparent hover:border-gray-200 dark:hover:border-gray-700 group"
-            :style="{ paddingLeft: (item.depth * 24 + 8) + 'px' }"
-          >
-            <!-- 排序按钮 -->
-            <div class="flex items-center gap-0.5 shrink-0 text-gray-400">
-              <UButton
-                icon="i-lucide-arrow-up"
-                variant="ghost"
-                size="xs"
-                color="neutral"
-                :disabled="!canMoveUp(index)"
-                @click="moveUp(index)"
-              />
-              <UButton
-                icon="i-lucide-arrow-down"
-                variant="ghost"
-                size="xs"
-                color="neutral"
-                :disabled="!canMoveDown(index)"
-                @click="moveDown(index)"
-              />
-            </div>
-
-            <!-- 标签编辑 -->
-            <UInput
-              v-model="item.label"
-              size="xs"
-              class="flex-1 min-w-0"
-              placeholder="导航名称"
-            />
-
-            <!-- to 路径显示 -->
-            <span
-              class="text-xs text-gray-400 shrink-0 max-w-[160px] truncate"
-              :title="item.to || '(保存后自动生成)'"
+        <!-- 树形列表（可拖拽排序） -->
+        <draggable
+          v-model="flatItems"
+          item-key="_key"
+          handle=".drag-handle"
+          :move="checkMove"
+          ghost-class="ghost"
+          tag="div"
+          class="space-y-1.5"
+          @start="onDragStart"
+          @end="onDragEnd"
+        >
+          <template #item="{ element: item, index }">
+            <div
+              class="flex items-center gap-1.5 p-2 rounded-lg border border-transparent hover:border-gray-200 dark:hover:border-gray-700 group"
+              :style="{ paddingLeft: (item.depth * 24 + 8) + 'px' }"
             >
-              {{ item.to || '(保存后生成)' }}
-            </span>
+              <!-- 拖拽手柄 -->
+              <div class="drag-handle cursor-grab active:cursor-grabbing shrink-0 text-gray-400 hover:text-gray-600">
+                <UIcon name="i-lucide-grip-vertical" class="size-3.5" />
+              </div>
 
-            <!-- 操作按钮 -->
-            <div class="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-              <UButton
-                v-if="item.depth < 2"
-                icon="i-lucide-plus"
-                variant="ghost"
+              <!-- 标签编辑 -->
+              <UInput
+                v-model="item.label"
                 size="xs"
-                color="primary"
-                title="添加子目录"
-                @click="addChild(index)"
+                class="flex-1 min-w-0"
+                placeholder="导航名称"
               />
-              <UButton
-                icon="i-lucide-list-plus"
-                variant="ghost"
-                size="xs"
-                color="primary"
-                title="添加同级目录"
-                @click="addSibling(index)"
-              />
-              <UButton
-                icon="i-lucide-trash-2"
-                variant="ghost"
-                size="xs"
-                color="error"
-                title="删除（含子项）"
-                @click="deleteItem(index)"
-              />
+
+              <!-- to 路径显示 -->
+              <span
+                class="text-xs text-gray-400 shrink-0 max-w-[160px] truncate"
+                :title="item.to || '(保存后自动生成)'"
+              >
+                {{ item.to || '(保存后生成)' }}
+              </span>
+
+              <!-- 操作按钮 -->
+              <div class="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                <UButton
+                  v-if="item.depth < 2"
+                  icon="i-lucide-plus"
+                  variant="ghost"
+                  size="xs"
+                  color="primary"
+                  title="添加子目录"
+                  @click="addChild(index)"
+                />
+                <UButton
+                  icon="i-lucide-list-plus"
+                  variant="ghost"
+                  size="xs"
+                  color="primary"
+                  title="添加同级目录"
+                  @click="addSibling(index)"
+                />
+                <UButton
+                  icon="i-lucide-trash-2"
+                  variant="ghost"
+                  size="xs"
+                  color="error"
+                  title="删除（含子项）"
+                  @click="deleteItem(index)"
+                />
+              </div>
             </div>
-          </div>
-        </div>
+          </template>
+        </draggable>
 
         <!-- 添加根级目录 -->
         <UButton
@@ -127,6 +122,7 @@
 
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
+import draggable from 'vuedraggable'
 
 /** 内部使用的扁平树节点 */
 interface FlatNode {
@@ -154,6 +150,9 @@ const open = ref(false)
 const flatItems = ref<FlatNode[]>([])
 const saving = ref(false)
 let keyCounter = 0
+
+// 拖拽时记录被拖拽元素的 _key，用于 end 事件中定位
+let dragTargetKey: string | null = null
 
 // ==================== 数据初始化 ====================
 
@@ -231,56 +230,55 @@ function getBlockEnd(startIdx: number): number {
   return end
 }
 
-function findPrevSibling(index: number): number {
-  const depth = flatItems.value[index]!.depth
-  for (let i = index - 1; i >= 0; i--) {
-    if (flatItems.value[i]!.depth < depth) break
-    if (flatItems.value[i]!.depth === depth) return i
+// ==================== 拖拽排序 ====================
+
+/** 只允许同层级之间拖拽排序 */
+function checkMove(evt: any): boolean {
+  const draggedItem = evt.draggedContext.element as FlatNode
+  const relatedItem = evt.relatedContext.element as FlatNode
+  return draggedItem.depth === relatedItem.depth
+}
+
+/** 拖拽开始时记录目标元素 key */
+function onDragStart(evt: any) {
+  dragTargetKey = flatItems.value[evt.oldIndex]!._key
+}
+
+/** 拖拽结束后，将子节点移动到父节点之后，确保 block 整体跟随 */
+function onDragEnd(evt: any) {
+  const { oldIndex, newIndex } = evt
+  if (oldIndex === undefined || newIndex === undefined) return
+  if (oldIndex === newIndex) {
+    dragTargetKey = null
+    return
   }
-  return -1
-}
 
-function findNextSibling(index: number): number {
-  const depth = flatItems.value[index]!.depth
-  for (let i = index + 1; i < flatItems.value.length; i++) {
-    if (flatItems.value[i]!.depth < depth) break
-    if (flatItems.value[i]!.depth === depth) return i
+  const items = flatItems.value
+  const movedDepth = items[newIndex]!.depth
+
+  // 找到被拖拽移动后，散落在原来位置的子节点起始位置
+  // newIndex > oldIndex 时子节点整体左移了一位，newIndex < oldIndex 时位置不变
+  let childrenStart = newIndex > oldIndex ? oldIndex : oldIndex + 1
+
+  // 统计需要跟随的子节点数量（子节点 depth > 父节点 depth）
+  let childCount = 0
+  while (
+    childrenStart + childCount < items.length &&
+    items[childrenStart + childCount]!.depth > movedDepth
+  ) {
+    childCount++
   }
-  return -1
-}
 
-// ==================== 排序操作 ====================
+  if (childCount > 0) {
+    const children = items.splice(childrenStart, childCount)
+    // 找到父节点在移除子节点后的新位置
+    const parentIdx = items.findIndex((i) => i._key === dragTargetKey)
+    if (parentIdx !== -1) {
+      items.splice(parentIdx + 1, 0, ...children)
+    }
+  }
 
-function canMoveUp(index: number): boolean {
-  return findPrevSibling(index) !== -1
-}
-
-function canMoveDown(index: number): boolean {
-  return findNextSibling(index) !== -1
-}
-
-function moveUp(index: number) {
-  const prevIdx = findPrevSibling(index)
-  if (prevIdx === -1) return
-  const items = flatItems.value
-  const myEnd = getBlockEnd(index)
-  const myLen = myEnd - index + 1
-  const myBlock = items.splice(index, myLen)
-  items.splice(prevIdx, 0, ...myBlock)
-}
-
-function moveDown(index: number) {
-  const nextIdx = findNextSibling(index)
-  if (nextIdx === -1) return
-  const items = flatItems.value
-  const myEnd = getBlockEnd(index)
-  const nextEnd = getBlockEnd(nextIdx)
-  const myLen = myEnd - index + 1
-  const nextLen = nextEnd - nextIdx + 1
-  const nextBlock = items.splice(nextIdx, nextLen)
-  const myBlock = items.splice(index, myLen)
-  items.splice(nextIdx, 0, ...myBlock)
-  items.splice(index, 0, ...nextBlock)
+  dragTargetKey = null
 }
 
 // ==================== 增删操作 ====================
