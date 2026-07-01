@@ -1,5 +1,5 @@
 import { db, schema } from "@nuxthub/db"
-import { eq, inArray } from "drizzle-orm"
+import { eq, inArray, desc } from "drizzle-orm"
 
 /**
  * 校验表名是否在 schema 中定义，无效则抛出错误
@@ -95,5 +95,40 @@ export async function batchTable(
       return db.delete(table).where(inArray(table.id, idList))
     case 'restore':
       return db.update(table).set({ deletedAt: null } as any).where(inArray(table.id, idList))
+  }
+}
+
+// ====================== 内容版本快照 ======================
+
+/**
+ * 保存内容版本快照，并只保留最新的 maxKeep 条
+ * 在更新 courses/chapters 的 content 之前调用，记录旧内容以便恢复
+ */
+export async function saveContentVersion(
+  type: 'course' | 'chapter',
+  id: number,
+  content: any,
+  maxKeep = 10,
+) {
+  const table = type === 'course' ? schema.courseVersions : schema.chapterVersions
+  const fk = type === 'course' ? schema.courseVersions.courseId : schema.chapterVersions.chapterId
+
+  // 插入旧内容快照
+  await db.insert(table).values(
+    type === 'course'
+      ? { courseId: id, content }
+      : { chapterId: id, content },
+  )
+
+  // 按 id 倒序保留最新 maxKeep 条，删除更早的版本
+  const all = await db
+    .select({ id: table.id })
+    .from(table)
+    .where(eq(fk, id))
+    .orderBy(desc(table.id))
+
+  if (all.length > maxKeep) {
+    const idsToDelete = all.slice(maxKeep).map((r) => r.id)
+    await db.delete(table).where(inArray(table.id, idsToDelete))
   }
 }

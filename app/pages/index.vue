@@ -36,13 +36,21 @@
             v-for="course in getCoursesByCategory(s.id)"
             :key="course.id"
             :to="`/course/${course.id}`"
-            class="group block"
+            class="group block relative"
           >
             <UCard
               class="h-full transition-all hover:ring-2 hover:ring-primary/50 hover:shadow-lg"
               :class="isMyCourse(course.id) ? 'ring-2 ring-primary/30 shadow-lg shadow-primary/10' : ''"
               :ui="{ body: 'flex flex-col h-full' }"
             >
+              <!-- 右上角设置按钮（管理员或课程编辑者可见） -->
+              <div
+                v-if="hasRole('admin') || isCourseTeacher(course.id)"
+                class="absolute top-3 right-3 z-10"
+              >
+                <LayoutCourseEditor :course-id="course.id" @saved="handleCourseSaved" />
+              </div>
+
               <!-- 图标 + 难度 -->
               <div class="flex items-start justify-between mb-4">
                 <div
@@ -96,8 +104,8 @@
 </template>
 
 <script setup lang="ts">
-const { data: home } = useHome()
-const { isCourseTeacher } = useAuth()
+const { data: home, refresh: refreshHome } = useHome()
+const { isCourseTeacher, hasRole } = useAuth()
 
 const categories = computed(() => home.value?.categories ?? [])
 const courses = computed(() => home.value?.courses ?? [])
@@ -119,6 +127,11 @@ function getCoursesByCategory(categoryId: number) {
 /** 当前用户是否是某课程的教师或编辑者（用于首页高亮） */
 function isMyCourse(courseId: number): boolean {
   return isCourseTeacher(courseId)
+}
+
+/** 课程设置保存后刷新首页数据 */
+async function handleCourseSaved() {
+  await refreshHome()
 }
 
 const { t } = useI18n()

@@ -1,13 +1,17 @@
 <template>
   <UPageAside>
     <!-- 编辑导航组件（管理员或课程编辑者可见） -->
-    <LayoutNavigationEditor
-      v-if="hasRole('admin') || isCourseEditor(Number(courseId))"
-      mode="course"
-      :course-id="courseId"
-      :navigation="navigation.slice(1)"
-      @saved="handleSaved"
-    />
+    <div v-if="hasRole('admin') || isCourseEditor(Number(courseId))" class="flex items-center gap-1 mb-2">
+      <LayoutNavigationEditor
+        mode="course"
+        :course-id="courseId"
+        :navigation="navigation.slice(1)"
+        @saved="handleSaved"
+      />
+      <LayoutCourseEditor :course-id="Number(courseId)" @saved="handleSaved" />
+    </div>
+
+    <div v-else />
 
     <UNavigationMenu
       :items="navigation"
