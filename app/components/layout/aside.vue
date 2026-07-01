@@ -1,5 +1,12 @@
 <template>
   <UPageAside>
+    <!-- 编辑导航组件 -->
+    <NavigationEditor
+      :course-id="courseId"
+      :navigation="navigation.slice(1)"
+      @saved="handleSaved"
+    />
+
     <UNavigationMenu
       :items="navigation"
       orientation="vertical"
@@ -9,32 +16,21 @@
     />
 
     <template #bottom>
-      <div class="hidden lg:flex flex-col gap-2 p-2">
-        <UButton
-          to="https://github.com"
-          target="_blank"
-          icon="i-lucide-github"
-          color="neutral"
-          variant="ghost"
-          size="sm"
-          label="GitHub"
-          class="justify-start"
-        />
-        <UButton
-          to="https://github.com"
-          target="_blank"
-          icon="i-lucide-star"
-          color="neutral"
-          variant="ghost"
-          size="sm"
-          label="点个 Star"
-          class="justify-start"
-        />
-      </div>
+      
     </template>
   </UPageAside>
 </template>
 
 <script setup lang="ts">
-const { navigation } = useSidebarNav()
+import NavigationEditor from './NavigationEditor.vue'
+
+const { navigation, courseId, refresh } = useSidebarNav()
+
+// 保存成功后的处理
+async function handleSaved() {
+  // 刷新数据以重新加载导航
+  if (refresh) {
+    await refresh()
+  }
+}
 </script>

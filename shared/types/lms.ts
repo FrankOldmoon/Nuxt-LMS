@@ -38,6 +38,8 @@ export type UEditorContent = Record<string, any>
 export interface LmsCourseDetail extends Omit<LmsCourseSummary, 'chapterCount'> {
   content: UEditorContent
   chapters: LmsChapterSummary[]
+  /** 导航排序配置（来自 courses 表的 orders 字段） */
+  orders: { id: string; label: string; order: number; parentId?: string | null }[]
 }
 
 /** 章节详情 */

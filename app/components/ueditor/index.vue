@@ -12,19 +12,26 @@
 import { UmoEditor } from '@umoteam/editor'
 import extensions from './extensions'
 const json = defineModel()
+const props = defineProps({
+  saveHandler: {
+    type: Function,
+    default: null,
+  },
+})
 const editorRef = ref(null)
 const tiptapEditor = ref(null)
-const options = ref({
-    // 配置项
-    height: '700px',
+const options = computed(() => ({
     document: {
         content: json.value,
     },
     contentType: 'markdown',
     extensions,
     async onSave(content, page, document) {
+        if (props.saveHandler) {
+            return props.saveHandler(content)
+        }
         localStorage.setItem('json', JSON.stringify(content.json))
-        return 1;
+        return 1
     },
     async onFileUpload(file) {
         if (!file) throw new Error('File not found')
@@ -39,12 +46,12 @@ const options = ref({
     onFileDelete(id, url) {
         console.error('The file has been deleted. Please configure the onFileDelete to completely delete the file from the server.')
     },
-})
+}))
 
 const onCreated = () => {
-    const content = JSON.parse(localStorage.getItem('json') || '{}')
-    console.log('json', content)
-    editorRef.value.setContent(content)
+    //const content = JSON.parse(localStorage.getItem('json') || '{}')
+    //console.log('json', content)
+    //editorRef.value.setContent(content)
 }
 
 const onChanged = () => {

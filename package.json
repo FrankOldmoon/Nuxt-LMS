@@ -30,6 +30,7 @@
   "devDependencies": {
     "@iconify-json/lucide": "^1.2.115",
     "less": "^4.6.7",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vuedraggable": "^4.1.0"
   }
 }

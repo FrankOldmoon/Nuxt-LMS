@@ -57,36 +57,5 @@
 </template>
 
 <script setup lang="ts">
-import type { LmsChapterPageData } from '#shared/types/lms'
-
-const route = useRoute()
-const courseId = computed(() => route.params.id as string)
-const chapterId = computed(() => route.params.cid as string)
-
-// SSR: useFetch 在服务端执行并序列化数据到客户端
-const { data: resp, pending } = useFetch<{ data: LmsChapterPageData | null }>(
-  () => `/api/lms/chapter/${chapterId.value}`,
-)
-
-const data = computed(() => resp.value?.data ?? null)
-
-// 从章节内容的 tiptap JSON 中提取 heading 节点生成 TOC
-const { setToc } = useLayoutState()
-const tocLinks = computed(() => extractTocFromContent(data.value?.chapter.content))
-watch(tocLinks, (links) => setToc(links), { immediate: true })
-
-// 上一章 / 下一章
-const prevChapter = computed(() => {
-  if (!data.value) return null
-  const chapters = data.value.course.chapters
-  const index = chapters.findIndex((ch) => ch.id === data.value!.chapter.id)
-  return index > 0 ? chapters[index - 1] : null
-})
-
-const nextChapter = computed(() => {
-  if (!data.value) return null
-  const chapters = data.value.course.chapters
-  const index = chapters.findIndex((ch) => ch.id === data.value!.chapter.id)
-  return index < chapters.length - 1 ? chapters[index + 1] : null
-})
+const { data, pending, prevChapter, nextChapter } = useChapterPageData()
 </script>

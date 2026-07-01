@@ -76,26 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import type { LmsCourseDetail } from '#shared/types/lms'
-
-const route = useRoute()
-const courseId = computed(() => route.params.id as string)
-
-// SSR: useFetch 在服务端执行并序列化数据到客户端
-const { data: resp, pending } = useFetch<{ data: LmsCourseDetail | null }>(
-  () => `/api/lms/course/${courseId.value}`,
-)
-
-const course = computed(() => resp.value?.data ?? null)
-
-// 从 tiptap JSON content 中提取 heading 节点生成 TOC，并追加「课程章节」锚点
-const { setToc } = useLayoutState()
-const tocLinks = computed(() => {
-  const content = course.value?.content
-  if (!content) return [{ id: 'chapters', text: '课程章节' }]
-  return [...extractTocFromContent(content), { id: 'chapters', text: '课程章节' }]
-})
-watch(tocLinks, (links) => setToc(links), { immediate: true })
+const { course, pending } = useCourseDetail()
 
 // 颜色工具函数
 function levelColor(level: string) {

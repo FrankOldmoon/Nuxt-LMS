@@ -1,5 +1,6 @@
 import { db, schema } from '@nuxthub/db'
 import { randomBytes, scrypt } from 'node:crypto'
+import { eq } from "drizzle-orm";
 
 const rand = {
     int: (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min,

@@ -69,6 +69,7 @@ export function normalizeCourseDetail(course: any): LmsCourseDetail {
     categoryId: course.categoryId,
     content: (course.content as Record<string, any>) || {},
     chapters,
+    orders: (course.orders as { id: string; label: string; order: number; parentId?: string | null }[]) || [],
   }
 }
 

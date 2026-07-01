@@ -53,7 +53,7 @@ defineProps<{
   tocLinks?: { id: string; text: string; children?: any[] }[]
 }>()
 
-const { showSidebar, showToc } = useLayoutState()
+const { showSidebar, showToc, tocLinks } = useLayoutState()
 const { navigation: sidebarNav } = useSidebarNav()
 const asideOpen = ref(false)
 const tocOpen = ref(false)

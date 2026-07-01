@@ -4,11 +4,12 @@ import type {
   LmsSeries,
   LmsCourseSummary,
   LmsCourseDetail,
+  LmsChapterSummary,
   LmsChapterPageData,
 } from '#shared/types/lms'
 
 // 类型重导出，供页面使用
-export type { LmsSeries, LmsCourseSummary, LmsCourseDetail, LmsChapterPageData, LmsHomeData }
+export type { LmsSeries, LmsCourseSummary, LmsCourseDetail, LmsChapterSummary, LmsChapterPageData, LmsHomeData }
 
 /**
  * 获取首页数据（分类 + 课程列表）
@@ -57,6 +58,7 @@ export function useHeaderNav() {
 /**
  * 左侧边栏导航树（垂直导航菜单）
  * 根据当前路由匹配 /course/:id，自行 useFetch 获取章节列表
+ * 优先使用 courses 表的 orders 字段（自定义排序），否则使用默认章节顺序
  * useFetch 在 SSR 阶段执行且在根 Suspense 下被等待，
  * 因此 aside 首屏即有数据，无需依赖页面通过 useState 间接传递
  * （与课程详情页 useFetch 同 URL 自动去重，不会重复请求）
@@ -66,25 +68,84 @@ export function useSidebarNav() {
 
   const courseId = computed(() => {
     const match = route.path.match(/^\/course\/([^/]+)/)
-    return match?.[1]
+    return match?.[1] ?? ''
   })
 
-  const { data: resp } = useFetch<{ data: { chapters: { id: number; title: string }[] } | null }>(
-    () => (courseId.value ? `/api/lms/course/${courseId.value}` : ''),
-    { default: () => null }
+  // 获取课程详情（包含 orders 字段）
+  // 使用 useAsyncData 而不是直接 useFetch，以避免类型问题
+  const { data: courseData, refresh } = useAsyncData<LmsCourseDetail | null>(
+    () => {
+      if (!courseId.value) return Promise.resolve(null)
+      return $fetch(`/api/lms/course/${courseId.value}`).then(res => (res as any)?.data ?? null)
+    },
+    {
+      watch: [courseId],
+      default: () => null,
+    }
   )
 
+  // 构建导航数据：优先使用 orders，否则使用默认章节顺序
   const navigation = computed<NavigationMenuItem[]>(() => {
     const cid = courseId.value
     if (!cid) return []
-    const chapters = resp.value?.data?.chapters ?? []
-    return chapters.map((ch) => ({
+
+    const course = courseData.value
+    if (!course) return []
+
+    const orders = course.orders ?? []
+    const chapters = course.chapters ?? []
+    const result: NavigationMenuItem[] = [{ label: '课程', to: `/course/${cid}` }]
+    // 如果有自定义 orders，使用 orders 构建导航（支持嵌套层级）
+    if (orders.length > 0) {
+      const sorted = [...orders].sort((a, b) => a.order - b.order)
+
+      // 构建单条导航项
+      function buildItem(item: typeof sorted[number]): NavigationMenuItem {
+        const base: NavigationMenuItem = { label: item.label }
+
+        // 如果是章节（id 是数字），构建章节链接
+        if (item.id && !item.id.startsWith('custom-') && !isNaN(Number(item.id))) {
+          base.to = `/course/${cid}/${item.id}`
+        } else if (item.id === 'course') {
+          base.to = `/course/${cid}`
+        } else {
+          base.to = `/course/${cid}#${item.label}`
+        }
+
+        return base
+      }
+
+      // 构建树形结构：parentId 为 null/undefined 的是根节点
+      const rootItems = sorted.filter((item) => !item.parentId)
+      const tree: NavigationMenuItem[] = rootItems.map((root) => {
+        const menuItem = buildItem(root)
+        // 查找子节点
+        const children = sorted.filter((child) => child.parentId === root.id)
+        if (children.length > 0) {
+          menuItem.children = children.map((child) => {
+            const childItem = buildItem(child)
+            // 查找三级子节点
+            const grandchildren = sorted.filter((gc) => gc.parentId === child.id)
+            if (grandchildren.length > 0) {
+              childItem.children = grandchildren.map((gc) => buildItem(gc))
+            }
+            return childItem
+          })
+        }
+        return menuItem
+      })
+      return result.concat(tree)
+    }
+
+    // 默认：课程首页 + 章节列表
+
+    return result.concat(chapters.map((ch) => ({
       label: ch.title,
       to: `/course/${cid}/${ch.id}`,
-    }))
+    })))
   })
 
-  return { navigation }
+  return { navigation, courseId, refresh }
 }
 
 /**
@@ -93,6 +154,13 @@ export function useSidebarNav() {
 export function useLayoutState() {
   const route = useRoute()
   const tocLinks = useState<{ id: string; text: string; children?: any[] }[]>('layout-toc', () => [])
+  // 当前页面可编辑的内容（tiptap JSON），供 toc.vue 中的 ueditor 编辑
+  const editableContent = useState<any | null>('layout-editable-content', () => null)
+  // 可编辑内容对应的表名和记录标识（DB name 列），供保存时调用 update API
+  const editableTable = useState<string>('layout-editable-table', () => '')
+  const editableName = useState<string>('layout-editable-name', () => '')
+  // 内容版本号：保存成功后 +1，页面监听此值来刷新数据
+  const contentVersion = useState<number>('layout-content-version', () => 0)
   // 页面可通过 setLayout 覆盖；null 表示使用路由默认值
   const sidebarOverride = useState<boolean | null>('layout-sidebar-override', () => null)
   const tocOverride = useState<boolean | null>('layout-toc-override', () => null)
@@ -106,6 +174,19 @@ export function useLayoutState() {
     tocLinks.value = links
   }
 
+  function setEditableContent(content: any | null) {
+    editableContent.value = content
+  }
+
+  function setEditableMeta(table: string, name: string) {
+    editableTable.value = table
+    editableName.value = name
+  }
+
+  function notifyContentSaved() {
+    contentVersion.value++
+  }
+
   function setLayout(opts: { sidebar?: boolean; toc?: boolean }) {
     if (opts.sidebar !== undefined) sidebarOverride.value = opts.sidebar
     if (opts.toc !== undefined) tocOverride.value = opts.toc
@@ -117,7 +198,7 @@ export function useLayoutState() {
     tocOverride.value = null
   })
 
-  return { tocLinks, showSidebar, showToc, setToc, setLayout }
+  return { tocLinks, editableContent, editableTable, editableName, contentVersion, showSidebar, showToc, setToc, setEditableContent, setEditableMeta, notifyContentSaved, setLayout }
 }
 
 /**
@@ -161,4 +242,97 @@ export function useFooterNav() {
   })
 
   return { links }
+}
+
+/**
+ * 课程详情页数据获取
+ * 从当前路由自己读取 courseId，SSR 阶段即可完成数据获取 + TOC 设置
+ * 内置 TOC 提取、可编辑内容设置、保存后自动刷新
+ * 可在 layout 和 page 中同时调用，useFetch 自动去重
+ */
+export function useCourseDetail() {
+  const route = useRoute()
+  const courseId = computed(() => route.params.id as string)
+
+  // 布局共享状态（必须在 useFetch 之前调用）
+  const { setToc, setEditableContent, setEditableMeta, contentVersion } = useLayoutState()
+
+  const { data: resp, pending, refresh } = useFetch<{ data: LmsCourseDetail | null }>(
+    () => courseId.value ? `/api/lms/course/${courseId.value}` : '',
+    {
+      default: () => ({ data: null }),
+      transform: (raw: any) => {
+        const detail = raw?.data ?? null
+        // 数据到达时立刻设置 TOC + 可编辑内容，不依赖 watch
+        const content = detail?.content
+        if (!content) {
+          setToc([{ id: 'chapters', text: '课程章节' }])
+        } else {
+          setToc([...extractTocFromContent(content), { id: 'chapters', text: '课程章节' }])
+        }
+        setEditableContent(content ?? null)
+        if (detail?.title) setEditableMeta('courses', detail.title)
+        return raw
+      },
+    }
+  )
+
+  const course = computed<LmsCourseDetail | null>(() => resp.value?.data ?? null)
+
+  // 监听内容版本号，保存成功后重新获取数据
+  watch(contentVersion, () => refresh())
+
+  return { course, pending, refresh }
+}
+
+/**
+ * 章节页面数据获取
+ * 从当前路由自己读取 chapterId，SSR 阶段即可完成数据获取 + TOC 设置
+ * 内置 TOC 提取、可编辑内容设置、上下章导航、保存后自动刷新
+ * 可在 layout 和 page 中同时调用，useFetch 自动去重
+ */
+export function useChapterPageData() {
+  const route = useRoute()
+  const chapterId = computed(() => route.params.cid as string)
+
+  // 布局共享状态（必须在 useFetch 之前调用）
+  const { setToc, setEditableContent, setEditableMeta, contentVersion } = useLayoutState()
+
+  const { data: resp, pending, refresh } = useFetch<{ data: LmsChapterPageData | null }>(
+    () => chapterId.value ? `/api/lms/chapter/${chapterId.value}` : '',
+    {
+      default: () => ({ data: null }),
+      transform: (raw: any) => {
+        const d = raw?.data ?? null
+        // 数据到达时立刻设置 TOC + 可编辑内容，不依赖 watch
+        setToc(extractTocFromContent(d?.chapter?.content))
+        setEditableContent(d?.chapter?.content ?? null)
+        if (d?.chapter?.title) setEditableMeta('chapters', d.chapter.title)
+        return raw
+      },
+    }
+  )
+
+  const data = computed<LmsChapterPageData | null>(() => resp.value?.data ?? null)
+
+  // 监听内容版本号，保存成功后重新获取数据
+  watch(contentVersion, () => refresh())
+
+  const prevChapter = computed(() => {
+    const d = data.value
+    if (!d) return null
+    const chapters = d.course.chapters
+    const idx = chapters.findIndex((ch) => ch.id === d.chapter.id)
+    return idx > 0 ? chapters[idx - 1]! : null
+  })
+
+  const nextChapter = computed(() => {
+    const d = data.value
+    if (!d) return null
+    const chapters = d.course.chapters
+    const idx = chapters.findIndex((ch) => ch.id === d.chapter.id)
+    return idx < chapters.length - 1 ? chapters[idx + 1]! : null
+  })
+
+  return { data, pending, refresh, prevChapter, nextChapter }
 }
