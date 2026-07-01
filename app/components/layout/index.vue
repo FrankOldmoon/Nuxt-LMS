@@ -15,9 +15,6 @@
         </LayoutMain>
 
         <!-- 右侧边栏：本页目录（桌面端显示） -->
-        <template v-if="showToc" #right>
-          <LayoutToc/>
-        </template>
       </UPage>
     </UContainer>
   </UMain>
