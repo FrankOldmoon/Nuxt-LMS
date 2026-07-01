@@ -1,7 +1,7 @@
 <template>
   <UPageAside>
     <!-- 编辑导航组件 -->
-    <NavigationEditor
+    <LayoutNavigationEditor
       mode="course"
       :course-id="courseId"
       :navigation="navigation.slice(1)"
@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import NavigationEditor from './NavigationEditor.vue'
+
 
 const { navigation, courseId, refresh } = useSidebarNav()
 

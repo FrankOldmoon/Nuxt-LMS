@@ -1,3 +1,73 @@
 {
-  "welcome": "歡迎"
+  "welcome": "歡迎",
+  "common": {
+    "cancel": "取消",
+    "reset": "重置",
+    "save": "儲存",
+    "search": "搜尋"
+  },
+  "home": {
+    "title": "課程系列",
+    "subtitle": "精選技術課程，助你從入門到精通",
+    "startLearning": "開始學習",
+    "chapters": "{count} 章節",
+    "courses": "{count} 門課程",
+    "levels": {
+      "beginner": "入門",
+      "intermediate": "進階",
+      "advanced": "高級"
+    }
+  },
+  "course": {
+    "chapterList": "課程章節",
+    "notFound": "課程不存在",
+    "backToHome": "返回首頁",
+    "chapters": "{count} 章節"
+  },
+  "chapter": {
+    "previous": "上一章",
+    "next": "下一章",
+    "notFound": "章節不存在",
+    "backToCourse": "返回課程"
+  },
+  "layout": {
+    "menu": "選單",
+    "toc": "目錄",
+    "navigation": "導航",
+    "pageToc": "本頁目錄",
+    "editPage": "編輯此頁",
+    "footerDescription": "基於 Nuxt UI v4 構建的現代化文件佈局",
+    "footerRights": "保留所有權利。"
+  },
+  "navEditor": {
+    "title": "編輯導航",
+    "editCategory": "編輯分類導航",
+    "editCourse": "編輯課程導航",
+    "hint": "支援最多三層目錄。拖曳手柄排序，懸停顯示添加/刪除按鈕",
+    "saveAndClose": "儲存並關閉",
+    "courseHome": "課程首頁",
+    "unnamed": "(未命名)",
+    "placeholder": "導航名稱",
+    "addChild": "添加子目錄",
+    "addSibling": "添加同級目錄",
+    "deleteWithChildren": "刪除（含子項）",
+    "addRoot": "添加一級目錄"
+  },
+  "ueditor": {
+    "markdown": {
+      "title": "輸入 Markdown 內容",
+      "placeholder": "在此輸入 Markdown 文本...",
+      "insert": "插入"
+    },
+    "toc": {
+      "heading": "目錄",
+      "empty": "暫無目錄"
+    },
+    "file": {
+      "unknown": "未知檔案",
+      "download": "下載",
+      "unknownSize": "未知大小"
+    },
+    "pageBreak": "分頁符"
+  }
 }

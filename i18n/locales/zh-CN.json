@@ -1,3 +1,73 @@
 {
-  "welcome": "欢迎"
+  "welcome": "欢迎",
+  "common": {
+    "cancel": "取消",
+    "reset": "重置",
+    "save": "保存",
+    "search": "搜索"
+  },
+  "home": {
+    "title": "课程系列",
+    "subtitle": "精选技术课程，助你从入门到精通",
+    "startLearning": "开始学习",
+    "chapters": "{count} 章节",
+    "courses": "{count} 门课程",
+    "levels": {
+      "beginner": "入门",
+      "intermediate": "进阶",
+      "advanced": "高级"
+    }
+  },
+  "course": {
+    "chapterList": "课程章节",
+    "notFound": "课程不存在",
+    "backToHome": "返回首页",
+    "chapters": "{count} 章节"
+  },
+  "chapter": {
+    "previous": "上一章",
+    "next": "下一章",
+    "notFound": "章节不存在",
+    "backToCourse": "返回课程"
+  },
+  "layout": {
+    "menu": "菜单",
+    "toc": "目录",
+    "navigation": "导航",
+    "pageToc": "本页目录",
+    "editPage": "编辑此页",
+    "footerDescription": "基于 Nuxt UI v4 构建的现代化文档布局",
+    "footerRights": "保留所有权利。"
+  },
+  "navEditor": {
+    "title": "编辑导航",
+    "editCategory": "编辑分类导航",
+    "editCourse": "编辑课程导航",
+    "hint": "支持最多三层目录。拖拽手柄排序，悬停显示添加/删除按钮",
+    "saveAndClose": "保存并关闭",
+    "courseHome": "课程首页",
+    "unnamed": "(未命名)",
+    "placeholder": "导航名称",
+    "addChild": "添加子目录",
+    "addSibling": "添加同级目录",
+    "deleteWithChildren": "删除（含子项）",
+    "addRoot": "添加一级目录"
+  },
+  "ueditor": {
+    "markdown": {
+      "title": "输入 Markdown 内容",
+      "placeholder": "在此输入 Markdown 文本...",
+      "insert": "插入"
+    },
+    "toc": {
+      "heading": "目录",
+      "empty": "暂无目录"
+    },
+    "file": {
+      "unknown": "未知文件",
+      "download": "下载",
+      "unknownSize": "未知大小"
+    },
+    "pageBreak": "分页符"
+  }
 }

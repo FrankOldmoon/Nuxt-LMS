@@ -3,10 +3,10 @@
     <!-- 页面标题 -->
     <div class="mb-12">
       <h1 class="text-4xl font-bold text-highlighted mb-3">
-        课程系列
+        {{ $t('home.title') }}
       </h1>
       <p class="text-lg text-muted">
-        精选技术课程，助你从入门到精通
+        {{ $t('home.subtitle') }}
       </p>
     </div>
 
@@ -26,7 +26,7 @@
             {{ s.title }}
           </h2>
           <span class="text-sm text-muted">
-            {{ getCoursesByCategory(s.id).length }} 门课程
+            {{ $t('home.courses', { count: getCoursesByCategory(s.id).length }) }}
           </span>
         </div>
 
@@ -79,10 +79,10 @@
               <div class="flex items-center justify-between pt-4 border-t border-default">
                 <span class="flex items-center gap-1.5 text-sm text-muted">
                   <UIcon name="i-lucide-list-video" class="size-4" />
-                  {{ course.chapterCount }} 章节
+                  {{ $t('home.chapters', { count: course.chapterCount }) }}
                 </span>
                 <span class="flex items-center gap-1 text-sm text-primary font-medium group-hover:gap-2 transition-all">
-                  开始学习
+                  {{ $t('home.startLearning') }}
                   <UIcon name="i-lucide-arrow-right" class="size-4" />
                 </span>
               </div>
@@ -104,11 +104,13 @@ function getCoursesByCategory(categoryId: number) {
   return courses.value.filter((c) => c.categoryId === categoryId)
 }
 
+const { t } = useI18n()
+
 function levelColor(level: string) {
   const map: Record<string, 'success' | 'warning' | 'error'> = {
-    '入门': 'success',
-    '进阶': 'warning',
-    '高级': 'error',
+    [t('home.levels.beginner')]: 'success',
+    [t('home.levels.intermediate')]: 'warning',
+    [t('home.levels.advanced')]: 'error',
   }
   return map[level] || 'neutral'
 }

@@ -10,7 +10,7 @@
         icon="i-lucide-panel-left"
         color="neutral"
         variant="outline"
-        label="菜单"
+        :label="$t('layout.menu')"
         @click="asideOpen = true"
       />
       <UButton
@@ -18,7 +18,7 @@
         icon="i-lucide-panel-right"
         color="neutral"
         variant="outline"
-        label="目录"
+        :label="$t('layout.toc')"
         @click="tocOpen = true"
       />
     </div>
@@ -27,7 +27,7 @@
     <slot />
 
     <!-- 移动端左侧导航弹窗 -->
-    <USlideover v-if="showSidebar" v-model:open="asideOpen" title="导航" side="left">
+    <USlideover v-if="showSidebar" v-model:open="asideOpen" :title="$t('layout.navigation')" side="left">
       <template #body>
         <UNavigationMenu
           :items="sidebarNav"
@@ -40,9 +40,9 @@
     </USlideover>
 
     <!-- 移动端目录弹窗 -->
-    <USlideover v-if="showToc && tocLinks?.length" v-model:open="tocOpen" title="本页目录" side="right">
+    <USlideover v-if="showToc && tocLinks?.length" v-model:open="tocOpen" :title="$t('layout.pageToc')" side="right">
       <template #body>
-        <LayoutTocList :links="tocLinks" title="本页目录" />
+        <LayoutTocList :links="tocLinks" :title="$t('layout.pageToc')" />
       </template>
     </USlideover>
   </UPageBody>

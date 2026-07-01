@@ -24,7 +24,7 @@
         <UCard :ui="{ body: 'flex items-center gap-3' }" class="transition-all hover:ring-2 hover:ring-primary/30">
           <UIcon name="i-lucide-arrow-left" class="size-5 text-muted shrink-0" />
           <div class="min-w-0">
-            <p class="text-xs text-muted mb-0.5">上一章</p>
+            <p class="text-xs text-muted mb-0.5">{{ $t('chapter.previous') }}</p>
             <p class="text-sm font-medium text-highlighted truncate">{{ prevChapter.title }}</p>
           </div>
         </UCard>
@@ -38,7 +38,7 @@
       >
         <UCard :ui="{ body: 'flex items-center gap-3 justify-end text-right' }" class="transition-all hover:ring-2 hover:ring-primary/30">
           <div class="min-w-0">
-            <p class="text-xs text-muted mb-0.5">下一章</p>
+            <p class="text-xs text-muted mb-0.5">{{ $t('chapter.next') }}</p>
             <p class="text-sm font-medium text-highlighted truncate">{{ nextChapter.title }}</p>
           </div>
           <UIcon name="i-lucide-arrow-right" class="size-5 text-muted shrink-0" />
@@ -51,8 +51,8 @@
   <!-- 章节不存在 -->
   <div v-else-if="!pending" class="flex flex-col items-center justify-center py-20">
     <UIcon name="i-lucide-search-x" class="size-12 text-muted mb-4" />
-    <p class="text-lg text-muted mb-4">章节不存在</p>
-    <UButton :to="`/course/${courseId}`" label="返回课程" color="primary" variant="outline" />
+    <p class="text-lg text-muted mb-4">{{ $t('chapter.notFound') }}</p>
+    <UButton :to="`/course/${courseId}`" :label="$t('chapter.backToCourse')" color="primary" variant="outline" />
   </div>
 </template>
 

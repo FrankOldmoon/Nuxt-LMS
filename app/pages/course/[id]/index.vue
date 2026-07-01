@@ -12,7 +12,7 @@
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 mb-2">
             <UBadge :label="course.level" :color="levelColor(course.level)" variant="subtle" size="sm" />
-            <span class="text-sm text-muted">{{ course.chapters.length }} 章节</span>
+            <span class="text-sm text-muted">{{ $t('course.chapters', { count: course.chapters.length }) }}</span>
           </div>
           <h1 class="text-3xl font-bold text-highlighted mb-2">
             {{ course.title }}
@@ -39,7 +39,7 @@
 
     <!-- 章节列表 -->
     <h2 id="chapters" class="text-2xl font-semibold text-highlighted mb-6 mt-12 scroll-mt-20">
-      课程章节
+      {{ $t('course.chapterList') }}
     </h2>
 
     <div class="flex flex-col gap-3">
@@ -70,8 +70,8 @@
   <!-- 课程不存在 -->
   <div v-else-if="!pending" class="flex flex-col items-center justify-center py-20">
     <UIcon name="i-lucide-search-x" class="size-12 text-muted mb-4" />
-    <p class="text-lg text-muted mb-4">课程不存在</p>
-    <UButton to="/" label="返回首页" color="primary" variant="outline" />
+    <p class="text-lg text-muted mb-4">{{ $t('course.notFound') }}</p>
+    <UButton to="/" :label="$t('course.backToHome')" color="primary" variant="outline" />
   </div>
 </template>
 
@@ -79,11 +79,13 @@
 const { course, pending } = useCourseDetail()
 
 // 颜色工具函数
+const { t } = useI18n()
+
 function levelColor(level: string) {
   const map: Record<string, 'success' | 'warning' | 'error'> = {
-    '入门': 'success',
-    '进阶': 'warning',
-    '高级': 'error',
+    [t('home.levels.beginner')]: 'success',
+    [t('home.levels.intermediate')]: 'warning',
+    [t('home.levels.advanced')]: 'error',
   }
   return map[level] || 'neutral'
 }

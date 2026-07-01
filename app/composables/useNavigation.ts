@@ -268,7 +268,7 @@ export function useCourseDetail() {
     if (!detail) return
 
     const content = detail?.content
-    console.log('detail', detail)
+
     if (!content) {
       setToc([{ id: 'chapters', text: '课程章节' }])
     } else {

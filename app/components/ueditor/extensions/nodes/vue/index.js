@@ -42,8 +42,8 @@ export default Node.create({
           ({ chain }) => {
             return chain()
               .insertContent({
-                type,
-                attrs: { content },
+                type: 'vue',
+                attrs: { content, type },
               })
               .run()
           },
@@ -59,8 +59,8 @@ export default Node.create({
           const content = match[2]; // 例如 '12'
           commands.deleteRange(range);
           commands.insertContentAt(range.from, {
-            type,
-            attrs: { content },
+            type: 'vue',
+            attrs: { content, type },
           });
         },
       }),
@@ -87,16 +87,15 @@ export default Node.create({
 
   parseMarkdown: (token, helpers) => {
     return {
-      type: token.vueType,
+      type: 'vue',
       attrs: {
-        //vueType: token.vueType,
+        type: token.vueType,
         content: token.text,
       },
     }
   },
 
   renderMarkdown: (node, helpers) => {
-    console.log({node})
     const vueType = node.type || 'vue'
     const content = helpers.renderChildren(node)
     return `::${vueType} ${content}::\n`

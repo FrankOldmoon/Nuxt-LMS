@@ -10,7 +10,7 @@
             <span>Nuxt Hub</span>
           </ULink>
           <p class="mt-2 text-sm text-muted">
-            基于 Nuxt UI v4 构建的现代化文档布局
+            {{ $t('layout.footerDescription') }}
           </p>
         </div>
 
@@ -42,7 +42,7 @@
     <!-- 左侧：版权信息 -->
     <template #left>
       <p class="text-sm text-muted">
-        © {{ new Date().getFullYear() }} Nuxt Hub. 保留所有权利。
+        © {{ new Date().getFullYear() }} Nuxt Hub. {{ $t('layout.footerRights') }}
       </p>
     </template>
 

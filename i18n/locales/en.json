@@ -1,3 +1,73 @@
 {
-  "welcome": "Welcome"
+  "welcome": "Welcome",
+  "common": {
+    "cancel": "Cancel",
+    "reset": "Reset",
+    "save": "Save",
+    "search": "Search"
+  },
+  "home": {
+    "title": "Course Series",
+    "subtitle": "Featured technical courses to take you from beginner to expert",
+    "startLearning": "Start Learning",
+    "chapters": "{count} Chapters",
+    "courses": "{count} Courses",
+    "levels": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    }
+  },
+  "course": {
+    "chapterList": "Course Chapters",
+    "notFound": "Course not found",
+    "backToHome": "Back to Home",
+    "chapters": "{count} Chapters"
+  },
+  "chapter": {
+    "previous": "Previous Chapter",
+    "next": "Next Chapter",
+    "notFound": "Chapter not found",
+    "backToCourse": "Back to Course"
+  },
+  "layout": {
+    "menu": "Menu",
+    "toc": "Table of Contents",
+    "navigation": "Navigation",
+    "pageToc": "On This Page",
+    "editPage": "Edit This Page",
+    "footerDescription": "A modern documentation layout built with Nuxt UI v4",
+    "footerRights": "All rights reserved."
+  },
+  "navEditor": {
+    "title": "Edit Navigation",
+    "editCategory": "Edit Category Navigation",
+    "editCourse": "Edit Course Navigation",
+    "hint": "Supports up to three levels. Drag to reorder, hover to add/delete items",
+    "saveAndClose": "Save & Close",
+    "courseHome": "Course Home",
+    "unnamed": "(Unnamed)",
+    "placeholder": "Navigation name",
+    "addChild": "Add child",
+    "addSibling": "Add sibling",
+    "deleteWithChildren": "Delete (with children)",
+    "addRoot": "Add top-level"
+  },
+  "ueditor": {
+    "markdown": {
+      "title": "Enter Markdown Content",
+      "placeholder": "Type Markdown text here...",
+      "insert": "Insert"
+    },
+    "toc": {
+      "heading": "Table of Contents",
+      "empty": "No table of contents"
+    },
+    "file": {
+      "unknown": "Unknown file",
+      "download": "Download",
+      "unknownSize": "Unknown size"
+    },
+    "pageBreak": "Page Break"
+  }
 }

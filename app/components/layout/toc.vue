@@ -3,7 +3,7 @@
 
     <LayoutTocList
       :links="tocLinks"
-      title="本页目录"
+      :title="$t('layout.pageToc')"
       class="w-full"
     />
 
@@ -16,7 +16,7 @@
             color="neutral"
             variant="ghost"
             size="sm"
-            label="编辑此页"
+            :label="$t('layout.editPage')"
             class="justify-start"
           />
 

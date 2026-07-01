@@ -78,7 +78,7 @@ const props = withDefaults(defineProps<{
   links?: TocLink[]
   title?: string
 }>(), {
-  title: '本页目录',
+  title: '',
 })
 
 

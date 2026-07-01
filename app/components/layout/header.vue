@@ -9,7 +9,7 @@
       <ULink
         to="/"
         class="flex items-center gap-2 font-bold text-lg text-highlighted"
-        aria-label="Nuxt Hub 首页"
+        aria-label="Nuxt Hub"
       >
         <UIcon name="i-lucide-boxes" class="size-6 text-primary" />
         <span class="hidden sm:inline">Nuxt Hub</span>
@@ -23,12 +23,12 @@
 
     <!-- 右侧：操作按钮 -->
     <template #right>
-      <UTooltip text="搜索" :content="{ side: 'bottom' }">
+      <UTooltip :text="$t('common.search')" :content="{ side: 'bottom' }">
         <UButton
           icon="i-lucide-search"
           color="neutral"
           variant="ghost"
-          aria-label="搜索"
+          :aria-label="$t('common.search')"
         />
       </UTooltip>
 

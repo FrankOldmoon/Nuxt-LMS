@@ -9,7 +9,7 @@
       </div>
       <div class="umo-file-info">
         <div class="umo-file-name" :title="attrs.name || ''">
-          {{ attrs.name || '未知文件' }}
+          {{ attrs.name || $t('ueditor.file.unknown') }}
         </div>
         <div class="umo-file-meta">{{ sizeText }}</div>
       </div>
@@ -20,7 +20,7 @@
           :download="attrs.name"
           target="_blank"
           class="umo-action-item"
-          title="下载"
+          :title="$t('ueditor.file.download')"
         >↓</a>
       </div>
     </div>
@@ -33,6 +33,8 @@ import prettyBytes from 'pretty-bytes'
 import { computeAtomNodeStyle } from '../helpers'
 
 const CDN_URL = 'https://unpkg.com/@umoteam/editor-external@latest'
+
+const { t } = useI18n()
 
 const fileTypes = {
   ai: ['ai', 'eps'],
@@ -91,6 +93,6 @@ const iconUrl = computed(
 )
 
 const sizeText = computed(() =>
-  attrs.value.size ? prettyBytes(attrs.value.size) : '未知大小',
+  attrs.value.size ? prettyBytes(attrs.value.size) : t('ueditor.file.unknownSize'),
 )
 </script>

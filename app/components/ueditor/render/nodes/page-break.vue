@@ -1,5 +1,5 @@
 <template>
-  <div class="umo-page-break" data-line-number="false" data-content="分页符" />
+  <div class="umo-page-break" :data-content="$t('ueditor.pageBreak')" data-line-number="false" />
 </template>
 
 <script setup>

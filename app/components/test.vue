@@ -1,6 +1,6 @@
 <template>
     <div>
-        <ubutton type="primary">保存</ubutton>
+        <ubutton type="primary">{{ $t('common.save') }}</ubutton>
     </div>
 </template>
 <script setup>
