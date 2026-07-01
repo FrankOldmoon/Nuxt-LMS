@@ -37,6 +37,8 @@
     "navigation": "導航",
     "pageToc": "本頁目錄",
     "editPage": "編輯此頁",
+    "saveSuccess": "儲存成功",
+    "saveFailed": "儲存失敗",
     "history": "歷史記錄",
     "historyLoading": "載入中...",
     "historyEmpty": "暫無歷史記錄",
@@ -136,7 +138,11 @@
     "colEmail": "電子郵件",
     "colTelephone": "電話",
     "updateSuccess": "班級已更新",
-    "updateFailed": "更新失敗"
+    "updateFailed": "更新失敗",
+    "newClassNamePlaceholder": "輸入新班級名稱",
+    "addClass": "新增班級",
+    "addClassSuccess": "班級新增成功",
+    "addClassFailed": "新增班級失敗"
   },
   "courseEditor": {
     "title": "課程設定",

@@ -37,6 +37,8 @@
     "navigation": "导航",
     "pageToc": "本页目录",
     "editPage": "编辑此页",
+    "saveSuccess": "保存成功",
+    "saveFailed": "保存失败",
     "history": "历史记录",
     "historyLoading": "加载中...",
     "historyEmpty": "暂无历史记录",
@@ -145,7 +147,11 @@
     "colEmail": "邮箱",
     "colTelephone": "电话",
     "updateSuccess": "班级已更新",
-    "updateFailed": "更新失败"
+    "updateFailed": "更新失败",
+    "newClassNamePlaceholder": "输入新班级名称",
+    "addClass": "新增班级",
+    "addClassSuccess": "班级新增成功",
+    "addClassFailed": "新增班级失败"
   },
   "courseEditor": {
     "title": "课程设置",

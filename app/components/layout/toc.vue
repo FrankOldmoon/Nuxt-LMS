@@ -10,7 +10,7 @@
     <template #bottom>
       <!-- 页面内容编辑器（管理员或课程编辑者可见） -->
       <div v-if="canEditContent" class="hidden lg:flex flex-col gap-3 pt-4 mt-4 border-t border-default">
-        <UModal fullscreen scrollable>
+        <UModal v-model:open="editModalOpen" fullscreen scrollable>
           <UButton
             icon="i-lucide-edit"
             color="neutral"
@@ -22,7 +22,12 @@
 
           <template #body>
             <div class="p-4 min-w-[480px]">
-              <ueditor v-model="editableContent" :save-handler="handleSave" />
+              <ueditor v-model="editableContent" :save-handler="handleSave" ref="ueditorRef"/>
+            </div>
+          </template>
+          <template #footer>
+            <div class="flex justify-end gap-2 w-full">
+              <UButton :label="$t('common.save')" color="primary" variant="solid" size="sm" :loading="saving" @click="handleSaveClick"/>
             </div>
           </template>
         </UModal>
@@ -37,6 +42,12 @@
 <script setup lang="ts">
 
 const { hasRole, isCourseEditor } = useAuth()
+const toast = useToast()
+const { t } = useI18n()
+
+const ueditorRef = ref()
+const editModalOpen = ref(false)
+const saving = ref(false)
 
 // 使用全局可编辑内容，由 course/chapter 页面设置
 const { tocLinks, editableContent, editableTable, editableId, editableCourseId, notifyContentSaved } = useLayoutState()
@@ -55,8 +66,22 @@ async function handleSave(content: Record<string, any>) {
     method: 'POST',
     body: { id: editableId.value, content: content.json },
   })
-  // 通知页面刷新数据
   notifyContentSaved()
+  location.reload()
   return 1
+}
+
+// 点击保存按钮：触发 ueditor 保存，成功后关闭弹窗并提示
+async function handleSaveClick() {
+  saving.value = true
+  try {
+    await ueditorRef.value?.saveDocument()
+    toast.add({ title: t('layout.saveSuccess'), color: 'success' })
+    editModalOpen.value = false
+  } catch (e: any) {
+    toast.add({ title: e.message || t('layout.saveFailed'), color: 'error' })
+  } finally {
+    saving.value = false
+  }
 }
 </script>

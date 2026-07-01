@@ -13,10 +13,10 @@ import { UmoEditor } from '@umoteam/editor'
 import extensions from './extensions'
 const json = defineModel()
 const props = defineProps({
-  saveHandler: {
-    type: Function,
-    default: null,
-  },
+    saveHandler: {
+        type: Function,
+        default: null,
+    },
 })
 const editorRef = ref(null)
 const tiptapEditor = ref(null)
@@ -24,6 +24,7 @@ const options = computed(() => ({
     document: {
         content: json.value,
     },
+    height: '600px',
     contentType: 'markdown',
     extensions,
     async onSave(content, page, document) {
@@ -62,4 +63,10 @@ const onChanged = () => {
     tiptapEditor.value = editorRef.value.useEditor()
 
 }
+
+const saveDocument = () => {
+    editorRef.value.saveContent(true)
+}
+
+defineExpose({ saveDocument })
 </script>

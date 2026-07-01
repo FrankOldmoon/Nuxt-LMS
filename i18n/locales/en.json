@@ -37,6 +37,8 @@
     "navigation": "Navigation",
     "pageToc": "On This Page",
     "editPage": "Edit This Page",
+    "saveSuccess": "Saved successfully",
+    "saveFailed": "Save failed",
     "history": "History",
     "historyLoading": "Loading...",
     "historyEmpty": "No history records",
@@ -145,7 +147,11 @@
     "colEmail": "Email",
     "colTelephone": "Telephone",
     "updateSuccess": "Class updated",
-    "updateFailed": "Update failed"
+    "updateFailed": "Update failed",
+    "newClassNamePlaceholder": "Enter new class name",
+    "addClass": "Add Class",
+    "addClassSuccess": "Class added successfully",
+    "addClassFailed": "Failed to add class"
   },
   "courseEditor": {
     "title": "Course Settings",
