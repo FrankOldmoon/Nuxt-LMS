@@ -69,9 +69,33 @@ export default defineEventHandler(async (event) => {
     .innerJoin(schema.permissions, eq(schema.rolePermissions.permissionId, schema.permissions.id))
     .where(eq(schema.userRoles.userId, userId))
 
+  // 查询用户作为编辑者的课程 ID 列表
+  const editorCourseRows = await db
+    .select({ courseId: schema.userCourses.courseId })
+    .from(schema.userCourses)
+    .where(
+      and(
+        eq(schema.userCourses.userId, userId),
+        eq(schema.userCourses.isEditor, true),
+      ),
+    )
+
+  // 查询用户作为教师的课程 ID 列表
+  const teacherCourseRows = await db
+    .select({ courseId: schema.userCourses.courseId })
+    .from(schema.userCourses)
+    .where(
+      and(
+        eq(schema.userCourses.userId, userId),
+        eq(schema.userCourses.isTeacher, true),
+      ),
+    )
+
   return cResp({
     user: userRecord,
     roles: roleRows,
     permissions: permRows,
+    editorCourseIds: editorCourseRows.map((r) => r.courseId),
+    teacherCourseIds: teacherCourseRows.map((r) => r.courseId),
   })
 })

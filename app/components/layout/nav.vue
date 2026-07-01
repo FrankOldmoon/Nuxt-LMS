@@ -8,7 +8,7 @@
     variant="pill"
   />
   <LayoutNavigationEditor
-    v-if="hasAnyRole(['teacher', 'admin'])"
+    v-if="hasRole('admin')"
     mode="category"
     :navigation="links.slice(1)"
     @saved="handleSaved"
@@ -24,7 +24,7 @@ withDefaults(defineProps<{
   highlight: true,
 })
 
-const { hasAnyRole } = useAuth()
+const { hasRole } = useAuth()
 const { links, refresh } = useHeaderNav()
 
 async function handleSaved() {

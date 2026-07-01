@@ -133,8 +133,14 @@ export async function requirePermission(event: any, permCodes: string[]): Promis
 }
 
 /**
- * 检查当前用户是否是某课程的教师/编辑者
- * 需要先调用 requireAuth 获取 user
+ * 要求管理员角色，否则抛 403
+ */
+export async function requireAdmin(event: any): Promise<AuthUser> {
+  return requireRole(event, ['admin'])
+}
+
+/**
+ * 检查当前用户是否是某课程的教师/编辑者（教师或编辑者均可）
  */
 export async function isCourseTeacher(userId: number, courseId: number): Promise<boolean> {
   const rows = await db
@@ -148,4 +154,59 @@ export async function isCourseTeacher(userId: number, courseId: number): Promise
     )
     .limit(1)
   return rows.length > 0 && !!(rows[0].isTeacher || rows[0].isEditor)
+}
+
+/**
+ * 检查当前用户是否是某课程的编辑者（仅编辑者，不含教师）
+ */
+export async function isCourseEditor(userId: number, courseId: number): Promise<boolean> {
+  const rows = await db
+    .select({ isEditor: schema.userCourses.isEditor })
+    .from(schema.userCourses)
+    .where(
+      and(
+        eq(schema.userCourses.userId, userId),
+        eq(schema.userCourses.courseId, courseId),
+      ),
+    )
+    .limit(1)
+  return rows.length > 0 && !!rows[0].isEditor
+}
+
+/**
+ * 要求是管理员或是目标课程的编辑者，否则抛 403
+ * @param courseId - 课程 ID
+ */
+export async function requireCourseTeacher(event: any, courseId: number): Promise<AuthUser> {
+  const user = await requireAuth(event)
+  if (user.roles.includes('admin')) return user
+
+  if (await isCourseEditor(user.id, courseId)) return user
+
+  throw createError({ statusCode: 403, statusMessage: '无权限：仅管理员或课程编辑者可操作' })
+}
+
+/**
+ * 要求是管理员或是目标章节所属课程的编辑者
+ * 自动查询章节的 courseId 再做判断
+ * @param chapterId - 章节 ID
+ */
+export async function requireChapterTeacher(event: any, chapterId: number): Promise<AuthUser> {
+  const user = await requireAuth(event)
+  if (user.roles.includes('admin')) return user
+
+  // 查询章节所属课程
+  const rows = await db
+    .select({ courseId: schema.chapters.courseId })
+    .from(schema.chapters)
+    .where(eq(schema.chapters.id, chapterId))
+    .limit(1)
+
+  if (!rows[0]) {
+    throw createError({ statusCode: 404, statusMessage: '章节不存在' })
+  }
+
+  if (await isCourseEditor(user.id, rows[0].courseId)) return user
+
+  throw createError({ statusCode: 403, statusMessage: '无权限：仅管理员或该课程的编辑者可操作' })
 }

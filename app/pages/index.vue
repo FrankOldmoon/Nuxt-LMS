@@ -40,6 +40,7 @@
           >
             <UCard
               class="h-full transition-all hover:ring-2 hover:ring-primary/50 hover:shadow-lg"
+              :class="isMyCourse(course.id) ? 'ring-2 ring-primary/30 shadow-lg shadow-primary/10' : ''"
               :ui="{ body: 'flex flex-col h-full' }"
             >
               <!-- 图标 + 难度 -->
@@ -96,12 +97,18 @@
 
 <script setup lang="ts">
 const { data: home } = useHome()
+const { isCourseTeacher } = useAuth()
 
 const categories = computed(() => home.value?.categories ?? [])
 const courses = computed(() => home.value?.courses ?? [])
 
 function getCoursesByCategory(categoryId: number) {
   return courses.value.filter((c) => c.categoryId === categoryId)
+}
+
+/** 当前用户是否是某课程的教师或编辑者（用于首页高亮） */
+function isMyCourse(courseId: number): boolean {
+  return isCourseTeacher(courseId)
 }
 
 const { t } = useI18n()

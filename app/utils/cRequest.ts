@@ -6,7 +6,7 @@
  * const result = await cRequest<LoginResult>('/api/login', { method: 'POST', body: { username, password } })
  *
  * // composable 调用（SSR 友好）
- * const { data, pending, refresh } = cRequest.use<CourseDetail>('/api/lms/course/show?id=1')
+ * const { data, pending, refresh } = cRequest.use<CourseDetail>('/api/lms/courses/show?id=1')
  */
 async function cRequest<T = any>(url: string, options: Record<string, any> = {}): Promise<T> {
   console.log('[cRequest]', options.method || 'GET', url)

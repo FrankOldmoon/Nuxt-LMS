@@ -86,7 +86,7 @@ export function useSidebarNav() {
 
   // 获取课程详情（包含 orders 字段）
   const { data: courseData, refresh } = cRequest.use<LmsCourseDetail | null>(
-    () => courseId.value ? `/api/lms/course/show?id=${courseId.value}` : '',
+    () => courseId.value ? `/api/lms/courses/show?id=${courseId.value}` : '',
     { default: () => null }
   )
 
@@ -165,6 +165,8 @@ export function useLayoutState() {
   // 可编辑内容对应的表名和记录标识（DB name 列），供保存时调用 update API
   const editableTable = useState<string>('layout-editable-table', () => '')
   const editableId = useState<number>('layout-editable-id', () => 0)
+  // 可编辑内容所属的课程 ID（章节编辑时需要此信息来判断编辑权限）
+  const editableCourseId = useState<number>('layout-editable-course-id', () => 0)
   // 内容版本号：保存成功后 +1，页面监听此值来刷新数据
   const contentVersion = useState<number>('layout-content-version', () => 0)
   // 页面可通过 setLayout 覆盖；null 表示使用路由默认值
@@ -184,9 +186,12 @@ export function useLayoutState() {
     editableContent.value = content
   }
 
-  function setEditableMeta(table: string, id: number) {
+  function setEditableMeta(table: string, id: number, courseId?: number) {
     editableTable.value = table
     editableId.value = id
+    if (courseId !== undefined) {
+      editableCourseId.value = courseId
+    }
   }
 
   function notifyContentSaved() {
@@ -204,7 +209,7 @@ export function useLayoutState() {
     tocOverride.value = null
   })
 
-  return { tocLinks, editableContent, editableTable, editableId, contentVersion, showSidebar, showToc, setToc, setEditableContent, setEditableMeta, notifyContentSaved, setLayout }
+  return { tocLinks, editableContent, editableTable, editableId, editableCourseId, contentVersion, showSidebar, showToc, setToc, setEditableContent, setEditableMeta, notifyContentSaved, setLayout }
 }
 
 /**
@@ -248,7 +253,7 @@ export function useCourseDetail() {
   const { setToc, setEditableContent, setEditableMeta, contentVersion } = useLayoutState()
 
   const { data: resp, pending, refresh } = cRequest.use<LmsCourseDetail | null>(
-    () => `/api/lms/course/show?id=${courseId.value}`,
+    () => `/api/lms/courses/show?id=${courseId.value}`,
     {
       default: () => null,
     }
@@ -270,7 +275,7 @@ export function useCourseDetail() {
     }
     setEditableContent(content ?? null)
     console.log('content', content)
-    if (detail?.id) setEditableMeta('courses', detail.id)
+    if (detail?.id) setEditableMeta('courses', detail.id, detail.id)
   }, { immediate: true })
 
   // 监听内容版本号，保存成功后重新获取数据
@@ -293,7 +298,7 @@ export function useChapterPageData() {
   const { setToc, setEditableContent, setEditableMeta, contentVersion } = useLayoutState()
 
   const { data: resp, pending, refresh } = cRequest.use<LmsChapterPageData | null>(
-    () => chapterId.value ? `/api/lms/chapter/show?id=${chapterId.value}` : '',
+    () => chapterId.value ? `/api/lms/chapters/show?id=${chapterId.value}` : '',
     {
       default: () => null,
     }
@@ -308,7 +313,7 @@ export function useChapterPageData() {
 
     setToc(extractTocFromContent(d?.chapter?.content))
     setEditableContent(d?.chapter?.content ?? null)
-    if (d?.chapter?.id) setEditableMeta('chapters', d.chapter.id)
+    if (d?.chapter?.id) setEditableMeta('chapters', d.chapter.id, d.course.id)
   }, { immediate: true })
 
   // 监听内容版本号，保存成功后重新获取数据

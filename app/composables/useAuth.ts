@@ -25,6 +25,8 @@ interface AuthData {
   user: User
   roles: Role[]
   permissions: Permission[]
+  editorCourseIds: number[]
+  teacherCourseIds: number[]
 }
 
 // ====================== SSR 兼容的状态管理 ======================
@@ -59,6 +61,8 @@ export function useAuth() {
   const user = computed(() => authData.value?.user ?? null)
   const roles = computed<Role[]>(() => authData.value?.roles ?? [])
   const permissions = computed<Permission[]>(() => authData.value?.permissions ?? [])
+  const editorCourseIds = computed<number[]>(() => authData.value?.editorCourseIds ?? [])
+  const teacherCourseIds = computed<number[]>(() => authData.value?.teacherCourseIds ?? [])
   const isLoggedIn = computed(() => !!user.value)
   const isLoading = computed(() => status.value === 'pending')
 
@@ -77,6 +81,16 @@ export function useAuth() {
   /** 检查当前用户是否拥有指定权限 */
   function hasPermission(code: string): boolean {
     return permissions.value.some((p) => p.code === code)
+  }
+
+  /** 检查当前用户是否是某课程的编辑者 */
+  function isCourseEditor(courseId: number): boolean {
+    return editorCourseIds.value.includes(courseId)
+  }
+
+  /** 检查当前用户是否是某课程的教师或编辑者 */
+  function isCourseTeacher(courseId: number): boolean {
+    return teacherCourseIds.value.includes(courseId) || editorCourseIds.value.includes(courseId)
   }
 
   // ====================== 变更方法（仅客户端调用） ======================
@@ -111,11 +125,15 @@ export function useAuth() {
     user,
     roles,
     permissions,
+    editorCourseIds,
+    teacherCourseIds,
     isLoggedIn,
     isLoading,
     hasRole,
     hasAnyRole,
     hasPermission,
+    isCourseEditor,
+    isCourseTeacher,
     login,
     register,
     logout,
