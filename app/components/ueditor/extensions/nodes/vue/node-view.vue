@@ -14,6 +14,6 @@ import counter from './counter.vue'
 
 const comps = {counter}
 const props = defineProps(nodeViewProps)
-const comp = comps[props.node.type]
+const comp = comps[props.node.attrs.type]
 
 </script>

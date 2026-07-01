@@ -5,7 +5,7 @@ import { Markdown } from '@tiptap/markdown'
 
 export default [
     Markdown,
-    Counter, 
+    //Counter, 
     Code,
     Vue
 ]

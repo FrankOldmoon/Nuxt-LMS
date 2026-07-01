@@ -13,6 +13,7 @@ export default Node.create({
   addAttributes() {
     return {
       content: '',
+      type: 'vue',
     }
   },
 
@@ -96,8 +97,8 @@ export default Node.create({
   },
 
   renderMarkdown: (node, helpers) => {
-    const vueType = node.type || 'vue'
-    const content = helpers.renderChildren(node)
+    const vueType = node.attrs.type
+    const content = node.attrs?.content || ''
     return `::${vueType} ${content}::\n`
   }
 
