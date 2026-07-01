@@ -8,6 +8,7 @@ interface User {
   avatarImg?: string | null
   preferName?: string | null
   englishName?: string | null
+  gender?: string | null
   defaultLocale?: string | null
 }
 

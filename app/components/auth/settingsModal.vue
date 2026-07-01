@@ -1,0 +1,150 @@
+<template>
+  <UModal v-model:open="isOpen" :ui="{ content: 'sm:max-w-2xl' }">
+    <template #content>
+      <div class="p-6">
+        <h3 class="text-lg font-semibold mb-6">{{ $t('settings.title') }}</h3>
+
+        <div v-if="loading" class="flex justify-center py-8">
+          <UIcon name="i-lucide-loader-circle" class="size-6 animate-spin text-(--ui-text-muted)" />
+        </div>
+
+        <div v-else class="space-y-4">
+          <!-- 网站标题 -->
+          <UFormField :label="$t('settings.siteTitle')" class="w-full">
+            <UInput
+              v-model="form.siteTitle"
+              :placeholder="$t('settings.siteTitlePlaceholder')"
+              class="w-full"
+            />
+          </UFormField>
+
+          <!-- 网站描述 -->
+          <UFormField :label="$t('settings.siteDescription')" class="w-full">
+            <UTextarea
+              v-model="form.siteDescription"
+              :placeholder="$t('settings.siteDescriptionPlaceholder')"
+              :rows="3"
+              class="w-full"
+            />
+          </UFormField>
+
+          <!-- 是否开放注册 -->
+          <UFormField :label="$t('settings.allowRegistration')" class="w-full">
+            <USwitch v-model="form.allowRegistration" />
+          </UFormField>
+
+          <!-- 网站 Logo -->
+          <UFormField :label="$t('settings.siteLogo')" class="w-full">
+            <UInput
+              v-model="form.siteLogo"
+              :placeholder="$t('settings.siteLogoPlaceholder')"
+              class="w-full"
+            />
+          </UFormField>
+
+          <!-- 每页显示数量 -->
+          <UFormField :label="$t('settings.pageSize')" class="w-full">
+            <UInput
+              v-model.number="form.pageSize"
+              type="number"
+              :placeholder="$t('settings.pageSizePlaceholder')"
+              class="w-full"
+            />
+          </UFormField>
+
+          <!-- 保存按钮 -->
+          <div class="flex justify-end gap-2 pt-4">
+            <UButton
+              :label="$t('common.cancel')"
+              color="neutral"
+              variant="ghost"
+              @click="closeModal"
+            />
+            <UButton
+              :label="$t('common.save')"
+              color="primary"
+              :loading="saving"
+              @click="saveSettings"
+            />
+          </div>
+        </div>
+      </div>
+    </template>
+  </UModal>
+</template>
+
+<script setup lang="ts">
+const isOpen = defineModel<boolean>('open', { default: false })
+const toast = useToast()
+const { t } = useI18n()
+
+// 获取网站配置（用于刷新）
+const { refreshConfig } = useLmsConfig()
+
+const loading = ref(false)
+const saving = ref(false)
+
+// 网站配置表单
+const form = ref({
+  siteTitle: 'Nuxt Hub',
+  siteDescription: '',
+  allowRegistration: true,
+  siteLogo: '',
+  pageSize: 20,
+})
+
+// 弹窗打开时加载配置
+watch(isOpen, async (val) => {
+  if (val) {
+    await loadSettings()
+  }
+})
+
+async function loadSettings() {
+  loading.value = true
+  try {
+    const data = await cRequest<{ id: string; value: any }[]>('/api/configs/list')
+    // 查找网站配置
+    const siteConfig = data.find((c) => c.id === 'site_config')
+    if (siteConfig && siteConfig.value) {
+      form.value = {
+        siteTitle: siteConfig.value.siteTitle ?? 'Nuxt Hub',
+        siteDescription: siteConfig.value.siteDescription ?? '',
+        allowRegistration: siteConfig.value.allowRegistration ?? true,
+        siteLogo: siteConfig.value.siteLogo ?? '',
+        pageSize: siteConfig.value.pageSize ?? 20,
+      }
+    }
+  } catch (e: any) {
+    toast.add({ title: e.message || t('settings.loadFailed'), color: 'error' })
+  } finally {
+    loading.value = false
+  }
+}
+
+function closeModal() {
+  isOpen.value = false
+}
+
+async function saveSettings() {
+  saving.value = true
+  try {
+    await cRequest('/api/configs/update', {
+      method: 'POST',
+      body: {
+        id: 'site_config',
+        value: form.value,
+      },
+    })
+    closeModal()
+    toast.add({ title: t('settings.updateSuccess'), color: 'success' })
+    
+    // 刷新网站配置（实时更新页面）
+    await refreshConfig()
+  } catch (e: any) {
+    toast.add({ title: e.message || t('settings.updateFailed'), color: 'error' })
+  } finally {
+    saving.value = false
+  }
+}
+</script>

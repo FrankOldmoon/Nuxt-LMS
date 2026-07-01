@@ -4,7 +4,8 @@
     "cancel": "Cancel",
     "reset": "Reset",
     "save": "Save",
-    "search": "Search"
+    "search": "Search",
+    "edit": "Edit"
   },
   "home": {
     "title": "Course Series",
@@ -76,6 +77,45 @@
     "usernameRequired": "Username is required",
     "passwordRequired": "Password is required",
     "nameRequired": "Name is required"
+  },
+  "profile": {
+    "title": "Profile",
+    "username": "Username",
+    "name": "Name",
+    "namePlaceholder": "Enter your name",
+    "preferName": "Nickname",
+    "preferNamePlaceholder": "Enter your nickname",
+    "englishName": "English Name",
+    "englishNamePlaceholder": "Enter your English name",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email",
+    "gender": "Gender",
+    "genderPlaceholder": "Select gender",
+    "genderMale": "Male",
+    "genderFemale": "Female",
+    "genderOther": "Other",
+    "locale": "Language",
+    "avatarImg": "Avatar",
+    "avatarImgPlaceholder": "Enter avatar URL",
+    "updateSuccess": "Profile updated successfully",
+    "updateFailed": "Failed to update profile"
+  },
+  "settings": {
+    "title": "System Settings",
+    "empty": "No configurations found",
+    "loadFailed": "Failed to load configurations",
+    "updateSuccess": "Configuration updated successfully",
+    "updateFailed": "Failed to update configuration",
+    "invalidJson": "Invalid JSON format",
+    "siteTitle": "Site Title",
+    "siteTitlePlaceholder": "Enter site title",
+    "siteDescription": "Site Description",
+    "siteDescriptionPlaceholder": "Enter site description",
+    "allowRegistration": "Allow Registration",
+    "siteLogo": "Site Logo",
+    "siteLogoPlaceholder": "Enter logo URL",
+    "pageSize": "Page Size",
+    "pageSizePlaceholder": "Enter page size"
   },
   "ueditor": {
     "markdown": {

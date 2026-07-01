@@ -1,5 +1,5 @@
 import { db, schema } from "@nuxthub/db";
-import { asc } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 
 export default eventHandler(async (event) => {
   // 查询所有分类（按 order 排序）
@@ -13,8 +13,14 @@ export default eventHandler(async (event) => {
     with: { chapters: true },
   });
 
+  // 查询网站配置
+  const siteConfig = await db.query.configs.findFirst({
+    where: eq(schema.configs.id, 'site_config'),
+  });
+
   return cResp({
     categories: categories.map(normalizeCategory),
     courses: courses.map((c) => normalizeCourseSummary(c, c.chapters.length)),
+    config: siteConfig?.value ?? null,
   });
 });
