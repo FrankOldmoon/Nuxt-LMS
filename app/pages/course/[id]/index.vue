@@ -85,7 +85,32 @@
 </template>
 
 <script setup lang="ts">
-const { course, pending } = useCourseDetail()
+const route = useRoute()
+const courseId = computed(() => route.params.id as string)
+const { setToc, setEditableContent, setEditableMeta, contentVersion } = useLayoutState()
+
+const { data: resp, pending, refresh } = cRequest.use<import('#shared/types/lms').LmsCourseDetail | null>(
+  () => `/api/lms/courses/show?id=${courseId.value}`,
+  { default: () => null },
+)
+
+const course = computed(() => resp.value as import('#shared/types/lms').LmsCourseDetail | null)
+
+// 数据变化时设置 TOC + 可编辑内容
+watch(resp, (detail) => {
+  if (!detail) return
+  const content = detail?.content
+  if (!content) {
+    setToc([{ id: 'chapters', text: '课程章节' }])
+  } else {
+    setToc([...extractTocFromContent(content), { id: 'chapters', text: '课程章节' }])
+  }
+  setEditableContent(content ?? null)
+  if (detail?.id) setEditableMeta('courses', detail.id, detail.id)
+}, { immediate: true })
+
+// 监听内容版本号，保存成功后重新获取数据
+watch(contentVersion, () => refresh())
 
 // 颜色工具函数
 const { t } = useI18n()

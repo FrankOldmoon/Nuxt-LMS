@@ -8,6 +8,7 @@ export default eventHandler(async (event) => {
   });
 
   // 查询所有课程（带章节关系，用于计算章节数）
+  // 课程排序由分类的 orders 字段控制，前端按 category.orders 排序
   const courses = await db.query.courses.findMany({
     with: { chapters: true },
   });

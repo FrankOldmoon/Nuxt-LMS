@@ -20,14 +20,14 @@
       <div class="flex items-center justify-between gap-4 pt-8 mt-8 border-t border-default">
         <NuxtLink
           v-if="prevChapter"
-          :to="`/course/${data.course.id}/${prevChapter.id}`"
+          :to="prevChapter.to"
           class="flex-1"
         >
           <UCard :ui="{ body: 'flex items-center gap-3' }" class="transition-all hover:ring-2 hover:ring-primary/30">
             <UIcon name="i-lucide-arrow-left" class="size-5 text-muted shrink-0" />
             <div class="min-w-0">
               <p class="text-xs text-muted mb-0.5">{{ $t('chapter.previous') }}</p>
-              <p class="text-sm font-medium text-highlighted truncate">{{ prevChapter.title }}</p>
+              <p class="text-sm font-medium text-highlighted truncate">{{ prevChapter.label }}</p>
             </div>
           </UCard>
         </NuxtLink>
@@ -35,13 +35,13 @@
 
         <NuxtLink
           v-if="nextChapter"
-          :to="`/course/${data.course.id}/${nextChapter.id}`"
+          :to="nextChapter.to"
           class="flex-1"
         >
           <UCard :ui="{ body: 'flex items-center gap-3 justify-end text-right' }" class="transition-all hover:ring-2 hover:ring-primary/30">
             <div class="min-w-0">
               <p class="text-xs text-muted mb-0.5">{{ $t('chapter.next') }}</p>
-              <p class="text-sm font-medium text-highlighted truncate">{{ nextChapter.title }}</p>
+              <p class="text-sm font-medium text-highlighted truncate">{{ nextChapter.label }}</p>
             </div>
             <UIcon name="i-lucide-arrow-right" class="size-5 text-muted shrink-0" />
           </UCard>
@@ -67,5 +67,55 @@
 </template>
 
 <script setup lang="ts">
-const { data, pending, prevChapter, nextChapter } = useChapterPageData()
+const route = useRoute()
+const chapterId = computed(() => route.params.cid as string)
+const courseId = computed(() => route.params.id as string)
+const { setToc, setEditableContent, setEditableMeta, contentVersion } = useLayoutState()
+const { navigation } = useSidebarNav()
+
+const { data: resp, pending, refresh } = cRequest.use<import('#shared/types/lms').LmsChapterPageData | null>(
+  () => chapterId.value ? `/api/lms/chapters/show?id=${chapterId.value}` : '',
+  { default: () => null },
+)
+
+const data = computed(() => resp.value as import('#shared/types/lms').LmsChapterPageData | null)
+
+// 数据变化时设置 TOC + 可编辑内容
+watch(resp, (d) => {
+  if (!d) return
+  setToc(extractTocFromContent(d?.chapter?.content))
+  setEditableContent(d?.chapter?.content ?? null)
+  if (d?.chapter?.id) setEditableMeta('chapters', d.chapter.id, d.course.id)
+}, { immediate: true })
+
+// 监听内容版本号，保存成功后重新获取数据
+watch(contentVersion, () => refresh())
+
+// 扁平化侧边栏导航，得到按 orders 排序的线性列表
+const flatNav = computed(() => {
+  const result: { label: string; to: string }[] = []
+  function walk(items: any[]) {
+    for (const item of items) {
+      if (item.to) result.push({ label: item.label, to: item.to })
+      if (item.children) walk(item.children)
+    }
+  }
+  walk(navigation.value)
+  return result
+})
+
+// 当前章节在导航中的索引
+const currentNavIndex = computed(() =>
+  flatNav.value.findIndex((item) => item.to === `/course/${courseId.value}/${chapterId.value}`)
+)
+
+const prevChapter = computed(() => {
+  const idx = currentNavIndex.value
+  return idx > 0 ? flatNav.value[idx - 1]! : null
+})
+
+const nextChapter = computed(() => {
+  const idx = currentNavIndex.value
+  return idx >= 0 && idx < flatNav.value.length - 1 ? flatNav.value[idx + 1]! : null
+})
 </script>

@@ -5,11 +5,10 @@ import type {
   LmsCourseSummary,
   LmsCourseDetail,
   LmsChapterSummary,
-  LmsChapterPageData,
 } from '#shared/types/lms'
 
 // 类型重导出，供页面使用
-export type { LmsSeries, LmsCourseSummary, LmsCourseDetail, LmsChapterSummary, LmsChapterPageData, LmsHomeData }
+export type { LmsSeries, LmsCourseSummary, LmsCourseDetail, LmsChapterSummary, LmsHomeData }
 
 /**
  * 获取首页数据（分类 + 课程列表）
@@ -237,103 +236,4 @@ export function useFooterNav() {
   })
 
   return { links }
-}
-
-/**
- * 课程详情页数据获取
- * 从当前路由自己读取 courseId，SSR 阶段即可完成数据获取 + TOC 设置
- * 内置 TOC 提取、可编辑内容设置、保存后自动刷新
- * 可在 layout 和 page 中同时调用，useFetch 自动去重
- */
-export function useCourseDetail() {
-  const route = useRoute()
-  const courseId = computed(() => route.params.id as string)
-
-  // 布局共享状态（必须在 useFetch 之前调用）
-  const { setToc, setEditableContent, setEditableMeta, contentVersion } = useLayoutState()
-
-  const { data: resp, pending, refresh } = cRequest.use<LmsCourseDetail | null>(
-    () => `/api/lms/courses/show?id=${courseId.value}`,
-    {
-      default: () => null,
-    }
-  )
-
-  const course = computed(() => resp.value as LmsCourseDetail | null)
-
-  // 数据变化时设置 TOC + 可编辑内容（首次获取 + 缓存命中都会触发）
-  watch(resp, (detail) => {
-    // 跳过初始的 null/undefined，等实际数据到达后再处理
-    if (!detail) return
-
-    const content = detail?.content
-
-    if (!content) {
-      setToc([{ id: 'chapters', text: '课程章节' }])
-    } else {
-      setToc([...extractTocFromContent(content), { id: 'chapters', text: '课程章节' }])
-    }
-    setEditableContent(content ?? null)
-    console.log('content', content)
-    if (detail?.id) setEditableMeta('courses', detail.id, detail.id)
-  }, { immediate: true })
-
-  // 监听内容版本号，保存成功后重新获取数据
-  watch(contentVersion, () => refresh())
-
-  return { course, pending, refresh }
-}
-
-/**
- * 章节页面数据获取
- * 从当前路由自己读取 chapterId，SSR 阶段即可完成数据获取 + TOC 设置
- * 内置 TOC 提取、可编辑内容设置、上下章导航、保存后自动刷新
- * 可在 layout 和 page 中同时调用，useFetch 自动去重
- */
-export function useChapterPageData() {
-  const route = useRoute()
-  const chapterId = computed(() => route.params.cid as string)
-
-  // 布局共享状态（必须在 useFetch 之前调用）
-  const { setToc, setEditableContent, setEditableMeta, contentVersion } = useLayoutState()
-
-  const { data: resp, pending, refresh } = cRequest.use<LmsChapterPageData | null>(
-    () => chapterId.value ? `/api/lms/chapters/show?id=${chapterId.value}` : '',
-    {
-      default: () => null,
-    }
-  )
-
-  const data = computed(() => resp.value as LmsChapterPageData | null)
-
-  // 数据变化时设置 TOC + 可编辑内容（首次获取 + 缓存命中都会触发）
-  watch(resp, (d) => {
-    // 跳过初始的 null/undefined，等实际数据到达后再处理
-    if (!d) return
-
-    setToc(extractTocFromContent(d?.chapter?.content))
-    setEditableContent(d?.chapter?.content ?? null)
-    if (d?.chapter?.id) setEditableMeta('chapters', d.chapter.id, d.course.id)
-  }, { immediate: true })
-
-  // 监听内容版本号，保存成功后重新获取数据
-  watch(contentVersion, () => refresh())
-
-  const prevChapter = computed(() => {
-    const d = data.value
-    if (!d) return null
-    const chapters = d.course.chapters
-    const idx = chapters.findIndex((ch) => ch.id === d.chapter.id)
-    return idx > 0 ? chapters[idx - 1]! : null
-  })
-
-  const nextChapter = computed(() => {
-    const d = data.value
-    if (!d) return null
-    const chapters = d.course.chapters
-    const idx = chapters.findIndex((ch) => ch.id === d.chapter.id)
-    return idx < chapters.length - 1 ? chapters[idx + 1]! : null
-  })
-
-  return { data, pending, refresh, prevChapter, nextChapter }
 }

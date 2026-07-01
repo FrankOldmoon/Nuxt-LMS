@@ -103,7 +103,17 @@ const categories = computed(() => home.value?.categories ?? [])
 const courses = computed(() => home.value?.courses ?? [])
 
 function getCoursesByCategory(categoryId: number) {
-  return courses.value.filter((c) => c.categoryId === categoryId)
+  const cat = categories.value.find((c) => c.id === categoryId)
+  const catCourses = courses.value.filter((c) => c.categoryId === categoryId)
+
+  // 如果分类有 orders 配置，按 orders 中的 order 排序显示
+  if (cat?.orders && cat.orders.length > 0) {
+    const courseMap = new Map(catCourses.map((c) => [String(c.id), c]))
+    const sorted = [...cat.orders].sort((a, b) => a.order - b.order)
+    return sorted.filter((o) => courseMap.has(o.id)).map((o) => courseMap.get(o.id)!)
+  }
+
+  return catCourses
 }
 
 /** 当前用户是否是某课程的教师或编辑者（用于首页高亮） */

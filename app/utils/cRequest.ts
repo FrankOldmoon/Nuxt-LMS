@@ -20,8 +20,16 @@ async function cRequest<T = any>(url: string, options: Record<string, any> = {})
 
 cRequest.use = <T = any>(url: string | (() => string), options: Record<string, any> = {}) => {
   const { transform: customTransform, ...rest } = options
+  // 用 URL 字符串作为稳定 key，确保客户端导航时能命中缓存
+  const resolvedKey = typeof url === 'function' ? url() : url
   return useFetch<T>(url, {
     ...rest,
+    key: resolvedKey,
+    getCachedData(key: string) {
+      // 客户端导航时优先复用 SSR payload 数据，避免重复请求
+      const nuxtApp = useNuxtApp()
+      return nuxtApp.payload.data[key] || nuxtApp.static.data[key]
+    },
     transform: (raw: any) => {
       console.log('[cRequest.use]', typeof url === 'function' ? url() : url, raw)
       if (raw && typeof raw === 'object' && 'data' in raw && 'success' in raw) {
