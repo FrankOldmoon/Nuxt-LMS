@@ -27,6 +27,7 @@ export function normalizeCategory(cat: any): LmsSeries {
     code: cat.code,
     icon: 'i-lucide-folder',
     order: cat.order ?? 0,
+    orders: (cat.orders as { id: string; label: string; order: number; parentId?: string | null }[]) || [],
   }
 }
 

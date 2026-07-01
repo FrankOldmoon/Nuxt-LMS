@@ -11,7 +11,7 @@
 
     <template #content>
       <div class="p-6 space-y-4 min-w-[520px] max-h-[70vh] overflow-y-auto">
-        <h3 class="text-lg font-medium">编辑课程导航</h3>
+        <h3 class="text-lg font-medium">{{ mode === 'category' ? '编辑分类导航' : '编辑课程导航' }}</h3>
         <p class="text-sm text-gray-500">支持最多三层目录。拖拽手柄排序，悬停显示添加/删除按钮</p>
 
         <!-- 树形列表（可拖拽排序） -->
@@ -44,18 +44,10 @@
                 placeholder="导航名称"
               />
 
-              <!-- to 路径显示 -->
-              <span
-                class="text-xs text-gray-400 shrink-0 max-w-[160px] truncate"
-                :title="item.to || '(保存后自动生成)'"
-              >
-                {{ item.to || '(保存后生成)' }}
-              </span>
-
               <!-- 操作按钮 -->
               <div class="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                 <UButton
-                  v-if="item.depth < 2"
+                  v-if="item.depth < maxDepth"
                   icon="i-lucide-plus"
                   variant="ghost"
                   size="xs"
@@ -134,8 +126,13 @@ interface FlatNode {
   isNew: boolean
 }
 
+type EditorMode = 'category' | 'course'
+
 interface Props {
-  courseId: string
+  /** 编辑模式：category=分类导航 / course=课程章节导航 */
+  mode: EditorMode
+  /** 课程ID（仅 course 模式需要） */
+  courseId?: string
   navigation: NavigationMenuItem[]
 }
 
@@ -151,13 +148,20 @@ const flatItems = ref<FlatNode[]>([])
 const saving = ref(false)
 let keyCounter = 0
 
+/** category 模式最大层级 1（二级目录），course 模式最大层级 2（三级目录） */
+const maxDepth = computed(() => props.mode === 'category' ? 1 : 2)
+
 // 拖拽时记录被拖拽元素的 _key，用于 end 事件中定位
 let dragTargetKey: string | null = null
 
 // ==================== 数据初始化 ====================
 
-/** 从 NavigationMenuItem 中提取 ID */
+/** 从 NavigationMenuItem 中提取 ID（优先使用 _meta，兼容旧逻辑） */
 function extractId(item: NavigationMenuItem): string {
+  // 优先使用 _meta 中的 ID
+  const meta = (item as any)._meta
+  if (meta?.id) return String(meta.id)
+
   const to = (item as any).to as string | undefined
   if (!to) return ''
   const match = to.match(/\/course\/\d+\/(\d+)/)
@@ -184,7 +188,7 @@ function initFromNavigation(nav: NavigationMenuItem[]): FlatNode[] {
         depth,
         isNew,
       })
-      if (item.children && item.children.length > 0 && depth < 2) {
+      if (item.children && item.children.length > 0 && depth < maxDepth.value) {
         walk(item.children, depth + 1)
       }
     }
@@ -192,7 +196,8 @@ function initFromNavigation(nav: NavigationMenuItem[]): FlatNode[] {
 
   walk(nav, 0)
 
-  if (result.length === 0) {
+  // course 模式：空列表时添加默认课程首页
+  if (result.length === 0 && props.mode === 'course' && props.courseId) {
     result.push({
       _key: 'k-' + (keyCounter++),
       id: 'course',
@@ -306,7 +311,7 @@ function addSibling(index: number) {
 
 function addChild(index: number) {
   const depth = flatItems.value[index]!.depth
-  if (depth >= 2) return
+  if (depth >= maxDepth.value) return
   const blockEnd = getBlockEnd(index)
   flatItems.value.splice(blockEnd + 1, 0, createNewNode(depth + 1))
 }
@@ -352,49 +357,111 @@ function toOrders(): { id: string; label: string; order: number; parentId?: stri
   return result
 }
 
+/** 将一组子节点（同一父级下）转为 orders 格式，depth 相对于父级 */
+function toOrdersForGroup(items: FlatNode[], baseDepth: number): { id: string; label: string; order: number; parentId?: string | null }[] {
+  const result: { id: string; label: string; order: number; parentId?: string | null }[] = []
+  const parentStack: (string | null)[] = []
+
+  for (const item of items) {
+    const relDepth = item.depth - baseDepth - 1
+    while (parentStack.length > relDepth) {
+      parentStack.pop()
+    }
+    const parentId = parentStack.length > 0 ? parentStack[parentStack.length - 1] ?? null : null
+    result.push({
+      id: item.id,
+      label: item.label || '(未命名)',
+      order: result.length,
+      parentId,
+    })
+    parentStack.length = relDepth + 1
+    parentStack[relDepth] = item.id
+  }
+
+  return result
+}
+
+/** course 模式保存：创建新章节 + 更新课程 orders */
+async function saveCourseMode() {
+  const courseId = props.courseId
+  if (!courseId) return
+
+  // 1. 为新建项调用 add API 创建记录
+  for (const item of flatItems.value) {
+    if (item.isNew && item.label.trim()) {
+      const resp = await cRequest.post<any[]>('/api/lms/chapters/add', {
+        name: item.label.trim(),
+        courseId: Number(courseId),
+        isOpen: true,
+      })
+      if (resp && resp.length > 0) {
+        const newId = resp[0].id
+        item.id = String(newId)
+        item.to = '/course/' + courseId + '/' + newId
+        item.isNew = false
+      }
+    } else if (item.isNew && !item.label.trim()) {
+      item.to = '/course/' + courseId + '#'
+    } else if (!item.isNew && !item.to) {
+      if (item.id === 'course') {
+        item.to = '/course/' + courseId
+      } else if (item.id && !item.id.startsWith('custom-') && !isNaN(Number(item.id))) {
+        item.to = '/course/' + courseId + '/' + item.id
+      } else {
+        item.to = '/course/' + courseId + '#' + item.label
+      }
+    }
+  }
+
+  // 2. 过滤空标签的新建项
+  flatItems.value = flatItems.value.filter(function (item) {
+    return item.label.trim() || !item.isNew
+  })
+
+  // 3. 转为 orders 并保存
+  const orders = toOrders()
+  await cRequest.post('/api/lms/courses/update', {
+    id: courseId,
+    orders,
+  })
+}
+
+/** category 模式保存：按分类分组，分别更新各分类的 orders */
+async function saveCategoryMode() {
+  // 按父级分类分组：depth=0 是分类，depth>0 的子项属于上一个分类
+  const groups: { categoryId: string; items: FlatNode[] }[] = []
+  let currentGroup: FlatNode[] | null = null
+
+  for (const item of flatItems.value) {
+    if (item.depth === 0) {
+      currentGroup = []
+      groups.push({ categoryId: item.id, items: currentGroup })
+    } else if (currentGroup !== null && item.depth > 0) {
+      currentGroup.push(item)
+    }
+  }
+
+  // 并行保存每个分类的 orders
+  await Promise.all(
+    groups.map((group) => {
+      const orders = toOrdersForGroup(group.items, 0)
+      return cRequest.post('/api/lms/categories/update', {
+        id: group.categoryId,
+        orders,
+      })
+    })
+  )
+}
+
 async function save() {
-  if (!props.courseId) return
   saving.value = true
 
   try {
-    // 1. 为新建项调用 add API 创建记录
-    for (const item of flatItems.value) {
-      if (item.isNew && item.label.trim()) {
-        const resp = await cRequest.post<any[]>('/api/lms/chapters/add', {
-          name: item.label.trim(),
-          courseId: Number(props.courseId),
-          isOpen: true,
-        })
-        if (resp && resp.length > 0) {
-          const newId = resp[0].id
-          item.id = String(newId)
-          item.to = '/course/' + props.courseId + '/' + newId
-          item.isNew = false
-        }
-      } else if (item.isNew && !item.label.trim()) {
-        item.to = '/course/' + props.courseId + '#'
-      } else if (!item.isNew && !item.to) {
-        if (item.id === 'course') {
-          item.to = '/course/' + props.courseId
-        } else if (item.id && !item.id.startsWith('custom-') && !isNaN(Number(item.id))) {
-          item.to = '/course/' + props.courseId + '/' + item.id
-        } else {
-          item.to = '/course/' + props.courseId + '#' + item.label
-        }
-      }
+    if (props.mode === 'course') {
+      await saveCourseMode()
+    } else {
+      await saveCategoryMode()
     }
-
-    // 2. 过滤空标签
-    flatItems.value = flatItems.value.filter(function (item) {
-      return item.label.trim() || !item.isNew
-    })
-
-    // 3. 转为 orders 并保存
-    const orders = toOrders()
-    await cRequest.post('/api/lms/courses/update', {
-      id: props.courseId,
-      orders,
-    })
 
     emit('saved')
     open.value = false

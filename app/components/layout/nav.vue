@@ -7,6 +7,11 @@
     color="primary"
     variant="pill"
   />
+  <LayoutNavigationEditor
+    mode="category"
+    :navigation="links.slice(1)"
+    @saved="handleSaved"
+  />
 </template>
 
 <script setup lang="ts">
@@ -18,5 +23,11 @@ withDefaults(defineProps<{
   highlight: true,
 })
 
-const { links } = useHeaderNav()
+const { links, refresh } = useHeaderNav()
+
+async function handleSaved() {
+  if (refresh) {
+    await refresh()
+  }
+}
 </script>

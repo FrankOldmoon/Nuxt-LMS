@@ -10,6 +10,8 @@ export interface LmsSeries {
   code: string | null
   icon: string
   order: number
+  /** 导航排序配置（来自 categories 表的 orders 字段） */
+  orders: { id: string; label: string; order: number; parentId?: string | null }[]
 }
 
 /** 课程摘要（列表用，不含章节数据） */

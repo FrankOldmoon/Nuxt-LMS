@@ -2,6 +2,7 @@
   <UPageAside>
     <!-- 编辑导航组件 -->
     <NavigationEditor
+      mode="course"
       :course-id="courseId"
       :navigation="navigation.slice(1)"
       @saved="handleSaved"

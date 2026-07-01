@@ -16,8 +16,10 @@
       </ULink>
     </template>
 
-    <!-- 中间：水平导航菜单（仅桌面端显示） -->
-    <LayoutNav orientation="horizontal" />
+    <!-- 中间：水平导航菜单（仅桌面端显示） + 编辑按钮 -->
+    <div class="flex items-center gap-2">
+      <LayoutNav orientation="horizontal" />
+    </div>
 
     <!-- 右侧：操作按钮 -->
     <template #right>
@@ -52,4 +54,5 @@
 </template>
 
 <script setup lang="ts">
+
 </script>
