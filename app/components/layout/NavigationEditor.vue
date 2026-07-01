@@ -362,16 +362,13 @@ async function save() {
     // 1. 为新建项调用 add API 创建记录
     for (const item of flatItems.value) {
       if (item.isNew && item.label.trim()) {
-        const resp: any = await $fetch('/api/lms/chapters/add', {
-          method: 'POST',
-          body: {
-            name: item.label.trim(),
-            courseId: Number(props.courseId),
-            isOpen: true,
-          },
+        const resp = await cRequest.post<any[]>('/api/lms/chapters/add', {
+          name: item.label.trim(),
+          courseId: Number(props.courseId),
+          isOpen: true,
         })
-        if (resp?.data && resp.data.length > 0) {
-          const newId = resp.data[0].id
+        if (resp && resp.length > 0) {
+          const newId = resp[0].id
           item.id = String(newId)
           item.to = '/course/' + props.courseId + '/' + newId
           item.isNew = false
@@ -396,12 +393,9 @@ async function save() {
 
     // 3. 转为 orders 并保存
     const orders = toOrders()
-    await $fetch('/api/lms/courses/update', {
-      method: 'POST',
-      body: {
-        id: props.courseId,
-        orders,
-      },
+    await cRequest.post('/api/lms/courses/update', {
+      id: props.courseId,
+      orders,
     })
 
     emit('saved')

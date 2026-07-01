@@ -34,16 +34,13 @@
 <script setup lang="ts">
 
 // 使用全局可编辑内容，由 course/chapter 页面设置
-const { tocLinks, editableContent, editableTable, editableName, notifyContentSaved } = useLayoutState()
+const { tocLinks, editableContent, editableTable, editableId, notifyContentSaved } = useLayoutState()
 
 // 保存回调：调用 update API 将内容写回数据库
 async function handleSave(content: Record<string, any>) {
-  await $fetch(`/api/lms/${editableTable.value}/update`, {
-    method: 'POST',
-    body: {
-      id: editableName.value,
-      content: content.json,
-    },
+  await cRequest.post(`/api/lms/${editableTable.value}/update`, {
+    id: editableId.value,
+    content: content.json,
   })
   // 通知页面刷新数据
   notifyContentSaved()

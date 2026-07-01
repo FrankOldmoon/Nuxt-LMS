@@ -17,8 +17,7 @@ export type { LmsSeries, LmsCourseSummary, LmsCourseDetail, LmsChapterSummary, L
  * useFetch 默认 SSR：服务端执行并序列化到客户端
  */
 export function useHome() {
-  return useFetch<LmsHomeData>('/api/lms/home', {
-    transform: (resp: any) => resp?.data ?? { categories: [], courses: [] },
+  return useCRequest<LmsHomeData>('/api/lms/home', {
     default: () => ({ categories: [], courses: [] }),
   })
 }
@@ -72,11 +71,10 @@ export function useSidebarNav() {
   })
 
   // 获取课程详情（包含 orders 字段）
-  // 使用 useAsyncData 而不是直接 useFetch，以避免类型问题
   const { data: courseData, refresh } = useAsyncData<LmsCourseDetail | null>(
     () => {
       if (!courseId.value) return Promise.resolve(null)
-      return $fetch(`/api/lms/course/${courseId.value}`).then(res => (res as any)?.data ?? null)
+      return cRequest.get<LmsCourseDetail>(`/api/lms/course/${courseId.value}`)
     },
     {
       watch: [courseId],
@@ -158,7 +156,7 @@ export function useLayoutState() {
   const editableContent = useState<any | null>('layout-editable-content', () => null)
   // 可编辑内容对应的表名和记录标识（DB name 列），供保存时调用 update API
   const editableTable = useState<string>('layout-editable-table', () => '')
-  const editableName = useState<string>('layout-editable-name', () => '')
+  const editableId = useState<number>('layout-editable-id', () => 0)
   // 内容版本号：保存成功后 +1，页面监听此值来刷新数据
   const contentVersion = useState<number>('layout-content-version', () => 0)
   // 页面可通过 setLayout 覆盖；null 表示使用路由默认值
@@ -178,9 +176,9 @@ export function useLayoutState() {
     editableContent.value = content
   }
 
-  function setEditableMeta(table: string, name: string) {
+  function setEditableMeta(table: string, id: number) {
     editableTable.value = table
-    editableName.value = name
+    editableId.value = id
   }
 
   function notifyContentSaved() {
@@ -198,7 +196,7 @@ export function useLayoutState() {
     tocOverride.value = null
   })
 
-  return { tocLinks, editableContent, editableTable, editableName, contentVersion, showSidebar, showToc, setToc, setEditableContent, setEditableMeta, notifyContentSaved, setLayout }
+  return { tocLinks, editableContent, editableTable, editableId, contentVersion, showSidebar, showToc, setToc, setEditableContent, setEditableMeta, notifyContentSaved, setLayout }
 }
 
 /**
@@ -257,12 +255,11 @@ export function useCourseDetail() {
   // 布局共享状态（必须在 useFetch 之前调用）
   const { setToc, setEditableContent, setEditableMeta, contentVersion } = useLayoutState()
 
-  const { data: resp, pending, refresh } = useFetch<{ data: LmsCourseDetail | null }>(
+  const { data: resp, pending, refresh } = useCRequest<LmsCourseDetail | null>(
     () => courseId.value ? `/api/lms/course/${courseId.value}` : '',
     {
-      default: () => ({ data: null }),
-      transform: (raw: any) => {
-        const detail = raw?.data ?? null
+      default: () => null,
+      transform: (detail: LmsCourseDetail | null) => {
         // 数据到达时立刻设置 TOC + 可编辑内容，不依赖 watch
         const content = detail?.content
         if (!content) {
@@ -271,13 +268,13 @@ export function useCourseDetail() {
           setToc([...extractTocFromContent(content), { id: 'chapters', text: '课程章节' }])
         }
         setEditableContent(content ?? null)
-        if (detail?.title) setEditableMeta('courses', detail.title)
-        return raw
+        if (detail?.id) setEditableMeta('courses', detail.id)
+        return detail
       },
     }
   )
 
-  const course = computed<LmsCourseDetail | null>(() => resp.value?.data ?? null)
+  const course = computed(() => resp.value as LmsCourseDetail | null)
 
   // 监听内容版本号，保存成功后重新获取数据
   watch(contentVersion, () => refresh())
@@ -298,22 +295,21 @@ export function useChapterPageData() {
   // 布局共享状态（必须在 useFetch 之前调用）
   const { setToc, setEditableContent, setEditableMeta, contentVersion } = useLayoutState()
 
-  const { data: resp, pending, refresh } = useFetch<{ data: LmsChapterPageData | null }>(
+  const { data: resp, pending, refresh } = useCRequest<LmsChapterPageData | null>(
     () => chapterId.value ? `/api/lms/chapter/${chapterId.value}` : '',
     {
-      default: () => ({ data: null }),
-      transform: (raw: any) => {
-        const d = raw?.data ?? null
+      default: () => null,
+      transform: (d: LmsChapterPageData | null) => {
         // 数据到达时立刻设置 TOC + 可编辑内容，不依赖 watch
         setToc(extractTocFromContent(d?.chapter?.content))
         setEditableContent(d?.chapter?.content ?? null)
-        if (d?.chapter?.title) setEditableMeta('chapters', d.chapter.title)
-        return raw
+        if (d?.chapter?.id) setEditableMeta('chapters', d.chapter.id)
+        return d
       },
     }
   )
 
-  const data = computed<LmsChapterPageData | null>(() => resp.value?.data ?? null)
+  const data = computed(() => resp.value as LmsChapterPageData | null)
 
   // 监听内容版本号，保存成功后重新获取数据
   watch(contentVersion, () => refresh())
