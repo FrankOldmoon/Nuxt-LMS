@@ -8,7 +8,7 @@ export function recordAnswer(question: any, userAnswer: string[] | number[]) {
     question.record = []
   }
   question.record = userAnswer
-  console.log('recordAnswer', question.record)
+
 }
 
 /**
