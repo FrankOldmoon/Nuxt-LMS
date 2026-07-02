@@ -1,12 +1,10 @@
 <template>
-    <!-- <UModal v-model:open="open" :ui="{ content: 'sm:max-w-xl', body: 'p-0' }"> -->
-
     <div class="flex flex-col max-h-[70vh]">
         <!-- 搜索输入框 -->
         <div class="flex items-center gap-2 p-4 border-b border-default">
             <UIcon name="i-lucide-search" class="size-5 text-muted shrink-0" />
             <UInput ref="inputRef" v-model="keyword" :placeholder="$t('common.search') + '...'" variant="none"
-                class="flex-1 text-base" autofocus @keydown.escape="open = false"
+                class="flex-1 text-base" autofocus @keydown.escape="$emit('close')"
                 @keydown.down.prevent="moveSelection(1)" @keydown.up.prevent="moveSelection(-1)"
                 @keydown.enter.prevent="selectResult(selectedIndex)" />
             <span class="text-xs text-muted shrink-0">
@@ -36,33 +34,28 @@
                     :class="{ 'bg-muted': index === selectedIndex }" @click="selectResult(index)"
                     @mouseenter="selectedIndex = index">
                     <div class="flex items-start gap-2">
-                        <!-- 图标 -->
                         <UIcon :name="entry.type === 'heading' ? 'i-lucide-heading' : 'i-lucide-text'"
                             class="size-4 mt-0.5 shrink-0"
                             :class="entry.type === 'heading' ? 'text-primary' : 'text-muted'" />
 
                         <div class="flex-1 min-w-0">
-                            <!-- 文本（带高亮） -->
                             <p class="text-sm font-medium text-highlighted line-clamp-2 leading-snug">
                                 <span v-for="(seg, si) in highlightText(entry.text)" :key="si"
                                     :class="{ 'bg-yellow-200 dark:bg-yellow-800 text-yellow-900 dark:text-yellow-100 rounded-sm px-0.5': seg.highlight }">{{
-                                    seg.text }}</span>
+                                        seg.text }}</span>
                             </p>
 
-                            <!-- 来源信息 -->
                             <div class="flex items-center gap-1.5 mt-1 text-xs text-muted">
                                 <span class="truncate max-w-[280px]">{{ entry.sourceName }}</span>
                             </div>
                         </div>
 
-                        <!-- URL 跳转图标 -->
                         <UIcon name="i-lucide-arrow-up-right" class="size-3.5 text-muted shrink-0 mt-0.5" />
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- </UModal> -->
 </template>
 
 <script setup lang="ts">
@@ -76,6 +69,7 @@ interface SearchEntry {
     sourceType: 'course' | 'chapter'
 }
 
+const route = useRoute()
 const router = useRouter()
 const keyword = ref('')
 const selectedIndex = ref(0)
@@ -85,11 +79,29 @@ const resultItems = ref<HTMLElement[]>([])
 
 const allEntries = ref<SearchEntry[]>([])
 
-// 客户端搜索过滤
+// 检测当前页面是否为课程/章节页面，获取 courseId
+const currentCourseId = computed(() => {
+    // /course/:id 或 /course/:id/:cid → 返回课程 id
+    if (route.name === 'course-id' || route.name === 'course-id-cid') {
+        return route.params.id as string | undefined
+    }
+    return undefined
+})
+
+// 根据页面上下文决定搜索的 API
+const searchApiUrl = computed(() => {
+    if (currentCourseId.value) {
+        return `/api/search?courseId=${currentCourseId.value}`
+    }
+    return '/api/search'
+})
+
+const emit = defineEmits(['close'])
+
+// 搜索过滤
 const filteredResults = computed(() => {
     const kw = keyword.value.trim().toLowerCase()
     if (!kw) return []
-    // 按文本匹配度排序，heading 优先，再按匹配位置排序
     const matched = allEntries.value
         .filter((entry) => entry.text.toLowerCase().includes(kw))
         .map((entry) => {
@@ -97,40 +109,33 @@ const filteredResults = computed(() => {
             return { entry, matchIndex: idx }
         })
         .sort((a, b) => {
-            // heading 优先
             if (a.entry.type === 'heading' && b.entry.type !== 'heading') return -1
             if (a.entry.type !== 'heading' && b.entry.type === 'heading') return 1
-            // 匹配位置靠前的优先
             return a.matchIndex - b.matchIndex
         })
     return matched.map((m) => m.entry)
 })
 
-// 搜索结果变化时重置选中索引
 watch(filteredResults, () => {
     selectedIndex.value = 0
 })
 
-// 键盘上下移动选择
+// 键盘操作
 function moveSelection(delta: number) {
     const max = filteredResults.value.length
     if (max === 0) return
     selectedIndex.value = ((selectedIndex.value + delta) % max + max) % max
     nextTick(() => {
-        // 滚动到可见区域
         resultItems.value[selectedIndex.value]?.scrollIntoView({ block: 'nearest' })
     })
 }
 
-const emit = defineEmits(['close'])
-// 选择结果并导航
 function selectResult(index: number) {
     const entry = filteredResults.value[index]
     if (!entry) return
 
     emit('close')
 
-    // 构建目标 URL
     let targetUrl = entry.url
     if (entry.headingId) {
         targetUrl += `#${entry.headingId}`
@@ -139,7 +144,7 @@ function selectResult(index: number) {
     router.push(targetUrl)
 }
 
-// 高亮匹配文本
+// 高亮
 function highlightText(text: string): { text: string; highlight: boolean }[] {
     const kw = keyword.value.trim()
     if (!kw) return [{ text, highlight: false }]
@@ -166,13 +171,22 @@ function highlightText(text: string): { text: string; highlight: boolean }[] {
     return segments
 }
 
-// 当 modal 打开时监听全局键盘事件，关闭时移除
-onMounted(async () => {
+// 页面路径变化时重新加载对应索引
+watch(() => route.fullPath, () => {
     keyword.value = ''
     selectedIndex.value = 0
+    loadData()
+})
+
+// 组件挂载时加载数据并聚焦
+onMounted(() => {
+    loadData()
+})
+
+async function loadData() {
     loading.value = true
     try {
-        const data = await $fetch<SearchEntry[]>('/api/search')
+        const data = await $fetch<SearchEntry[]>(searchApiUrl.value)
         allEntries.value = data || []
     } catch {
         allEntries.value = []
@@ -182,6 +196,20 @@ onMounted(async () => {
     nextTick(() => {
         inputRef.value?.inputRef?.focus()
     })
-})
+}
 
+// 全局快捷键 Cmd+K / Ctrl+K 打开搜索
+function onGlobalKeydown(e: KeyboardEvent) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        // 由 header 中的 UModal open 状态控制，这里不需要额外处理
+    }
+}
+
+onMounted(() => {
+    window.addEventListener('keydown', onGlobalKeydown)
+})
+onUnmounted(() => {
+    window.removeEventListener('keydown', onGlobalKeydown)
+})
 </script>

@@ -1,0 +1,4 @@
+<template>
+    <monaco />
+</template>
+
