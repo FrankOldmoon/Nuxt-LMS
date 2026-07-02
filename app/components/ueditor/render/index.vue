@@ -1,9 +1,9 @@
 <template>
-  <div class="umo-editor-render umo-page-content" style="width:100%; height:100%; min-height:100%">
+  <div class="umo-editor-render umo-page-content render" style="width:100%;">
     <!-- <div class="umo-page-node-content" style="width:100%; height:100%; min-height:100%"> -->
     <div v-if="renderContent" class="umo-editor-content is-readonly" :style="{ lineHeight: defaultLineHeight }"
       :spellcheck="false">
-      <div class="umo-editor" contenteditable="false" style="padding: 0px; height:100%; min-height:100%">
+      <div class="umo-editor" contenteditable="false" style="padding: 0px; min-height: 100%;">
         <RenderNode :node="renderContent" />
       </div>
     </div>
@@ -39,15 +39,47 @@ const props = defineProps({
 
 const defaultLineHeight = computed(() => props.lineHeight)
 
-const pageStyle = computed(() => ({
-  '--umo-page-background': props.background,
-  //width: '100%',
-}))
+function convertBracket(str) {
+  const result = [];
+  let lastIndex = 0;
+  const regex = /\{\{(.*?)\}\}/g;
+  let match;
+
+  while ((match = regex.exec(str)) !== null) {
+    // 处理匹配前的普通文本
+    const before = str.slice(lastIndex, match.index);
+    if (before) {
+      result.push({ type: 'text', text: before });
+    }
+
+    // 处理匹配到的占位符
+    const content = match[1].trim();
+    result.push({
+      type: 'inputs',
+      attrs: { content: '' },
+    });
+
+    // 更新位置
+    lastIndex = match.index + match[0].length;
+  }
+
+  // 处理最后的普通文本
+  const remaining = str.slice(lastIndex);
+  if (remaining) {
+    result.push({ type: 'text', text: remaining });
+  }
+
+  return result;
+}
 
 const renderContent = computed(() => {
   if (!props.json || !Object.keys(props.json).length) {
     return null
   } else if (typeof props.json == 'string') {
+    if (props.json.match(/\{\{(.*?)\}\}/g)) {
+      const result = convertBracket(props.json)
+      return { type: 'doc', content: result }
+    }
     return { type: 'doc', content: [{ type: 'text', text: props.json }] }
   }
   return props.json
@@ -56,6 +88,10 @@ const renderContent = computed(() => {
 
 <style lang="less">
 @import "../../../../node_modules/@umoteam/editor/dist/umo-editor.css";
+
+.umo-page-content .render {
+  min-height: 100% !important
+}
 
 .umo-editor-render-container {
   //width: 100%;

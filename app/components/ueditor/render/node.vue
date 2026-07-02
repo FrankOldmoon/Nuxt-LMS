@@ -4,27 +4,15 @@
 
   <!-- Doc 根节点：无包裹直接渲染子节点 -->
   <template v-else-if="node.type === 'doc'">
-    <RenderNode
-      v-for="(child, index) in node.content"
-      :key="index"
-      :node="child"
-    />
+    <RenderNode v-for="(child, index) in node.content" :key="index" :node="child" />
   </template>
 
   <!-- 匹配到注册类型的节点：动态组件渲染 -->
-  <component
-    v-else-if="currentComponent"
-    :is="currentComponent"
-    :node="node"
-  />
+  <component v-else-if="currentComponent" :is="currentComponent" :node="node" />
 
   <!-- 未知节点类型：div 包裹降级渲染 -->
   <div v-else>
-    <RenderNode
-      v-for="(child, index) in node.content"
-      :key="index"
-      :node="child"
-    />
+    <RenderNode v-for="(child, index) in node.content" :key="index" :node="child" />
   </div>
 </template>
 
@@ -74,6 +62,7 @@ import EchartsView from './nodes/echarts.vue'
 import DetailsView from './nodes/details.vue'
 
 import VueView from './nodes/vue/index.vue'
+import InputsView from './nodes/inputs.vue'
 
 const componentNodeTypes = {
   // 基础节点
@@ -135,6 +124,7 @@ const componentNodeTypes = {
   inlineMath: MathView,
 
   vue: VueView,
+  inputs: InputsView
 }
 
 // 文本节点渲染组件：封装原有 renderTextWithMarks 逻辑

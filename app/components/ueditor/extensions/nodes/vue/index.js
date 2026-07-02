@@ -5,7 +5,6 @@ import VueNodeView from './node-view.vue'
 export default Node.create({
   name: 'vue',
   group: 'block',
-  //content: 'block+',
   atom: true,
   selectable: true,
   draggable: true,

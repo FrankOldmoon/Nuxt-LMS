@@ -33,10 +33,6 @@
     <!-- 提交后结果 -->
     <div v-if="submitted" class="mt-4 space-y-3">
       <ResultBanner :correct="isCorrect" :point="question.point" />
-      <div v-if="!isCorrect" class="text-sm text-gray-600 dark:text-gray-400">
-        <span class="font-medium">{{ $t('question.correctAnswerLabel') }}</span>
-        <span class="font-medium">{{ getOptionLabel(question.answer[0]) }}</span>
-      </div>
       <ExplanationBlock :explanation="question.explanation" />
       <div class="flex justify-end">
         <UButton variant="soft" size="sm" @click="redo">{{ $t('question.redo') }}</UButton>
@@ -85,11 +81,6 @@ function dotClass(idx) {
   return selected.value === idx
     ? 'border-blue-400 text-blue-500'
     : 'border-gray-300 dark:border-gray-500'
-}
-
-function getOptionLabel(idx) {
-  if (!props.question.options?.[idx]) return String(idx)
-  return contentToText(props.question.options[idx])
 }
 
 async function submit() {

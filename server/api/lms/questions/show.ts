@@ -9,7 +9,7 @@ export default eventHandler(async (event) => {
 
   // 从 schema 中获取 questions 表（根据实际导出结构调整）
   const { questions } = schema
-  console.log({course_id, cid})
+
   const data = await db.query.questions.findFirst({
     where: and(
       eq(questions.courseId, Number(course_id)),

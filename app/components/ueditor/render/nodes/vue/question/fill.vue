@@ -1,20 +1,6 @@
 <template>
   <div>
-    <!-- 填空区域 -->
-    <div class="text-sm leading-relaxed text-gray-800 dark:text-gray-200">
-      <template v-for="(seg, si) in fillSegments" :key="si">
-        <span>{{ seg.text }}</span>
-        <input
-          v-if="seg.index !== null"
-          v-model="fillAnswers[seg.index]"
-          :disabled="submitted"
-          class="inline-block px-2 py-0.5 border-b-2 border-blue-400 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-500 outline-none text-center min-w-[4rem] mx-1 rounded"
-          :class="inputClass(seg.index)"
-          :placeholder="$t('question.fillPlaceholder', { 0: seg.index + 1 })"
-        />
-      </template>
-    </div>
-
+    
     <!-- 提交/重置 -->
     <div v-if="!submitted" class="flex justify-end gap-2 pt-3">
       <UButton variant="soft" size="sm" :disabled="!hasAnswer" @click="reset">
@@ -28,13 +14,6 @@
     <!-- 结果 -->
     <div v-if="submitted" class="mt-4 space-y-3">
       <ResultBanner :correct="isCorrect" :point="question.point" />
-      <div v-if="!isCorrect" class="text-sm text-gray-600 dark:text-gray-400">
-        <span class="font-medium">{{ $t('question.correctAnswerLabel') }}</span>
-        <span v-for="(ans, ai) in question.answer" :key="ai"
-          class="inline-block px-2 py-0.5 bg-green-100 dark:bg-green-900/30 rounded mx-0.5">
-          {{ ans }}
-        </span>
-      </div>
       <ExplanationBlock :explanation="question.explanation" />
       <div class="flex justify-end">
         <UButton variant="soft" size="sm" @click="redo">{{ $t('question.redo') }}</UButton>

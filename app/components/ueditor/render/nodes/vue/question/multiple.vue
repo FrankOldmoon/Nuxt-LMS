@@ -33,13 +33,6 @@
     <!-- 结果 -->
     <div v-if="submitted" class="mt-4 space-y-3">
       <ResultBanner :correct="isCorrect" :point="question.point" />
-      <div v-if="!isCorrect" class="text-sm text-gray-600 dark:text-gray-400">
-        <span class="font-medium">{{ $t('question.correctAnswerLabel') }}</span>
-        <span v-for="(ansIdx, ai) in question.answer" :key="ai">
-          <span v-if="ai > 0">、</span>
-          <span class="font-medium">{{ getOptionLabel(ansIdx) }}</span>
-        </span>
-      </div>
       <ExplanationBlock :explanation="question.explanation" />
       <div class="flex justify-end">
         <UButton variant="soft" size="sm" @click="redo">{{ $t('question.redo') }}</UButton>
@@ -96,11 +89,6 @@ function checkClass(idx) {
   return selected.value.includes(idx)
     ? 'border-blue-400 bg-blue-400 text-white'
     : 'border-gray-300 dark:border-gray-500 hover:border-blue-300'
-}
-
-function getOptionLabel(idx) {
-  if (!props.question.options?.[idx]) return String(idx)
-  return contentToText(props.question.options[idx])
 }
 
 async function submit() {
