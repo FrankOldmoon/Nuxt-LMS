@@ -22,7 +22,9 @@ export default defineNuxtConfig({
     fonts: false
   },
   nitro: {
-    
+    scheduledTasks: {
+      'build-search': { cron: '0 0 * * *' },
+    },
     experimental: {
       openAPI: true,
       tasks: true,

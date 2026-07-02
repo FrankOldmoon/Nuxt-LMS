@@ -17,9 +17,15 @@
 
     <!-- 右侧：操作按钮 -->
     <template #right>
-      <UTooltip :text="$t('common.search')" :content="{ side: 'bottom' }">
-        <UButton icon="i-lucide-search" color="neutral" variant="ghost" :aria-label="$t('common.search')" />
-      </UTooltip>
+      <UModal v-model:open="showSearchModal">
+        <UTooltip :text="$t('common.search')" :content="{ side: 'bottom' }">
+          <UButton icon="i-lucide-search" color="neutral" variant="ghost" :aria-label="$t('common.search')" />
+        </UTooltip>
+        <template #content>
+          <!-- 搜索弹窗 -->
+          <LayoutSearchModal @close="() => { showSearchModal = false }" />
+        </template>
+      </UModal>
       <UColorModeButton />
 
       <!-- SSR 直接渲染：未登录 → Login 按钮，已登录 → 用户名 + 下拉菜单 -->
@@ -49,6 +55,8 @@
 
   <!-- 系统设置弹窗（仅管理员可见） -->
   <AuthSettingsModal v-model:open="showSettingsModal" />
+
+
 </template>
 
 <script setup lang="ts">
@@ -62,6 +70,7 @@ const { siteTitle, logo } = useLmsConfig()
 const showLoginModal = ref(false)
 const showProfileModal = ref(false)
 const showSettingsModal = ref(false)
+const showSearchModal = ref(false)
 
 function onLoginSuccess() {
   showLoginModal.value = false
