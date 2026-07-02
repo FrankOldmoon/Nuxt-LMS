@@ -18,7 +18,7 @@ export default eventHandler(async (event) => {
     .where(eq(schema.users.id, user.id))
     .limit(1)
 
-  const classId = userRow[0]?.defaultClass?.id
+  const classId = (userRow[0]?.defaultClass as any)?.id
   if (!classId) {
     return cResp([])
   }
@@ -69,29 +69,26 @@ export default eventHandler(async (event) => {
     }
   }
 
-  // 5. 组合：学生信息 + 评论记录
-  const studentMap = new Map(students.map(s => [s.id, s]))
-  const result = []
-  for (const [userId, data] of userCommentMap) {
-    const s = studentMap.get(userId)
-    if (!s) continue // 非本班学生跳过
-    result.push({
+  // 5. 组合：所有学生 + 评论记录（没评论的 record 为 null）
+  const result = students.map(s => {
+    const data = userCommentMap.get(s.id)
+    return {
       id: s.id,
       name: s.name,
       preferName: s.preferName,
       rollNumber: s.rollNumber,
       avatarImg: s.avatarImg,
-      record: {
-        comments: data.comments.map(c => ({
+      record: data ? {
+        comments: data.comments.map((c: any) => ({
           cid: c.cid,
           content: c.content,
           createdAt: c.createdAt,
           isRoot: c.cid === commentCid,
         })),
         likeCount: data.likeCount,
-      },
-    })
-  }
+      } : null,
+    }
+  })
 
   // 有评论的排前面
   return cResp(result.sort((a, b) => {

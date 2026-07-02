@@ -28,7 +28,7 @@
                 <span class="font-semibold text-gray-800 dark:text-gray-200">{{ comment.name }}</span>
                 <span v-if="commentId" class="text-xs text-gray-400">#{{ commentId }}</span>
                 <div class="flex items-center gap-2 ml-auto">
-                    <UButton v-if="isTeacher" icon="i-heroicons-clipboard-list" variant="ghost" size="2xs"
+                    <UButton v-if="isTeacher" icon="i-heroicons-clipboard" variant="ghost" size="2xs"
                         class="opacity-50 hover:opacity-100 transition-opacity"
                         @click="recordsOpen = true" />
                     <span class="text-xs text-gray-400">{{ comment.point }}{{ $t('question.points') }}</span>
