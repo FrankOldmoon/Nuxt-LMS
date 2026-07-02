@@ -12,7 +12,7 @@ export default eventHandler(async (event) => {
   const courseId = Number(course_id)
   const commentCid = Number(cid)
 
-  // 1. 获取当前用户的 defaultClass
+  // 1. 获取当前用户的 defaultClass，确定查询范围
   const userRow = await db.select({ defaultClass: schema.users.defaultClass })
     .from(schema.users)
     .where(eq(schema.users.id, user.id))
@@ -23,11 +23,11 @@ export default eventHandler(async (event) => {
     return cResp([])
   }
 
-  // 2. 获取该班级所有学生
+  // 2. 获取该班级学生 userIds（仅用于确定查询范围）
   const classUsers = await getClassUsers(classId)
-  const students = classUsers.filter(u => !u.isTeacher)
+  const studentIds = classUsers.filter(u => !u.isTeacher).map(u => u.id)
 
-  if (students.length === 0) {
+  if (studentIds.length === 0) {
     return cResp([])
   }
 
@@ -52,13 +52,12 @@ export default eventHandler(async (event) => {
     : []
 
   // 按用户分组：每个用户发了哪些评论、被赞了多少
-  const userCommentMap = new Map() // userId -> { comments: [], likeCount: number }
+  const userCommentMap = new Map()
   for (const c of allComments) {
     if (!userCommentMap.has(c.userId)) {
       userCommentMap.set(c.userId, { comments: [], likeCount: 0 })
     }
-    const entry = userCommentMap.get(c.userId)
-    entry.comments.push(c)
+    userCommentMap.get(c.userId).comments.push(c)
   }
 
   // 统计每个用户收到的总赞数
@@ -69,31 +68,24 @@ export default eventHandler(async (event) => {
     }
   }
 
-  // 5. 组合：所有学生 + 评论记录（没评论的 record 为 null）
-  const result = students.map(s => {
-    const data = userCommentMap.get(s.id)
-    return {
-      id: s.id,
-      name: s.name,
-      preferName: s.preferName,
-      rollNumber: s.rollNumber,
-      avatarImg: s.avatarImg,
-      record: data ? {
-        comments: data.comments.map((c: any) => ({
-          cid: c.cid,
-          content: c.content,
-          createdAt: c.createdAt,
-          isRoot: c.cid === commentCid,
-        })),
-        likeCount: data.likeCount,
-      } : null,
-    }
-  })
+  // 5. 只返回本班学生中有评论的 { userId, record } 列表
+  const result = studentIds
+    .filter(id => userCommentMap.has(id))
+    .map(id => {
+      const data = userCommentMap.get(id)
+      return {
+        userId: id,
+        record: {
+          comments: data.comments.map((c: any) => ({
+            cid: c.cid,
+            content: c.content,
+            createdAt: c.createdAt,
+            isRoot: c.cid === commentCid,
+          })),
+          likeCount: data.likeCount,
+        },
+      }
+    })
 
-  // 有评论的排前面
-  return cResp(result.sort((a, b) => {
-    const aHas = a.record ? 1 : 0
-    const bHas = b.record ? 1 : 0
-    return bHas - aHas
-  }))
+  return cResp(result)
 })

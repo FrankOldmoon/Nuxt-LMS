@@ -41,6 +41,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const { t } = useI18n()
+const { students, fetchUsers, currentClassId } = useClassUsers()
 
 const open = computed({
     get: () => props.modelValue,
@@ -58,15 +59,36 @@ const extraColumns = computed(() => [{
 
 const defaultSort = [{ id: 'record', desc: true }]
 
+// 先用缓存学生数据填充 table，再异步合并 records
+function buildRows(recordsData) {
+    const recordMap = new Map((recordsData || []).map(r => [r.userId, r.record]))
+    rows.value = students.value.map(s => ({
+        id: s.id,
+        name: s.name,
+        preferName: s.preferName,
+        rollNumber: s.rollNumber,
+        avatarImg: s.avatarImg,
+        record: recordMap.get(s.id) || null,
+    }))
+    // 有记录的排前面
+    rows.value.sort((a, b) => {
+        const aHas = a.record ? 1 : 0
+        const bHas = b.record ? 1 : 0
+        return bHas - aHas
+    })
+}
+
 async function fetchRecords() {
     if (!props.courseId || !props.cid) {
         rows.value = []
         return
     }
+    // 先用缓存学生数据立即显示 table
+    buildRows([])
     pending.value = true
     try {
         const data = await cRequest(`/api/lms/questions/records?course_id=${props.courseId}&cid=${props.cid}`)
-        rows.value = data || []
+        buildRows(data)
     } catch {
         rows.value = []
     } finally {

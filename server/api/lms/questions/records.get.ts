@@ -12,27 +12,26 @@ export default eventHandler(async (event) => {
   const courseId = Number(course_id)
   const questionCid = Number(cid)
 
-  // 1. 获取当前用户的 defaultClass
+  // 1. 获取当前用户的 defaultClass，确定查询范围
   const userRow = await db.select({ defaultClass: schema.users.defaultClass })
     .from(schema.users)
     .where(eq(schema.users.id, user.id))
     .limit(1)
 
-  const classId = userRow[0]?.defaultClass?.id
+  const classId = (userRow[0]?.defaultClass as any)?.id
   if (!classId) {
     return cResp([])
   }
 
-  // 2. 获取该班级所有学生
+  // 2. 获取该班级学生 userIds（仅用于确定查询范围）
   const classUsers = await getClassUsers(classId)
-  const students = classUsers.filter(u => !u.isTeacher)
+  const studentIds = classUsers.filter(u => !u.isTeacher).map(u => u.id)
 
-  if (students.length === 0) {
+  if (studentIds.length === 0) {
     return cResp([])
   }
 
-  // 3. 查询这些学生的题目提交记录
-  const userIds = students.map(u => u.id)
+  // 3. 查询这些学生的题目提交记录，只返回 userId + record
   const records = await db.query.userQuestions.findMany({
     where: and(
       eq(schema.userQuestions.courseId, courseId),
@@ -40,21 +39,14 @@ export default eventHandler(async (event) => {
     ),
   })
 
-  // 4. 组合：学生信息 + 提交记录
+  // 4. 只返回有记录的 { userId, record } 列表
   const recordMap = new Map(records.map(r => [r.userId, r]))
-  const result = students.map(s => ({
-    id: s.id,
-    name: s.name,
-    preferName: s.preferName,
-    rollNumber: s.rollNumber,
-    avatarImg: s.avatarImg,
-    record: recordMap.get(s.id) || null,
-  }))
+  const result = studentIds
+    .filter(id => recordMap.has(id))
+    .map(id => ({
+      userId: id,
+      record: recordMap.get(id),
+    }))
 
-  // 返回所有学生，有记录的排前面
-  return cResp(result.sort((a, b) => {
-    const aHas = a.record !== null ? 1 : 0
-    const bHas = b.record !== null ? 1 : 0
-    return bHas - aHas
-  }))
+  return cResp(result)
 })

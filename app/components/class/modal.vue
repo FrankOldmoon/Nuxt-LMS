@@ -52,7 +52,8 @@
                   :class="{ 'opacity-50': isSelectedStudent(user.id) }" @click="toggleStudentSelect(user)">
                   <UIcon :name="isSelectedStudent(user.id) ? 'i-lucide-check-square' : 'i-lucide-square'"
                     class="size-4 text-primary shrink-0" />
-                  <UAvatar :src="user.avatarImg || undefined" :alt="user.name" size="2xs" :text="user.name?.charAt(0)" />
+                  <UAvatar :src="user.avatarImg || undefined" :alt="user.name" size="2xs"
+                    :text="user.name?.charAt(0)" />
                   <span class="truncate">{{ user.name }}</span>
                 </div>
               </div>
@@ -62,14 +63,14 @@
           </div>
 
           <!-- 已选学生标签 -->
-        <div v-if="selectedStudents.length" class="flex flex-wrap gap-1.5">
-          <UBadge v-for="u in selectedStudents" :key="u.id" :label="u.name" color="info" variant="subtle" size="xs">
-            <template #leading>
-              <UIcon name="i-lucide-x" class="size-3 cursor-pointer hover:text-error"
-                @click="removeSelectedStudent(u.id)" />
-            </template>
-          </UBadge>
-        </div>
+          <div v-if="selectedStudents.length" class="flex flex-wrap gap-1.5">
+            <UBadge v-for="u in selectedStudents" :key="u.id" :label="u.name" color="info" variant="subtle" size="xs">
+              <template #leading>
+                <UIcon name="i-lucide-x" class="size-3 cursor-pointer hover:text-error"
+                  @click="removeSelectedStudent(u.id)" />
+              </template>
+            </UBadge>
+          </div>
 
           <!-- 教师行 -->
           <div class="flex gap-2">
@@ -83,7 +84,8 @@
                   :class="{ 'opacity-50': isSelectedTeacher(user.id) }" @click="toggleTeacherSelect(user)">
                   <UIcon :name="isSelectedTeacher(user.id) ? 'i-lucide-check-square' : 'i-lucide-square'"
                     class="size-4 text-primary shrink-0" />
-                  <UAvatar :src="user.avatarImg || undefined" :alt="user.name" size="2xs" :text="user.name?.charAt(0)" />
+                  <UAvatar :src="user.avatarImg || undefined" :alt="user.name" size="2xs"
+                    :text="user.name?.charAt(0)" />
                   <span class="truncate">{{ user.name }}</span>
                 </div>
               </div>
@@ -93,7 +95,7 @@
           </div>
         </div>
 
-        
+
 
         <!-- 已选教师标签 -->
         <div v-if="selectedTeachers.length" class="flex flex-wrap gap-1.5">
@@ -107,7 +109,8 @@
       </div>
 
       <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-default">
-        <UButton :label="$t('common.cancel')" color="neutral" variant="ghost" size="sm" @click="() => { open = false }" />
+        <UButton :label="$t('common.cancel')" color="neutral" variant="ghost" size="sm"
+          @click="() => { open = false }" />
       </div>
 
     </template>
@@ -122,6 +125,7 @@ const open = defineModel<boolean>('open', { required: true })
 const { user, refreshUser } = useAuth()
 const toast = useToast()
 const { t } = useI18n()
+const { fetchUsers } = useClassUsers()
 
 // ==================== 班级选择 ====================
 
@@ -162,6 +166,8 @@ async function onClassChange() {
       body: { defaultClass: { id: c.id, name: c.name } },
     })
     await refreshUser()
+    // 切换班级时重新拉取用户
+    await fetchUsers(c.id)
     toast.add({ title: t('classSelector.updateSuccess'), color: 'success' })
   } catch (e: any) {
     toast.add({ title: e.message || t('classSelector.updateFailed'), color: 'error' })
@@ -284,7 +290,7 @@ async function addStudentsToClass() {
     })
     toast.add({ title: t('classSelector.addStudentsSuccess'), color: 'success' })
     selectedStudents.value = []; studentSearch.value = ''; studentSearchResults.value = []
-    classUsersTableRef.value?.refresh()
+    if (selectedClassId.value) await fetchUsers(selectedClassId.value)
   } catch (e: any) {
     toast.add({ title: e.message || t('classSelector.addStudentsFailed'), color: 'error' })
   } finally { addingStudents.value = false }
@@ -335,7 +341,7 @@ async function addTeachersToClass() {
     })
     toast.add({ title: t('classSelector.addTeachersSuccess'), color: 'success' })
     selectedTeachers.value = []; teacherSearch.value = ''; teacherSearchResults.value = []
-    classUsersTableRef.value?.refresh()
+    if (selectedClassId.value) await fetchUsers(selectedClassId.value)
   } catch (e: any) {
     toast.add({ title: e.message || t('classSelector.addTeachersFailed'), color: 'error' })
   } finally { addingTeachers.value = false }
@@ -356,6 +362,12 @@ watch(open, async (val) => {
     teacherSearchResults.value = []
     selectedTeachers.value = []
     await loadClasses()
+    // 加载完班级列表后，拉取当前班级用户
+    if (selectedClassId.value) await fetchUsers(selectedClassId.value)
   }
+})
+
+onMounted(async () => {
+  if (selectedClassId.value) await fetchUsers(selectedClassId.value)
 })
 </script>

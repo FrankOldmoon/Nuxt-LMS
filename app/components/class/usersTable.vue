@@ -73,7 +73,6 @@
 <script setup lang="ts">
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
-import type { LmsClassUser } from '#shared/types/lms'
 
 const UButton = resolveComponent('UButton')
 
@@ -88,6 +87,7 @@ const props = defineProps<{
 }>()
 
 const { t } = useI18n()
+const { classUsers, classUsersLoading, fetchUsers: fetchClassUsers } = useClassUsers()
 
 const users = ref<any[]>([])
 const _pending = ref(false)
@@ -139,30 +139,31 @@ const columns = computed(() => {
   return cols
 })
 
-async function fetchUsers() {
-  // 外部传入 rows 时不自动拉取
-  if (props.rows !== undefined) return
-  if (!props.classId) {
-    users.value = []
-    return
-  }
-  _pending.value = true
-  try {
-    const data = await cRequest<LmsClassUser[]>(`/api/lms/classes/users?classId=${props.classId}`)
-    users.value = data || []
-  } catch {
-    users.value = []
-  } finally {
-    _pending.value = false
-  }
-}
-
-watch(() => props.classId, () => fetchUsers(), { immediate: true })
+// 外部传入 rows 时直接使用；否则使用全局缓存的班级用户
 watch(() => props.rows, (val) => {
   if (val !== undefined) {
     users.value = val
   }
 }, { immediate: true })
 
-defineExpose({ refresh: fetchUsers })
+// 没有传入 rows 时，使用全局缓存数据
+watch([classUsers, () => props.rows], () => {
+  if (props.rows === undefined) {
+    users.value = classUsers.value
+    _pending.value = classUsersLoading.value
+  }
+}, { immediate: true })
+
+// classId 变化时触发全局 fetch（仅在没有 rows 时）
+watch(() => props.classId, (id) => {
+  if (props.rows === undefined && id) {
+    fetchClassUsers(id)
+  }
+}, { immediate: true })
+
+defineExpose({ refresh: () => {
+  if (props.rows === undefined && props.classId) {
+    fetchClassUsers(props.classId)
+  }
+}})
 </script>
