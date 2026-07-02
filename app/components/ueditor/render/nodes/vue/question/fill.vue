@@ -1,39 +1,56 @@
 <template>
   <div>
-    <!-- 提交/重置 -->
-    <div v-if="!submitted" class="flex justify-end gap-2 pt-3">
-      <UButton variant="soft" size="sm" :disabled="!hasAnswer" @click="reset">
-        {{ $t('common.reset') }}
-      </UButton>
-      <UButton color="primary" size="sm" :disabled="!hasAnswer" @click="submit">
-        {{ $t('question.submit') }}
-      </UButton>
-    </div>
-
-    <!-- 结果 -->
-    <div v-if="submitted" class="mt-4 space-y-3">
-      <ResultBanner :correct="isCorrect" :point="question.point" />
-      <ExplanationBlock :explanation="question.explanation" />
-      <div class="flex justify-end">
-        <UButton variant="soft" size="sm" @click="redo">{{ $t('question.redo') }}</UButton>
-      </div>
-    </div>
+    <!-- 填空题型：内容在父组件渲染，此处无需模板 -->
   </div>
 </template>
 
 <script setup>
-import ResultBanner from './result-banner.vue'
-import ExplanationBlock from './explanation-block.vue'
-import { submitQuestion, recordAnswer, contentToText } from './shared.ts'
+import { ref, watch, computed, onMounted, onBeforeUnmount, inject } from 'vue'
+import { submitQuestion, recordAnswer } from './shared.ts'
 
 const props = defineProps({
   question: { type: Object, required: true },
   questionId: { type: Number, default: 0 },
 })
 
-const submitted = ref(false)
-const isCorrect = ref(false)
+const submitted = inject('questionSubmitted')
+const isCorrect = inject('questionIsCorrect')
 const fillAnswers = ref([])
+let inputEls = []
+
+// 找到当前题目区域下的所有 input 框
+function getInputContainer() {
+  return document.querySelector(`[data-question-id="${props.questionId}"] .prose`)
+}
+
+// 收集 DOM 中所有 input 框并绑定事件
+function bindInputs() {
+  const container = getInputContainer()
+  if (!container) return
+  unbindInputs()
+  inputEls = container.querySelectorAll('input')
+  inputEls.forEach((el, idx) => {
+    el.dataset.fillIndex = idx
+    el.addEventListener('input', onInput)
+  })
+}
+
+function unbindInputs() {
+  inputEls.forEach(el => {
+    el.removeEventListener('input', onInput)
+  })
+  inputEls = []
+}
+
+function onInput(e) {
+  const idx = Number(e.target.dataset.fillIndex)
+  fillAnswers.value[idx] = e.target.value
+  recordAnswer(props.question, fillAnswers.value.map(v => (v || '').trim()))
+}
+
+onMounted(() => {
+  setTimeout(bindInputs, 0)
+})
 
 // 初始化填空答案
 watch(() => props.question, (q) => {
@@ -42,61 +59,40 @@ watch(() => props.question, (q) => {
   }
 }, { immediate: true })
 
-const hasAnswer = computed(() => fillAnswers.value.some(a => a.trim() !== ''))
+const hasAnswer = computed(() => fillAnswers.value.some(a => a && a.trim() !== ''))
 
-// 内容分段（解析 {{n}} 占位符）
-const fillSegments = computed(() => {
-  if (!props.question || props.question.type !== 'fill') return []
-  const text = contentToText(props.question.content)
-  const segments = []
-  const re = /\{\{(\d+)\}\}/g
-  let lastIndex = 0
-  let match
-  while ((match = re.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      segments.push({ text: text.slice(lastIndex, match.index), index: null })
-    }
-    segments.push({ text: '', index: Number(match[1]) })
-    lastIndex = match.index + match[0].length
-  }
-  if (lastIndex < text.length) {
-    segments.push({ text: text.slice(lastIndex), index: null })
-  }
-  return segments
-})
-
-function inputClass(idx) {
-  if (!submitted.value) return ''
-  const userAns = (fillAnswers.value[idx] || '').trim()
-  const correctAns = String(props.question.answer[idx] || '').trim()
-  return userAns === correctAns
-    ? 'border-green-400 bg-green-50 dark:bg-green-900/30'
-    : 'border-red-400 bg-red-50 dark:bg-red-900/30'
-}
-
-// 输入框内容变化时实时记录
-function onInput() {
-  recordAnswer(props.question, fillAnswers.value.map(a => a.trim()))
-}
-
-async function submit() {
+function submit() {
   if (!props.question) return
+  // 提交前从 DOM 收集最新值
+  const container = getInputContainer()
+  if (container) {
+    const inputs = container.querySelectorAll('input')
+    inputs.forEach((el, idx) => {
+      fillAnswers.value[idx] = el.value
+    })
+  }
   const qAnswer = props.question.answer || []
-  isCorrect.value = qAnswer.length > 0 && qAnswer.every((ans, i) => {
+  const correct = qAnswer.length > 0 && qAnswer.every((ans, i) => {
     return (fillAnswers.value[i] || '').trim() === String(ans).trim()
   })
-  submitted.value = true
-  await submitQuestion({
+  isCorrect.value = correct
+  submitQuestion({
     questionId: props.questionId,
-    userAnswer: fillAnswers.value.map(a => a.trim()),
-    isCorrect: isCorrect.value,
+    userAnswer: fillAnswers.value.map(a => (a || '').trim()),
+    isCorrect: correct,
   })
+  return { isCorrect: correct }
 }
 
 function reset() {
-  submitted.value = false
   fillAnswers.value = (props.question.answer || []).map(() => '')
+  const container = getInputContainer()
+  if (container) {
+    container.querySelectorAll('input').forEach(el => { el.value = '' })
+  }
 }
 
-function redo() { reset() }
+onBeforeUnmount(() => { unbindInputs() })
+
+defineExpose({ submit, reset, hasAnswer })
 </script>

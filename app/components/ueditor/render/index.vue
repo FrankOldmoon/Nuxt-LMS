@@ -39,48 +39,11 @@ const props = defineProps({
 
 const defaultLineHeight = computed(() => props.lineHeight)
 
-function convertBracket(str) {
-  const result = [];
-  let lastIndex = 0;
-  const regex = /\{\{(.*?)\}\}/g;
-  let match;
-
-  while ((match = regex.exec(str)) !== null) {
-    // 处理匹配前的普通文本
-    const before = str.slice(lastIndex, match.index);
-    if (before) {
-      result.push({ type: 'text', text: before });
-    }
-
-    // 处理匹配到的占位符
-    const content = match[1].trim();
-    result.push({
-      type: 'inputs',
-      attrs: { content: '' },
-    });
-
-    // 更新位置
-    lastIndex = match.index + match[0].length;
-  }
-
-  // 处理最后的普通文本
-  const remaining = str.slice(lastIndex);
-  if (remaining) {
-    result.push({ type: 'text', text: remaining });
-  }
-
-  return result;
-}
-
 const renderContent = computed(() => {
   if (!props.json || !Object.keys(props.json).length) {
     return null
   } else if (typeof props.json == 'string') {
-    if (props.json.match(/\{\{(.*?)\}\}/g)) {
-      const result = convertBracket(props.json)
-      return { type: 'doc', content: result }
-    }
-    return { type: 'doc', content: [{ type: 'text', text: props.json }] }
+    return markdownToTiptap(props.json)
   }
   return props.json
 })

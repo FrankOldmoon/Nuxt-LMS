@@ -14,36 +14,15 @@
           <span v-if="selected.includes(idx)" class="text-xs">✓</span>
         </span>
         <span class="flex-1 text-sm">
-          <ueditorRender v-if="isRichDoc(opt)" :json="opt" />
-          <span v-else>{{ contentToText(opt) }}</span>
+          <ueditorRender :json="opt" />
         </span>
       </label>
-    </div>
-
-    <!-- 提交/重置 -->
-    <div v-if="!submitted" class="flex justify-end gap-2 pt-3">
-      <UButton variant="soft" size="sm" :disabled="!selected.length" @click="reset">
-        {{ $t('common.reset') }}
-      </UButton>
-      <UButton color="primary" size="sm" :disabled="!selected.length" @click="submit">
-        {{ $t('question.submit') }}
-      </UButton>
-    </div>
-
-    <!-- 结果 -->
-    <div v-if="submitted" class="mt-4 space-y-3">
-      <ResultBanner :correct="isCorrect" :point="question.point" />
-      <ExplanationBlock :explanation="question.explanation" />
-      <div class="flex justify-end">
-        <UButton variant="soft" size="sm" @click="redo">{{ $t('question.redo') }}</UButton>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import ResultBanner from './result-banner.vue'
-import ExplanationBlock from './explanation-block.vue'
+import { ref, computed, inject } from 'vue'
 import { submitQuestion, recordAnswer, contentToText, isRichDoc } from './shared.ts'
 
 const props = defineProps({
@@ -51,9 +30,11 @@ const props = defineProps({
   questionId: { type: Number, default: 0 },
 })
 
+const submitted = inject('questionSubmitted')
+const isCorrect = inject('questionIsCorrect')
 const selected = ref([])
-const submitted = ref(false)
-const isCorrect = ref(false)
+
+const hasAnswer = computed(() => selected.value.length > 0)
 
 function toggle(idx) {
   if (submitted.value) return
@@ -62,7 +43,6 @@ function toggle(idx) {
   if (pos > -1) arr.splice(pos, 1)
   else arr.push(idx)
   selected.value = arr
-  // 实时记录作答（当前所有选中项）
   recordAnswer(props.question, [...selected.value])
 }
 
@@ -94,23 +74,23 @@ function checkClass(idx) {
     : 'border-gray-300 dark:border-gray-500 hover:border-blue-300'
 }
 
-async function submit() {
+function submit() {
   if (!props.question || !selected.value.length) return
   const sortedUser = [...selected.value].sort((a, b) => a - b)
   const sortedCorrect = [...props.question.answer].sort((a, b) => a - b)
-  isCorrect.value = sortedUser.length === sortedCorrect.length && sortedUser.every((v, i) => v === sortedCorrect[i])
-  submitted.value = true
-  await submitQuestion({
+  const correct = sortedUser.length === sortedCorrect.length && sortedUser.every((v, i) => v === sortedCorrect[i])
+  isCorrect.value = correct
+  submitQuestion({
     questionId: props.questionId,
     userAnswer: [...selected.value],
-    isCorrect: isCorrect.value,
+    isCorrect: correct,
   })
+  return { isCorrect: correct }
 }
 
 function reset() {
-  submitted.value = false
   selected.value = []
 }
 
-function redo() { reset() }
+defineExpose({ submit, reset, hasAnswer })
 </script>
