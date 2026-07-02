@@ -6,6 +6,7 @@
     "save": "儲存",
     "search": "搜尋",
     "edit": "編輯",
+    "delete": "刪除",
     "loading": "載入中..."
   },
   "home": {
@@ -310,5 +311,23 @@
     "homeworkDetail": "作業詳情",
     "score": "得分",
     "correctAnswer": "正確答案"
+  },
+  "comment": {
+    "label": "評論",
+    "loading": "載入中...",
+    "notFound": "評論未找到",
+    "editTitle": "編輯評論",
+    "namePlaceholder": "評論名稱",
+    "contentLabel": "評論內容",
+    "tagsLabel": "標籤",
+    "tagPlaceholder": "輸入標籤",
+    "saveSuccess": "儲存成功",
+    "saveFailed": "儲存失敗",
+    "reply": "回覆",
+    "replyPlaceholder": "寫下你的回覆...",
+    "like": "讚",
+    "anonymous": "匿名",
+    "noReplies": "暫無回覆",
+    "confirmDelete": "確定刪除這則評論嗎？"
   }
 }

@@ -6,6 +6,7 @@
     "save": "保存",
     "search": "搜索",
     "edit": "编辑",
+    "delete": "删除",
     "loading": "加载中..."
   },
   "home": {
@@ -319,5 +320,23 @@
     "homeworkDetail": "作业详情",
     "score": "得分",
     "correctAnswer": "正确答案"
+  },
+  "comment": {
+    "label": "评论",
+    "loading": "加载中...",
+    "notFound": "评论未找到",
+    "editTitle": "编辑评论",
+    "namePlaceholder": "评论名称",
+    "contentLabel": "评论内容",
+    "tagsLabel": "标签",
+    "tagPlaceholder": "输入标签",
+    "saveSuccess": "保存成功",
+    "saveFailed": "保存失败",
+    "reply": "回复",
+    "replyPlaceholder": "写下你的回复...",
+    "like": "赞",
+    "anonymous": "匿名",
+    "noReplies": "暂无回复",
+    "confirmDelete": "确定删除这条评论吗？"
   }
 }
