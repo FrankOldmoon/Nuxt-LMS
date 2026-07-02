@@ -17,7 +17,7 @@ const MIME_TYPES: Record<string, string> = {
   '.ico':  'image/x-icon',
   '.pdf':  'application/pdf',
   '.txt':  'text/plain',
-  '.md':   'text/markdown', // 新增md类型
+  '.md':   'text/plain',
   '.html': 'text/html',
   '.css':  'text/css',
   '.js':   'application/javascript',

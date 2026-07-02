@@ -5,7 +5,8 @@
     "reset": "Reset",
     "save": "Save",
     "search": "Search",
-    "edit": "Edit"
+    "edit": "Edit",
+    "loading": "Loading..."
   },
   "home": {
     "title": "Course Series",
@@ -305,5 +306,18 @@
   "upload": {
     "dragHint": "Drag files here to upload",
     "clickHint": "Or click to select files"
+  },
+  "record": {
+    "noRecords": "No records",
+    "questionRecords": "Question Records",
+    "homeworkRecords": "Homework Records",
+    "colRecord": "Record",
+    "viewDetail": "View Detail",
+    "correct": "Correct",
+    "partial": "Partial",
+    "wrong": "Wrong",
+    "homeworkDetail": "Homework Detail",
+    "score": "Score",
+    "correctAnswer": "Correct Answer"
   }
 }

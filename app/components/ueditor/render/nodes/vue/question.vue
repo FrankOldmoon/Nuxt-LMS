@@ -16,9 +16,11 @@
             <!-- {{ question.record }}:{{ question.correct_rate }} -->
             <!-- {{ question }} -->
             <!-- 右上角编辑按钮 -->
-            <UButton icon="i-heroicons-pencil-square" variant="ghost" size="2xs"
-                class="absolute top-2 right-2 opacity-50 hover:opacity-100 transition-opacity z-10"
-                @click="editOpen = true" />
+            <div class="absolute top-2 right-2 flex items-center gap-1 z-10">
+                <UButton icon="i-heroicons-pencil-square" variant="ghost" size="2xs"
+                    class="opacity-50 hover:opacity-100 transition-opacity"
+                    @click="editOpen = true" />
+            </div>
 
             <!-- 题目标题 -->
             <div class="flex items-center gap-3 mb-3 pr-6">
@@ -28,7 +30,12 @@
                 </span>
                 <span class="font-semibold text-gray-800 dark:text-gray-200">{{ question.name }}</span>
                 <span v-if="questionId" class="text-xs text-gray-400">#{{ questionId }}</span>
-                <span class="text-xs text-gray-400 ml-auto font-mono">{{ scoreDisplay }}</span>
+                <div class="flex items-center gap-2 ml-auto">
+                    <UButton v-if="isTeacher" icon="i-heroicons-clipboard" variant="ghost" size="2xs"
+                        class="opacity-50 hover:opacity-100 transition-opacity"
+                        @click="recordsOpen = true" />
+                    <span class="text-xs text-gray-400 font-mono">{{ scoreDisplay }}</span>
+                </div>
             </div>
 
             <!-- 题目内容（所有题型统一在此渲染富文本） -->
@@ -101,6 +108,10 @@
 
         <!-- 编辑弹窗 -->
         <QuestionEdit v-model="editOpen" :question-id="questionId" :question="question" @saved="onSaved" />
+
+        <!-- 记录弹窗（仅教师） -->
+        <RecordsModal v-if="isTeacher" v-model="recordsOpen" type="question" :course-id="editableCourseId"
+            :cid="questionId" :question="question" />
     </div>
 </template>
 
@@ -114,6 +125,7 @@ import SelectRender from './question/select.vue'
 import ResultBanner from './question/result-banner.vue'
 import ExplanationBlock from './question/explanation-block.vue'
 import QuestionEdit from '../../../extensions/nodes/vue/question/edit.vue'
+import RecordsModal from './records-modal.vue'
 import { computeCorrectRate } from './question/shared.ts'
 
 const props = defineProps({
@@ -281,6 +293,7 @@ const scoreDisplay = computed(() => {
 })
 
 const editOpen = ref(false)
+const recordsOpen = ref(false)
 
 function onSaved(ques) {
     // 新建题目：拿到新增 cid 后通知父节点更新 content 属性

@@ -5,7 +5,8 @@
     "reset": "重置",
     "save": "儲存",
     "search": "搜尋",
-    "edit": "編輯"
+    "edit": "編輯",
+    "loading": "載入中..."
   },
   "home": {
     "title": "課程系列",
@@ -296,5 +297,18 @@
   "upload": {
     "dragHint": "拖拽檔案到此處上傳",
     "clickHint": "或點擊選擇檔案"
+  },
+  "record": {
+    "noRecords": "暫無記錄",
+    "questionRecords": "題目作答記錄",
+    "homeworkRecords": "作業提交記錄",
+    "colRecord": "記錄",
+    "viewDetail": "查看詳情",
+    "correct": "正確",
+    "partial": "部分正確",
+    "wrong": "錯誤",
+    "homeworkDetail": "作業詳情",
+    "score": "得分",
+    "correctAnswer": "正確答案"
   }
 }

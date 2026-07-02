@@ -14,9 +14,11 @@
 
         <template v-else>
             <!-- 右上角编辑按钮（仅教师） -->
-            <UButton v-if="isTeacher" icon="i-heroicons-pencil-square" variant="ghost" size="2xs"
-                class="absolute top-2 right-2 opacity-50 hover:opacity-100 transition-opacity z-10"
-                @click="editOpen = true" />
+            <div v-if="isTeacher" class="absolute top-2 right-2 flex items-center gap-1 z-10">
+                <UButton icon="i-heroicons-pencil-square" variant="ghost" size="2xs"
+                    class="opacity-50 hover:opacity-100 transition-opacity"
+                    @click="editOpen = true" />
+            </div>
 
             <!-- 作业标题 -->
             <div class="flex items-center gap-3 mb-3 pr-6">
@@ -27,7 +29,12 @@
                 <span class="font-semibold text-gray-800 dark:text-gray-200">{{ homework.name }}</span>
                 <span v-if="homework.code" class="text-xs text-gray-400 font-mono">{{ homework.code }}</span>
                 <span v-if="homeworkId" class="text-xs text-gray-400">#{{ homeworkId }}</span>
-                <span class="text-xs text-gray-400 ml-auto">{{ homework.point }}{{ $t('question.points') }}</span>
+                <div class="flex items-center gap-2 ml-auto">
+                    <UButton v-if="isTeacher" icon="i-heroicons-clipboard" variant="ghost" size="2xs"
+                        class="opacity-50 hover:opacity-100 transition-opacity"
+                        @click="recordsOpen = true" />
+                    <span class="text-xs text-gray-400">{{ homework.point }}{{ $t('question.points') }}</span>
+                </div>
             </div>
 
             <!-- 作业内容 -->
@@ -105,6 +112,10 @@
 
         <!-- 编辑弹窗 -->
         <HomeworkEdit v-model="editOpen" :homework-id="homeworkId" :homework="homework" @saved="onSaved" />
+
+        <!-- 记录弹窗（仅教师） -->
+        <RecordsModal v-if="isTeacher" v-model="recordsOpen" type="homework" :course-id="editableCourseId"
+            :cid="homeworkId" :max-score="homework.point || 0" />
     </div>
 </template>
 
@@ -112,6 +123,7 @@
 import { reactive, ref, computed, watch } from 'vue'
 import ExplanationBlock from './question/explanation-block.vue'
 import HomeworkEdit from '../../../extensions/nodes/vue/homework/edit.vue'
+import RecordsModal from './records-modal.vue'
 
 const props = defineProps({
     node: Object,
@@ -170,6 +182,7 @@ watch([fetchedHomework, homeworkId], () => {
 const pending = computed(() => !!homeworkId.value && fetchedPending.value)
 
 const editOpen = ref(false)
+const recordsOpen = ref(false)
 
 // 学生提交状态
 const submittedContent = ref('')

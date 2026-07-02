@@ -11,7 +11,7 @@
 
     <template v-else>
       <!-- 教师列表 -->
-      <div v-if="teachers.length" class="mb-3">
+      <div v-if="!hideTeachers && teachers.length" class="mb-3">
         <div class="text-xs font-medium text-muted mb-1.5">{{ $t('classSelector.teachers') }}</div>
         <div class="space-y-1">
           <div
@@ -58,11 +58,15 @@
             @click="openEdit(row.original.id)"
           />
         </template>
+        <!-- 转发额外列的插槽（动态 slot name，注意不能含空格） -->
+        <template v-for="col in extraColumns" :key="col.id" #[col.id+'-cell']="slotProps">
+          <slot :name="col.id+'-cell'" v-bind="slotProps" />
+        </template>
       </UTable>
     </template>
 
     <!-- 用户编辑弹窗 -->
-    <AuthUserEditModal ref="editModal" :user-id="editingUserId" @saved="fetchUsers" />
+    <AuthUserEditModal v-if="!hideActions" ref="editModal" :user-id="editingUserId" @saved="fetchUsers" />
   </div>
 </template>
 
@@ -75,13 +79,20 @@ const UButton = resolveComponent('UButton')
 
 const props = defineProps<{
   classId: number | null
+  rows?: any[]
+  extraColumns?: { id: string; header: any; sortingFn?: any }[]
+  hideActions?: boolean
+  hideTeachers?: boolean
+  loading?: boolean
+  defaultSort?: { id: string, desc: boolean }[]
 }>()
 
 const { t } = useI18n()
 
-const users = ref<LmsClassUser[]>([])
-const pending = ref(false)
-const sorting = ref([{ id: 'preferName', desc: false }])
+const users = ref<any[]>([])
+const _pending = ref(false)
+const pending = computed(() => props.loading ?? _pending.value)
+const sorting = ref(props.defaultSort ?? [{ id: 'preferName', desc: false }])
 
 const teachers = computed(() => users.value.filter((u) => u.isTeacher))
 const students = computed(() => users.value.filter((u) => !u.isTeacher))
@@ -113,30 +124,45 @@ function sortableHeader(label: string) {
   }
 }
 
-const columns = computed<TableColumn<LmsClassUser>[]>(() => [
-  { accessorKey: 'name', header: sortableHeader(t('classSelector.colName')) },
-  { accessorKey: 'preferName', header: sortableHeader(t('classSelector.colPreferName')) },
-  { accessorKey: 'rollNumber', header: sortableHeader(t('classSelector.colRollNumber')) },
-  { id: 'actions', header: '' },
-])
+const columns = computed(() => {
+  const cols: TableColumn<any>[] = [
+    { accessorKey: 'name', header: sortableHeader(t('classSelector.colName')) },
+    { accessorKey: 'preferName', header: sortableHeader(t('classSelector.colPreferName')) },
+    { accessorKey: 'rollNumber', header: sortableHeader(t('classSelector.colRollNumber')) },
+  ]
+  if (!props.hideActions) {
+    cols.push({ id: 'actions', header: '' })
+  }
+  if (props.extraColumns?.length) {
+    cols.push(...props.extraColumns)
+  }
+  return cols
+})
 
 async function fetchUsers() {
+  // 外部传入 rows 时不自动拉取
+  if (props.rows !== undefined) return
   if (!props.classId) {
     users.value = []
     return
   }
-  pending.value = true
+  _pending.value = true
   try {
     const data = await cRequest<LmsClassUser[]>(`/api/lms/classes/users?classId=${props.classId}`)
     users.value = data || []
   } catch {
     users.value = []
   } finally {
-    pending.value = false
+    _pending.value = false
   }
 }
 
 watch(() => props.classId, () => fetchUsers(), { immediate: true })
+watch(() => props.rows, (val) => {
+  if (val !== undefined) {
+    users.value = val
+  }
+}, { immediate: true })
 
 defineExpose({ refresh: fetchUsers })
 </script>
