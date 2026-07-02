@@ -42,7 +42,7 @@ const options = computed(() => ({
             method: 'POST',
             body: formData,
         })
-        return res
+        return {url: res.data.url, id: res.data.url}
     },
     onFileDelete(id, url) {
         console.error('The file has been deleted. Please configure the onFileDelete to completely delete the file from the server.')

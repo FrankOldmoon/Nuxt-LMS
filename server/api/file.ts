@@ -3,7 +3,7 @@ import { createReadStream, access } from 'fs'
 import { eventHandler, getQuery, sendStream, setResponseHeader, createError } from 'h3'
 
 // 使用绝对路径，避免工作目录切换导致找不到文件
-const UPLOAD_ROOT = './storage'
+const UPLOAD_ROOT = resolve('./storage')
 
 // 一个简单的 MIME 映射表（可按需扩充）
 const MIME_TYPES: Record<string, string> = {
@@ -42,9 +42,10 @@ export default eventHandler(async (event) => {
     })
   }
 
-  // 安全校验：拼接绝对路径后，必须仍以 UPLOAD_ROOT 开头
-  const absolutePath = resolve(UPLOAD_ROOT, pathname)
-  if (!absolutePath.startsWith(UPLOAD_ROOT + '/')) {
+  // 安全校验：去除前导 / 避免 resolve 将其当作绝对路径，拼接后必须以 UPLOAD_ROOT 开头
+  const safePathname = pathname.replace(/^\/+/, '')
+  const absolutePath = resolve(UPLOAD_ROOT, safePathname)
+  if (!absolutePath.startsWith(UPLOAD_ROOT + '/') && absolutePath !== UPLOAD_ROOT) {
     throw createError({
       statusCode: 403,
       statusMessage: '禁止的路径访问',
@@ -64,7 +65,7 @@ export default eventHandler(async (event) => {
   }
 
   // 根据扩展名设置 Content-Type
-  const ext = extname(pathname).toLowerCase()
+  const ext = extname(safePathname).toLowerCase()
   const contentType = MIME_TYPES[ext] || 'application/octet-stream'
   setResponseHeader(event, 'Content-Type', contentType)
 

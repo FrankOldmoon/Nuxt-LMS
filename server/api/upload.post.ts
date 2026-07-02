@@ -11,11 +11,11 @@ const UPLOAD_ROOT = './storage/'
 
 export default eventHandler(async (event) => {
   // 1. 获取当前用户（可选）
-  const user = await getCurrentUser()
+  const user = await getCurrentUser(event)
 
   // 2. 解析上传文件
   const formData = await readMultipartFormData(event)
-  const fileField = formData?.find(f => f.name === "file")
+  const fileField = formData?.find(f => f.name === "files")
   if (!fileField || !fileField.filename) {
     return cResp(null, "请上传文件", false)
   }
@@ -38,7 +38,7 @@ export default eventHandler(async (event) => {
     where: eq(schema.files.hash, hash),
   })
   if (existing) {
-    return cResp({ path: existing.path }, "文件已存在", true)
+    return cResp({ url: `/api/file?pathname=${encodeURIComponent(existing.path.replace(/^\/+/, ''))}` }, "文件已存在", true)
   }
 
   // 6. 准备日期目录
@@ -49,7 +49,7 @@ export default eventHandler(async (event) => {
   // 7. 临时文件名：以哈希为名，扩展名不变
   const tempFileName = `${hash}${ext}`
   const tempFilePath = join(dateDir, tempFileName)
-  const tempDbPath = `/uploads/${dateStr}/${tempFileName}`
+  const tempDbPath = `/${dateStr}/${tempFileName}`
 
   // 8. 写入临时文件
   await writeFile(tempFilePath, buffer)
@@ -73,7 +73,7 @@ export default eventHandler(async (event) => {
       where: eq(schema.files.hash, hash),
     })
     if (conflict) {
-      return cResp({ path: conflict.path }, "文件已存在", true)
+      return cResp({ url: `/api/file?pathname=${encodeURIComponent(conflict.path.replace(/^\/+/, ''))}` }, "文件已存在", true)
     }
     // 其他错误直接抛出
     throw error
@@ -82,7 +82,7 @@ export default eventHandler(async (event) => {
   // 10. 重命名为最终文件名：{id}{ext}
   const finalFileName = `${record.id}${ext}`
   const finalFilePath = join(dateDir, finalFileName)
-  const finalDbPath = `/uploads/${dateStr}/${finalFileName}`
+  const finalDbPath = `/${dateStr}/${finalFileName}`
 
   await rename(tempFilePath, finalFilePath)
 
@@ -91,6 +91,6 @@ export default eventHandler(async (event) => {
     .set({ path: finalDbPath })
     .where(eq(schema.files.id, record.id))
 
-  // 12. 返回最终路径
-  return cResp({ url: finalDbPath }, "上传成功", true)
+  // 12. 返回可访问的完整 URL
+  return cResp({ url: `/api/file?pathname=${encodeURIComponent(finalDbPath.replace(/^\/+/, ''))}` }, "上传成功", true)
 })
