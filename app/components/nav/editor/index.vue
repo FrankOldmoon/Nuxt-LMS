@@ -16,7 +16,7 @@
         <h3 class="text-lg font-medium">{{ mode === 'category' ? $t('navEditor.editCategory') : $t('navEditor.editCourse') }}</h3>
         <p class="text-sm text-gray-500">{{ $t('navEditor.hint') }}</p>
 
-        <NavigationEditorList
+        <NavEditorList
           v-model="flatItems"
           :max-depth="maxDepth"
           :gen-key="genKey"
@@ -48,7 +48,7 @@
 
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
-import NavigationEditorList from './list.vue'
+import NavEditorList from './list.vue'
 
 /** 内部使用的扁平树节点（供子组件引用） */
 export interface FlatNode {

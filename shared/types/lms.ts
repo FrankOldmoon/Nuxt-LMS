@@ -69,3 +69,55 @@ export interface LmsHomeData {
   categories: LmsSeries[]
   courses: LmsCourseSummary[]
 }
+
+/** 班级（对应 DB classes 表） */
+export interface LmsClass {
+  id: number
+  name: string
+  code: string
+}
+
+/** 课程成员（教师/编辑者） */
+export interface LmsMember {
+  userId: number
+  username: string
+  name: string
+  avatarImg: string | null
+  isTeacher: boolean
+  isEditor: boolean
+}
+
+/** 用户搜索结果 */
+export interface LmsSearchUser {
+  id: number
+  username: string
+  name: string
+  avatarImg: string | null
+}
+
+/** 班级用户（班级成员列表） */
+export interface LmsClassUser {
+  id: number
+  username: string
+  name: string
+  preferName: string | null
+  englishName: string | null
+  avatarImg: string | null
+  rollNumber: string | null
+  email: string | null
+  telephone: string | null
+  isTeacher: boolean | null
+}
+
+/** 用户资料表单数据 */
+export interface UserProfileForm {
+  name: string
+  preferName: string
+  englishName: string
+  email: string
+  gender: string
+  avatarImg: string
+  rollNumber: string
+  telephone: string
+  classId: number | null
+}

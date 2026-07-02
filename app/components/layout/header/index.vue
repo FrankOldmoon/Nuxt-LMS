@@ -12,7 +12,7 @@
 
     <!-- 中间：水平导航菜单（仅桌面端显示） -->
     <div class="flex items-center gap-2">
-      <LayoutNav orientation="horizontal" />
+      <LayoutHeaderNav orientation="horizontal" />
     </div>
 
     <!-- 右侧：操作按钮 -->
@@ -34,7 +34,7 @@
 
     <!-- 移动端菜单内容 -->
     <template #body>
-      <LayoutNav orientation="vertical" class="w-full" />
+      <LayoutHeaderNav orientation="vertical" class="w-full" />
     </template>
   </UHeader>
 

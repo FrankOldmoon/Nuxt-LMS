@@ -11,47 +11,8 @@
           <span class="text-sm">{{ $t('profile.loading') }}</span>
         </div>
 
-        <div v-else class="space-y-4">
-          <div class="flex justify-center mb-6">
-            <UAvatar :src="form.avatarImg" :alt="form.name" size="2xl" :text="form.name?.charAt(0)" />
-          </div>
-          <UFormField :label="$t('profile.avatarImg')" class="w-full">
-            <UInput v-model="form.avatarImg" :placeholder="$t('profile.avatarImgPlaceholder')" class="w-full" />
-          </UFormField>
-          <UFormField :label="$t('profile.name')" class="w-full">
-            <UInput v-model="form.name" :placeholder="$t('profile.namePlaceholder')" class="w-full" />
-          </UFormField>
-          <UFormField :label="$t('profile.preferName')" class="w-full">
-            <UInput v-model="form.preferName" :placeholder="$t('profile.preferNamePlaceholder')" class="w-full" />
-          </UFormField>
-          <UFormField :label="$t('profile.englishName')" class="w-full">
-            <UInput v-model="form.englishName" :placeholder="$t('profile.englishNamePlaceholder')" class="w-full" />
-          </UFormField>
-          <UFormField :label="$t('profile.email')" class="w-full">
-            <UInput v-model="form.email" type="email" :placeholder="$t('profile.emailPlaceholder')" class="w-full" />
-          </UFormField>
-          <UFormField :label="$t('profile.gender')" class="w-full">
-            <USelect
-              v-model="form.gender"
-              :items="genderOptions"
-              :placeholder="$t('profile.genderPlaceholder')"
-              class="w-full"
-            />
-          </UFormField>
-          <UFormField :label="$t('profile.rollNumber')" class="w-full">
-            <UInput v-model="form.rollNumber" :placeholder="$t('profile.rollNumberPlaceholder')" class="w-full" />
-          </UFormField>
-          <UFormField :label="$t('profile.telephone')" class="w-full">
-            <UInput v-model="form.telephone" :placeholder="$t('profile.telephonePlaceholder')" class="w-full" />
-          </UFormField>
-          <UFormField :label="$t('profile.class')" class="w-full">
-            <USelect
-              v-model="form.classId"
-              :items="classOptions"
-              :placeholder="$t('profile.classPlaceholder')"
-              class="w-full"
-            />
-          </UFormField>
+        <template v-else>
+          <AuthUserProfileForm v-model="form" />
 
           <div class="flex justify-end gap-2 pt-4">
             <UButton
@@ -67,13 +28,15 @@
               @click="saveUser"
             />
           </div>
-        </div>
+        </template>
       </div>
     </template>
   </UModal>
 </template>
 
 <script setup lang="ts">
+import type { UserProfileForm } from '#shared/types/lms'
+
 const props = defineProps<{
   userId: number | null
 }>()
@@ -89,13 +52,7 @@ const open = ref(false)
 const loading = ref(false)
 const saving = ref(false)
 
-const genderOptions = computed(() => [
-  { label: t('profile.genderMale'), value: 'male' },
-  { label: t('profile.genderFemale'), value: 'female' },
-  { label: t('profile.genderOther'), value: 'other' },
-])
-
-const form = ref({
+const form = ref<UserProfileForm>({
   name: '',
   preferName: '',
   englishName: '',
@@ -104,31 +61,9 @@ const form = ref({
   avatarImg: '',
   rollNumber: '',
   telephone: '',
-  classId: null as number | null,
+  classId: null,
 })
 
-interface ClassItem {
-  id: number
-  name: string
-  code: string
-}
-const classes = ref<ClassItem[]>([])
-
-const classOptions = computed(() => [
-  { label: '', value: null },
-  ...classes.value.map((c) => ({ label: c.name, value: c.id })),
-])
-
-async function loadClasses() {
-  try {
-    const data = await cRequest<ClassItem[]>('/api/lms/classes/list')
-    classes.value = data || []
-  } catch {
-    classes.value = []
-  }
-}
-
-/** 加载目标用户数据 */
 async function loadUser() {
   if (!props.userId) return
   loading.value = true
@@ -174,7 +109,6 @@ async function saveUser() {
   }
 }
 
-/** 外部调用：打开弹窗 */
 function show() {
   open.value = true
 }
@@ -182,7 +116,6 @@ function show() {
 watch(open, (val) => {
   if (val && props.userId) {
     loadUser()
-    loadClasses()
   }
 })
 

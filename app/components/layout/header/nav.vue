@@ -7,7 +7,7 @@
     color="primary"
     variant="pill"
   />
-  <LayoutNavigationEditor
+  <NavEditor
     v-if="hasRole('admin')"
     mode="category"
     :navigation="links.slice(1)"

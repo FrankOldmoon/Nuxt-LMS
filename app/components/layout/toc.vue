@@ -33,7 +33,7 @@
         </UModal>
 
         <!-- 历史记录 -->
-        <LayoutHistoryModal :table="editableTable" :id="editableId" />
+        <ContentHistoryModal :table="editableTable" :id="editableId" />
       </div>
     </template>
   </UPageAside>

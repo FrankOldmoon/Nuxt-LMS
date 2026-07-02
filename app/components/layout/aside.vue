@@ -3,9 +3,9 @@
     <!-- 编辑导航组件（管理员或课程编辑者可见） -->
     <div v-if="hasRole('admin') || isCourseEditor(Number(courseId))">
       <div class="flex items-center gap-1 mb-2">
-        <LayoutNavigationEditor mode="course" :course-id="courseId" :navigation="navigation.slice(1)"
+        <NavEditor mode="course" :course-id="courseId" :navigation="navigation.slice(1)"
           @saved="handleSaved" />
-        <LayoutCourseEditor :course-id="Number(courseId)" @saved="handleSaved" />
+        <CourseEditor :course-id="Number(courseId)" @saved="handleSaved" />
       </div>
       <div>
         <!-- 选择班级 -->
@@ -39,7 +39,7 @@
 
           <!-- 班级用户表格 -->
           <div v-if="selectedClassId" class="mt-4">
-            <LayoutClassUsersTable :class-id="selectedClassId" />
+            <ClassUsersTable :class-id="selectedClassId" />
           </div>
 
           <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-default">
@@ -72,14 +72,10 @@ async function handleSaved() {
 
 // ==================== 班级选择 ====================
 
-interface ClassItem {
-  id: number
-  name: string
-  code: string
-}
+import type { LmsClass } from '#shared/types/lms'
 
 const classModalOpen = ref(false)
-const classList = ref<ClassItem[]>([])
+const classList = ref<LmsClass[]>([])
 const classLoading = ref(false)
 // UInputMenu 绑定的是选中项的 value（classId）
 const selectedItem = ref<number | undefined>(undefined)
@@ -108,7 +104,7 @@ async function addClass() {
   if (!name) return
   adding.value = true
   try {
-    const result = await cRequest<ClassItem[]>('/api/lms/classes/add', {
+    const result = await cRequest<LmsClass[]>('/api/lms/classes/add', {
       method: 'POST',
       body: { name, code: name },
     })

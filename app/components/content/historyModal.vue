@@ -147,11 +147,6 @@ async function handleRestore(versionId: number) {
   }
 }
 
-function formatTime(time?: string) {
-  if (!time) return ''
-  return new Date(time).toLocaleString()
-}
-
 // 打开弹窗时拉取历史版本
 watch(open, (val) => {
   if (val) fetchVersions()

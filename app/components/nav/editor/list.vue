@@ -12,7 +12,7 @@
     @end="onDragEnd"
   >
     <template #item="{ element: item, index }">
-      <NavigationEditorItem
+      <NavEditorItem
         :item="item"
         :index="index"
         :max-depth="maxDepth"
@@ -39,7 +39,7 @@
 <script setup lang="ts">
 import draggable from 'vuedraggable'
 import type { FlatNode } from './index.vue'
-import NavigationEditorItem from './item.vue'
+import NavEditorItem from './item.vue'
 
 const props = defineProps<{
   modelValue: FlatNode[]

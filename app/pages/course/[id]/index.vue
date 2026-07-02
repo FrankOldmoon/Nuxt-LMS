@@ -111,40 +111,4 @@ watch(resp, (detail) => {
 
 // 监听内容版本号，保存成功后重新获取数据
 watch(contentVersion, () => refresh())
-
-// 颜色工具函数
-const { t } = useI18n()
-
-function levelColor(level: string) {
-  const map: Record<string, 'success' | 'warning' | 'error'> = {
-    [t('home.levels.beginner')]: 'success',
-    [t('home.levels.intermediate')]: 'warning',
-    [t('home.levels.advanced')]: 'error',
-  }
-  return map[level] || 'neutral'
-}
-
-function colorTextClass(color: string) {
-  const map: Record<string, string> = {
-    primary: 'text-primary',
-    success: 'text-success',
-    info: 'text-info',
-    warning: 'text-warning',
-    error: 'text-error',
-    neutral: 'text-highlighted',
-  }
-  return map[color] || 'text-primary'
-}
-
-function colorBgClass(color: string) {
-  const map: Record<string, string> = {
-    primary: 'bg-primary/10',
-    success: 'bg-success/10',
-    info: 'bg-info/10',
-    warning: 'bg-warning/10',
-    error: 'bg-error/10',
-    neutral: 'bg-elevated',
-  }
-  return map[color] || 'bg-primary/10'
-}
 </script>

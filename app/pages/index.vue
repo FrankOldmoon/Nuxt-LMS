@@ -32,71 +32,14 @@
 
         <!-- 课程卡片网格 -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <NuxtLink
+          <CourseCard
             v-for="course in getCoursesByCategory(s.id)"
             :key="course.id"
-            :to="`/course/${course.id}`"
-            class="group block relative"
-          >
-            <UCard
-              class="h-full transition-all hover:ring-2 hover:ring-primary/50 hover:shadow-lg"
-              :class="isMyCourse(course.id) ? 'ring-2 ring-primary/30 shadow-lg shadow-primary/10' : ''"
-              :ui="{ body: 'flex flex-col h-full' }"
-            >
-              <!-- 右上角设置按钮（管理员或课程编辑者可见） -->
-              <div
-                v-if="hasRole('admin') || isCourseTeacher(course.id)"
-                class="absolute top-3 right-3 z-10"
-              >
-                <LayoutCourseEditor :course-id="course.id" @saved="handleCourseSaved" />
-              </div>
-
-              <!-- 图标 + 难度 -->
-              <div class="flex items-start justify-between mb-4">
-                <div
-                  class="flex items-center justify-center size-12 rounded-lg"
-                  :class="colorBgClass(course.color)"
-                >
-                  <UIcon :name="course.icon" class="size-6" :class="colorTextClass(course.color)" />
-                </div>
-                <UBadge
-                  :label="course.level"
-                  :color="levelColor(course.level)"
-                  variant="subtle"
-                  size="sm"
-                />
-              </div>
-
-              <!-- 标题 -->
-              <h3 class="text-lg font-semibold text-highlighted mb-2 group-hover:text-primary transition-colors">
-                {{ course.title }}
-              </h3>
-
-              <!-- 标签 -->
-              <div class="flex flex-wrap gap-1.5 mb-4">
-                <UBadge
-                  v-for="tag in course.tags"
-                  :key="tag"
-                  :label="tag"
-                  color="neutral"
-                  variant="outline"
-                  size="sm"
-                />
-              </div>
-
-              <!-- 底部信息 -->
-              <div class="flex items-center justify-between pt-4 border-t border-default">
-                <span class="flex items-center gap-1.5 text-sm text-muted">
-                  <UIcon name="i-lucide-list-video" class="size-4" />
-                  {{ $t('home.chapters', { count: course.chapterCount }) }}
-                </span>
-                <span class="flex items-center gap-1 text-sm text-primary font-medium group-hover:gap-2 transition-all">
-                  {{ $t('home.startLearning') }}
-                  <UIcon name="i-lucide-arrow-right" class="size-4" />
-                </span>
-              </div>
-            </UCard>
-          </NuxtLink>
+            :course="course"
+            :highlight="isCourseTeacher(course.id)"
+            :can-edit="hasRole('admin') || isCourseTeacher(course.id)"
+            @saved="handleCourseSaved"
+          />
         </div>
       </section>
     </div>
@@ -124,48 +67,8 @@ function getCoursesByCategory(categoryId: number) {
   return catCourses
 }
 
-/** 当前用户是否是某课程的教师或编辑者（用于首页高亮） */
-function isMyCourse(courseId: number): boolean {
-  return isCourseTeacher(courseId)
-}
-
 /** 课程设置保存后刷新首页数据 */
 async function handleCourseSaved() {
   await refreshHome()
-}
-
-const { t } = useI18n()
-
-function levelColor(level: string) {
-  const map: Record<string, 'success' | 'warning' | 'error'> = {
-    [t('home.levels.beginner')]: 'success',
-    [t('home.levels.intermediate')]: 'warning',
-    [t('home.levels.advanced')]: 'error',
-  }
-  return map[level] || 'neutral'
-}
-
-function colorTextClass(color: string) {
-  const map: Record<string, string> = {
-    primary: 'text-primary',
-    success: 'text-success',
-    info: 'text-info',
-    warning: 'text-warning',
-    error: 'text-error',
-    neutral: 'text-highlighted',
-  }
-  return map[color] || 'text-primary'
-}
-
-function colorBgClass(color: string) {
-  const map: Record<string, string> = {
-    primary: 'bg-primary/10',
-    success: 'bg-success/10',
-    info: 'bg-info/10',
-    warning: 'bg-warning/10',
-    error: 'bg-error/10',
-    neutral: 'bg-elevated',
-  }
-  return map[color] || 'bg-primary/10'
 }
 </script>

@@ -46,26 +46,15 @@
 </template>
 
 <script setup lang="ts">
+import type { LmsClassUser } from '#shared/types/lms'
+
 const props = defineProps<{
   classId: number | null
 }>()
 
 const { t } = useI18n()
 
-interface ClassUser {
-  id: number
-  username: string
-  name: string
-  preferName: string | null
-  englishName: string | null
-  avatarImg: string | null
-  rollNumber: string | null
-  email: string | null
-  telephone: string | null
-  isTeacher: boolean | null
-}
-
-const users = ref<ClassUser[]>([])
+const users = ref<LmsClassUser[]>([])
 const pending = ref(false)
 
 // 编辑弹窗
@@ -91,7 +80,7 @@ async function fetchUsers() {
   }
   pending.value = true
   try {
-    const data = await cRequest<ClassUser[]>(`/api/lms/classes/users?classId=${props.classId}`)
+    const data = await cRequest<LmsClassUser[]>(`/api/lms/classes/users?classId=${props.classId}`)
     users.value = data || []
   } catch {
     users.value = []
