@@ -23,7 +23,7 @@
 
 <script setup>
 import { ref, computed, inject, watch } from 'vue'
-import { submitQuestion, recordAnswer } from './shared.ts'
+import { submitQuestion, recordAnswer, computeCorrectRate } from './shared.ts'
 
 const props = defineProps({
   question: { type: Object, required: true },
@@ -32,6 +32,8 @@ const props = defineProps({
 
 const submitted = inject('questionSubmitted')
 const isCorrect = inject('questionIsCorrect')
+const fromRecord = inject('questionFromRecord')
+const { editableCourseId } = useLayoutState()
 const selected = ref([])
 
 const hasAnswer = computed(() => selected.value.length > 0)
@@ -44,7 +46,10 @@ watch(() => props.question?.record, (record) => {
 }, { immediate: true })
 
 function toggle(idx) {
-  if (submitted.value) return
+  if (fromRecord.value) {
+    submitted.value = false
+    fromRecord.value = false
+  }
   const arr = [...selected.value]
   const pos = arr.indexOf(idx)
   if (pos > -1) arr.splice(pos, 1)
@@ -55,12 +60,16 @@ function toggle(idx) {
 
 function optionClass(idx) {
   if (submitted.value) {
-    const correct = props.question.answer.includes(idx)
     const sel = selected.value.includes(idx)
-    if (correct && sel) return 'border-green-400 bg-green-50 dark:bg-green-900/20'
-    if (correct && !sel) return 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20'
-    if (!correct && sel) return 'border-red-400 bg-red-50 dark:bg-red-900/20'
-    return 'border-gray-200 dark:border-gray-600'
+    if (isCorrect.value) {
+      // 答对：选中项标绿
+      if (sel) return 'border-green-400 bg-green-50 dark:bg-green-900/20'
+      return 'border-gray-200 dark:border-gray-600'
+    } else {
+      // 答错：只标红用户选错的项，不标绿/黄正确答案
+      if (sel) return 'border-red-400 bg-red-50 dark:bg-red-900/20'
+      return 'border-gray-200 dark:border-gray-600'
+    }
   }
   return selected.value.includes(idx)
     ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20'
@@ -69,12 +78,14 @@ function optionClass(idx) {
 
 function checkClass(idx) {
   if (submitted.value) {
-    const correct = props.question.answer.includes(idx)
     const sel = selected.value.includes(idx)
-    if (correct && sel) return 'border-green-400 bg-green-400 text-white'
-    if (correct && !sel) return 'border-yellow-400 bg-yellow-100 text-yellow-600'
-    if (!correct && sel) return 'border-red-400 bg-red-400 text-white'
-    return 'border-gray-300 dark:border-gray-500'
+    if (isCorrect.value) {
+      if (sel) return 'border-green-400 bg-green-400 text-white'
+      return 'border-gray-300 dark:border-gray-500'
+    } else {
+      if (sel) return 'border-red-400 bg-red-400 text-white'
+      return 'border-gray-300 dark:border-gray-500'
+    }
   }
   return selected.value.includes(idx)
     ? 'border-blue-400 bg-blue-400 text-white'
@@ -91,6 +102,9 @@ function submit() {
     questionId: props.questionId,
     userAnswer: [...selected.value],
     isCorrect: correct,
+    correctRate: computeCorrectRate(props.question),
+    courseId: editableCourseId.value,
+    point: props.question.point,
   })
   return { isCorrect: correct }
 }

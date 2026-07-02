@@ -1,6 +1,7 @@
 <template>
     <div class="homework-render w-full space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 relative"
-        :data-homework-id="homeworkId">
+        :data-homework-id="homeworkId"
+        @mouseenter.once="fetchRecord">
         <!-- 加载中 -->
         <div v-if="pending" class="flex items-center justify-center py-6 text-gray-400">
             <span>{{ $t('homework.loading') }}</span>
@@ -45,6 +46,12 @@
 
         <!-- 学生提交区域 -->
         <div v-if="homework" class="space-y-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+            <!-- 答题内容 -->
+            <div>
+                <label class="text-xs text-gray-500 mb-1 block">{{ $t('homework.contentLabel') }}</label>
+                <richEditor v-model="submittedContent" />
+            </div>
+
             <!-- 文件上传 -->
             <div>
                 <label class="text-xs text-gray-500 mb-1 block">{{ $t('homework.uploadLabel') }}</label>
@@ -74,6 +81,11 @@
                 <div class="flex items-center gap-2">
                     <UIcon name="i-heroicons-check-circle" class="w-5 h-5 text-green-500" />
                     <span class="text-sm text-green-700 dark:text-green-300">{{ $t('homework.submitSuccess') }}</span>
+                </div>
+                <!-- 已提交内容 -->
+                <div v-if="submittedContent" class="mt-2">
+                    <ueditorRender v-if="isRichDoc(submittedContent)" :json="submittedContent" />
+                    <p v-else class="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{{ submittedContent }}</p>
                 </div>
                 <!-- 已提交文件列表 -->
                 <div v-if="submittedFileList && submittedFileList.length" class="mt-2 space-y-1">
@@ -160,6 +172,7 @@ const pending = computed(() => !!homeworkId.value && fetchedPending.value)
 const editOpen = ref(false)
 
 // 学生提交状态
+const submittedContent = ref('')
 const submittedFiles = ref([])
 const submitted = ref(false)
 const submittedFileList = ref([])
@@ -167,6 +180,10 @@ const submitting = ref(false)
 const submitMsg = ref('')
 const submitOk = ref(true)
 
+// 判断是否为富文本 JSON
+function isRichDoc(content) {
+    return content && typeof content === 'object' && !Array.isArray(content) && !!content.type
+}
 
 async function onSubmit() {
     if (!homeworkId.value || !editableCourseId.value) return
@@ -180,6 +197,7 @@ async function onSubmit() {
                 course_id: editableCourseId.value,
                 homework_cid: homeworkId.value,
                 files,
+                content: submittedContent.value,
             },
         })
         submitted.value = true
@@ -195,6 +213,7 @@ async function onSubmit() {
 }
 
 function onReset() {
+    submittedContent.value = ''
     submittedFiles.value = []
     submitted.value = false
     submittedFileList.value = []
@@ -212,6 +231,31 @@ function onSaved(hw) {
     // 本地立即更新内容，避免刷新期间空白
     if (homework.value) {
         Object.assign(homework.value, hw)
+    }
+}
+
+// 鼠标移入时（仅一次）获取当前用户的提交记录，填充到提交状态
+async function fetchRecord() {
+    if (!homeworkId.value || !editableCourseId.value) return
+    try {
+        const data = await cRequest(`/api/lms/homeworks/record?course_id=${editableCourseId.value}&cid=${homeworkId.value}`)
+        if (data) {
+            // 填充已提交内容
+            if (data.content) {
+                submittedContent.value = data.content
+            }
+            // 填充已提交文件
+            if (Array.isArray(data.files) && data.files.length > 0) {
+                submittedFiles.value = [...data.files]
+                submittedFileList.value = [...data.files]
+            }
+            // 有内容或文件则标记为已提交
+            if (data.content || (Array.isArray(data.files) && data.files.length > 0)) {
+                submitted.value = true
+            }
+        }
+    } catch (err) {
+        // 静默忽略（未登录或无记录）
     }
 }
 </script>

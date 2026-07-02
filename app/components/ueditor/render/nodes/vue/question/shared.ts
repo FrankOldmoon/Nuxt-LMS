@@ -51,14 +51,20 @@ export async function submitQuestion(params: {
   questionId: number
   userAnswer: string[] | number[]
   isCorrect: boolean
+  correctRate: number
+  courseId?: number
+  point?: number
 }) {
   try {
     await cRequest('/api/lms/questions/submit', {
       method: 'POST',
       body: {
-        question_id: params.questionId,
+        course_id: params.courseId,
+        question_cid: params.questionId,
         user_answer: params.userAnswer,
         is_correct: params.isCorrect,
+        correct_rate: params.correctRate,
+        point: params.point,
       },
     })
   } catch {

@@ -5,8 +5,8 @@
 </template>
 
 <script setup>
-import { ref, watch, computed, onMounted, onBeforeUnmount, inject } from 'vue'
-import { submitQuestion, recordAnswer } from './shared.ts'
+import { ref, watch, computed, onMounted, onBeforeUnmount, inject, nextTick } from 'vue'
+import { submitQuestion, recordAnswer, computeCorrectRate } from './shared.ts'
 
 const props = defineProps({
   question: { type: Object, required: true },
@@ -15,6 +15,8 @@ const props = defineProps({
 
 const submitted = inject('questionSubmitted')
 const isCorrect = inject('questionIsCorrect')
+const fromRecord = inject('questionFromRecord')
+const { editableCourseId } = useLayoutState()
 const selectAnswers = ref([])
 let selectEls = []
 
@@ -44,6 +46,12 @@ function unbindSelects() {
 
 function onChange(e) {
   const idx = Number(e.target.dataset.fillIndex)
+  // 来自回填时重新作答，清除 submitted 状态
+  if (fromRecord.value) {
+    submitted.value = false
+    fromRecord.value = false
+    clearSelectStyles()
+  }
   selectAnswers.value[idx] = e.target.value
   recordAnswer(props.question, selectAnswers.value.map(v => (v || '').trim()))
 }
@@ -57,6 +65,23 @@ watch(() => props.question, (q) => {
   if (q?.type === 'select') {
     selectAnswers.value = (q.answer || []).map(() => '')
   }
+}, { immediate: true })
+
+// 监听 record 变化，同步到 selectAnswers 和 DOM（fetchRecord 回填场景）
+watch(() => props.question?.record, (record) => {
+  if (!Array.isArray(record) || record.length === 0) return
+  selectAnswers.value = [...record]
+  // DOM 可能还未渲染，用 nextTick 确保已挂载
+  nextTick(() => {
+    const container = getContainer()
+    if (!container) return
+    const els = container.querySelectorAll('select')
+    els.forEach((el, idx) => {
+      if (record[idx] !== undefined) {
+        el.value = record[idx]
+      }
+    })
+  })
 }, { immediate: true })
 
 const hasAnswer = computed(() => selectAnswers.value.some(a => a && a.trim() !== ''))
@@ -111,6 +136,9 @@ function submit() {
     questionId: props.questionId,
     userAnswer: selectAnswers.value.map(a => (a || '').trim()),
     isCorrect: correct,
+    correctRate: computeCorrectRate(props.question),
+    courseId: editableCourseId.value,
+    point: props.question.point,
   })
   styleSelects()
   return { isCorrect: correct }

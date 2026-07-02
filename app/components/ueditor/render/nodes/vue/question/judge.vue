@@ -26,6 +26,8 @@ const props = defineProps({
 
 const submitted = inject('questionSubmitted')
 const isCorrect = inject('questionIsCorrect')
+const fromRecord = inject('questionFromRecord')
+const { editableCourseId } = useLayoutState()
 const selected = ref(-1)
 
 const hasAnswer = computed(() => selected.value >= 0)
@@ -38,17 +40,25 @@ watch(() => props.question?.record, (record) => {
 }, { immediate: true })
 
 function select(idx) {
-  if (submitted.value) return
+  if (fromRecord.value) {
+    submitted.value = false
+    fromRecord.value = false
+  }
   selected.value = idx
   recordAnswer(props.question, [idx])
 }
 
 function btnClass(idx) {
   if (submitted.value) {
-    const correct = props.question.answer[0] === idx
-    if (correct) return 'border-green-400 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-    if (selected.value === idx && !correct) return 'border-red-400 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
-    return 'border-gray-200 dark:border-gray-600 text-gray-500'
+    if (isCorrect.value) {
+      // 答对：选中项标绿
+      if (selected.value === idx) return 'border-green-400 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+      return 'border-gray-200 dark:border-gray-600 text-gray-500'
+    } else {
+      // 答错：只标红用户选错的项，不标绿正确答案
+      if (selected.value === idx) return 'border-red-400 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+      return 'border-gray-200 dark:border-gray-600 text-gray-500'
+    }
   }
   return selected.value === idx
     ? 'border-blue-400 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
@@ -63,6 +73,9 @@ function submit() {
     questionId: props.questionId,
     userAnswer: [selected.value],
     isCorrect: correct,
+    correctRate: correct ? 1 : 0,
+    courseId: editableCourseId.value,
+    point: props.question.point,
   })
   return { isCorrect: correct }
 }

@@ -285,6 +285,7 @@
     "codePlaceholder": "作業代碼",
     "saveSuccess": "儲存成功",
     "saveFailed": "儲存失敗",
+    "contentLabel": "作業作答",
     "uploadLabel": "上傳作業檔案",
     "uploadHint": "拖曳檔案到此處上傳",
     "submit": "提交作業",

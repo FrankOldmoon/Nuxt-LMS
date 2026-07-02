@@ -1,6 +1,7 @@
 <template>
     <div class="question-render w-full space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 relative"
-        :data-question-id="questionId">
+        :data-question-id="questionId"
+        @mouseenter.once="fetchRecord">
         <!-- 加载中 -->
         <div v-if="pending" class="flex items-center justify-center py-6 text-gray-400">
             <span>{{ $t('question.loading') }}</span>
@@ -12,7 +13,7 @@
         </div>
 
         <template v-else>
-            {{ question.record }}:{{ question.correct_rate }}
+            <!-- {{ question.record }}:{{ question.correct_rate }} -->
             <!-- {{ question }} -->
             <!-- 右上角编辑按钮 -->
             <UButton icon="i-heroicons-pencil-square" variant="ghost" size="2xs"
@@ -50,7 +51,7 @@
                 </span>
             </div>
             <div class="flex gap-2 ml-auto">
-                <UButton variant="soft" size="sm" :disabled="!hasAnswer || submitted" @click="onReset">
+                <UButton variant="soft" size="sm" :disabled="!hasAnswer" @click="onReset">
                     {{ $t('common.reset') }}
                 </UButton>
                 <UButton color="primary" size="sm" :disabled="!hasAnswer" @click="onSubmit">
@@ -62,7 +63,19 @@
         <!-- 结果（公共） -->
         <div v-if="submitted" class="mt-4 space-y-3">
             <ResultBanner :correct="isCorrect" :point="question?.point" />
-            <ExplanationBlock :explanation="question?.explanation" />
+            <!-- 答案正确才显示正确答案和解析 -->
+            <template v-if="isCorrect">
+                <div class="mb-2">
+                    <span class="text-sm text-gray-500">{{ $t('question.correctAnswerLabel') }}</span>
+                    <div class="flex flex-wrap gap-2 mt-1">
+                        <div v-for="(ans, idx) in formattedAnswers" :key="idx"
+                            class="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded text-sm">
+                            <span class="font-medium text-green-700 dark:text-green-300">{{ ans }}</span>
+                        </div>
+                    </div>
+                </div>
+                <ExplanationBlock :explanation="question?.explanation" />
+            </template>
         </div>
 
         <!-- 显示答案（仅教师可见，一直显示） -->
@@ -132,10 +145,13 @@ const renderRef = ref(null)
 const submitted = ref(false)
 const isCorrect = ref(false)
 const showAnswer = ref(false)
+// 标记是否来自 fetchRecord 回填（回填时可重新作答，submit 后不可）
+const fromRecord = ref(false)
 
 // provide 给子组件，让子组件能感知提交状态（如禁用选项、样式变化）
 provide('questionSubmitted', submitted)
 provide('questionIsCorrect', isCorrect)
+provide('questionFromRecord', fromRecord)
 
 // 子组件是否有答案（通过 ref 调用子组件暴露的 hasAnswer）
 const hasAnswer = computed(() => renderRef.value?.hasAnswer ?? false)
@@ -167,6 +183,7 @@ function onSubmit() {
     if (result) {
         isCorrect.value = result.isCorrect
         submitted.value = true
+        fromRecord.value = false
     }
 }
 
@@ -176,6 +193,7 @@ function onReset() {
     submitted.value = false
     isCorrect.value = false
     showAnswer.value = false
+    fromRecord.value = false
     question.value.record = []
 }
 
@@ -275,6 +293,28 @@ function onSaved(ques) {
     // 本地立即更新内容，避免刷新期间空白
     if (question.value) {
         Object.assign(question.value, ques)
+    }
+}
+
+// 鼠标移入时（仅一次）获取当前用户的提交记录，填充到 question.record
+async function fetchRecord() {
+    if (!questionId.value || !editableCourseId.value) return
+    try {
+        const data = await cRequest(`/api/lms/questions/record?course_id=${editableCourseId.value}&cid=${questionId.value}`)
+        if (data && question.value) {
+            // records 只存最新一次作答，直接填充
+            if (Array.isArray(data.records) && data.records.length > 0) {
+                question.value.record = [...data.records]
+                // 同步计算 correct_rate（watch 是异步的，此处手动算避免读到旧值）
+                question.value.correct_rate = computeCorrectRate(question.value)
+                // 有历史记录则显示结果（不重新提交），但允许重新作答
+                submitted.value = true
+                fromRecord.value = true
+                isCorrect.value = (question.value.correct_rate || 0) > 0
+            }
+        }
+    } catch (err) {
+        // 静默忽略（未登录或无记录）
     }
 }
 </script>

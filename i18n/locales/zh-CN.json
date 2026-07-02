@@ -294,6 +294,7 @@
     "codePlaceholder": "作业代码",
     "saveSuccess": "保存成功",
     "saveFailed": "保存失败",
+    "contentLabel": "作业作答",
     "uploadLabel": "上传作业文件",
     "uploadHint": "拖拽文件到此处上传",
     "submit": "提交作业",

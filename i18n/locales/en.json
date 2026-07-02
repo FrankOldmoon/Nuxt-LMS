@@ -294,6 +294,7 @@
     "codePlaceholder": "Homework code",
     "saveSuccess": "Saved successfully",
     "saveFailed": "Save failed",
+    "contentLabel": "Homework Answer",
     "uploadLabel": "Upload homework files",
     "uploadHint": "Drag files here to upload",
     "submit": "Submit Homework",

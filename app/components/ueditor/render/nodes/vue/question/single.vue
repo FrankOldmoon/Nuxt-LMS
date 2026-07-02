@@ -28,6 +28,8 @@ const props = defineProps({
 
 const submitted = inject('questionSubmitted')
 const isCorrect = inject('questionIsCorrect')
+const fromRecord = inject('questionFromRecord')
+const { editableCourseId } = useLayoutState()
 const selected = ref(-1)
 
 const hasAnswer = computed(() => selected.value >= 0)
@@ -40,17 +42,26 @@ watch(() => props.question?.record, (record) => {
 }, { immediate: true })
 
 function select(idx) {
-    if (submitted.value) return
+    // 来自回填时重新作答，清除 submitted 状态
+    if (fromRecord.value) {
+        submitted.value = false
+        fromRecord.value = false
+    }
     selected.value = idx
     recordAnswer(props.question, [idx])
 }
 
 function optionClass(idx) {
     if (submitted.value) {
-        const correct = props.question.answer[0] === idx
-        if (correct) return 'border-green-400 bg-green-50 dark:bg-green-900/20'
-        if (selected.value === idx && !correct) return 'border-red-400 bg-red-50 dark:bg-red-900/20'
-        return 'border-gray-200 dark:border-gray-600'
+        if (isCorrect.value) {
+            // 答对：选中项标绿
+            if (selected.value === idx) return 'border-green-400 bg-green-50 dark:bg-green-900/20'
+            return 'border-gray-200 dark:border-gray-600'
+        } else {
+            // 答错：只标红用户选错的项，不标绿正确答案
+            if (selected.value === idx) return 'border-red-400 bg-red-50 dark:bg-red-900/20'
+            return 'border-gray-200 dark:border-gray-600'
+        }
     }
     return selected.value === idx
         ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20'
@@ -59,10 +70,13 @@ function optionClass(idx) {
 
 function dotClass(idx) {
     if (submitted.value) {
-        const correct = props.question.answer[0] === idx
-        if (correct) return 'border-green-400 text-green-500'
-        if (selected.value === idx && !correct) return 'border-red-400 text-red-500'
-        return 'border-gray-300 dark:border-gray-500'
+        if (isCorrect.value) {
+            if (selected.value === idx) return 'border-green-400 text-green-500'
+            return 'border-gray-300 dark:border-gray-500'
+        } else {
+            if (selected.value === idx) return 'border-red-400 text-red-500'
+            return 'border-gray-300 dark:border-gray-500'
+        }
     }
     return selected.value === idx
         ? 'border-blue-400 text-blue-500'
@@ -77,6 +91,9 @@ function submit() {
         questionId: props.questionId,
         userAnswer: [selected.value],
         isCorrect: correct,
+        correctRate: correct ? 1 : 0,
+        courseId: editableCourseId.value,
+        point: props.question.point,
     })
     return { isCorrect: correct }
 }
