@@ -1,19 +1,13 @@
 <template>
-  <div class="umo-editor-render-container">
-    <div class="umo-zoomable-container umo-web-container umo-scrollbar">
-      <div class="umo-zoomable-content">
-        <div class="umo-editor-render umo-page-content" :style="pageStyle">
-          <div class="umo-page-node-content">
-            <div v-if="renderContent" class="umo-editor-content is-readonly" :style="{ lineHeight: defaultLineHeight }"
-              :spellcheck="false">
-              <div class="umo-editor" contenteditable="false">
-                <RenderNode :node="renderContent" />
-              </div>
-            </div>
-          </div>
-        </div>
+  <div class="umo-editor-render umo-page-content" style="width:100%; height:100%; min-height:100%">
+    <!-- <div class="umo-page-node-content" style="width:100%; height:100%; min-height:100%"> -->
+    <div v-if="renderContent" class="umo-editor-content is-readonly" :style="{ lineHeight: defaultLineHeight }"
+      :spellcheck="false">
+      <div class="umo-editor" contenteditable="false" style="padding: 0px; height:100%; min-height:100%">
+        <RenderNode :node="renderContent" />
       </div>
     </div>
+    <!-- </div> -->
   </div>
 </template>
 

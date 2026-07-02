@@ -81,12 +81,14 @@ const { data: resp, pending, refresh } = cRequest.use<import('#shared/types/lms'
 const data = computed(() => resp.value as import('#shared/types/lms').LmsChapterPageData | null)
 
 // 数据变化时设置 TOC + 可编辑内容
+// flush: 'sync' 确保在 SSR Suspense 恢复时同步执行，
+// 避免嵌套 Suspense 子组件（如 question）渲染时 editableCourseId 仍为初始值 0
 watch(resp, (d) => {
   if (!d) return
   setToc(extractTocFromContent(d?.chapter?.content))
   setEditableContent(d?.chapter?.content ?? null)
   if (d?.chapter?.id) setEditableMeta('chapters', d.chapter.id, d.course.id)
-}, { immediate: true })
+}, { immediate: true, flush: 'sync' })
 
 // 监听内容版本号，保存成功后重新获取数据
 watch(contentVersion, () => refresh())

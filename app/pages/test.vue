@@ -1,5 +1,5 @@
 <template>
-    <RichEditor v-model="data"/>
+    <question :id="1"/>
 </template>
 
 

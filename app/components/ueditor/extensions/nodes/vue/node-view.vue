@@ -23,8 +23,13 @@ watch(
     if (!type) return
     loading.value = true
     try {
-      // 无白名单，直接根据type动态导入对应vue文件
-      const mod = await import(`./${type}.vue`)
+      // 优先尝试同目录下 .vue 文件，其次尝试子目录 index.vue
+      let mod
+      try {
+        mod = await import(`./${type}.vue`)
+      } catch {
+        mod = await import(`./${type}/index.vue`)
+      }
       comp.value = mod.default
     } catch (err) {
       console.warn(`组件 ${type} 不存在，加载失败`, err)

@@ -14,7 +14,7 @@
             </template>
         </UModal>
         <!-- 字符串模式：3行文本域 + 右上角半透明书本按钮 -->
-        <div v-show="!isJson" class="relative">
+        <div v-if="!isJson" class="relative">
             <UTextarea v-model="model" :rows="3" class="w-full" placeholder="请输入文本内容..." />
             <!-- 富文本编辑弹窗 -->
             <UButton icon="i-heroicons-book-open" variant="ghost" size="sm"
@@ -23,8 +23,8 @@
         </div>
 
         <!-- JSON 模式：渲染富文本（只读） + 右上角半透明输入按钮 -->
-        <div v-show="isJson" class="relative border rounded-md p-3 min-h-[72px] cursor-pointer">
-            <div @click="() => { isModalOpen = true }">
+        <div v-if="isJson" class="relative border rounded-md p-3 min-h-[72px] cursor-pointer">
+            <div @click="openEditor">
                 <ueditorRender :json="model" />
             </div>
             <UButton icon="i-heroicons-book-open" variant="ghost" size="sm"
@@ -53,14 +53,7 @@ const editJson = ref<any>(null)
 
 /** 打开编辑器：将当前 model 转换为 JSON 赋给 editJson */
 function openEditor() {
-    if (typeof model.value === 'string') {
-        editJson.value = textToJson(model.value)
-    } else if (isJson.value) {
-        // 深拷贝避免直接修改原对象
-        editJson.value = JSON.parse(JSON.stringify(model.value))
-    } else {
-        editJson.value = null
-    }
+    editJson.value = model.value
     isModalOpen.value = true
 }
 
@@ -91,18 +84,5 @@ function extractText(node: any): string {
         return node.content.map(extractText).join('')
     }
     return ''
-}
-
-/** 将纯文本转为 Tiptap doc JSON */
-function textToJson(text: string): Record<string, any> {
-    return {
-        type: 'doc',
-        content: [
-            {
-                type: 'paragraph',
-                content: text ? [{ type: 'text', text }] : [],
-            },
-        ],
-    }
 }
 </script>
