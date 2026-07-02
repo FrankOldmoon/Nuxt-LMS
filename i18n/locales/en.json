@@ -276,7 +276,13 @@
     "correctFeedback": "Correct! +{point} pts",
     "wrongFeedback": "Incorrect",
     "correctAnswerLabel": "Correct Answer: ",
+    "showAnswer": "Show Answer",
+    "hideAnswer": "Hide Answer",
     "questionMissing": "Question not found (ID: {id})",
     "getFailed": "Failed to load question"
+  },
+  "upload": {
+    "dragHint": "Drag files here to upload",
+    "clickHint": "Or click to select files"
   }
 }

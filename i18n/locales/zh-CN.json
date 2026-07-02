@@ -276,7 +276,13 @@
     "correctFeedback": "回答正确！+{point}分",
     "wrongFeedback": "回答错误",
     "correctAnswerLabel": "正确答案：",
+    "showAnswer": "显示答案",
+    "hideAnswer": "隐藏答案",
     "questionMissing": "题目不存在 (ID: {id})",
     "getFailed": "获取题目失败"
+  },
+  "upload": {
+    "dragHint": "拖拽文件到此处上传",
+    "clickHint": "或点击选择文件"
   }
 }

@@ -26,12 +26,19 @@ const { t } = useI18n()
 
 const fillHintText = computed(() => t('question.fillAnswerHint'))
 
-// 从 content 中提取 {{text}} 作为答案
+// 从 content 中提取答案
 const parsedAnswers = computed(() => {
-  const text = extractText(props.form.content)
-  const matches = text.match(/\{\{(.+?)\}\}/g)
-  if (!matches) return []
-  return matches.map(m => m.replace(/^\{\{|\}\}$/g, '').trim())
+  const content = props.form.content
+  if (typeof content === 'string') {
+    // 字符串格式：从 {{}} 中提取答案
+    const matches = content.match(/\{\{(.+?)\}\}/g)
+    if (!matches) return []
+    return matches.map(m => m.replace(/^\{\{|\}\}$/g, '').trim())
+  } else if (content && typeof content === 'object') {
+    // UEditor JSON 格式：提取 type 为 inputs 的节点的 attrs.content 作为答案
+    return extractAnswersFromDoc(content)
+  }
+  return []
 })
 
 // 同步到 form.answer
@@ -40,21 +47,22 @@ watch(parsedAnswers, (answers) => {
   props.form.answer = answers
 }, { immediate: true })
 
-function extractText(content) {
-  if (typeof content === 'string') return content
-  if (content && typeof content === 'object') {
-    return extractFromDoc(content)
+function extractAnswersFromDoc(node) {
+  const answers = []
+  if (!node) return answers
+  
+  // 如果是 inputs 节点，提取 attrs.content 作为答案
+  if (node.type === 'inputs' && node.attrs && node.attrs.content) {
+    answers.push(node.attrs.content)
   }
-  return ''
-}
-
-function extractFromDoc(node) {
-  if (!node) return ''
-  if (typeof node === 'string') return node
-  if (node.text) return node.text
+  
+  // 递归处理子节点
   if (node.content && Array.isArray(node.content)) {
-    return node.content.map(extractFromDoc).join('')
+    for (const child of node.content) {
+      answers.push(...extractAnswersFromDoc(child))
+    }
   }
-  return ''
+  
+  return answers
 }
 </script>

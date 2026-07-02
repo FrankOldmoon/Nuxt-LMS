@@ -8,7 +8,7 @@
 const props = defineProps({
     node: Object,
 })
-const content = ref(props.node.attrs.content)
+const content = ref('')
 const emit = defineEmits(['update'])
 watch(content, () => {
     emit('update', content.value)

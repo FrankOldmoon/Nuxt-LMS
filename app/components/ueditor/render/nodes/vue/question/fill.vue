@@ -90,9 +90,26 @@ function reset() {
   if (container) {
     container.querySelectorAll('input').forEach(el => { el.value = '' })
   }
+  props.question.record = []
+}
+
+// 填充正确答案为 record
+function fillCorrectAnswer() {
+  if (props.question?.answer && props.question.answer.length > 0) {
+    const container = getInputContainer()
+    if (container) {
+      const inputs = container.querySelectorAll('input')
+      props.question.answer.forEach((ans, idx) => {
+        if (inputs[idx]) {
+          inputs[idx].value = ans
+        }
+      })
+    }
+    props.question.record = [...props.question.answer]
+  }
 }
 
 onBeforeUnmount(() => { unbindInputs() })
 
-defineExpose({ submit, reset, hasAnswer })
+defineExpose({ submit, reset, hasAnswer, fillCorrectAnswer })
 </script>

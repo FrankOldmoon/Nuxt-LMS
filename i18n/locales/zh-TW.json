@@ -267,7 +267,13 @@
     "correctFeedback": "回答正確！+{point}分",
     "wrongFeedback": "回答錯誤",
     "correctAnswerLabel": "正確答案：",
+    "showAnswer": "顯示答案",
+    "hideAnswer": "隱藏答案",
     "questionMissing": "題目不存在 (ID: {id})",
     "getFailed": "獲取題目失敗"
+  },
+  "upload": {
+    "dragHint": "拖拽檔案到此處上傳",
+    "clickHint": "或點擊選擇檔案"
   }
 }

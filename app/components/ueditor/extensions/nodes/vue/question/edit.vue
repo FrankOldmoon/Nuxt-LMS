@@ -29,26 +29,7 @@
         <!-- ========== 公共 UI：标签 ========== -->
         <div>
           <label class="text-xs text-gray-500 mb-1 block">{{ $t('question.tagsLabel') }}</label>
-          <div class="flex flex-wrap gap-1">
-            <span v-for="(tag, idx) in form.tags" :key="idx"
-              class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300 rounded text-xs">
-              {{ tag }}
-              <button class="hover:text-red-500" @click="removeTag(idx)">&times;</button>
-            </span>
-            <UInput
-              v-if="showTagInput"
-              ref="tagInputRef"
-              v-model="tagText"
-              size="2xs"
-              class="w-24"
-              :placeholder="$t('question.tagPlaceholder')"
-              @blur="addTag"
-              @keydown.enter.prevent="addTag"
-            />
-            <UButton v-else variant="ghost" size="2xs" icon="i-heroicons-plus" @click="showTagInput = true; nextTick(() => tagInputRef?.focus())">
-              {{ $t('question.addTag') }}
-            </UButton>
-          </div>
+          <FormInputTags v-model="form.tags" :placeholder="$t('question.tagPlaceholder')" :add-text="$t('question.addTag')" />
         </div>
 
         <!-- ========== 公共 UI：操作按钮 ========== -->
@@ -102,10 +83,6 @@ const saveOk = ref(true)
 const form = ref(null)
 let originalData = null
 
-const showTagInput = ref(false)
-const tagText = ref('')
-const tagInputRef = ref(null)
-
 // 弹窗打开时从 props.question 深拷贝初始化 form
 function initForm() {
   if (!props.question) {
@@ -147,19 +124,6 @@ function onTypeChange() {
       form.value.answer = []
       break
   }
-}
-
-function addTag() {
-  if (!tagText.value.trim() || !form.value) return
-  if (!Array.isArray(form.value.tags)) form.value.tags = []
-  if (!form.value.tags.includes(tagText.value.trim())) form.value.tags.push(tagText.value.trim())
-  tagText.value = ''
-  showTagInput.value = false
-}
-
-function removeTag(idx) {
-  if (!form.value) return
-  form.value.tags.splice(idx, 1)
 }
 
 function resetForm() {

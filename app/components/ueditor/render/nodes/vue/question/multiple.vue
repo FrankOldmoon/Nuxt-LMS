@@ -22,8 +22,8 @@
 </template>
 
 <script setup>
-import { ref, computed, inject } from 'vue'
-import { submitQuestion, recordAnswer, contentToText, isRichDoc } from './shared.ts'
+import { ref, computed, inject, watch } from 'vue'
+import { submitQuestion, recordAnswer } from './shared.ts'
 
 const props = defineProps({
   question: { type: Object, required: true },
@@ -35,6 +35,13 @@ const isCorrect = inject('questionIsCorrect')
 const selected = ref([])
 
 const hasAnswer = computed(() => selected.value.length > 0)
+
+// 监听 question.record 变化，同步到 selected
+watch(() => props.question?.record, (record) => {
+  if (record && record.length > 0) {
+    selected.value = [...record]
+  }
+}, { immediate: true })
 
 function toggle(idx) {
   if (submitted.value) return
@@ -90,7 +97,16 @@ function submit() {
 
 function reset() {
   selected.value = []
+  props.question.record = []
 }
 
-defineExpose({ submit, reset, hasAnswer })
+// 填充正确答案为 record
+function fillCorrectAnswer() {
+  if (props.question?.answer && props.question.answer.length > 0) {
+    selected.value = [...props.question.answer]
+    props.question.record = [...props.question.answer]
+  }
+}
+
+defineExpose({ submit, reset, hasAnswer, fillCorrectAnswer })
 </script>

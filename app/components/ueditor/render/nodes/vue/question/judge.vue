@@ -16,7 +16,7 @@
 </template>
 
 <script setup>
-import { ref, computed, inject } from 'vue'
+import { ref, computed, inject, watch } from 'vue'
 import { submitQuestion, recordAnswer } from './shared.ts'
 
 const props = defineProps({
@@ -29,6 +29,13 @@ const isCorrect = inject('questionIsCorrect')
 const selected = ref(-1)
 
 const hasAnswer = computed(() => selected.value >= 0)
+
+// 监听 question.record 变化，同步到 selected
+watch(() => props.question?.record, (record) => {
+  if (record && record.length > 0) {
+    selected.value = record[0]
+  }
+}, { immediate: true })
 
 function select(idx) {
   if (submitted.value) return
@@ -62,7 +69,16 @@ function submit() {
 
 function reset() {
   selected.value = -1
+  props.question.record = []
 }
 
-defineExpose({ submit, reset, hasAnswer })
+// 填充正确答案为 record
+function fillCorrectAnswer() {
+  if (props.question?.answer && props.question.answer.length > 0) {
+    selected.value = props.question.answer[0]
+    props.question.record = [props.question.answer[0]]
+  }
+}
+
+defineExpose({ submit, reset, hasAnswer, fillCorrectAnswer })
 </script>

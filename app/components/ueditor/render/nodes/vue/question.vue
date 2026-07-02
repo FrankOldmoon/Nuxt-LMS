@@ -1,5 +1,6 @@
 <template>
-    <div class="question-render w-full space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 relative" :data-question-id="questionId">
+    <div class="question-render w-full space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 relative"
+        :data-question-id="questionId">
         <!-- 加载中 -->
         <div v-if="pending" class="flex items-center justify-center py-6 text-gray-400">
             <span>{{ $t('question.loading') }}</span>
@@ -33,22 +34,21 @@
             </div>
 
             <!-- 题型特定渲染 -->
-            <component v-if="renderComponent" ref="renderRef" :is="renderComponent" :question="question" :question-id="questionId" />
+            <component v-if="renderComponent" ref="renderRef" :is="renderComponent" :question="question"
+                :question-id="questionId" />
         </template>
 
         <!-- 提交/重置（公共） -->
-        <div v-if="question && !submitted" class="flex items-center gap-2 pt-3">
+        <div v-if="question" class="flex items-center gap-2 pt-3">
             <!-- 标签 -->
             <div v-if="question.tags && question.tags.length" class="flex flex-wrap gap-1">
-                <span
-                    v-for="(tag, idx) in question.tags"
-                    :key="idx"
+                <span v-for="(tag, idx) in question.tags" :key="idx"
                     class="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded text-xs">
                     {{ tag }}
                 </span>
             </div>
             <div class="flex gap-2 ml-auto">
-                <UButton variant="soft" size="sm" :disabled="!hasAnswer" @click="onReset">
+                <UButton variant="soft" size="sm" :disabled="!hasAnswer || submitted" @click="onReset">
                     {{ $t('common.reset') }}
                 </UButton>
                 <UButton color="primary" size="sm" :disabled="!hasAnswer" @click="onSubmit">
@@ -61,8 +61,26 @@
         <div v-if="submitted" class="mt-4 space-y-3">
             <ResultBanner :correct="isCorrect" :point="question?.point" />
             <ExplanationBlock :explanation="question?.explanation" />
-            <div class="flex justify-end">
-                <UButton variant="soft" size="sm" @click="onRedo">{{ $t('question.redo') }}</UButton>
+        </div>
+
+        <!-- 显示答案（仅教师可见，一直显示） -->
+        <div v-if="question && isTeacher" class="mt-4 flex items-start gap-2">
+            <UButton variant="soft" size="sm" @click="onShowAnswer">
+                {{ showAnswer ? $t('question.hideAnswer') : $t('question.showAnswer') }}
+            </UButton>
+            <div v-if="showAnswer" class="flex-1">
+                <!-- 正确答案 -->
+                <div class="mb-2">
+                    <span class="text-sm text-gray-500">{{ $t('question.correctAnswerLabel') }}</span>
+                    <div class="flex flex-wrap gap-2 mt-1">
+                        <div v-for="(ans, idx) in formattedAnswers" :key="idx"
+                            class="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded text-sm">
+                            <span class="font-medium text-green-700 dark:text-green-300">{{ ans }}</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- 答案解析 -->
+                <ExplanationBlock v-if="question?.explanation" :explanation="question?.explanation" />
             </div>
         </div>
 
@@ -87,6 +105,7 @@ const props = defineProps({
 
 const { t } = useI18n()
 const { editableCourseId } = useLayoutState()
+const { hasRole } = useAuth()
 
 const questionId = computed(() => Number(props.node?.attrs?.content) || 0)
 
@@ -105,6 +124,7 @@ const renderRef = ref(null)
 // 公共状态
 const submitted = ref(false)
 const isCorrect = ref(false)
+const showAnswer = ref(false)
 
 // provide 给子组件，让子组件能感知提交状态（如禁用选项、样式变化）
 provide('questionSubmitted', submitted)
@@ -112,6 +132,27 @@ provide('questionIsCorrect', isCorrect)
 
 // 子组件是否有答案（通过 ref 调用子组件暴露的 hasAnswer）
 const hasAnswer = computed(() => renderRef.value?.hasAnswer ?? false)
+
+// 是否是教师（显示答案按钮只对教师可见）
+const isTeacher = computed(() => hasRole('teacher') || hasRole('admin'))
+
+// 格式化答案（根据题型不同显示方式不同）
+const formattedAnswers = computed(() => {
+    if (!question.value?.answer) return []
+    const answer = question.value.answer
+    const type = question.value.type
+
+    if (type === 'single' || type === 'multiple') {
+        // 选择题：显示 A/B/C/D
+        return answer.map(idx => String.fromCharCode(65 + idx))
+    } else if (type === 'judge') {
+        // 判断题：显示 ✓ 正确 / ✗ 错误
+        return answer.map(idx => idx === 0 ? t('question.correct') : t('question.wrong'))
+    } else {
+        // 填空题：直接显示答案文本
+        return answer
+    }
+})
 
 function onSubmit() {
     if (!renderRef.value) return
@@ -127,9 +168,20 @@ function onReset() {
     renderRef.value.reset()
     submitted.value = false
     isCorrect.value = false
+    showAnswer.value = false
+    question.value.record = []
 }
 
-function onRedo() { onReset() }
+function onShowAnswer() {
+    showAnswer.value = !showAnswer.value
+    if (showAnswer.value && renderRef.value) {
+        // 填充正确答案为 record
+        renderRef.value.fillCorrectAnswer()
+    } else {
+        onReset()
+    }
+
+}
 
 // SSR-friendly data fetching
 const apiUrl = computed(() => {
