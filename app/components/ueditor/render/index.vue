@@ -1,5 +1,5 @@
 <template>
-  <div class="umo-editor-render umo-page-content render" style="width:100%;">
+  <div class="umo-editor-render umo-page-content render" style="width:100%;min-height: 100%;">
     <!-- <div class="umo-page-node-content" style="width:100%; height:100%; min-height:100%"> -->
     <div v-if="renderContent" class="umo-editor-content is-readonly" :style="{ lineHeight: defaultLineHeight }"
       :spellcheck="false">

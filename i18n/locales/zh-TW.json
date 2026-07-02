@@ -299,6 +299,16 @@
     "dragHint": "拖拽檔案到此處上傳",
     "clickHint": "或點擊選擇檔案"
   },
+  "courseData": {
+    "editor": "內容管理",
+    "searchPlaceholder": "搜尋名稱、編號或標籤...",
+    "empty": "暫無內容",
+    "all": "全部",
+    "questionLabel": "題目",
+    "confirmDelete": "確定刪除此項嗎？",
+    "deleted": "已刪除",
+    "deleteFailed": "刪除失敗"
+  },
   "record": {
     "noRecords": "暫無記錄",
     "questionRecords": "題目作答記錄",

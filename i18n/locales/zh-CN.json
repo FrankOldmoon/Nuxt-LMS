@@ -308,6 +308,16 @@
     "dragHint": "拖拽文件到此处上传",
     "clickHint": "或点击选择文件"
   },
+  "courseData": {
+    "editor": "内容管理",
+    "searchPlaceholder": "搜索名称、编号或标签...",
+    "empty": "暂无内容",
+    "all": "全部",
+    "questionLabel": "题目",
+    "confirmDelete": "确定删除此项吗？",
+    "deleted": "已删除",
+    "deleteFailed": "删除失败"
+  },
   "record": {
     "noRecords": "暂无记录",
     "questionRecords": "题目作答记录",

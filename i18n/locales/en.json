@@ -308,6 +308,16 @@
     "dragHint": "Drag files here to upload",
     "clickHint": "Or click to select files"
   },
+  "courseData": {
+    "editor": "Content Manager",
+    "searchPlaceholder": "Search name, ID or tags...",
+    "empty": "No content",
+    "all": "All",
+    "questionLabel": "Question",
+    "confirmDelete": "Are you sure you want to delete this item?",
+    "deleted": "Deleted",
+    "deleteFailed": "Delete failed"
+  },
   "record": {
     "noRecords": "No records",
     "questionRecords": "Question Records",

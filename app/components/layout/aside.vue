@@ -6,6 +6,7 @@
         <NavEditor mode="course" :course-id="courseId" :navigation="navigation.slice(1)"
           @saved="handleSaved" />
         <CourseEditor :course-id="Number(courseId)" @saved="handleSaved" />
+        <CourseDataEditor :course-id="Number(courseId)" />
       </div>
       <div class="mt-4 space-y-3">
         <UButton :label="selectedClassName || $t('classSelector.selectClass')"
