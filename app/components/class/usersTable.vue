@@ -9,36 +9,57 @@
       {{ $t('classSelector.noUsers') }}
     </div>
 
-    <UTable
-      v-else
-      :data="users"
-      :columns="columns"
-      :ui="{ td: 'py-1.5' }"
-    >
-      <template #name-cell="{ row }">
-        <div class="flex items-center gap-2">
-          <UAvatar :src="row.original.avatarImg || undefined" :alt="row.original.name" size="2xs" :text="row.original.name?.charAt(0)" />
-          <span class="text-sm">{{ row.original.name }}</span>
-          <UBadge v-if="row.original.isTeacher" :label="$t('classSelector.roleTeacher')" color="primary" variant="subtle" size="xs" />
+    <template v-else>
+      <!-- 教师列表 -->
+      <div v-if="teachers.length" class="mb-3">
+        <div class="text-xs font-medium text-muted mb-1.5">{{ $t('classSelector.teachers') }}</div>
+        <div class="space-y-1">
+          <div
+            v-for="t in teachers"
+            :key="t.id"
+            class="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-muted"
+          >
+            <UAvatar :src="t.avatarImg || undefined" :alt="t.name" size="2xs" :text="t.name?.charAt(0)" />
+            <span class="text-sm flex-1">{{ t.name }}</span>
+            <UButton
+              icon="i-lucide-pencil"
+              size="xs"
+              color="neutral"
+              variant="ghost"
+              :aria-label="$t('common.edit')"
+              @click="openEdit(t.id)"
+            />
+          </div>
         </div>
-      </template>
-      <template #preferName-cell="{ row }">
-        <span class="text-xs text-muted">{{ row.original.preferName || '-' }}</span>
-      </template>
-      <template #rollNumber-cell="{ row }">
-        <span class="text-xs text-muted">{{ row.original.rollNumber || '-' }}</span>
-      </template>
-      <template #actions-cell="{ row }">
-        <UButton
-          icon="i-lucide-pencil"
-          size="xs"
-          color="neutral"
-          variant="ghost"
-          :aria-label="$t('common.edit')"
-          @click="openEdit(row.original.id)"
-        />
-      </template>
-    </UTable>
+        <USeparator v-if="students.length" class="mt-3" />
+      </div>
+
+      <!-- 学生表格 -->
+      <UTable
+        v-if="students.length"
+        v-model:sorting="sorting"
+        :data="students"
+        :columns="columns"
+        :ui="{ td: 'py-1.5' }"
+      >
+        <template #name-cell="{ row }">
+          <div class="flex items-center gap-2">
+            <UAvatar :src="row.original.avatarImg || undefined" :alt="row.original.name" size="2xs" :text="row.original.name?.charAt(0)" />
+            <span class="text-sm">{{ row.original.name }}</span>
+          </div>
+        </template>
+        <template #actions-cell="{ row }">
+          <UButton
+            icon="i-lucide-pencil"
+            size="xs"
+            color="neutral"
+            variant="ghost"
+            :aria-label="$t('common.edit')"
+            @click="openEdit(row.original.id)"
+          />
+        </template>
+      </UTable>
+    </template>
 
     <!-- 用户编辑弹窗 -->
     <AuthUserEditModal ref="editModal" :user-id="editingUserId" @saved="fetchUsers" />
@@ -46,7 +67,11 @@
 </template>
 
 <script setup lang="ts">
+import { h, resolveComponent } from 'vue'
+import type { TableColumn } from '@nuxt/ui'
 import type { LmsClassUser } from '#shared/types/lms'
+
+const UButton = resolveComponent('UButton')
 
 const props = defineProps<{
   classId: number | null
@@ -56,6 +81,10 @@ const { t } = useI18n()
 
 const users = ref<LmsClassUser[]>([])
 const pending = ref(false)
+const sorting = ref([{ id: 'preferName', desc: false }])
+
+const teachers = computed(() => users.value.filter((u) => u.isTeacher))
+const students = computed(() => users.value.filter((u) => !u.isTeacher))
 
 // 编辑弹窗
 const editModal = ref<{ show: () => void } | null>(null)
@@ -66,10 +95,28 @@ function openEdit(userId: number) {
   editModal.value?.show()
 }
 
-const columns = computed(() => [
-  { accessorKey: 'name', header: t('classSelector.colName') },
-  { accessorKey: 'preferName', header: t('classSelector.colPreferName') },
-  { accessorKey: 'rollNumber', header: t('classSelector.colRollNumber') },
+function sortableHeader(label: string) {
+  return ({ column }: { column: any }) => {
+    const isSorted = column.getIsSorted()
+    return h(UButton, {
+      color: 'neutral',
+      variant: 'ghost',
+      label,
+      icon: isSorted
+        ? isSorted === 'asc'
+          ? 'i-lucide-arrow-up-narrow-wide'
+          : 'i-lucide-arrow-down-wide-narrow'
+        : 'i-lucide-arrow-up-down',
+      class: '-mx-2.5',
+      onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
+    })
+  }
+}
+
+const columns = computed<TableColumn<LmsClassUser>[]>(() => [
+  { accessorKey: 'name', header: sortableHeader(t('classSelector.colName')) },
+  { accessorKey: 'preferName', header: sortableHeader(t('classSelector.colPreferName')) },
+  { accessorKey: 'rollNumber', header: sortableHeader(t('classSelector.colRollNumber')) },
   { id: 'actions', header: '' },
 ])
 
@@ -90,4 +137,6 @@ async function fetchUsers() {
 }
 
 watch(() => props.classId, () => fetchUsers(), { immediate: true })
+
+defineExpose({ refresh: fetchUsers })
 </script>

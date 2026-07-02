@@ -120,7 +120,13 @@
     "updateSuccess": "資料更新成功",
     "updateFailed": "資料更新失敗",
     "loading": "載入中...",
-    "loadFailed": "載入資料失敗"
+    "loadFailed": "載入資料失敗",
+    "teachingClasses": "任教班級",
+    "teachingClassesPlaceholder": "選擇任教班級...",
+    "teachingCourses": "任教課程",
+    "teachingCoursesPlaceholder": "選擇任教課程...",
+    "editorCourses": "編輯者課程",
+    "editorCoursesPlaceholder": "選擇編輯者課程..."
   },
   "settings": {
     "title": "系統設定",
@@ -137,6 +143,7 @@
     "noClasses": "暫無班級",
     "noUsers": "該班級暫無成員",
     "roleTeacher": "教師",
+    "teachers": "教師",
     "colName": "姓名",
     "colPreferName": "暱稱",
     "colRollNumber": "學號",
@@ -147,7 +154,20 @@
     "newClassNamePlaceholder": "輸入新班級名稱",
     "addClass": "新增班級",
     "addClassSuccess": "班級新增成功",
-    "addClassFailed": "新增班級失敗"
+    "addClassFailed": "新增班級失敗",
+    "editClassName": "編輯班級名稱",
+    "editClassNameSuccess": "班級名稱已更新",
+    "editClassNameFailed": "更新班級名稱失敗",
+    "addStudents": "新增學生",
+    "addMembers": "新增成員",
+    "searchStudentPlaceholder": "搜尋學生姓名或使用者名稱...",
+    "noSearchResult": "無符合結果",
+    "addStudentsSuccess": "學生新增成功",
+    "addStudentsFailed": "新增學生失敗",
+    "addTeachers": "新增教師",
+    "searchTeacherPlaceholder": "搜尋教師姓名或使用者名稱...",
+    "addTeachersSuccess": "教師新增成功",
+    "addTeachersFailed": "新增教師失敗"
   },
   "courseEditor": {
     "title": "課程設定",

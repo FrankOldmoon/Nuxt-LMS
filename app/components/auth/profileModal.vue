@@ -6,7 +6,12 @@
           <h3 class="text-lg font-semibold">{{ $t('profile.title') }}</h3>
         </div>
 
-        <AuthUserProfileForm v-model="form" />
+        <AuthUserProfileForm
+          v-model="form"
+          v-model:teaching-class-ids="teachingClassIds"
+          v-model:teaching-course-ids="teachingCourseIds"
+          v-model:editor-course-ids="editorCourseIds"
+        />
 
         <div class="flex justify-end gap-2 pt-4">
           <UButton
@@ -36,6 +41,10 @@ const toast = useToast()
 const { t } = useI18n()
 
 const saving = ref(false)
+
+const teachingClassIds = ref<number[]>([])
+const teachingCourseIds = ref<number[]>([])
+const editorCourseIds = ref<number[]>([])
 
 const form = ref<UserProfileForm>({
   name: '',
@@ -67,6 +76,20 @@ function loadFormData() {
     telephone: user.value?.telephone || '',
     classId: user.value?.classId ?? null,
   }
+  loadTeachingData()
+}
+
+async function loadTeachingData() {
+  try {
+    const data = await cRequest<any>('/api/lms/users/teaching')
+    teachingClassIds.value = data?.teachingClassIds || []
+    teachingCourseIds.value = data?.teachingCourseIds || []
+    editorCourseIds.value = data?.editorCourseIds || []
+  } catch {
+    teachingClassIds.value = []
+    teachingCourseIds.value = []
+    editorCourseIds.value = []
+  }
 }
 
 function closeModal() {
@@ -80,6 +103,17 @@ async function saveProfile() {
       method: 'PUT',
       body: form.value,
     })
+    if (user.value) {
+      await cRequest('/api/lms/users/teaching', {
+        method: 'POST',
+        body: {
+          userId: user.value.id,
+          teachingClassIds: teachingClassIds.value,
+          teachingCourseIds: teachingCourseIds.value,
+          editorCourseIds: editorCourseIds.value,
+        },
+      })
+    }
     await refreshUser()
     isOpen.value = false
     toast.add({ title: t('profile.updateSuccess'), color: 'success' })

@@ -12,7 +12,12 @@
         </div>
 
         <template v-else>
-          <AuthUserProfileForm v-model="form" />
+          <AuthUserProfileForm
+            v-model="form"
+            v-model:teaching-class-ids="teachingClassIds"
+            v-model:teaching-course-ids="teachingCourseIds"
+            v-model:editor-course-ids="editorCourseIds"
+          />
 
           <div class="flex justify-end gap-2 pt-4">
             <UButton
@@ -52,6 +57,10 @@ const open = ref(false)
 const loading = ref(false)
 const saving = ref(false)
 
+const teachingClassIds = ref<number[]>([])
+const teachingCourseIds = ref<number[]>([])
+const editorCourseIds = ref<number[]>([])
+
 const form = ref<UserProfileForm>({
   name: '',
   preferName: '',
@@ -80,10 +89,25 @@ async function loadUser() {
       telephone: data?.telephone || '',
       classId: data?.classId ?? null,
     }
+    await loadTeachingData()
   } catch {
     toast.add({ title: t('profile.loadFailed'), color: 'error' })
   } finally {
     loading.value = false
+  }
+}
+
+async function loadTeachingData() {
+  if (!props.userId) return
+  try {
+    const data = await cRequest<any>(`/api/lms/users/teaching?userId=${props.userId}`)
+    teachingClassIds.value = data?.teachingClassIds || []
+    teachingCourseIds.value = data?.teachingCourseIds || []
+    editorCourseIds.value = data?.editorCourseIds || []
+  } catch {
+    teachingClassIds.value = []
+    teachingCourseIds.value = []
+    editorCourseIds.value = []
   }
 }
 
@@ -98,6 +122,15 @@ async function saveUser() {
     await cRequest('/api/lms/users/update', {
       method: 'POST',
       body: { id: props.userId, ...form.value },
+    })
+    await cRequest('/api/lms/users/teaching', {
+      method: 'POST',
+      body: {
+        userId: props.userId,
+        teachingClassIds: teachingClassIds.value,
+        teachingCourseIds: teachingCourseIds.value,
+        editorCourseIds: editorCourseIds.value,
+      },
     })
     toast.add({ title: t('profile.updateSuccess'), color: 'success' })
     emit('saved')

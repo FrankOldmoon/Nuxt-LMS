@@ -120,7 +120,13 @@
     "updateSuccess": "Profile updated successfully",
     "updateFailed": "Failed to update profile",
     "loading": "Loading...",
-    "loadFailed": "Failed to load profile"
+    "loadFailed": "Failed to load profile",
+    "teachingClasses": "Teaching Classes",
+    "teachingClassesPlaceholder": "Select teaching classes...",
+    "teachingCourses": "Teaching Courses",
+    "teachingCoursesPlaceholder": "Select teaching courses...",
+    "editorCourses": "Editor Courses",
+    "editorCoursesPlaceholder": "Select editor courses..."
   },
   "settings": {
     "title": "System Settings",
@@ -146,6 +152,7 @@
     "noClasses": "No classes",
     "noUsers": "No members in this class",
     "roleTeacher": "Teacher",
+    "teachers": "Teachers",
     "colName": "Name",
     "colPreferName": "Nickname",
     "colRollNumber": "Roll Number",
@@ -156,7 +163,20 @@
     "newClassNamePlaceholder": "Enter new class name",
     "addClass": "Add Class",
     "addClassSuccess": "Class added successfully",
-    "addClassFailed": "Failed to add class"
+    "addClassFailed": "Failed to add class",
+    "editClassName": "Edit class name",
+    "editClassNameSuccess": "Class name updated",
+    "editClassNameFailed": "Failed to update class name",
+    "addStudents": "Add Students",
+    "addMembers": "Add Members",
+    "searchStudentPlaceholder": "Search by name or username...",
+    "noSearchResult": "No results found",
+    "addStudentsSuccess": "Students added successfully",
+    "addStudentsFailed": "Failed to add students",
+    "addTeachers": "Add Teachers",
+    "searchTeacherPlaceholder": "Search teacher by name or username...",
+    "addTeachersSuccess": "Teachers added successfully",
+    "addTeachersFailed": "Failed to add teachers"
   },
   "courseEditor": {
     "title": "Course Settings",
