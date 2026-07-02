@@ -121,6 +121,7 @@ function initForm() {
     answer: Array.isArray(props.question.answer) ? [...props.question.answer] : [],
     explanation: props.question.explanation || '',
     tags: Array.isArray(props.question.tags) ? [...props.question.tags] : [],
+    record: Array.isArray(props.question.record) ? [...props.question.record] : [],
   }
   form.value = normalized
   originalData = JSON.parse(JSON.stringify(normalized))

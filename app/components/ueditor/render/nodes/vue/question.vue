@@ -12,6 +12,7 @@
         </div>
 
         <template v-else>
+            {{ question.record }}
             <!-- 右上角编辑按钮 -->
             <UButton icon="i-heroicons-pencil-square" variant="ghost" size="2xs"
                 class="absolute top-2 right-2 opacity-50 hover:opacity-100 transition-opacity z-10"
@@ -41,6 +42,7 @@
 </template>
 
 <script setup>
+import { reactive } from 'vue'
 import SingleRender from './question/single.vue'
 import JudgeRender from './question/judge.vue'
 import MultipleRender from './question/multiple.vue'
@@ -77,7 +79,8 @@ const apiUrl = computed(() => {
 const { data: question, pending, refresh } = cRequest.use(apiUrl, {
     transform: (raw) => {
         if (!raw) return null
-        return {
+        // 用 reactive 包装，确保嵌套属性（如 record）的 push 能触发响应式更新
+        return reactive({
             name: raw.name || '',
             content: raw.content || '',
             options: Array.isArray(raw.options) ? [...raw.options] : [],
@@ -86,7 +89,8 @@ const { data: question, pending, refresh } = cRequest.use(apiUrl, {
             answer: Array.isArray(raw.answer) ? [...raw.answer] : [],
             explanation: raw.explanation || '',
             tags: Array.isArray(raw.tags) ? [...raw.tags] : [],
-        }
+            record: Array.isArray(raw.record) ? [...raw.record] : [],
+        })
     },
 })
 
@@ -95,22 +99,6 @@ const editOpen = ref(false)
 function onSaved(ques) {
     refresh()
     question.value = ques
-}
-
-function contentToText(content) {
-    if (typeof content === 'string') return content
-    if (content && typeof content === 'object') return extractText(content)
-    return ''
-}
-function extractText(node) {
-    if (!node) return ''
-    if (typeof node === 'string') return node
-    if (node.text) return node.text
-    if (node.content && Array.isArray(node.content)) return node.content.map(extractText).join('')
-    return ''
-}
-function isRichDoc(content) {
-    return content && typeof content === 'object' && !Array.isArray(content) && content.type
 }
 </script>
 

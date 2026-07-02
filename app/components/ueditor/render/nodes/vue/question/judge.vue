@@ -3,7 +3,7 @@
     <!-- 判断按钮 -->
     <div class="flex gap-4">
       <button
-        v-for="(opt, idx) in question.options"
+        v-for="(_, idx) in question.options"
         :key="idx"
         class="flex-1 py-3 px-4 rounded-md border text-sm font-medium transition-colors"
         :class="btnClass(idx)"
@@ -37,6 +37,7 @@
 <script setup>
 import ResultBanner from './result-banner.vue'
 import ExplanationBlock from './explanation-block.vue'
+import { submitQuestion, recordAnswer } from './shared.ts'
 
 const props = defineProps({
   question: { type: Object, required: true },
@@ -50,6 +51,7 @@ const isCorrect = ref(false)
 function select(idx) {
   if (submitted.value) return
   selected.value = idx
+  recordAnswer(props.question, [idx])
 }
 
 function btnClass(idx) {
@@ -68,12 +70,11 @@ async function submit() {
   if (!props.question || selected.value < 0) return
   isCorrect.value = selected.value === props.question.answer[0]
   submitted.value = true
-  try {
-    await cRequest('/api/lms/questions/submit', {
-      method: 'POST',
-      body: { question_id: props.questionId, user_answer: [selected.value], is_correct: isCorrect.value },
-    })
-  } catch { /* 接口暂未实现 */ }
+  await submitQuestion({
+    questionId: props.questionId,
+    userAnswer: [selected.value],
+    isCorrect: isCorrect.value,
+  })
 }
 
 function reset() {

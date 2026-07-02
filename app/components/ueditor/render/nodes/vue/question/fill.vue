@@ -1,6 +1,5 @@
 <template>
   <div>
-    
     <!-- 提交/重置 -->
     <div v-if="!submitted" class="flex justify-end gap-2 pt-3">
       <UButton variant="soft" size="sm" :disabled="!hasAnswer" @click="reset">
@@ -25,6 +24,7 @@
 <script setup>
 import ResultBanner from './result-banner.vue'
 import ExplanationBlock from './explanation-block.vue'
+import { submitQuestion, recordAnswer, contentToText } from './shared.ts'
 
 const props = defineProps({
   question: { type: Object, required: true },
@@ -74,6 +74,11 @@ function inputClass(idx) {
     : 'border-red-400 bg-red-50 dark:bg-red-900/30'
 }
 
+// 输入框内容变化时实时记录
+function onInput() {
+  recordAnswer(props.question, fillAnswers.value.map(a => a.trim()))
+}
+
 async function submit() {
   if (!props.question) return
   const qAnswer = props.question.answer || []
@@ -81,16 +86,11 @@ async function submit() {
     return (fillAnswers.value[i] || '').trim() === String(ans).trim()
   })
   submitted.value = true
-  try {
-    await cRequest('/api/lms/questions/submit', {
-      method: 'POST',
-      body: {
-        question_id: props.questionId,
-        user_answer: fillAnswers.value.map(a => a.trim()),
-        is_correct: isCorrect.value,
-      },
-    })
-  } catch { /* 接口暂未实现 */ }
+  await submitQuestion({
+    questionId: props.questionId,
+    userAnswer: fillAnswers.value.map(a => a.trim()),
+    isCorrect: isCorrect.value,
+  })
 }
 
 function reset() {
@@ -99,17 +99,4 @@ function reset() {
 }
 
 function redo() { reset() }
-
-function contentToText(content) {
-  if (typeof content === 'string') return content
-  if (content && typeof content === 'object') return extractText(content)
-  return ''
-}
-function extractText(node) {
-  if (!node) return ''
-  if (typeof node === 'string') return node
-  if (node.text) return node.text
-  if (node.content && Array.isArray(node.content)) return node.content.map(extractText).join('')
-  return ''
-}
 </script>

@@ -44,6 +44,7 @@
 <script setup>
 import ResultBanner from './result-banner.vue'
 import ExplanationBlock from './explanation-block.vue'
+import { submitQuestion, recordAnswer, contentToText, isRichDoc } from './shared.ts'
 
 const props = defineProps({
   question: { type: Object, required: true },
@@ -61,6 +62,8 @@ function toggle(idx) {
   if (pos > -1) arr.splice(pos, 1)
   else arr.push(idx)
   selected.value = arr
+  // 实时记录作答（当前所有选中项）
+  recordAnswer(props.question, [...selected.value])
 }
 
 function optionClass(idx) {
@@ -97,12 +100,11 @@ async function submit() {
   const sortedCorrect = [...props.question.answer].sort((a, b) => a - b)
   isCorrect.value = sortedUser.length === sortedCorrect.length && sortedUser.every((v, i) => v === sortedCorrect[i])
   submitted.value = true
-  try {
-    await cRequest('/api/lms/questions/submit', {
-      method: 'POST',
-      body: { question_id: props.questionId, user_answer: [...selected.value], is_correct: isCorrect.value },
-    })
-  } catch { /* 接口暂未实现 */ }
+  await submitQuestion({
+    questionId: props.questionId,
+    userAnswer: [...selected.value],
+    isCorrect: isCorrect.value,
+  })
 }
 
 function reset() {
@@ -111,20 +113,4 @@ function reset() {
 }
 
 function redo() { reset() }
-
-function contentToText(content) {
-  if (typeof content === 'string') return content
-  if (content && typeof content === 'object') return extractText(content)
-  return ''
-}
-function extractText(node) {
-  if (!node) return ''
-  if (typeof node === 'string') return node
-  if (node.text) return node.text
-  if (node.content && Array.isArray(node.content)) return node.content.map(extractText).join('')
-  return ''
-}
-function isRichDoc(content) {
-  return content && typeof content === 'object' && !Array.isArray(content) && content.type
-}
 </script>
