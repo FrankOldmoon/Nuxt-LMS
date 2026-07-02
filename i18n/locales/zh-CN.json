@@ -286,6 +286,21 @@
     "questionMissing": "题目不存在 (ID: {id})",
     "getFailed": "获取题目失败"
   },
+  "homework": {
+    "label": "作业",
+    "loading": "加载中...",
+    "notFound": "作业未找到",
+    "namePlaceholder": "作业名称",
+    "codePlaceholder": "作业代码",
+    "saveSuccess": "保存成功",
+    "saveFailed": "保存失败",
+    "uploadLabel": "上传作业文件",
+    "uploadHint": "拖拽文件到此处上传",
+    "submit": "提交作业",
+    "resubmit": "重新提交",
+    "submitSuccess": "提交成功",
+    "submitFailed": "提交失败"
+  },
   "upload": {
     "dragHint": "拖拽文件到此处上传",
     "clickHint": "或点击选择文件"

@@ -1,11 +1,11 @@
-import { join, resolve, extname } from 'path'
+import { join, resolve, extname, basename } from 'path'
 import { createReadStream, access } from 'fs'
 import { eventHandler, getQuery, sendStream, setResponseHeader, createError } from 'h3'
 
 // 使用绝对路径，避免工作目录切换导致找不到文件
 const UPLOAD_ROOT = resolve('./storage')
 
-// 一个简单的 MIME 映射表（可按需扩充）
+// 一个简单的 MIME 映射表（补充md）
 const MIME_TYPES: Record<string, string> = {
   '.jpg':  'image/jpeg',
   '.jpeg': 'image/jpeg',
@@ -17,6 +17,7 @@ const MIME_TYPES: Record<string, string> = {
   '.ico':  'image/x-icon',
   '.pdf':  'application/pdf',
   '.txt':  'text/plain',
+  '.md':   'text/markdown', // 新增md类型
   '.html': 'text/html',
   '.css':  'text/css',
   '.js':   'application/javascript',
@@ -66,11 +67,20 @@ export default eventHandler(async (event) => {
 
   // 根据扩展名设置 Content-Type
   const ext = extname(safePathname).toLowerCase()
+  const fileName = basename(safePathname) // 获取原始文件名带后缀
   const contentType = MIME_TYPES[ext] || 'application/octet-stream'
   setResponseHeader(event, 'Content-Type', contentType)
 
   // 强缓存：上传文件内容不变，可缓存一年
   setResponseHeader(event, 'Cache-Control', 'public, max-age=31536000, immutable')
+
+  // 关键：添加下载文件名，浏览器下载会保留完整后缀
+  // filename* 兼容中文文件名
+  setResponseHeader(
+    event,
+    'Content-Disposition',
+    `inline; filename="${fileName}"; filename*=UTF-8''${encodeURIComponent(fileName)}`
+  )
 
   // 以流的形式返回文件
   const stream = createReadStream(absolutePath)

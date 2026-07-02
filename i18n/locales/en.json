@@ -286,6 +286,21 @@
     "questionMissing": "Question not found (ID: {id})",
     "getFailed": "Failed to load question"
   },
+  "homework": {
+    "label": "Homework",
+    "loading": "Loading...",
+    "notFound": "Homework not found",
+    "namePlaceholder": "Homework name",
+    "codePlaceholder": "Homework code",
+    "saveSuccess": "Saved successfully",
+    "saveFailed": "Save failed",
+    "uploadLabel": "Upload homework files",
+    "uploadHint": "Drag files here to upload",
+    "submit": "Submit Homework",
+    "resubmit": "Resubmit",
+    "submitSuccess": "Submitted successfully",
+    "submitFailed": "Submit failed"
+  },
   "upload": {
     "dragHint": "Drag files here to upload",
     "clickHint": "Or click to select files"

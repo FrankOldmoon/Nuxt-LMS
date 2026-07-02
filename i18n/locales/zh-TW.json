@@ -277,6 +277,21 @@
     "questionMissing": "題目不存在 (ID: {id})",
     "getFailed": "獲取題目失敗"
   },
+  "homework": {
+    "label": "作業",
+    "loading": "載入中...",
+    "notFound": "作業未找到",
+    "namePlaceholder": "作業名稱",
+    "codePlaceholder": "作業代碼",
+    "saveSuccess": "儲存成功",
+    "saveFailed": "儲存失敗",
+    "uploadLabel": "上傳作業檔案",
+    "uploadHint": "拖曳檔案到此處上傳",
+    "submit": "提交作業",
+    "resubmit": "重新提交",
+    "submitSuccess": "提交成功",
+    "submitFailed": "提交失敗"
+  },
   "upload": {
     "dragHint": "拖拽檔案到此處上傳",
     "clickHint": "或點擊選擇檔案"
