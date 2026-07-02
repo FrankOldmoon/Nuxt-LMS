@@ -12,7 +12,8 @@
         </div>
 
         <template v-else>
-            {{ question.record }}
+            {{ question.record }}:{{ question.correct_rate }}
+            <!-- {{ question }} -->
             <!-- 右上角编辑按钮 -->
             <UButton icon="i-heroicons-pencil-square" variant="ghost" size="2xs"
                 class="absolute top-2 right-2 opacity-50 hover:opacity-100 transition-opacity z-10"
@@ -25,7 +26,8 @@
                     {{ typeLabel[question.type] }}
                 </span>
                 <span class="font-semibold text-gray-800 dark:text-gray-200">{{ question.name }}</span>
-                <span class="text-xs text-gray-400 ml-auto">{{ question.point }}{{ $t('question.points') }}</span>
+                <span v-if="questionId" class="text-xs text-gray-400">#{{ questionId }}</span>
+                <span class="text-xs text-gray-400 ml-auto font-mono">{{ scoreDisplay }}</span>
             </div>
 
             <!-- 题目内容（所有题型统一在此渲染富文本） -->
@@ -90,18 +92,22 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, provide } from 'vue'
+import { reactive, ref, computed, provide, watch } from 'vue'
 import SingleRender from './question/single.vue'
 import JudgeRender from './question/judge.vue'
 import MultipleRender from './question/multiple.vue'
 import FillRender from './question/fill.vue'
+import SelectRender from './question/select.vue'
 import ResultBanner from './question/result-banner.vue'
 import ExplanationBlock from './question/explanation-block.vue'
 import QuestionEdit from '../../../extensions/nodes/vue/question/edit.vue'
+import { computeCorrectRate } from './question/shared.ts'
 
 const props = defineProps({
     node: Object,
 })
+
+const emit = defineEmits(['init'])
 
 const { t } = useI18n()
 const { editableCourseId } = useLayoutState()
@@ -114,10 +120,11 @@ const typeLabel = computed(() => ({
     judge: t('question.typeJudge'),
     multiple: t('question.typeMultiple'),
     fill: t('question.typeFill'),
+    select: t('question.typeSelect'),
 }))
 
 // 题型 → 渲染组件
-const componentMap = { single: SingleRender, judge: JudgeRender, multiple: MultipleRender, fill: FillRender }
+const componentMap = { single: SingleRender, judge: JudgeRender, multiple: MultipleRender, fill: FillRender, select: SelectRender }
 const renderComponent = computed(() => componentMap[question.value?.type] || null)
 const renderRef = ref(null)
 
@@ -149,7 +156,7 @@ const formattedAnswers = computed(() => {
         // 判断题：显示 ✓ 正确 / ✗ 错误
         return answer.map(idx => idx === 0 ? t('question.correct') : t('question.wrong'))
     } else {
-        // 填空题：直接显示答案文本
+        // 填空题/下拉题：直接显示答案文本
         return answer
     }
 })
@@ -183,13 +190,27 @@ function onShowAnswer() {
 
 }
 
+// 默认单选题（questionId 为空时填充，便于新建）
+const defaultQuestion = reactive({
+    name: '',
+    content: '',
+    options: ['', '', '', ''],
+    type: 'single',
+    point: 1,
+    answer: [0],
+    explanation: '',
+    tags: [],
+    record: [],
+    correct_rate: 0,
+})
+
 // SSR-friendly data fetching
 const apiUrl = computed(() => {
     if (!questionId.value || !editableCourseId.value) return ''
     return `/api/lms/questions/show?course_id=${editableCourseId.value}&cid=${questionId.value}`
 })
 
-const { data: question, pending, refresh } = cRequest.use(apiUrl, {
+const { data: fetchedQuestion, pending: fetchedPending, refresh } = cRequest.use(apiUrl, {
     transform: (raw) => {
         if (!raw) return null
         return reactive({
@@ -202,15 +223,59 @@ const { data: question, pending, refresh } = cRequest.use(apiUrl, {
             explanation: raw.explanation || '',
             tags: Array.isArray(raw.tags) ? [...raw.tags] : [],
             record: Array.isArray(raw.record) ? [...raw.record] : [],
+            correct_rate: 0,
         })
     },
+})
+
+// questionId 为空时使用默认单选题；否则使用接口数据
+// flush: 'sync' 确保 SSR 渲染时数据到达后同步更新，避免用 defaultQuestion 渲染
+const question = ref(defaultQuestion)
+watch([fetchedQuestion, questionId], () => {
+    if (!questionId.value) {
+        question.value = defaultQuestion
+    } else if (fetchedQuestion.value) {
+        question.value = fetchedQuestion.value
+    }
+}, { immediate: true, flush: 'sync' })
+
+// provide question 数据，供 select 渲染节点获取 options
+provide('questionData', question)
+
+// questionId 为空时不显示加载态
+const pending = computed(() => !!questionId.value && fetchedPending.value)
+
+// 根据 record 实时更新 correct_rate（得分比 0~1）
+watch(() => question.value?.record, () => {
+    if (question.value) {
+        question.value.correct_rate = computeCorrectRate(question.value)
+    }
+}, { immediate: true, deep: true })
+
+// 得分显示 [obtained/point]，仅在 submit 后更新
+const scoreDisplay = computed(() => {
+    if (!question.value) return '[0/0]'
+    const total = question.value.point || 0
+    const rate = submitted.value ? (question.value.correct_rate || 0) : 0
+    const obt = rate * total
+    const fmt = (n) => Number.isInteger(n) ? String(n) : String(parseFloat(n.toFixed(2)))
+    return `[${fmt(obt)}/${fmt(total)}]`
 })
 
 const editOpen = ref(false)
 
 function onSaved(ques) {
-    refresh()
-    question.value = ques
+    // 新建题目：拿到新增 cid 后通知父节点更新 content 属性
+    if (ques.cid && Number(ques.cid) !== questionId.value) {
+        emit('init', ques.cid)
+    } else {
+        // 已有题目：刷新接口数据
+        refresh()
+    }
+    // 本地立即更新内容，避免刷新期间空白
+    if (question.value) {
+        Object.assign(question.value, ques)
+    }
 }
 </script>
 

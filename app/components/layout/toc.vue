@@ -82,6 +82,7 @@ async function handleSaveClick() {
     await handleSave(editableContent.value)
     toast.add({ title: t('layout.saveSuccess'), color: 'success' })
     editModalOpen.value = false
+    await nextTick()
     location.reload()
   } catch (e: any) {
     toast.add({ title: e.message || t('layout.saveFailed'), color: 'error' })

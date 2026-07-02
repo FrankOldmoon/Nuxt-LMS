@@ -49,6 +49,7 @@ import SingleEditor from './single.vue'
 import JudgeEditor from './judge.vue'
 import MultipleEditor from './multiple.vue'
 import FillEditor from './fill.vue'
+import SelectEditor from './select.vue'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -71,10 +72,11 @@ const typeOptions = computed(() => [
   { label: t('question.typeJudge'), value: 'judge' },
   { label: t('question.typeMultiple'), value: 'multiple' },
   { label: t('question.typeFill'), value: 'fill' },
+  { label: t('question.typeSelect'), value: 'select' },
 ])
 
 // 题型 → 组件映射
-const componentMap = { single: SingleEditor, judge: JudgeEditor, multiple: MultipleEditor, fill: FillEditor }
+const componentMap = { single: SingleEditor, judge: JudgeEditor, multiple: MultipleEditor, fill: FillEditor, select: SelectEditor }
 const typeComponent = computed(() => componentMap[form.value?.type] || null)
 
 const saving = ref(false)
@@ -82,6 +84,9 @@ const saveMsg = ref('')
 const saveOk = ref(true)
 const form = ref(null)
 let originalData = null
+
+// provide form 给 select node-view，使其能读取 options
+provide('questionForm', form)
 
 // 弹窗打开时从 props.question 深拷贝初始化 form
 function initForm() {
@@ -123,6 +128,10 @@ function onTypeChange() {
       form.value.options = ['', '', '', '']
       form.value.answer = []
       break
+    case 'select':
+      form.value.options = []
+      form.value.answer = []
+      break
   }
 }
 
@@ -132,18 +141,28 @@ function resetForm() {
 }
 
 async function saveQuestion() {
-  if (!form.value || !props.questionId) return
+  if (!form.value) return
   saving.value = true
   saveMsg.value = ''
   try {
-    await cRequest('/api/lms/questions/update', {
-      method: 'POST',
-      body: { id: props.questionId, course_id: editableCourseId.value, ...form.value },
-    })
+    if (props.questionId) {
+      // 已有题目：更新
+      await cRequest('/api/lms/questions/update', {
+        method: 'POST',
+        body: { id: props.questionId, course_id: editableCourseId.value, ...form.value },
+      })
+      emit('saved', form.value)
+    } else {
+      // 新题目：新增并拿回 cid
+      const result = await cRequest('/api/lms/questions/add', {
+        method: 'POST',
+        body: { course_id: editableCourseId.value, ...form.value },
+      })
+      emit('saved', { ...form.value, cid: result.cid })
+    }
     saveOk.value = true
     saveMsg.value = t('question.saveSuccess')
     originalData = JSON.parse(JSON.stringify(form.value))
-    emit('saved', form.value)
     open.value = false
   } catch (err) {
     saveOk.value = false

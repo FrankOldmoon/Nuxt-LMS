@@ -43,12 +43,20 @@ export function markdownToTiptap(markdown: string): TiptapNode {
 
     // 行内语法正则（优先级从高到低）
     const inlinePatterns: InlinePattern[] = [
-      // 新增：{{xxx}} 占位符（优先级最高，避免和其他语法冲突）
+      // {{xxx}} 占位符 → inputs 节点（优先级最高，避免和其他语法冲突）
       {
         regex: /^\{\{(.*?)\}\}/,
         handler: () => ({
           type: 'inputs',
           attrs: { content: '' }
+        })
+      },
+      // ||content|| → select 节点（inline 下拉选择）
+      {
+        regex: /^\|\|(.+?)\|\|/,
+        handler: (match) => ({
+          type: 'select',
+          attrs: { content: match[1].trim() }
         })
       },
       // 图片 ![alt](url "title")
@@ -200,7 +208,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
 
       // 普通文本
       if (!matched) {
-        const specialIndex = remaining.search(/[!`*_~\[{]/);
+        const specialIndex = remaining.search(/[!`*_~\[{|]/);
         if (specialIndex === -1) {
           nodes.push({ type: 'text', text: remaining });
           remaining = '';

@@ -61,6 +61,40 @@ watch(() => props.question, (q) => {
 
 const hasAnswer = computed(() => fillAnswers.value.some(a => a && a.trim() !== ''))
 
+// submit 后给输入框着色：正确绿、错误红
+function styleInputs() {
+  const container = getInputContainer()
+  if (!container) return
+  const inputs = container.querySelectorAll('input')
+  const qAnswer = props.question.answer || []
+  inputs.forEach((el, idx) => {
+    const userVal = (el.value || '').trim()
+    const correctVal = String(qAnswer[idx] || '').trim()
+    if (userVal === correctVal) {
+      el.style.borderColor = '#4ade80'
+      el.style.backgroundColor = 'rgba(74, 222, 128, 0.1)'
+    } else {
+      el.style.borderColor = '#f87171'
+      el.style.backgroundColor = 'rgba(248, 113, 113, 0.1)'
+    }
+  })
+}
+
+// 清除输入框着色
+function clearInputStyles() {
+  const container = getInputContainer()
+  if (!container) return
+  container.querySelectorAll('input').forEach(el => {
+    el.style.borderColor = ''
+    el.style.backgroundColor = ''
+  })
+}
+
+// submitted 变为 false 时清除着色（reset 场景）
+watch(submitted, (val) => {
+  if (!val) clearInputStyles()
+})
+
 function submit() {
   if (!props.question) return
   // 提交前从 DOM 收集最新值
@@ -81,6 +115,7 @@ function submit() {
     userAnswer: fillAnswers.value.map(a => (a || '').trim()),
     isCorrect: correct,
   })
+  styleInputs()
   return { isCorrect: correct }
 }
 
@@ -90,6 +125,7 @@ function reset() {
   if (container) {
     container.querySelectorAll('input').forEach(el => { el.value = '' })
   }
+  clearInputStyles()
   props.question.record = []
 }
 
@@ -105,6 +141,7 @@ function fillCorrectAnswer() {
         }
       })
     }
+    clearInputStyles()
     props.question.record = [...props.question.answer]
   }
 }

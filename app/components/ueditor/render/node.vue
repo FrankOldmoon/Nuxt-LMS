@@ -63,6 +63,7 @@ import DetailsView from './nodes/details.vue'
 
 import VueView from './nodes/vue/index.vue'
 import InputsView from './nodes/inputs.vue'
+import SelectView from './nodes/select.vue'
 
 const componentNodeTypes = {
   // 基础节点
@@ -124,7 +125,8 @@ const componentNodeTypes = {
   inlineMath: MathView,
 
   vue: VueView,
-  inputs: InputsView
+  inputs: InputsView,
+  select: SelectView
 }
 
 // 文本节点渲染组件：封装原有 renderTextWithMarks 逻辑
