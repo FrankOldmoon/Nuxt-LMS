@@ -1,5 +1,5 @@
 import { db, schema } from "@nuxthub/db"
-import { eq, inArray, desc } from "drizzle-orm"
+import { eq, inArray, desc, and, or, isNull, ilike } from "drizzle-orm"
 
 /**
  * 校验表名是否在 schema 中定义，无效则抛出错误
@@ -131,4 +131,231 @@ export async function saveContentVersion(
     const idsToDelete = all.slice(maxKeep).map((r) => r.id)
     await db.delete(table).where(inArray(table.id, idsToDelete))
   }
+}
+
+// ====================== 内容版本查询/恢复 ======================
+
+/**
+ * 获取内容的历史版本列表（按 id 倒序）
+ */
+export async function listContentVersions(type: 'course' | 'chapter', id: number) {
+  const table = type === 'course' ? schema.courseVersions : schema.chapterVersions
+  const fk = type === 'course' ? schema.courseVersions.courseId : schema.chapterVersions.chapterId
+
+  return db
+    .select({
+      id: table.id,
+      content: table.content,
+      createdAt: table.createdAt,
+    })
+    .from(table)
+    .where(eq(fk, id))
+    .orderBy(desc(table.id))
+}
+
+/**
+ * 按 versionId 获取单个版本记录
+ */
+export async function getContentVersion(type: 'course' | 'chapter', versionId: number) {
+  const table = type === 'course' ? schema.courseVersions : schema.chapterVersions
+  const rows = await db
+    .select()
+    .from(table)
+    .where(eq(table.id, versionId))
+    .limit(1)
+  return rows[0] ?? null
+}
+
+/**
+ * 恢复内容到指定版本
+ * 先将当前内容保存为版本快照，再写回历史版本内容
+ */
+export async function restoreContentVersion(type: 'course' | 'chapter', id: number, content: any) {
+  const tableName = type === 'course' ? 'courses' : 'chapters'
+  const current = await showTable(tableName, id)
+  const oldContent = (current as any)?.content
+  if (oldContent !== undefined && oldContent !== null) {
+    await saveContentVersion(type, id, oldContent)
+  }
+  await updateTable(tableName, id, { content })
+}
+
+// ====================== 课程成员管理 ======================
+
+/**
+ * 获取课程的教师和编辑者列表
+ */
+export async function getCourseMembers(courseId: number) {
+  return db
+    .select({
+      userId: schema.userCourses.userId,
+      isTeacher: schema.userCourses.isTeacher,
+      isEditor: schema.userCourses.isEditor,
+      username: schema.users.username,
+      name: schema.users.name,
+      avatarImg: schema.users.avatarImg,
+    })
+    .from(schema.userCourses)
+    .innerJoin(schema.users, eq(schema.userCourses.userId, schema.users.id))
+    .where(
+      and(
+        eq(schema.userCourses.courseId, courseId),
+        isNull(schema.userCourses.deletedAt),
+        or(
+          eq(schema.userCourses.isTeacher, true),
+          eq(schema.userCourses.isEditor, true),
+        ),
+      ),
+    )
+}
+
+/**
+ * 添加或移除课程的教师/编辑者
+ */
+export async function updateCourseMember(
+  courseId: number,
+  userId: number,
+  role: 'teacher' | 'editor',
+  action: 'add' | 'remove',
+) {
+  const existing = await db
+    .select()
+    .from(schema.userCourses)
+    .where(
+      and(
+        eq(schema.userCourses.courseId, courseId),
+        eq(schema.userCourses.userId, userId),
+        isNull(schema.userCourses.deletedAt),
+      ),
+    )
+    .limit(1)
+
+  const isFlag = role === 'teacher' ? 'isTeacher' : 'isEditor'
+  const flagValue = action === 'add'
+
+  if (existing[0]) {
+    await db
+      .update(schema.userCourses)
+      .set({ [isFlag]: flagValue } as any)
+      .where(
+        and(
+          eq(schema.userCourses.courseId, courseId),
+          eq(schema.userCourses.userId, userId),
+        ),
+      )
+  } else if (action === 'add') {
+    await db
+      .insert(schema.userCourses)
+      .values({
+        courseId,
+        userId,
+        isTeacher: role === 'teacher',
+        isEditor: role === 'editor',
+      })
+  }
+}
+
+// ====================== 用户搜索 ======================
+
+/**
+ * 搜索用户（按用户名或姓名模糊匹配），排除已软删除的
+ */
+export async function searchUsers(keyword: string, limit = 100) {
+  return db
+    .select({
+      id: schema.users.id,
+      username: schema.users.username,
+      name: schema.users.name,
+      avatarImg: schema.users.avatarImg,
+    })
+    .from(schema.users)
+    .where(
+      and(
+        isNull(schema.users.deletedAt),
+        or(
+          ilike(schema.users.username, `%${keyword}%`),
+          ilike(schema.users.name, `%${keyword}%`),
+        ),
+      ),
+    )
+    .limit(limit)
+}
+
+// ====================== 配置 upsert ======================
+
+/**
+ * 配置项 upsert（插入或更新）
+ */
+export async function upsertConfig(id: string, value: any) {
+  await db
+    .insert(schema.configs)
+    .values({ id, value })
+    .onConflictDoUpdate({
+      target: schema.configs.id,
+      set: { value },
+    })
+}
+
+// ====================== 班级用户查询 ======================
+
+/**
+ * 获取指定班级的用户列表（user_classes 关联表 + users.class_id 直接归属）
+ * 合并去重：关联表用户优先（有 isTeacher 信息），补充直接归属用户
+ */
+export async function getClassUsers(classId: number) {
+  // 1. 通过 user_classes 关联表查询（含 isTeacher 信息）
+  const relUsers = await db
+    .select({
+      id: schema.users.id,
+      username: schema.users.username,
+      name: schema.users.name,
+      preferName: schema.users.preferName,
+      englishName: schema.users.englishName,
+      avatarImg: schema.users.avatarImg,
+      rollNumber: schema.users.rollNumber,
+      email: schema.users.email,
+      telephone: schema.users.telephone,
+      isTeacher: schema.userClasses.isTeacher,
+    })
+    .from(schema.userClasses)
+    .innerJoin(schema.users, eq(schema.userClasses.userId, schema.users.id))
+    .where(
+      and(
+        eq(schema.userClasses.classId, classId),
+        isNull(schema.userClasses.deletedAt),
+        isNull(schema.users.deletedAt),
+      ),
+    )
+
+  // 2. 通过 users.class_id 直接归属查询（未在 user_classes 中的）
+  const relUserIds = new Set(relUsers.map((u) => u.id))
+  const directUsers = await db
+    .select({
+      id: schema.users.id,
+      username: schema.users.username,
+      name: schema.users.name,
+      preferName: schema.users.preferName,
+      englishName: schema.users.englishName,
+      avatarImg: schema.users.avatarImg,
+      rollNumber: schema.users.rollNumber,
+      email: schema.users.email,
+      telephone: schema.users.telephone,
+    })
+    .from(schema.users)
+    .where(
+      and(
+        eq(schema.users.classId, classId),
+        isNull(schema.users.deletedAt),
+      ),
+    )
+
+  // 3. 合并去重
+  const merged = [...relUsers]
+  for (const u of directUsers) {
+    if (!relUserIds.has(u.id)) {
+      merged.push({ ...u, isTeacher: null })
+    }
+  }
+
+  return merged
 }

@@ -1,7 +1,5 @@
 import { db, schema } from '@nuxthub/db'
 import { eq } from 'drizzle-orm'
-import { cResp } from '../../utils/index'
-import { hashPassword, generateToken } from '../../utils/auth'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)

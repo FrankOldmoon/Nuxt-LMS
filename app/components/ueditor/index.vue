@@ -64,8 +64,8 @@ const onChanged = () => {
 
 }
 
-const saveDocument = () => {
-    editorRef.value.saveContent(true)
+const saveDocument = async () => {
+    return editorRef.value.saveContent(true)
 }
 
 defineExpose({ saveDocument })

@@ -60,24 +60,29 @@ const canEditContent = computed(() => {
   return false
 })
 
-// 保存回调：调用 update API 将内容写回数据库
+// 保存回调：调用 update API 将内容写回数据库，成功后通知页面刷新
+// content 可能是 UmoEditor 的内容对象（含 .json）或直接的 JSON 对象
 async function handleSave(content: Record<string, any>) {
+  const json = content?.json ?? content
   await cRequest(`/api/lms/${editableTable.value}/update`, {
     method: 'POST',
-    body: { id: editableId.value, content: content.json },
+    body: { id: editableId.value, content: json },
   })
+  // 保存成功后通知页面刷新内容（contentVersion +1，页面 watch 会重新拉取）
   notifyContentSaved()
-  location.reload()
   return 1
 }
 
-// 点击保存按钮：触发 ueditor 保存，成功后关闭弹窗并提示
+// 点击保存按钮：用 editableContent 调用 API 保存，成功后关闭弹窗并提示
 async function handleSaveClick() {
   saving.value = true
   try {
-    await ueditorRef.value?.saveDocument()
+    // editableContent 已通过 ueditor 的 onChanged 实时更新，直接用于保存
+    // handleSave 内部会调用 notifyContentSaved 触发页面刷新
+    await handleSave(editableContent.value)
     toast.add({ title: t('layout.saveSuccess'), color: 'success' })
     editModalOpen.value = false
+    location.reload()
   } catch (e: any) {
     toast.add({ title: e.message || t('layout.saveFailed'), color: 'error' })
   } finally {

@@ -12,6 +12,17 @@ export const cResp = (data: any, msg: string = '', success: boolean = true) => {
   return { data, msg, success }
 }
 
+/** 从 query 中获取并校验 id 参数，无效则返回 0 */
+export function getQueryId(event: any): number {
+  return Number(getQuery(event).id)
+}
+
+/** 从 query 中获取并校验 id 参数，无效则返回错误响应 */
+export function requireQueryId(event: any): number | null {
+  const id = Number(getQuery(event).id)
+  return id || null
+}
+
 // ====================== 归一化工具：DB 记录 → 前端数据结构 ======================
 
 /** 从 config jsonb 中安全取值 */

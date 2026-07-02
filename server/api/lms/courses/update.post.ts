@@ -6,11 +6,10 @@ export default eventHandler(async (event) => {
     return cResp(null, '缺少 id 参数', false)
   }
 
-  // 管理员或该课程的任课教师可更新
   await requireCourseTeacher(event, Number(id))
 
   try {
-    // 若更新了 content，先将旧内容保存为版本快照（仅保留最新 10 条）
+    // 若更新了 content，先将旧内容保存为版本快照
     if (setData.content !== undefined) {
       const current = await showTable('courses', Number(id))
       const oldContent = (current as any)?.content

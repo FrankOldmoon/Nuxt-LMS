@@ -1,8 +1,3 @@
-import { db, schema } from '@nuxthub/db'
-import { eq } from 'drizzle-orm'
-import { cResp } from '../../utils/index'
-import { requireAuth } from '../../utils/auth'
-
 export default defineEventHandler(async (event) => {
   const authUser = await requireAuth(event)
   const body = await readBody(event)
@@ -33,10 +28,6 @@ export default defineEventHandler(async (event) => {
     return cResp(null, '没有需要更新的字段', false)
   }
 
-  await db
-    .update(schema.users)
-    .set(updateData)
-    .where(eq(schema.users.id, authUser.id))
-
+  await updateTable('users', authUser.id, updateData)
   return cResp(null, '更新成功')
 })

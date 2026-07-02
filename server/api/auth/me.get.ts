@@ -1,6 +1,5 @@
 import { db, schema } from '@nuxthub/db'
 import { eq, and, isNull } from 'drizzle-orm'
-import { cResp } from '../../utils/index'
 
 export default defineEventHandler(async (event) => {
   const tokenStr = getCookie(event, 'auth_token')
