@@ -16,7 +16,7 @@
 
     <div v-else />
 
-    <UNavigationMenu :items="navigation" orientation="vertical" :highlight="true" color="primary" class="w-full" />
+    <UNavigationMenu :items="indexedNavigation" orientation="vertical" :highlight="true" color="primary" class="w-full" />
 
     <ClassModal v-model:open="classModalOpen" />
 
@@ -34,6 +34,8 @@ const { navigation, courseId, refresh } = useSidebarNav()
 const classModalOpen = ref(false)
 
 const selectedClassName = computed(() => user.value?.defaultClass?.name || '')
+
+const indexedNavigation = computed(() => indexNavItems(navigation.value, '', true))
 
 async function handleSaved() {
   if (refresh) await refresh()

@@ -114,7 +114,7 @@
         <HomeworkEdit v-model="editOpen" :homework-id="homeworkId" :homework="homework" @saved="onSaved" />
 
         <!-- 记录弹窗（仅教师） -->
-        <RecordsModal v-if="isTeacher" v-model="recordsOpen" type="homework" :course-id="editableCourseId"
+        <RecordsModal v-if="isTeacher" v-model="recordsOpen" :course-id="editableCourseId"
             :cid="homeworkId" :max-score="homework.point || 0" />
     </div>
 </template>
@@ -123,7 +123,7 @@
 import { reactive, ref, computed, watch } from 'vue'
 import ExplanationBlock from './question/explanation-block.vue'
 import HomeworkEdit from '../../../extensions/nodes/vue/homework/edit.vue'
-import RecordsModal from './records-modal.vue'
+import RecordsModal from './homework/records-modal.vue'
 
 const props = defineProps({
     node: Object,

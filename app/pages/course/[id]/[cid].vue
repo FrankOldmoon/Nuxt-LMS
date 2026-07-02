@@ -93,7 +93,7 @@ watch(resp, (d) => {
 // 监听内容版本号，保存成功后重新获取数据
 watch(contentVersion, () => refresh())
 
-// 扁平化侧边栏导航，得到按 orders 排序的线性列表
+// 扁平化侧边栏导航，得到按 orders 排序的线性列表（带序号前缀）
 const flatNav = computed(() => {
   const result: { label: string; to: string }[] = []
   function walk(items: any[]) {
@@ -102,7 +102,7 @@ const flatNav = computed(() => {
       if (item.children) walk(item.children)
     }
   }
-  walk(navigation.value)
+  walk(indexNavItems(navigation.value, '', true))
   return result
 })
 

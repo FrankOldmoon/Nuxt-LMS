@@ -110,7 +110,7 @@
         <QuestionEdit v-model="editOpen" :question-id="questionId" :question="question" @saved="onSaved" />
 
         <!-- 记录弹窗（仅教师） -->
-        <RecordsModal v-if="isTeacher" v-model="recordsOpen" type="question" :course-id="editableCourseId"
+        <RecordsModal v-if="isTeacher" v-model="recordsOpen" :course-id="editableCourseId"
             :cid="questionId" :question="question" />
     </div>
 </template>
@@ -125,7 +125,7 @@ import SelectRender from './question/select.vue'
 import ResultBanner from './question/result-banner.vue'
 import ExplanationBlock from './question/explanation-block.vue'
 import QuestionEdit from '../../../extensions/nodes/vue/question/edit.vue'
-import RecordsModal from './records-modal.vue'
+import RecordsModal from './question/records-modal.vue'
 import { computeCorrectRate } from './question/shared.ts'
 
 const props = defineProps({

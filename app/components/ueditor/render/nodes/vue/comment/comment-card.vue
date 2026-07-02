@@ -20,7 +20,7 @@
                         @click="$emit('toggle-like', comment)">
                         <UIcon :name="comment.liked ? 'i-heroicons-heart-solid' : 'i-heroicons-heart'"
                             class="w-3.5 h-3.5" />
-                        <span>{{ $t('comment.like') }}</span>
+                        <span>{{ comment.likeCount || 0 }}</span>
                     </button>
                     <!-- 删除（带确认） -->
                     <UPopover v-if="canDelete" :modal="true">

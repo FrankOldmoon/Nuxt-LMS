@@ -38,28 +38,54 @@ export default eventHandler(async (event) => {
   })
   const userMap = new Map(users.map(u => [u.id, u]))
 
-  // 4. 查询当前用户的 userComments（点赞状态）
-  const userComments = await db.query.userComments.findMany({
-    where: and(
-      eq(schema.userComments.userId, user.id),
-      eq(schema.userComments.courseId, courseId),
-    )
-  })
-  const likeMap = new Map(userComments.map(uc => [uc.commentCid, uc.like]))
+  // 4. 查询所有 userComments（点赞记录，用于统计每条评论的赞数 + 当前用户点赞状态）
+  const commentCids = [root.cid, ...children.map(c => c.cid)]
+  const allUserComments = commentCids.length > 0
+    ? await db.query.userComments.findMany({
+        where: and(
+          eq(schema.userComments.courseId, courseId),
+          inArray(schema.userComments.commentCid, commentCids),
+          eq(schema.userComments.like, true)
+        )
+      })
+    : []
 
-  // 5. 组合：评论 + 用户信息 + 点赞状态
-  const combine = (c) => {
+  // 每条评论的总赞数
+  const likeCountMap = new Map()
+  for (const uc of allUserComments) {
+    likeCountMap.set(uc.commentCid, (likeCountMap.get(uc.commentCid) || 0) + 1)
+  }
+
+  // 当前用户的点赞状态
+  const likedMap = new Map()
+  for (const uc of allUserComments) {
+    if (uc.userId === user.id) likedMap.set(uc.commentCid, true)
+  }
+
+  // 5. 组合：评论 + 用户信息 + 点赞状态 + 赞数
+  const combine = (c: any) => {
     const u = userMap.get(c.userId)
     return {
       ...c,
       userName: u?.name || '',
       avatarImg: u?.avatarImg || null,
-      liked: likeMap.get(c.cid) === true,
+      liked: likedMap.get(c.cid) === true,
+      likeCount: likeCountMap.get(c.cid) || 0,
     }
   }
 
+  // 6. 子评论排序：先按赞数降序，再按发表时间升序
+  const sortedChildren = (children as any[])
+    .map(combine)
+    .sort((a, b) => {
+      if (b.likeCount !== a.likeCount) return b.likeCount - a.likeCount
+      const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0
+      const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0
+      return ta - tb
+    })
+
   return cResp({
     root: combine(root),
-    children: children.map(combine),
+    children: sortedChildren,
   })
 })

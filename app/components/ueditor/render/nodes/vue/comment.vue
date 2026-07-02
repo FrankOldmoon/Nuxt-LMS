@@ -27,7 +27,12 @@
                 </span>
                 <span class="font-semibold text-gray-800 dark:text-gray-200">{{ comment.name }}</span>
                 <span v-if="commentId" class="text-xs text-gray-400">#{{ commentId }}</span>
-                <span class="text-xs text-gray-400 ml-auto">{{ comment.point }}{{ $t('question.points') }}</span>
+                <div class="flex items-center gap-2 ml-auto">
+                    <UButton v-if="isTeacher" icon="i-heroicons-clipboard-list" variant="ghost" size="2xs"
+                        class="opacity-50 hover:opacity-100 transition-opacity"
+                        @click="recordsOpen = true" />
+                    <span class="text-xs text-gray-400">{{ comment.point }}{{ $t('question.points') }}</span>
+                </div>
             </div>
 
             <!-- 评论内容 -->
@@ -55,15 +60,33 @@
                     <CommentForm :parent-cid="commentId" :placeholder="$t('comment.replyPlaceholder')"
                         @submit="onReply" />
 
-                    <!-- 子评论列表 -->
-                    <CommentList :comments="children" :current-user-id="user?.id"
+                    <!-- 子评论列表（分页） -->
+                    <CommentList :comments="pagedChildren" :current-user-id="user?.id"
                         @toggle-like="toggleLike" @delete="onDelete" />
+
+                    <!-- 分页控件 -->
+                    <div v-if="children.length > pageSize" class="flex items-center justify-between pt-2">
+                        <span class="text-xs text-gray-400">
+                            {{ (page - 1) * pageSize + 1 }}-{{ Math.min(page * pageSize, children.length) }} / {{ children.length }}
+                        </span>
+                        <div class="flex items-center gap-1">
+                            <UButton size="xs" variant="ghost" color="neutral" icon="i-heroicons-chevron-left"
+                                :disabled="page <= 1" @click="page--" />
+                            <span class="text-xs text-gray-400">{{ page }} / {{ totalPages }}</span>
+                            <UButton size="xs" variant="ghost" color="neutral" icon="i-heroicons-chevron-right"
+                                :disabled="page >= totalPages" @click="page++" />
+                        </div>
+                    </div>
                 </template>
             </div>
         </template>
 
         <!-- 编辑弹窗 -->
         <CommentEdit v-model="editOpen" :comment-id="commentId" :comment="comment" @saved="onSaved" />
+
+        <!-- 记录弹窗（仅教师） -->
+        <RecordsModal v-if="isTeacher" v-model="recordsOpen" :course-id="editableCourseId"
+            :cid="commentId" />
     </div>
 </template>
 
@@ -72,6 +95,7 @@ import { reactive, ref, computed, watch } from 'vue'
 import CommentEdit from '../../../extensions/nodes/vue/comment/edit.vue'
 import CommentForm from './comment/comment-form.vue'
 import CommentList from './comment/comment-list.vue'
+import RecordsModal from './comment/records-modal.vue'
 
 const props = defineProps({
     node: Object,
@@ -123,11 +147,27 @@ watch([fetchedComment, commentId], () => {
 const pending = computed(() => !!commentId.value && fetchedPending.value)
 
 const editOpen = ref(false)
+const recordsOpen = ref(false)
+
+// 子评论分页（前端分页，API 一次性获取全部）
+const pageSize = 5
+const page = ref(1)
 
 // 评论列表数据（自身 + 子评论）
 const rootComment = ref(null)
 const children = ref([])
 const listPending = ref(false)
+
+const totalPages = computed(() => Math.max(1, Math.ceil(children.value.length / pageSize)))
+const pagedChildren = computed(() => {
+    const start = (page.value - 1) * pageSize
+    return children.value.slice(start, start + pageSize)
+})
+
+// 新增/删除评论后校正页码
+watch([children, totalPages], () => {
+    if (page.value > totalPages.value) page.value = totalPages.value
+})
 
 async function fetchComments() {
     if (!commentId.value || !editableCourseId.value) return
@@ -154,8 +194,9 @@ watch(commentId, () => {
 // 点赞/取消点赞
 async function toggleLike(item) {
     const newLike = !item.liked
-    // 乐观更新
+    // 乐观更新：同时更新 liked 和 likeCount
     item.liked = newLike
+    item.likeCount = Math.max(0, (item.likeCount || 0) + (newLike ? 1 : -1))
     try {
         await cRequest('/api/lms/comments/like', {
             method: 'POST',
@@ -168,6 +209,7 @@ async function toggleLike(item) {
     } catch {
         // 回滚
         item.liked = !newLike
+        item.likeCount = Math.max(0, (item.likeCount || 0) + (newLike ? -1 : 1))
     }
 }
 
@@ -190,6 +232,8 @@ async function onReply({ content, parentCid }) {
                 ...result,
                 liked: false,
             })
+            // 跳转到最后一页，让用户看到新回复
+            page.value = totalPages.value
         }
     } catch (err) {
         // 静默

@@ -179,6 +179,31 @@ export function useSidebarNav() {
 }
 
 /**
+ * 为导航项添加序号前缀：1, 1.1, 1.1.1（第一项"课程"不加序号）
+ */
+export function indexNavItems(items: NavigationMenuItem[], prefix: string = '', skipFirst: boolean = false): NavigationMenuItem[] {
+  return items.map((item, i) => {
+    if (skipFirst && i === 0) {
+      const newItem: NavigationMenuItem = { ...item }
+      if (item.children?.length) {
+        newItem.children = indexNavItems(item.children, '', false)
+      }
+      return newItem
+    }
+    const num = skipFirst ? i : i + 1
+    const idx = prefix ? `${prefix}.${num}` : `${num}`
+    const newItem: NavigationMenuItem = {
+      ...item,
+      label: `${idx} ${item.label}`,
+    }
+    if (item.children?.length) {
+      newItem.children = indexNavItems(item.children, idx, false)
+    }
+    return newItem
+  })
+}
+
+/**
  * 布局共享状态：目录链接和布局开关
  */
 export function useLayoutState() {
