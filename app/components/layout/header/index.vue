@@ -28,6 +28,17 @@
       </UModal>
       <UColorModeButton />
 
+      <!-- 通知按钮（仅登录后显示） -->
+      <UTooltip v-if="isLoggedIn" :text="$t('notification.title')" :content="{ side: 'bottom' }">
+        <UButton
+          icon="i-lucide-bell"
+          color="neutral"
+          variant="ghost"
+          :aria-label="$t('notification.title')"
+          @click="() => { showNotificationModal = true }"
+        />
+      </UTooltip>
+
       <!-- SSR 直接渲染：未登录 → Login 按钮，已登录 → 用户名 + 下拉菜单 -->
       <UButton v-if="!isLoggedIn" :label="$t('auth.login')" color="neutral" variant="ghost" icon="i-lucide-log-in"
         @click="() => { showLoginModal = true }" />
@@ -56,6 +67,9 @@
   <!-- 系统设置弹窗（仅管理员可见） -->
   <AuthSettingsModal v-model:open="showSettingsModal" />
 
+  <!-- 通知弹窗 -->
+  <LayoutNotificationModal v-model:open="showNotificationModal" />
+
 
 </template>
 
@@ -71,6 +85,7 @@ const showLoginModal = ref(false)
 const showProfileModal = ref(false)
 const showSettingsModal = ref(false)
 const showSearchModal = ref(false)
+const showNotificationModal = ref(false)
 
 function onLoginSuccess() {
   showLoginModal.value = false

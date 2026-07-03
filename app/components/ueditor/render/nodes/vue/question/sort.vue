@@ -44,7 +44,8 @@ const { editableCourseId, editableId } = useLayoutState()
 
 // dragList: [{ originalIndex: 2 }, { originalIndex: 0 }, ...] — 驱动 vuedraggable
 const dragList = ref([])
-
+// 防止 dragList watcher → recordAnswer → record watcher → dragList 循环
+let isRecording = false
 // userOrder: 从 dragList 派生的原始索引数组
 const userOrder = computed(() => dragList.value.map(item => item.originalIndex))
 
@@ -74,17 +75,24 @@ watch(() => props.question, (q) => {
 
 // 监听 record 变化（fetchRecord 回填场景）
 watch(() => props.question?.record, (record) => {
+  if (isRecording) return
   if (!Array.isArray(record) || record.length === 0) return
   dragList.value = record.map(idx => ({ originalIndex: idx }))
 }, { immediate: true })
 
+
+
 // dragList 变化时实时记录
 watch(dragList, () => {
-  if (fromRecord.value) {
+  if (submitted.value) {
     submitted.value = false
+  }
+  if (fromRecord.value) {
     fromRecord.value = false
   }
+  isRecording = true
   recordAnswer(props.question, [...userOrder.value])
+  nextTick(() => { isRecording = false })
 }, { deep: true })
 
 function getItemText(originalIndex) {

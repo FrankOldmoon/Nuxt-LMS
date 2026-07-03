@@ -121,3 +121,22 @@ export interface UserProfileForm {
   telephone: string
   classId: number | null
 }
+
+/** 通知 */
+export interface LmsNotification {
+  id: number
+  name: string
+  content: Record<string, any> | null
+  data: Record<string, any> | null
+  userId: number
+  readAt: string | null
+  createdAt: string
+}
+
+/** 通知列表分页数据 */
+export interface LmsNotificationList {
+  items: LmsNotification[]
+  total: number
+  page: number
+  pageSize: number
+}

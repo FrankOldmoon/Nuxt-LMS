@@ -48,7 +48,7 @@ const renderContent = computed(() => {
   return props.json
 })
 
-console.log('renderContent',renderContent.value)
+
 </script>
 
 <style lang="less">

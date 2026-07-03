@@ -5,7 +5,7 @@
       v-model="userAnswer"
       :rows="3"
       :placeholder="$t('question.shortAnswerPlaceholder')"
-      :disabled="submitted && !fromRecord"
+      :disabled="false"
       class="w-full p-3 rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors resize-y"
       :class="inputClass"
       @input="onInput"
@@ -64,8 +64,10 @@ watch(() => props.question?.record, (record) => {
 }, { immediate: true })
 
 function onInput() {
-  if (fromRecord.value) {
+  if (submitted.value) {
     submitted.value = false
+  }
+  if (fromRecord.value) {
     fromRecord.value = false
   }
   recordAnswer(props.question, [userAnswer.value])

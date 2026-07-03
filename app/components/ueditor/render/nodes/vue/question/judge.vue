@@ -40,8 +40,10 @@ watch(() => props.question?.record, (record) => {
 }, { immediate: true })
 
 function select(idx) {
-  if (fromRecord.value) {
+  if (submitted.value) {
     submitted.value = false
+  }
+  if (fromRecord.value) {
     fromRecord.value = false
   }
   selected.value = idx

@@ -156,17 +156,28 @@ function fillCorrectAnswer() {
   renderRef.value?.fillCorrectAnswer()
 }
 
-// 设置 record（用于回填）
+// 设置 record（用于回填）：不设置 submitted，由复合题控制何时显示判断
 function setRecord(record) {
   if (Array.isArray(record) && record.length > 0) {
     localQuestion.value.record = [...record]
-    submitted.value = true
     fromRecord.value = true
-    // 计算 isCorrect
     const rate = computeCorrectRate(localQuestion.value)
     isCorrect.value = rate >= 1
   }
 }
 
-defineExpose({ submit, hasAnswer, fillCorrectAnswer, setRecord, submitted, isCorrect })
+// 由父组件控制判断显示
+function applyJudgment() {
+  submitted.value = true
+}
+
+function reset() {
+  localQuestion.value.record = []
+  submitted.value = false
+  isCorrect.value = false
+  fromRecord.value = false
+  renderRef.value?.reset?.()
+}
+
+defineExpose({ submit, hasAnswer, fillCorrectAnswer, setRecord, applyJudgment, reset, submitted, isCorrect })
 </script>

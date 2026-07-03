@@ -60,18 +60,27 @@ const markdownOpen = ref(false)
 const pickerOpen = ref(false)
 const pickerType = ref('questions')
 
-// 下拉菜单项：Markdown + 题目/作业/评论
+// 下拉菜单：Markdown | 快速插入空白 | 选择现有
 const allItems = computed(() => [
     { label: t('ueditor.markdown.title'), icon: 'i-mdi:language-markdown', onSelect: () => { markdownOpen.value = true } },
     { type: 'separator' },
-    { label: t('courseData.questionLabel'), icon: 'i-lucide-circle-help', onSelect: () => openPicker('questions') },
-    { label: t('homework.label'), icon: 'i-lucide-book-open', onSelect: () => openPicker('homeworks') },
-    { label: t('comment.label'), icon: 'i-lucide-message-circle', onSelect: () => openPicker('comments') },
+    { label: t('courseData.questionLabel'), icon: 'i-lucide-circle-help', onSelect: () => quickInsert('questions') },
+    { label: t('homework.label'), icon: 'i-lucide-book-open', onSelect: () => quickInsert('homeworks') },
+    { label: t('comment.label'), icon: 'i-lucide-message-circle', onSelect: () => quickInsert('comments') },
+    { type: 'separator' },
+    { label: `${t('common.search')} ${t('courseData.questionLabel')}`, icon: 'i-lucide-circle-help', onSelect: () => openPicker('questions') },
+    { label: `${t('common.search')} ${t('homework.label')}`, icon: 'i-lucide-book-open', onSelect: () => openPicker('homeworks') },
+    { label: `${t('common.search')} ${t('comment.label')}`, icon: 'i-lucide-message-circle', onSelect: () => openPicker('comments') },
 ])
 
 function openPicker(type) {
     pickerType.value = type
     pickerOpen.value = true
+}
+
+function quickInsert(type) {
+    pickerType.value = type
+    onPickerConfirm([0])
 }
 
 // 监听输入规则触发的选择器事件

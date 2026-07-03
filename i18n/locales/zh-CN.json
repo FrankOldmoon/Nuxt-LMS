@@ -460,5 +460,19 @@
     "anonymous": "匿名",
     "noReplies": "暂无回复",
     "confirmDelete": "确定删除这条评论吗？"
+  },
+  "notification": {
+    "title": "通知中心",
+    "empty": "暂无通知",
+    "loading": "加载中...",
+    "loadFailed": "加载通知失败",
+    "unread": "未读",
+    "read": "已读",
+    "markAsRead": "标为已读",
+    "time": "时间",
+    "noNotifications": "你还没有任何通知",
+    "page": "第 {page} 页 / 共 {total} 页",
+    "prev": "上一页",
+    "next": "下一页"
   }
 }

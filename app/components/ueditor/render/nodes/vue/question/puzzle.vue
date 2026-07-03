@@ -93,9 +93,10 @@ watch(() => props.question?.record, (record) => {
 
 // 点击交换
 function onPieceClick(pos) {
-  if (submitted.value && !fromRecord.value) return
-  if (fromRecord.value) {
+  if (submitted.value) {
     submitted.value = false
+  }
+  if (fromRecord.value) {
     fromRecord.value = false
   }
   if (selectedPos.value === null) {

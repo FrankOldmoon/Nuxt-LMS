@@ -42,9 +42,11 @@ watch(() => props.question?.record, (record) => {
 }, { immediate: true })
 
 function select(idx) {
-    // 来自回填时重新作答，清除 submitted 状态
-    if (fromRecord.value) {
+    // 提交后重新作答，清除判断状态
+    if (submitted.value) {
         submitted.value = false
+    }
+    if (fromRecord.value) {
         fromRecord.value = false
     }
     selected.value = idx

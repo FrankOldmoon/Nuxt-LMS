@@ -167,9 +167,10 @@ function syncRecord() {
 
 // 点击左侧
 function onLeftClick(leftIdx) {
-  if (submitted.value && !fromRecord.value) return
-  if (fromRecord.value) {
+  if (submitted.value) {
     submitted.value = false
+  }
+  if (fromRecord.value) {
     fromRecord.value = false
   }
   if (selectedLeft.value === leftIdx) {
@@ -181,9 +182,10 @@ function onLeftClick(leftIdx) {
 
 // 点击右侧
 function onRightClick(rightIdx) {
-  if (submitted.value && !fromRecord.value) return
-  if (fromRecord.value) {
+  if (submitted.value) {
     submitted.value = false
+  }
+  if (fromRecord.value) {
     fromRecord.value = false
   }
   if (selectedLeft.value === null) return

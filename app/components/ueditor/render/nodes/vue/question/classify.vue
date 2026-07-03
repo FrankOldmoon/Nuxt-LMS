@@ -164,8 +164,10 @@ watch(() => props.question?.record, (record) => {
 
 // 拖拽时更新 record
 watch([pool, catBuckets], () => {
-  if (fromRecord.value) {
+  if (submitted.value) {
     submitted.value = false
+  }
+  if (fromRecord.value) {
     fromRecord.value = false
   }
   doSyncRecord()

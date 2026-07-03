@@ -44,6 +44,9 @@ const showAnswer = ref(false)
 // 各子题的 record
 const subRecords = ref({})
 
+// 防止 fillCorrectAnswer → setRecord → answer-change → syncRecord → record watcher → setRecord 循环
+let isRestoring = false
+
 const hasAnswer = computed(() => {
   return Object.keys(subRecords.value).length > 0
 })
@@ -51,12 +54,15 @@ const hasAnswer = computed(() => {
 // 子题答案变化
 function onAnswerChange(idx, record) {
   subRecords.value[idx] = record
-  // 来自回填时重新作答
-  if (fromRecord.value) {
+  if (submitted.value) {
     submitted.value = false
+  }
+  if (fromRecord.value) {
     fromRecord.value = false
   }
-  syncRecord()
+  if (!isRestoring) {
+    syncRecord()
+  }
 }
 
 // 同步到 question.record
@@ -65,10 +71,11 @@ function syncRecord() {
   recordAnswer(props.question, record)
 }
 
-// 监听 question.record 变化（fetchRecord 回填场景）
+// 监听 question.record 变化（fetchRecord 回填场景 / fillCorrectAnswer 触发）
 watch(() => props.question?.record, (record) => {
   if (!Array.isArray(record) || record.length === 0) return
   // 将每个子题的 record 设置到对应的 SubQuestionRenderer
+  isRestoring = true
   nextTick(() => {
     record.forEach((subRecord, idx) => {
       if (Array.isArray(subRecord) && subRecord.length > 0) {
@@ -76,6 +83,11 @@ watch(() => props.question?.record, (record) => {
         subRecords.value[idx] = subRecord
       }
     })
+    // 回填后若父级已是 submitted 状态，子题也显示判断
+    if (submitted.value) {
+      subRefs.value.forEach(ref => ref?.applyJudgment?.())
+    }
+    nextTick(() => { isRestoring = false })
   })
 }, { immediate: true })
 
@@ -128,8 +140,10 @@ function submit() {
 }
 
 function reset() {
+  showAnswer.value = false
   subRecords.value = {}
   props.question.record = []
+  subRefs.value.forEach(ref => ref?.reset?.())
 }
 
 function fillCorrectAnswer() {

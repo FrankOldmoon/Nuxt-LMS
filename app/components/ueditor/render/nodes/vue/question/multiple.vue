@@ -46,8 +46,10 @@ watch(() => props.question?.record, (record) => {
 }, { immediate: true })
 
 function toggle(idx) {
-  if (fromRecord.value) {
+  if (submitted.value) {
     submitted.value = false
+  }
+  if (fromRecord.value) {
     fromRecord.value = false
   }
   const arr = [...selected.value]

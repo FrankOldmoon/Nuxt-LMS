@@ -46,12 +46,14 @@ function unbindSelects() {
 
 function onChange(e) {
   const idx = Number(e.target.dataset.fillIndex)
-  // 来自回填时重新作答，清除 submitted 状态
-  if (fromRecord.value) {
+  // 提交后重新作答，清除判断状态
+  if (submitted.value) {
     submitted.value = false
-    fromRecord.value = false
-    clearSelectStyles()
   }
+  if (fromRecord.value) {
+    fromRecord.value = false
+  }
+  clearSelectStyles()
   selectAnswers.value[idx] = e.target.value
   recordAnswer(props.question, selectAnswers.value.map(v => (v || '').trim()))
 }
