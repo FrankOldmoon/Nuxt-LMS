@@ -183,18 +183,22 @@ onBeforeUnmount(() => {
     overflow: hidden;
     background: #fff;
 }
+
 .pdf-render-preview {
     background: #fff;
 }
+
 .pdf-page-wrapper {
     position: relative;
     background: #fff;
 }
+
 .pdf-page-canvas {
     display: block;
     width: 100%;
     height: auto;
 }
+
 .pdf-text-layer {
     position: absolute;
     left: 0;
@@ -209,6 +213,7 @@ onBeforeUnmount(() => {
     transform-origin: 0 0;
     z-index: 2;
 }
+
 .pdf-text-layer :deep(span) {
     position: absolute;
     white-space: pre;
@@ -216,9 +221,11 @@ onBeforeUnmount(() => {
     cursor: text;
     transform-origin: 0% 0%;
 }
+
 .pdf-text-layer :deep(::selection) {
     background: rgba(0, 100, 255, 0.3);
 }
+
 .pdf-loading {
     display: flex;
     align-items: center;

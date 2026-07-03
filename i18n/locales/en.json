@@ -548,6 +548,13 @@
     "importFailed": "Import failed",
     "passwordDefault": "default REDACTED"
   },
+  "ide": {
+    "run": "Run",
+    "clear": "Clear",
+    "input": "Input",
+    "inputPlaceholder": "Enter stdin here...",
+    "output": "Output"
+  },
   "myFiles": {
     "title": "My Files",
     "used": "Used",

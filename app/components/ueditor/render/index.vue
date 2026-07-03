@@ -1,13 +1,14 @@
 <template>
   <div class="umo-editor-render umo-page-content render" style="width:100%; min-height:30px">
-    <!-- <div class="umo-page-node-content" style="width:100%; height:100%; min-height:100%"> -->
     <div v-if="renderContent" class="umo-editor-content is-readonly" :style="{ lineHeight: defaultLineHeight }"
       :spellcheck="false">
-      <div class="umo-editor" contenteditable="false" style="padding: 0px; min-height: 100%;">
+      <div class="umo-editor" contenteditable="false" style="padding: 0px; min-height: 100%;" ref="renderNodeRef">
         <RenderNode :node="renderContent" />
       </div>
     </div>
-    <!-- </div> -->
+
+    <!-- 图片全屏预览 -->
+    <UeditorRenderImageModal v-model:open="imageModalOpen" :images="imageList" :initial-index="imageModalIndex" />
   </div>
 </template>
 
@@ -37,6 +38,7 @@ const props = defineProps({
   },
 })
 
+const renderNodeRef = ref(null)
 const defaultLineHeight = computed(() => props.lineHeight)
 
 const renderContent = computed(() => {
@@ -46,6 +48,104 @@ const renderContent = computed(() => {
     return markdownToTiptap(props.json)
   }
   return props.json
+})
+
+// ========== 图片全屏预览 ==========
+const imageModalOpen = ref(false)
+const imageModalIndex = ref(0)
+const imageList = ref([])
+
+// 从渲染 DOM 中提取所有图片和 canvas 并绑定点击事件
+function bindImageClicks() {
+  const comp = renderNodeRef.value
+  if (!comp) return
+  const el = comp.$el || comp
+  if (!el || typeof el.querySelectorAll !== 'function') return
+
+  // 收集所有可预览的图片 URL（img 标签 + canvas 转 dataURL）
+  const urls = []
+
+  // 1. 收集 img 标签
+  const imgs = el.querySelectorAll('img')
+  imgs.forEach((img) => {
+    const src = img.src || img.getAttribute('data-src') || ''
+    if (src) {
+      urls.push(src)
+      img.style.cursor = 'pointer'
+      img.onclick = (e) => {
+        e.stopPropagation()
+        imageList.value = urls
+        imageModalIndex.value = urls.indexOf(src)
+        imageModalOpen.value = true
+      }
+    }
+  })
+
+  // 2. 收集 canvas（PDF 页面等），转为 dataURL
+  const canvases = el.querySelectorAll('canvas')
+  canvases.forEach((canvas) => {
+    try {
+      const dataUrl = canvas.toDataURL('image/png')
+      if (dataUrl && dataUrl.length > 100) {
+        const urlRef = dataUrl
+        urls.push(urlRef)
+        canvas.style.cursor = 'pointer'
+        // 双击触发预览，保留文字选择的单击行为
+        canvas.ondblclick = (e) => {
+          e.stopPropagation()
+          imageList.value = urls
+          imageModalIndex.value = urls.indexOf(urlRef)
+          imageModalOpen.value = true
+        }
+
+        // text-layer 也绑定双击（覆盖在 canvas 上方）
+        const wrapper = canvas.closest('.pdf-page-wrapper, .pdf-node-preview')
+        if (wrapper) {
+          const textLayer = wrapper.querySelector('.pdf-text-layer')
+          if (textLayer) {
+            textLayer.ondblclick = (e) => {
+              e.stopPropagation()
+              imageList.value = urls
+              imageModalIndex.value = urls.indexOf(urlRef)
+              imageModalOpen.value = true
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[imageModal] canvas toDataURL failed:', e.message)
+    }
+  })
+
+  console.log('[imageModal] bindImageClicks found:', imgs.length, 'imgs,', canvases.length, 'canvases, urls:', urls.length)
+}
+
+let mutationObserver = null
+
+onMounted(() => {
+  nextTick(() => {
+    setTimeout(bindImageClicks, 1000)
+  })
+
+  // 监听 DOM 变化，PDF/异步渲染完成后自动绑定
+  const comp = renderNodeRef.value
+  const el = comp?.$el || comp
+  if (el && typeof el.querySelectorAll === 'function') {
+    mutationObserver = new MutationObserver(() => {
+      bindImageClicks()
+    })
+    mutationObserver.observe(el, { childList: true, subtree: true })
+  }
+})
+
+watch(renderContent, () => {
+  nextTick(() => {
+    setTimeout(bindImageClicks, 1000)
+  })
+})
+
+onBeforeUnmount(() => {
+  mutationObserver?.disconnect()
 })
 
 

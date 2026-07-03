@@ -2,12 +2,20 @@
   <div class="cb-wrapper" :class="`cb-theme-${theme}`">
     <div class="cb-header">
       <span class="cb-lang">{{ language }}</span>
-      <button class="cb-copy" :class="{ copied }" @click="copyCode" v-html="copied ? checkIcon : copyIcon"></button>
+      <div class="flex items-center gap-2">
+        <button v-if="isPython" class="cb-run" @click="ideOpen = true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        </button>
+        <button class="cb-copy" :class="{ copied }" @click="copyCode" v-html="copied ? checkIcon : copyIcon"></button>
+      </div>
     </div>
     <div class="cb-main">
       <pre class="cb-lines" aria-hidden="true"><span v-for="n in lineCount" :key="n">{{ n }}</span></pre>
       <pre class="cb-code"><code v-html="highlightedHtml"></code></pre>
     </div>
+
+    <!-- Python IDE 弹窗 -->
+    <IdeModal v-model:open="ideOpen" :code="codeText" />
   </div>
 </template>
 
@@ -25,6 +33,8 @@ const attrs = computed(() => props.node.attrs || {})
 const language = computed(() => attrs.value.language || 'plaintext')
 const theme = computed(() => attrs.value.theme || 'light')
 const textWrap = computed(() => attrs.value.textWrap)
+const isPython = computed(() => ['python', 'py'].includes(language.value))
+const ideOpen = ref(false)
 
 const codeText = computed(() =>
   (props.node.content || []).map((c) => c.text || '').join(''),
@@ -214,6 +224,28 @@ const copyCode = async () => {
   &.copied {
     color: #22c55e !important;
     border-color: #22c55e !important;
+  }
+}
+
+.cb-run {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  line-height: 0;
+  color: #22c55e;
+  border-color: #22c55e;
+
+  &:hover {
+    background: #22c55e;
+    color: #fff;
   }
 }
 

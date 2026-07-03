@@ -548,6 +548,13 @@
     "importFailed": "导入失败",
     "passwordDefault": "默认 REDACTED"
   },
+  "ide": {
+    "run": "运行",
+    "clear": "清空",
+    "input": "输入",
+    "inputPlaceholder": "在此输入 stdin 内容...",
+    "output": "输出"
+  },
   "myFiles": {
     "title": "网盘文件",
     "used": "已用",

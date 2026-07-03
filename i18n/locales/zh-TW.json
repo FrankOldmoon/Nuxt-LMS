@@ -525,6 +525,13 @@
     "importFailed": "匯入失敗",
     "passwordDefault": "預設 REDACTED"
   },
+  "ide": {
+    "run": "執行",
+    "clear": "清空",
+    "input": "輸入",
+    "inputPlaceholder": "在此輸入 stdin 內容...",
+    "output": "輸出"
+  },
   "myFiles": {
     "title": "網盤檔案",
     "used": "已用",
