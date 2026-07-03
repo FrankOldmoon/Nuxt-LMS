@@ -181,6 +181,10 @@
     "addTeachersSuccess": "教師新增成功",
     "addTeachersFailed": "新增教師失敗"
   },
+  "userCard": {
+    "courseScore": "課程積分",
+    "chapterScore": "章節積分"
+  },
   "courseEditor": {
     "title": "課程設定",
     "editCourse": "設定",

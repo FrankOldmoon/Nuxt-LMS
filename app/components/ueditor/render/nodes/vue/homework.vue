@@ -218,6 +218,8 @@ async function onSubmit() {
         submittedFileList.value = files
         submitOk.value = true
         submitMsg.value = t('homework.submitSuccess')
+        // 通知 userCard 刷新（作业提交会增加课程经验）
+        useUserCard().refresh()
     } catch (err) {
         submitOk.value = false
         submitMsg.value = err.message || t('homework.submitFailed')

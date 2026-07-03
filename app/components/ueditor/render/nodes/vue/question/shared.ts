@@ -97,6 +97,7 @@ export function computeCorrectRate(question: any): number {
 
 /**
  * 提交题目答案到后端（只负责 API 调用，record 由 recordAnswer 实时记录）
+ * 成功后自增 userCard 刷新触发器，让侧栏的积分/经验立即更新
  */
 export async function submitQuestion(params: {
   questionId: number
@@ -122,6 +123,8 @@ export async function submitQuestion(params: {
         point: params.point,
       },
     })
+    // 通知 userCard 刷新（题目提交会增加课程/章节积分与经验）
+    useUserCard().refresh()
   } catch {
     // 接口暂未实现，静默忽略
   }

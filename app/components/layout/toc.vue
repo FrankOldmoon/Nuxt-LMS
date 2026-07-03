@@ -1,6 +1,6 @@
 <template>
   <UPageAside>
-
+    <classUserCard />
     <LayoutTocList
       :links="tocLinks"
       :title="$t('layout.pageToc')"

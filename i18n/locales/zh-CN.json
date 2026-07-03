@@ -190,6 +190,10 @@
     "addTeachersSuccess": "教师添加成功",
     "addTeachersFailed": "添加教师失败"
   },
+  "userCard": {
+    "courseScore": "课程积分",
+    "chapterScore": "章节积分"
+  },
   "courseEditor": {
     "title": "课程设置",
     "editCourse": "设置",

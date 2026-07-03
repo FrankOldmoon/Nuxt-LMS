@@ -206,6 +206,8 @@ async function toggleLike(item) {
                 like: newLike,
             },
         })
+        // 防御性通知 userCard 刷新（未来若点赞也会加分，可即时反映）
+        useUserCard().refresh()
     } catch {
         // 回滚
         item.liked = !newLike
@@ -235,6 +237,8 @@ async function onReply({ content, parentCid }) {
             // 跳转到最后一页，让用户看到新回复
             page.value = totalPages.value
         }
+        // 防御性通知 userCard 刷新（未来若评论也会加分，可即时反映）
+        useUserCard().refresh()
     } catch (err) {
         // 静默
     }

@@ -190,6 +190,10 @@
     "addTeachersSuccess": "Teachers added successfully",
     "addTeachersFailed": "Failed to add teachers"
   },
+  "userCard": {
+    "courseScore": "Course Score",
+    "chapterScore": "Chapter Score"
+  },
   "courseEditor": {
     "title": "Course Settings",
     "editCourse": "Settings",

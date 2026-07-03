@@ -15,7 +15,6 @@ export default defineNuxtConfig({
   },
   hub: {
     db: "postgresql",
-    blob: true,
   },
   css: ['~/assets/css/main.css'],
   ui: {
@@ -28,9 +27,9 @@ export default defineNuxtConfig({
     experimental: {
       openAPI: true,
       tasks: true,
+      websocket: true,
     },
     routeRules: {
-      // 全部接口允许跨域
       "/api/**": {
         cors: true,
       },
