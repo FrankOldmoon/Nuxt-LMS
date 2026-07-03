@@ -11,7 +11,11 @@ const props = defineProps({
     showHeader: { type: Boolean, default: true },
     showFooter: { type: Boolean, default: true },
     showContextMenu: { type: Boolean, default: true },
+    // 初始 cellData（用于恢复已保存的数据）
+    initialData: { type: Object, default: null },
 })
+
+const emit = defineEmits(['change'])
 
 const sheetContainer = ref(null)
 const toast = useToast()
@@ -97,11 +101,14 @@ async function initSheet() {
     // 销毁已有实例
     destroyUniver()
 
-    // 构建表头行 cellData
-    const headerRow = {}
-    props.headers.forEach((h, c) => {
-        headerRow[c] = { v: h, s: { bl: 1, cl: { rgb: '#2563EB' } } }
-    })
+    // 构建 cellData：优先使用初始数据，无则空对象
+    const cellData = {}
+    if (props.initialData) {
+        for (const rowKey in props.initialData) {
+            const r = Number(rowKey)
+            cellData[r] = props.initialData[rowKey]
+        }
+    }
 
     // 构建列宽数据
     const columnData = {}
@@ -132,7 +139,7 @@ async function initSheet() {
     univerAPI = api
     univerDispose = dispose
 
-    // 创建工作簿（表头行 + 预留空行）
+    // 创建工作簿（表头行 + 初始数据）
     univerAPI.createWorkbook({
         id: 'univer-sheet',
         name: 'Sheet',
@@ -141,12 +148,23 @@ async function initSheet() {
                 id: 'sheet1',
                 name: 'Sheet1',
                 rowCount: props.rowCount,
-                columnCount: props.headers.length,
-                cellData: { 0: headerRow },
+                columnCount: props.headers.length || 10,
+                cellData,
                 columnData,
             },
         },
     })
+
+    // 监听单元格数据变化，自动通知父组件
+    try {
+        const EventEnum = univerAPI.Event
+        const eventName = EventEnum?.WorkbookValueChanged || EventEnum?.WorkbookCellEdited || 'WorkbookValueChanged'
+        if (eventName) {
+            univerAPI.addEvent(eventName, () => {
+                emit('change')
+            })
+        }
+    } catch (_) { /* 事件监听失败不影响功能 */ }
 }
 
 // ========== 读取所有数据行（跳过表头） ==========
@@ -177,13 +195,87 @@ function getRows() {
     return rows
 }
 
+// ========== 导出当前 cellData ==========
+function getCellData() {
+    if (!univerAPI) return null
+
+    const fWorkbook = univerAPI.getActiveWorkbook()
+    if (!fWorkbook) return null
+
+    const fWorksheet = fWorkbook.getActiveSheet()
+    if (!fWorksheet) return null
+
+    const snapshot = fWorksheet.getSheet().getSnapshot()
+    const cellData = snapshot.cellData || {}
+
+    // 返回所有数据行
+    const result = {}
+    for (const rowKey in cellData) {
+        const r = Number(rowKey)
+        result[r] = cellData[rowKey]
+    }
+    return result
+}
+
 // ========== 重置（重新初始化空表格） ==========
 async function reset() {
     await initSheet()
 }
 
+// ========== 用排序/筛选后的行数据覆盖 sheet 数据行 ==========
+// 销毁当前工作簿，用新数据重建（避免不兼容的 API 调用）
+function setSortedRows(rows) {
+    if (!univerAPI) return
+
+    const fWorkbook = univerAPI.getActiveWorkbook()
+    if (!fWorkbook) return
+
+    const fWorksheet = fWorkbook.getActiveSheet()
+    if (!fWorksheet) return
+
+    // 获取当前表头行和列宽
+    const snapshot = fWorksheet.getSheet().getSnapshot()
+    const oldCellData = snapshot.cellData || {}
+    const headerRow = oldCellData[0] || {}
+    const columnData = snapshot.columnData || {}
+
+    // 构建新的 cellData（保留第 0 行表头 + 排序后的数据行）
+    const newCellData = { 0: headerRow }
+    rows.forEach((row, idx) => {
+        const r = idx + 1
+        const rowData = {}
+        row.forEach((val, c) => {
+            if (val !== '' && val !== undefined && val !== null) {
+                rowData[c] = { v: val }
+            }
+        })
+        if (Object.keys(rowData).length) {
+            newCellData[r] = rowData
+        }
+    })
+
+    // 销毁当前工作簿，用新数据重建
+    const unitId = fWorkbook.getId()
+    univerAPI.disposeUnit(unitId)
+
+    univerAPI.createWorkbook({
+        id: 'univer-sheet',
+        name: 'Sheet',
+        sheets: {
+            sheet1: {
+                id: 'sheet1',
+                name: 'Sheet1',
+                rowCount: props.rowCount,
+                columnCount: props.headers.length,
+                cellData: newCellData,
+                columnData,
+            },
+        },
+    })
+}
+
 // 暴露方法给父组件
-defineExpose({ getRows, reset })
+defineExpose({ getRows, getCellData, setSortedRows, reset })
 
 // ========== 生命周期 ==========
 watch(() => props.active, (val) => {
@@ -193,6 +285,13 @@ watch(() => props.active, (val) => {
         destroyUniver()
     }
 }, { immediate: true })
+
+// 渲染端：initialData 变化时重新初始化（编辑器端不会触发，因为自己保存数据）
+watch(() => props.initialData, (val, oldVal) => {
+    if (val && JSON.stringify(val) !== JSON.stringify(oldVal)) {
+        nextTick(() => initSheet())
+    }
+})
 
 onBeforeUnmount(() => {
     destroyUniver()

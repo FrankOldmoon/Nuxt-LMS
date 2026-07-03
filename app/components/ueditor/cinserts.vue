@@ -22,6 +22,7 @@
     padding: 0 4px;
     height: 100%;
 }
+
 .cinserts-btn {
     display: flex;
     align-items: center;
@@ -35,15 +36,19 @@
     color: inherit;
     transition: background 0.15s;
 }
+
 .cinserts-btn:hover {
     background: rgba(0, 0, 0, 0.06);
 }
+
 .dark .cinserts-btn:hover {
     background: rgba(255, 255, 255, 0.1);
 }
+
 .cinserts-icon {
     font-size: 16px;
 }
+
 .cinserts-text {
     white-space: nowrap;
 }
@@ -68,8 +73,13 @@ const allItems = computed(() => [
     { label: t('homework.label'), icon: 'i-lucide-book-open', onSelect: () => quickInsert('homeworks') },
     { label: t('comment.label'), icon: 'i-lucide-message-circle', onSelect: () => quickInsert('comments') },
     { type: 'separator' },
-    { label: t('ueditor.insertInput'), icon: 'i-lucide-text-cursor-input', onSelect: () => insertVueNode('inputs') },
-    { label: t('ueditor.insertSelect'), icon: 'i-lucide-chevron-down-square', onSelect: () => insertVueNode('select') },
+    { label: t('ueditor.insertInput'), icon: 'i-lucide-text-cursor-input', onSelect: () => insertQuestionNode('inputs') },
+    { label: t('ueditor.insertSelect'), icon: 'i-lucide-chevron-down-square', onSelect: () => insertQuestionNode('select') },
+    { label: t('ueditor.insertSheet'), icon: 'i-lucide-table', onSelect: () => insertSheet() },
+    { label: t('ueditor.insertPdf'), icon: 'i-lucide-file-text', onSelect: () => insertTypedSheet('pdf') },
+    { label: t('ueditor.insertOffice'), icon: 'i-lucide-file-spreadsheet', onSelect: () => insertTypedSheet('office') },
+    { label: t('ueditor.insertMindmap'), icon: 'i-lucide-network', onSelect: () => insertVueNode('mindmap') },
+    { label: t('ueditor.insertAichat'), icon: 'i-lucide-bot', onSelect: () => insertAichat() },
     { type: 'separator' },
     { label: `${t('common.search')} ${t('courseData.questionLabel')}`, icon: 'i-lucide-circle-help', onSelect: () => openPicker('questions') },
     { label: `${t('common.search')} ${t('homework.label')}`, icon: 'i-lucide-book-open', onSelect: () => openPicker('homeworks') },
@@ -86,13 +96,64 @@ function quickInsert(type) {
     onPickerConfirm([0])
 }
 
-// 插入通用 vue 节点（inputs / select 等）
-function insertVueNode(type) {
+// 插入通用 question 节点（inputs / select 等）
+function insertQuestionNode(type) {
     const editor = props.editor?.useEditor()
     if (!editor) return
     editor.chain().focus().insertContent({
         type: type,
-        attrs: { content: ''},
+        attrs: { content: '' },
+    }).run()
+}
+
+// 插入通用 vue 节点
+function insertVueNode(type) {
+    const editor = props.editor?.useEditor()
+    if (!editor) return
+    editor.chain().focus().insertContent({
+        type: 'vue',
+        attrs: { content: '', type },
+    }).run()
+}
+
+// 插入 sheet 节点（带默认配置）
+function insertSheet() {
+    const editor = props.editor?.useEditor()
+    if (!editor) return
+    const defaultConfig = JSON.stringify({
+        height: 300,
+    })
+    editor.chain().focus().insertContent({
+        type: 'vue',
+        attrs: { content: defaultConfig, type: 'sheet' },
+    }).run()
+}
+
+// 插入带空配置的 vue 节点（pdf 等）
+function insertTypedSheet(type) {
+    const editor = props.editor?.useEditor()
+    if (!editor) return
+    editor.chain().focus().insertContent({
+        type: 'vue',
+        attrs: { content: JSON.stringify({}), type },
+    }).run()
+}
+
+// 插入 aichat 节点（带默认配置）
+function insertAichat() {
+    const editor = props.editor?.useEditor()
+    if (!editor) return
+    const defaultConfig = JSON.stringify({
+        title: '',
+        preset: '',
+        opening: '',
+        apiKey: '',
+        apiUrl: '',
+        model: 'gpt-4o-mini',
+    })
+    editor.chain().focus().insertContent({
+        type: 'vue',
+        attrs: { content: defaultConfig, type: 'aichat' },
     }).run()
 }
 

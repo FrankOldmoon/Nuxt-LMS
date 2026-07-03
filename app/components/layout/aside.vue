@@ -39,6 +39,14 @@ const selectedClassName = computed(() => user.value?.defaultClass?.name || '')
 const indexedNavigation = computed(() => indexNavItems(navigation.value, '', true))
 
 async function handleSaved() {
-  if (refresh) await refresh()
+  if (refresh) {
+    // 清除 useFetch 的 payload 缓存，确保 refresh 获取最新数据
+    const key = `/api/lms/courses/show?id=${courseId.value}`
+    const nuxtApp = useNuxtApp()
+    if (nuxtApp.payload.data[key]) {
+      delete nuxtApp.payload.data[key]
+    }
+    await refresh()
+  }
 }
 </script>

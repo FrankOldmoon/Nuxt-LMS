@@ -1,3 +1,6 @@
+import { db, schema } from '@nuxthub/db'
+import { eq } from 'drizzle-orm'
+
 export default eventHandler(async (event) => {
   const body = await readBody(event)
   const { id, ...setData } = body
@@ -18,6 +21,22 @@ export default eventHandler(async (event) => {
         await saveContentVersion('course', Number(id), oldContent)
       }
     }
+
+    // 若更新了 orders，同步更新 chapter 的 name
+    if (setData.orders !== undefined && Array.isArray(setData.orders)) {
+      const chapterUpdates = (setData.orders as any[])
+        .filter(o => o.id && !o.id.startsWith('custom-') && o.id !== 'course' && !isNaN(Number(o.id)))
+        .map(o => ({ id: Number(o.id), name: o.label }))
+
+      for (const item of chapterUpdates) {
+        if (item.name) {
+          await db.update(schema.chapters)
+            .set({ name: item.name, updatedAt: new Date() })
+            .where(eq(schema.chapters.id, item.id))
+        }
+      }
+    }
+
     const result = await updateTable('courses', Number(id), setData)
     return cResp(result)
   } catch (error: any) {

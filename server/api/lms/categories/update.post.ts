@@ -1,3 +1,6 @@
+import { db, schema } from '@nuxthub/db'
+import { eq } from 'drizzle-orm'
+
 export default eventHandler(async (event) => {
   // 仅管理员可更新分类
   await requireAdmin(event)
@@ -10,6 +13,21 @@ export default eventHandler(async (event) => {
   }
 
   try {
+    // 若更新了 orders，同步更新 course 的 name
+    if (setData.orders !== undefined && Array.isArray(setData.orders)) {
+      const courseUpdates = (setData.orders as any[])
+        .filter(o => o.id && !o.id.startsWith('custom-') && !isNaN(Number(o.id)))
+        .map(o => ({ id: Number(o.id), name: o.label }))
+
+      for (const item of courseUpdates) {
+        if (item.name) {
+          await db.update(schema.courses)
+            .set({ name: item.name, updatedAt: new Date() })
+            .where(eq(schema.courses.id, item.id))
+        }
+      }
+    }
+
     const result = await updateTable('categories', Number(id), setData)
     return cResp(result)
   } catch (error: any) {

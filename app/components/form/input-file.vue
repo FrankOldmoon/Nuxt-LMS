@@ -35,6 +35,26 @@
           @click.stop="driveOpen = true"
         />
       </div>
+
+      <!-- URL 输入 -->
+      <div class="mt-3 flex items-center gap-2" @click.stop>
+        <UInput
+          v-model="urlInput"
+          :placeholder="$t('upload.urlPlaceholder')"
+          size="sm"
+          icon="i-lucide-link"
+          class="flex-1"
+          @keydown.enter="addUrl"
+        />
+        <UButton
+          icon="i-lucide-plus"
+          color="primary"
+          variant="outline"
+          size="sm"
+          :disabled="!urlInput.trim()"
+          @click="addUrl"
+        />
+      </div>
     </div>
 
     <!-- 网盘文件选择弹窗 -->
@@ -102,6 +122,22 @@ const fileInput = ref(null)
 const isDragging = ref(false)
 const fileList = ref([])
 const driveOpen = ref(false)
+const urlInput = ref('')
+
+// 通过 URL 添加文件
+function addUrl() {
+  const url = urlInput.value.trim()
+  if (!url) return
+  const name = url.split('/').pop()?.split('?')[0] || 'file'
+  fileList.value.push({
+    name: decodeURIComponent(name),
+    size: 0,
+    status: 'success',
+    url,
+  })
+  urlInput.value = ''
+  updateModelValue()
+}
 
 // 从网盘选择文件
 function onDriveConfirm(selectedFiles) {
