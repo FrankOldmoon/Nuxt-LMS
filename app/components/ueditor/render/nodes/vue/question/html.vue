@@ -41,8 +41,10 @@ const latestRate = ref(null)
 
 const hasAnswer = computed(() => latestRate.value !== null)
 
-// 监听 iframe message
+// 监听 iframe message（通过 event.source 区分不同 iframe）
 function onMessage(event) {
+    // 只处理来自当前 iframe 的消息
+    if (event.source !== iframeRef.value?.contentWindow) return
     if (event.data && typeof event.data === 'object' && event.data.type === 'correct_rate') {
         const rate = Number(event.data.rate)
         if (!isNaN(rate) && rate >= 0 && rate <= 1) {

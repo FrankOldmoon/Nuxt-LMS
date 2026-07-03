@@ -116,8 +116,6 @@ function bindImageClicks() {
       console.warn('[imageModal] canvas toDataURL failed:', e.message)
     }
   })
-
-  console.log('[imageModal] bindImageClicks found:', imgs.length, 'imgs,', canvases.length, 'canvases, urls:', urls.length)
 }
 
 let mutationObserver = null
