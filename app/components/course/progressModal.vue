@@ -1,0 +1,233 @@
+<template>
+    <div>
+        <!-- 进度弹窗 -->
+        <UModal v-model:open="isOpen" :ui="{ content: 'max-w-4xl' }" scrollable>
+            <template #content>
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold mb-4">{{ t('coursePanel.progress') }}</h3>
+                    <div v-if="loading" class="py-8 text-center text-gray-400">{{ t('common.loading') }}</div>
+                    <UTable v-else v-model:expanded="expanded" :data="tableData" :columns="columns"
+                        :get-sub-rows="(row) => row.children" class="flex-1" :ui="{
+                            base: 'border-separate border-spacing-0',
+                            tbody: '[&>tr]:last:[&>td]:border-b-0',
+                            tr: 'group hover:bg-gray-50',
+                            td: 'empty:p-0 group-has-[td:not(:empty)]:border-b border-default',
+                        }" />
+                </div>
+            </template>
+        </UModal>
+
+        <!-- 任务预览弹窗 -->
+        <TaskModal v-model:open="taskModalOpen" :course-id="courseId" :type="taskModalItem.type" :id="taskModalItem.id"
+            :status="taskModalItem.status" />
+    </div>
+</template>
+
+<script setup lang="ts">
+import { h, resolveComponent } from 'vue'
+import type { TableColumn } from '@nuxt/ui'
+
+import TaskDot from './taskDot.vue'
+import TaskModal from './taskModal.vue'
+
+const UButton = resolveComponent('UButton')
+const UTooltip = resolveComponent('UTooltip')
+
+const isOpen = defineModel('open', { default: false })
+const { t } = useI18n()
+
+interface NavItem {
+    to?: string
+    label: string
+    children?: NavItem[]
+}
+
+interface ChapterData {
+    score: number | null
+    items: TaskItem[]
+}
+
+type TaskItem = {
+    id: number
+    type: 'question' | 'homework' | 'comment'
+    status: string
+}
+
+type ProgressRow = {
+    label: string
+    score: number | null | undefined
+    items: TaskItem[]
+    isParent: boolean
+    children?: ProgressRow[]
+}
+
+const props = defineProps({
+    courseId: { type: [String, Number], default: '' },
+    navigation: { type: Array as () => NavItem[], default: () => [] as NavItem[] },
+})
+
+// ---- 任务弹窗状态 ----
+const loading = ref(false)
+const taskModalOpen = ref(false)
+const taskModalItem = reactive({ type: '', id: 0, status: 'todo' })
+
+function onItemClick(item: TaskItem) {
+    Object.assign(taskModalItem, item)
+    taskModalOpen.value = true
+}
+
+// ---- 从导航构建树结构 ----
+function extractChapterId(to: string): number | null {
+    if (!to) return null
+    const match = to.match(/\/course\/[^/]+\/(\d+)$/)
+    return match ? Number(match[1]) : null
+}
+
+// 将导航转为带 children 的树（跳过根节点"课程"）
+function buildTree(navItems: NavItem[], dataMap: Record<number, ChapterData>): ProgressRow[] {
+    function walk(items: NavItem[]): ProgressRow[] {
+        return items.map((item: NavItem) => {
+            const chapterId = extractChapterId(item.to || '')
+            const hasChildren = !!item.children?.length
+            const nodeData: ChapterData = chapterId ? (dataMap[chapterId] || { score: null, items: [] }) : { score: null, items: [] }
+            const row: ProgressRow = {
+                label: item.label,
+                score: nodeData.score ?? null,
+                items: nodeData.items || [],
+                isParent: hasChildren,
+            }
+            // 递归子节点
+            if (hasChildren) {
+                row.children = walk(item.children || [])
+            }
+            return row
+        })
+    }
+    return walk(navItems)
+}
+
+const chapterData = ref < Record < number, ChapterData>> ({})
+
+const tableData = computed(() => buildTree(props.navigation.slice(1), chapterData.value))
+const expanded = ref < Record < number, boolean>> ({})
+
+// 默认展开第一层
+watch(tableData, (data: ProgressRow[]) => {
+    expanded.value = {}
+    data.forEach((_: ProgressRow, i: number) => { expanded.value[i] = true })
+}, { immediate: true })
+
+// ---- 列定义 ----
+const columns: TableColumn<ProgressRow>[] = [
+    {
+        accessorKey: 'label',
+        header: () => t('coursePanel.chapter'),
+        cell: ({ row }) => {
+            return h(
+                'div',
+                {
+                    style: { paddingLeft: `${row.depth * 1.5}rem` },
+                    class: 'flex items-center gap-2',
+                },
+                [
+                    h(UButton, {
+                        color: 'neutral',
+                        variant: 'outline',
+                        size: 'xs',
+                        icon: row.getIsExpanded() ? 'i-lucide-minus' : 'i-lucide-plus',
+                        class: !row.getCanExpand() && 'invisible',
+                        ui: {
+                            base: 'p-0 rounded-sm',
+                            leadingIcon: 'size-4',
+                        },
+                        onClick: row.getToggleExpandedHandler(),
+                    }),
+                    h('span', {
+                        class: (row.original as ProgressRow)?.isParent ? 'font-semibold' : '',
+                    }, row.getValue('label') as string),
+                ],
+            )
+        },
+    },
+    {
+        accessorKey: 'score',
+        header: () => t('coursePanel.score'),
+        meta: {
+            class: {
+                th: 'text-right w-24',
+                td: 'text-right font-mono',
+            },
+        },
+        cell: ({ row }) => {
+            const score = row.getValue('score') as number | null
+            return score != null ? Number(score).toFixed(1) : '—'
+        },
+    },
+    {
+        id: 'bar',
+        header: () => t('coursePanel.bar'),
+        cell: ({ row }) => {
+            const score = row.getValue('score') as number | null
+            if (score == null) return null
+            const pct = Math.min(100, score)
+            return h('div', { class: 'w-full h-2 bg-gray-200 dark:bg-gray-700 rounded overflow-hidden' }, [
+                h('div', {
+                    class: [
+                        'h-full rounded transition-all',
+                        (row.original as ProgressRow)?.isParent ? 'bg-primary-300' : 'bg-primary-500',
+                    ],
+                    style: { width: `${pct}%` },
+                }),
+            ])
+        },
+    },
+    {
+        id: 'tasks',
+        header: () => t('coursePanel.tasks'),
+        cell: ({ row }) => {
+            const items = (row.original as ProgressRow)?.items
+            if (!items?.length) return null
+            return h('div', { class: 'flex items-center gap-1 flex-wrap' },
+                items.map((item: TaskItem) =>
+                    h(UTooltip, {
+                        key: `${item.type}-${item.id}`,
+                        text: `${item.type} #${item.id} (${item.status})`,
+                    }, () =>
+                        h(TaskDot, {
+                            type: item.type,
+                            status: item.status,
+                            id: item.id,
+                            onClick: () => onItemClick(item),
+                        }),
+                    ),
+                ),
+            )
+        },
+    },
+]
+
+// ---- 加载数据 ----
+async function loadData() {
+    if (!props.courseId) return
+    loading.value = true
+    try {
+        const data = await cRequest(`/api/lms/courses/progress?courseId=${props.courseId}`) as { chapterId: number; score: number; items?: TaskItem[] }[]
+        const map: Record<number, ChapterData> = {}
+        for (const row of data) {
+            map[row.chapterId] = {
+                score: row.score,
+                items: row.items || [],
+            }
+        }
+        chapterData.value = map
+    } catch (e) {
+        console.error('加载进度失败', e)
+    } finally {
+        loading.value = false
+    }
+}
+
+watch(isOpen, (val) => {
+    if (val) loadData()
+})
+</script>
