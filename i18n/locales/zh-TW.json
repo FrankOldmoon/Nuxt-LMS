@@ -322,7 +322,12 @@
     "importHint": "請輸入 JSON 陣列格式，每個物件是一筆記錄的欄位",
     "importSuccess": "匯入成功",
     "importFailed": "匯入失敗",
-    "importParseError": "JSON 解析錯誤"
+    "importParseError": "JSON 解析錯誤",
+    "selected": "已選",
+    "confirmInsert": "確認插入",
+    "selectQuestions": "選擇題目",
+    "selectHomeworks": "選擇作業",
+    "selectComments": "選擇評論"
   },
   "record": {
     "noRecords": "暫無記錄",

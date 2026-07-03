@@ -331,7 +331,12 @@
     "importHint": "Enter JSON array format, each object is a record's fields",
     "importSuccess": "Imported successfully",
     "importFailed": "Import failed",
-    "importParseError": "JSON parse error"
+    "importParseError": "JSON parse error",
+    "selected": "selected",
+    "confirmInsert": "Confirm Insert",
+    "selectQuestions": "Select Questions",
+    "selectHomeworks": "Select Homework",
+    "selectComments": "Select Comments"
   },
   "record": {
     "noRecords": "No records",

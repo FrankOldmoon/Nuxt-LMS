@@ -331,7 +331,12 @@
     "importHint": "请输入 JSON 数组格式，每个对象是一条记录的字段",
     "importSuccess": "导入成功",
     "importFailed": "导入失败",
-    "importParseError": "JSON 解析错误"
+    "importParseError": "JSON 解析错误",
+    "selected": "已选",
+    "confirmInsert": "确认插入",
+    "selectQuestions": "选择题目",
+    "selectHomeworks": "选择作业",
+    "selectComments": "选择评论"
   },
   "record": {
     "noRecords": "暂无记录",

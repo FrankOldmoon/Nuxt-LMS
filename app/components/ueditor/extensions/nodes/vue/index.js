@@ -52,6 +52,19 @@ export default Node.create({
 
   addInputRules() {
     return [
+      // 复数类型：::questions / ::homeworks / ::comments 触发选择器事件（不插入节点）
+      new InputRule({
+        find: /^::(questions|homeworks|comments)$/,
+        handler: ({ state, range, match, commands }) => {
+          const type = match[1]
+          commands.deleteRange(range)
+          // 通过自定义事件触发选择器
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('ueditor-open-picker', { detail: { type } }))
+          }
+        },
+      }),
+      // 单数类型：::question 12:: 格式
       new InputRule({
         find: /^::(\w+)\s+(.*?)::$/,
         handler: ({ state, range, match, commands }) => {

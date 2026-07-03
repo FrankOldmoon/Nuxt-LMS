@@ -11,7 +11,7 @@ export default Node.create({
                     commands.deleteRange(range)
                     commands.setCodeBlock({language:'python'})
                 },
-            }),
+            })
         ]
     },
 })
