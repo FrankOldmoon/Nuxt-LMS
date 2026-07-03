@@ -54,5 +54,5 @@ const statusText = computed(() => {
         default: return t('coursePanel.todo')
     }
 })
-const tooltip = computed(() => `${typeName.value} — ${statusText.value}`)
+const tooltip = computed(() => statusText.value)
 </script>

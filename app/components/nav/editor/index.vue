@@ -1,26 +1,17 @@
 <template>
   <UModal v-model:open="open">
     <UTooltip :text="$t('navEditor.title')" :content="{ side: 'bottom' }">
-      <UButton
-        color="primary"
-        variant="ghost"
-        size="sm"
-        icon="i-lucide-list-tree"
-        :aria-label="$t('navEditor.title')"
-        @click="openModal"
-      />
+      <UButton color="primary" variant="ghost" size="sm" icon="i-lucide-list-tree" :aria-label="$t('navEditor.title')"
+        @click="openModal" />
     </UTooltip>
 
     <template #content>
       <div class="p-6 space-y-4 min-w-[520px] max-h-[70vh] overflow-y-auto">
-        <h3 class="text-lg font-medium">{{ mode === 'category' ? $t('navEditor.editCategory') : $t('navEditor.editCourse') }}</h3>
+        <h3 class="text-lg font-medium">{{ mode === 'category' ? $t('navEditor.editCategory') :
+          $t('navEditor.editCourse') }}</h3>
         <p class="text-sm text-gray-500">{{ $t('navEditor.hint') }}</p>
 
-        <NavEditorList
-          v-model="flatItems"
-          :max-depth="maxDepth"
-          :gen-key="genKey"
-        />
+        <NavEditorList v-model="flatItems" :max-depth="maxDepth" :gen-key="genKey" />
       </div>
 
       <!-- 底部按钮 -->
@@ -32,12 +23,7 @@
           <UButton color="neutral" variant="outline" @click="resetFromProps">
             {{ $t('common.reset') }}
           </UButton>
-          <UButton
-            color="primary"
-            variant="solid"
-            :loading="saving"
-            @click="save"
-          >
+          <UButton color="primary" variant="solid" :loading="saving" @click="save">
             {{ $t('navEditor.saveAndClose') }}
           </UButton>
         </div>

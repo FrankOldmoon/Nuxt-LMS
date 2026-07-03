@@ -1,37 +1,16 @@
 <template>
-  <draggable
-    :model-value="items"
-    item-key="_key"
-    handle=".drag-handle"
-    :move="checkMove"
-    ghost-class="ghost"
-    tag="div"
-    class="space-y-1.5"
-    @update:model-value="$emit('update:modelValue', $event)"
-    @start="onDragStart"
-    @end="onDragEnd"
-  >
+  <draggable :model-value="visibleItems" item-key="_key" handle=".drag-handle" :move="checkMove" ghost-class="ghost" tag="div"
+    class="space-y-0.5" @update:model-value="onVisibleUpdate" @start="onDragStart" @end="onDragEnd">
     <template #item="{ element: item, index }">
-      <NavEditorItem
-        :item="item"
-        :index="index"
-        :max-depth="maxDepth"
-        @add-child="addChild"
-        @add-sibling="addSibling"
-        @delete="deleteItem"
-      />
+      <NavEditorItem :item="item" :index="originalIndex(index)" :max-depth="maxDepth"
+        :has-children="hasChildren(item._key)" :collapsed="collapsedKeys.has(item._key)"
+        @add-child="addChild" @add-sibling="addSibling" @delete="deleteItem"
+        @toggle-collapse="toggleCollapse(item._key)" />
     </template>
   </draggable>
 
   <!-- 添加根级目录 -->
-  <UButton
-    icon="i-lucide-plus"
-    color="primary"
-    variant="outline"
-    size="xs"
-    block
-    @click="addRootItem"
-  >
+  <UButton icon="i-lucide-plus" color="primary" variant="outline" size="xs" block @click="addRootItem">
     {{ $t('navEditor.addRoot') }}
   </UButton>
 </template>
@@ -55,6 +34,61 @@ const items = computed({
   get: () => props.modelValue,
   set: (val) => emit('update:modelValue', val),
 })
+
+// ==================== 折叠状态 ====================
+
+const collapsedKeys = ref(new Set<string>())
+
+/** 判断某节点是否有子节点（下一项 depth 更深） */
+function hasChildren(key: string): boolean {
+  const idx = items.value.findIndex((i) => i._key === key)
+  if (idx === -1 || idx >= items.value.length - 1) return false
+  return items.value[idx + 1]!.depth > items.value[idx]!.depth
+}
+
+function toggleCollapse(key: string) {
+  const next = new Set(collapsedKeys.value)
+  if (next.has(key)) {
+    next.delete(key)
+  } else {
+    next.add(key)
+  }
+  collapsedKeys.value = next
+}
+
+/** 过滤掉被折叠父节点的子项 */
+const visibleItems = computed(() => {
+  const result: FlatNode[] = []
+  for (const item of items.value) {
+    // 检查是否在某折叠节点的后代中
+    let hidden = false
+    for (let i = result.length - 1; i >= 0; i--) {
+      const ancestor = result[i]!
+      if (ancestor.depth < item.depth && collapsedKeys.value.has(ancestor._key)) {
+        hidden = true
+        break
+      }
+    }
+    if (!hidden) result.push(item)
+  }
+  return result
+})
+
+/** 可见列表索引 → 原始列表索引 */
+function originalIndex(visibleIdx: number): number {
+  const visible = visibleItems.value
+  if (visibleIdx >= visible.length) return visibleIdx
+  return items.value.findIndex((i) => i._key === visible[visibleIdx]?._key)
+}
+
+/** 拖拽更新：将可见列表的变更映射回原始列表 */
+function onVisibleUpdate(newVisible: FlatNode[]) {
+  const newItems = [...items.value]
+  // 用 _key 匹配，按可见列表顺序重排
+  const keyOrder = newVisible.map((v) => v._key)
+  newItems.sort((a, b) => keyOrder.indexOf(a._key) - keyOrder.indexOf(b._key))
+  emit('update:modelValue', newItems)
+}
 
 // 拖拽时记录被拖拽元素的 _key，用于 end 事件中定位
 let dragTargetKey: string | null = null

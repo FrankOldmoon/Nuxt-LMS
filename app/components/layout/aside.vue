@@ -3,16 +3,16 @@
     <!-- 工具栏按钮行 -->
     <div class="flex items-center gap-1 mb-3 flex-wrap">
       <UTooltip :text="$t('coursePanel.progress')">
-        <UButton icon="i-lucide-trending-up" color="neutral" variant="outline" size="xs" @click="() => { progressOpen = true }" />
+        <UButton icon="i-lucide-trending-up" color="primary" variant="soft" size="xs" @click="progressOpen = true" />
       </UTooltip>
       <UTooltip :text="$t('coursePanel.leaderboard')">
-        <UButton icon="i-lucide-trophy" color="neutral" variant="outline" size="xs" @click="() => { leaderboardOpen = true }" />
+        <UButton icon="i-lucide-trophy" color="info" variant="soft" size="xs" @click="leaderboardOpen = true" />
       </UTooltip>
       <UTooltip :text="$t('coursePanel.groups')">
-        <UButton icon="i-lucide-users" color="neutral" variant="outline" size="xs" @click="() => { groupsOpen = true }" />
+        <UButton icon="i-lucide-users" color="warning" variant="soft" size="xs" @click="groupsOpen = true" />
       </UTooltip>
       <UTooltip :text="$t('coursePanel.grades')">
-        <UButton icon="i-lucide-graduation-cap" color="neutral" variant="outline" size="xs" @click="() => { gradesOpen = true }" />
+        <UButton icon="i-lucide-graduation-cap" color="error" variant="soft" size="xs" @click="gradesOpen = true" />
       </UTooltip>
     </div>
 
