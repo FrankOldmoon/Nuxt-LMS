@@ -302,7 +302,7 @@ export async function upsertConfig(id: string, value: any) {
  * 获取指定班级的用户列表（user_classes 关联表 + users.class_id 直接归属）
  * 合并去重：关联表用户优先（有 isTeacher 信息），补充直接归属用户
  */
-export async function getClassUsers(classId: number) {
+export async function getClassUsers(classId: number, courseId: number = 0) {
   // 1. 通过 user_classes 关联表查询（含 isTeacher 信息）
   const relUsers = await db
     .select({
@@ -354,6 +354,23 @@ export async function getClassUsers(classId: number) {
   for (const u of directUsers) {
     if (!relUserIds.has(u.id)) {
       merged.push({ ...u, isTeacher: null })
+    }
+  }
+
+  // 4. 如果有 courseId，查询 userCourses 的 number 和 group 并合并
+  if (courseId && merged.length > 0) {
+    const userIds = merged.map(u => u.id)
+    const userCourses = await db.query.userCourses.findMany({
+      where: and(
+        eq(schema.userCourses.courseId, courseId),
+        inArray(schema.userCourses.userId, userIds),
+      ),
+    })
+    const ucMap = new Map(userCourses.map(uc => [uc.userId, uc]))
+    for (const u of merged) {
+      const uc = ucMap.get(u.id)
+      ;(u as any).number = uc?.number || ''
+      ;(u as any).group = uc?.group || ''
     }
   }
 

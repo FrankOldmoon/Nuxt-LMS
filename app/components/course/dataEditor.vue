@@ -12,12 +12,16 @@
                     <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" @click="open = false" />
                 </div>
 
-                <!-- 工具栏：类型筛选 + 搜索 -->
+                <!-- 工具栏：类型筛选 + 搜索 + 导入 -->
                 <div class="flex items-center gap-2">
                     <USelect v-model="filterType" :items="typeOptions" size="sm" class="w-32" />
                     <UInputMenu v-model="searchSelected" :items="searchItems" value-key="value" label-key="label"
                         :placeholder="$t('courseData.searchPlaceholder')" icon="i-lucide-search" size="sm"
                         class="flex-1" @change="onSearchSelect" />
+                    <UButton size="sm" color="primary" variant="soft" icon="i-lucide-upload"
+                        @click="importOpen = true">
+                        {{ $t('courseData.import') }}
+                    </UButton>
                     <span class="text-xs text-gray-400 whitespace-nowrap">
                         {{ filtered.length ? `${currentIndex + 1} / ${filtered.length}` : '0 / 0' }}
                     </span>
@@ -83,6 +87,28 @@
                 @saved="onEditSaved" />
             <CommentEdit v-if="editType === 'comment'" v-model="editOpen" :comment-id="editId" :comment="editData"
                 @saved="onEditSaved" />
+
+            <!-- 导入弹窗 -->
+            <UModal v-model:open="importOpen" :ui="{ content: 'sm:max-w-2xl' }">
+                <template #content>
+                    <div class="p-6 space-y-4">
+                        <h3 class="text-lg font-semibold">{{ $t('courseData.importTitle') }}</h3>
+                        <p class="text-xs text-gray-500">{{ $t('courseData.importHint') }}</p>
+                        <div class="h-[400px]">
+                            <Monaco v-model="importJson" language="json" />
+                        </div>
+                        <div v-if="importMsg" class="text-xs" :class="importOk ? 'text-green-500' : 'text-red-500'">
+                            {{ importMsg }}
+                        </div>
+                        <div class="flex justify-end gap-2">
+                            <UButton variant="ghost" @click="importOpen = false">{{ $t('common.cancel') }}</UButton>
+                            <UButton color="primary" :loading="importing" @click="doImport">
+                                {{ $t('courseData.import') }}
+                            </UButton>
+                        </div>
+                    </div>
+                </template>
+            </UModal>
         </template>
     </UModal>
 </template>
@@ -94,6 +120,7 @@ import CommentEdit from '../ueditor/extensions/nodes/vue/comment/edit.vue'
 import QuestionRender from '../ueditor/render/nodes/vue/question.vue'
 import HomeworkRender from '../ueditor/render/nodes/vue/homework.vue'
 import CommentRender from '../ueditor/render/nodes/vue/comment.vue'
+import Monaco from '../monaco/index.vue'
 
 const props = defineProps({
     courseId: { type: [Number, String], default: 0 },
@@ -239,6 +266,47 @@ async function deleteCurrent() {
         fetchData()
     } catch (err) {
         toast.add({ title: err.message || t('courseData.deleteFailed'), color: 'error' })
+    }
+}
+
+// 导入
+const importOpen = ref(false)
+const importJson = ref('[\n  {\n    "name": "示例",\n    "content": "",\n    "point": 1\n  }\n]')
+const importing = ref(false)
+const importMsg = ref('')
+const importOk = ref(true)
+
+async function doImport() {
+    let items
+    try {
+        items = JSON.parse(importJson.value)
+        if (!Array.isArray(items)) throw new Error('JSON 必须是数组格式')
+    } catch (err) {
+        importOk.value = false
+        importMsg.value = `${t('courseData.importParseError')}: ${err.message}`
+        return
+    }
+    importing.value = true
+    importMsg.value = ''
+    try {
+        const data = await cRequest('/api/lms/courses/import', {
+            method: 'POST',
+            body: {
+                course_id: props.courseId,
+                type: filterType.value,
+                items,
+            },
+        })
+        importOk.value = true
+        importMsg.value = `${t('courseData.importSuccess')}: ${data.imported}`
+        toast.add({ title: `${t('courseData.importSuccess')}: ${data.imported}`, color: 'success' })
+        fetchData()
+        importOpen.value = false
+    } catch (err) {
+        importOk.value = false
+        importMsg.value = err.message || t('courseData.importFailed')
+    } finally {
+        importing.value = false
     }
 }
 </script>

@@ -1,7 +1,7 @@
 <template>
-  <UModal v-model:open="open" scrollable>
+  <UModal v-model:open="open" scrollable :ui="{ content: 'w-[80vw] max-w-[80vw]' }">
     <template #content>
-      <div class="p-6 min-w-[400px]">
+      <div class="p-6 w-full">
         <h3 class="text-lg font-semibold mb-4">{{ $t('classSelector.selectClass') }}</h3>
 
         <!-- 班级选择行 -->
@@ -125,6 +125,7 @@ const open = defineModel<boolean>('open', { required: true })
 const { user, refreshUser } = useAuth()
 const toast = useToast()
 const { t } = useI18n()
+const { editableCourseId } = useLayoutState()
 const { fetchUsers } = useClassUsers()
 
 // ==================== 班级选择 ====================
@@ -167,7 +168,7 @@ async function onClassChange() {
     })
     await refreshUser()
     // 切换班级时重新拉取用户
-    await fetchUsers(c.id)
+    await fetchUsers(c.id, editableCourseId.value)
     toast.add({ title: t('classSelector.updateSuccess'), color: 'success' })
   } catch (e: any) {
     toast.add({ title: e.message || t('classSelector.updateFailed'), color: 'error' })
@@ -290,7 +291,7 @@ async function addStudentsToClass() {
     })
     toast.add({ title: t('classSelector.addStudentsSuccess'), color: 'success' })
     selectedStudents.value = []; studentSearch.value = ''; studentSearchResults.value = []
-    if (selectedClassId.value) await fetchUsers(selectedClassId.value)
+    if (selectedClassId.value) await fetchUsers(selectedClassId.value, editableCourseId.value)
   } catch (e: any) {
     toast.add({ title: e.message || t('classSelector.addStudentsFailed'), color: 'error' })
   } finally { addingStudents.value = false }
@@ -341,7 +342,7 @@ async function addTeachersToClass() {
     })
     toast.add({ title: t('classSelector.addTeachersSuccess'), color: 'success' })
     selectedTeachers.value = []; teacherSearch.value = ''; teacherSearchResults.value = []
-    if (selectedClassId.value) await fetchUsers(selectedClassId.value)
+    if (selectedClassId.value) await fetchUsers(selectedClassId.value, editableCourseId.value)
   } catch (e: any) {
     toast.add({ title: e.message || t('classSelector.addTeachersFailed'), color: 'error' })
   } finally { addingTeachers.value = false }
@@ -363,11 +364,11 @@ watch(open, async (val) => {
     selectedTeachers.value = []
     await loadClasses()
     // 加载完班级列表后，拉取当前班级用户
-    if (selectedClassId.value) await fetchUsers(selectedClassId.value)
+    if (selectedClassId.value) await fetchUsers(selectedClassId.value, editableCourseId.value)
   }
 })
 
 onMounted(async () => {
-  if (selectedClassId.value) await fetchUsers(selectedClassId.value)
+  if (selectedClassId.value) await fetchUsers(selectedClassId.value, editableCourseId.value)
 })
 </script>
