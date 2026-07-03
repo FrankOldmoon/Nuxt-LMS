@@ -327,6 +327,7 @@
     "deleted": "Deleted",
     "deleteFailed": "Delete failed",
     "import": "Import",
+    "insert": "Insert",
     "importTitle": "Batch Import",
     "importHint": "Enter JSON array format, each object is a record's fields",
     "importSuccess": "Imported successfully",

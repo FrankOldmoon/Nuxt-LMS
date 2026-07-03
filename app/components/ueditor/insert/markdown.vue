@@ -1,16 +1,10 @@
 <template>
-    <UModal title="Modal with title">
-        <!-- 默认插槽：放置触发按钮 -->
-        <div class="mr-2 flex items-center pt-2">
-            <div clsss="flex gap-0">
-                <UIcon name="i-mdi:language-markdown" class="size-5" />
-                <div>M</div>
-            </div>
-        </div>
+    <UModal title="Modal with title" v-model:open="open">
+        
         <template #body>
             <div class="flex flex-col gap-4 p-4">
                 <h3 class="text-lg font-semibold">{{ $t('ueditor.markdown.title') }}</h3>
-                <UTextarea v-model="inputText" :placeholder="$t('ueditor.markdown.placeholder')" :rows="6" autoresize />
+                <monaco v-model="inputText" :placeholder="$t('ueditor.markdown.placeholder')"/>
                 <div class="flex justify-end gap-2">
                     <UButton type="primary" @click="insertContent">{{ $t('ueditor.markdown.insert') }}</UButton>
                     <!-- 关闭按钮可选，Nuxt UI 的 Modal 默认可通过点击遮罩层或 ESC 关闭 -->
@@ -29,6 +23,8 @@ const props = defineProps({
         default: () => { },
     },
 })
+
+const open = defineModel({default: false})
 
 const inputText = ref('')
 

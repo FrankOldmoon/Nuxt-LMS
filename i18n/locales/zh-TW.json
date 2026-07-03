@@ -318,6 +318,7 @@
     "deleted": "已刪除",
     "deleteFailed": "刪除失敗",
     "import": "匯入",
+    "insert": "插入",
     "importTitle": "批次匯入",
     "importHint": "請輸入 JSON 陣列格式，每個物件是一筆記錄的欄位",
     "importSuccess": "匯入成功",

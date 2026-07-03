@@ -327,6 +327,7 @@
     "deleted": "已删除",
     "deleteFailed": "删除失败",
     "import": "导入",
+    "insert": "插入",
     "importTitle": "批量导入",
     "importHint": "请输入 JSON 数组格式，每个对象是一条记录的字段",
     "importSuccess": "导入成功",
