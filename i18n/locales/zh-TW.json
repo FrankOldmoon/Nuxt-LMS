@@ -451,5 +451,15 @@
     "anonymous": "匿名",
     "noReplies": "暫無回覆",
     "confirmDelete": "確定刪除這則評論嗎？"
+  },
+  "importUsers": {
+    "title": "匯入使用者",
+    "import": "匯入",
+    "requiredColumns": "必填欄",
+    "optionalColumns": "可選欄",
+    "notReady": "表格未初始化",
+    "noData": "沒有資料可匯入",
+    "importFailed": "匯入失敗",
+    "passwordDefault": "預設 REDACTED"
   }
 }

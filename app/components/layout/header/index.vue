@@ -70,6 +70,9 @@
   <!-- 通知弹窗 -->
   <LayoutNotificationModal v-model:open="showNotificationModal" />
 
+  <!-- 导入用户弹窗（仅管理员） -->
+  <AuthImportUsersModal v-model:open="showImportUsersModal" />
+
 
 </template>
 
@@ -86,6 +89,7 @@ const showProfileModal = ref(false)
 const showSettingsModal = ref(false)
 const showSearchModal = ref(false)
 const showNotificationModal = ref(false)
+const showImportUsersModal = ref(false)
 
 function onLoginSuccess() {
   showLoginModal.value = false
@@ -106,7 +110,7 @@ const userMenuItems = computed(() => {
     ],
   ]
 
-  // 管理员可看到系统设置
+  // 管理员可看到系统设置和导入用户
   if (isAdmin.value) {
     items.push([
       {
@@ -114,6 +118,13 @@ const userMenuItems = computed(() => {
         icon: 'i-lucide-settings',
         onSelect: () => {
           showSettingsModal.value = true
+        },
+      },
+      {
+        label: t('importUsers.title'),
+        icon: 'i-lucide-users',
+        onSelect: () => {
+          showImportUsersModal.value = true
         },
       },
     ])

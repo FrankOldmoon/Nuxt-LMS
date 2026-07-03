@@ -474,5 +474,15 @@
     "page": "Page {page} of {total}",
     "prev": "Previous",
     "next": "Next"
+  },
+  "importUsers": {
+    "title": "Import Users",
+    "import": "Import",
+    "requiredColumns": "Required columns",
+    "optionalColumns": "Optional columns",
+    "notReady": "Sheet not initialized",
+    "noData": "No data to import",
+    "importFailed": "Import failed",
+    "passwordDefault": "default REDACTED"
   }
 }
