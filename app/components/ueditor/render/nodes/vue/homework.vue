@@ -131,7 +131,7 @@ const props = defineProps({
 const { t } = useI18n()
 const emit = defineEmits(['init'])
 
-const { editableCourseId } = useLayoutState()
+const { editableCourseId, editableId } = useLayoutState()
 const { hasRole } = useAuth()
 
 const homeworkId = computed(() => Number(props.node?.attrs?.content) || 0)
@@ -208,6 +208,7 @@ async function onSubmit() {
             method: 'POST',
             body: {
                 course_id: editableCourseId.value,
+                chapter_id: editableId.value,
                 homework_cid: homeworkId.value,
                 files,
                 content: submittedContent.value,

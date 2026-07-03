@@ -1,5 +1,5 @@
 <template>
-  <UModal v-model:open="isOpen" :ui="{ content: 'sm:max-w-2xl' }">
+  <UModal v-model:open="isOpen"  scrollable>
     <template #content>
       <div class="p-6">
         <h3 class="text-lg font-semibold mb-6">{{ $t('settings.title') }}</h3>
@@ -52,6 +52,9 @@
             />
           </UFormField>
 
+          <!-- LMS 学习行为参数 -->
+          <LmsConfigEditor ref="lmsConfigRef" v-model="lmsConfig" />
+
           <!-- 保存按钮 -->
           <div class="flex justify-end gap-2 pt-4">
             <UButton
@@ -83,6 +86,8 @@ const { refreshConfig } = useLmsConfig()
 
 const loading = ref(false)
 const saving = ref(false)
+const lmsConfigRef = ref<any>(null)
+const lmsConfig = ref<any>(null)
 
 // 网站配置表单
 const form = ref({
@@ -115,6 +120,9 @@ async function loadSettings() {
         pageSize: siteConfig.value.pageSize ?? 20,
       }
     }
+    // 加载 LMS 配置
+    const lmsData = await cRequest('/api/lms/config/get')
+    lmsConfig.value = lmsData
   } catch (e: any) {
     toast.add({ title: e.message || t('settings.loadFailed'), color: 'error' })
   } finally {
@@ -129,12 +137,19 @@ function closeModal() {
 async function saveSettings() {
   saving.value = true
   try {
+    // 保存网站配置
     await cRequest('/api/configs/update', {
       method: 'POST',
       body: {
         id: 'site_config',
         value: form.value,
       },
+    })
+    // 保存 LMS 配置
+    const configData = lmsConfigRef.value?.getConfig() || lmsConfig.value
+    await cRequest('/api/lms/config/update', {
+      method: 'POST',
+      body: configData,
     })
     closeModal()
     toast.add({ title: t('settings.updateSuccess'), color: 'success' })

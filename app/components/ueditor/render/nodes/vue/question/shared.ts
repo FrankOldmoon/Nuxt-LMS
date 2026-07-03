@@ -53,6 +53,7 @@ export async function submitQuestion(params: {
   isCorrect: boolean
   correctRate: number
   courseId?: number
+  chapterId?: number
   point?: number
 }) {
   try {
@@ -60,6 +61,7 @@ export async function submitQuestion(params: {
       method: 'POST',
       body: {
         course_id: params.courseId,
+        chapter_id: params.chapterId,
         question_cid: params.questionId,
         user_answer: params.userAnswer,
         is_correct: params.isCorrect,

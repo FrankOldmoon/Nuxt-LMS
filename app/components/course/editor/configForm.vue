@@ -52,6 +52,9 @@
       />
       <p v-if="extraConfigError" class="text-xs text-error mt-1">{{ extraConfigError }}</p>
     </UFormField>
+
+    <!-- LMS 学习行为参数（课程级覆盖） -->
+    <LmsConfigEditor ref="lmsConfigRef" v-model="lmsConfig" />
   </div>
 </template>
 
@@ -69,11 +72,13 @@ const config = reactive({
 
 const extraConfigText = ref('{}')
 const extraConfigError = ref('')
+const lmsConfigRef = ref<any>(null)
+const lmsConfig = ref<any>(null)
 
 const colorOpts = computed(() => colorOptions())
 const levelOpts = computed(() => levelOptions())
 
-const KNOWN_KEYS = ['icon', 'color', 'level', 'showAnnouncement', 'showComments', 'showProgress']
+const KNOWN_KEYS = ['icon', 'color', 'level', 'showAnnouncement', 'showComments', 'showProgress', 'lmsConfig']
 
 /** 从课程 config 对象初始化表单 */
 function initFromConfig(cfg: Record<string, any>) {
@@ -83,6 +88,9 @@ function initFromConfig(cfg: Record<string, any>) {
   config.showAnnouncement = cfg.showAnnouncement ?? true
   config.showComments = cfg.showComments ?? true
   config.showProgress = cfg.showProgress ?? false
+
+  // LMS 配置（课程级覆盖）
+  lmsConfig.value = cfg.lmsConfig || null
 
   const extra: Record<string, any> = {}
   for (const key of Object.keys(cfg)) {
@@ -94,7 +102,7 @@ function initFromConfig(cfg: Record<string, any>) {
   extraConfigError.value = ''
 }
 
-/** 合并 config 已知字段 + extra JSON，返回最终 config */
+/** 合并 config 已知字段 + lmsConfig + extra JSON，返回最终 config */
 function buildConfig(): Record<string, any> | null {
   let extra: Record<string, any> = {}
   try {
@@ -104,7 +112,7 @@ function buildConfig(): Record<string, any> | null {
     extraConfigError.value = t('settings.invalidJson')
     return null
   }
-  return {
+  const result: Record<string, any> = {
     icon: config.icon || undefined,
     color: config.color,
     level: config.level,
@@ -113,6 +121,12 @@ function buildConfig(): Record<string, any> | null {
     showProgress: config.showProgress,
     ...extra,
   }
+  // 添加 LMS 配置（课程级覆盖）
+  const lmsData = lmsConfigRef.value?.getConfig()
+  if (lmsData) {
+    result.lmsConfig = lmsData
+  }
+  return result
 }
 
 defineExpose({ initFromConfig, buildConfig })

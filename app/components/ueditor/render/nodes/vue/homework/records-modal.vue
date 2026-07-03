@@ -77,6 +77,7 @@ const emit = defineEmits(['update:modelValue'])
 
 const { t } = useI18n()
 const { students } = useClassUsers()
+const { editableId } = useLayoutState()
 
 const open = computed({
     get: () => props.modelValue,
@@ -150,6 +151,7 @@ async function onScoreBlur(row) {
             method: 'POST',
             body: {
                 course_id: props.courseId,
+                chapter_id: editableId.value,
                 homework_cid: props.cid,
                 user_id: row.id,
                 score: val,

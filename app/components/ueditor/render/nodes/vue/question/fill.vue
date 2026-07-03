@@ -16,7 +16,7 @@ const props = defineProps({
 const submitted = inject('questionSubmitted')
 const isCorrect = inject('questionIsCorrect')
 const fromRecord = inject('questionFromRecord')
-const { editableCourseId } = useLayoutState()
+const { editableCourseId, editableId } = useLayoutState()
 const fillAnswers = ref([])
 let inputEls = []
 
@@ -141,6 +141,7 @@ function submit() {
     isCorrect: correct,
     correctRate: computeCorrectRate(props.question),
     courseId: editableCourseId.value,
+    chapterId: editableId.value,
     point: props.question.point,
   })
   styleInputs()
