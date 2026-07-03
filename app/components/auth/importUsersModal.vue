@@ -1,5 +1,5 @@
 <template>
-    <UModal v-model:open="isOpen" scrollable>
+    <UModal v-model:open="isOpen" scrollable fullscreen>
         <template #content>
             <div class="flex flex-col" style="height: 75vh;">
                 <!-- 标题栏 -->
@@ -22,7 +22,7 @@
                 </div>
 
                 <!-- Univer 表格组件 -->
-                <UniverSheet
+                <sheet
                     ref="sheetRef"
                     :headers="HEADERS"
                     :col-widths="COL_WIDTHS"

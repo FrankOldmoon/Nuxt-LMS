@@ -25,8 +25,25 @@
         <p class="text-xs text-gray-400 dark:text-gray-500">
           {{ $t('upload.clickHint') }}
         </p>
+        <UButton
+          icon="i-lucide-hard-drive"
+          color="neutral"
+          variant="outline"
+          size="xs"
+          class="mt-1"
+          :label="$t('myFiles.pickFromDrive')"
+          @click.stop="driveOpen = true"
+        />
       </div>
     </div>
+
+    <!-- 网盘文件选择弹窗 -->
+    <FilesMyFilesModal
+      v-model:open="driveOpen"
+      picker
+      :multiple="multiple"
+      @confirm="onDriveConfirm"
+    />
     
     <!-- 上传列表 -->
     <div v-if="fileList.length > 0" class="mt-4 space-y-2">
@@ -84,6 +101,20 @@ const emit = defineEmits(['update:modelValue'])
 const fileInput = ref(null)
 const isDragging = ref(false)
 const fileList = ref([])
+const driveOpen = ref(false)
+
+// 从网盘选择文件
+function onDriveConfirm(selectedFiles) {
+  for (const f of selectedFiles) {
+    fileList.value.push({
+      name: f.name,
+      size: f.size,
+      status: 'success',
+      url: f.url,
+    })
+  }
+  updateModelValue()
+}
 
 function handleClick() {
   fileInput.value?.click()

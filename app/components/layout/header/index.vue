@@ -73,6 +73,9 @@
   <!-- 导入用户弹窗（仅管理员） -->
   <AuthImportUsersModal v-model:open="showImportUsersModal" />
 
+  <!-- 网盘文件弹窗 -->
+  <FilesMyFilesModal v-model:open="showMyFilesModal" />
+
 
 </template>
 
@@ -90,6 +93,7 @@ const showSettingsModal = ref(false)
 const showSearchModal = ref(false)
 const showNotificationModal = ref(false)
 const showImportUsersModal = ref(false)
+const showMyFilesModal = ref(false)
 
 function onLoginSuccess() {
   showLoginModal.value = false
@@ -105,6 +109,13 @@ const userMenuItems = computed(() => {
         icon: 'i-lucide-user-circle',
         onSelect: () => {
           showProfileModal.value = true
+        },
+      },
+      {
+        label: t('myFiles.title'),
+        icon: 'i-lucide-hard-drive',
+        onSelect: () => {
+          showMyFilesModal.value = true
         },
       },
     ],

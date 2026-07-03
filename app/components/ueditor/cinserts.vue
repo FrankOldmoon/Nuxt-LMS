@@ -68,6 +68,9 @@ const allItems = computed(() => [
     { label: t('homework.label'), icon: 'i-lucide-book-open', onSelect: () => quickInsert('homeworks') },
     { label: t('comment.label'), icon: 'i-lucide-message-circle', onSelect: () => quickInsert('comments') },
     { type: 'separator' },
+    { label: t('ueditor.insertInput'), icon: 'i-lucide-text-cursor-input', onSelect: () => insertVueNode('inputs') },
+    { label: t('ueditor.insertSelect'), icon: 'i-lucide-chevron-down-square', onSelect: () => insertVueNode('select') },
+    { type: 'separator' },
     { label: `${t('common.search')} ${t('courseData.questionLabel')}`, icon: 'i-lucide-circle-help', onSelect: () => openPicker('questions') },
     { label: `${t('common.search')} ${t('homework.label')}`, icon: 'i-lucide-book-open', onSelect: () => openPicker('homeworks') },
     { label: `${t('common.search')} ${t('comment.label')}`, icon: 'i-lucide-message-circle', onSelect: () => openPicker('comments') },
@@ -81,6 +84,16 @@ function openPicker(type) {
 function quickInsert(type) {
     pickerType.value = type
     onPickerConfirm([0])
+}
+
+// 插入通用 vue 节点（inputs / select 等）
+function insertVueNode(type) {
+    const editor = props.editor?.useEditor()
+    if (!editor) return
+    editor.chain().focus().insertContent({
+        type: type,
+        attrs: { content: ''},
+    }).run()
 }
 
 // 监听输入规则触发的选择器事件

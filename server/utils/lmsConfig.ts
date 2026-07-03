@@ -51,6 +51,11 @@ export const DEFAULT_LMS_CONFIG = {
     dailyExpCap: 100,          // 每日经验上限
     levelStep: 100,            // 每级所需经验（线性）
   },
+  // 网盘存储
+  storage: {
+    driveSize: 1073741824,     // 个人网盘空间上限（字节），默认 1GB
+    teacherMultiplier: 1,      // teacher 角色空间倍率（driveSize * teacherMultiplier）
+  },
 }
 
 // 内存缓存

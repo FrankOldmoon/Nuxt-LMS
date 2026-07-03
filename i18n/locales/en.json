@@ -7,7 +7,8 @@
     "search": "Search",
     "edit": "Edit",
     "delete": "Delete",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "select": "Select"
   },
   "home": {
     "title": "Course Series",
@@ -252,7 +253,9 @@
       "download": "Download",
       "unknownSize": "Unknown size"
     },
-    "pageBreak": "Page Break"
+    "pageBreak": "Page Break",
+    "insertInput": "Input",
+    "insertSelect": "Select"
   },
   "question": {
     "loading": "Loading question data...",
@@ -484,5 +487,27 @@
     "noData": "No data to import",
     "importFailed": "Import failed",
     "passwordDefault": "default REDACTED"
+  },
+  "myFiles": {
+    "title": "My Files",
+    "used": "Used",
+    "searchPlaceholder": "Search file name...",
+    "empty": "No files",
+    "total": "{n} files",
+    "colName": "Name",
+    "colSize": "Size",
+    "colTime": "Uploaded",
+    "colActions": "Actions",
+    "preview": "Preview",
+    "download": "Download",
+    "renameSuccess": "Renamed successfully",
+    "renameFailed": "Rename failed",
+    "deleteSuccess": "Deleted successfully",
+    "deleteFailed": "Delete failed",
+    "confirmDelete": "Are you sure to delete \"{name}\"?",
+    "loadFailed": "Failed to load files",
+    "pickFromDrive": "Pick from drive",
+    "selected": "{n} selected",
+    "confirmSelect": "Confirm selection"
   }
 }

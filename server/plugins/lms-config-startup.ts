@@ -3,5 +3,4 @@
  */
 export default defineNitroPlugin(async () => {
   await reloadLmsConfig()
-  console.log('[lms_config] 已加载缓存')
 })

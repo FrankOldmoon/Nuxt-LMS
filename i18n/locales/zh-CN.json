@@ -7,7 +7,8 @@
     "search": "搜索",
     "edit": "编辑",
     "delete": "删除",
-    "loading": "加载中..."
+    "loading": "加载中...",
+    "select": "选择"
   },
   "home": {
     "title": "课程系列",
@@ -252,7 +253,9 @@
       "download": "下载",
       "unknownSize": "未知大小"
     },
-    "pageBreak": "分页符"
+    "pageBreak": "分页符",
+    "insertInput": "输入框",
+    "insertSelect": "下拉框"
   },
   "question": {
     "loading": "加载题目数据中...",
@@ -484,5 +487,27 @@
     "noData": "没有数据可导入",
     "importFailed": "导入失败",
     "passwordDefault": "默认 REDACTED"
+  },
+  "myFiles": {
+    "title": "网盘文件",
+    "used": "已用",
+    "searchPlaceholder": "搜索文件名...",
+    "empty": "暂无文件",
+    "total": "共 {n} 个文件",
+    "colName": "文件名",
+    "colSize": "大小",
+    "colTime": "上传时间",
+    "colActions": "操作",
+    "preview": "预览",
+    "download": "下载",
+    "renameSuccess": "重命名成功",
+    "renameFailed": "重命名失败",
+    "deleteSuccess": "删除成功",
+    "deleteFailed": "删除失败",
+    "confirmDelete": "确定删除文件 \"{name}\" 吗？",
+    "loadFailed": "加载文件失败",
+    "pickFromDrive": "从网盘选择",
+    "selected": "已选 {n} 个",
+    "confirmSelect": "确认选择"
   }
 }

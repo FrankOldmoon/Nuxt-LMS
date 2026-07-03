@@ -6,12 +6,21 @@ import { writeFile, mkdir, rename, rm } from "node:fs/promises"
 import { join, extname } from "node:path"
 import { readMultipartFormData } from "h3"
 
+// 字节格式化（用于空间不足提示）
+function formatBytes(n: number): string {
+  if (!n || n < 0) return '0 B'
+  if (n < 1024) return `${n} B`
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`
+  if (n < 1024 * 1024 * 1024) return `${(n / 1024 / 1024).toFixed(1)} MB`
+  return `${(n / 1024 / 1024 / 1024).toFixed(2)} GB`
+}
+
 // 上传根目录
 const UPLOAD_ROOT = './storage/'
 
 export default eventHandler(async (event) => {
-  // 1. 获取当前用户（可选）
-  const user = await getCurrentUser(event)
+  // 1. 获取当前用户（必填，网盘空间按用户配额）
+  const user = await requireAuth(event)
 
   // 2. 解析上传文件
   const formData = await readMultipartFormData(event)
@@ -28,6 +37,16 @@ export default eventHandler(async (event) => {
   const dangerous = [".exe", ".sh", ".bat", ".cmd", ".ps1", ".php"]
   if (dangerous.includes(ext)) {
     return cResp(null, "不允许上传该类型文件", false)
+  }
+
+  // 3.5 检查个人网盘空间是否足够（admin 不限）
+  const space = await checkDriveSpace({ id: user.id, roles: user.roles }, buffer.length)
+  if (!space.ok) {
+    return cResp(
+      { quota: space.quota, used: space.used, need: buffer.length },
+      `网盘空间不足：已用 ${formatBytes(space.used)}，配额 ${formatBytes(space.quota)}，本次需 ${formatBytes(buffer.length)}`,
+      false,
+    )
   }
 
   // 4. 计算 SHA-256 哈希
@@ -63,7 +82,7 @@ export default eventHandler(async (event) => {
       path: tempDbPath,
       type: fileField.type,
       size: buffer.length,
-      userId: user?.id ?? null,
+      userId: user.id,
     }).returning()
   } catch (error: any) {
     // 路径唯一冲突：说明另一个请求已插入相同哈希的文件
