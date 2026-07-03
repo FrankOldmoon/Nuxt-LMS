@@ -161,6 +161,7 @@ async function sendMessage() {
                 apiKey: config.value.apiKey,
                 apiUrl: config.value.apiUrl,
                 model: config.value.model,
+                thinking: config.value.thinking,
             }),
         })
 

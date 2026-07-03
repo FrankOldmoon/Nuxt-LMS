@@ -80,6 +80,8 @@ const allItems = computed(() => [
     { label: t('ueditor.insertOffice'), icon: 'i-lucide-file-spreadsheet', onSelect: () => insertTypedSheet('office') },
     { label: t('ueditor.insertMindmap'), icon: 'i-lucide-network', onSelect: () => insertVueNode('mindmap') },
     { label: t('ueditor.insertAichat'), icon: 'i-lucide-bot', onSelect: () => insertAichat() },
+    { label: t('ueditor.insertCondition'), icon: 'i-lucide-shield-check', onSelect: () => insertTypedSheet('condition') },
+    { label: t('ueditor.insertTabs'), icon: 'i-lucide-panel-top', onSelect: () => insertTabs() },
     { type: 'separator' },
     { label: `${t('common.search')} ${t('courseData.questionLabel')}`, icon: 'i-lucide-circle-help', onSelect: () => openPicker('questions') },
     { label: `${t('common.search')} ${t('homework.label')}`, icon: 'i-lucide-book-open', onSelect: () => openPicker('homeworks') },
@@ -150,10 +152,27 @@ function insertAichat() {
         apiKey: '',
         apiUrl: '',
         model: 'gpt-4o-mini',
+        thinking: false,
     })
     editor.chain().focus().insertContent({
         type: 'vue',
         attrs: { content: defaultConfig, type: 'aichat' },
+    }).run()
+}
+
+// 插入 tabs 节点（带默认配置）
+function insertTabs() {
+    const editor = props.editor?.useEditor()
+    if (!editor) return
+    const defaultConfig = JSON.stringify({
+        tabs: [
+            { label: 'Tab 1', content: '' },
+            { label: 'Tab 2', content: '' },
+        ],
+    })
+    editor.chain().focus().insertContent({
+        type: 'vue',
+        attrs: { content: defaultConfig, type: 'tabs' },
     }).run()
 }
 

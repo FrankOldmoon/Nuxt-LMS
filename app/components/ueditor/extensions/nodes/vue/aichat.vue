@@ -33,6 +33,9 @@
                 <UFormField :label="t('ueditor.aichatModel')" size="sm">
                     <UInput v-model="cfgModel" placeholder="gpt-4o-mini" size="sm" class="w-full" />
                 </UFormField>
+                <UFormField :label="t('ueditor.aichatThinking')" size="sm" :hint="t('ueditor.aichatThinkingHint')">
+                    <USwitch v-model="cfgThinking" />
+                </UFormField>
                 <UButton size="xs" color="primary" @click="applyConfig">{{ t('common.save') }}</UButton>
             </div>
 
@@ -65,6 +68,7 @@ const cfgOpening = ref(config.value.opening || '')
 const cfgApiKey = ref(config.value.apiKey || '')
 const cfgApiUrl = ref(config.value.apiUrl || '')
 const cfgModel = ref(config.value.model || 'gpt-4o-mini')
+const cfgThinking = ref(config.value.thinking || false)
 
 function toggleConfig() {
     cfgTitle.value = config.value.title || ''
@@ -73,6 +77,7 @@ function toggleConfig() {
     cfgApiKey.value = config.value.apiKey || ''
     cfgApiUrl.value = config.value.apiUrl || ''
     cfgModel.value = config.value.model || 'gpt-4o-mini'
+    cfgThinking.value = config.value.thinking || false
     showConfig.value = !showConfig.value
 }
 
@@ -85,6 +90,7 @@ function applyConfig() {
         apiKey: cfgApiKey.value,
         apiUrl: cfgApiUrl.value,
         model: cfgModel.value || 'gpt-4o-mini',
+        thinking: cfgThinking.value,
     }
     config.value = newConfig
     props.updateAttributes({ content: JSON.stringify(newConfig) })

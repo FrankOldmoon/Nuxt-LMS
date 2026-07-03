@@ -74,7 +74,7 @@ async function cRequest<T = any>(url: string, options: Record<string, any> = {})
 
   console.log('[cRequest]', options.method || 'GET', finalUrl)
   const resp = await $fetch<{ data: T; success: boolean; msg: string }>(finalUrl, finalOptions)
-  console.log('[cRequest] response:', resp.success, resp.msg)
+  console.log('[cRequest] response:', resp.success, resp.msg, resp.data)
   if (!resp.success) {
     throw new Error(resp.msg || '请求失败')
   }

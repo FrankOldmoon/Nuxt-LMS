@@ -2,7 +2,7 @@
   <div>
     <p class="text-xs text-gray-500 mb-3">{{ $t('question.matchRenderHint') }}</p>
 
-    <div ref="containerRef" class="relative flex gap-8 py-2">
+    <div ref="containerRef" class="relative flex gap-32 py-2">
       <!-- SVG 连线层 -->
       <svg class="absolute inset-0 w-full h-full pointer-events-none" style="z-index: 0;">
         <!-- 已建立的连线 -->
