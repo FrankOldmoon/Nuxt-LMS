@@ -51,6 +51,7 @@ const saving = ref(false)
 
 // 使用全局可编辑内容，由 course/chapter 页面设置
 const { tocLinks, editableContent, editableTable, editableId, editableCourseId, notifyContentSaved } = useLayoutState()
+const nuxtApp = useNuxtApp()
 
 // 仅管理员或当前课程编辑者可以编辑页面内容
 const canEditContent = computed(() => {
@@ -60,7 +61,7 @@ const canEditContent = computed(() => {
   return false
 })
 
-// 保存回调：调用 update API 将内容写回数据库，成功后通知页面刷新
+// 保存回调：调用 update API 将内容写回数据库
 // content 可能是 UmoEditor 的内容对象（含 .json）或直接的 JSON 对象
 async function handleSave(content: Record<string, any>) {
   const json = content?.json ?? content
@@ -68,22 +69,32 @@ async function handleSave(content: Record<string, any>) {
     method: 'POST',
     body: { id: editableId.value, content: json },
   })
-  // 保存成功后通知页面刷新内容（contentVersion +1，页面 watch 会重新拉取）
-  notifyContentSaved()
   return 1
 }
 
-// 点击保存按钮：用 editableContent 调用 API 保存，成功后关闭弹窗并提示
+// 点击保存按钮：用 editableContent 调用 API 保存，成功后清除缓存并通知页面刷新
 async function handleSaveClick() {
   saving.value = true
   try {
-    // editableContent 已通过 ueditor 的 onChanged 实时更新，直接用于保存
-    // handleSave 内部会调用 notifyContentSaved 触发页面刷新
     await handleSave(editableContent.value)
+
+    // 清除相关 API 的 Nuxt 缓存，确保 refresh 拿到最新数据
+    const table = editableTable.value
+    const id = editableId.value
+    const courseId = editableCourseId.value
+    for (const key of Object.keys(nuxtApp.payload.data)) {
+      if (key.includes(`/${table}/show`) || key.includes(`course_id=${courseId}`) || key.includes(`id=${id}`)) {
+        delete nuxtApp.payload.data[key]
+      }
+    }
+
     toast.add({ title: t('layout.saveSuccess'), color: 'success' })
     editModalOpen.value = false
+
+    // 在 nextTick 后通知页面刷新，确保弹窗关闭等状态已更新
+    // 避免与 Vue 批量更新合并导致 watch 偶发不触发
     await nextTick()
-    location.reload()
+    notifyContentSaved()
   } catch (e: any) {
     toast.add({ title: e.message || t('layout.saveFailed'), color: 'error' })
   } finally {

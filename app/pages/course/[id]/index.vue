@@ -109,6 +109,6 @@ watch(resp, (detail) => {
   if (detail?.id) setEditableMeta('courses', detail.id, detail.id)
 }, { immediate: true })
 
-// 监听内容版本号，保存成功后重新获取数据
-watch(contentVersion, () => refresh())
+// 监听内容版本号，保存成功后重新获取数据（flush: sync 确保每次变化都触发）
+watch(contentVersion, () => refresh(), { flush: 'sync' })
 </script>

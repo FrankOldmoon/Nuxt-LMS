@@ -90,8 +90,8 @@ watch(resp, (d) => {
   if (d?.chapter?.id) setEditableMeta('chapters', d.chapter.id, d.course.id)
 }, { immediate: true, flush: 'sync' })
 
-// 监听内容版本号，保存成功后重新获取数据
-watch(contentVersion, () => refresh())
+// 监听内容版本号，保存成功后重新获取数据（flush: sync 确保每次变化都触发）
+watch(contentVersion, () => refresh(), { flush: 'sync' })
 
 // 扁平化侧边栏导航，得到按 orders 排序的线性列表（带序号前缀）
 const flatNav = computed(() => {
