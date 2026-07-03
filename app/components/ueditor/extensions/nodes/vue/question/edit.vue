@@ -11,8 +11,8 @@
           <UInput v-model.number="form.point" type="number" :placeholder="$t('question.pointPlaceholder')" size="sm" class="w-20" />
         </div>
 
-        <!-- ========== 公共 UI：题目内容 ========== -->
-        <div>
+        <!-- ========== 公共 UI：题目内容（html/composite 题型由组件内部处理） ========== -->
+        <div v-if="form?.type !== 'html' && form?.type !== 'composite'">
           <label class="text-xs text-gray-500 mb-1 block">{{ $t('question.contentLabel') }}</label>
           <richEditor v-model="form.content" />
         </div>
@@ -50,6 +50,13 @@ import JudgeEditor from './judge.vue'
 import MultipleEditor from './multiple.vue'
 import FillEditor from './fill.vue'
 import SelectEditor from './select.vue'
+import SortEditor from './sort.vue'
+import ClassifyEditor from './classify.vue'
+import PuzzleEditor from './puzzle.vue'
+import HtmlEditor from './html.vue'
+import ShortAnswerEditor from './short-answer.vue'
+import MatchEditor from './match.vue'
+import CompositeEditor from './composite.vue'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -73,10 +80,17 @@ const typeOptions = computed(() => [
   { label: t('question.typeMultiple'), value: 'multiple' },
   { label: t('question.typeFill'), value: 'fill' },
   { label: t('question.typeSelect'), value: 'select' },
+  { label: t('question.typeSort'), value: 'sort' },
+  { label: t('question.typeClassify'), value: 'classify' },
+  { label: t('question.typePuzzle'), value: 'puzzle' },
+  { label: t('question.typeHtml'), value: 'html' },
+  { label: t('question.typeShortAnswer'), value: 'short-answer' },
+  { label: t('question.typeMatch'), value: 'match' },
+  { label: t('question.typeComposite'), value: 'composite' },
 ])
 
 // 题型 → 组件映射
-const componentMap = { single: SingleEditor, judge: JudgeEditor, multiple: MultipleEditor, fill: FillEditor, select: SelectEditor }
+const componentMap = { single: SingleEditor, judge: JudgeEditor, multiple: MultipleEditor, fill: FillEditor, select: SelectEditor, sort: SortEditor, classify: ClassifyEditor, puzzle: PuzzleEditor, html: HtmlEditor, 'short-answer': ShortAnswerEditor, match: MatchEditor, composite: CompositeEditor }
 const typeComponent = computed(() => componentMap[form.value?.type] || null)
 
 const saving = ref(false)
@@ -96,14 +110,15 @@ function initForm() {
   }
   const normalized = {
     name: props.question.name || '',
-    content: props.question.content || '',
-    options: Array.isArray(props.question.options) ? [...props.question.options] : [],
+    options: props.question.options != null ? JSON.parse(JSON.stringify(props.question.options)) : [],
     type: props.question.type || 'single',
     point: Number(props.question.point) || 0,
     answer: Array.isArray(props.question.answer) ? [...props.question.answer] : [],
     explanation: props.question.explanation || '',
     tags: Array.isArray(props.question.tags) ? [...props.question.tags] : [],
-    record: Array.isArray(props.question.record) ? [...props.question.record] : [],
+    record: Array.isArray(props.question.record) ? JSON.parse(JSON.stringify(props.question.record)) : [],
+    // content: 数组时（composite）深拷贝，否则原样
+    content: Array.isArray(props.question.content) ? JSON.parse(JSON.stringify(props.question.content)) : props.question.content,
   }
   form.value = normalized
   originalData = JSON.parse(JSON.stringify(normalized))
@@ -131,6 +146,42 @@ function onTypeChange() {
     case 'select':
       form.value.options = []
       form.value.answer = []
+      break
+    case 'sort':
+      form.value.options = ['', '', '']
+      form.value.answer = [0, 1, 2]
+      break
+    case 'classify':
+      form.value.options = [
+        { name: '', items: ['', ''] },
+        { name: '', items: ['', ''] },
+      ]
+      form.value.answer = [0, 0, 1, 1]
+      break
+    case 'puzzle':
+      form.value.options = { url: '', split: 3 }
+      form.value.answer = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+      break
+    case 'html':
+      form.value.options = []
+      form.value.answer = [1]
+      form.value.content = ''
+      break
+    case 'short-answer':
+      form.value.options = []
+      form.value.answer = ['']
+      break
+    case 'match':
+      form.value.options = [
+        { left: '', right: '' },
+        { left: '', right: '' },
+      ]
+      form.value.answer = [0, 1]
+      break
+    case 'composite':
+      form.value.options = []
+      form.value.answer = []
+      form.value.content = []
       break
   }
 }

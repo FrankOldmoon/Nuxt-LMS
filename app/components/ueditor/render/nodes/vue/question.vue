@@ -38,8 +38,8 @@
                 </div>
             </div>
 
-            <!-- 题目内容（所有题型统一在此渲染富文本） -->
-            <div class="prose prose-sm dark:prose-invert max-w-none">
+            <!-- 题目内容（html/composite 题型由组件内部处理） -->
+            <div v-if="question?.type !== 'html' && question?.type !== 'composite'" class="prose prose-sm dark:prose-invert max-w-none">
                 <ueditorRender :json="question.content" />
             </div>
 
@@ -122,6 +122,13 @@ import JudgeRender from './question/judge.vue'
 import MultipleRender from './question/multiple.vue'
 import FillRender from './question/fill.vue'
 import SelectRender from './question/select.vue'
+import SortRender from './question/sort.vue'
+import ClassifyRender from './question/classify.vue'
+import PuzzleRender from './question/puzzle.vue'
+import HtmlRender from './question/html.vue'
+import ShortAnswerRender from './question/short-answer.vue'
+import MatchRender from './question/match.vue'
+import CompositeRender from './question/composite.vue'
 import ResultBanner from './question/result-banner.vue'
 import ExplanationBlock from './question/explanation-block.vue'
 import QuestionEdit from '../../../extensions/nodes/vue/question/edit.vue'
@@ -146,10 +153,17 @@ const typeLabel = computed(() => ({
     multiple: t('question.typeMultiple'),
     fill: t('question.typeFill'),
     select: t('question.typeSelect'),
+    sort: t('question.typeSort'),
+    classify: t('question.typeClassify'),
+    puzzle: t('question.typePuzzle'),
+    html: t('question.typeHtml'),
+    'short-answer': t('question.typeShortAnswer'),
+    match: t('question.typeMatch'),
+    composite: t('question.typeComposite'),
 }))
 
 // 题型 → 渲染组件
-const componentMap = { single: SingleRender, judge: JudgeRender, multiple: MultipleRender, fill: FillRender, select: SelectRender }
+const componentMap = { single: SingleRender, judge: JudgeRender, multiple: MultipleRender, fill: FillRender, select: SelectRender, sort: SortRender, classify: ClassifyRender, puzzle: PuzzleRender, html: HtmlRender, 'short-answer': ShortAnswerRender, match: MatchRender, composite: CompositeRender }
 const renderComponent = computed(() => componentMap[question.value?.type] || null)
 const renderRef = ref(null)
 
@@ -183,6 +197,34 @@ const formattedAnswers = computed(() => {
     } else if (type === 'judge') {
         // 判断题：显示 ✓ 正确 / ✗ 错误
         return answer.map(idx => idx === 0 ? t('question.correct') : t('question.wrong'))
+    } else if (type === 'sort') {
+        // 排序题：显示正确顺序的选项文本
+        const options = question.value.options || []
+        return answer.map(idx => options[idx] || `#${idx}`)
+    } else if (type === 'classify') {
+        // 分类题：显示每个分类及其正确项
+        const options = question.value.options || []
+        return options.map((cat, ci) => {
+            const items = (cat.items || []).join(', ')
+            return `${cat.name || `#${ci + 1}`}: ${items}`
+        })
+    } else if (type === 'puzzle') {
+        // 拼图题：显示原图排列
+        return [t('question.puzzleOriginalImage')]
+    } else if (type === 'html') {
+        // HTML 题：由 iframe 判定
+        return [t('question.htmlDeterminedByIframe')]
+    } else if (type === 'short-answer') {
+        // 简答题：显示正则表达式
+        return [`${t('question.shortAnswerRegex')}: ${answer[0] || ''}`]
+    } else if (type === 'match') {
+        // 连线题：显示正确配对
+        const options = question.value.options || []
+        return options.map((pair, i) => `${pair.left} ↔ ${pair.right}`)
+    } else if (type === 'composite') {
+        // 大题：显示子题数量
+        const subs = Array.isArray(question.value.content) ? question.value.content : []
+        return [t('question.compositeSubCount', { count: subs.length })]
     } else {
         // 填空题/下拉题：直接显示答案文本
         return answer
@@ -245,14 +287,14 @@ const { data: fetchedQuestion, pending: fetchedPending, refresh } = cRequest.use
         if (!raw) return null
         return reactive({
             name: raw.name || '',
-            content: raw.content || '',
-            options: Array.isArray(raw.options) ? [...raw.options] : [],
+            content: Array.isArray(raw.content) ? JSON.parse(JSON.stringify(raw.content)) : (raw.content || ''),
+            options: raw.options != null ? JSON.parse(JSON.stringify(raw.options)) : [],
             type: raw.type || 'single',
             point: Number(raw.point) || 0,
             answer: Array.isArray(raw.answer) ? [...raw.answer] : [],
             explanation: raw.explanation || '',
             tags: Array.isArray(raw.tags) ? [...raw.tags] : [],
-            record: Array.isArray(raw.record) ? [...raw.record] : [],
+            record: Array.isArray(raw.record) ? JSON.parse(JSON.stringify(raw.record)) : [],
             correct_rate: 0,
         })
     },

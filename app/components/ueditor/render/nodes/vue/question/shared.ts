@@ -41,6 +41,57 @@ export function computeCorrectRate(question: any): number {
     ).length
     return correct / answer.length
   }
+  if (type === 'sort') {
+    if (!answer.length) return 0
+    const correct = answer.filter((_: any, i: number) => record[i] === answer[i]).length
+    return correct / answer.length
+  }
+  if (type === 'classify') {
+    if (!answer.length) return 0
+    const correct = answer.filter((_: any, i: number) => Number(record[i]) === Number(answer[i])).length
+    return correct / answer.length
+  }
+  if (type === 'puzzle') {
+    if (!answer.length) return 0
+    const correct = answer.filter((_: any, i: number) => Number(record[i]) === Number(answer[i])).length
+    return correct / answer.length
+  }
+  if (type === 'html') {
+    // HTML 题：record[0] 存储 iframe 传来的 correct_rate (0~1)
+    return Math.max(0, Math.min(1, Number(record[0]) || 0))
+  }
+  if (type === 'short-answer') {
+    // 简答题：answer[0] 是正则表达式，record[0] 是用户输入
+    if (!answer.length) return 0
+    try {
+      const re = new RegExp(answer[0])
+      return re.test(String(record[0] || '')) ? 1 : 0
+    } catch {
+      return 0
+    }
+  }
+  if (type === 'match') {
+    // 连线题：answer[i] = i（left[i] 连 right[i]），record[i] = rightOriginalIndex
+    if (!answer.length) return 0
+    const correct = answer.filter((_: any, i: number) => Number(record[i]) === Number(answer[i])).length
+    return correct / answer.length
+  }
+  if (type === 'composite') {
+    // 大题：record 是子题记录数组 [[ans1], [ans2], ...]，content 是子题数组
+    const subQuestions = question.content
+    if (!Array.isArray(subQuestions) || !subQuestions.length) return 0
+    let totalPoint = 0
+    let correctPoint = 0
+    subQuestions.forEach((sub: any, i: number) => {
+      const subRecord = Array.isArray(record[i]) ? record[i] : []
+      const subQuestion = { ...sub, record: subRecord }
+      const rate = computeCorrectRate(subQuestion)
+      const pt = Number(sub.point) || 0
+      totalPoint += pt
+      correctPoint += rate * pt
+    })
+    return totalPoint > 0 ? correctPoint / totalPoint : 0
+  }
   return 0
 }
 
@@ -56,6 +107,8 @@ export async function submitQuestion(params: {
   chapterId?: number
   point?: number
 }) {
+  // questionId 为 0 时（大题中的子题），跳过 API 调用
+  if (!params.questionId) return
   try {
     await cRequest('/api/lms/questions/submit', {
       method: 'POST',
