@@ -23,6 +23,16 @@
           @saved="handleSaved" />
         <CourseEditor :course-id="Number(courseId)" @saved="handleSaved" />
         <CourseDataEditor :course-id="Number(courseId)" />
+        <UTooltip :text="$t('coursePanel.export')">
+          <UButton
+            icon="i-lucide-download"
+            color="success"
+            variant="soft"
+            size="xs"
+            :loading="exporting"
+            @click="exportCourse"
+          />
+        </UTooltip>
       </div>
       <div class="mt-4 space-y-3">
         <UButton :label="selectedClassName || $t('classSelector.selectClass')"
@@ -59,6 +69,7 @@ const progressOpen = ref(false)
 const leaderboardOpen = ref(false)
 const groupsOpen = ref(false)
 const gradesOpen = ref(false)
+const exporting = ref(false)
 
 const selectedClassName = computed(() => user.value?.defaultClass?.name || '')
 
@@ -72,6 +83,42 @@ async function handleSaved() {
       delete nuxtApp.payload.data[key]
     }
     await refresh()
+  }
+}
+
+/**
+ * 导出当前课程（含全部章节 / 题目 / 作业 / 评论 / 测验 / 竞赛）到 JSON 文件
+ * - 调用 /api/lms/courses/export
+ * - 用 Blob 触发浏览器下载
+ * - 文件名：<courseCode 或 name>-<timestamp>.json
+ */
+async function exportCourse() {
+  if (!courseId.value || exporting.value) return
+  exporting.value = true
+  try {
+    const data = await cRequest<any>('/api/lms/courses/export', {
+      query: { id: courseId.value },
+    })
+    const courseName = data?.course?.name || 'course'
+    const courseCode = data?.course?.code
+    const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+    const safe = (s: string) => String(s).replace(/[\\/:*?"<>|]/g, '_')
+    const fileName = `${safe(courseCode || courseName)}-${ts}.json`
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = fileName
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  } catch (err: any) {
+    // eslint-disable-next-line no-console
+    console.error('export course failed', err)
+  } finally {
+    exporting.value = false
   }
 }
 </script>
