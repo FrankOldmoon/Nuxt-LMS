@@ -30,13 +30,26 @@
 
       <!-- 通知按钮（仅登录后显示） -->
       <UTooltip v-if="isLoggedIn" :text="$t('notification.title')" :content="{ side: 'bottom' }">
-        <UButton
-          icon="i-lucide-bell"
-          color="neutral"
-          variant="ghost"
-          :aria-label="$t('notification.title')"
-          @click="() => { showNotificationModal = true }"
-        />
+        <div class="relative">
+          <UButton icon="i-lucide-bell" color="neutral" variant="ghost" :aria-label="$t('notification.title')"
+            @click="() => { showNotificationModal = true }" />
+          <span v-if="unreadCounts.notifyUnread > 0"
+            class="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center font-bold pointer-events-none">
+            {{ unreadCounts.notifyUnread > 9 ? '9+' : unreadCounts.notifyUnread }}
+          </span>
+        </div>
+      </UTooltip>
+
+      <!-- 消息按钮（仅登录后显示） -->
+      <UTooltip v-if="isLoggedIn" :text="$t('message.title')" :content="{ side: 'bottom' }">
+        <div class="relative">
+          <UButton icon="i-lucide-message-square" color="neutral" variant="ghost" :aria-label="$t('message.title')"
+            @click="() => { showMessageModal = true }" />
+          <span v-if="unreadCounts.msgUnread > 0"
+            class="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center font-bold pointer-events-none">
+            {{ unreadCounts.msgUnread > 9 ? '9+' : unreadCounts.msgUnread }}
+          </span>
+        </div>
       </UTooltip>
 
       <!-- SSR 直接渲染：未登录 → Login 按钮，已登录 → 用户名 + 下拉菜单 -->
@@ -70,6 +83,9 @@
   <!-- 通知弹窗 -->
   <LayoutNotificationModal v-model:open="showNotificationModal" />
 
+  <!-- 消息弹窗 -->
+  <LayoutMessageModal v-model:open="showMessageModal" />
+
   <!-- 导入用户弹窗（仅管理员） -->
   <AuthImportUsersModal v-model:open="showImportUsersModal" />
 
@@ -87,17 +103,37 @@ const { t } = useI18n()
 // 获取网站配置（SSR 兼容，自动导入）
 const { siteTitle, logo } = useLmsConfig()
 
+// 未读计数
+const { counts: unreadCounts, refresh: refreshUnread } = useUnreadCounts()
+
 const showLoginModal = ref(false)
 const showProfileModal = ref(false)
 const showSettingsModal = ref(false)
 const showSearchModal = ref(false)
 const showNotificationModal = ref(false)
+const showMessageModal = ref(false)
 const showImportUsersModal = ref(false)
 const showMyFilesModal = ref(false)
 
 function onLoginSuccess() {
   showLoginModal.value = false
+  refreshUnread()
 }
+
+// 登录后挂载时拉取未读数
+watch(isLoggedIn, (val) => {
+  if (val) refreshUnread()
+}, { immediate: true })
+
+// 通知弹窗关闭后刷新未读数（已读状态可能变化）
+watch(showNotificationModal, (val) => {
+  if (!val && isLoggedIn.value) refreshUnread()
+})
+
+// 消息弹窗关闭后刷新未读数
+watch(showMessageModal, (val) => {
+  if (!val && isLoggedIn.value) refreshUnread()
+})
 
 const isAdmin = computed(() => hasRole('admin'))
 

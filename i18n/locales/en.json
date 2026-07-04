@@ -713,6 +713,15 @@
     "prev": "Previous",
     "next": "Next"
   },
+  "message": {
+    "title": "Messages",
+    "searchUser": "Search users...",
+    "empty": "No messages",
+    "noConversations": "No conversations",
+    "selectConversation": "Select a conversation to start chatting",
+    "inputPlaceholder": "Type a message...",
+    "sendFailed": "Send failed"
+  },
   "importUsers": {
     "title": "Import Users",
     "import": "Import",

@@ -796,5 +796,14 @@
     "createSuccess": "公告發布成功",
     "createFailed": "發布公告失敗",
     "deleteFailed": "刪除公告失敗"
+  },
+  "message": {
+    "title": "訊息",
+    "searchUser": "搜尋用戶...",
+    "empty": "暫無訊息",
+    "noConversations": "暫無會話",
+    "selectConversation": "選擇左側會話開始聊天",
+    "inputPlaceholder": "輸入訊息...",
+    "sendFailed": "發送失敗"
   }
 }

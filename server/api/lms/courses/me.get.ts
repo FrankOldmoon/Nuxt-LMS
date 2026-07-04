@@ -8,7 +8,7 @@
  * - 不查任务完成情况，便于答题/交作业后高频调用
  */
 import { db, schema } from '@nuxthub/db'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, isNull, sql } from 'drizzle-orm'
 
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
@@ -16,8 +16,29 @@ export default eventHandler(async (event) => {
   const courseId = Number(query.courseId)
   const chapterId = Number(query.chapterId) || 0
 
+  // 未读通知数（始终返回，与课程无关）
+  const [notifyRow] = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(schema.notifys)
+    .where(and(eq(schema.notifys.userId, user.id), isNull(schema.notifys.readAt)))
+
+  // 未读消息数（始终返回，与课程无关）
+  const [msgRow] = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(schema.messages)
+    .where(and(
+      eq(schema.messages.receiverUserId, user.id),
+      isNull(schema.messages.readAt),
+      isNull(schema.messages.deletedAt),
+    ))
+
+  const unread = {
+    notifyUnread: Number(notifyRow?.count) || 0,
+    msgUnread: Number(msgRow?.count) || 0,
+  }
+
   if (!courseId) {
-    return cResp({ courseScore: 0, exp: 0, chapterScore: null })
+    return cResp({ courseScore: 0, exp: 0, chapterScore: null, ...unread })
   }
 
   // 课程总分 + 经验值
@@ -64,5 +85,6 @@ export default eventHandler(async (event) => {
     courseScore: courseRow ? Number(courseRow.score) || 0 : 0,
     exp: courseRow ? Number(courseRow.exp) || 0 : 0,
     chapterScore,
+    ...unread,
   })
 })

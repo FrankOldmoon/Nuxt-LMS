@@ -83,12 +83,16 @@ type MyStats = {
   courseScore: number
   exp: number
   chapterScore: number | null
+  notifyUnread?: number
+  msgUnread?: number
 }
 const stats = useState<MyStats>('user-card-stats', () => ({
   courseScore: 0,
   exp: 0,
   chapterScore: null,
 }))
+
+const { counts: unreadCounts } = useUnreadCounts()
 
 async function fetchStats() {
   if (!courseId.value) {
@@ -103,6 +107,11 @@ async function fetchStats() {
       },
     })
     stats.value = data
+    // 同步未读数到全局状态
+    unreadCounts.value = {
+      notifyUnread: data.notifyUnread ?? 0,
+      msgUnread: data.msgUnread ?? 0,
+    }
   } catch {
     // 静默忽略，保持旧值
   }

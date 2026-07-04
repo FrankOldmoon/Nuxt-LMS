@@ -713,6 +713,26 @@
     "prev": "上一页",
     "next": "下一页"
   },
+  "message": {
+    "title": "消息",
+    "searchUser": "搜索用户...",
+    "empty": "暂无消息",
+    "noConversations": "暂无会话",
+    "selectConversation": "选择左侧会话开始聊天",
+    "inputPlaceholder": "输入消息...",
+    "sendFailed": "发送失败",
+    "empty": "暂无通知",
+    "loading": "加载中...",
+    "loadFailed": "加载通知失败",
+    "unread": "未读",
+    "read": "已读",
+    "markAsRead": "标为已读",
+    "time": "时间",
+    "noNotifications": "你还没有任何通知",
+    "page": "第 {page} 页 / 共 {total} 页",
+    "prev": "上一页",
+    "next": "下一页"
+  },
   "importUsers": {
     "title": "导入用户",
     "import": "导入",

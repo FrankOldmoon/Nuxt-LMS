@@ -37,5 +37,16 @@ export default eventHandler(async (event) => {
     .limit(pageSize)
     .offset(offset)
 
+  // 标记本页未读通知为已读
+  const unreadIds = items.filter(i => !i.readAt).map(i => i.id)
+  if (unreadIds.length > 0) {
+    await db.update(schema.notifys)
+      .set({ readAt: new Date() })
+      .where(and(
+        eq(schema.notifys.userId, user.id),
+        sql`${schema.notifys.id} IN (${sql.join(unreadIds.map(id => sql`${id}`), sql`,`)})`,
+      ))
+  }
+
   return cResp({ items, total, page, pageSize })
 })
