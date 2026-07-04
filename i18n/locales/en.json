@@ -6,6 +6,11 @@
     "noResults": "No matching icons",
     "pageInfo": "{total} icons, page {page} / {totalPage}"
   },
+  "form": {
+    "btnConfirm": {
+      "defaultText": "Are you sure you want to proceed?"
+    }
+  },
   "welcome": "Welcome",
   "common": {
     "cancel": "Cancel",

@@ -6,6 +6,11 @@
     "noResults": "无匹配图标",
     "pageInfo": "共 {total} 个图标，第 {page} / {totalPage} 页"
   },
+  "form": {
+    "btnConfirm": {
+      "defaultText": "确定执行此操作吗？"
+    }
+  },
   "welcome": "欢迎",
   "common": {
     "cancel": "取消",

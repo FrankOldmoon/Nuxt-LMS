@@ -15,21 +15,20 @@
             <!-- 右上角编辑按钮（仅教师） -->
             <div v-if="isTeacher" class="absolute top-2 right-2 flex items-center gap-1 z-10">
                 <UButton icon="i-heroicons-pencil-square" variant="ghost" size="2xs"
-                    class="opacity-50 hover:opacity-100 transition-opacity"
-                    @click="editOpen = true" />
+                    class="opacity-50 hover:opacity-100 transition-opacity" @click="editOpen = true" />
             </div>
 
             <!-- 测验标题 + 信息 -->
             <div class="flex items-center gap-3 mb-3 pr-6">
-                <span class="px-2 py-0.5 bg-amber-50 dark:bg-amber-800 text-amber-600 dark:text-amber-300 rounded text-xs font-medium">
+                <span
+                    class="px-2 py-0.5 bg-amber-50 dark:bg-amber-800 text-amber-600 dark:text-amber-300 rounded text-xs font-medium">
                     {{ $t('quiz.label') }}
                 </span>
                 <span class="font-semibold text-gray-800 dark:text-gray-200">{{ quiz.name }}</span>
                 <span v-if="quizId" class="text-xs text-gray-400">#{{ quizId }}</span>
                 <div class="flex items-center gap-2 ml-auto">
                     <UButton v-if="isTeacher" icon="i-heroicons-clipboard" variant="ghost" size="2xs"
-                        class="opacity-50 hover:opacity-100 transition-opacity"
-                        @click="recordsOpen = true" />
+                        class="opacity-50 hover:opacity-100 transition-opacity" @click="recordsOpen = true" />
                     <span class="text-xs text-gray-400">{{ quiz.point }}{{ $t('question.points') }}</span>
                 </div>
             </div>
@@ -47,7 +46,8 @@
             </div>
 
             <!-- 已提交记录 -->
-            <div v-if="userRecord" class="mb-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-md">
+            <div v-if="userRecord"
+                class="mb-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-md">
                 <div class="flex items-center gap-2 mb-1">
                     <UIcon name="i-heroicons-check-circle" class="size-5 text-green-500" />
                     <span class="text-sm font-medium text-green-700 dark:text-green-300">
@@ -59,14 +59,16 @@
 
             <!-- 未开始：显示开始按钮或等待提示 -->
             <div v-if="!started && !userRecord" class="flex flex-col items-center gap-3 py-6">
-                <UButton v-if="canStart && quizQuestions.length > 0" color="primary" size="lg" icon="i-lucide-play" :label="$t('quiz.start')" @click="startQuiz" />
+                <UButton v-if="canStart && quizQuestions.length > 0" color="primary" size="lg" icon="i-lucide-play"
+                    :label="$t('quiz.start')" @click="startQuiz" />
                 <p v-else-if="quizQuestions.length === 0" class="text-sm text-gray-400">{{ $t('quiz.noQuestions') }}</p>
                 <p v-else class="text-sm text-gray-400">{{ notStartedReason }}</p>
             </div>
 
             <!-- 已提交且可重试：显示重新开始按钮 -->
             <div v-if="userRecord && canRetry && !started" class="flex justify-center py-4">
-                <UButton color="primary" variant="outline" icon="i-lucide-rotate-ccw" :label="$t('quiz.retry')" @click="startQuiz" />
+                <UButton color="primary" variant="outline" icon="i-lucide-rotate-ccw" :label="$t('quiz.retry')"
+                    @click="startQuiz" />
             </div>
 
             <!-- 答题中 或 已提交（显示题目） -->
@@ -94,36 +96,35 @@
                     <div class="w-12 shrink-0 flex flex-col gap-1">
                         <button v-for="(q, idx) in quizQuestions" :key="q.id"
                             class="w-10 h-10 rounded-lg border-2 flex items-center justify-center text-sm font-medium transition-all relative"
-                            :class="getQuestionBtnClass(idx)"
-                            @click="switchQuestion(idx)">
+                            :class="getQuestionBtnClass(idx)" @click="switchQuestion(idx)">
                             {{ idx + 1 }}
                         </button>
                     </div>
 
                     <!-- 右侧当前题目（v-show 保持所有题目挂载，切换不重新加载） -->
                     <div class="flex-1 min-w-0 relative">
-                        <div v-for="(q, idx) in quizQuestions" :key="q.id"
-                            v-show="currentIndex === idx"
+                        <div v-for="(q, idx) in quizQuestions" :key="q.id" v-show="currentIndex === idx"
                             :class="currentIndex === idx ? '' : 'pointer-events-none absolute inset-0 -z-10'">
-                            <component
-                                :ref="(el) => { if (el) questionRefs[idx] = el }"
-                                :is="QuestionRender"
-                                :node="{ attrs: { type: 'question', content: String(q.id) } }"
-                                :in-quiz="true" />
+                            <component :ref="(el) => { if (el) questionRefs[idx] = el }" :is="QuestionRender"
+                                :node="{ attrs: { type: 'question', content: String(q.id) } }" :in-quiz="true" />
                         </div>
                     </div>
                 </div>
 
                 <!-- 底部提交按钮 + 导航 -->
-                <div v-if="started" class="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-800">
-                    <UButton color="success" variant="solid" size="lg" icon="i-lucide-chevron-left" :disabled="currentIndex <= 0" @click="switchQuestion(currentIndex - 1)" />
+                <div v-if="started"
+                    class="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-800">
+                    <UButton color="success" variant="solid" size="lg" icon="i-lucide-chevron-left"
+                        :disabled="currentIndex <= 0" @click="switchQuestion(currentIndex - 1)" />
                     <div class="flex items-center gap-3">
                         <span class="text-xs text-gray-400">{{ answeredCount }} / {{ quizQuestions.length }}</span>
                         <UButton color="primary" size="sm" :loading="submitting" @click="confirmSubmit">
                             {{ $t('quiz.submit') }}
                         </UButton>
                     </div>
-                    <UButton color="success" variant="solid" size="lg" icon="i-lucide-chevron-right" :disabled="currentIndex >= quizQuestions.length - 1" @click="switchQuestion(currentIndex + 1)" />
+                    <UButton color="success" variant="solid" size="lg" icon="i-lucide-chevron-right"
+                        :disabled="currentIndex >= quizQuestions.length - 1"
+                        @click="switchQuestion(currentIndex + 1)" />
                 </div>
 
                 <!-- 提交确认弹窗 -->
@@ -142,7 +143,8 @@
                             </div>
                             <div class="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
                                 <UButton variant="soft" @click="confirmOpen = false">{{ $t('common.cancel') }}</UButton>
-                                <UButton color="primary" :loading="submitting" @click="submitQuiz">{{ $t('quiz.submit') }}</UButton>
+                                <UButton color="primary" :loading="submitting" @click="submitQuiz">{{ $t('quiz.submit')
+                                    }}</UButton>
                             </div>
                         </div>
                     </template>
@@ -151,8 +153,10 @@
 
             <!-- 提交后结果 -->
             <div v-if="submitted && resultScore !== null" class="mt-4">
-                <div class="p-4 rounded-lg" :class="resultPassed ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700' : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700'">
-                    <div class="text-lg font-semibold" :class="resultPassed ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'">
+                <div class="p-4 rounded-lg"
+                    :class="resultPassed ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700' : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700'">
+                    <div class="text-lg font-semibold"
+                        :class="resultPassed ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'">
                         {{ resultScore }} / {{ quiz.point }}{{ $t('question.points') }}
                     </div>
                     <div class="text-sm text-gray-500 mt-1">
@@ -166,8 +170,8 @@
         <QuizEdit v-model="editOpen" :quiz-id="quizId" :quiz="quiz" @saved="onSaved" />
 
         <!-- 记录弹窗（仅教师） -->
-        <QuizRecordsModal v-if="isTeacher" v-model="recordsOpen" :course-id="editableCourseId"
-            :cid="quizId" :quiz-point="quiz.point || 100" />
+        <QuizRecordsModal v-if="isTeacher" v-model="recordsOpen" :course-id="editableCourseId" :cid="quizId"
+            :quiz-point="quiz.point || 100" :questions="quizQuestions" />
     </div>
 </template>
 
@@ -457,7 +461,7 @@ function startQuiz() {
             records: [],
             start_only: true,
         },
-    }).catch(() => {})
+    }).catch(() => { })
 
     resumeTimer()
 }

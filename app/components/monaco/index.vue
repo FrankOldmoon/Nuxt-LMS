@@ -1,8 +1,10 @@
 <template>
     <ClientOnly>
-        <div ref="editorContainer" class="monaco-editor-container w-full"></div>
+        <div ref="editorContainer" class="w-full h-full min-h-[400px] border border-default rounded overflow-hidden"></div>
         <template #fallback>
-            <div class="monaco-editor-loading">编辑器加载中...</div>
+            <div class="w-full min-h-[400px] flex items-center justify-center text-muted bg-elevated/30 border border-default rounded">
+                {{ $t('common.loading') }}
+            </div>
         </template>
     </ClientOnly>
 </template>
@@ -31,12 +33,10 @@ const props = defineProps({
         type: Number,
         default: 14
     },
-    // 新增：是否自动格式化
     autoFormat: {
         type: Boolean,
         default: true
     },
-    // 格式化配置（缩进等）
     formatOptions: {
         type: Object,
         default: () => ({
@@ -87,23 +87,22 @@ async function loadMonaco() {
     })
 }
 
-// 封装格式化函数
+// 格式化：使用 editor.getAction 调用内置格式化命令
 async function formatEditorCode() {
     if (!editor || !monaco || !props.autoFormat) return
     const model = editor.getModel()
     if (!model) return
 
-    // 获取格式化操作
-    const edits = await monaco.languages.formatDocument(model, props.formatOptions)
-    if (edits && edits.length) {
-        const oldValue = editor.getValue()
-        // 应用格式化
-        model.applyEdits(edits)
-        const newValue = editor.getValue()
-        // 格式化后同步回父组件
-        if (newValue !== oldValue) {
+    try {
+        const formatAction = editor.getAction('editor.action.formatDocument')
+        if (formatAction) {
+            await formatAction.run()
+            // 格式化后同步回父组件
+            const newValue = editor.getValue()
             emit('update:modelValue', newValue)
         }
+    } catch (e) {
+        // 某些语言可能没有注册格式化器，静默忽略
     }
 }
 
@@ -141,7 +140,6 @@ watch(() => props.modelValue, async (newVal, oldVal) => {
     if (newVal === current) return
 
     editor.setValue(newVal)
-    // 赋值后自动格式化
     await nextTick()
     formatEditorCode()
 })
@@ -149,7 +147,6 @@ watch(() => props.modelValue, async (newVal, oldVal) => {
 watch(() => props.language, (newLang) => {
     if (editor) {
         monaco.editor.setModelLanguage(editor.getModel(), newLang)
-        // 切换语言后重新格式化
         nextTick(() => formatEditorCode())
     }
 })
@@ -174,30 +171,6 @@ onBeforeUnmount(() => {
 defineExpose({
     getEditor: () => editor,
     getMonaco: () => monaco,
-    // 暴露手动格式化方法，父组件可调用
     formatCode: formatEditorCode
 })
 </script>
-
-<style scoped>
-.monaco-editor-container {
-    width: 100%;
-    height: 100%;
-    min-height: 400px;
-    border: 1px solid #e5e7eb;
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.monaco-editor-loading {
-    width: 100%;
-    min-height: 400px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #6b7280;
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 4px;
-}
-</style>

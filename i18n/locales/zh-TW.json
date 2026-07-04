@@ -6,6 +6,11 @@
     "noResults": "無匹配圖示",
     "pageInfo": "共 {total} 個圖示，第 {page} / {totalPage} 頁"
   },
+  "form": {
+    "btnConfirm": {
+      "defaultText": "確定執行此操作嗎？"
+    }
+  },
   "welcome": "歡迎",
   "common": {
     "cancel": "取消",

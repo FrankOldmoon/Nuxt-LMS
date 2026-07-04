@@ -34,6 +34,17 @@
                         </div>
                         <span v-else class="text-xs text-gray-400">-</span>
                     </template>
+                    <!-- 每道题的答题状态列（动态 slot） -->
+                    <template v-for="q in questions" :key="q.id" #[`q${q.id}-cell`]="{ row }">
+                        <div v-if="getQuestionRecord(row.original, q.id)" class="flex items-center justify-center">
+                            <UIcon :name="getQuestionRecord(row.original, q.id).rate > 0
+                                ? 'i-lucide-check-circle-2' : 'i-lucide-x-circle'"
+                                class="size-4"
+                                :class="getQuestionRecord(row.original, q.id).rate > 0
+                                    ? 'text-success' : 'text-error'" />
+                        </div>
+                        <span v-else class="text-xs text-gray-400">-</span>
+                    </template>
                 </ClassUsersTable>
             </div>
         </template>
@@ -46,6 +57,8 @@ const props = defineProps({
     courseId: { type: Number, default: 0 },
     cid: { type: Number, default: 0 },
     quizPoint: { type: Number, default: 100 },
+    /** quiz 题目列表：[{ id, point }] */
+    questions: { type: Array, default: () => [] },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -61,22 +74,31 @@ const open = computed({
 const rows = ref([])
 const pending = ref(false)
 
-const extraColumns = computed(() => [
-    {
-        id: 'score',
-        header: t('quiz.score'),
-    },
-    {
-        id: 'correctRate',
-        header: t('quiz.correctRate'),
-    },
-    {
-        id: 'submitCount',
-        header: t('quiz.submitLimit'),
-    },
-])
+// 额外列：总分 + 正确率 + 提交次数 + 每道题一列
+const extraColumns = computed(() => {
+    const cols = [
+        { id: 'score', header: t('quiz.score') },
+        { id: 'correctRate', header: t('quiz.correctRate') },
+        { id: 'submitCount', header: t('quiz.submitLimit') },
+    ]
+    // 每道题一列，列名为 Q1/Q2/...
+    props.questions.forEach((q, idx) => {
+        cols.push({
+            id: `q${q.id}`,
+            header: `Q${idx + 1}`,
+        })
+    })
+    return cols
+})
 
 const defaultSort = [{ id: 'score', desc: true }]
+
+// 从用户的 record 中提取某道题的答题记录
+function getQuestionRecord(rowData, questionCid) {
+    const records = rowData?.record?.records
+    if (!Array.isArray(records)) return null
+    return records.find(r => Number(r.questionCid) === Number(questionCid)) || null
+}
 
 function buildRows(recordsData) {
     const recordMap = new Map((recordsData || []).map(r => [r.userId, r.record]))
