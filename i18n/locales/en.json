@@ -8,7 +8,8 @@
     "edit": "Edit",
     "delete": "Delete",
     "loading": "Loading...",
-    "select": "Select"
+    "select": "Select",
+    "confirm": "Confirm"
   },
   "home": {
     "title": "Course Series",
@@ -197,7 +198,17 @@
     "teachingCourses": "Teaching Courses",
     "teachingCoursesPlaceholder": "Select teaching courses...",
     "editorCourses": "Editor Courses",
-    "editorCoursesPlaceholder": "Select editor courses..."
+    "editorCoursesPlaceholder": "Select editor courses...",
+    "changePassword": "Change Password",
+    "oldPassword": "Old Password",
+    "oldPasswordPlaceholder": "Enter old password",
+    "newPassword": "New Password",
+    "newPasswordPlaceholder": "Enter new password (at least 6 chars)",
+    "confirmNewPassword": "Confirm New Password",
+    "confirmNewPasswordPlaceholder": "Enter new password again",
+    "passwordMismatch": "Passwords do not match",
+    "passwordChanged": "Password changed successfully",
+    "passwordChangeFailed": "Failed to change password"
   },
   "settings": {
     "title": "System Settings",

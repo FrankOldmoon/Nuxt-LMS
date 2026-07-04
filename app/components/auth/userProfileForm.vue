@@ -57,7 +57,42 @@
                     :placeholder="$t('profile.editorCoursesPlaceholder')" multiple class="w-full" />
             </UFormField>
         </template>
+
+        <!-- 修改密码 -->
+        <div class="pt-2">
+            <UButton :label="$t('profile.changePassword')" icon="i-lucide-key-round" color="neutral" variant="outline"
+                size="sm" @click="showPwdModal = true" />
+        </div>
     </div>
+
+    <!-- 修改密码弹窗 -->
+    <UModal v-model:open="showPwdModal" :ui="{ content: 'sm:max-w-sm' }">
+        <template #content>
+            <div class="p-6 space-y-4">
+                <h3 class="text-lg font-semibold">{{ $t('profile.changePassword') }}</h3>
+                <UFormField :label="$t('profile.oldPassword')" required>
+                    <UInput v-model="pwdForm.oldPassword" type="password"
+                        :placeholder="$t('profile.oldPasswordPlaceholder')" class="w-full" />
+                </UFormField>
+                <UFormField :label="$t('profile.newPassword')" required>
+                    <UInput v-model="pwdForm.newPassword" type="password"
+                        :placeholder="$t('profile.newPasswordPlaceholder')" class="w-full" />
+                </UFormField>
+                <UFormField :label="$t('profile.confirmNewPassword')" required
+                    :error="pwdForm.newPassword && pwdForm.confirmPassword && pwdForm.newPassword !== pwdForm.confirmPassword ? $t('profile.passwordMismatch') : ''">
+                    <UInput v-model="pwdForm.confirmPassword" type="password"
+                        :placeholder="$t('profile.confirmNewPasswordPlaceholder')" class="w-full" />
+                </UFormField>
+                <div class="flex justify-end gap-2 pt-2">
+                    <UButton :label="$t('common.cancel')" color="neutral" variant="ghost"
+                        @click="showPwdModal = false" />
+                    <UButton :label="$t('common.confirm')" color="primary" :loading="pwdSaving"
+                        :disabled="!pwdForm.oldPassword || !pwdForm.newPassword || pwdForm.newPassword !== pwdForm.confirmPassword"
+                        @click="submitChangePassword" />
+                </div>
+            </div>
+        </template>
+    </UModal>
 </template>
 
 <script setup lang="ts">
@@ -97,6 +132,37 @@ const editorCourseIdsModel = computed<SelectOption[]>({
 
 const fileInputRef = ref<HTMLInputElement>()
 const uploading = ref(false)
+
+// 修改密码
+const showPwdModal = ref(false)
+const pwdSaving = ref(false)
+const pwdForm = reactive({ oldPassword: '', newPassword: '', confirmPassword: '' })
+
+async function submitChangePassword() {
+  if (pwdForm.newPassword !== pwdForm.confirmPassword) {
+    toast.add({ title: t('profile.passwordMismatch'), color: 'error' })
+    return
+  }
+  pwdSaving.value = true
+  try {
+    await cRequest('/api/auth/change-password', {
+      method: 'POST',
+      body: {
+        oldPassword: pwdForm.oldPassword,
+        newPassword: pwdForm.newPassword,
+      },
+    })
+    toast.add({ title: t('profile.passwordChanged'), color: 'success' })
+    showPwdModal.value = false
+    pwdForm.oldPassword = ''
+    pwdForm.newPassword = ''
+    pwdForm.confirmPassword = ''
+  } catch (e: any) {
+    toast.add({ title: e.message || t('profile.passwordChangeFailed'), color: 'error' })
+  } finally {
+    pwdSaving.value = false
+  }
+}
 
 function triggerFileInput() {
     fileInputRef.value?.click()

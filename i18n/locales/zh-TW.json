@@ -8,7 +8,8 @@
     "edit": "編輯",
     "delete": "刪除",
     "loading": "載入中...",
-    "select": "選擇"
+    "select": "選擇",
+    "confirm": "確認"
   },
   "home": {
     "title": "課程系列",
@@ -197,7 +198,17 @@
     "teachingCourses": "任教課程",
     "teachingCoursesPlaceholder": "選擇任教課程...",
     "editorCourses": "編輯者課程",
-    "editorCoursesPlaceholder": "選擇編輯者課程..."
+    "editorCoursesPlaceholder": "選擇編輯者課程...",
+    "changePassword": "修改密碼",
+    "oldPassword": "舊密碼",
+    "oldPasswordPlaceholder": "請輸入舊密碼",
+    "newPassword": "新密碼",
+    "newPasswordPlaceholder": "請輸入新密碼（至少6位）",
+    "confirmNewPassword": "確認新密碼",
+    "confirmNewPasswordPlaceholder": "請再次輸入新密碼",
+    "passwordMismatch": "兩次輸入的密碼不一致",
+    "passwordChanged": "密碼修改成功",
+    "passwordChangeFailed": "密碼修改失敗"
   },
   "settings": {
     "title": "系統設定",
