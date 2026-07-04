@@ -569,6 +569,7 @@
     "leaderboard": "排行榜",
     "groups": "小组",
     "grades": "课程成绩",
+    "announcements": "公告",
     "export": "导出课程",
     "exporting": "正在导出…",
     "exportSuccess": "课程已导出",
@@ -626,5 +627,23 @@
     "pickFromDrive": "从网盘选择",
     "selected": "已选 {n} 个",
     "confirmSelect": "确认选择"
+  },
+  "announcement": {
+    "title": "课程公告",
+    "new": "新建公告",
+    "name": "公告标题",
+    "namePlaceholder": "请输入公告标题",
+    "content": "公告内容",
+    "targetClasses": "目标班级",
+    "noClasses": "暂无班级",
+    "targetClassesHint": "不选择则发送给所有班级",
+    "publish": "发布公告",
+    "empty": "暂无公告",
+    "classLabel": "班级 #{id}",
+    "allClasses": "全部班级",
+    "loadFailed": "加载公告失败",
+    "createSuccess": "公告发布成功",
+    "createFailed": "发布公告失败",
+    "deleteFailed": "删除公告失败"
   }
 }

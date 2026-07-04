@@ -546,6 +546,7 @@
     "leaderboard": "排行榜",
     "groups": "小組",
     "grades": "課程成績",
+    "announcements": "公告",
     "export": "導出課程",
     "exporting": "正在導出…",
     "exportSuccess": "課程已導出",
@@ -603,5 +604,23 @@
     "pickFromDrive": "從網盤選擇",
     "selected": "已選 {n} 個",
     "confirmSelect": "確認選擇"
+  },
+  "announcement": {
+    "title": "課程公告",
+    "new": "新建公告",
+    "name": "公告標題",
+    "namePlaceholder": "請輸入公告標題",
+    "content": "公告內容",
+    "targetClasses": "目標班級",
+    "noClasses": "暫無班級",
+    "targetClassesHint": "不選擇則發送給所有班級",
+    "publish": "發布公告",
+    "empty": "暫無公告",
+    "classLabel": "班級 #{id}",
+    "allClasses": "全部班級",
+    "loadFailed": "載入公告失敗",
+    "createSuccess": "公告發布成功",
+    "createFailed": "發布公告失敗",
+    "deleteFailed": "刪除公告失敗"
   }
 }

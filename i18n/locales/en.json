@@ -569,6 +569,7 @@
     "leaderboard": "Leaderboard",
     "groups": "Groups",
     "grades": "Grades",
+    "announcements": "Announcements",
     "export": "Export Course",
     "exporting": "Exporting…",
     "exportSuccess": "Course exported",
@@ -626,5 +627,23 @@
     "pickFromDrive": "Pick from drive",
     "selected": "{n} selected",
     "confirmSelect": "Confirm selection"
+  },
+  "announcement": {
+    "title": "Course Announcements",
+    "new": "New Announcement",
+    "name": "Title",
+    "namePlaceholder": "Enter announcement title",
+    "content": "Content",
+    "targetClasses": "Target Classes",
+    "noClasses": "No classes available",
+    "targetClassesHint": "If no class selected, send to all classes",
+    "publish": "Publish",
+    "empty": "No announcements",
+    "classLabel": "Class #{id}",
+    "allClasses": "All Classes",
+    "loadFailed": "Failed to load announcements",
+    "createSuccess": "Announcement published",
+    "createFailed": "Failed to publish announcement",
+    "deleteFailed": "Failed to delete announcement"
   }
 }

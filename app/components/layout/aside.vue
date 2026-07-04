@@ -14,6 +14,9 @@
       <UTooltip :text="$t('coursePanel.grades')">
         <UButton icon="i-lucide-graduation-cap" color="error" variant="soft" size="xs" @click="gradesOpen = true" />
       </UTooltip>
+      <UTooltip :text="$t('coursePanel.announcements')">
+        <UButton icon="i-lucide-bell" color="success" variant="soft" size="xs" @click="announcementsOpen = true" />
+      </UTooltip>
     </div>
 
     <!-- 编辑导航组件（管理员或课程编辑者可见） -->
@@ -52,6 +55,7 @@
     <CourseLeaderboardModal v-model:open="leaderboardOpen" :course-id="courseId" :class-id="user?.defaultClass?.id || ''" />
     <CourseGroupsModal v-model:open="groupsOpen" :course-id="courseId" :class-id="user?.defaultClass?.id || ''" />
     <CourseGradesModal v-model:open="gradesOpen" :course-id="courseId" :class-id="user?.defaultClass?.id || ''" />
+    <CourseAnnouncementsModal v-model:open="announcementsOpen" :course-id="courseId" :class-id="user?.defaultClass?.id || ''" />
 
     <template #bottom>
 
@@ -69,6 +73,7 @@ const progressOpen = ref(false)
 const leaderboardOpen = ref(false)
 const groupsOpen = ref(false)
 const gradesOpen = ref(false)
+const announcementsOpen = ref(false)
 const exporting = ref(false)
 
 const selectedClassName = computed(() => user.value?.defaultClass?.name || '')
