@@ -35,6 +35,16 @@
       </UButton>
     </UForm>
 
+    <div class="flex items-center justify-between mt-4">
+      <span></span>
+      <button
+        class="text-xs text-primary hover:underline cursor-pointer"
+        @click="$emit('switchToForgotPassword')"
+      >
+        {{ $t('auth.forgotPassword') }}
+      </button>
+    </div>
+
     <p class="text-sm text-(--ui-text-muted) text-center mt-4">
       {{ $t('auth.noAccount') }}
       <button
@@ -58,6 +68,7 @@ const loading = ref(false)
 const emit = defineEmits<{
   success: []
   switchToRegister: []
+  switchToForgotPassword: []
 }>()
 
 async function handleLogin() {

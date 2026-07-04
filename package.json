@@ -21,6 +21,7 @@
     "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.45.2",
     "lowlight": "^3.3.0",
+    "nodemailer": "^9.0.3",
     "nuxt": "^4.4.8",
     "postgres": "^3.4.9",
     "tailwindcss": "^4.3.2",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "@iconify-json/lucide": "^1.2.115",
+    "@types/nodemailer": "^8.0.1",
     "less": "^4.6.7",
     "typescript": "^6.0.3",
     "vuedraggable": "^4.1.0"

@@ -52,6 +52,38 @@
             />
           </UFormField>
 
+          <!-- 邮件服务配置 -->
+          <div class="border border-default rounded-lg p-4 space-y-3 bg-elevated/30">
+            <div class="flex items-center gap-2">
+              <UIcon name="i-lucide-mail" class="size-4 text-primary" />
+              <span class="text-sm font-semibold">{{ $t('settings.mailConfig') }}</span>
+            </div>
+            <p class="text-xs text-muted">{{ $t('settings.mailConfigHint') }}</p>
+            <UFormField :label="$t('settings.mailHost')" class="w-full">
+              <UInput v-model="form.mail.host" :placeholder="$t('settings.mailHostPlaceholder')" class="w-full" />
+            </UFormField>
+            <div class="grid grid-cols-2 gap-3">
+              <UFormField :label="$t('settings.mailPort')" class="w-full">
+                <UInput v-model.number="form.mail.port" type="number" :placeholder="'465'" class="w-full" />
+              </UFormField>
+              <UFormField :label="$t('settings.mailSecure')" class="w-full">
+                <USwitch v-model="form.mail.secure" />
+              </UFormField>
+            </div>
+            <UFormField :label="$t('settings.mailUser')" class="w-full">
+              <UInput v-model="form.mail.user" :placeholder="$t('settings.mailUserPlaceholder')" class="w-full" />
+            </UFormField>
+            <UFormField :label="$t('settings.mailPass')" class="w-full">
+              <UInput v-model="form.mail.pass" type="password" :placeholder="$t('settings.mailPassPlaceholder')" class="w-full" />
+            </UFormField>
+            <UFormField :label="$t('settings.mailFrom')" class="w-full">
+              <UInput v-model="form.mail.from" :placeholder="$t('settings.mailFromPlaceholder')" class="w-full" />
+            </UFormField>
+            <UFormField :label="$t('settings.siteUrl')" class="w-full">
+              <UInput v-model="form.mail.siteUrl" :placeholder="$t('settings.siteUrlPlaceholder')" class="w-full" />
+            </UFormField>
+          </div>
+
           <!-- LMS 学习行为参数 -->
           <LmsConfigEditor ref="lmsConfigRef" v-model="lmsConfig" />
 
@@ -96,6 +128,15 @@ const form = ref({
   allowRegistration: true,
   siteLogo: '',
   pageSize: 20,
+  mail: {
+    host: '',
+    port: 465,
+    secure: true,
+    user: '',
+    pass: '',
+    from: '',
+    siteUrl: '',
+  },
 })
 
 // 弹窗打开时加载配置
@@ -118,6 +159,15 @@ async function loadSettings() {
         allowRegistration: siteConfig.value.allowRegistration ?? true,
         siteLogo: siteConfig.value.siteLogo ?? '',
         pageSize: siteConfig.value.pageSize ?? 20,
+        mail: {
+          host: siteConfig.value.mail?.host ?? '',
+          port: siteConfig.value.mail?.port ?? 465,
+          secure: siteConfig.value.mail?.secure ?? true,
+          user: siteConfig.value.mail?.user ?? '',
+          pass: siteConfig.value.mail?.pass ?? '',
+          from: siteConfig.value.mail?.from ?? '',
+          siteUrl: siteConfig.value.mail?.siteUrl ?? '',
+        },
       }
     }
     // 加载 LMS 配置
@@ -145,6 +195,8 @@ async function saveSettings() {
         value: form.value,
       },
     })
+    // 刷新 site_config 缓存（邮件配置生效）
+    await cRequest('/api/lms/config/reload-site', { method: 'POST' }).catch(() => {})
     // 保存 LMS 配置
     const configData = lmsConfigRef.value?.getConfig() || lmsConfig.value
     await cRequest('/api/lms/config/update', {

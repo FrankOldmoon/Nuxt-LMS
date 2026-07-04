@@ -33,12 +33,19 @@
           v-if="activeTab === 'login'"
           @success="onSuccess"
           @switch-to-register="activeTab = 'register'"
+          @switch-to-forgot-password="activeTab = 'forgotPassword'"
         />
 
         <!-- 注册表单 -->
         <AuthRegisterForm
           v-if="activeTab === 'register'"
           @success="onSuccess"
+          @switch-to-login="activeTab = 'login'"
+        />
+
+        <!-- 忘记密码表单 -->
+        <AuthForgotPasswordForm
+          v-if="activeTab === 'forgotPassword'"
           @switch-to-login="activeTab = 'login'"
         />
       </div>
@@ -48,7 +55,7 @@
 
 <script setup lang="ts">
 const isOpen = defineModel<boolean>('open', { default: false })
-const activeTab = ref<'login' | 'register'>('login')
+const activeTab = ref<'login' | 'register' | 'forgotPassword'>('login')
 
 const emit = defineEmits<{
   success: []
