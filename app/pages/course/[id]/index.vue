@@ -127,7 +127,9 @@
     <!-- 右侧目录（桌面端显示，滚动时固定） -->
     <div class="hidden lg:block w-56 shrink-0">
       <div class="sticky top-20">
-        <LayoutToc/>
+        <UPageAside>
+          <LayoutToc/>
+        </UPageAside>
       </div>
     </div>
   </div>

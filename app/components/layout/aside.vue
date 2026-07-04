@@ -1,5 +1,5 @@
 <template>
-  <UPageAside>
+  <div>
     <!-- 工具栏按钮行 -->
     <div class="flex items-center gap-1 mb-3 flex-wrap">
       <UTooltip :text="$t('coursePanel.progress')">
@@ -22,19 +22,12 @@
     <!-- 编辑导航组件（管理员或课程编辑者可见） -->
     <div v-if="hasRole('admin') || isCourseEditor(Number(courseId))">
       <div class="flex items-center gap-1 mb-2">
-        <NavEditor mode="course" :course-id="courseId" :navigation="navigation.slice(1)"
-          @saved="handleSaved" />
+        <NavEditor mode="course" :course-id="courseId" :navigation="navigation.slice(1)" @saved="handleSaved" />
         <CourseEditor :course-id="Number(courseId)" @saved="handleSaved" />
         <CourseDataEditor :course-id="Number(courseId)" />
         <UTooltip :text="$t('coursePanel.export')">
-          <UButton
-            icon="i-lucide-download"
-            color="success"
-            variant="soft"
-            size="xs"
-            :loading="exporting"
-            @click="exportCourse"
-          />
+          <UButton icon="i-lucide-download" color="success" variant="soft" size="xs" :loading="exporting"
+            @click="exportCourse" />
         </UTooltip>
       </div>
       <div class="mt-4 space-y-3">
@@ -44,7 +37,7 @@
       </div>
     </div>
 
-    <div v-else />
+    
 
     <UNavigationMenu :items="navItems" orientation="vertical" :highlight="true" color="primary" class="w-full" />
 
@@ -52,15 +45,13 @@
 
     <!-- 课程面板弹窗 -->
     <CourseProgressModal v-model:open="progressOpen" :course-id="courseId" :navigation="indexedNavigation" />
-    <CourseLeaderboardModal v-model:open="leaderboardOpen" :course-id="courseId" :class-id="user?.defaultClass?.id || ''" />
+    <CourseLeaderboardModal v-model:open="leaderboardOpen" :course-id="courseId"
+      :class-id="user?.defaultClass?.id || ''" />
     <CourseGroupsModal v-model:open="groupsOpen" :course-id="courseId" :class-id="user?.defaultClass?.id || ''" />
     <CourseGradesModal v-model:open="gradesOpen" :course-id="courseId" :class-id="user?.defaultClass?.id || ''" />
-    <CourseAnnouncementsModal v-model:open="announcementsOpen" :course-id="courseId" :class-id="user?.defaultClass?.id || ''" />
-
-    <template #bottom>
-
-    </template>
-  </UPageAside>
+    <CourseAnnouncementsModal v-model:open="announcementsOpen" :course-id="courseId"
+      :class-id="user?.defaultClass?.id || ''" />
+  </div>
 </template>
 
 <script setup lang="ts">

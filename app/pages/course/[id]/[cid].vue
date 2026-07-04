@@ -1,5 +1,5 @@
 <template>
-  
+
   <div v-if="data" class="flex gap-8">
     <!-- 左侧主内容 -->
     <div class="flex-1 min-w-0 max-w-none">
@@ -22,11 +22,7 @@
 
       <!-- 上一章/下一章导航 -->
       <div class="flex items-center justify-between gap-4 pt-8 mt-8 border-t border-default">
-        <NuxtLink
-          v-if="prevChapter"
-          :to="prevChapter.to"
-          class="flex-1"
-        >
+        <NuxtLink v-if="prevChapter" :to="prevChapter.to" class="flex-1">
           <UCard :ui="{ body: 'flex items-center gap-3' }" class="transition-all hover:ring-2 hover:ring-primary/30">
             <UIcon name="i-lucide-arrow-left" class="size-5 text-muted shrink-0" />
             <div class="min-w-0">
@@ -37,12 +33,9 @@
         </NuxtLink>
         <div v-else class="flex-1" />
 
-        <NuxtLink
-          v-if="nextChapter"
-          :to="nextChapter.to"
-          class="flex-1"
-        >
-          <UCard :ui="{ body: 'flex items-center gap-3 justify-end text-right' }" class="transition-all hover:ring-2 hover:ring-primary/30">
+        <NuxtLink v-if="nextChapter" :to="nextChapter.to" class="flex-1">
+          <UCard :ui="{ body: 'flex items-center gap-3 justify-end text-right' }"
+            class="transition-all hover:ring-2 hover:ring-primary/30">
             <div class="min-w-0">
               <p class="text-xs text-muted mb-0.5">{{ $t('chapter.next') }}</p>
               <p class="text-sm font-medium text-highlighted truncate">{{ nextChapter.label }}</p>
@@ -57,7 +50,9 @@
     <!-- 右侧目录（桌面端显示，滚动时固定） -->
     <div class="hidden lg:block w-56 shrink-0">
       <div class="sticky top-20">
-        <LayoutToc/>
+        <UPageAside>
+          <LayoutToc />
+        </UPageAside>
       </div>
     </div>
   </div>

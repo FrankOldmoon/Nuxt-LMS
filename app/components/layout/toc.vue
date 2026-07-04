@@ -1,67 +1,44 @@
 <template>
-  <UPageAside>
-    <ChapterBtns/>
+  <div>
+    <ChapterBtns />
     <ClassUserCard />
-    <LayoutTocList
-      :links="tocLinks"
-      :title="$t('layout.pageToc')"
-      class="w-full"
-    />
+    <LayoutTocList :links="tocLinks" :title="$t('layout.pageToc')" class="w-full" />
 
     <!-- 全屏播放模式：标题上下导航按钮 -->
-    <div
-      v-if="playFullscreen && flatHeadings.length"
-      class="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-default"
-    >
-      <UButton
-        icon="i-lucide-chevron-up"
-        size="sm"
-        variant="outline"
-        :disabled="currentHeadingIndex <= 0"
-        @click="goToHeading(-1)"
-      />
+    <div v-if="playFullscreen && flatHeadings.length"
+      class="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-default">
+      <UButton icon="i-lucide-chevron-up" size="sm" variant="outline" :disabled="currentHeadingIndex <= 0"
+        @click="goToHeading(-1)" />
       <span class="text-xs text-muted font-mono">
         {{ currentHeadingIndex + 1 }} / {{ flatHeadings.length }}
       </span>
-      <UButton
-        icon="i-lucide-chevron-down"
-        size="sm"
-        variant="outline"
-        :disabled="currentHeadingIndex >= flatHeadings.length - 1"
-        @click="goToHeading(1)"
-      />
+      <UButton icon="i-lucide-chevron-down" size="sm" variant="outline"
+        :disabled="currentHeadingIndex >= flatHeadings.length - 1" @click="goToHeading(1)" />
     </div>
 
-    <template #bottom>
-      <!-- 页面内容编辑器（管理员或课程编辑者可见） -->
-      <div v-if="canEditContent" class="hidden lg:flex flex-col gap-3 pt-4 mt-4 border-t border-default">
-        <UModal v-model:open="editModalOpen" fullscreen scrollable>
-          <UButton
-            icon="i-lucide-edit"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-            :label="$t('layout.editPage')"
-            class="justify-start"
-          />
+    <!-- 页面内容编辑器（管理员或课程编辑者可见） -->
+    <div v-if="canEditContent" class="hidden lg:flex flex-col gap-3 pt-4 mt-4 border-t border-default">
+      <UModal v-model:open="editModalOpen" fullscreen scrollable>
+        <UButton icon="i-lucide-edit" color="neutral" variant="ghost" size="sm" :label="$t('layout.editPage')"
+          class="justify-start" />
 
-          <template #body>
-            <div class="p-4 min-w-[480px]">
-              <ueditor v-model="editableContent" :save-handler="handleSave" ref="ueditorRef"/>
-            </div>
-          </template>
-          <template #footer>
-            <div class="flex justify-end gap-2 w-full">
-              <UButton :label="$t('common.save')" color="primary" variant="solid" size="sm" :loading="saving" @click="handleSaveClick"/>
-            </div>
-          </template>
-        </UModal>
+        <template #body>
+          <div class="p-4 min-w-[480px]">
+            <ueditor v-model="editableContent" :save-handler="handleSave" ref="ueditorRef" />
+          </div>
+        </template>
+        <template #footer>
+          <div class="flex justify-end gap-2 w-full">
+            <UButton :label="$t('common.save')" color="primary" variant="solid" size="sm" :loading="saving"
+              @click="handleSaveClick" />
+          </div>
+        </template>
+      </UModal>
 
-        <!-- 历史记录 -->
-        <ContentHistoryModal :table="editableTable" :id="editableId" />
-      </div>
-    </template>
-  </UPageAside>
+      <!-- 历史记录 -->
+      <ContentHistoryModal :table="editableTable" :id="editableId" />
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
