@@ -13,6 +13,9 @@
       <slot />
     </div>
 
+    <!-- WebSocket 连接 + 弹幕飘动层 -->
+    <LayoutWs />
+
     <!-- 移动端左侧导航弹窗 -->
     <USlideover v-if="showSidebar" v-model:open="asideOpen" :title="$t('layout.navigation')" side="left">
       <template #body>
@@ -39,22 +42,6 @@ const { playFullscreen } = useChapterBtns()
 const { navigation: sidebarNav } = useSidebarNav()
 const asideOpen = ref(false)
 const tocOpen = ref(false)
-
-const { user } = useAuth()
-
-const { wsConnected, connect, joinClass } = useWebSocket()
-const classIdNum = computed(() => user.value?.defaultClass?.id || user.value?.classId)
-
-// 建立 WebSocket 连接并加入班级房间
-watch([classIdNum, wsConnected], () => {
-  if (classIdNum.value) {
-    if (!wsConnected.value) {
-      connect()
-    } else {
-      joinClass(classIdNum.value)
-    }
-  }
-}, { immediate: true })
 
 // 路由变化时自动关闭弹窗
 const route = useRoute()

@@ -67,7 +67,10 @@
     "openUpdateFailed": "Access update failed",
     "invite": "Invite to Jump",
     "inviteSent": "Invite sent",
-    "inviteFailed": "Invite failed"
+    "inviteFailed": "Invite failed",
+    "danmaku": "Danmaku",
+    "danmakuPlaceholder": "Type a message...",
+    "danmakuSend": "Send"
   },
   "layout": {
     "menu": "Menu",

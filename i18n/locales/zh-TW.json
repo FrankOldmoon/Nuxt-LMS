@@ -67,7 +67,10 @@
     "openUpdateFailed": "開放狀態更新失敗",
     "invite": "邀請跳轉",
     "inviteSent": "邀請已發送",
-    "inviteFailed": "邀請發送失敗"
+    "inviteFailed": "邀請發送失敗",
+    "danmaku": "彈幕",
+    "danmakuPlaceholder": "輸入彈幕內容...",
+    "danmakuSend": "發送"
   },
   "layout": {
     "menu": "選單",

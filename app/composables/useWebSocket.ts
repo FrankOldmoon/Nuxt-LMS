@@ -4,15 +4,19 @@
  * - joinClass(classId)：加入班级房间
  * - onInvite(callback)：监听邀请跳转事件
  * - sendInvite(classId, courseId, chapterId)：广播邀请
+ * - sendDanmaku(classId, text, from)：发送弹幕
+ * - onDanmaku(callback)：监听弹幕事件
  */
 
 type InviteCallback = (data: { courseId: number; chapterId: number; from: string }) => void
+type DanmakuCallback = (data: { text: string; from: string }) => void
 
 export function useWebSocket() {
   const ws = useState<WebSocket | null>('ws-connection', () => null)
   const wsConnected = useState<boolean>('ws-connected', () => false)
   const joinedClassId = useState<number | null>('ws-joined-class', () => null)
   const inviteCallbacks = useState<InviteCallback[]>('ws-invite-callbacks', () => [])
+  const danmakuCallbacks = useState<DanmakuCallback[]>('ws-danmaku-callbacks', () => [])
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null
 
   function connect() {
@@ -39,6 +43,8 @@ export function useWebSocket() {
           const data = JSON.parse(event.data)
           if (data.type === 'invite') {
             inviteCallbacks.value.forEach(cb => cb(data))
+          } else if (data.type === 'danmaku') {
+            danmakuCallbacks.value.forEach(cb => cb(data))
           }
         } catch {
           // 忽略解析错误
@@ -80,6 +86,16 @@ export function useWebSocket() {
     inviteCallbacks.value.push(callback)
   }
 
+  function sendDanmaku(classId: number, text: string, from: string = 'anonymous') {
+    if (ws.value && ws.value.readyState === WebSocket.OPEN) {
+      ws.value.send(JSON.stringify({ type: 'danmaku', classId, text: text.slice(0, 200), from }))
+    }
+  }
+
+  function onDanmaku(callback: DanmakuCallback) {
+    danmakuCallbacks.value.push(callback)
+  }
+
   function disconnect() {
     if (reconnectTimer) {
       clearTimeout(reconnectTimer)
@@ -93,5 +109,5 @@ export function useWebSocket() {
     joinedClassId.value = null
   }
 
-  return { ws, wsConnected, joinedClassId, connect, joinClass, sendInvite, onInvite, disconnect }
+  return { ws, wsConnected, joinedClassId, connect, joinClass, sendInvite, onInvite, sendDanmaku, onDanmaku, disconnect }
 }

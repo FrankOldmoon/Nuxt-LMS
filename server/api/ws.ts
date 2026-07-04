@@ -5,10 +5,12 @@
  * 客户端 → 服务端：
  *   { type: 'join', classId: number }
  *   { type: 'invite', classId: number, courseId: number, chapterId: number, from: string }
+ *   { type: 'danmaku', classId: number, text: string, from: string }
  *
  * 服务端 → 客户端：
  *   { type: 'joined', classId: number }
  *   { type: 'invite', courseId: number, chapterId: number, from: string }
+ *   { type: 'danmaku', text: string, from: string }
  *   { type: 'error', message: string }
  */
 
@@ -45,6 +47,20 @@ export default defineWebSocketHandler({
             courseId: data.courseId,
             chapterId: data.chapterId,
             from: data.from || 'teacher',
+          })
+          for (const p of room) {
+            p.send(msg)
+          }
+        }
+      } else if (type === 'danmaku' && classId) {
+        // 广播弹幕到同班级的所有连接
+        const cid = Number(classId)
+        const room = classRooms.get(cid)
+        if (room) {
+          const msg = JSON.stringify({
+            type: 'danmaku',
+            text: String(data.text || '').slice(0, 200),
+            from: data.from || 'anonymous',
           })
           for (const p of room) {
             p.send(msg)

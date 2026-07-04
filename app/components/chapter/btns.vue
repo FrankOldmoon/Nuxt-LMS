@@ -30,12 +30,18 @@
     <UTooltip v-if="canEdit" :text="$t('chapter.invite')">
       <UButton icon="i-lucide-megaphone" color="error" variant="soft" size="xs" :loading="inviting" @click="sendInvite" />
     </UTooltip>
+
+    <!-- 弹幕 -->
+    <UTooltip :text="$t('chapter.danmaku')">
+      <UButton icon="i-lucide-message-square-text" color="success" variant="soft" size="xs" @click="() => { danmakuOpen = true }" />
+    </UTooltip>
   </div>
 
   <!-- 弹窗 -->
   <ChapterScoreModal v-model:open="scoreOpen" :course-id="courseIdNum" :chapter-id="chapterIdNum" :class-id="classIdNum" />
   <ChapterSelectModal v-model:open="selectOpen" :course-id="courseIdNum" :class-id="classIdNum" />
   <ChapterTimerModal v-model:open="timerOpen" />
+  <ChapterDanmakuModal v-model:open="danmakuOpen" :class-id="classIdNum" />
 </template>
 
 <script setup lang="ts">
@@ -50,7 +56,7 @@ const courseId = computed(() => route.params.id as string)
 const chapterId = computed(() => route.params.cid as string)
 const courseIdNum = computed(() => Number(courseId.value) || 0)
 const chapterIdNum = computed(() => Number(chapterId.value) || 0)
-const classIdNum = computed(() => user.value?.defaultClass?.id || 0)
+const classIdNum = computed(() => user.value?.defaultClass?.id || user.value?.classId || 0)
 
 // 教师或管理员才能操作得分/选择
 const canEdit = computed(() => {
@@ -61,6 +67,7 @@ const canEdit = computed(() => {
 const scoreOpen = ref(false)
 const selectOpen = ref(false)
 const timerOpen = ref(false)
+const danmakuOpen = ref(false)
 const inviting = ref(false)
 
 // 发送邀请：通知班级内所有学生跳转到当前章节
