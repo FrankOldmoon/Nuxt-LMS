@@ -19,7 +19,6 @@
         multiple
         size="sm"
         class="flex-1"
-        :loading="loadingClasses"
         :disabled="isOpen"
         @update:model-value="updateClassOpen"
       />
@@ -31,11 +30,16 @@
 const props = defineProps<{
   chapterId: number
   courseId: number
+  chapterData?: {
+    isOpen?: boolean
+    classChapters?: { classId: number; open: boolean }[]
+  }
 }>()
 
 const { t } = useI18n()
 const toast = useToast()
 const { hasRole, isCourseTeacher } = useAuth()
+const { classes, loadClasses } = useClasses()
 
 const canEdit = computed(() => {
   if (hasRole('admin')) return true
@@ -44,29 +48,19 @@ const canEdit = computed(() => {
 
 const isOpen = ref(false)
 const savingOpen = ref(false)
-const loadingClasses = ref(false)
-const classOptions = ref<{ label: string; value: number }[]>([])
 const selectedClassIds = ref<number[]>([])
 
-// 加载章节开放状态 + 班级列表
-async function loadData() {
-  if (!props.chapterId) return
-  loadingClasses.value = true
-  try {
-    // 获取章节信息（含 isOpen）
-    const chapterData = await cRequest<{ chapter: { isOpen?: boolean } }>(`/api/lms/chapters/show?id=${props.chapterId}`)
-    isOpen.value = !!chapterData?.chapter?.isOpen
+// 班级选项（来自全局缓存）
+const classOptions = computed(() =>
+  classes.value.map(c => ({ label: c.name, value: c.id }))
+)
 
-    // 获取章节的班级开放状态
-    const classes = await cRequest<{ classId: number; name: string; open: boolean }[]>(`/api/lms/chapters/classes?chapterId=${props.chapterId}`)
-    classOptions.value = (classes || []).map(c => ({ label: c.name, value: c.classId }))
-    selectedClassIds.value = (classes || []).filter(c => c.open).map(c => c.classId)
-  } catch (e) {
-    console.error('[accessBar] 加载失败', e)
-  } finally {
-    loadingClasses.value = false
-  }
-}
+// 从页面传入的 chapterData 初始化（无需额外 API 请求）
+watch(() => props.chapterData, (data) => {
+  if (!data) return
+  isOpen.value = !!data.isOpen
+  selectedClassIds.value = (data.classChapters || []).filter(c => c.open).map(c => c.classId)
+}, { immediate: true })
 
 // 更新章节 isOpen
 async function updateOpen(val: boolean) {
@@ -88,13 +82,13 @@ async function updateOpen(val: boolean) {
 // 更新班级开放状态
 async function updateClassOpen(ids: number[]) {
   try {
-    const classes = classOptions.value.map(c => ({
-      classId: c.value,
-      open: ids.includes(c.value),
+    const classList = classes.value.map(c => ({
+      classId: c.id,
+      open: ids.includes(c.id),
     }))
     await cRequest('/api/lms/chapters/classes', {
       method: 'POST',
-      body: { chapterId: props.chapterId, classes },
+      body: { chapterId: props.chapterId, classes: classList },
     })
     toast.add({ title: t('chapter.openUpdated'), color: 'success' })
   } catch (e: any) {
@@ -102,7 +96,6 @@ async function updateClassOpen(ids: number[]) {
   }
 }
 
-watch(() => props.chapterId, (val) => {
-  if (val) loadData()
-}, { immediate: true })
+// 首次加载班级列表（全局缓存）
+loadClasses()
 </script>

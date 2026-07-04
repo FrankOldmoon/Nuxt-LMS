@@ -58,5 +58,21 @@ export default eventHandler(async (event) => {
     }
   }
 
-  return cResp(normalizeChapterPageData(chapter, chapter.course))
+  // 返回章节页面数据
+  const result = normalizeChapterPageData(chapter, chapter.course)
+
+  // 教师/管理员：附带 isOpen 和班级开放状态，供 accessBar 使用（避免前端再请求）
+  if (isAdmin || isTeacher) {
+    result.chapter.isOpen = !!chapter.isOpen
+    const allClassChapters = await db
+      .select({ classId: schema.classChapters.classId, open: schema.classChapters.open })
+      .from(schema.classChapters)
+      .where(eq(schema.classChapters.chapterId, id))
+    result.chapter.classChapters = allClassChapters.map(cc => ({
+      classId: cc.classId,
+      open: !!cc.open,
+    }))
+  }
+
+  return cResp(result)
 })

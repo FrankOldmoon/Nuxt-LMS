@@ -46,7 +46,7 @@
 
     <div v-else />
 
-    <UNavigationMenu :items="indexedNavigation" orientation="vertical" :highlight="true" color="primary" class="w-full" />
+    <UNavigationMenu :items="navItems" orientation="vertical" :highlight="true" color="primary" class="w-full" />
 
     <ClassModal v-model:open="classModalOpen" />
 
@@ -66,7 +66,7 @@
 <script setup lang="ts">
 
 const { hasRole, isCourseEditor, user } = useAuth()
-const { navigation, courseId, refresh } = useSidebarNav()
+const { navigation, courseId, refresh, accessibleChapterIds } = useSidebarNav()
 
 const classModalOpen = ref(false)
 const progressOpen = ref(false)
@@ -79,6 +79,36 @@ const exporting = ref(false)
 const selectedClassName = computed(() => user.value?.defaultClass?.name || '')
 
 const indexedNavigation = computed(() => indexNavItems(navigation.value, '', true))
+
+const canEditCourse = computed(() => hasRole('admin') || isCourseEditor(Number(courseId.value)))
+
+// 导航项：非教师/管理员时，未开放章节禁用点击
+const navItems = computed(() => {
+  if (canEditCourse.value) return indexedNavigation.value
+  return markNavDisabled(indexedNavigation.value) as typeof indexedNavigation.value
+})
+
+// 递归标记未开放章节为 disabled
+function markNavDisabled(items: any[]): any[] {
+  return items.map(item => {
+    const newItem: any = { ...item }
+    // 从 to 中提取 chapterId：/course/:id/:cid
+    if (item.to) {
+      const match = String(item.to).match(/\/course\/[^/]+\/(\d+)$/)
+      if (match) {
+        const chId = Number(match[1])
+        if (!accessibleChapterIds.value.has(chId)) {
+          newItem.disabled = true
+          newItem.label = '🔒 ' + (item.label || '')
+        }
+      }
+    }
+    if (item.children?.length) {
+      newItem.children = markNavDisabled(item.children)
+    }
+    return newItem
+  })
+}
 
 async function handleSaved() {
   if (refresh) {

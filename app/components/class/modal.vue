@@ -130,7 +130,7 @@ const { fetchUsers } = useClassUsers()
 
 // ==================== 班级选择 ====================
 
-const classList = ref<LmsClass[]>([])
+const { classes: classList, loadClasses: loadClassList } = useClasses()
 const classLoading = ref(false)
 const selectedItem = ref<number | undefined>(undefined)
 const newClassName = ref('')
@@ -147,10 +147,7 @@ const classUsersTableRef = ref<{ refresh: () => void } | null>(null)
 async function loadClasses() {
   classLoading.value = true
   try {
-    const data = await cRequest<ClassItem[]>('/api/lms/classes/list')
-    classList.value = data || []
-  } catch {
-    classList.value = []
+    await loadClassList()
   } finally {
     classLoading.value = false
   }

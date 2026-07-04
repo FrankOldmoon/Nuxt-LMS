@@ -4,7 +4,7 @@
     <!-- 左侧主内容 -->
     <div class="flex-1 min-w-0 max-w-none">
       <!-- 章节访问控制栏（教师/管理员可见） -->
-      <ChapterAccessBar :chapter-id="Number(chapterId)" :course-id="Number(courseId)" />
+      <ChapterAccessBar :chapter-id="Number(chapterId)" :course-id="Number(courseId)" :chapter-data="data?.chapter" />
 
       <!-- 章节头部 -->
       <div class="mb-8 pb-6 border-b border-default">
@@ -63,9 +63,16 @@
   </div>
 
   <!-- 章节不存在 -->
-  <div v-else-if="!pending" class="flex flex-col items-center justify-center py-20">
+  <div v-else-if="!pending && notFound" class="flex flex-col items-center justify-center py-20">
     <UIcon name="i-lucide-search-x" class="size-12 text-muted mb-4" />
     <p class="text-lg text-muted mb-4">{{ $t('chapter.notFound') }}</p>
+    <UButton :to="`/course/${courseId}`" :label="$t('chapter.backToCourse')" color="primary" variant="outline" />
+  </div>
+
+  <!-- 章节未开放 -->
+  <div v-else-if="!pending && locked" class="flex flex-col items-center justify-center py-20">
+    <UIcon name="i-lucide-lock" class="size-12 text-muted mb-4" />
+    <p class="text-lg text-muted mb-4">{{ $t('chapter.notOpen') }}</p>
     <UButton :to="`/course/${courseId}`" :label="$t('chapter.backToCourse')" color="primary" variant="outline" />
   </div>
 </template>
@@ -77,12 +84,16 @@ const courseId = computed(() => route.params.id as string)
 const { setToc, setEditableContent, setEditableMeta, contentVersion } = useLayoutState()
 const { navigation } = useSidebarNav()
 
-const { data: resp, pending, refresh } = cRequest.use<import('#shared/types/lms').LmsChapterPageData | null>(
+const { data: resp, pending, refresh, error } = cRequest.use<import('#shared/types/lms').LmsChapterPageData | null>(
   () => chapterId.value ? `/api/lms/chapters/show?id=${chapterId.value}` : '',
   { default: () => null },
 )
 
 const data = computed(() => resp.value as import('#shared/types/lms').LmsChapterPageData | null)
+
+// 区分"不存在"和"未开放"（403 错误 = 未开放，404/其他 = 不存在）
+const locked = computed(() => !!error.value && (error.value as any)?.statusCode === 403)
+const notFound = computed(() => !!error.value && (error.value as any)?.statusCode !== 403)
 
 // 数据变化时设置 TOC + 可编辑内容
 // flush: 'sync' 确保在 SSR Suspense 恢复时同步执行，

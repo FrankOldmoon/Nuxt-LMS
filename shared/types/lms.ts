@@ -31,6 +31,7 @@ export interface LmsCourseSummary {
 export interface LmsChapterSummary {
   id: number
   title: string
+  accessible?: boolean
 }
 
 /** UEditor 文档 JSON 类型 */
@@ -53,6 +54,8 @@ export interface LmsChapterDetail {
   questionIds?: number[]
   homeworkIds?: number[]
   commentIds?: number[]
+  isOpen?: boolean
+  classChapters?: { classId: number; open: boolean }[]
 }
 
 /** 章节页面数据（章节 + 所属课程含章节列表用于导航） */

@@ -175,7 +175,13 @@ export function useSidebarNav() {
     })))
   })
 
-  return { navigation, courseId, refresh }
+  // 可访问的章节 ID 集合（来自 courseData.chapters.accessible）
+  const accessibleChapterIds = computed(() => {
+    const chapters = courseData.value?.chapters || []
+    return new Set(chapters.filter(ch => ch.accessible).map(ch => ch.id))
+  })
+
+  return { navigation, courseId, refresh, accessibleChapterIds }
 }
 
 /**

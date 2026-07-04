@@ -33,6 +33,7 @@
     "next": "Next Chapter",
     "notFound": "Chapter not found",
     "backToCourse": "Back to Course",
+    "notOpen": "This chapter is not yet open",
     "play": "Play",
     "exitPlay": "Exit Play",
     "score": "Score",
