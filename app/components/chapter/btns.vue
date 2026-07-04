@@ -2,13 +2,8 @@
   <div class="flex items-center gap-1 mb-3 flex-wrap">
     <!-- 播放：全屏播放模式 -->
     <UTooltip :text="playFullscreen ? $t('chapter.exitPlay') : $t('chapter.play')">
-      <UButton
-        :icon="playFullscreen ? 'i-lucide-minimize' : 'i-lucide-play'"
-        :color="playFullscreen ? 'error' : 'primary'"
-        variant="soft"
-        size="xs"
-        @click="togglePlay"
-      />
+      <UButton :icon="playFullscreen ? 'i-lucide-minimize' : 'i-lucide-play'"
+        :color="playFullscreen ? 'error' : 'primary'" variant="soft" size="xs" @click="togglePlay" />
     </UTooltip>
 
     <!-- 得分：章节得分（教师/管理员可见） -->
@@ -18,7 +13,8 @@
 
     <!-- 选择：随机/多选学生加减分（教师/管理员可见） -->
     <UTooltip v-if="canEdit" :text="$t('chapter.select')">
-      <UButton icon="i-lucide-user-check" color="warning" variant="soft" size="xs" @click="() => { selectOpen = true }" />
+      <UButton icon="i-lucide-user-check" color="warning" variant="soft" size="xs"
+        @click="() => { selectOpen = true }" />
     </UTooltip>
 
     <!-- 计时器 -->
@@ -28,20 +24,35 @@
 
     <!-- 邀请跳转（教师/管理员可见） -->
     <UTooltip v-if="canEdit" :text="$t('chapter.invite')">
-      <UButton icon="i-lucide-megaphone" color="error" variant="soft" size="xs" :loading="inviting" @click="sendInvite" />
+      <UButton icon="i-lucide-megaphone" color="error" variant="soft" size="xs" :loading="inviting"
+        @click="sendInvite" />
     </UTooltip>
 
     <!-- 弹幕 -->
     <UTooltip :text="$t('chapter.danmaku')">
-      <UButton icon="i-lucide-message-square-text" color="success" variant="soft" size="xs" @click="() => { danmakuOpen = true }" />
+      <UButton icon="i-lucide-message-square-text" color="success" variant="soft" size="xs"
+        @click="() => { danmakuOpen = true }" />
+    </UTooltip>
+
+    <!-- 投票（教师/管理员可见） -->
+    <UTooltip v-if="canEdit" :text="$t('chapter.vote')">
+      <UButton icon="i-lucide-vote" color="primary" variant="soft" size="xs" @click="() => { voteOpen = true }" />
+    </UTooltip>
+
+    <!-- 抢答（教师/管理员可见） -->
+    <UTooltip v-if="canEdit" :text="$t('chapter.quickAnswer')">
+      <UButton icon="i-lucide-hand" color="warning" variant="soft" size="xs" @click="() => { quickAnswerOpen = true }" />
     </UTooltip>
   </div>
 
   <!-- 弹窗 -->
-  <ChapterScoreModal v-model:open="scoreOpen" :course-id="courseIdNum" :chapter-id="chapterIdNum" :class-id="classIdNum" />
+  <ChapterScoreModal v-model:open="scoreOpen" :course-id="courseIdNum" :chapter-id="chapterIdNum"
+    :class-id="classIdNum" />
   <ChapterSelectModal v-model:open="selectOpen" :course-id="courseIdNum" :class-id="classIdNum" />
   <ChapterTimerModal v-model:open="timerOpen" />
   <ChapterDanmakuModal v-model:open="danmakuOpen" :class-id="classIdNum" />
+  <ChapterVoteModal v-model:open="voteOpen" :class-id="classIdNum" :can-edit="canEdit" />
+  <ChapterQuickAnswerModal v-model:open="quickAnswerOpen" :class-id="classIdNum" :can-edit="canEdit" />
 </template>
 
 <script setup lang="ts">
@@ -68,6 +79,8 @@ const scoreOpen = ref(false)
 const selectOpen = ref(false)
 const timerOpen = ref(false)
 const danmakuOpen = ref(false)
+const voteOpen = ref(false)
+const quickAnswerOpen = ref(false)
 const inviting = ref(false)
 
 // 发送邀请：通知班级内所有学生跳转到当前章节

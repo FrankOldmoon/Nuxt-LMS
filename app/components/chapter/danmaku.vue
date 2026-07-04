@@ -6,7 +6,7 @@
       class="absolute whitespace-nowrap font-bold text-lg drop-shadow-md danmaku-float"
       :style="{ top: item.top + '%', color: '#22c55e' }"
     >
-      {{ item.text }}
+      {{ item.from }}：{{ item.text }}
     </div>
   </div>
 </template>
