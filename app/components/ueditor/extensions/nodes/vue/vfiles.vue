@@ -1,87 +1,74 @@
 <template>
-    <node-view-wrapper class="vfiles-node-wrapper">
-        <div class="vfiles-node-container" contenteditable="false">
-            <!-- 工具栏 -->
-            <div class="vfiles-node-toolbar">
-                <div class="flex items-center gap-2">
-                    <UIcon name="i-lucide-folder-tree" class="text-gray-500" />
-                    <span class="text-sm font-medium">{{ t('ueditor.vfiles') }}</span>
-                </div>
-                <div class="flex items-center gap-1">
-                    <UButton icon="i-lucide-settings-2" color="neutral" variant="ghost" size="2xs"
-                        @click="toggleConfig" />
-                    <UButton icon="i-lucide-trash-2" color="error" variant="ghost" size="2xs" @click="deleteNode" />
-                </div>
+    <!-- 配置面板：管理文件树 -->
+    <div v-if="showConfig" class="vue-node-config">
+        <div class="flex items-center gap-2 mb-2">
+            <UButton icon="i-lucide-folder-plus" size="xs" variant="outline" color="neutral"
+                :label="t('ueditor.vfilesAddFolder')" @click="addItem('folder')" />
+            <UButton icon="i-lucide-file-plus" size="xs" variant="outline" color="neutral"
+                :label="t('ueditor.vfilesAddFile')" @click="addItem('file')" />
+        </div>
+        <div class="flex flex-col gap-1 max-h-96 overflow-y-auto">
+            <div v-for="(node, idx) in editItems" :key="node.id"
+                :style="{ paddingLeft: node.depth * 16 + 'px' }"
+                class="flex items-center gap-1 p-0.5 bg-white rounded">
+                <UIcon :name="node.type === 'folder' ? 'i-lucide-folder' : 'i-lucide-file'"
+                    class="text-gray-400 size-4 shrink-0" />
+                <UInput v-model="node.label"
+                    :placeholder="node.type === 'folder' ? t('ueditor.vfilesFolderName') : t('ueditor.vfilesFileName')"
+                    size="xs" class="flex-1" />
+                <UButton v-if="node.type === 'folder'" icon="i-lucide-file-plus" color="neutral" variant="ghost"
+                    size="2xs" @click="addChild(node, 'file')" />
+                <UButton v-if="node.type === 'folder'" icon="i-lucide-folder-plus" color="neutral"
+                    variant="ghost" size="2xs" @click="addChild(node, 'folder')" />
+                <UButton icon="i-lucide-chevron-up" color="neutral" variant="ghost" size="2xs"
+                    :disabled="idx === 0" @click="moveItem(idx, -1)" />
+                <UButton icon="i-lucide-chevron-down" color="neutral" variant="ghost" size="2xs"
+                    :disabled="idx === editItems.length - 1" @click="moveItem(idx, 1)" />
+                <UButton icon="i-lucide-x" color="error" variant="ghost" size="2xs" @click="removeItem(idx)" />
             </div>
+        </div>
+        <USeparator class="my-2" />
+        <UButton size="xs" color="primary" @click="applyConfig">{{ t('common.save') }}</UButton>
+    </div>
 
-            <!-- 配置面板：管理文件树 -->
-            <div v-if="showConfig" class="vfiles-node-config">
-                <div class="flex items-center gap-2 mb-2">
-                    <UButton icon="i-lucide-folder-plus" size="xs" variant="outline" color="neutral"
-                        :label="t('ueditor.vfilesAddFolder')" @click="addItem('folder')" />
-                    <UButton icon="i-lucide-file-plus" size="xs" variant="outline" color="neutral"
-                        :label="t('ueditor.vfilesAddFile')" @click="addItem('file')" />
-                </div>
-                <div class="vfiles-edit-tree">
-                    <div v-for="(node, idx) in editItems" :key="node.id"
-                        :style="{ paddingLeft: node.depth * 16 + 'px' }" class="vfiles-edit-row">
-                        <UIcon :name="node.type === 'folder' ? 'i-lucide-folder' : 'i-lucide-file'"
-                            class="text-gray-400 size-4 shrink-0" />
-                        <UInput v-model="node.label"
-                            :placeholder="node.type === 'folder' ? t('ueditor.vfilesFolderName') : t('ueditor.vfilesFileName')"
-                            size="xs" class="flex-1" />
-                        <UButton v-if="node.type === 'folder'" icon="i-lucide-file-plus" color="neutral" variant="ghost"
-                            size="2xs" @click="addChild(node, 'file')" />
-                        <UButton v-if="node.type === 'folder'" icon="i-lucide-folder-plus" color="neutral"
-                            variant="ghost" size="2xs" @click="addChild(node, 'folder')" />
-                        <UButton icon="i-lucide-chevron-up" color="neutral" variant="ghost" size="2xs"
-                            :disabled="idx === 0" @click="moveItem(idx, -1)" />
-                        <UButton icon="i-lucide-chevron-down" color="neutral" variant="ghost" size="2xs"
-                            :disabled="idx === editItems.length - 1" @click="moveItem(idx, 1)" />
-                        <UButton icon="i-lucide-x" color="error" variant="ghost" size="2xs" @click="removeItem(idx)" />
-                    </div>
-                </div>
-                <USeparator class="my-2" />
-                <UButton size="xs" color="primary" @click="applyConfig">{{ t('common.save') }}</UButton>
+    <!-- 预览/编辑区（始终显示） -->
+    <div class="vue-node-body">
+        <div class="flex" style="min-height: 300px;">
+            <!-- 左侧导航 -->
+            <div style="width: 220px; border-right: 1px solid #e5e7eb; padding: 8px; overflow-y: auto; max-height: 400px;">
+                <UNavigationMenu :items="navItems" orientation="vertical" class="w-full" />
             </div>
-
-            <!-- 预览模式 -->
-            <div v-show="!showConfig" class="vfiles-node-body">
-                <div class="flex" style="min-height: 300px;">
-                    <!-- 左侧导航 -->
-                    <div class="vfiles-nav">
-                        <UNavigationMenu :items="navItems" orientation="vertical" class="w-full" @select="onSelect" />
+            <!-- 右侧内容编辑 -->
+            <div style="flex: 1; padding: 12px; min-width: 0; max-height: 400px; overflow: hidden;">
+                <div v-if="selectedFile" class="flex flex-col h-full">
+                    <div class="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100 dark:border-gray-800">
+                        <UIcon name="i-lucide-file" class="size-4 text-gray-400" />
+                        <span class="text-sm font-medium">{{ selectedFile.label }}</span>
                     </div>
-                    <!-- 右侧内容编辑 -->
-                    <div class="vfiles-content">
-                        <div v-if="selectedFile" class="flex flex-col h-full">
-                            <div
-                                class="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100 dark:border-gray-800">
-                                <UIcon name="i-lucide-file" class="size-4 text-gray-400" />
-                                <span class="text-sm font-medium">{{ selectedFile.label }}</span>
-                            </div>
-                            <div class="flex-1 overflow-auto">
-                                <RichEditor v-model="selectedFile.content" />
-                            </div>
-                        </div>
-                        <div v-else class="flex items-center justify-center h-full text-gray-400 text-sm">
-                            {{ t('ueditor.vfilesSelectHint') }}
-                        </div>
+                    <div class="flex-1 overflow-auto">
+                        <RichEditor v-model="selectedFile.content" />
                     </div>
+                </div>
+                <div v-else class="flex items-center justify-center h-full text-gray-400 text-sm">
+                    {{ t('ueditor.vfilesSelectHint') }}
                 </div>
             </div>
         </div>
-    </node-view-wrapper>
+    </div>
 </template>
 
 <script setup>
-import { NodeViewWrapper, nodeViewProps } from '@tiptap/vue-3'
-
+import { nodeViewProps } from '@tiptap/vue-3'
 
 const props = defineProps(nodeViewProps)
 const { t } = useI18n()
 
-const showConfig = ref(false)
+const showConfig = inject('nodeViewShowConfig')
+const meta = inject('nodeViewMeta')
+
+meta.title = t('ueditor.vfiles')
+meta.icon = 'i-lucide-folder-tree'
+meta.hasSettings = true
 
 const parseConfig = () => {
     try {
@@ -92,16 +79,9 @@ const parseConfig = () => {
 }
 const config = ref(parseConfig())
 
-// 扁平化列表（配置编辑用），带 depth
 const editItems = ref([])
 let idCounter = 0
-function flattenTree(items, depth = 0) {
-    const result = []
-    for (const item of items) {
-        result.push({ ...item, depth })
-    }
-    return result
-}
+
 function rebuildEditItems() {
     editItems.value = []
     function walk(items, depth) {
@@ -121,14 +101,11 @@ function rebuildEditItems() {
     walk(config.value.items || [], 0)
 }
 
-function toggleConfig() {
-    if (!showConfig.value) {
-        rebuildEditItems()
-    }
-    showConfig.value = !showConfig.value
-}
+// showConfig 打开时重建 editItems
+watch(showConfig, (val) => {
+    if (val) rebuildEditItems()
+})
 
-// 将扁平 editItems 转回树
 function buildTree() {
     const items = JSON.parse(JSON.stringify(editItems.value))
     const root = { children: [] }
@@ -140,9 +117,7 @@ function buildTree() {
         if (node.type === 'file') item.content = node.content
         else item.children = []
         parent.children.push(item)
-        if (node.type === 'folder') {
-            stack.push(item)
-        }
+        if (node.type === 'folder') stack.push(item)
     }
     return root.children
 }
@@ -156,7 +131,6 @@ function applyConfig() {
     selectedId.value = null
 }
 
-// 配置面板操作
 function addItem(type) {
     editItems.value.push({ id: `n${idCounter++}`, label: '', type, content: '', depth: 0 })
 }
@@ -168,7 +142,6 @@ function removeItem(idx) {
     const node = editItems.value[idx]
     const removedDepth = node.depth
     editItems.value.splice(idx, 1)
-    // 删除子节点
     while (idx < editItems.value.length && editItems.value[idx].depth > removedDepth) {
         editItems.value.splice(idx, 1)
     }
@@ -178,15 +151,13 @@ function moveItem(idx, dir) {
     if (newIdx < 0 || newIdx >= editItems.value.length) return
     const node = editItems.value[idx]
     const target = editItems.value[newIdx]
-    // 不能移入比自己层级深的节点后（会变成别的文件夹的子项）
     if (dir > 0 && target.depth > node.depth) return
-    // 调整 depth
     const items = editItems.value
     const moved = items.splice(idx, 1)[0]
     items.splice(newIdx, 0, moved)
 }
 
-// 预览模式：导航菜单
+// 预览模式
 const selectedId = ref(null)
 const selectedFile = computed(() => {
     if (!selectedId.value) return null
@@ -221,20 +192,11 @@ const navItems = computed(() => {
     return build(config.value.items || [])
 })
 
-function onSelect(e) {
-    // NavigationMenu select 事件
-}
-
-function deleteNode() {
-    props.deleteNode()
-}
-
 // 编辑文件内容时防抖保存
 let saveTimer = null
 watch(() => selectedFile.value?.content, () => {
     if (saveTimer) clearTimeout(saveTimer)
     saveTimer = setTimeout(() => {
-        // 更新 config 中对应文件的内容
         function updateContent(items) {
             for (const item of items) {
                 if (item.id === selectedId.value && item.type === 'file') {
@@ -250,66 +212,3 @@ watch(() => selectedFile.value?.content, () => {
     }, 800)
 }, { deep: true })
 </script>
-
-<style scoped>
-.vfiles-node-container {
-    border: 1px solid var(--umo-content-node-border, #e5e7eb);
-    border-radius: 8px;
-    overflow: hidden;
-    background: #fff;
-}
-
-.vfiles-node-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 6px 12px;
-    background: #f9fafb;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.vfiles-node-config {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 12px;
-    background: #f3f4f6;
-}
-
-.vfiles-edit-tree {
-    max-height: 400px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.vfiles-edit-row {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 4px;
-    background: #fff;
-    border-radius: 4px;
-}
-
-.vfiles-node-body {
-    padding: 0;
-}
-
-.vfiles-nav {
-    width: 220px;
-    border-right: 1px solid #e5e7eb;
-    padding: 8px;
-    overflow-y: auto;
-    max-height: 400px;
-}
-
-.vfiles-content {
-    flex: 1;
-    padding: 12px;
-    min-width: 0;
-    max-height: 400px;
-    overflow: hidden;
-}
-</style>

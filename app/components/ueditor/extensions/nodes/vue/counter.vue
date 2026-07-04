@@ -1,18 +1,22 @@
 <template>
-    <div class="flex items-center justify-center w-full gap-2 p-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 select-none"
-            contenteditable="false">
+    <div class="vue-node-body p-2">
+        <div class="flex items-center justify-center w-full gap-2">
             <UButton variant="outline" size="2xs" icon="i-heroicons-minus-small" @click="decrement"
                 :disabled="count <= 0" />
             <span class="text-lg font-semibold min-w-[3ch] text-center tabular-nums">{{ count }}</span>
             <UButton variant="outline" size="2xs" icon="i-heroicons-plus-small" @click="increment" />
         </div>
+    </div>
 </template>
 
 <script setup>
-const props = defineProps({
-    node: Object,
-    updateAttributes: Function,
-})
+import { nodeViewProps } from '@tiptap/vue-3'
+
+const props = defineProps(nodeViewProps)
+const meta = inject('nodeViewMeta')
+
+// counter 无标题无设置，仅显示删除按钮
+meta.hasSettings = false
 
 const count = computed(() => Number(props.node.attrs.content))
 
@@ -25,11 +29,3 @@ const decrement = () => {
     }
 }
 </script>
-
-<style scoped>
-
-    /* 可选：避免拖动时选中内部文本 */
-    .counter-node-wrapper {
-        user-select: none;
-    }
-</style>
