@@ -57,7 +57,19 @@
 <script setup lang="ts">
 
 const { hasRole, isCourseEditor, user } = useAuth()
-const { navigation, courseId, refresh, accessibleChapterIds } = useSidebarNav()
+const { navigation, courseId, refresh, accessibleChapterIds, passedChapterIds } = useSidebarNav()
+const { courseNavVersion } = useLayoutState()
+
+// 章节完成状态变化时刷新课程数据，让侧边栏打钩实时更新
+// 必须先清除 Nuxt payload 缓存，否则 getCachedData 会返回旧数据导致 refresh 无效
+watch(courseNavVersion, () => {
+  const nuxtApp = useNuxtApp()
+  const key = `/api/lms/courses/show?id=${courseId.value}`
+  if (nuxtApp.payload.data[key]) {
+    delete nuxtApp.payload.data[key]
+  }
+  refresh()
+})
 
 const classModalOpen = ref(false)
 const progressOpen = ref(false)
@@ -73,11 +85,33 @@ const indexedNavigation = computed(() => indexNavItems(navigation.value, '', tru
 
 const canEditCourse = computed(() => hasRole('admin') || isCourseEditor(Number(courseId.value)))
 
-// 导航项：非教师/管理员时，未开放章节禁用点击
+// 导航项：非教师/管理员时，未开放章节禁用点击；已完成章节右侧打钩
 const navItems = computed(() => {
-  if (canEditCourse.value) return indexedNavigation.value
-  return markNavDisabled(indexedNavigation.value) as typeof indexedNavigation.value
+  const base = canEditCourse.value
+    ? indexedNavigation.value
+    : (markNavDisabled(indexedNavigation.value) as typeof indexedNavigation.value)
+  return markPassed(base as any[])
 })
+
+// 递归标记已完成（is_pass）章节右侧显示 ✓ 徽标
+function markPassed(items: any[]): any[] {
+  return items.map(item => {
+    const newItem: any = { ...item }
+    if (item.to) {
+      const match = String(item.to).match(/\/course\/[^/]+\/(\d+)$/)
+      if (match) {
+        const chId = Number(match[1])
+        if (passedChapterIds.value.has(chId)) {
+          newItem.badge = { label: '✓', color: 'success' }
+        }
+      }
+    }
+    if (item.children?.length) {
+      newItem.children = markPassed(item.children)
+    }
+    return newItem
+  })
+}
 
 // 递归标记未开放章节为 disabled
 function markNavDisabled(items: any[]): any[] {

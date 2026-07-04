@@ -64,5 +64,21 @@ export default eventHandler(async (event) => {
     result.chapters = result.chapters.map(ch => ({ ...ch, accessible: accessibleIds.has(ch.id) }))
   }
 
+  // 附带当前用户每个章节的完成状态（is_pass），供侧边栏打钩
+  if (user) {
+    const allChapterIds = (course.chapters || []).map(c => c.id)
+    if (allChapterIds.length > 0) {
+      const userChapters = await db
+        .select({ chapterId: schema.userChapters.chapterId, isPass: schema.userChapters.isPass })
+        .from(schema.userChapters)
+        .where(and(
+          eq(schema.userChapters.userId, user.id),
+          inArray(schema.userChapters.chapterId, allChapterIds),
+        ))
+      const passMap = new Map(userChapters.map(uc => [uc.chapterId, !!uc.isPass]))
+      result.chapters = result.chapters.map(ch => ({ ...ch, isPass: passMap.get(ch.id) ?? false }))
+    }
+  }
+
   return cResp(result)
 })

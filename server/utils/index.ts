@@ -59,11 +59,15 @@ export function normalizeCourseSummary(course: any, chapterCount?: number): LmsC
 }
 
 /** 归一化章节摘要（DB chapters → LmsChapterSummary） */
-export function normalizeChapterSummary(ch: any): LmsChapterSummary {
-  return {
+export function normalizeChapterSummary(ch: any, userChapter?: any): LmsChapterSummary {
+  const result: LmsChapterSummary = {
     id: ch.id,
     title: ch.name,
   }
+  if (userChapter) {
+    result.isPass = !!userChapter.isPass
+  }
+  return result
 }
 
 /** 归一化课程详情（DB courses + chapters → LmsCourseDetail） */
@@ -87,8 +91,8 @@ export function normalizeCourseDetail(course: any): LmsCourseDetail {
 }
 
 /** 归一化章节详情（DB chapters → LmsChapterDetail） */
-export function normalizeChapterDetail(ch: any): LmsChapterDetail {
-  return {
+export function normalizeChapterDetail(ch: any, userChapter?: any): LmsChapterDetail {
+  const result: LmsChapterDetail = {
     id: ch.id,
     title: ch.name,
     content: (ch.content as Record<string, any>) || {},
@@ -96,15 +100,20 @@ export function normalizeChapterDetail(ch: any): LmsChapterDetail {
     homeworkIds: (ch.homeworkIds as number[]) || [],
     commentIds: (ch.commentIds as number[]) || [],
   }
+  if (userChapter) {
+    result.taskStatus = (userChapter.taskStatus as Record<string, boolean>) || {}
+    result.isPass = !!userChapter.isPass
+  }
+  return result
 }
 
 /** 归一化章节页面数据（DB chapter + course → LmsChapterPageData） */
-export function normalizeChapterPageData(ch: any, course: any): LmsChapterPageData {
+export function normalizeChapterPageData(ch: any, course: any, userChapter?: any): LmsChapterPageData {
   const cfg = getConfig(course)
   // 合并全局 lmsConfig + 课程 lmsConfig，读取课程功能开关
   const courseLms = mergeCourseLmsConfig(cfg)
   return {
-    chapter: normalizeChapterDetail(ch),
+    chapter: normalizeChapterDetail(ch, userChapter),
     course: {
       id: course.id,
       title: course.name,

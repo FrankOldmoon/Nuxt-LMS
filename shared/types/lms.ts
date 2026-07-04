@@ -32,6 +32,8 @@ export interface LmsChapterSummary {
   id: number
   title: string
   accessible?: boolean
+  /** 当前用户是否已完成本章全部任务（is_pass） */
+  isPass?: boolean
 }
 
 /** UEditor 文档 JSON 类型 */
@@ -56,6 +58,10 @@ export interface LmsChapterDetail {
   commentIds?: number[]
   isOpen?: boolean
   classChapters?: { classId: number; open: boolean }[]
+  /** 各 heading 的完成状态：{ [headingId]: boolean } */
+  taskStatus?: Record<string, boolean>
+  /** 当前用户是否已完成本章全部任务 */
+  isPass?: boolean
 }
 
 /** 章节页面数据（章节 + 所属课程含章节列表用于导航） */

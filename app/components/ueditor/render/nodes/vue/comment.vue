@@ -104,6 +104,7 @@ const emit = defineEmits(['init'])
 
 const { editableCourseId } = useLayoutState()
 const { user, hasRole } = useAuth()
+const chapterTask = useChapterTask()
 
 const commentId = computed(() => Number(props.node?.attrs?.content) || 0)
 const isTeacher = computed(() => hasRole('teacher') || hasRole('admin'))
@@ -177,6 +178,11 @@ async function fetchComments() {
         if (data) {
             rootComment.value = data.root || null
             children.value = data.children || []
+            // 若当前用户已回复过，上报完成状态
+            const uid = user.value?.id
+            if (uid && Array.isArray(data.children) && data.children.some(c => c.userId === uid)) {
+                chapterTask?.reportNodeDone('comment', commentId.value, true)
+            }
         }
     } catch {
         rootComment.value = null
@@ -236,6 +242,8 @@ async function onReply({ content, parentCid }) {
             })
             // 跳转到最后一页，让用户看到新回复
             page.value = totalPages.value
+            // 上报评论完成（回复即完成）
+            chapterTask?.reportNodeDone('comment', commentId.value, true)
         }
         // 防御性通知 userCard 刷新（未来若评论也会加分，可即时反映）
         useUserCard().refresh()

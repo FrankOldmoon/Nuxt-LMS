@@ -181,7 +181,13 @@ export function useSidebarNav() {
     return new Set(chapters.filter(ch => ch.accessible).map(ch => ch.id))
   })
 
-  return { navigation, courseId, refresh, accessibleChapterIds }
+  // 已完成（is_pass）的章节 ID 集合，供侧边栏打钩
+  const passedChapterIds = computed(() => {
+    const chapters = courseData.value?.chapters || []
+    return new Set(chapters.filter(ch => ch.isPass).map(ch => ch.id))
+  })
+
+  return { navigation, courseId, refresh, accessibleChapterIds, passedChapterIds }
 }
 
 /**
@@ -228,6 +234,8 @@ export function useLayoutState() {
   const sidebarOverride = useState<boolean | null>('layout-sidebar-override', () => null)
   const tocOverride = useState<boolean | null>('layout-toc-override', () => null)
   const showDanmaku = useState<boolean>('layout-show-danmaku', () => true)
+  // 课程侧边栏导航版本号：章节完成状态变化时 +1，触发 useSidebarNav 重新拉取
+  const courseNavVersion = useState<number>('layout-course-nav-version', () => 0)
 
   // 路由默认：仅在课程页（/course/:id）和章节页（/course/:id/:cid）显示 aside 和 toc
   // 使用 computed 直接读取路由，确保 SSR 渲染阶段即可得到正确值
@@ -255,6 +263,11 @@ export function useLayoutState() {
     contentVersion.value++
   }
 
+  /** 通知课程侧边栏导航刷新（章节 is_pass 变化后调用） */
+  function notifyCourseNavUpdate() {
+    courseNavVersion.value++
+  }
+
   function setLayout(opts: { sidebar?: boolean | null; toc?: boolean | null }) {
     if (opts.sidebar !== undefined) sidebarOverride.value = opts.sidebar
     if (opts.toc !== undefined) tocOverride.value = opts.toc
@@ -266,7 +279,7 @@ export function useLayoutState() {
     tocOverride.value = null
   })
 
-  return { tocLinks, editableContent, editableTable, editableId, editableCourseId, contentVersion, showSidebar, showToc, showDanmaku, setToc, setEditableContent, setEditableMeta, notifyContentSaved, setLayout }
+  return { tocLinks, editableContent, editableTable, editableId, editableCourseId, contentVersion, showSidebar, showToc, showDanmaku, courseNavVersion, setToc, setEditableContent, setEditableMeta, notifyContentSaved, notifyCourseNavUpdate, setLayout }
 }
 
 /**

@@ -187,6 +187,7 @@ const emit = defineEmits(['init'])
 const { t } = useI18n()
 const { editableCourseId } = useLayoutState()
 const { hasRole } = useAuth()
+const chapterTask = useChapterTask()
 
 const quizId = computed(() => Number(props.node?.attrs?.content) || 0)
 const isTeacher = computed(() => hasRole('teacher') || hasRole('admin'))
@@ -553,6 +554,8 @@ async function submitQuiz() {
         resultPassed.value = result.isPassed
         submitted.value = true
         started.value = false
+        // 上报测验完成状态（通过即完成）
+        chapterTask?.reportNodeDone('quiz', quizId.value, !!result.isPassed)
         await fetchRecord()
         useUserCard().refresh()
     } catch (err) {

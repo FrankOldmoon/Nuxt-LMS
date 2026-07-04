@@ -59,7 +59,14 @@ export default eventHandler(async (event) => {
   }
 
   // 返回章节页面数据
-  const result = normalizeChapterPageData(chapter, chapter.course)
+  // 查询当前用户的章节学习记录（task_status / is_pass）
+  let userChapter: any = null
+  if (user) {
+    userChapter = await db.query.userChapters.findFirst({
+      where: and(eq(schema.userChapters.userId, user.id), eq(schema.userChapters.chapterId, id)),
+    })
+  }
+  const result = normalizeChapterPageData(chapter, chapter.course, userChapter)
 
   // 教师/管理员：附带 isOpen 和班级开放状态，供 accessBar 使用（避免前端再请求）
   if (isAdmin || isTeacher) {

@@ -133,6 +133,7 @@ const emit = defineEmits(['init'])
 
 const { editableCourseId, editableId } = useLayoutState()
 const { hasRole } = useAuth()
+const chapterTask = useChapterTask()
 
 const homeworkId = computed(() => Number(props.node?.attrs?.content) || 0)
 
@@ -218,6 +219,8 @@ async function onSubmit() {
         submittedFileList.value = files
         submitOk.value = true
         submitMsg.value = t('homework.submitSuccess')
+        // 上报作业完成（提交即完成）
+        chapterTask?.reportNodeDone('homework', homeworkId.value, true)
         // 通知 userCard 刷新（作业提交会增加课程经验）
         useUserCard().refresh()
     } catch (err) {
@@ -268,6 +271,8 @@ async function fetchRecord() {
             // 有内容或文件则标记为已提交
             if (data.content || (Array.isArray(data.files) && data.files.length > 0)) {
                 submitted.value = true
+                // 上报历史完成状态
+                chapterTask?.reportNodeDone('homework', homeworkId.value, true)
             }
         }
     } catch (err) {

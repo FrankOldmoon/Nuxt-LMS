@@ -86,6 +86,13 @@ const { data: resp, pending, refresh, error } = cRequest.use<import('#shared/typ
 
 const data = computed(() => resp.value as import('#shared/types/lms').LmsChapterPageData | null)
 
+// 章节任务完成状态上下文：提供给内容区组件（上报）与目录（打钩）
+const chapterTaskCtx = setupChapterTask({
+  content: computed(() => data.value?.chapter?.content),
+  chapterId: computed(() => Number(chapterId.value)),
+  courseId: computed(() => Number(courseId.value)),
+})
+
 // 区分"不存在"和"未开放"（403 错误 = 未开放，404/其他 = 不存在）
 const locked = computed(() => !!error.value && (error.value as any)?.statusCode === 403)
 const notFound = computed(() => !!error.value && (error.value as any)?.statusCode !== 403)
@@ -93,12 +100,28 @@ const notFound = computed(() => !!error.value && (error.value as any)?.statusCod
 // 数据变化时设置 TOC + 可编辑内容
 // flush: 'sync' 确保在 SSR Suspense 恢复时同步执行，
 // 避免嵌套 Suspense 子组件（如 question）渲染时 editableCourseId 仍为初始值 0
+let initedTaskChapterId = 0
 watch(resp, (d) => {
   if (!d) return
   setToc(extractTocFromContent(d?.chapter?.content))
   setEditableContent(d?.chapter?.content ?? null)
   if (d?.chapter?.id) setEditableMeta('chapters', d.chapter.id, d.course.id)
   showDanmaku.value = d.course.showDanmaku ?? true
+  // 切换章节时用服务端数据初始化任务状态（同一章节内容保存刷新不重置）
+  if (d?.chapter?.id && d.chapter.id !== initedTaskChapterId) {
+    initedTaskChapterId = d.chapter.id
+    chapterTaskCtx.taskStatus.value = { ...(d.chapter.taskStatus || {}) }
+    chapterTaskCtx.isPass.value = !!d.chapter.isPass
+    // 用已完成的 heading 反推 node 级状态，避免后续 recompute 丢失已完成任务
+    const map = chapterTaskCtx.taskMap.value
+    const ns: Record<string, boolean> = {}
+    for (const h of map.headings) {
+      if (chapterTaskCtx.taskStatus.value[h.id]) {
+        for (const t of (map.tasksByHeading[h.id] || [])) ns[t.key] = true
+      }
+    }
+    chapterTaskCtx.nodeStatus.value = ns
+  }
 }, { immediate: true, flush: 'sync' })
 
 // 监听内容版本号，保存成功后重新获取数据（flush: sync 确保每次变化都触发）

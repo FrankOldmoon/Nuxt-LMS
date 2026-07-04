@@ -86,7 +86,11 @@ watch(() => props.question?.record, (record) => {
   })
 }, { immediate: true })
 
-const hasAnswer = computed(() => fillAnswers.value.some(a => a && a.trim() !== ''))
+const hasAnswer = computed(() => fillAnswers.value.some((a) => {
+  a = a.toString()
+  return a && a.trim() !== ''
+}
+))
 
 // submit 后给输入框着色：正确绿、错误红（支持正则匹配）
 function styleInputs() {

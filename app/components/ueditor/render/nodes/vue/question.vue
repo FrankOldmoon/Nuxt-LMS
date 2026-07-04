@@ -148,6 +148,7 @@ const emit = defineEmits(['init'])
 const { t } = useI18n()
 const { editableCourseId } = useLayoutState()
 const { hasRole } = useAuth()
+const chapterTask = useChapterTask()
 
 const questionId = computed(() => Number(props.node?.attrs?.content) || 0)
 
@@ -255,6 +256,10 @@ function onSubmit() {
         isCorrect.value = result.isCorrect
         submitted.value = true
         fromRecord.value = false
+        // 上报题目完成状态（quiz 模式下由 quiz 统一上报）
+        if (!props.inQuiz) {
+            chapterTask?.reportNodeDone('question', questionId.value, isCorrect.value)
+        }
     }
 }
 
@@ -396,6 +401,8 @@ async function fetchRecord() {
                 submitted.value = true
                 fromRecord.value = true
                 isCorrect.value = (question.value.correct_rate || 0) > 0
+                // 上报历史完成状态
+                chapterTask?.reportNodeDone('question', questionId.value, isCorrect.value)
             }
         }
     } catch (err) {

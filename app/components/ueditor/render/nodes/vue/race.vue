@@ -167,6 +167,7 @@ const emit = defineEmits(['init'])
 const { t } = useI18n()
 const { editableCourseId, editableId } = useLayoutState()
 const { hasRole, user } = useAuth()
+const chapterTask = useChapterTask()
 const { wsConnected, connect, raceJoin, onRaceJoined, sendRaceStart, onRaceStart, sendRaceQuestion, onRaceQuestion, sendRaceAnswer, onRaceAnswerUpdate, onRaceScores, sendRaceQuestionEnd, onRaceQuestionEnd, sendRaceEnd, onRaceEnd, sendRaceOnline, onRaceOnlineUpdate } = useWebSocket()
 
 // 告知 question 组件当前在 race 中：显示提交按钮但不向后端提交
@@ -464,6 +465,9 @@ function submitStudentAnswer() {
 
     studentAnswered.value = true
     if (submitCheckTimer) clearInterval(submitCheckTimer)
+
+    // 上报竞赛完成状态（参与答题即完成）
+    chapterTask?.reportNodeDone('race', raceId.value, true)
 
     sendRaceAnswer(
         pin.value, raceId.value, currentQuestionCid.value,

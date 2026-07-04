@@ -10,14 +10,16 @@
           <a
             :href="`#${link.id}`"
             :class="[
-              'block text-sm leading-6 rounded-sm transition-colors px-2 cursor-pointer',
+              'flex items-center gap-1 text-sm leading-6 rounded-sm transition-colors px-2 cursor-pointer',
               activeId === link.id
                 ? 'text-primary font-medium bg-primary/10'
                 : 'text-muted hover:text-highlighted',
             ]"
             @click.prevent="scrollToHeading(link.id)"
           >
-            {{ link.text }}
+            <span class="flex-1 truncate">{{ link.text }}</span>
+            <UIcon v-if="isDone(link.id)" name="i-lucide-circle-check-big"
+              class="size-3.5 shrink-0 text-success" />
           </a>
 
           <!-- 递归渲染子标题 -->
@@ -29,14 +31,16 @@
               <a
                 :href="`#${child.id}`"
                 :class="[
-                  'block text-sm leading-6 rounded-sm transition-colors px-2 cursor-pointer',
+                  'flex items-center gap-1 text-sm leading-6 rounded-sm transition-colors px-2 cursor-pointer',
                   activeId === child.id
                     ? 'text-primary font-medium bg-primary/10'
                     : 'text-muted hover:text-highlighted',
                 ]"
                 @click.prevent="scrollToHeading(child.id)"
               >
-                {{ child.text }}
+                <span class="flex-1 truncate">{{ child.text }}</span>
+                <UIcon v-if="isDone(child.id)" name="i-lucide-circle-check-big"
+                  class="size-3.5 shrink-0 text-success" />
               </a>
 
               <!-- 支持三级标题 -->
@@ -48,14 +52,16 @@
                   <a
                     :href="`#${grandchild.id}`"
                     :class="[
-                      'block text-xs leading-6 rounded-sm transition-colors px-2 cursor-pointer',
+                      'flex items-center gap-1 text-xs leading-6 rounded-sm transition-colors px-2 cursor-pointer',
                       activeId === grandchild.id
                         ? 'text-primary font-medium bg-primary/10'
                         : 'text-dimmed hover:text-highlighted',
                     ]"
                     @click.prevent="scrollToHeading(grandchild.id)"
                   >
-                    {{ grandchild.text }}
+                    <span class="flex-1 truncate">{{ grandchild.text }}</span>
+                    <UIcon v-if="isDone(grandchild.id)" name="i-lucide-circle-check-big"
+                      class="size-3 shrink-0 text-success" />
                   </a>
                 </li>
               </ul>
@@ -83,6 +89,13 @@ const props = withDefaults(defineProps<{
 
 
 const activeId = ref<string | null>(null)
+
+// 注入章节任务上下文（仅章节页存在，课程页为 null）
+const chapterTask = useChapterTask()
+
+function isDone(id: string): boolean {
+  return !!chapterTask?.taskStatus.value?.[id]
+}
 
 /**
  * 将嵌套的 toc links 扁平化，用于 IntersectionObserver 监听
