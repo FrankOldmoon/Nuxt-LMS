@@ -88,16 +88,28 @@ watch(() => props.question?.record, (record) => {
 
 const hasAnswer = computed(() => fillAnswers.value.some(a => a && a.trim() !== ''))
 
-// submit 后给输入框着色：正确绿、错误红
+// submit 后给输入框着色：正确绿、错误红（支持正则匹配）
 function styleInputs() {
   const container = getInputContainer()
   if (!container) return
   const inputs = container.querySelectorAll('input')
   const qAnswer = props.question.answer || []
+  const qOptions = props.question.options || []
   inputs.forEach((el, idx) => {
     const userVal = (el.value || '').trim()
     const correctVal = String(qAnswer[idx] || '').trim()
-    if (userVal === correctVal) {
+    const isRegex = qOptions[idx] === 'regex'
+    let correct = false
+    if (isRegex) {
+      try {
+        correct = new RegExp(correctVal).test(userVal)
+      } catch {
+        correct = false
+      }
+    } else {
+      correct = userVal === correctVal
+    }
+    if (correct) {
       el.style.borderColor = '#4ade80'
       el.style.backgroundColor = 'rgba(74, 222, 128, 0.1)'
     } else {
@@ -133,8 +145,19 @@ function submit() {
     })
   }
   const qAnswer = props.question.answer || []
+  const qOptions = props.question.options || []
   const correct = qAnswer.length > 0 && qAnswer.every((ans, i) => {
-    return (fillAnswers.value[i] || '').trim() === String(ans).trim()
+    const userVal = (fillAnswers.value[i] || '').trim()
+    const correctVal = String(ans).trim()
+    // 支持正则表达式匹配
+    if (qOptions[i] === 'regex') {
+      try {
+        return new RegExp(correctVal).test(userVal)
+      } catch {
+        return false
+      }
+    }
+    return userVal === correctVal
   })
   isCorrect.value = correct
   submitQuestion({

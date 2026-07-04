@@ -133,7 +133,7 @@ import ResultBanner from './question/result-banner.vue'
 import ExplanationBlock from './question/explanation-block.vue'
 import QuestionEdit from '../../../extensions/nodes/vue/question/edit.vue'
 import RecordsModal from './question/records-modal.vue'
-import { computeCorrectRate } from './question/shared.ts'
+import { computeCorrectRate, decryptAnswer } from './question/shared.ts'
 
 const props = defineProps({
     node: Object,
@@ -226,8 +226,9 @@ const formattedAnswers = computed(() => {
         const subs = Array.isArray(question.value.content) ? question.value.content : []
         return [t('question.compositeSubCount', { count: subs.length })]
     } else {
-        // 填空题/下拉题：直接显示答案文本
-        return answer
+        // 填空题/下拉题：直接显示答案文本，正则答案加标记
+        const options = question.value.options || []
+        return answer.map((ans, idx) => options[idx] === 'regex' ? `${ans} (${t('question.fillRegex')})` : String(ans))
     }
 })
 
@@ -285,6 +286,8 @@ const apiUrl = computed(() => {
 const { data: fetchedQuestion, pending: fetchedPending, refresh } = cRequest.use(apiUrl, {
     transform: (raw) => {
         if (!raw) return null
+        // 注意：answer 在此保持加密状态，不在 SSR payload 中暴露明文
+        // 解密在客户端 watch 中执行（见下方 onMounted / watch）
         return reactive({
             name: raw.name || '',
             content: Array.isArray(raw.content) ? JSON.parse(JSON.stringify(raw.content)) : (raw.content || ''),
@@ -307,7 +310,12 @@ watch([fetchedQuestion, questionId], () => {
     if (!questionId.value) {
         question.value = defaultQuestion
     } else if (fetchedQuestion.value) {
-        question.value = fetchedQuestion.value
+        // 客户端解密 answer（SSR 时保持加密，避免明文暴露在 payload 中）
+        const q = fetchedQuestion.value
+        if (import.meta.client && Array.isArray(q.answer) && q.answer.some((a) => typeof a === 'string' && a.startsWith('enc:'))) {
+            q.answer = decryptAnswer(q.answer)
+        }
+        question.value = q
     }
 }, { immediate: true, flush: 'sync' })
 

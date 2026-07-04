@@ -11,6 +11,41 @@ export function recordAnswer(question: any, userAnswer: string[] | number[]) {
 
 }
 
+// ====================== 答案加密/解密 ======================
+
+// 与后端一致的密钥
+const ENC_KEY = 'lms_q_a_2026'
+
+/**
+ * 解密后端加密的答案值
+ * 格式 'enc:base64string'，解密为原始值（字符串）
+ * 非加密值（不以 'enc:' 开头）直接返回原值
+ */
+export function decryptValue(val: any): any {
+  if (typeof val !== 'string' || !val.startsWith('enc:')) return val
+  const encStr = val.slice(4)
+  try {
+    // Base64 解码 → URI 解码 → XOR 解密
+    const binary = atob(encStr)
+    const decoded = decodeURIComponent(escape(binary))
+    let result = ''
+    for (let i = 0; i < decoded.length; i++) {
+      result += String.fromCharCode(decoded.charCodeAt(i) ^ ENC_KEY.charCodeAt(i % ENC_KEY.length))
+    }
+    return result
+  } catch {
+    return val
+  }
+}
+
+/**
+ * 解密整个 answer 数组（原地或返回新数组）
+ */
+export function decryptAnswer(answer: any[]): any[] {
+  if (!Array.isArray(answer)) return answer
+  return answer.map(ans => decryptValue(ans))
+}
+
 /**
  * 根据 record 实时计算得分比（0 ~ 1）
  * - single/judge: 全对 1，否则 0
@@ -36,9 +71,20 @@ export function computeCorrectRate(question: any): number {
   }
   if (type === 'fill' || type === 'select') {
     if (!answer.length) return 0
-    const correct = answer.filter((ans: any, i: number) =>
-      String(record[i] || '').trim() === String(ans).trim()
-    ).length
+    const options = question.options || []
+    const correct = answer.filter((ans: any, i: number) => {
+      const userVal = String(record[i] || '').trim()
+      const correctVal = String(ans).trim()
+      // 填空题支持正则表达式匹配
+      if (type === 'fill' && options[i] === 'regex') {
+        try {
+          return new RegExp(correctVal).test(userVal)
+        } catch {
+          return false
+        }
+      }
+      return userVal === correctVal
+    }).length
     return correct / answer.length
   }
   if (type === 'sort') {
