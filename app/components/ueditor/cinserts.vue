@@ -51,6 +51,7 @@ const allItems = computed(() => [
     { label: t('ueditor.insertVfiles'), icon: 'i-lucide-folder-tree', onSelect: () => insertVfiles() },
     { label: t('ueditor.insertQuiz'), icon: 'i-lucide-clipboard-list', onSelect: () => insertQuiz() },
     { label: t('ueditor.insertRace'), icon: 'i-lucide-zap', onSelect: () => insertRace() },
+    { label: t('ueditor.insertChatroom'), icon: 'i-lucide-message-square-text', onSelect: () => insertChatroom() },
     { type: 'separator' },
     { label: `${t('common.search')} ${t('courseData.questionLabel')}`, icon: 'i-lucide-circle-help', onSelect: () => openPicker('questions') },
     { label: `${t('common.search')} ${t('homework.label')}`, icon: 'i-lucide-book-open', onSelect: () => openPicker('homeworks') },
@@ -179,6 +180,16 @@ function insertRace() {
     editor.chain().focus().insertContent({
         type: 'vue',
         attrs: { content: '0', type: 'race' },
+    }).run()
+}
+
+// 插入班级聊天室节点（纯前端 ws，无 cid）
+function insertChatroom() {
+    const editor = props.editor?.useEditor()
+    if (!editor) return
+    editor.chain().focus().insertContent({
+        type: 'vue',
+        attrs: { content: '', type: 'chatroom' },
     }).run()
 }
 

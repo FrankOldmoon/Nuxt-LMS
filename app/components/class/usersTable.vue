@@ -10,103 +10,148 @@
     </div>
 
     <template v-else>
-      <!-- 教师列表 -->
-      <div v-if="!hideTeachers && teachers.length" class="mb-3">
-        <div class="text-xs font-medium text-muted mb-1.5">{{ $t('classSelector.teachers') }}</div>
-        <div class="space-y-1">
-          <div
-            v-for="t in teachers"
-            :key="t.id"
-            class="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-muted"
-          >
-            <UAvatar :src="t.avatarImg || undefined" :alt="t.name" size="2xs" :text="t.name?.charAt(0)" />
-            <span class="text-sm flex-1">{{ t.name }}</span>
+      <!-- 小组模式：Tab 切换学生/小组 -->
+      <UTabs v-if="showGroup && groupRows.length" v-model="activeTab" :items="tabItems" class="mb-3" />
+
+      <!-- ============ 学生 Tab ============ -->
+      <div v-show="!showGroup || activeTab === 'students'">
+        <!-- 教师列表 -->
+        <div v-if="!hideTeachers && teachers.length" class="mb-3">
+          <div class="text-xs font-medium text-muted mb-1.5">{{ $t('classSelector.teachers') }}</div>
+          <div class="space-y-1">
+            <div
+              v-for="t in teachers"
+              :key="t.id"
+              class="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-muted"
+            >
+              <UAvatar :src="t.avatarImg || undefined" :alt="t.name" size="2xs" :text="t.name?.charAt(0)" />
+              <span class="text-sm flex-1">{{ t.name }}</span>
+              <UButton
+                icon="i-lucide-pencil"
+                size="xs"
+                color="neutral"
+                variant="ghost"
+                :aria-label="$t('common.edit')"
+                @click="openEdit(t.id)"
+              />
+            </div>
+          </div>
+          <USeparator v-if="students.length" class="mt-3" />
+        </div>
+
+        <!-- 学生表格 -->
+        <UTable
+          v-if="students.length"
+          v-model:sorting="sorting"
+          :data="students"
+          :columns="columns"
+          :ui="{ td: 'py-1.5' }"
+        >
+          <!-- number 列 -->
+          <template v-if="!hideNumber" #number-cell="{ row }">
+            <UInput v-model="numberMap[row.original.id]" size="xs" class="w-16"
+              :placeholder="'-'"
+              @blur="onNumberBlur(row.original.id)"
+              @keydown.enter="$event.target.blur()" />
+          </template>
+          <!-- number 表头：排序按钮 + 一键填充 -->
+          <template v-if="!hideNumber" #number-header="{ column }">
+            <div class="flex items-center gap-1">
+              <component :is="sortableHeader(t('classSelector.colNumber'))({ column })" />
+              <UButton icon="i-lucide-list-ordered" size="xs" color="neutral" variant="ghost"
+                :title="$t('classSelector.autoFillNumber')" @click="autoFillNumbers" />
+            </div>
+          </template>
+          <template #name-cell="{ row }">
+            <div class="flex items-center gap-2">
+              <UAvatar :src="row.original.avatarImg || undefined" :alt="row.original.name" size="2xs" :text="row.original.name?.charAt(0)" />
+              <span class="text-sm">{{ row.original.name }}</span>
+            </div>
+          </template>
+          <!-- 重置密码列 -->
+          <template v-if="!hideActions" #resetPassword-cell="{ row }">
+            <UButton
+              icon="i-lucide-key-round"
+              size="xs"
+              color="neutral"
+              variant="ghost"
+              :aria-label="$t('classSelector.resetPassword')"
+              @click="openReset(row.original.id)"
+            />
+          </template>
+          <template #actions-cell="{ row }">
             <UButton
               icon="i-lucide-pencil"
               size="xs"
               color="neutral"
               variant="ghost"
               :aria-label="$t('common.edit')"
-              @click="openEdit(t.id)"
+              @click="openEdit(row.original.id)"
             />
-          </div>
-        </div>
-        <USeparator v-if="students.length" class="mt-3" />
-      </div>
+          </template>
+          <!-- 转发额外列的插槽（动态 slot name，注意不能含空格） -->
+          <template v-for="col in extraColumns" :key="col.id" #[col.id+'-cell']="slotProps">
+            <slot :name="col.id+'-cell'" v-bind="slotProps" />
+          </template>
+        </UTable>
 
-      <!-- 学生表格 -->
-      <UTable
-        v-if="students.length"
-        v-model:sorting="sorting"
-        :data="students"
-        :columns="columns"
-        :ui="{ td: 'py-1.5' }"
-      >
-        <!-- number 列 -->
-        <template v-if="!hideNumber" #number-cell="{ row }">
-          <UInput v-model="numberMap[row.original.id]" size="xs" class="w-16"
-            :placeholder="'-'"
-            @blur="onNumberBlur(row.original.id)"
-            @keydown.enter="$event.target.blur()" />
-        </template>
-        <!-- number 表头：排序按钮 + 一键填充 -->
-        <template v-if="!hideNumber" #number-header="{ column }">
-          <div class="flex items-center gap-1">
-            <component :is="sortableHeader(t('classSelector.colNumber'))({ column })" />
-            <UButton icon="i-lucide-list-ordered" size="xs" color="neutral" variant="ghost"
-              :title="$t('classSelector.autoFillNumber')" @click="autoFillNumbers" />
-          </div>
-        </template>
-        <template #name-cell="{ row }">
-          <div class="flex items-center gap-2">
-            <UAvatar :src="row.original.avatarImg || undefined" :alt="row.original.name" size="2xs" :text="row.original.name?.charAt(0)" />
-            <span class="text-sm">{{ row.original.name }}</span>
-          </div>
-        </template>
-        <!-- 重置密码列 -->
-        <template v-if="!hideActions" #resetPassword-cell="{ row }">
-          <UButton
-            icon="i-lucide-key-round"
-            size="xs"
-            color="neutral"
-            variant="ghost"
-            :aria-label="$t('classSelector.resetPassword')"
-            @click="openReset(row.original.id)"
-          />
-        </template>
-        <template #actions-cell="{ row }">
-          <UButton
-            icon="i-lucide-pencil"
-            size="xs"
-            color="neutral"
-            variant="ghost"
-            :aria-label="$t('common.edit')"
-            @click="openEdit(row.original.id)"
-          />
-        </template>
-        <!-- 转发额外列的插槽（动态 slot name，注意不能含空格） -->
-        <template v-for="col in extraColumns" :key="col.id" #[col.id+'-cell']="slotProps">
-          <slot :name="col.id+'-cell'" v-bind="slotProps" />
-        </template>
-      </UTable>
-
-      <!-- 得分条形图（showChart 时显示） -->
-      <ClientOnly v-if="showChart && students.length">
-        <div class="mt-4 relative">
-          <Chart :option="chartOption" height="320" />
-          <!-- 右侧 HTML 覆盖层：头像 + 名字 -->
-          <div class="absolute top-0 right-0 h-full flex flex-col justify-around py-[10px]" style="width: 120px;">
-            <div v-for="item in chartData" :key="item.id"
-              class="flex items-center gap-1.5 h-6 transition-all duration-700 ease-in-out">
-              <UAvatar :src="item.avatarImg || undefined" :alt="item.name" size="2xs"
-                :text="item.name?.charAt(0)" class="shrink-0" />
-              <span class="text-xs truncate" :class="chartData.indexOf(item) < 3 ? 'font-bold' : ''">
-                {{ item.name }}
-              </span>
+        <!-- 得分条形图（showChart 时显示） -->
+        <ClientOnly v-if="showChart && students.length">
+          <div class="mt-4 relative">
+            <Chart :option="chartOption" height="320" />
+            <!-- 右侧 HTML 覆盖层：头像 + 名字 -->
+            <div class="absolute top-0 right-0 h-full flex flex-col justify-around py-[10px]" style="width: 120px;">
+              <div v-for="item in chartData" :key="item.id"
+                class="flex items-center gap-1.5 h-6 transition-all duration-700 ease-in-out">
+                <UAvatar :src="item.avatarImg || undefined" :alt="item.name" size="2xs"
+                  :text="item.name?.charAt(0)" class="shrink-0" />
+                <span class="text-xs truncate" :class="chartData.indexOf(item) < 3 ? 'font-bold' : ''">
+                  {{ item.name }}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      </ClientOnly>
+        </ClientOnly>
+      </div>
+
+      <!-- ============ 小组 Tab ============ -->
+      <div v-if="showGroup && activeTab === 'groups'">
+        <UTable
+          v-if="groupTableRows.length"
+          v-model:sorting="groupSorting"
+          :data="groupTableRows"
+          :columns="groupColumns"
+          :ui="{ td: 'py-1.5' }"
+        >
+          <template #groupName-cell="{ row }">
+            <div class="flex items-center gap-2">
+              <UIcon name="i-lucide-users" class="size-4 text-primary" />
+              <span class="text-sm font-medium">{{ row.original.groupName }}</span>
+            </div>
+          </template>
+          <template #leader-cell="{ row }">
+            <div v-if="row.original.leader" class="flex items-center gap-2">
+              <UAvatar :src="row.original.leader.avatarImg || undefined" :alt="row.original.leader.name"
+                size="2xs" :text="row.original.leader.name?.charAt(0)" />
+              <span class="text-sm">{{ row.original.leader.name }}</span>
+              <UBadge color="primary" variant="subtle" size="xs">{{ $t('coursePanel.leader') }}</UBadge>
+            </div>
+          </template>
+          <template #memberCount-cell="{ row }">
+            <span class="text-sm">{{ row.original.memberCount }}</span>
+          </template>
+          <template #avgScore-cell="{ row }">
+            <span class="text-sm font-mono font-semibold text-highlighted">{{ row.original.avgScore.toFixed(1) }}</span>
+          </template>
+        </UTable>
+
+        <!-- 小组得分柱状图 -->
+        <ClientOnly v-if="showChart && groupTableRows.length">
+          <div class="mt-4">
+            <Chart :option="groupChartOption" height="320" />
+          </div>
+        </ClientOnly>
+      </div>
     </template>
 
     <!-- 用户编辑弹窗 -->
@@ -149,6 +194,7 @@ const props = defineProps<{
   defaultSort?: { id: string, desc: boolean }[]
   showChart?: boolean
   showOnline?: boolean
+  showGroup?: boolean
 }>()
 
 const { t } = useI18n()
@@ -249,6 +295,163 @@ const chartOption = computed(() => {
   }
 })
 
+// ====================== 小组模式 ======================
+const activeTab = ref('students')
+const groupRows = ref<any[]>([])
+const groupSorting = ref([{ id: 'avgScore', desc: true }])
+
+// 当前课程 ID（提前定义，供下方 watch immediate 使用）
+const currentCourseId = computed(() => props.courseId || editableCourseId.value)
+
+const tabItems = computed(() => [
+  { label: t('classSelector.tabStudents'), value: 'students', icon: 'i-lucide-user' },
+  { label: t('classSelector.tabGroups'), value: 'groups', icon: 'i-lucide-users' },
+])
+
+// 规范化 group 名称（去掉 c_ 前缀，c_ 表示组长）
+function normalizeGroupName(group: string): string {
+  if (!group) return ''
+  return group.startsWith('c_') ? group.slice(2) : group
+}
+
+// 拉取小组数据
+async function fetchGroupData() {
+  if (!currentCourseId.value || !props.classId) return
+  try {
+    const data = await cRequest(`/api/lms/courses/groups?courseId=${currentCourseId.value}&classId=${props.classId}`)
+    buildGroupRows(data || [])
+  } catch {
+    groupRows.value = []
+  }
+}
+
+// 将 API 返回的分组数据聚合为小组行
+function buildGroupRows(rawData: any[]) {
+  const studentMap = new Map(students.value.map(s => [s.id, s]))
+  const groupMap = new Map<string, { members: any[]; leader: any | null }>()
+
+  for (const r of rawData) {
+    const rawGroup = r.group || ''
+    const name = normalizeGroupName(rawGroup)
+    if (!name) continue // 未分组学生不计入小组
+
+    if (!groupMap.has(name)) {
+      groupMap.set(name, { members: [], leader: null })
+    }
+    const g = groupMap.get(name)!
+    const stu = studentMap.get(r.userId)
+    const member = {
+      userId: r.userId,
+      name: stu?.name || `#${r.userId}`,
+      avatarImg: stu?.avatarImg || '',
+      score: Number(r.score) || 0,
+    }
+    g.members.push(member)
+    // 组长（group 带 c_ 前缀）
+    if (rawGroup.startsWith('c_')) {
+      g.leader = member
+    }
+  }
+
+  groupRows.value = Array.from(groupMap.entries()).map(([groupName, g]) => {
+    const scores = g.members.map(m => m.score)
+    const totalScore = scores.reduce((a, b) => a + b, 0)
+    return {
+      groupName,
+      leader: g.leader,
+      memberCount: g.members.length,
+      members: g.members,
+      totalScore,
+      avgScore: g.members.length > 0 ? totalScore / g.members.length : 0,
+    }
+  })
+}
+
+// 小组表格列
+const groupColumns = computed<TableColumn<any>[]>(() => [
+  { accessorKey: 'groupName', header: sortableHeader(t('classSelector.colGroupName')), sortingFn: (a: any, b: any) => String(a.original?.groupName).localeCompare(String(b.original?.groupName)) },
+  { id: 'leader', header: t('classSelector.colLeader') },
+  { accessorKey: 'memberCount', header: sortableHeader(t('classSelector.colMemberCount')), sortingFn: (a: any, b: any) => (a.original?.memberCount || 0) - (b.original?.memberCount || 0) },
+  { accessorKey: 'avgScore', header: sortableHeader(t('classSelector.colAvgScore')), sortingFn: (a: any, b: any) => (a.original?.avgScore || 0) - (b.original?.avgScore || 0) },
+])
+
+// 小组表格数据（按 groupSorting 排序）
+const groupTableRows = computed(() => {
+  const list = [...groupRows.value]
+  for (const sort of groupSorting.value) {
+    const key = sort.id
+    const desc = sort.desc
+    list.sort((a: any, b: any) => {
+      const va = a[key] ?? 0
+      const vb = b[key] ?? 0
+      if (typeof va === 'number' && typeof vb === 'number') {
+        return desc ? vb - va : va - vb
+      }
+      return desc ? String(vb).localeCompare(String(va)) : String(va).localeCompare(String(vb))
+    })
+  }
+  return list
+})
+
+// 小组柱状图配置（竖向柱状图）
+const groupChartOption = computed(() => {
+  const data = groupTableRows.value
+  if (!data.length) return {}
+  const maxScore = Math.max(...data.map(d => d.avgScore), 1)
+  const colors = ['#f59e0b', '#fbbf24', '#d1d5db', '#60a5fa', '#60a5fa', '#60a5fa', '#60a5fa', '#60a5fa']
+  return {
+    grid: { left: 20, right: 20, top: 20, bottom: 50 },
+    xAxis: {
+      type: 'category',
+      data: data.map(d => d.groupName),
+      axisLabel: { fontSize: 11, color: '#6b7280', rotate: data.length > 6 ? 30 : 0, interval: 0 },
+      axisTick: { show: false },
+      axisLine: { lineStyle: { color: '#e5e7eb' } },
+    },
+    yAxis: {
+      type: 'value',
+      max: Math.ceil(maxScore * 1.2),
+      splitLine: { show: true, lineStyle: { type: 'dashed', color: '#e5e7eb' } },
+      axisLabel: { fontSize: 10, color: '#9ca3af' },
+    },
+    series: [{
+      type: 'bar',
+      data: data.map((d, i) => ({
+        value: Number(d.avgScore.toFixed(1)),
+        itemStyle: {
+          color: colors[i] || '#60a5fa',
+          borderRadius: [4, 4, 0, 0],
+        },
+      })),
+      barWidth: '50%',
+      label: {
+        show: true,
+        position: 'top',
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: '#374151',
+        formatter: '{c}',
+      },
+      animationDuration: 800,
+      animationDurationUpdate: 600,
+      animationEasingUpdate: 'cubicInOut',
+    }],
+    animation: true,
+    animationDuration: 800,
+    animationDurationUpdate: 600,
+    animationEasingUpdate: 'cubicInOut',
+  }
+})
+
+// classId/courseId 变化时拉取小组数据
+watch([() => props.classId, currentCourseId, students], () => {
+  if (props.showGroup && props.classId && currentCourseId.value) {
+    fetchGroupData()
+  }
+}, { immediate: true })
+
+// 当前课程 ID（已在上方定义）
+
 // 编辑弹窗
 const editModal = ref<{ show: () => void } | null>(null)
 const editingUserId = ref<number | null>(null)
@@ -275,9 +478,6 @@ function sortableHeader(label: string) {
     })
   }
 }
-
-// 当前课程 ID
-const currentCourseId = computed(() => props.courseId || editableCourseId.value)
 
 // 学生编号 map: userId -> number，直接从用户数据读取（API 已附带）
 const numberMap = reactive<Record<number, string>>({})

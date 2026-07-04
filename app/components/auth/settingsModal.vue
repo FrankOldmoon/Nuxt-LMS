@@ -87,6 +87,9 @@
           <!-- LMS 学习行为参数 -->
           <LmsConfigEditor ref="lmsConfigRef" v-model="lmsConfig" />
 
+          <!-- 奖章管理（仅管理员） -->
+          <LmsMedalEditor v-if="hasRole('admin')" />
+
           <!-- 保存按钮 -->
           <div class="flex justify-end gap-2 pt-4">
             <UButton
@@ -112,6 +115,7 @@
 const isOpen = defineModel<boolean>('open', { default: false })
 const toast = useToast()
 const { t } = useI18n()
+const { hasRole } = useAuth()
 
 // 获取网站配置（用于刷新）
 const { refreshConfig } = useLmsConfig()

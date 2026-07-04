@@ -34,6 +34,10 @@ export default eventHandler(async (event) => {
     }
 
     const result = await db.insert(schema.comments).values(insertData).returning()
+
+    // 检查并授予奖章
+    await checkAndAwardMedals(user.id, course_id)
+
     return cResp(result[0])
   } catch (error: any) {
     console.error('新增评论失败:', error)

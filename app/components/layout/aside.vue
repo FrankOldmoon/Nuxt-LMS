@@ -2,19 +2,19 @@
   <div>
     <!-- 工具栏按钮行 -->
     <div class="flex items-center gap-1 mb-3 flex-wrap">
-      <UTooltip :text="$t('coursePanel.progress')">
+      <UTooltip v-if="courseBtnsConfig.showProgress" :text="$t('coursePanel.progress')">
         <UButton icon="i-lucide-trending-up" color="primary" variant="soft" size="xs" @click="progressOpen = true" />
       </UTooltip>
-      <UTooltip :text="$t('coursePanel.leaderboard')">
+      <UTooltip v-if="courseBtnsConfig.showLeaderboard" :text="$t('coursePanel.leaderboard')">
         <UButton icon="i-lucide-trophy" color="info" variant="soft" size="xs" @click="leaderboardOpen = true" />
       </UTooltip>
-      <UTooltip :text="$t('coursePanel.groups')">
+      <UTooltip v-if="courseBtnsConfig.showGroups" :text="$t('coursePanel.groups')">
         <UButton icon="i-lucide-users" color="warning" variant="soft" size="xs" @click="groupsOpen = true" />
       </UTooltip>
-      <UTooltip :text="$t('coursePanel.grades')">
+      <UTooltip v-if="courseBtnsConfig.showGrades" :text="$t('coursePanel.grades')">
         <UButton icon="i-lucide-graduation-cap" color="error" variant="soft" size="xs" @click="gradesOpen = true" />
       </UTooltip>
-      <UTooltip :text="$t('coursePanel.announcements')">
+      <UTooltip v-if="courseBtnsConfig.showAnnouncements" :text="$t('coursePanel.announcements')">
         <UButton icon="i-lucide-bell" color="success" variant="soft" size="xs" @click="announcementsOpen = true" />
       </UTooltip>
     </div>
@@ -37,8 +37,6 @@
       </div>
     </div>
 
-    
-
     <UNavigationMenu :items="navItems" orientation="vertical" :highlight="true" color="primary" class="w-full" />
 
     <ClassModal v-model:open="classModalOpen" />
@@ -58,7 +56,7 @@
 
 const { hasRole, isCourseEditor, user } = useAuth()
 const { navigation, courseId, refresh, accessibleChapterIds, passedChapterIds } = useSidebarNav()
-const { courseNavVersion } = useLayoutState()
+const { courseNavVersion, courseBtnsConfig } = useLayoutState()
 
 // 章节完成状态变化时刷新课程数据，让侧边栏打钩实时更新
 // 必须先清除 Nuxt payload 缓存，否则 getCachedData 会返回旧数据导致 refresh 无效

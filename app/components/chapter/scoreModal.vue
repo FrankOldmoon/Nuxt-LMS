@@ -22,7 +22,7 @@
           <ClassUsersTable :rows="(tableRows as any)" :class-id="props.classId" :course-id="props.courseId" :loading="loading"
             :hide-actions="true" :hide-teachers="true" :hide-number="true"
             :extra-columns="extraColumns" :default-sort="[{ id: 'score', desc: true }]"
-            show-chart>
+            show-chart show-group>
             <!-- 章节得分列 -->
             <template #score-cell="{ row }">
               <span class="font-mono font-bold text-sm">{{ (row.original.score ?? 0).toFixed(1) }}</span>

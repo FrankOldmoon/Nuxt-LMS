@@ -142,5 +142,8 @@ export default eventHandler(async (event) => {
     eq(schema.quizzes.cid, quizCid)
   ))
 
+  // 检查并授予奖章
+  await checkAndAwardMedals(user.id, courseId)
+
   return cResp({ gainedExp, score: totalScore, correctCount, isPassed, submitCount: newSubmitCount })
 })

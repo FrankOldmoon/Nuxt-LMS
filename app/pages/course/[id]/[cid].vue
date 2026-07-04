@@ -76,7 +76,7 @@
 const route = useRoute()
 const chapterId = computed(() => route.params.cid as string)
 const courseId = computed(() => route.params.id as string)
-const { setToc, setEditableContent, setEditableMeta, contentVersion, showDanmaku } = useLayoutState()
+const { setToc, setEditableContent, setEditableMeta, contentVersion, showDanmaku, chapterBtnsConfig, courseBtnsConfig } = useLayoutState()
 const { navigation } = useSidebarNav()
 
 const { data: resp, pending, refresh, error } = cRequest.use<import('#shared/types/lms').LmsChapterPageData | null>(
@@ -107,6 +107,9 @@ watch(resp, (d) => {
   setEditableContent(d?.chapter?.content ?? null)
   if (d?.chapter?.id) setEditableMeta('chapters', d.chapter.id, d.course.id)
   showDanmaku.value = d.course.showDanmaku ?? true
+  // 设置章节/课程按钮开关配置
+  chapterBtnsConfig.value = { showPlay: true, showScore: true, showSelect: true, showTimer: true, showInvite: true, showDanmaku: true, showVote: true, showQuickAnswer: true, ...(d.course.chapterBtns || {}) }
+  courseBtnsConfig.value = { showProgress: true, showLeaderboard: true, showGroups: true, showGrades: true, showAnnouncements: true, ...(d.course.courseBtns || {}) }
   // 切换章节时用服务端数据初始化任务状态（同一章节内容保存刷新不重置）
   if (d?.chapter?.id && d.chapter.id !== initedTaskChapterId) {
     initedTaskChapterId = d.chapter.id

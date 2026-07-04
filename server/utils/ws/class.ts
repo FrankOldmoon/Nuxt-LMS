@@ -124,6 +124,25 @@ export function handleClassMessage(peer: any, data: any): boolean {
       }))
       return true
     }
+
+    // 班级在线聊天室：广播到同班级房间（不持久化）
+    case 'chatroom': {
+      const userId = Number(data.userId)
+      const from = String(data.from || 'anonymous')
+      const avatarImg = data.avatarImg || null
+      const text = String(data.text || '').slice(0, 1000)
+      if (!text) return true
+      broadcastToClass(cid, JSON.stringify({
+        type: 'chatroom',
+        classId: cid,
+        userId,
+        from,
+        avatarImg,
+        text,
+        ts: Date.now(),
+      }))
+      return true
+    }
   }
 
   return false

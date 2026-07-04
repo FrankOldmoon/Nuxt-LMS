@@ -1,46 +1,46 @@
 <template>
   <div class="flex items-center gap-1 mb-3 flex-wrap">
     <!-- 播放：全屏播放模式 -->
-    <UTooltip :text="playFullscreen ? $t('chapter.exitPlay') : $t('chapter.play')">
+    <UTooltip v-if="chapterBtnsConfig.showPlay" :text="playFullscreen ? $t('chapter.exitPlay') : $t('chapter.play')">
       <UButton :icon="playFullscreen ? 'i-lucide-minimize' : 'i-lucide-play'"
         :color="playFullscreen ? 'error' : 'primary'" variant="soft" size="xs" @click="togglePlay" />
     </UTooltip>
 
     <!-- 得分：章节得分（教师/管理员可见） -->
-    <UTooltip v-if="canEdit" :text="$t('chapter.score')">
+    <UTooltip v-if="canEdit && chapterBtnsConfig.showScore" :text="$t('chapter.score')">
       <UButton icon="i-lucide-award" color="success" variant="soft" size="xs" @click="() => { scoreOpen = true }" />
     </UTooltip>
 
     <!-- 选择：随机/多选学生加减分（教师/管理员可见） -->
-    <UTooltip v-if="canEdit" :text="$t('chapter.select')">
+    <UTooltip v-if="canEdit && chapterBtnsConfig.showSelect" :text="$t('chapter.select')">
       <UButton icon="i-lucide-user-check" color="warning" variant="soft" size="xs"
         @click="() => { selectOpen = true }" />
     </UTooltip>
 
     <!-- 计时器 -->
-    <UTooltip :text="$t('chapter.timer')">
+    <UTooltip v-if="chapterBtnsConfig.showTimer" :text="$t('chapter.timer')">
       <UButton icon="i-lucide-timer" color="info" variant="soft" size="xs" @click="() => { timerOpen = true }" />
     </UTooltip>
 
     <!-- 邀请跳转（教师/管理员可见） -->
-    <UTooltip v-if="canEdit" :text="$t('chapter.invite')">
+    <UTooltip v-if="canEdit && chapterBtnsConfig.showInvite" :text="$t('chapter.invite')">
       <UButton icon="i-lucide-megaphone" color="error" variant="soft" size="xs" :loading="inviting"
         @click="sendInvite" />
     </UTooltip>
 
     <!-- 弹幕 -->
-    <UTooltip v-if="canEdit || showDanmaku" :text="$t('chapter.danmaku')">
+    <UTooltip v-if="(canEdit || showDanmaku) && chapterBtnsConfig.showDanmaku" :text="$t('chapter.danmaku')">
       <UButton icon="i-lucide-message-square-text" color="success" variant="soft" size="xs"
         @click="() => { danmakuOpen = true }" />
     </UTooltip>
 
     <!-- 投票（教师/管理员可见） -->
-    <UTooltip v-if="canEdit" :text="$t('chapter.vote')">
+    <UTooltip v-if="canEdit && chapterBtnsConfig.showVote" :text="$t('chapter.vote')">
       <UButton icon="i-lucide-vote" color="primary" variant="soft" size="xs" @click="() => { voteOpen = true }" />
     </UTooltip>
 
     <!-- 抢答（教师/管理员可见） -->
-    <UTooltip v-if="canEdit" :text="$t('chapter.quickAnswer')">
+    <UTooltip v-if="canEdit && chapterBtnsConfig.showQuickAnswer" :text="$t('chapter.quickAnswer')">
       <UButton icon="i-lucide-hand" color="warning" variant="soft" size="xs" @click="() => { quickAnswerOpen = true }" />
     </UTooltip>
   </div>
@@ -59,7 +59,7 @@
 const route = useRoute()
 const { hasRole, isCourseTeacher, user } = useAuth()
 const { playFullscreen, togglePlay } = useChapterBtns()
-const { showDanmaku } = useLayoutState()
+const { showDanmaku, chapterBtnsConfig } = useLayoutState()
 const { sendInvite: wsSendInvite } = useWebSocket()
 const toast = useToast()
 const { t } = useI18n()

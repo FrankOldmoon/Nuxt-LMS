@@ -8,6 +8,7 @@
 </template>
 
 <script setup>
+import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 
 const props = defineProps({
     modelValue: {
@@ -16,11 +17,11 @@ const props = defineProps({
     },
     language: {
         type: String,
-        default: 'html' // 支持 javascript, typescript, html, css, json, python, java 等
+        default: 'html'
     },
     theme: {
         type: String,
-        default: 'vs-dark' // vs 浅色, vs-dark 深色, hc-black 高对比
+        default: 'vs-dark'
     },
     readOnly: {
         type: Boolean,
@@ -29,6 +30,21 @@ const props = defineProps({
     fontSize: {
         type: Number,
         default: 14
+    },
+    // 新增：是否自动格式化
+    autoFormat: {
+        type: Boolean,
+        default: true
+    },
+    // 格式化配置（缩进等）
+    formatOptions: {
+        type: Object,
+        default: () => ({
+            tabSize: 2,
+            insertSpaces: true,
+            trimTrailingWhitespace: true,
+            insertFinalNewline: true
+        })
     }
 })
 
@@ -38,10 +54,8 @@ const editorContainer = ref(null)
 let editor = null
 let monaco = null
 
-// CDN 配置
 const CDN_BASE = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs'
 
-// 动态加载 CDN 脚本
 function loadScript(url) {
     return new Promise((resolve, reject) => {
         if (document.querySelector(`script[src="${url}"]`)) {
@@ -56,14 +70,12 @@ function loadScript(url) {
     })
 }
 
-// 加载 Monaco 核心
 async function loadMonaco() {
     if (window.monaco) {
         monaco = window.monaco
         return window.monaco
     }
 
-    // 先加载 loader
     await loadScript(`${CDN_BASE}/loader.js`)
 
     return new Promise((resolve) => {
@@ -75,7 +87,26 @@ async function loadMonaco() {
     })
 }
 
-// 初始化编辑器
+// 封装格式化函数
+async function formatEditorCode() {
+    if (!editor || !monaco || !props.autoFormat) return
+    const model = editor.getModel()
+    if (!model) return
+
+    // 获取格式化操作
+    const edits = await monaco.languages.formatDocument(model, props.formatOptions)
+    if (edits && edits.length) {
+        const oldValue = editor.getValue()
+        // 应用格式化
+        model.applyEdits(edits)
+        const newValue = editor.getValue()
+        // 格式化后同步回父组件
+        if (newValue !== oldValue) {
+            emit('update:modelValue', newValue)
+        }
+    }
+}
+
 async function initEditor() {
     await loadMonaco()
 
@@ -89,33 +120,40 @@ async function initEditor() {
         minimap: { enabled: true },
         scrollBeyondLastLine: false,
         wordWrap: 'on',
-        tabSize: 2
+        tabSize: props.formatOptions.tabSize
     })
 
-    // 内容变化事件
     editor.onDidChangeModelContent(() => {
         const value = editor.getValue()
         emit('update:modelValue', value)
     })
 
     emit('editorReady', editor)
+
+    // 初始化完成后延迟格式化（等待语言加载完成）
+    nextTick(() => formatEditorCode())
 }
 
-// 监听内容变化（外部更新）
-watch(() => props.modelValue, (newVal) => {
-    if (editor && newVal !== editor.getValue()) {
-        editor.setValue(newVal)
-    }
+// 外部传入值变化，更新并格式化
+watch(() => props.modelValue, async (newVal, oldVal) => {
+    if (!editor) return
+    const current = editor.getValue()
+    if (newVal === current) return
+
+    editor.setValue(newVal)
+    // 赋值后自动格式化
+    await nextTick()
+    formatEditorCode()
 })
 
-// 监听语言切换
 watch(() => props.language, (newLang) => {
     if (editor) {
         monaco.editor.setModelLanguage(editor.getModel(), newLang)
+        // 切换语言后重新格式化
+        nextTick(() => formatEditorCode())
     }
 })
 
-// 监听主题切换
 watch(() => props.theme, (newTheme) => {
     if (monaco) {
         monaco.editor.setTheme(newTheme)
@@ -133,10 +171,11 @@ onBeforeUnmount(() => {
     }
 })
 
-// 暴露实例方法
 defineExpose({
     getEditor: () => editor,
-    getMonaco: () => monaco
+    getMonaco: () => monaco,
+    // 暴露手动格式化方法，父组件可调用
+    formatCode: formatEditorCode
 })
 </script>
 

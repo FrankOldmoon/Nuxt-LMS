@@ -234,6 +234,16 @@ export function useLayoutState() {
   const sidebarOverride = useState<boolean | null>('layout-sidebar-override', () => null)
   const tocOverride = useState<boolean | null>('layout-toc-override', () => null)
   const showDanmaku = useState<boolean>('layout-show-danmaku', () => true)
+  // 章节按钮开关配置（由章节页从 course lmsConfig 设置）
+  const chapterBtnsConfig = useState<Record<string, boolean>>('layout-chapter-btns-config', () => ({
+    showPlay: true, showScore: true, showSelect: true, showTimer: true,
+    showInvite: true, showDanmaku: true, showVote: true, showQuickAnswer: true,
+  }))
+  // 课程按钮开关配置（由课程页从 course lmsConfig 设置）
+  const courseBtnsConfig = useState<Record<string, boolean>>('layout-course-btns-config', () => ({
+    showProgress: true, showLeaderboard: true, showGroups: true,
+    showGrades: true, showAnnouncements: true,
+  }))
   // 课程侧边栏导航版本号：章节完成状态变化时 +1，触发 useSidebarNav 重新拉取
   const courseNavVersion = useState<number>('layout-course-nav-version', () => 0)
 
@@ -279,7 +289,7 @@ export function useLayoutState() {
     tocOverride.value = null
   })
 
-  return { tocLinks, editableContent, editableTable, editableId, editableCourseId, contentVersion, showSidebar, showToc, showDanmaku, courseNavVersion, setToc, setEditableContent, setEditableMeta, notifyContentSaved, notifyCourseNavUpdate, setLayout }
+  return { tocLinks, editableContent, editableTable, editableId, editableCourseId, contentVersion, showSidebar, showToc, showDanmaku, chapterBtnsConfig, courseBtnsConfig, courseNavVersion, setToc, setEditableContent, setEditableMeta, notifyContentSaved, notifyCourseNavUpdate, setLayout }
 }
 
 /**

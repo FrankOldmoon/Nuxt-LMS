@@ -145,7 +145,7 @@
 <script setup lang="ts">
 const route = useRoute()
 const courseId = computed(() => route.params.id as string)
-const { setToc, setEditableContent, setEditableMeta, contentVersion } = useLayoutState()
+const { setToc, setEditableContent, setEditableMeta, contentVersion, courseBtnsConfig, chapterBtnsConfig } = useLayoutState()
 
 const { data: resp, pending, refresh } = cRequest.use<import('#shared/types/lms').LmsCourseDetail | null>(
   () => `/api/lms/courses/show?id=${courseId.value}`,
@@ -225,6 +225,10 @@ watch(resp, (detail) => {
   }
   setEditableContent(content ?? null)
   if (detail?.id) setEditableMeta('courses', detail.id, detail.id)
+  // 从课程 config.lmsConfig 设置按钮开关
+  const lmsCfg = (detail as any)?.config?.lmsConfig || {}
+  courseBtnsConfig.value = { showProgress: true, showLeaderboard: true, showGroups: true, showGrades: true, showAnnouncements: true, ...(lmsCfg.courseBtns || {}) }
+  chapterBtnsConfig.value = { showPlay: true, showScore: true, showSelect: true, showTimer: true, showInvite: true, showDanmaku: true, showVote: true, showQuickAnswer: true, ...(lmsCfg.chapterBtns || {}) }
 }, { immediate: true })
 
 // 监听内容版本号，保存成功后重新获取数据（flush: sync 确保每次变化都触发）

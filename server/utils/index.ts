@@ -120,6 +120,8 @@ export function normalizeChapterPageData(ch: any, course: any, userChapter?: any
       icon: cfg.icon || 'i-lucide-book-open',
       color: cfg.color || 'primary',
       showDanmaku: courseLms?.course?.showDanmaku ?? true,
+      chapterBtns: courseLms?.chapterBtns ?? {},
+      courseBtns: courseLms?.courseBtns ?? {},
       chapters: (course.chapters || []).map(normalizeChapterSummary),
     },
   }

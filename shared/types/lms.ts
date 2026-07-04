@@ -73,6 +73,10 @@ export interface LmsChapterPageData {
     icon: string
     color: string
     showDanmaku: boolean
+    /** 章节按钮开关配置 */
+    chapterBtns?: Record<string, boolean>
+    /** 课程按钮开关配置 */
+    courseBtns?: Record<string, boolean>
     chapters: LmsChapterSummary[]
   }
 }

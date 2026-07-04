@@ -15,6 +15,14 @@
         <div v-if="user.rollNumber" class="text-xs text-muted truncate font-mono mt-0.5">
           {{ user.rollNumber }}
         </div>
+        <!-- 已获得的奖章 -->
+        <div v-if="myMedals.length" class="flex flex-wrap gap-1 mt-1">
+          <UTooltip v-for="medal in myMedals" :key="medal.medalId"
+            :text="`${medal.name}：${medal.content?.description || ''}`">
+            <UIcon :name="medal.content?.icon || 'i-lucide-award'"
+              :class="medalIconColor(medal.content?.color)" class="size-4" />
+          </UTooltip>
+        </div>
       </div>
     </div>
 
@@ -64,6 +72,7 @@
 <script setup lang="ts">
 const { user } = useAuth()
 const route = useRoute()
+const { myMedals, fetchMyMedals, checkMedals } = useMedals()
 
 // 路由中的课程/章节 ID
 const courseId = computed(() => Number(route.params.id) || 0)
@@ -111,9 +120,31 @@ async function fetchStats() {
 // 路由变化时（进入/切换课程/章节）重新拉取
 watch([courseId, chapterId], () => { fetchStats() }, { immediate: true })
 
-// 监听全局 trigger：答题 / 交作业 / 评论等加分操作后自动刷新
+// 监听全局 trigger：答题 / 交作业 / 评论等加分操作后自动刷新 + 检查奖章
 const { refreshTrigger } = useUserCard()
-watch(refreshTrigger, () => { fetchStats() })
+watch(refreshTrigger, () => {
+  fetchStats()
+  if (courseId.value) checkMedals(courseId.value)
+})
+
+// 进入课程时拉取已获奖章
+watch(courseId, () => { fetchMyMedals() }, { immediate: true })
+
+// 奖章图标颜色映射
+function medalIconColor(color) {
+  const map = {
+    bronze: 'text-amber-700',
+    silver: 'text-gray-400',
+    gold: 'text-amber-400',
+    diamond: 'text-cyan-400',
+    primary: 'text-primary',
+    success: 'text-success',
+    warning: 'text-warning',
+    error: 'text-error',
+    info: 'text-info',
+  }
+  return map[color] || 'text-primary'
+}
 
 const courseScore = computed(() => stats.value.courseScore)
 const exp = computed(() => stats.value.exp)

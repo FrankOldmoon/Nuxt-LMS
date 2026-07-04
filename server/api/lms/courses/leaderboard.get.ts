@@ -39,13 +39,12 @@ export default eventHandler(async (event) => {
         score: scoreMap.get(userId) ?? 0,
     })).sort((a, b) => b.score - a.score)
 
-    // 取前10名（无成绩者已补0纳入排序，不足10人则全部返回）
-    const top10 = allStudents.slice(0, Math.min(10, allStudents.length))
+    // 返回全部学生（含成绩，补0），前端 ClassUsersTable 展示完整表格
     const myRank = allStudents.findIndex(s => s.userId === user.id)
     const myInfo = myRank >= 0 ? { userId: user.id, score: allStudents[myRank].score } : null
 
     return cResp({
-        top10,
+        top10: allStudents,
         myRank: myRank >= 0 ? myRank + 1 : null,
         myInfo,
     })

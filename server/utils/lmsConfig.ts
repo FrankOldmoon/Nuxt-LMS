@@ -59,6 +59,25 @@ export const DEFAULT_LMS_CONFIG = {
     showProgress: false,         // 显示学习进度
     defaultChapterOpen: true,    // 新章节默认开放
   },
+  // 章节按钮开关（aside 侧边栏顶部 + 章节页按钮行）
+  chapterBtns: {
+    showPlay: true,              // 播放（全屏模式）
+    showScore: true,             // 章节得分
+    showSelect: true,            // 随机/多选学生
+    showTimer: true,             // 计时器
+    showInvite: true,            // 邀请跳转
+    showDanmaku: true,           // 弹幕
+    showVote: true,              // 投票
+    showQuickAnswer: true,       // 抢答
+  },
+  // 课程按钮开关（aside 工具栏）
+  courseBtns: {
+    showProgress: true,          // 学习进度
+    showLeaderboard: true,       // 排行榜
+    showGroups: true,            // 小组
+    showGrades: true,            // 成绩
+    showAnnouncements: true,     // 公告
+  },
   // 网盘存储
   storage: {
     driveSize: 1073741824,     // 个人网盘空间上限（字节），默认 1GB

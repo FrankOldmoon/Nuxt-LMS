@@ -56,6 +56,9 @@ export default eventHandler(async (event) => {
     // 只更新经验值
     await addCourseScore(user.id, courseId, 0, 'homeworkScore', gainedExp)
 
+    // 检查并授予奖章
+    await checkAndAwardMedals(user.id, courseId)
+
     return cResp({ gainedExp })
   } catch (error: any) {
     console.error('提交作业失败:', error)

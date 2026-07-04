@@ -151,6 +151,72 @@
                 </div>
             </div>
         </div>
+
+        <!-- 章节按钮开关 -->
+        <div class="space-y-2">
+            <p class="text-sm font-medium">{{ $t('lmsConfig.chapterBtns') }}</p>
+            <div class="grid grid-cols-2 gap-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('chapter.play') }}</span>
+                    <USwitch v-model="config.chapterBtns.showPlay" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('chapter.score') }}</span>
+                    <USwitch v-model="config.chapterBtns.showScore" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('chapter.select') }}</span>
+                    <USwitch v-model="config.chapterBtns.showSelect" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('chapter.timer') }}</span>
+                    <USwitch v-model="config.chapterBtns.showTimer" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('chapter.invite') }}</span>
+                    <USwitch v-model="config.chapterBtns.showInvite" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('chapter.danmaku') }}</span>
+                    <USwitch v-model="config.chapterBtns.showDanmaku" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('chapter.vote') }}</span>
+                    <USwitch v-model="config.chapterBtns.showVote" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('chapter.quickAnswer') }}</span>
+                    <USwitch v-model="config.chapterBtns.showQuickAnswer" />
+                </div>
+            </div>
+        </div>
+
+        <!-- 课程按钮开关 -->
+        <div class="space-y-2">
+            <p class="text-sm font-medium">{{ $t('lmsConfig.courseBtns') }}</p>
+            <div class="grid grid-cols-2 gap-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('coursePanel.progress') }}</span>
+                    <USwitch v-model="config.courseBtns.showProgress" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('coursePanel.leaderboard') }}</span>
+                    <USwitch v-model="config.courseBtns.showLeaderboard" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('coursePanel.groups') }}</span>
+                    <USwitch v-model="config.courseBtns.showGroups" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('coursePanel.grades') }}</span>
+                    <USwitch v-model="config.courseBtns.showGrades" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('coursePanel.announcements') }}</span>
+                    <USwitch v-model="config.courseBtns.showAnnouncements" />
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -172,6 +238,8 @@ const defaultConfig = {
     quiz: { submitExp: 3, passScore: 60, passBonusExp: 10 },
     general: { dailyExpCap: 100, levelStep: 100 },
     course: { showDanmaku: true, showAnnouncement: true, showComments: true, showProgress: false, defaultChapterOpen: true },
+    chapterBtns: { showPlay: true, showScore: true, showSelect: true, showTimer: true, showInvite: true, showDanmaku: true, showVote: true, showQuickAnswer: true },
+    courseBtns: { showProgress: true, showLeaderboard: true, showGroups: true, showGrades: true, showAnnouncements: true },
 }
 
 const config = reactive(JSON.parse(JSON.stringify(defaultConfig)))

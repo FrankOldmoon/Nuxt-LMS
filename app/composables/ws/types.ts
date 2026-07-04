@@ -26,3 +26,6 @@ export type RaceOnlineUpdateCallback = (data: { pin: string; userId: number; fro
 
 // 私信回调
 export type MessageCallback = (data: { message: any }) => void
+
+// 班级聊天室回调
+export type ChatroomCallback = (data: { classId: number; userId: number; from: string; avatarImg: string | null; text: string; ts: number }) => void

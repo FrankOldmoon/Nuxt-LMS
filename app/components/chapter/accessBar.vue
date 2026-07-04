@@ -10,7 +10,7 @@
     <USeparator orientation="vertical" class="h-6" />
 
     <!-- 班级多选 -->
-    <div class="flex items-center gap-2 flex-1 min-w-[200px]">
+    <div class="flex items-center gap-2 min-w-[200px] max-w-[480px]">
       <UIcon name="i-lucide-school" class="size-4 text-muted" />
       <span class="text-sm font-medium whitespace-nowrap">{{ $t('chapter.openClasses') }}</span>
       <USelect
@@ -18,7 +18,7 @@
         :items="classOptions"
         multiple
         size="sm"
-        class="flex-1"
+        class="min-w-[200px] max-w-[400px]"
         :disabled="isOpen"
         @update:model-value="updateClassOpen"
       />

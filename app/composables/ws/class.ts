@@ -7,13 +7,13 @@ import type {
   InviteCallback, DanmakuCallback,
   VoteStartCallback, VoteUpdateCallback, VoteEndCallback,
   QuickAnswerStartCallback, QuickAnswerResultCallback, QuickAnswerEndCallback,
-  OnlineUpdateCallback, MessageCallback,
+  OnlineUpdateCallback, MessageCallback, ChatroomCallback,
 } from './types'
 import {
   inviteCallbacks, danmakuCallbacks,
   voteStartCallbacks, voteUpdateCallbacks, voteEndCallbacks,
   quickAnswerStartCallbacks, quickAnswerResultCallbacks, quickAnswerEndCallbacks,
-  onlineUpdateCallbacks, messageCallbacks,
+  onlineUpdateCallbacks, messageCallbacks, chatroomCallbacks,
 } from './callbacks'
 import type { useWsConnection } from './connection'
 
@@ -89,6 +89,14 @@ export function useWsClass(conn: ReturnType<typeof useWsConnection>) {
     messageCallbacks.push(callback)
   }
 
+  // ====================== 班级聊天室 ======================
+  function sendChatroom(classId: number, userId: number, from: string, avatarImg: string | null, text: string) {
+    send({ type: 'chatroom', classId, userId, from, avatarImg, text })
+  }
+  function onChatroom(callback: ChatroomCallback) {
+    chatroomCallbacks.push(callback)
+  }
+
   return {
     sendInvite, onInvite,
     sendDanmaku, onDanmaku,
@@ -96,5 +104,6 @@ export function useWsClass(conn: ReturnType<typeof useWsConnection>) {
     sendQuickAnswerStart, onQuickAnswerStart, sendQuickAnswerSubmit, onQuickAnswerResult, sendQuickAnswerEnd, onQuickAnswerEnd,
     sendOnline, onOnlineUpdate,
     onMessage,
+    sendChatroom, onChatroom,
   }
 }

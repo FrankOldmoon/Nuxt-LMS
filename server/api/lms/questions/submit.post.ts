@@ -88,6 +88,9 @@ export default eventHandler(async (event) => {
     // 更新 userCourses：questionScore + score + exp
     await addCourseScore(user.id, courseId, scoreDelta, 'questionScore', gainedExp)
 
+    // 检查并授予奖章
+    await checkAndAwardMedals(user.id, courseId)
+
     return cResp({ gainedExp, score, scoreDelta })
   } catch (error: any) {
     console.error('提交题目失败:', error)
