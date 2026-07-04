@@ -32,7 +32,34 @@
     "previous": "Previous Chapter",
     "next": "Next Chapter",
     "notFound": "Chapter not found",
-    "backToCourse": "Back to Course"
+    "backToCourse": "Back to Course",
+    "play": "Play",
+    "exitPlay": "Exit Play",
+    "score": "Score",
+    "select": "Select",
+    "timer": "Timer",
+    "prevHeading": "Previous Heading",
+    "nextHeading": "Next Heading",
+    "chapterScore": "Chapter Score",
+    "tasks": "Task Status",
+    "selectAll": "Select All",
+    "selectNone": "Deselect All",
+    "randomPick": "Random Pick",
+    "randomCount": "Random Count",
+    "selected": "{n} selected",
+    "addScore": "Add Score",
+    "subScore": "Subtract Score",
+    "scoreConfirm": "Confirm {delta} pts to {n} people?",
+    "scoreUpdated": "Score updated",
+    "scoreUpdateFailed": "Score update failed",
+    "setTime": "Set Time",
+    "minutes": "Minutes",
+    "seconds": "Seconds",
+    "start": "Start",
+    "pause": "Pause",
+    "reset": "Reset",
+    "resume": "Resume",
+    "noClass": "Please select a class first"
   },
   "layout": {
     "menu": "Menu",
@@ -69,7 +96,12 @@
     "addChild": "Add child",
     "addSibling": "Add sibling",
     "deleteWithChildren": "Delete (with children)",
-    "addRoot": "Add top-level"
+    "addRoot": "Add top-level",
+    "batchImport": "Batch Import",
+    "batchImportHint": "One item per line, 2 spaces per indent level:\nLevel 1\n  Level 2\n    Level 3",
+    "batchImportPlaceholder": "Level 1\n  Level 2\n    Level 3",
+    "batchImportConfirm": "Import",
+    "batchImportEmpty": "Please enter content"
   },
   "auth": {
     "login": "Login",
@@ -251,6 +283,10 @@
     "markdown": {
       "title": "Enter Markdown Content",
       "placeholder": "Type Markdown text here...",
+      "insert": "Insert"
+    },
+    "html": {
+      "title": "Insert HTML Content",
       "insert": "Insert"
     },
     "toc": {

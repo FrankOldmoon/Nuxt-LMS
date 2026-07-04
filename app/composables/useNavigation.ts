@@ -247,7 +247,7 @@ export function useLayoutState() {
     contentVersion.value++
   }
 
-  function setLayout(opts: { sidebar?: boolean; toc?: boolean }) {
+  function setLayout(opts: { sidebar?: boolean | null; toc?: boolean | null }) {
     if (opts.sidebar !== undefined) sidebarOverride.value = opts.sidebar
     if (opts.toc !== undefined) tocOverride.value = opts.toc
   }

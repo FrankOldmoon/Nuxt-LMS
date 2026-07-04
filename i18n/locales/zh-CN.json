@@ -32,7 +32,34 @@
     "previous": "上一章",
     "next": "下一章",
     "notFound": "章节不存在",
-    "backToCourse": "返回课程"
+    "backToCourse": "返回课程",
+    "play": "播放",
+    "exitPlay": "退出播放",
+    "score": "得分",
+    "select": "选择",
+    "timer": "计时器",
+    "prevHeading": "上一个标题",
+    "nextHeading": "下一个标题",
+    "chapterScore": "章节得分",
+    "tasks": "任务状态",
+    "selectAll": "全选",
+    "selectNone": "取消全选",
+    "randomPick": "随机选择",
+    "randomCount": "随机人数",
+    "selected": "已选 {n} 人",
+    "addScore": "加分",
+    "subScore": "减分",
+    "scoreConfirm": "确认{delta}分给{n}人？",
+    "scoreUpdated": "分数已更新",
+    "scoreUpdateFailed": "分数更新失败",
+    "setTime": "设置时间",
+    "minutes": "分钟",
+    "seconds": "秒",
+    "start": "开始",
+    "pause": "暂停",
+    "reset": "重置",
+    "resume": "继续",
+    "noClass": "请先选择班级"
   },
   "layout": {
     "menu": "菜单",
@@ -69,7 +96,12 @@
     "addChild": "添加子目录",
     "addSibling": "添加同级目录",
     "deleteWithChildren": "删除（含子项）",
-    "addRoot": "添加一级目录"
+    "addRoot": "添加一级目录",
+    "batchImport": "批量导入",
+    "batchImportHint": "每行一个导航项，每2个空格缩进代表一层：\n一级\n  二级\n    三级",
+    "batchImportPlaceholder": "一级\n  二级\n    三级",
+    "batchImportConfirm": "导入",
+    "batchImportEmpty": "请输入内容"
   },
   "auth": {
     "login": "登录",
@@ -251,6 +283,10 @@
     "markdown": {
       "title": "输入 Markdown 内容",
       "placeholder": "在此输入 Markdown 文本...",
+      "insert": "插入"
+    },
+    "html": {
+      "title": "插入 HTML 内容",
       "insert": "插入"
     },
     "toc": {

@@ -1,9 +1,9 @@
 <template>
-    <div class="cinserts-trigger">
+    <div class="flex items-center h-full px-1">
         <UDropdownMenu :items="allItems" :content="{ align: 'start' }">
-            <button class="cinserts-btn">
-                <UIcon name="i-lucide-plus" class="cinserts-icon" />
-                <span class="cinserts-text">{{ $t('courseData.insert') }}</span>
+            <button class="flex flex-col items-center justify-center gap-0.5 px-2 py-1 border-none rounded bg-transparent cursor-pointer text-[13px] text-inherit transition-colors hover:bg-black/[0.06] dark:hover:bg-white/10">
+                <UIcon name="i-lucide-plus" class="text-base" />
+                <span class="whitespace-nowrap">{{ $t('courseData.insert') }}</span>
             </button>
         </UDropdownMenu>
     </div>
@@ -11,48 +11,12 @@
     <!-- Markdown 弹窗 -->
     <UeditorInsertMarkdown :editor="editor" v-model="markdownOpen" />
 
+    <!-- HTML 弹窗 -->
+    <UeditorInsertHtml :editor="editor" v-model="htmlOpen" />
+
     <!-- 内容选择器 -->
     <UeditorContentPicker v-model="pickerOpen" :type="pickerType" @confirm="onPickerConfirm" />
 </template>
-
-<style scoped>
-.cinserts-trigger {
-    display: flex;
-    align-items: center;
-    padding: 0 4px;
-    height: 100%;
-}
-
-.cinserts-btn {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
-    border: none;
-    border-radius: 4px;
-    background: transparent;
-    cursor: pointer;
-    font-size: 13px;
-    color: inherit;
-    transition: background 0.15s;
-}
-
-.cinserts-btn:hover {
-    background: rgba(0, 0, 0, 0.06);
-}
-
-.dark .cinserts-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.cinserts-icon {
-    font-size: 16px;
-}
-
-.cinserts-text {
-    white-space: nowrap;
-}
-</style>
 
 <script setup>
 const props = defineProps({
@@ -62,12 +26,14 @@ const props = defineProps({
 const { t } = useI18n()
 
 const markdownOpen = ref(false)
+const htmlOpen = ref(false)
 const pickerOpen = ref(false)
 const pickerType = ref('questions')
 
-// 下拉菜单：Markdown | 快速插入空白 | 选择现有
+// 下拉菜单：Markdown | HTML | 快速插入空白 | 选择现有
 const allItems = computed(() => [
     { label: t('ueditor.markdown.title'), icon: 'i-mdi:language-markdown', onSelect: () => { markdownOpen.value = true } },
+    { label: t('ueditor.html.title'), icon: 'i-mdi:language-html5', onSelect: () => { htmlOpen.value = true } },
     { type: 'separator' },
     { label: t('courseData.questionLabel'), icon: 'i-lucide-circle-help', onSelect: () => quickInsert('questions') },
     { label: t('homework.label'), icon: 'i-lucide-book-open', onSelect: () => quickInsert('homeworks') },

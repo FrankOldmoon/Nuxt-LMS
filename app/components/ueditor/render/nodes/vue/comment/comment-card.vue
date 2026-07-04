@@ -1,16 +1,14 @@
 <template>
     <div class="flex items-start gap-3 p-3 rounded-lg"
         :class="isRoot ? 'bg-gray-50 dark:bg-gray-800' : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700'">
-        <!-- 头像 -->
-        <UAvatar :src="comment.avatarImg || undefined" :alt="comment.name || comment.userName || 'U'" size="xs"
-            :text="(comment.name || comment.userName || 'U')?.charAt(0)" />
+        <!-- 用户卡片 -->
+        <div class="w-20 flex-shrink-0">
+            <AuthUserCard :user="userObj" />
+        </div>
 
         <div class="flex-1 min-w-0">
-            <!-- 用户名 + 时间 + 操作按钮 -->
+            <!-- 时间 + 操作按钮 -->
             <div class="flex items-center gap-2 mb-1">
-                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {{ comment.userName || comment.name || $t('comment.anonymous') }}
-                </span>
                 <span v-if="comment.createdAt" class="text-xs text-gray-400">{{ formatTime(comment.createdAt) }}</span>
                 <!-- 操作按钮靠右 -->
                 <div class="flex items-center gap-2 ml-auto">
@@ -62,6 +60,15 @@ const props = defineProps({
 const emit = defineEmits(['toggle-like', 'delete'])
 
 const { hasRole } = useAuth()
+
+// 构造 user 对象供 AuthUserCard 使用
+const userObj = computed(() => ({
+    id: props.comment.userId,
+    name: props.comment.name || props.comment.userName || 'U',
+    preferName: props.comment.userName || props.comment.name || null,
+    avatarImg: props.comment.avatarImg || null,
+    rollNumber: null,
+}))
 
 // 是否可删除：作者本人或教师/管理员
 const canDelete = computed(() => {

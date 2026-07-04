@@ -3,9 +3,9 @@
         <umo-editor v-bind="options" ref="editorRef" @changed="onChanged" @created="onCreated">
         </umo-editor>
 
-        <!-- Cinserts 组件，初始隐藏，editor 创建后移动到工具栏 -->
+        <!-- Cinserts 组件，初始隐藏，editor 创建后移动到工具栏（仅 teacher 以上角色可见） -->
         <div ref="cinsertsWrapper" v-show="false">
-            <Cinserts :editor="editorRef" />
+            <Cinserts v-if="canEdit" :editor="editorRef" />
         </div>
     </client-only>
 </template>
@@ -22,6 +22,16 @@ const props = defineProps({
         default: null,
     },
 })
+
+// 仅 teacher 以上角色可编辑内容（显示 Cinserts）
+const { hasRole, isCourseEditor, isCourseTeacher } = useAuth()
+const route = useRoute()
+const courseId = computed(() => Number(route.params.id) || 0)
+const canEdit = computed(() => {
+    if (hasRole('admin') || hasRole('teacher')) return true
+    return courseId.value ? isCourseEditor(courseId.value) || isCourseTeacher(courseId.value) : false
+})
+
 const editorRef = ref(null)
 const tiptapEditor = ref(null)
 const cinsertsWrapper = ref(null)

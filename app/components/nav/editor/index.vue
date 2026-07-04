@@ -7,8 +7,11 @@
 
     <template #content>
       <div class="p-6 space-y-4 min-w-[520px] max-h-[70vh] overflow-y-auto">
-        <h3 class="text-lg font-medium">{{ mode === 'category' ? $t('navEditor.editCategory') :
-          $t('navEditor.editCourse') }}</h3>
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-medium">{{ mode === 'category' ? $t('navEditor.editCategory') :
+            $t('navEditor.editCourse') }}</h3>
+          <UButton size="sm" variant="outline" icon="i-lucide-file-plus" :label="$t('navEditor.batchImport')" @click="() => { importOpen = true }" />
+        </div>
         <p class="text-sm text-gray-500">{{ $t('navEditor.hint') }}</p>
 
         <NavEditorList v-model="flatItems" :max-depth="maxDepth" :gen-key="genKey" />
@@ -26,6 +29,26 @@
           <UButton color="primary" variant="solid" :loading="saving" @click="save">
             {{ $t('navEditor.saveAndClose') }}
           </UButton>
+        </div>
+      </div>
+    </template>
+  </UModal>
+
+  <!-- 批量导入弹窗 -->
+  <UModal v-model:open="importOpen" :ui="{ content: 'max-w-lg' }">
+    <template #content>
+      <div class="p-6 space-y-4">
+        <h3 class="text-lg font-medium">{{ $t('navEditor.batchImport') }}</h3>
+        <p class="text-sm text-muted whitespace-pre-line">{{ $t('navEditor.batchImportHint') }}</p>
+        <UTextarea
+          v-model="importText"
+          :placeholder="$t('navEditor.batchImportPlaceholder')"
+          :rows="10"
+          class="w-full font-mono text-sm"
+        />
+        <div class="flex justify-end gap-2">
+          <UButton color="neutral" variant="ghost" @click="() => { importOpen = false }">{{ $t('common.cancel') }}</UButton>
+          <UButton color="primary" @click="doBatchImport">{{ $t('navEditor.batchImportConfirm') }}</UButton>
         </div>
       </div>
     </template>
@@ -69,6 +92,10 @@ const open = ref(false)
 const flatItems = ref<FlatNode[]>([])
 const saving = ref(false)
 let keyCounter = 0
+
+// 批量导入
+const importOpen = ref(false)
+const importText = ref('')
 
 /** category 模式最大层级 1（二级目录），course 模式最大层级 2（三级目录） */
 const maxDepth = computed(() => props.mode === 'category' ? 1 : 2)
@@ -138,6 +165,41 @@ function initFromNavigation(nav: NavigationMenuItem[]): FlatNode[] {
 function resetFromProps() {
   keyCounter = 0
   flatItems.value = initFromNavigation(props.navigation)
+}
+
+/** 批量导入：解析缩进文本，每2个空格为一层，追加到 flatItems */
+function doBatchImport() {
+  const text = importText.value.trim()
+  if (!text) return
+
+  const lines = text.split('\n')
+  const newItems: FlatNode[] = []
+
+  for (const line of lines) {
+    if (!line.trim()) continue
+    // 计算前导空格数，每2个空格为一层
+    const indent = line.length - line.trimStart().length
+    const depth = Math.floor(indent / 2)
+    // 限制在最大层级内
+    const clampedDepth = Math.min(depth, maxDepth.value)
+    const label = line.trim()
+
+    newItems.push({
+      _key: 'k-' + (keyCounter++),
+      id: 'new-' + keyCounter,
+      label,
+      to: '',
+      depth: clampedDepth,
+      isNew: true,
+    })
+  }
+
+  if (newItems.length > 0) {
+    flatItems.value.push(...newItems)
+  }
+
+  importText.value = ''
+  importOpen.value = false
 }
 
 watch(open, (val) => {

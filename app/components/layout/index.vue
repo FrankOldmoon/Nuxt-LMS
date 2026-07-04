@@ -1,5 +1,5 @@
 <template>
-  <LayoutHeader />
+  <LayoutHeader v-if="!playFullscreen" />
 
   <UMain>
     <UContainer>
@@ -19,9 +19,10 @@
     </UContainer>
   </UMain>
 
-  <LayoutFooter />
+  <LayoutFooter v-if="!playFullscreen" />
 </template>
 
 <script setup lang="ts">
 const { showSidebar, showToc } = useLayoutState()
+const { playFullscreen } = useChapterBtns()
 </script>

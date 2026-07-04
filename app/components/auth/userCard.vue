@@ -1,0 +1,73 @@
+<template>
+    <div class="aspect-square flex flex-col items-center justify-center gap-0.5 rounded-lg cursor-pointer transition-all border-2 p-1 text-center select-none"
+        :class="[cardSizeClass, selected
+            ? 'bg-primary/15 border-primary ring-2 ring-primary/30 scale-[1.02]'
+            : 'bg-muted/30 border-default hover:bg-muted/50']" @click="$emit('click')">
+        <UAvatar :src="user.avatarImg || undefined" :alt="user.name" :text="user.name?.charAt(0)" :size="avatarSize" />
+        <span class="truncate w-full leading-tight" :class="textClass">
+            {{ user.preferName || user.name }}
+        </span>
+        <span v-if="user.rollNumber" class="text-muted font-mono truncate w-full leading-tight" :class="subTextClass">
+            {{ user.rollNumber }}
+        </span>
+        <slot />
+    </div>
+</template>
+
+<script setup lang="ts">
+const props = withDefaults(defineProps<{
+    user: {
+        id?: number
+        name: string
+        preferName?: string | null
+        avatarImg?: string | null
+        rollNumber?: string | null
+    }
+    selected?: boolean
+    size?: 'sm' | 'md' | 'lg'
+}>(), {
+    selected: false,
+    size: 'sm',
+})
+
+defineEmits<{
+    click: []
+}>()
+
+// 整体框尺寸：固定宽高 + aspect-square 保持正方形
+const cardSizeClass = computed(() => {
+    switch (props.size) {
+        case 'sm': return 'w-20 h-20'
+        case 'md': return 'w-28 h-28'
+        case 'lg': return 'w-36 h-36'
+        default: return 'w-20 h-20'
+    }
+})
+
+const avatarSize = computed(() => {
+    switch (props.size) {
+        case 'sm': return 'lg'
+        case 'md': return 'lg'
+        case 'lg': return 'xl'
+        default: return 'lg'
+    }
+})
+
+const textClass = computed(() => {
+    switch (props.size) {
+        case 'sm': return 'text-[10px]'
+        case 'md': return 'text-xs'
+        case 'lg': return 'text-sm'
+        default: return 'text-[10px]'
+    }
+})
+
+const subTextClass = computed(() => {
+    switch (props.size) {
+        case 'sm': return 'text-[8px]'
+        case 'md': return 'text-[10px]'
+        case 'lg': return 'text-xs'
+        default: return 'text-[8px]'
+    }
+})
+</script>
