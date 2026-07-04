@@ -316,12 +316,15 @@ export const announcements = pgTable(
     id: serial('id').primaryKey(),
     name: varchar('name', { length: 255 }).notNull(),
     content: jsonb('content'),
+    classId: integer('class_id'),
     courseId: integer('course_id').notNull(),
     ...withTimestamps,
   },
   (t) => ({
     courseFk: foreignKey({ columns: [t.courseId], foreignColumns: [courses.id] }).onDelete('cascade'),
+    classFk: foreignKey({ columns: [t.classId], foreignColumns: [classes.id] }).onDelete('set null'),
     courseIdx: index('idx_announcements_course_id').on(t.courseId),
+    classIdx: index('idx_announcements_class_id').on(t.classId),
   })
 );
 
