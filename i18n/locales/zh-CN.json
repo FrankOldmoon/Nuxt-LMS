@@ -250,11 +250,11 @@
     "mailPort": "端口",
     "mailSecure": "SSL",
     "mailUser": "发件邮箱账号",
-    "mailUserPlaceholder": "如 noreply@example.com",
+    "mailUserPlaceholder": "如 noreply\\@example.com",
     "mailPass": "发件邮箱密码",
     "mailPassPlaceholder": "邮箱密码或授权码",
     "mailFrom": "发件人",
-    "mailFromPlaceholder": "如 LMS <noreply@example.com>",
+    "mailFromPlaceholder": "如 LMS <noreply\\@example.com>",
     "siteUrl": "网站地址",
     "siteUrlPlaceholder": "如 https://lms.example.com"
   },

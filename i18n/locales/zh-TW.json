@@ -241,11 +241,11 @@
     "mailPort": "連接埠",
     "mailSecure": "SSL",
     "mailUser": "發件郵箱帳號",
-    "mailUserPlaceholder": "如 noreply@example.com",
+    "mailUserPlaceholder": "如 noreply\\@example.com",
     "mailPass": "發件郵箱密碼",
     "mailPassPlaceholder": "郵箱密碼或授權碼",
     "mailFrom": "發件人",
-    "mailFromPlaceholder": "如 LMS <noreply@example.com>",
+    "mailFromPlaceholder": "如 LMS <noreply\\@example.com>",
     "siteUrl": "網站位址",
     "siteUrlPlaceholder": "如 https://lms.example.com"
   },

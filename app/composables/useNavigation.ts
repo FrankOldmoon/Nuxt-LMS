@@ -229,10 +229,11 @@ export function useLayoutState() {
   const tocOverride = useState<boolean | null>('layout-toc-override', () => null)
   const showDanmaku = useState<boolean>('layout-show-danmaku', () => true)
 
-  // 路由默认：首页隐藏 aside 和 toc，其他页面显示
+  // 路由默认：仅在课程页（/course/:id）和章节页（/course/:id/:cid）显示 aside 和 toc
   // 使用 computed 直接读取路由，确保 SSR 渲染阶段即可得到正确值
-  const showSidebar = computed(() => sidebarOverride.value ?? route.path !== '/')
-  const showToc = computed(() => tocOverride.value ?? route.path !== '/')
+  const isCourseOrChapterPage = computed(() => /^\/course\/[^/]+(\/[^/]+)?$/.test(route.path))
+  const showSidebar = computed(() => sidebarOverride.value ?? isCourseOrChapterPage.value)
+  const showToc = computed(() => tocOverride.value ?? isCourseOrChapterPage.value)
 
   function setToc(links: { id: string; text: string; children?: any[] }[]) {
     tocLinks.value = links
