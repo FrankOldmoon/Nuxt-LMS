@@ -43,28 +43,84 @@
         {{ $t('course.chapterList') }}
       </h2>
 
-      <div class="flex flex-col gap-3">
-        <NuxtLink
-          v-for="(chapter, index) in course.chapters"
-          :key="chapter.id"
-          :to="`/course/${course.id}/${chapter.id}`"
-          class="group block"
-        >
-          <UCard
-            class="transition-all hover:ring-2 hover:ring-primary/30"
-            :ui="{ body: 'flex items-center gap-4' }"
+      <div class="flex flex-col gap-2">
+        <template v-for="(item, index) in chapterTree" :key="item.id">
+          <!-- 一级章节 -->
+          <NuxtLink
+            :to="item.accessible === false ? undefined : item.to"
+            class="group block"
+            :class="item.accessible === false ? 'cursor-not-allowed opacity-60' : ''"
           >
-            <div class="flex items-center justify-center size-10 rounded-lg bg-elevated shrink-0 font-bold text-muted">
-              {{ String(index + 1).padStart(2, '0') }}
+            <UCard
+              class="transition-all"
+              :class="item.accessible === false ? '' : 'hover:ring-2 hover:ring-primary/30'"
+              :ui="{ body: 'flex items-center gap-4' }"
+            >
+              <div class="flex items-center justify-center size-10 rounded-lg bg-elevated shrink-0 font-bold text-muted">
+                {{ String(index + 1).padStart(2, '0') }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-base font-medium text-highlighted flex items-center gap-2" :class="item.children?.length ? 'font-bold' : ''">
+                  <UIcon v-if="item.accessible === false" name="i-lucide-lock" class="size-4 text-muted" />
+                  {{ item.label }}
+                </h3>
+              </div>
+              <UIcon v-if="item.accessible !== false" name="i-lucide-arrow-right" class="size-5 text-muted group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
+            </UCard>
+          </NuxtLink>
+
+          <!-- 二级章节 -->
+          <div v-if="item.children?.length" class="flex flex-col gap-2 pl-6">
+            <NuxtLink
+              v-for="(child, cIdx) in item.children"
+              :key="child.id"
+              :to="child.accessible === false ? undefined : child.to"
+              class="group block"
+              :class="child.accessible === false ? 'cursor-not-allowed opacity-60' : ''"
+            >
+              <UCard
+                class="transition-all"
+                :class="child.accessible === false ? '' : 'hover:ring-2 hover:ring-primary/30'"
+                :ui="{ body: 'flex items-center gap-3' }"
+              >
+                <div class="flex items-center justify-center size-8 rounded-lg bg-elevated shrink-0 text-xs font-bold text-muted">
+                  {{ index + 1 }}.{{ cIdx + 1 }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-sm font-medium text-highlighted flex items-center gap-2">
+                    <UIcon v-if="child.accessible === false" name="i-lucide-lock" class="size-3.5 text-muted" />
+                    {{ child.label }}
+                  </h3>
+                </div>
+                <UIcon v-if="child.accessible !== false" name="i-lucide-arrow-right" class="size-4 text-muted group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
+
+                <!-- 三级章节 -->
+                <template v-if="child.children?.length">
+                </template>
+              </UCard>
+            </NuxtLink>
+
+            <!-- 三级章节（独立行，更深层缩进） -->
+            <div v-for="(child, cIdx) in item.children" :key="'sub-'+child.id" class="flex flex-col gap-2 pl-6">
+              <NuxtLink
+                v-for="(gc, gIdx) in child.children || []"
+                :key="gc.id"
+                :to="gc.accessible === false ? undefined : gc.to"
+                class="group block"
+                :class="gc.accessible === false ? 'cursor-not-allowed opacity-50' : ''"
+              >
+                <div class="flex items-center gap-3 py-1.5 px-3 rounded-lg transition-colors" :class="gc.accessible === false ? '' : 'hover:bg-muted/30'">
+                  <span class="text-xs text-muted font-mono shrink-0">{{ index + 1 }}.{{ cIdx + 1 }}.{{ gIdx + 1 }}</span>
+                  <span class="text-sm text-highlighted flex items-center gap-1.5">
+                    <UIcon v-if="gc.accessible === false" name="i-lucide-lock" class="size-3 text-muted" />
+                    {{ gc.label }}
+                  </span>
+                  <UIcon v-if="gc.accessible !== false" name="i-lucide-arrow-right" class="size-3.5 text-muted ml-auto group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
+                </div>
+              </NuxtLink>
             </div>
-            <div class="flex-1 min-w-0">
-              <h3 class="text-base font-medium text-highlighted group-hover:text-primary transition-colors">
-                {{ chapter.title }}
-              </h3>
-            </div>
-            <UIcon name="i-lucide-arrow-right" class="size-5 text-muted group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
-          </UCard>
-        </NuxtLink>
+          </div>
+        </template>
       </div>
     </div>
 
@@ -95,6 +151,66 @@ const { data: resp, pending, refresh } = cRequest.use<import('#shared/types/lms'
 )
 
 const course = computed(() => resp.value as import('#shared/types/lms').LmsCourseDetail | null)
+
+// 构建章节树：优先使用 orders（与 aside 导航一致），否则用 chapters 默认顺序
+interface ChapterNode {
+  id: number | string
+  label: string
+  to?: string
+  accessible: boolean
+  children?: ChapterNode[]
+}
+
+const chapterTree = computed<ChapterNode[]>(() => {
+  if (!course.value) return []
+  const chapters = course.value.chapters || []
+  const orders = course.value.orders || []
+  const cid = course.value.id
+  const accessMap = new Map(chapters.map(ch => [ch.id, ch.accessible]))
+
+  // 从 orders 构建树
+  if (orders.length > 0) {
+    const sorted = [...orders].sort((a, b) => a.order - b.order)
+    // 构建节点
+    function buildNode(o: typeof sorted[number]): ChapterNode {
+      const isChapter = o.id && !o.id.startsWith('custom-') && !isNaN(Number(o.id))
+      const chId = isChapter ? Number(o.id) : o.id
+      const accessible = isChapter ? (accessMap.get(Number(o.id)) ?? true) : true
+      return {
+        id: chId,
+        label: o.label,
+        to: isChapter ? `/course/${cid}/${o.id}` : (o.id === 'course' ? `/course/${cid}` : `/course/${cid}#${o.label}`),
+        accessible,
+      }
+    }
+
+    // 构建树：parentId 为 null/undefined 的是根节点
+    const rootItems = sorted.filter(o => !o.parentId)
+    return rootItems.map(root => {
+      const node = buildNode(root)
+      const children = sorted.filter(o => o.parentId === root.id)
+      if (children.length > 0) {
+        node.children = children.map(child => {
+          const childNode = buildNode(child)
+          const grandchildren = sorted.filter(o => o.parentId === child.id)
+          if (grandchildren.length > 0) {
+            childNode.children = grandchildren.map(buildNode)
+          }
+          return childNode
+        })
+      }
+      return node
+    })
+  }
+
+  // 默认：用 chapters（无层级）
+  return chapters.map(ch => ({
+    id: ch.id,
+    label: ch.title,
+    to: `/course/${cid}/${ch.id}`,
+    accessible: ch.accessible ?? true,
+  }))
+})
 
 // 数据变化时设置 TOC + 可编辑内容
 watch(resp, (detail) => {

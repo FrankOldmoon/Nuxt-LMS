@@ -5,6 +5,10 @@
             <template #content>
                 <div class="p-6">
                     <h3 class="text-lg font-semibold mb-4">{{ t('coursePanel.progress') }}</h3>
+
+                    <!-- 教师/管理员：选择学生查看进度 -->
+                    <CourseUserSelect v-if="canSelectStudent" :course-id="Number(courseId)" @impersonated="onImpersonated" @restored="onImpersonated" />
+
                     <div v-if="loading" class="py-8 text-center text-gray-400">{{ t('common.loading') }}</div>
                     <UTable v-else v-model:expanded="expanded" :data="tableData" :columns="columns"
                         :get-sub-rows="(row) => row.children" class="flex-1" :ui="{
@@ -65,6 +69,16 @@ const props = defineProps({
     courseId: { type: [String, Number], default: '' },
     navigation: { type: Array as () => NavItem[], default: () => [] as NavItem[] },
 })
+
+const { hasRole } = useAuth()
+// 弹窗打开时记录原始角色，切换学生后仍保留选择器
+const canSelectStudent = ref(false)
+
+// 模拟学生身份或恢复后重新加载数据（等待 cookie 刷新）
+async function onImpersonated() {
+    await nextTick()
+    await loadData()
+}
 
 // ---- 任务弹窗状态 ----
 const loading = ref(false)
@@ -228,6 +242,10 @@ async function loadData() {
 }
 
 watch(isOpen, (val) => {
-    if (val) loadData()
+    if (val) {
+        // 弹窗打开时记录当前角色（教师/管理员才显示选择器）
+        canSelectStudent.value = hasRole('admin') || hasRole('teacher')
+        loadData()
+    }
 })
 </script>

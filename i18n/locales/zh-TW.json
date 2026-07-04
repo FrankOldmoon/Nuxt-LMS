@@ -628,7 +628,15 @@
     "myScore": "我的得分",
     "correctRate": "正確率",
     "homeworkSubmitted": "已提交作業",
-    "commentParticipated": "已參與討論"
+    "commentParticipated": "已參與討論",
+    "viewAs": "查看身份",
+    "selectStudent": "選擇學生",
+    "impersonating": "模擬中",
+    "impersonateSuccess": "已切換為學生視角",
+    "impersonateFailed": "切換失敗",
+    "restoreRole": "恢復身份",
+    "restoreSuccess": "已恢復原始身份",
+    "restoreFailed": "恢復失敗"
   },
   "myFiles": {
     "title": "網盤檔案",
