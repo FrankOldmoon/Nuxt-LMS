@@ -64,7 +64,10 @@
     "openToAll": "Open to All",
     "openClasses": "Open Classes",
     "openUpdated": "Access updated",
-    "openUpdateFailed": "Access update failed"
+    "openUpdateFailed": "Access update failed",
+    "invite": "Invite to Jump",
+    "inviteSent": "Invite sent",
+    "inviteFailed": "Invite failed"
   },
   "layout": {
     "menu": "Menu",

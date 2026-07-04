@@ -64,7 +64,10 @@
     "openToAll": "全局开放",
     "openClasses": "开放班级",
     "openUpdated": "开放状态已更新",
-    "openUpdateFailed": "开放状态更新失败"
+    "openUpdateFailed": "开放状态更新失败",
+    "invite": "邀请跳转",
+    "inviteSent": "邀请已发送",
+    "inviteFailed": "邀请发送失败"
   },
   "layout": {
     "menu": "菜单",

@@ -25,6 +25,11 @@
     <UTooltip :text="$t('chapter.timer')">
       <UButton icon="i-lucide-timer" color="info" variant="soft" size="xs" @click="() => { timerOpen = true }" />
     </UTooltip>
+
+    <!-- 邀请跳转（教师/管理员可见） -->
+    <UTooltip v-if="canEdit" :text="$t('chapter.invite')">
+      <UButton icon="i-lucide-megaphone" color="error" variant="soft" size="xs" :loading="inviting" @click="sendInvite" />
+    </UTooltip>
   </div>
 
   <!-- 弹窗 -->
@@ -37,6 +42,9 @@
 const route = useRoute()
 const { hasRole, isCourseTeacher, user } = useAuth()
 const { playFullscreen, togglePlay } = useChapterBtns()
+const { sendInvite: wsSendInvite } = useWebSocket()
+const toast = useToast()
+const { t } = useI18n()
 
 const courseId = computed(() => route.params.id as string)
 const chapterId = computed(() => route.params.cid as string)
@@ -53,4 +61,19 @@ const canEdit = computed(() => {
 const scoreOpen = ref(false)
 const selectOpen = ref(false)
 const timerOpen = ref(false)
+const inviting = ref(false)
+
+// 发送邀请：通知班级内所有学生跳转到当前章节
+async function sendInvite() {
+  if (!classIdNum.value || !courseIdNum.value || !chapterIdNum.value) return
+  inviting.value = true
+  try {
+    wsSendInvite(classIdNum.value, courseIdNum.value, chapterIdNum.value, user.value?.name || 'teacher')
+    toast.add({ title: t('chapter.inviteSent'), color: 'success' })
+  } catch {
+    toast.add({ title: t('chapter.inviteFailed'), color: 'error' })
+  } finally {
+    setTimeout(() => { inviting.value = false }, 1000)
+  }
+}
 </script>

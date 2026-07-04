@@ -40,6 +40,22 @@ const { navigation: sidebarNav } = useSidebarNav()
 const asideOpen = ref(false)
 const tocOpen = ref(false)
 
+const { user } = useAuth()
+
+const { wsConnected, connect, joinClass } = useWebSocket()
+const classIdNum = computed(() => user.value?.defaultClass?.id || user.value?.classId)
+
+// 建立 WebSocket 连接并加入班级房间
+watch([classIdNum, wsConnected], () => {
+  if (classIdNum.value) {
+    if (!wsConnected.value) {
+      connect()
+    } else {
+      joinClass(classIdNum.value)
+    }
+  }
+}, { immediate: true })
+
 // 路由变化时自动关闭弹窗
 const route = useRoute()
 watch(() => route.fullPath, () => {
