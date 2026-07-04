@@ -24,9 +24,9 @@
             <UButton size="xs" variant="outline" icon="i-lucide-plus" :label="$t('race.selectQuestions')" @click="pickerOpen = true" />
           </div>
           <div v-if="form.questionIds.length" class="space-y-1 max-h-48 overflow-y-auto">
-            <div v-for="(qid, idx) in form.questionIds" :key="idx" class="flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-gray-800 rounded">
+            <div v-for="(q, idx) in form.questionIds" :key="idx" class="flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-gray-800 rounded">
               <UIcon name="i-lucide-circle-help" class="size-4 text-gray-400" />
-              <span class="text-sm flex-1">{{ $t('courseData.questionLabel') }} #{{ qid }}</span>
+              <span class="text-sm flex-1">{{ $t('courseData.questionLabel') }} #{{ q.id }}</span>
               <UButton icon="i-lucide-x" color="error" variant="ghost" size="2xs" @click="form.questionIds.splice(idx, 1)" />
             </div>
           </div>
@@ -81,11 +81,12 @@ function initForm() {
     }
     return
   }
+  const raw = Array.isArray(props.race.questionIds) ? props.race.questionIds : []
   const normalized = {
     name: props.race.name || '',
     point: Number(props.race.point) || 100,
     gapTime: Number(props.race.gapTime) || 30,
-    questionIds: Array.isArray(props.race.questionIds) ? [...props.race.questionIds] : [],
+    questionIds: raw.map(item => typeof item === 'number' ? { id: item } : { id: Number(item.id) }).filter(q => q.id > 0),
   }
   form.value = normalized
   originalData = JSON.parse(JSON.stringify(normalized))
@@ -93,8 +94,8 @@ function initForm() {
 
 function onPickQuestions(cids) {
   for (const cid of cids) {
-    if (!form.value.questionIds.includes(cid)) {
-      form.value.questionIds.push(cid)
+    if (!form.value.questionIds.some(q => q.id === cid)) {
+      form.value.questionIds.push({ id: cid })
     }
   }
 }

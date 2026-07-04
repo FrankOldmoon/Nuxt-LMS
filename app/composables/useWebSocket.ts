@@ -24,11 +24,13 @@ type QuickAnswerResultCallback = (data: { winner: string | null }) => void
 type QuickAnswerEndCallback = () => void
 
 // Race 回调类型
+type RaceJoinedCallback = (data: { pin: string }) => void
 type RaceStartCallback = (data: { raceCid: number; courseId: number; from: string; totalQuestions: number; timeLimit: number }) => void
-type RaceQuestionCallback = (data: { raceCid: number; question: any; questionCid: number; questionIndex: number; totalQuestions: number; timeLimit: number; options: any[]; qtype: string }) => void
+type RaceQuestionCallback = (data: { raceCid: number; questionCid: number; questionIndex: number; totalQuestions: number; timeLimit: number }) => void
 type RaceAnswerUpdateCallback = (data: { raceCid: number; questionCid: number; answeredCount: number }) => void
-type RaceQuestionEndCallback = (data: { raceCid: number; questionCid: number; correctAnswer: any[]; results: any[]; answeredCount: number }) => void
-type RaceEndCallback = (data: { raceCid: number; leaderboard: any[] }) => void
+type RaceScoresCallback = (data: { raceCid: number; scores: any[] }) => void
+type RaceQuestionEndCallback = (data: { raceCid: number; questionCid: number; results: any[]; top3: any[]; answeredCount: number }) => void
+type RaceEndCallback = (data: { raceCid: number; leaderboard: any[]; scores: any[] }) => void
 
 // 模块级回调数组，确保所有组件共享同一份
 const inviteCallbacks: InviteCallback[] = []
@@ -41,9 +43,11 @@ const quickAnswerResultCallbacks: QuickAnswerResultCallback[] = []
 const quickAnswerEndCallbacks: QuickAnswerEndCallback[] = []
 
 // Race 回调数组
+const raceJoinedCallbacks: RaceJoinedCallback[] = []
 const raceStartCallbacks: RaceStartCallback[] = []
 const raceQuestionCallbacks: RaceQuestionCallback[] = []
 const raceAnswerUpdateCallbacks: RaceAnswerUpdateCallback[] = []
+const raceScoresCallbacks: RaceScoresCallback[] = []
 const raceQuestionEndCallbacks: RaceQuestionEndCallback[] = []
 const raceEndCallbacks: RaceEndCallback[] = []
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null
@@ -61,8 +65,10 @@ function dispatch(type: string, data: any) {
     case 'raceStart': raceStartCallbacks.forEach(cb => cb(data)); break
     case 'raceQuestion': raceQuestionCallbacks.forEach(cb => cb(data)); break
     case 'raceAnswerUpdate': raceAnswerUpdateCallbacks.forEach(cb => cb(data)); break
+    case 'raceScores': raceScoresCallbacks.forEach(cb => cb(data)); break
     case 'raceQuestionEnd': raceQuestionEndCallbacks.forEach(cb => cb(data)); break
     case 'raceEnd': raceEndCallbacks.forEach(cb => cb(data)); break
+    case 'raceJoined': raceJoinedCallbacks.forEach(cb => cb(data)); break
   }
 }
 
@@ -190,32 +196,41 @@ export function useWebSocket() {
   }
 
   // ====================== Race 竞赛 ======================
-  function sendRaceStart(classId: number, raceCid: number, courseId: number, totalQuestions: number, timeLimit: number, from: string = 'teacher') {
-    send({ type: 'raceStart', classId, raceCid, courseId, totalQuestions, timeLimit, from })
+  function raceJoin(pin: string) {
+    send({ type: 'raceJoin', pin })
+  }
+  function onRaceJoined(callback: RaceJoinedCallback) {
+    raceJoinedCallbacks.push(callback)
+  }
+  function sendRaceStart(pin: string, raceCid: number, courseId: number, totalQuestions: number, timeLimit: number, from: string = 'teacher') {
+    send({ type: 'raceStart', pin, raceCid, courseId, totalQuestions, timeLimit, from })
   }
   function onRaceStart(callback: RaceStartCallback) {
     raceStartCallbacks.push(callback)
   }
-  function sendRaceQuestion(classId: number, raceCid: number, question: any, questionCid: number, questionIndex: number, totalQuestions: number, timeLimit: number, options: any[], qtype: string) {
-    send({ type: 'raceQuestion', classId, raceCid, question, questionCid, questionIndex, totalQuestions, timeLimit, options, qtype })
+  function sendRaceQuestion(pin: string, raceCid: number, questionCid: number, questionIndex: number, totalQuestions: number, timeLimit: number) {
+    send({ type: 'raceQuestion', pin, raceCid, questionCid, questionIndex, totalQuestions, timeLimit })
   }
   function onRaceQuestion(callback: RaceQuestionCallback) {
     raceQuestionCallbacks.push(callback)
   }
-  function sendRaceAnswer(classId: number, raceCid: number, questionCid: number, answer: any, rate: number, correct: boolean, from: string, userId: number) {
-    send({ type: 'raceAnswer', classId, raceCid, questionCid, answer, rate, correct, from, userId })
+  function sendRaceAnswer(pin: string, raceCid: number, questionCid: number, answer: any, rate: number, correct: boolean, from: string, userId: number) {
+    send({ type: 'raceAnswer', pin, raceCid, questionCid, answer, rate, correct, from, userId })
   }
   function onRaceAnswerUpdate(callback: RaceAnswerUpdateCallback) {
     raceAnswerUpdateCallbacks.push(callback)
   }
-  function sendRaceQuestionEnd(classId: number, raceCid: number, correctAnswer: any[]) {
-    send({ type: 'raceQuestionEnd', classId, raceCid, correctAnswer })
+  function onRaceScores(callback: RaceScoresCallback) {
+    raceScoresCallbacks.push(callback)
+  }
+  function sendRaceQuestionEnd(pin: string, raceCid: number) {
+    send({ type: 'raceQuestionEnd', pin, raceCid })
   }
   function onRaceQuestionEnd(callback: RaceQuestionEndCallback) {
     raceQuestionEndCallbacks.push(callback)
   }
-  function sendRaceEnd(classId: number, raceCid: number) {
-    send({ type: 'raceEnd', classId, raceCid })
+  function sendRaceEnd(pin: string, raceCid: number) {
+    send({ type: 'raceEnd', pin, raceCid })
   }
   function onRaceEnd(callback: RaceEndCallback) {
     raceEndCallbacks.push(callback)
@@ -240,7 +255,7 @@ export function useWebSocket() {
     sendDanmaku, onDanmaku,
     sendVoteStart, onVoteStart, sendVoteSubmit, onVoteUpdate, sendVoteEnd, onVoteEnd,
     sendQuickAnswerStart, onQuickAnswerStart, sendQuickAnswerSubmit, onQuickAnswerResult, sendQuickAnswerEnd, onQuickAnswerEnd,
-    sendRaceStart, onRaceStart, sendRaceQuestion, onRaceQuestion, sendRaceAnswer, onRaceAnswerUpdate, sendRaceQuestionEnd, onRaceQuestionEnd, sendRaceEnd, onRaceEnd,
+    raceJoin, onRaceJoined, sendRaceStart, onRaceStart, sendRaceQuestion, onRaceQuestion, sendRaceAnswer, onRaceAnswerUpdate, onRaceScores, sendRaceQuestionEnd, onRaceQuestionEnd, sendRaceEnd, onRaceEnd,
     disconnect,
   }
 }

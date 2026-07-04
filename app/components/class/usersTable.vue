@@ -89,6 +89,11 @@
           <slot :name="col.id+'-cell'" v-bind="slotProps" />
         </template>
       </UTable>
+
+      <!-- 得分条形图（showChart 时显示） -->
+      <ClientOnly v-if="showChart && students.length">
+        <ChartIndex :option="chartOption" height="320" class="mt-4" />
+      </ClientOnly>
     </template>
 
     <!-- 用户编辑弹窗 -->
@@ -129,6 +134,7 @@ const props = defineProps<{
   hideNumber?: boolean
   loading?: boolean
   defaultSort?: { id: string, desc: boolean }[]
+  showChart?: boolean
 }>()
 
 const { t } = useI18n()
@@ -143,6 +149,68 @@ const sorting = ref(props.defaultSort ?? [{ id: 'preferName', desc: false }])
 
 const teachers = computed(() => users.value.filter((u) => u.isTeacher))
 const students = computed(() => users.value.filter((u) => !u.isTeacher))
+
+// 条形图数据：按 score 降序取前10
+const chartData = computed(() => {
+  return [...students.value]
+    .sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0))
+    .slice(0, 10)
+    .map(s => ({
+      name: s.name || s.preferName || `#${s.id}`,
+      score: Number(s.score) || 0,
+    }))
+})
+
+// ECharts 水平条形图配置
+const chartOption = computed(() => {
+  const data = chartData.value
+  // 反转使第一名在顶部
+  const reversed = [...data].reverse()
+  const maxScore = Math.max(...data.map(d => d.score), 1)
+  const colors = ['#f59e0b', '#fbbf24', '#d1d5db', '#60a5fa', '#60a5fa', '#60a5fa', '#60a5fa', '#60a5fa', '#60a5fa', '#60a5fa']
+  return {
+    grid: { left: 80, right: 40, top: 10, bottom: 20 },
+    xAxis: {
+      type: 'value',
+      max: Math.ceil(maxScore * 1.2),
+      splitLine: { show: true, lineStyle: { type: 'dashed', color: '#e5e7eb' } },
+      axisLabel: { fontSize: 10, color: '#9ca3af' },
+    },
+    yAxis: {
+      type: 'category',
+      data: reversed.map(d => d.name),
+      axisLabel: { fontSize: 11, color: '#6b7280' },
+      axisTick: { show: false },
+      axisLine: { show: false },
+    },
+    series: [{
+      type: 'bar',
+      data: reversed.map((d, i) => ({
+        value: d.score,
+        itemStyle: {
+          color: colors[reversed.length - 1 - i] || '#60a5fa',
+          borderRadius: [0, 4, 4, 0],
+        },
+      })),
+      barWidth: '60%',
+      label: {
+        show: true,
+        position: 'right',
+        fontSize: 11,
+        fontWeight: 'bold',
+        color: '#374151',
+        formatter: '{c}',
+      },
+      animationDuration: 800,
+      animationDurationUpdate: 600,
+      animationEasingUpdate: 'cubicInOut',
+    }],
+    animation: true,
+    animationDuration: 800,
+    animationDurationUpdate: 600,
+    animationEasingUpdate: 'cubicInOut',
+  }
+})
 
 // 编辑弹窗
 const editModal = ref<{ show: () => void } | null>(null)

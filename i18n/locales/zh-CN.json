@@ -476,6 +476,7 @@
     "studentCount": "参与人数：{n}",
     "answeredCount": "已答题：{n}",
     "results": "答题结果",
+    "noWinners": "无人答对",
     "finished": "竞赛已结束",
     "joinRace": "加入竞赛",
     "waitingNext": "等待下一题...",

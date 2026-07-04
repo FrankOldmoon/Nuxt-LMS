@@ -116,7 +116,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, provide, watch } from 'vue'
+import { reactive, ref, computed, provide, inject, watch } from 'vue'
 import SingleRender from './question/single.vue'
 import JudgeRender from './question/judge.vue'
 import MultipleRender from './question/multiple.vue'
@@ -139,6 +139,9 @@ const props = defineProps({
     node: Object,
     inQuiz: { type: Boolean, default: false },
 })
+
+// race 模式：显示提交按钮但不向后端提交 question 记录
+const inRace = inject('inRace', false)
 
 const emit = defineEmits(['init'])
 
@@ -235,6 +238,18 @@ const formattedAnswers = computed(() => {
 
 function onSubmit() {
     if (!renderRef.value) return
+    if (inRace) {
+        // race 模式：只显示结果，不向后端提交（race 的提交检测会自动处理）
+        const qData = question.value
+        if (Array.isArray(qData.answer) && qData.answer.some((a) => typeof a === 'string' && a.startsWith('enc:'))) {
+            qData.answer = decryptAnswer(qData.answer)
+        }
+        const rate = computeCorrectRate(qData)
+        isCorrect.value = rate > 0
+        submitted.value = true
+        fromRecord.value = false
+        return
+    }
     const result = renderRef.value.submit()
     if (result) {
         isCorrect.value = result.isCorrect
@@ -362,9 +377,9 @@ function onSaved(ques) {
     }
 }
 
-// 鼠标移入时（仅一次）：非 quiz 模式获取当前用户的提交记录
+// 鼠标移入时（仅一次）：非 quiz/race 模式获取当前用户的提交记录
 function onHover() {
-    if (props.inQuiz) return
+    if (props.inQuiz || inRace) return
     fetchRecord()
 }
 async function fetchRecord() {

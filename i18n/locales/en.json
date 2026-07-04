@@ -476,6 +476,7 @@
     "studentCount": "Participants: {n}",
     "answeredCount": "Answered: {n}",
     "results": "Results",
+    "noWinners": "No winners",
     "finished": "Race finished",
     "joinRace": "Join Race",
     "waitingNext": "Waiting for next question...",

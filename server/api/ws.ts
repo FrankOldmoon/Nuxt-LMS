@@ -35,9 +35,8 @@ const votes = new Map<string, { classId: number; question: string; options: stri
 // 抢答数据：classId → { question, winner, submitted }
 const quickAnswers = new Map<number, { question: string; winner: string | null; submitted: Set<string> }>()
 
-// 竞赛数据：classId → raceState
-// raceState: { raceCid, courseId, currentQuestion, totalQuestions, answers: Map<questionCid, Map<userId, {answer, from, rate, correct}>>, activeQuestionCid, timeLimit, startedAt }
-interface RaceAnswer { answer: any; from: string; userId: number; rate: number; correct: boolean }
+// 竞赛数据：pin → raceState，pin = `${classId}_${chapterId}`
+interface RaceAnswer { answer: any; from: string; userId: number; rate: number; correct: boolean; submittedAt: number }
 interface RaceState {
   raceCid: number
   courseId: number
@@ -45,11 +44,44 @@ interface RaceState {
   totalQuestions: number
   activeQuestionCid: number | null
   timeLimit: number
+  questionStartedAt: number
   startedAt: number
-  // questionCid → (userId → answer info)
   answers: Map<number, Map<number, RaceAnswer>>
 }
-const raceStates = new Map<number, RaceState>()
+const raceStates = new Map<string, RaceState>()
+
+// race 房间：pin → Set<peer>
+const raceRooms = new Map<string, Set<any>>()
+
+function broadcastToRace(pin: string, msg: string) {
+  const room = raceRooms.get(pin)
+  if (room) {
+    for (const p of room) {
+      p.send(msg)
+    }
+  }
+}
+
+// 从 race answers 计算实时分数汇总
+function computeRaceScores(race: RaceState) {
+  const userTotals = new Map<number, { from: string; score: number; correctCount: number }>()
+  for (const [, qAnswers] of race.answers) {
+    for (const [uid, info] of qAnswers) {
+      if (!userTotals.has(uid)) {
+        userTotals.set(uid, { from: info.from, score: 0, correctCount: 0 })
+      }
+      const ut = userTotals.get(uid)!
+      if (info.correct) ut.correctCount++
+      ut.score += info.rate
+    }
+  }
+  const summary: any[] = []
+  for (const [uid, info] of userTotals) {
+    summary.push({ userId: uid, from: info.from, score: Math.round(info.score * 100) / 100, correctCount: info.correctCount })
+  }
+  summary.sort((a, b) => b.score - a.score)
+  return summary
+}
 
 function broadcastToClass(cid: number, msg: string) {
   const room = classRooms.get(cid)
@@ -156,49 +188,84 @@ export default defineWebSocketHandler({
         const cid = Number(classId)
         broadcastToClass(cid, JSON.stringify({ type: 'quickAnswerEnd' }))
         quickAnswers.delete(cid)
-      } else if (type === 'raceStart' && classId) {
-        // 教师开始竞赛
-        const cid = Number(classId)
+      } else if (type === 'raceJoin') {
+        // 加入 race 房间，pin = classId_chapterId
+        const pin = String(data.pin || '')
+        if (!pin) return
+        if (!raceRooms.has(pin)) raceRooms.set(pin, new Set())
+        raceRooms.get(pin)!.add(peer)
+        ;(peer as any)._racePin = pin
+        peer.send(JSON.stringify({ type: 'raceJoined', pin }))
+        // 如果竞赛进行中，返回当前状态
+        const race = raceStates.get(pin)
+        if (race) {
+          peer.send(JSON.stringify({
+            type: 'raceStart',
+            raceCid: race.raceCid,
+            courseId: race.courseId,
+            from: 'system',
+            totalQuestions: race.totalQuestions,
+            timeLimit: race.timeLimit,
+          }))
+          if (race.activeQuestionCid) {
+            peer.send(JSON.stringify({
+              type: 'raceQuestion',
+              raceCid: race.raceCid,
+              questionCid: race.activeQuestionCid,
+              questionIndex: race.currentQuestion,
+              totalQuestions: race.totalQuestions,
+              timeLimit: race.timeLimit,
+            }))
+          }
+          // 返回实时分数
+          peer.send(JSON.stringify({
+            type: 'raceScores',
+            raceCid: race.raceCid,
+            scores: computeRaceScores(race),
+          }))
+        }
+      } else if (type === 'raceStart') {
+        // 教师开始竞赛，pin 房间
+        const pin = String(data.pin || '')
+        if (!pin) return
         const raceCid = Number(data.raceCid)
         const courseId = Number(data.courseId)
         const totalQuestions = Number(data.totalQuestions) || 0
-        raceStates.set(cid, {
-          raceCid, courseId, currentQuestion: 0, totalQuestions,
+        raceStates.set(pin, {
+          raceCid, courseId, currentQuestion: -1, totalQuestions,
           activeQuestionCid: null, timeLimit: Number(data.timeLimit) || 30,
-          startedAt: Date.now(), answers: new Map(),
+          questionStartedAt: 0, startedAt: Date.now(), answers: new Map(),
         })
-        broadcastToClass(cid, JSON.stringify({
+        broadcastToRace(pin, JSON.stringify({
           type: 'raceStart', raceCid, courseId, from: data.from || 'teacher',
           totalQuestions, timeLimit: data.timeLimit || 30,
         }))
-      } else if (type === 'raceQuestion' && classId) {
-        // 教师推送题目
-        const cid = Number(classId)
-        const race = raceStates.get(cid)
+      } else if (type === 'raceQuestion') {
+        // 教师推送题目，广播到 pin 房间
+        const pin = String(data.pin || '')
+        const race = raceStates.get(pin)
         if (!race) return
         const questionCid = Number(data.questionCid)
         const questionIndex = Number(data.questionIndex) || 0
         race.currentQuestion = questionIndex
         race.activeQuestionCid = questionCid
         race.timeLimit = Number(data.timeLimit) || 30
+        race.questionStartedAt = Date.now()
         if (!race.answers.has(questionCid)) {
           race.answers.set(questionCid, new Map())
         }
-        broadcastToClass(cid, JSON.stringify({
+        broadcastToRace(pin, JSON.stringify({
           type: 'raceQuestion',
           raceCid: race.raceCid,
-          question: data.question || '',
           questionCid,
           questionIndex,
           totalQuestions: race.totalQuestions,
           timeLimit: race.timeLimit,
-          options: data.options || [],
-          qtype: data.qtype || 'single',
         }))
-      } else if (type === 'raceAnswer' && classId) {
+      } else if (type === 'raceAnswer') {
         // 学生提交答案
-        const cid = Number(classId)
-        const race = raceStates.get(cid)
+        const pin = String(data.pin || '')
+        const race = raceStates.get(pin)
         if (!race || !race.activeQuestionCid) return
         const userId = Number(data.userId)
         const from = String(data.from || 'anonymous')
@@ -211,64 +278,62 @@ export default defineWebSocketHandler({
           userId,
           rate: Number(data.rate) || 0,
           correct: !!data.correct,
+          submittedAt: Date.now(),
         })
-        // 广播答题进度（不泄露答案）
-        broadcastToClass(cid, JSON.stringify({
+        // 广播答题进度 + 实时分数
+        broadcastToRace(pin, JSON.stringify({
           type: 'raceAnswerUpdate',
           raceCid: race.raceCid,
           questionCid,
           answeredCount: qAnswers.size,
         }))
-      } else if (type === 'raceQuestionEnd' && classId) {
+        broadcastToRace(pin, JSON.stringify({
+          type: 'raceScores',
+          raceCid: race.raceCid,
+          scores: computeRaceScores(race),
+        }))
+      } else if (type === 'raceQuestionEnd') {
         // 教师结束当前题目，展示结果
-        const cid = Number(classId)
-        const race = raceStates.get(cid)
+        const pin = String(data.pin || '')
+        const race = raceStates.get(pin)
         if (!race || !race.activeQuestionCid) return
         const questionCid = race.activeQuestionCid
         const qAnswers = race.answers.get(questionCid)
         const results: any[] = []
         if (qAnswers) {
           for (const [uid, info] of qAnswers) {
-            results.push({ userId: uid, from: info.from, correct: info.correct, rate: info.rate })
+            const timeUsed = Math.round((info.submittedAt - race.questionStartedAt) / 100) / 10
+            results.push({ userId: uid, from: info.from, correct: info.correct, rate: info.rate, timeUsed })
           }
         }
-        broadcastToClass(cid, JSON.stringify({
+        // 按正确+速度排序：答对在前，用时短在前
+        results.sort((a, b) => {
+          if (a.correct !== b.correct) return a.correct ? -1 : 1
+          return a.timeUsed - b.timeUsed
+        })
+        const top3 = results.slice(0, 3)
+        broadcastToRace(pin, JSON.stringify({
           type: 'raceQuestionEnd',
           raceCid: race.raceCid,
           questionCid,
-          correctAnswer: data.correctAnswer || [],
           results,
+          top3,
           answeredCount: qAnswers?.size || 0,
         }))
         race.activeQuestionCid = null
-      } else if (type === 'raceEnd' && classId) {
+      } else if (type === 'raceEnd') {
         // 教师结束竞赛
-        const cid = Number(classId)
-        const race = raceStates.get(cid)
+        const pin = String(data.pin || '')
+        const race = raceStates.get(pin)
         if (!race) return
-        // 汇总所有题目结果
-        const summary: any[] = []
-        const userTotals = new Map<number, { from: string; score: number; correctCount: number }>()
-        for (const [qCid, qAnswers] of race.answers) {
-          for (const [uid, info] of qAnswers) {
-            if (!userTotals.has(uid)) {
-              userTotals.set(uid, { from: info.from, score: 0, correctCount: 0 })
-            }
-            const ut = userTotals.get(uid)!
-            if (info.correct) ut.correctCount++
-            ut.score += info.rate
-          }
-        }
-        for (const [uid, info] of userTotals) {
-          summary.push({ userId: uid, from: info.from, score: Math.round(info.score * 100) / 100, correctCount: info.correctCount })
-        }
-        summary.sort((a, b) => b.score - a.score)
-        broadcastToClass(cid, JSON.stringify({
+        const summary = computeRaceScores(race)
+        broadcastToRace(pin, JSON.stringify({
           type: 'raceEnd',
           raceCid: race.raceCid,
           leaderboard: summary,
+          scores: summary,
         }))
-        raceStates.delete(cid)
+        raceStates.delete(pin)
       }
     } catch (e) {
       peer.send(JSON.stringify({ type: 'error', message: 'Invalid message format' }))
@@ -281,6 +346,13 @@ export default defineWebSocketHandler({
       classRooms.get(cid)!.delete(peer)
       if (classRooms.get(cid)!.size === 0) {
         classRooms.delete(cid)
+      }
+    }
+    const racePin = (peer as any)._racePin
+    if (racePin && raceRooms.has(racePin)) {
+      raceRooms.get(racePin)!.delete(peer)
+      if (raceRooms.get(racePin)!.size === 0) {
+        raceRooms.delete(racePin)
       }
     }
   },
