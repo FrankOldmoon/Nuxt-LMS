@@ -780,7 +780,9 @@
     "wrong": "错误",
     "homeworkDetail": "作业详情",
     "score": "得分",
-    "correctAnswer": "正确答案"
+    "correctAnswer": "正确答案",
+    "optionDistribution": "选项分布",
+    "selectedCount": "选择人数"
   },
   "comment": {
     "label": "评论",

@@ -771,7 +771,9 @@
     "wrong": "錯誤",
     "homeworkDetail": "作業詳情",
     "score": "得分",
-    "correctAnswer": "正確答案"
+    "correctAnswer": "正確答案",
+    "optionDistribution": "選項分佈",
+    "selectedCount": "選擇人數"
   },
   "comment": {
     "label": "評論",

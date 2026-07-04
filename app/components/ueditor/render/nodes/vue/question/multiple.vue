@@ -13,6 +13,7 @@
           :class="checkClass(idx)">
           <span v-if="selected.includes(idx)" class="text-xs">✓</span>
         </span>
+        <span class="shrink-0 text-sm font-medium text-muted mt-0.5 w-5">{{ String.fromCharCode(65 + idx) }}</span>
         <span class="flex-1 text-sm">
           <ueditorRender :json="opt" />
         </span>

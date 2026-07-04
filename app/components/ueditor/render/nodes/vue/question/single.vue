@@ -9,6 +9,7 @@
                     :class="dotClass(idx)">
                     <span v-if="selected === idx" class="w-2.5 h-2.5 rounded-full bg-current"></span>
                 </span>
+                <span class="shrink-0 text-sm font-medium text-muted mt-0.5 w-5">{{ String.fromCharCode(65 + idx) }}</span>
                 <span class="flex-1 text-sm">
                     <ueditorRender :json="opt" />
                 </span>

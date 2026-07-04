@@ -780,7 +780,9 @@
     "wrong": "Wrong",
     "homeworkDetail": "Homework Detail",
     "score": "Score",
-    "correctAnswer": "Correct Answer"
+    "correctAnswer": "Correct Answer",
+    "optionDistribution": "Option Distribution",
+    "selectedCount": "Selected Count"
   },
   "comment": {
     "label": "Comment",

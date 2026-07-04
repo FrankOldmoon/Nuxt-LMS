@@ -342,8 +342,9 @@ watch([fetchedQuestion, questionId], () => {
 
 // provide question 数据，供 select 渲染节点获取 options
 provide('questionData', question)
-// 告知深层子组件（如 code-block）当前在 quiz 中，隐藏运行/复制按钮
+// 告知深层子组件（如 code-block）当前在 question/quiz 中，隐藏运行/复制按钮
 provide('inQuiz', props.inQuiz)
+provide('inQuestion', true)
 
 // questionId 为空时不显示加载态
 const pending = computed(() => !!questionId.value && fetchedPending.value)

@@ -2,9 +2,12 @@
   <div class="cb-wrapper" :class="`cb-theme-${theme}`">
     <div class="cb-header">
       <span class="cb-lang">{{ language }}</span>
-      <div v-if="!inQuiz" class="flex items-center gap-2">
+      <div v-if="!hideActions" class="flex items-center gap-2">
         <button v-if="isPython" class="cb-run" @click="ideOpen = true">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
         </button>
         <button class="cb-copy" :class="{ copied }" @click="copyCode" v-html="copied ? checkIcon : copyIcon"></button>
       </div>
@@ -29,8 +32,10 @@ const props = defineProps({
   node: { type: Object, required: true },
 })
 
-// 从父级 question 组件注入，quiz 模式下隐藏运行/复制按钮
+// 从父级 question 组件注入，question/quiz 模式下隐藏运行/复制按钮
 const inQuiz = inject('inQuiz', false)
+const inQuestion = inject('inQuestion', false)
+const hideActions = computed(() => inQuiz || inQuestion)
 
 const attrs = computed(() => props.node.attrs || {})
 const language = computed(() => attrs.value.language || 'plaintext')
@@ -118,82 +123,321 @@ const copyCode = async () => {
 
   &.cb-theme-dark {
     background: #1e293b;
-    .cb-header { background: #0f172a; border-bottom-color: #334155; }
-    .cb-lang { color: #94a3b8; }
-    .cb-copy { color: #94a3b8; border-color: #334155; &:hover { color: #e2e8f0; background: rgba(255,255,255,0.1); } }
-    .cb-lines { color: #475569; border-right-color: #334155; }
-    .cb-code { color: #e2e8f0; }
-    .cb-code .hljs-keyword { color: #ff7b72; }
-    .cb-code .hljs-built_in { color: #ffa657; }
-    .cb-code .hljs-type { color: #ff7b72; }
-    .cb-code .hljs-literal { color: #79c0ff; }
-    .cb-code .hljs-number { color: #79c0ff; }
-    .cb-code .hljs-operator { color: #79c0ff; }
-    .cb-code .hljs-variable { color: #79c0ff; }
-    .cb-code .hljs-attr { color: #79c0ff; }
-    .cb-code .hljs-attribute { color: #79c0ff; }
-    .cb-code .hljs-meta { color: #79c0ff; }
-    .cb-code .hljs-string { color: #a5d6ff; }
-    .cb-code .hljs-regexp { color: #a5d6ff; }
-    .cb-code .hljs-title { color: #d2a8ff; }
-    .cb-code .hljs-title.function_ { color: #d2a8ff; }
-    .cb-code .hljs-title.class_ { color: #d2a8ff; }
-    .cb-code .hljs-comment { color: #8b949e; font-style: italic; }
-    .cb-code .hljs-doctag { color: #ff7b72; }
-    .cb-code .hljs-name { color: #7ee787; }
-    .cb-code .hljs-tag { color: #7ee787; }
-    .cb-code .hljs-symbol { color: #ffa657; }
-    .cb-code .hljs-bullet { color: #f2cc60; }
-    .cb-code .hljs-code { color: #8b949e; }
-    .cb-code .hljs-formula { color: #8b949e; }
-    .cb-code .hljs-quote { color: #7ee787; }
-    .cb-code .hljs-section { color: #1f6feb; }
-    .cb-code .hljs-subst { color: #c9d1d9; }
-    .cb-code .hljs-addition { color: #aff5b4; background: #033a16; }
-    .cb-code .hljs-deletion { color: #ffdcd7; background: #67060c; }
-    .cb-code .hljs-template-tag { color: #ff7b72; }
-    .cb-code .hljs-template-variable { color: #ff7b72; }
-    .cb-code .hljs-variable.language_ { color: #ff7b72; }
+
+    .cb-header {
+      background: #0f172a;
+      border-bottom-color: #334155;
+    }
+
+    .cb-lang {
+      color: #94a3b8;
+    }
+
+    .cb-copy {
+      color: #94a3b8;
+      border-color: #334155;
+
+      &:hover {
+        color: #e2e8f0;
+        background: rgba(255, 255, 255, 0.1);
+      }
+    }
+
+    .cb-lines {
+      color: #475569;
+      border-right-color: #334155;
+    }
+
+    .cb-code {
+      color: #e2e8f0;
+    }
+
+    .cb-code .hljs-keyword {
+      color: #ff7b72;
+    }
+
+    .cb-code .hljs-built_in {
+      color: #ffa657;
+    }
+
+    .cb-code .hljs-type {
+      color: #ff7b72;
+    }
+
+    .cb-code .hljs-literal {
+      color: #79c0ff;
+    }
+
+    .cb-code .hljs-number {
+      color: #79c0ff;
+    }
+
+    .cb-code .hljs-operator {
+      color: #79c0ff;
+    }
+
+    .cb-code .hljs-variable {
+      color: #79c0ff;
+    }
+
+    .cb-code .hljs-attr {
+      color: #79c0ff;
+    }
+
+    .cb-code .hljs-attribute {
+      color: #79c0ff;
+    }
+
+    .cb-code .hljs-meta {
+      color: #79c0ff;
+    }
+
+    .cb-code .hljs-string {
+      color: #a5d6ff;
+    }
+
+    .cb-code .hljs-regexp {
+      color: #a5d6ff;
+    }
+
+    .cb-code .hljs-title {
+      color: #d2a8ff;
+    }
+
+    .cb-code .hljs-title.function_ {
+      color: #d2a8ff;
+    }
+
+    .cb-code .hljs-title.class_ {
+      color: #d2a8ff;
+    }
+
+    .cb-code .hljs-comment {
+      color: #8b949e;
+      font-style: italic;
+    }
+
+    .cb-code .hljs-doctag {
+      color: #ff7b72;
+    }
+
+    .cb-code .hljs-name {
+      color: #7ee787;
+    }
+
+    .cb-code .hljs-tag {
+      color: #7ee787;
+    }
+
+    .cb-code .hljs-symbol {
+      color: #ffa657;
+    }
+
+    .cb-code .hljs-bullet {
+      color: #f2cc60;
+    }
+
+    .cb-code .hljs-code {
+      color: #8b949e;
+    }
+
+    .cb-code .hljs-formula {
+      color: #8b949e;
+    }
+
+    .cb-code .hljs-quote {
+      color: #7ee787;
+    }
+
+    .cb-code .hljs-section {
+      color: #1f6feb;
+    }
+
+    .cb-code .hljs-subst {
+      color: #c9d1d9;
+    }
+
+    .cb-code .hljs-addition {
+      color: #aff5b4;
+      background: #033a16;
+    }
+
+    .cb-code .hljs-deletion {
+      color: #ffdcd7;
+      background: #67060c;
+    }
+
+    .cb-code .hljs-template-tag {
+      color: #ff7b72;
+    }
+
+    .cb-code .hljs-template-variable {
+      color: #ff7b72;
+    }
+
+    .cb-code .hljs-variable.language_ {
+      color: #ff7b72;
+    }
   }
 
   &.cb-theme-light {
     background: #f8fafc;
-    .cb-header { background: #f1f5f9; border-bottom-color: #e2e8f0; }
-    .cb-lang { color: #64748b; }
-    .cb-copy { color: #64748b; border-color: #e2e8f0; &:hover { color: #1e293b; background: rgba(0,0,0,0.05); } }
-    .cb-lines { color: #cbd5e1; border-right-color: #e2e8f0; }
-    .cb-code { color: #1e293b; }
-    .cb-code .hljs-keyword { color: #d73a49; }
-    .cb-code .hljs-built_in { color: #e36209; }
-    .cb-code .hljs-type { color: #d73a49; }
-    .cb-code .hljs-literal { color: #005cc5; }
-    .cb-code .hljs-number { color: #005cc5; }
-    .cb-code .hljs-operator { color: #005cc5; }
-    .cb-code .hljs-variable { color: #005cc5; }
-    .cb-code .hljs-attr { color: #005cc5; }
-    .cb-code .hljs-attribute { color: #005cc5; }
-    .cb-code .hljs-meta { color: #005cc5; }
-    .cb-code .hljs-string { color: #032f62; }
-    .cb-code .hljs-regexp { color: #032f62; }
-    .cb-code .hljs-title { color: #6f42c1; }
-    .cb-code .hljs-title.function_ { color: #6f42c1; }
-    .cb-code .hljs-title.class_ { color: #6f42c1; }
-    .cb-code .hljs-comment { color: #6a737d; font-style: italic; }
-    .cb-code .hljs-doctag { color: #d73a49; }
-    .cb-code .hljs-name { color: #22863a; }
-    .cb-code .hljs-tag { color: #22863a; }
-    .cb-code .hljs-symbol { color: #e36209; }
-    .cb-code .hljs-bullet { color: #735c0f; }
-    .cb-code .hljs-code { color: #6a737d; }
-    .cb-code .hljs-formula { color: #6a737d; }
-    .cb-code .hljs-quote { color: #22863a; }
-    .cb-code .hljs-section { color: #005cc5; font-weight: bold; }
-    .cb-code .hljs-subst { color: #24292e; }
-    .cb-code .hljs-addition { color: #22863a; background: #f0fff4; }
-    .cb-code .hljs-deletion { color: #b31d28; background: #ffeef0; }
-    .cb-code .hljs-template-tag { color: #d73a49; }
-    .cb-code .hljs-template-variable { color: #d73a49; }
-    .cb-code .hljs-variable.language_ { color: #d73a49; }
+
+    .cb-header {
+      background: #f1f5f9;
+      border-bottom-color: #e2e8f0;
+    }
+
+    .cb-lang {
+      color: #64748b;
+    }
+
+    .cb-copy {
+      color: #64748b;
+      border-color: #e2e8f0;
+
+      &:hover {
+        color: #1e293b;
+        background: rgba(0, 0, 0, 0.05);
+      }
+    }
+
+    .cb-lines {
+      color: #cbd5e1;
+      border-right-color: #e2e8f0;
+    }
+
+    .cb-code {
+      color: #1e293b;
+    }
+
+    .cb-code .hljs-keyword {
+      color: #d73a49;
+    }
+
+    .cb-code .hljs-built_in {
+      color: #e36209;
+    }
+
+    .cb-code .hljs-type {
+      color: #d73a49;
+    }
+
+    .cb-code .hljs-literal {
+      color: #005cc5;
+    }
+
+    .cb-code .hljs-number {
+      color: #005cc5;
+    }
+
+    .cb-code .hljs-operator {
+      color: #005cc5;
+    }
+
+    .cb-code .hljs-variable {
+      color: #005cc5;
+    }
+
+    .cb-code .hljs-attr {
+      color: #005cc5;
+    }
+
+    .cb-code .hljs-attribute {
+      color: #005cc5;
+    }
+
+    .cb-code .hljs-meta {
+      color: #005cc5;
+    }
+
+    .cb-code .hljs-string {
+      color: #032f62;
+    }
+
+    .cb-code .hljs-regexp {
+      color: #032f62;
+    }
+
+    .cb-code .hljs-title {
+      color: #6f42c1;
+    }
+
+    .cb-code .hljs-title.function_ {
+      color: #6f42c1;
+    }
+
+    .cb-code .hljs-title.class_ {
+      color: #6f42c1;
+    }
+
+    .cb-code .hljs-comment {
+      color: #6a737d;
+      font-style: italic;
+    }
+
+    .cb-code .hljs-doctag {
+      color: #d73a49;
+    }
+
+    .cb-code .hljs-name {
+      color: #22863a;
+    }
+
+    .cb-code .hljs-tag {
+      color: #22863a;
+    }
+
+    .cb-code .hljs-symbol {
+      color: #e36209;
+    }
+
+    .cb-code .hljs-bullet {
+      color: #735c0f;
+    }
+
+    .cb-code .hljs-code {
+      color: #6a737d;
+    }
+
+    .cb-code .hljs-formula {
+      color: #6a737d;
+    }
+
+    .cb-code .hljs-quote {
+      color: #22863a;
+    }
+
+    .cb-code .hljs-section {
+      color: #005cc5;
+      font-weight: bold;
+    }
+
+    .cb-code .hljs-subst {
+      color: #24292e;
+    }
+
+    .cb-code .hljs-addition {
+      color: #22863a;
+      background: #f0fff4;
+    }
+
+    .cb-code .hljs-deletion {
+      color: #b31d28;
+      background: #ffeef0;
+    }
+
+    .cb-code .hljs-template-tag {
+      color: #d73a49;
+    }
+
+    .cb-code .hljs-template-variable {
+      color: #d73a49;
+    }
+
+    .cb-code .hljs-variable.language_ {
+      color: #d73a49;
+    }
   }
 }
 

@@ -25,6 +25,14 @@
                         </div>
                     </template>
                 </ClassUsersTable>
+
+                <!-- 选项分布柱状图（仅 single/multiple 类型） -->
+                <ClientOnly v-if="showOptionChart">
+                    <div class="mt-4 pt-4 border-t border-default">
+                        <h3 class="text-sm font-medium mb-2">{{ $t('record.optionDistribution') }}</h3>
+                        <Chart :option="optionChartOption" height="240" />
+                    </div>
+                </ClientOnly>
             </div>
         </template>
     </UModal>
@@ -256,4 +264,85 @@ function recordIcon(record) {
     if (rate > 0) return 'i-heroicons-exclamation-circle'
     return 'i-heroicons-x-circle'
 }
+
+// ====================== 选项分布柱状图（single/multiple） ======================
+const showOptionChart = computed(() => {
+    const type = props.question?.type
+    return type === 'single' || type === 'multiple'
+})
+
+// 统计每个选项被选择的人数
+const optionCounts = computed(() => {
+    const q = props.question
+    if (!q || !showOptionChart.value) return []
+    const options = q.options || []
+    const counts = new Array(options.length).fill(0)
+    for (const row of rows.value) {
+        const rec = row.record
+        if (!rec || !Array.isArray(rec.records)) continue
+        for (const idx of rec.records) {
+            const i = Number(idx)
+            if (i >= 0 && i < counts.length) counts[i]++
+        }
+    }
+    return options.map((opt, i) => ({
+        label: String.fromCharCode(65 + i),
+        text: typeof opt === 'string' ? opt : (opt?.text || opt?.name || ''),
+        count: counts[i],
+        isCorrect: Array.isArray(q.answer) && q.answer.includes(i),
+    }))
+})
+
+const optionChartOption = computed(() => {
+    const data = optionCounts.value
+    if (!data.length) return {}
+    const correctAnswer = Array.isArray(props.question?.answer) ? props.question.answer : []
+    return {
+        grid: { left: 40, right: 20, top: 20, bottom: 60 },
+        xAxis: {
+            type: 'category',
+            data: data.map(d => d.label),
+            axisLabel: { fontSize: 12, color: '#6b7280' },
+            axisTick: { show: false },
+            axisLine: { lineStyle: { color: '#e5e7eb' } },
+        },
+        yAxis: {
+            type: 'value',
+            minInterval: 1,
+            splitLine: { show: true, lineStyle: { type: 'dashed', color: '#e5e7eb' } },
+            axisLabel: { fontSize: 10, color: '#9ca3af' },
+        },
+        series: [{
+            type: 'bar',
+            data: data.map(d => ({
+                value: d.count,
+                itemStyle: {
+                    color: d.isCorrect ? '#22c55e' : '#60a5fa',
+                    borderRadius: [4, 4, 0, 0],
+                },
+            })),
+            barWidth: '50%',
+            label: {
+                show: true,
+                position: 'top',
+                fontSize: 12,
+                fontWeight: 'bold',
+                color: '#374151',
+                formatter: '{c}',
+            },
+            animationDuration: 600,
+        }],
+        tooltip: {
+            trigger: 'axis',
+            formatter: (params) => {
+                const idx = params[0]?.dataIndex
+                if (idx == null) return ''
+                const d = data[idx]
+                return `${d.label}: ${d.text}<br/>${t('record.selectedCount')}: ${d.count}${d.isCorrect ? ` (${t('record.correctAnswer')})` : ''}`
+            },
+        },
+        animation: true,
+        animationDuration: 600,
+    }
+})
 </script>
