@@ -1,9 +1,11 @@
 import { db, schema } from "@nuxthub/db"
 import { eq } from "drizzle-orm"
+import { sendToUser } from "../../../utils/wsRooms"
 
 /**
  * 发送消息
  * body: { receiverUserId, content }
+ * 保存后通过 WebSocket 实时推送给接收者
  */
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
@@ -29,5 +31,23 @@ export default eventHandler(async (event) => {
     receiverUserId: Number(receiverUserId),
   }).returning()
 
-  return cResp(result[0])
+  const msg = result[0]
+
+  // 通过 WebSocket 推送给接收者（在线则实时收到）
+  if (msg) {
+    sendToUser(Number(receiverUserId), {
+      type: 'message',
+      message: {
+        id: msg.id,
+        name: msg.name,
+        content: msg.content,
+        senderUserId: msg.senderUserId,
+        receiverUserId: msg.receiverUserId,
+        readAt: msg.readAt,
+        createdAt: msg.createdAt,
+      },
+    })
+  }
+
+  return cResp(msg)
 })

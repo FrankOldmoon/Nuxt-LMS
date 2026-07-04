@@ -95,6 +95,8 @@ const isOpen = defineModel('open', { default: false })
 const { t } = useI18n()
 const { user } = useAuth()
 const toast = useToast()
+const { onMessage } = useWebSocket()
+const { refresh: refreshUnread } = useUnreadCounts()
 
 const conversations = ref([])
 const selectedUserId = ref(0)
@@ -206,6 +208,26 @@ watch(isOpen, (val) => {
     selectedUserId.value = 0
     messages.value = []
     inputText.value = ''
+  }
+})
+
+// WebSocket 实时消息：收到新消息时更新 UI
+onMessage((data) => {
+  const msg = data.message
+  if (!msg) return
+
+  if (isOpen.value && msg.senderUserId === selectedUserId.value) {
+    // 当前正在和对方聊天，直接追加并标记已读
+    messages.value.push(msg)
+    nextTick(() => {
+      if (msgContainer.value) msgContainer.value.scrollTop = msgContainer.value.scrollHeight
+    })
+    // 重新加载消息会触发标记已读
+    loadMessages()
+  } else {
+    // 未打开弹窗或不在当前会话：刷新会话列表 + 刷新未读数
+    if (isOpen.value) loadConversations()
+    refreshUnread()
   }
 })
 </script>

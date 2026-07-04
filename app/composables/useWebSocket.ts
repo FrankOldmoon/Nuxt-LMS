@@ -36,6 +36,9 @@ type RaceEndCallback = (data: { raceCid: number; leaderboard: any[]; scores: any
 type OnlineUpdateCallback = (data: { classId?: number; userId: number; from: string; online: boolean }) => void
 type RaceOnlineUpdateCallback = (data: { pin: string; userId: number; from: string; online: boolean }) => void
 
+// 私信回调
+type MessageCallback = (data: { message: any }) => void
+
 // 模块级回调数组，确保所有组件共享同一份
 const inviteCallbacks: InviteCallback[] = []
 const danmakuCallbacks: DanmakuCallback[] = []
@@ -56,6 +59,7 @@ const raceQuestionEndCallbacks: RaceQuestionEndCallback[] = []
 const raceEndCallbacks: RaceEndCallback[] = []
 const onlineUpdateCallbacks: OnlineUpdateCallback[] = []
 const raceOnlineUpdateCallbacks: RaceOnlineUpdateCallback[] = []
+const messageCallbacks: MessageCallback[] = []
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null
 
 function dispatch(type: string, data: any) {
@@ -77,6 +81,7 @@ function dispatch(type: string, data: any) {
     case 'raceJoined': raceJoinedCallbacks.forEach(cb => cb(data)); break
     case 'onlineUpdate': onlineUpdateCallbacks.forEach(cb => cb(data)); break
     case 'raceOnlineUpdate': raceOnlineUpdateCallbacks.forEach(cb => cb(data)); break
+    case 'message': messageCallbacks.forEach(cb => cb(data)); break
   }
 }
 
@@ -104,6 +109,11 @@ export function useWebSocket() {
 
       socket.onopen = () => {
         wsConnected.value = true
+        // 注册用户级连接（用于私信推送）
+        const { user } = useAuth()
+        if (user.value?.id) {
+          send({ type: 'registerUser', userId: user.value.id, from: user.value.name })
+        }
         if (joinedClassId.value) {
           joinClass(joinedClassId.value)
         }
@@ -258,6 +268,11 @@ export function useWebSocket() {
     raceOnlineUpdateCallbacks.push(callback)
   }
 
+  // ====================== 私信推送 ======================
+  function onMessage(callback: MessageCallback) {
+    messageCallbacks.push(callback)
+  }
+
   function disconnect() {
     if (reconnectTimer) {
       clearTimeout(reconnectTimer)
@@ -279,6 +294,7 @@ export function useWebSocket() {
     sendQuickAnswerStart, onQuickAnswerStart, sendQuickAnswerSubmit, onQuickAnswerResult, sendQuickAnswerEnd, onQuickAnswerEnd,
     raceJoin, onRaceJoined, sendRaceStart, onRaceStart, sendRaceQuestion, onRaceQuestion, sendRaceAnswer, onRaceAnswerUpdate, onRaceScores, sendRaceQuestionEnd, onRaceQuestionEnd, sendRaceEnd, onRaceEnd,
     sendOnline, onOnlineUpdate, sendRaceOnline, onRaceOnlineUpdate,
+    onMessage,
     disconnect,
   }
 }

@@ -26,6 +26,9 @@
  *   { type: 'error', message: string }
  */
 
+// 用户级连接池（私信推送），与 server/utils/wsRooms.ts 共享同一实例
+import { userPeers } from '../utils/wsRooms'
+
 // 按 classId 分组的连接池
 const classRooms = new Map<number, Set<any>>()
 
@@ -114,6 +117,17 @@ export default defineWebSocketHandler({
     try {
       const data = JSON.parse(message.text())
       const { type, classId } = data
+
+      if (type === 'registerUser') {
+        // 注册用户级连接，用于私信推送
+        const userId = Number(data.userId)
+        if (!userId) return
+        if (!userPeers.has(userId)) userPeers.set(userId, new Set())
+        userPeers.get(userId)!.add(peer)
+        ;(peer as any)._userId = userId
+        ;(peer as any)._userName = String(data.from || 'anonymous')
+        return
+      }
 
       if (type === 'join' && classId) {
         const cid = Number(classId)
@@ -404,6 +418,13 @@ export default defineWebSocketHandler({
       classRooms.get(cid)!.delete(peer)
       if (classRooms.get(cid)!.size === 0) {
         classRooms.delete(cid)
+      }
+    }
+    // 清理用户级连接
+    if (uid && userPeers.has(uid)) {
+      userPeers.get(uid)!.delete(peer)
+      if (userPeers.get(uid)!.size === 0) {
+        userPeers.delete(uid)
       }
     }
     const racePin = (peer as any)._racePin
