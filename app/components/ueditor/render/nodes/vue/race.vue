@@ -36,7 +36,7 @@
                 <ClassUsersTable :rows="studentRows" :loading="scoresLoading"
                     :hide-actions="true" :hide-teachers="true" :hide-number="true"
                     :extra-columns="scoreColumns" :default-sort="[{ id: 'score', desc: true }]"
-                    show-chart>
+                    show-chart show-online>
                     <template #score-cell="{ row }">
                         <span class="text-sm font-bold" :class="getScoreClass(row.original.score)">
                             {{ row.original.score?.toFixed(1) ?? '0' }}
@@ -167,7 +167,7 @@ const emit = defineEmits(['init'])
 const { t } = useI18n()
 const { editableCourseId, editableId } = useLayoutState()
 const { hasRole, user } = useAuth()
-const { wsConnected, connect, raceJoin, onRaceJoined, sendRaceStart, onRaceStart, sendRaceQuestion, onRaceQuestion, sendRaceAnswer, onRaceAnswerUpdate, onRaceScores, sendRaceQuestionEnd, onRaceQuestionEnd, sendRaceEnd, onRaceEnd } = useWebSocket()
+const { wsConnected, connect, raceJoin, onRaceJoined, sendRaceStart, onRaceStart, sendRaceQuestion, onRaceQuestion, sendRaceAnswer, onRaceAnswerUpdate, onRaceScores, sendRaceQuestionEnd, onRaceQuestionEnd, sendRaceEnd, onRaceEnd, sendRaceOnline, onRaceOnlineUpdate } = useWebSocket()
 
 // 告知 question 组件当前在 race 中：显示提交按钮但不向后端提交
 provide('inRace', true)
@@ -238,6 +238,9 @@ const scoresLoading = ref(false)
 let timerInterval = null
 let submitCheckTimer = null
 
+// race 在线用户：userId → boolean
+const raceOnlineMap = reactive({})
+
 // ====================== pin 房间加入 ======================
 onMounted(() => {
     // 确保 ws 连接
@@ -248,6 +251,8 @@ onMounted(() => {
     const joinTimer = setTimeout(() => {
         if (pin.value && classId.value) {
             raceJoin(pin.value)
+            // 发送在线信号
+            sendRaceOnline(pin.value, user.value?.id || 0, user.value?.name || 'anonymous', true)
         }
     }, 500)
     // 持续尝试加入（最多 10 次）
@@ -255,6 +260,7 @@ onMounted(() => {
     const retryInterval = setInterval(() => {
         if (wsConnected.value && pin.value && classId.value) {
             raceJoin(pin.value)
+            sendRaceOnline(pin.value, user.value?.id || 0, user.value?.name || 'anonymous', true)
             retries = 999
         }
         retries++
@@ -264,6 +270,11 @@ onMounted(() => {
         clearTimeout(joinTimer)
         clearInterval(retryInterval)
     })
+})
+
+// 监听 race 在线状态
+onRaceOnlineUpdate((data) => {
+    raceOnlineMap[data.userId] = data.online
 })
 
 onRaceJoined((data) => {
@@ -488,6 +499,10 @@ function onSaved(r) {
 onBeforeUnmount(() => {
     if (timerInterval) clearInterval(timerInterval)
     if (submitCheckTimer) clearInterval(submitCheckTimer)
+    // 发送离线信号
+    if (pin.value) {
+        sendRaceOnline(pin.value, user.value?.id || 0, user.value?.name || 'anonymous', false)
+    }
 })
 </script>
 

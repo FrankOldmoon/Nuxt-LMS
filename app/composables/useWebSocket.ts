@@ -32,6 +32,10 @@ type RaceScoresCallback = (data: { raceCid: number; scores: any[] }) => void
 type RaceQuestionEndCallback = (data: { raceCid: number; questionCid: number; results: any[]; top3: any[]; answeredCount: number }) => void
 type RaceEndCallback = (data: { raceCid: number; leaderboard: any[]; scores: any[] }) => void
 
+// 在线状态回调
+type OnlineUpdateCallback = (data: { classId?: number; userId: number; from: string; online: boolean }) => void
+type RaceOnlineUpdateCallback = (data: { pin: string; userId: number; from: string; online: boolean }) => void
+
 // 模块级回调数组，确保所有组件共享同一份
 const inviteCallbacks: InviteCallback[] = []
 const danmakuCallbacks: DanmakuCallback[] = []
@@ -50,6 +54,8 @@ const raceAnswerUpdateCallbacks: RaceAnswerUpdateCallback[] = []
 const raceScoresCallbacks: RaceScoresCallback[] = []
 const raceQuestionEndCallbacks: RaceQuestionEndCallback[] = []
 const raceEndCallbacks: RaceEndCallback[] = []
+const onlineUpdateCallbacks: OnlineUpdateCallback[] = []
+const raceOnlineUpdateCallbacks: RaceOnlineUpdateCallback[] = []
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null
 
 function dispatch(type: string, data: any) {
@@ -69,6 +75,8 @@ function dispatch(type: string, data: any) {
     case 'raceQuestionEnd': raceQuestionEndCallbacks.forEach(cb => cb(data)); break
     case 'raceEnd': raceEndCallbacks.forEach(cb => cb(data)); break
     case 'raceJoined': raceJoinedCallbacks.forEach(cb => cb(data)); break
+    case 'onlineUpdate': onlineUpdateCallbacks.forEach(cb => cb(data)); break
+    case 'raceOnlineUpdate': raceOnlineUpdateCallbacks.forEach(cb => cb(data)); break
   }
 }
 
@@ -126,9 +134,9 @@ export function useWebSocket() {
     }
   }
 
-  function joinClass(classId: number) {
+  function joinClass(classId: number, userId?: number, from?: string) {
     joinedClassId.value = classId
-    send({ type: 'join', classId })
+    send({ type: 'join', classId, userId, from })
   }
 
   function sendInvite(classId: number, courseId: number, chapterId: number, from: string = 'teacher') {
@@ -236,6 +244,20 @@ export function useWebSocket() {
     raceEndCallbacks.push(callback)
   }
 
+  // ====================== 在线状态 ======================
+  function sendOnline(classId: number, userId: number, from: string, online: boolean) {
+    send({ type: 'online', classId, userId, from, online })
+  }
+  function onOnlineUpdate(callback: OnlineUpdateCallback) {
+    onlineUpdateCallbacks.push(callback)
+  }
+  function sendRaceOnline(pin: string, userId: number, from: string, online: boolean) {
+    send({ type: 'raceOnline', pin, userId, from, online })
+  }
+  function onRaceOnlineUpdate(callback: RaceOnlineUpdateCallback) {
+    raceOnlineUpdateCallbacks.push(callback)
+  }
+
   function disconnect() {
     if (reconnectTimer) {
       clearTimeout(reconnectTimer)
@@ -256,6 +278,7 @@ export function useWebSocket() {
     sendVoteStart, onVoteStart, sendVoteSubmit, onVoteUpdate, sendVoteEnd, onVoteEnd,
     sendQuickAnswerStart, onQuickAnswerStart, sendQuickAnswerSubmit, onQuickAnswerResult, sendQuickAnswerEnd, onQuickAnswerEnd,
     raceJoin, onRaceJoined, sendRaceStart, onRaceStart, sendRaceQuestion, onRaceQuestion, sendRaceAnswer, onRaceAnswerUpdate, onRaceScores, sendRaceQuestionEnd, onRaceQuestionEnd, sendRaceEnd, onRaceEnd,
+    sendOnline, onOnlineUpdate, sendRaceOnline, onRaceOnlineUpdate,
     disconnect,
   }
 }

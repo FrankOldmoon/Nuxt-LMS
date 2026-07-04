@@ -17,54 +17,35 @@
           {{ $t('classSelector.noUsers') }}
         </div>
 
-        <!-- 得分表 -->
-        <div v-else class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="border-b border-default text-left text-muted">
-                <th class="py-2 px-2 font-medium">{{ $t('classSelector.colName') }}</th>
-                <th class="py-2 px-2 font-medium whitespace-nowrap">{{ $t('chapter.chapterScore') }}</th>
-                <th class="py-2 px-2 font-medium">{{ $t('chapter.tasks') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="s in students"
-                :key="s.id"
-                class="border-b border-default/50 hover:bg-muted/30"
-              >
-                <!-- 姓名 -->
-                <td class="py-2 px-2">
-                  <div class="flex items-center gap-2">
-                    <UAvatar :src="s.avatarImg || undefined" :alt="s.name" size="2xs" :text="s.name?.charAt(0)" />
-                    <span>{{ s.name }}</span>
-                  </div>
-                </td>
-                <!-- 章节得分 -->
-                <td class="py-2 px-2">
-                  <span class="font-mono font-bold">{{ getScore(s.id).toFixed(1) }}</span>
-                </td>
-                <!-- 任务状态点 -->
-                <td class="py-2 px-2">
-                  <div class="flex items-center gap-1 flex-wrap">
-                    <UTooltip
-                      v-for="(item, idx) in getItems(s.id)"
-                      :key="idx"
-                      :text="`${item.type} #${item.id} (${item.status})`"
-                    >
-                      <TaskDot
-                        :type="item.type"
-                        :status="item.status"
-                        :id="item.id"
-                        @click="onItemClick(item)"
-                      />
-                    </UTooltip>
-                    <span v-if="getItems(s.id).length === 0" class="text-xs text-muted">-</span>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- 得分表 + 条形图 -->
+        <div v-else>
+          <ClassUsersTable :rows="(tableRows as any)" :class-id="props.classId" :course-id="props.courseId" :loading="loading"
+            :hide-actions="true" :hide-teachers="true" :hide-number="true"
+            :extra-columns="extraColumns" :default-sort="[{ id: 'score', desc: true }]"
+            show-chart>
+            <!-- 章节得分列 -->
+            <template #score-cell="{ row }">
+              <span class="font-mono font-bold text-sm">{{ (row.original.score ?? 0).toFixed(1) }}</span>
+            </template>
+            <!-- 任务状态列 -->
+            <template #tasks-cell="{ row }">
+              <div class="flex items-center gap-1 flex-wrap">
+                <UTooltip
+                  v-for="(item, idx) in row.original.items || []"
+                  :key="idx"
+                  :text="`${item.type} #${item.id} (${item.status})`"
+                >
+                  <TaskDot
+                    :type="item.type"
+                    :status="item.status"
+                    :id="item.id"
+                    @click="onItemClick(item)"
+                  />
+                </UTooltip>
+                <span v-if="!(row.original.items || []).length" class="text-xs text-muted">-</span>
+              </div>
+            </template>
+          </ClassUsersTable>
         </div>
       </div>
     </template>
@@ -86,6 +67,7 @@ type TaskItem = {
 }
 
 const isOpen = defineModel('open', { default: false })
+const { t } = useI18n()
 const { students, fetchUsers } = useClassUsers()
 
 const props = defineProps({
@@ -108,13 +90,27 @@ function onItemClick(item: TaskItem) {
 
 const scoreMap = computed(() => new Map(scoreData.value.map(r => [r.userId, r])))
 
-function getScore(userId: number): number {
-  return scoreMap.value.get(userId)?.score ?? 0
-}
+// ClassUsersTable 的行数据：合并 students 和 scoreData
+const tableRows = computed(() => {
+  return students.value.map(s => {
+    const sd = scoreMap.value.get(s.id)
+    return {
+      id: s.id,
+      name: s.name,
+      preferName: s.preferName,
+      rollNumber: s.rollNumber,
+      avatarImg: s.avatarImg,
+      score: sd?.score ?? 0,
+      items: sd?.items ?? [],
+    }
+  })
+})
 
-function getItems(userId: number): TaskItem[] {
-  return scoreMap.value.get(userId)?.items ?? []
-}
+// 额外列：章节得分 + 任务状态
+const extraColumns = computed(() => [
+  { id: 'score', header: t('chapter.chapterScore') },
+  { id: 'tasks', header: t('chapter.tasks') },
+])
 
 async function loadData() {
   if (!props.chapterId || !props.classId || !props.courseId) return

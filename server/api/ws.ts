@@ -83,6 +83,19 @@ function computeRaceScores(race: RaceState) {
   return summary
 }
 
+// 获取 race 房间内所有在线用户
+function getRaceOnlineUsers(pin: string): { userId: number; from: string }[] {
+  const room = raceRooms.get(pin)
+  if (!room) return []
+  const users: { userId: number; from: string }[] = []
+  for (const p of room) {
+    const uid = (p as any)._userId
+    const from = (p as any)._userName
+    if (uid) users.push({ userId: uid, from: from || 'anonymous' })
+  }
+  return users
+}
+
 function broadcastToClass(cid: number, msg: string) {
   const room = classRooms.get(cid)
   if (room) {
@@ -108,8 +121,15 @@ export default defineWebSocketHandler({
           classRooms.set(cid, new Set())
         }
         classRooms.get(cid)!.add(peer)
-        ;(peer as any)._classId = cid
+          ; (peer as any)._classId = cid
+        // 保存用户信息用于在线状态
+        if (data.userId) (peer as any)._userId = Number(data.userId)
+        if (data.from) (peer as any)._userName = String(data.from)
         peer.send(JSON.stringify({ type: 'joined', classId: cid }))
+        // 广播在线状态
+        if (data.userId) {
+          broadcastToClass(cid, JSON.stringify({ type: 'onlineUpdate', classId: cid, userId: Number(data.userId), from: data.from || 'anonymous', online: true }))
+        }
       } else if (type === 'invite' && classId) {
         const cid = Number(classId)
         broadcastToClass(cid, JSON.stringify({
@@ -194,7 +214,7 @@ export default defineWebSocketHandler({
         if (!pin) return
         if (!raceRooms.has(pin)) raceRooms.set(pin, new Set())
         raceRooms.get(pin)!.add(peer)
-        ;(peer as any)._racePin = pin
+          ; (peer as any)._racePin = pin
         peer.send(JSON.stringify({ type: 'raceJoined', pin }))
         // 如果竞赛进行中，返回当前状态
         const race = raceStates.get(pin)
@@ -224,6 +244,38 @@ export default defineWebSocketHandler({
             scores: computeRaceScores(race),
           }))
         }
+        // 广播在线状态到 race 房间（新成员加入）
+        const onlineUsers = getRaceOnlineUsers(pin)
+        broadcastToRace(pin, JSON.stringify({ type: 'onlineUpdate', pin, onlineUsers }))
+      } else if (type === 'online') {
+        // 在线状态广播（classId 房间）
+        const cid = Number(classId)
+        if (!cid) return
+        const userId = Number(data.userId)
+        const from = String(data.from || 'anonymous')
+        const online = data.online !== false
+        broadcastToClass(cid, JSON.stringify({
+          type: 'onlineUpdate',
+          classId: cid,
+          userId,
+          from,
+          online,
+        }))
+      } else if (type === 'raceOnline') {
+        // race 在线状态广播（pin 房间）
+        const pin = String(data.pin || '')
+        if (!pin) return
+        const userId = Number(data.userId)
+        const from = String(data.from || 'anonymous')
+        const online = data.online !== false
+        // 广播到 race 房间
+        broadcastToRace(pin, JSON.stringify({
+          type: 'raceOnlineUpdate',
+          pin,
+          userId,
+          from,
+          online,
+        }))
       } else if (type === 'raceStart') {
         // 教师开始竞赛，pin 房间
         const pin = String(data.pin || '')
@@ -342,7 +394,13 @@ export default defineWebSocketHandler({
 
   close(peer) {
     const cid = (peer as any)._classId
+    const uid = (peer as any)._userId
+    const from = (peer as any)._userName
     if (cid && classRooms.has(cid)) {
+      // 广播离线
+      if (uid) {
+        broadcastToClass(cid, JSON.stringify({ type: 'onlineUpdate', classId: cid, userId: uid, from: from || 'anonymous', online: false }))
+      }
       classRooms.get(cid)!.delete(peer)
       if (classRooms.get(cid)!.size === 0) {
         classRooms.delete(cid)
@@ -350,6 +408,10 @@ export default defineWebSocketHandler({
     }
     const racePin = (peer as any)._racePin
     if (racePin && raceRooms.has(racePin)) {
+      // 广播 race 离线
+      if (uid) {
+        broadcastToRace(racePin, JSON.stringify({ type: 'raceOnlineUpdate', pin: racePin, userId: uid, from: from || 'anonymous', online: false }))
+      }
       raceRooms.get(racePin)!.delete(peer)
       if (raceRooms.get(racePin)!.size === 0) {
         raceRooms.delete(racePin)

@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 const { user } = useAuth()
-const { wsConnected, connect, joinClass } = useWebSocket()
+const { wsConnected, connect, joinClass, onOnlineUpdate } = useWebSocket()
 const { showDanmaku } = useLayoutState()
 const classIdNum = computed(() => user.value?.defaultClass?.id || user.value?.classId)
 
@@ -15,7 +15,7 @@ watch([classIdNum, wsConnected], () => {
     if (!wsConnected.value) {
       connect()
     } else {
-      joinClass(classIdNum.value)
+      joinClass(classIdNum.value, user.value?.id, user.value?.name)
     }
   }
 }, { immediate: true })

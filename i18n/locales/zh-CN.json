@@ -222,6 +222,8 @@
     "loading": "加载中...",
     "noClasses": "暂无班级",
     "noUsers": "该班级暂无成员",
+    "online": "在线",
+    "offline": "离线",
     "roleTeacher": "教师",
     "teachers": "教师",
     "colName": "姓名",

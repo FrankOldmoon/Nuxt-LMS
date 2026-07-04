@@ -315,6 +315,7 @@ export async function getClassUsers(classId: number, courseId: number = 0) {
       rollNumber: schema.users.rollNumber,
       email: schema.users.email,
       telephone: schema.users.telephone,
+      loginAt: schema.users.loginAt,
       isTeacher: schema.userClasses.isTeacher,
     })
     .from(schema.userClasses)
@@ -340,6 +341,7 @@ export async function getClassUsers(classId: number, courseId: number = 0) {
       rollNumber: schema.users.rollNumber,
       email: schema.users.email,
       telephone: schema.users.telephone,
+      loginAt: schema.users.loginAt,
     })
     .from(schema.users)
     .where(

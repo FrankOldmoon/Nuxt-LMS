@@ -1,9 +1,6 @@
 <template>
-  <div
-    ref="chartRef"
-    :style="containerStyle"
-    class="chart-container"
-  />
+  <div ref="chartRef" :style="containerStyle" class="chart-container">
+  </div>
 </template>
 
 <script setup>
@@ -234,6 +231,6 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .chart-container {
-  min-height: 0;
+  min-height: 500px;
 }
 </style>

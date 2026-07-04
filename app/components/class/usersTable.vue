@@ -92,7 +92,20 @@
 
       <!-- 得分条形图（showChart 时显示） -->
       <ClientOnly v-if="showChart && students.length">
-        <ChartIndex :option="chartOption" height="320" class="mt-4" />
+        <div class="mt-4 relative">
+          <Chart :option="chartOption" height="320" />
+          <!-- 右侧 HTML 覆盖层：头像 + 名字 -->
+          <div class="absolute top-0 right-0 h-full flex flex-col justify-around py-[10px]" style="width: 120px;">
+            <div v-for="item in chartData" :key="item.id"
+              class="flex items-center gap-1.5 h-6 transition-all duration-700 ease-in-out">
+              <UAvatar :src="item.avatarImg || undefined" :alt="item.name" size="2xs"
+                :text="item.name?.charAt(0)" class="shrink-0" />
+              <span class="text-xs truncate" :class="chartData.indexOf(item) < 3 ? 'font-bold' : ''">
+                {{ item.name }}
+              </span>
+            </div>
+          </div>
+        </div>
       </ClientOnly>
     </template>
 
@@ -135,6 +148,7 @@ const props = defineProps<{
   loading?: boolean
   defaultSort?: { id: string, desc: boolean }[]
   showChart?: boolean
+  showOnline?: boolean
 }>()
 
 const { t } = useI18n()
@@ -147,8 +161,27 @@ const _pending = ref(false)
 const pending = computed(() => props.loading ?? _pending.value)
 const sorting = ref(props.defaultSort ?? [{ id: 'preferName', desc: false }])
 
-const teachers = computed(() => users.value.filter((u) => u.isTeacher))
-const students = computed(() => users.value.filter((u) => !u.isTeacher))
+const teachers = computed(() => users.value.filter((u) => u.isTeacher === true))
+const students = computed(() => users.value.filter((u) => u.isTeacher !== true))
+
+// 在线状态：userId → boolean
+const onlineMap = reactive<Record<number, boolean>>({})
+
+// 监听 WebSocket 在线状态
+const { onOnlineUpdate, onRaceOnlineUpdate } = useWebSocket()
+onOnlineUpdate((data) => {
+  onlineMap[data.userId] = data.online
+})
+onRaceOnlineUpdate((data) => {
+  onlineMap[data.userId] = data.online
+})
+
+// 基于 loginAt 判断初始在线（2小时内）
+function isOnlineByLoginAt(loginAt: any): boolean {
+  if (!loginAt) return false
+  const diff = Date.now() - new Date(loginAt).getTime()
+  return diff < 2 * 60 * 60 * 1000
+}
 
 // 条形图数据：按 score 降序取前10
 const chartData = computed(() => {
@@ -156,7 +189,9 @@ const chartData = computed(() => {
     .sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0))
     .slice(0, 10)
     .map(s => ({
+      id: s.id,
       name: s.name || s.preferName || `#${s.id}`,
+      avatarImg: s.avatarImg || '',
       score: Number(s.score) || 0,
     }))
 })
@@ -169,7 +204,7 @@ const chartOption = computed(() => {
   const maxScore = Math.max(...data.map(d => d.score), 1)
   const colors = ['#f59e0b', '#fbbf24', '#d1d5db', '#60a5fa', '#60a5fa', '#60a5fa', '#60a5fa', '#60a5fa', '#60a5fa', '#60a5fa']
   return {
-    grid: { left: 80, right: 40, top: 10, bottom: 20 },
+    grid: { left: 10, right: 140, top: 10, bottom: 20 },
     xAxis: {
       type: 'value',
       max: Math.ceil(maxScore * 1.2),
@@ -178,8 +213,8 @@ const chartOption = computed(() => {
     },
     yAxis: {
       type: 'category',
-      data: reversed.map(d => d.name),
-      axisLabel: { fontSize: 11, color: '#6b7280' },
+      data: reversed.map(() => ''),
+      axisLabel: { show: false },
       axisTick: { show: false },
       axisLine: { show: false },
     },
@@ -193,10 +228,12 @@ const chartOption = computed(() => {
         },
       })),
       barWidth: '60%',
+      showBackground: true,
+      backgroundStyle: { color: 'rgba(0,0,0,0.04)', borderRadius: [0, 4, 4, 0] },
       label: {
         show: true,
         position: 'right',
-        fontSize: 11,
+        fontSize: 12,
         fontWeight: 'bold',
         color: '#374151',
         formatter: '{c}',
@@ -354,6 +391,21 @@ async function doResetPassword() {
 
 const columns = computed(() => {
   const cols: TableColumn<any>[] = []
+  // 在线状态列（在 number 之前）
+  if (props.showOnline) {
+    cols.push({
+      id: 'online',
+      header: '',
+      cell: ({ row }) => {
+        const uid = row.original.id
+        const online = onlineMap[uid] ?? isOnlineByLoginAt(row.original.loginAt)
+        return h('div', {
+          class: ['w-4 h-4 rounded-full shrink-0', online ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'],
+          title: online ? t('classSelector.online') : t('classSelector.offline'),
+        })
+      },
+    })
+  }
   // number 列（在 name 之前，可排序）
   if (!props.hideNumber) {
     cols.push({

@@ -213,6 +213,8 @@
     "loading": "載入中...",
     "noClasses": "暫無班級",
     "noUsers": "該班級暫無成員",
+    "online": "在線",
+    "offline": "離線",
     "roleTeacher": "教師",
     "teachers": "教師",
     "colName": "姓名",

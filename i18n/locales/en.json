@@ -222,6 +222,8 @@
     "loading": "Loading...",
     "noClasses": "No classes",
     "noUsers": "No members in this class",
+    "online": "Online",
+    "offline": "Offline",
     "roleTeacher": "Teacher",
     "teachers": "Teachers",
     "colName": "Name",
