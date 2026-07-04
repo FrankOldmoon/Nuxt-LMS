@@ -65,6 +65,40 @@ export default eventHandler(async (event) => {
     })))
   }
 
+  if (!itemType || itemType === 'quiz') {
+    const items = await db.query.quizzes.findMany({
+      where: eq(schema.quizzes.courseId, courseId),
+    })
+    result.push(...items.map((q: any) => ({
+      type: 'quiz',
+      cid: q.cid,
+      name: q.name,
+      content: q.content,
+      tags: q.tags,
+      point: q.point,
+      extra: { questions: q.questions, timeLimit: q.timeLimit, submitLimit: q.submitLimit, startAt: q.startAt, endAt: q.endAt },
+      createdAt: q.createdAt,
+      updatedAt: q.updatedAt,
+    })))
+  }
+
+  if (!itemType || itemType === 'race') {
+    const items = await db.query.races.findMany({
+      where: eq(schema.races.courseId, courseId),
+    })
+    result.push(...items.map((r: any) => ({
+      type: 'race',
+      cid: r.cid,
+      name: r.name,
+      content: r.content,
+      tags: r.tags,
+      point: r.point,
+      extra: { questionIds: r.questionIds, gapTime: r.gapTime },
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+    })))
+  }
+
   // 按 type 再按 cid 排序
   result.sort((a, b) => {
     if (a.type !== b.type) return a.type.localeCompare(b.type)

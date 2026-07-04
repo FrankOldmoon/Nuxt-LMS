@@ -48,6 +48,9 @@ const allItems = computed(() => [
     { label: t('ueditor.insertAichat'), icon: 'i-lucide-bot', onSelect: () => insertAichat() },
     { label: t('ueditor.insertCondition'), icon: 'i-lucide-shield-check', onSelect: () => insertTypedSheet('condition') },
     { label: t('ueditor.insertTabs'), icon: 'i-lucide-panel-top', onSelect: () => insertTabs() },
+    { label: t('ueditor.insertVfiles'), icon: 'i-lucide-folder-tree', onSelect: () => insertVfiles() },
+    { label: t('ueditor.insertQuiz'), icon: 'i-lucide-clipboard-list', onSelect: () => insertQuiz() },
+    { label: t('ueditor.insertRace'), icon: 'i-lucide-zap', onSelect: () => insertRace() },
     { type: 'separator' },
     { label: `${t('common.search')} ${t('courseData.questionLabel')}`, icon: 'i-lucide-circle-help', onSelect: () => openPicker('questions') },
     { label: `${t('common.search')} ${t('homework.label')}`, icon: 'i-lucide-book-open', onSelect: () => openPicker('homeworks') },
@@ -139,6 +142,43 @@ function insertTabs() {
     editor.chain().focus().insertContent({
         type: 'vue',
         attrs: { content: defaultConfig, type: 'tabs' },
+    }).run()
+}
+
+// 插入 vfiles 虚拟文件夹节点（带默认配置）
+function insertVfiles() {
+    const editor = props.editor?.useEditor()
+    if (!editor) return
+    const defaultConfig = JSON.stringify({
+        items: [
+            { id: 'f1', label: 'Folder 1', type: 'folder', children: [
+                { id: 'file1', label: 'file1.md', type: 'file', content: '' },
+            ]},
+        ],
+    })
+    editor.chain().focus().insertContent({
+        type: 'vue',
+        attrs: { content: defaultConfig, type: 'vfiles' },
+    }).run()
+}
+
+// 插入 quiz 节点（空 cid，创建后回填）
+function insertQuiz() {
+    const editor = props.editor?.useEditor()
+    if (!editor) return
+    editor.chain().focus().insertContent({
+        type: 'vue',
+        attrs: { content: '0', type: 'quiz' },
+    }).run()
+}
+
+// 插入 race 节点（空 cid，创建后回填）
+function insertRace() {
+    const editor = props.editor?.useEditor()
+    if (!editor) return
+    editor.chain().focus().insertContent({
+        type: 'vue',
+        attrs: { content: '0', type: 'race' },
     }).run()
 }
 

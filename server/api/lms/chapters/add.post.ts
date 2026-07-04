@@ -1,5 +1,5 @@
 /**
- * 新增章节：根据课程 config.defaultChapterOpen 设置章节初始 isOpen
+ * 新增章节：根据课程 lmsConfig.course.defaultChapterOpen 设置章节初始 isOpen
  * POST /api/lms/chapters/add
  * body: { name, courseId, isOpen?, ... }
  */
@@ -17,7 +17,7 @@ export default eventHandler(async (event) => {
   }
 
   try {
-    // 读取课程 config.defaultChapterOpen，若未显式传 isOpen 则用课程默认值
+    // 读取课程 lmsConfig.course.defaultChapterOpen，若未显式传 isOpen 则用合并后的默认值
     if (body.isOpen === undefined && body.courseId) {
       const course = await db
         .select({ config: schema.courses.config })
@@ -25,7 +25,8 @@ export default eventHandler(async (event) => {
         .where(eq(schema.courses.id, Number(body.courseId)))
         .limit(1)
       const cfg = (course[0]?.config as Record<string, any>) || {}
-      body.isOpen = cfg.defaultChapterOpen ?? true
+      const courseLms = mergeCourseLmsConfig(cfg)
+      body.isOpen = courseLms?.course?.defaultChapterOpen ?? true
     }
 
     const result = await addTable('chapters', body)

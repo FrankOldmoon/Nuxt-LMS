@@ -227,6 +227,7 @@ export function useLayoutState() {
   // 页面可通过 setLayout 覆盖；null 表示使用路由默认值
   const sidebarOverride = useState<boolean | null>('layout-sidebar-override', () => null)
   const tocOverride = useState<boolean | null>('layout-toc-override', () => null)
+  const showDanmaku = useState<boolean>('layout-show-danmaku', () => true)
 
   // 路由默认：首页隐藏 aside 和 toc，其他页面显示
   // 使用 computed 直接读取路由，确保 SSR 渲染阶段即可得到正确值
@@ -264,7 +265,7 @@ export function useLayoutState() {
     tocOverride.value = null
   })
 
-  return { tocLinks, editableContent, editableTable, editableId, editableCourseId, contentVersion, showSidebar, showToc, setToc, setEditableContent, setEditableMeta, notifyContentSaved, setLayout }
+  return { tocLinks, editableContent, editableTable, editableId, editableCourseId, contentVersion, showSidebar, showToc, showDanmaku, setToc, setEditableContent, setEditableMeta, notifyContentSaved, setLayout }
 }
 
 /**

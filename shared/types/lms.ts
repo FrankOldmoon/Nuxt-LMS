@@ -66,6 +66,7 @@ export interface LmsChapterPageData {
     title: string
     icon: string
     color: string
+    showDanmaku: boolean
     chapters: LmsChapterSummary[]
   }
 }

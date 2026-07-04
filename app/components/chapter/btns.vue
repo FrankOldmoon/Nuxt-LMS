@@ -29,7 +29,7 @@
     </UTooltip>
 
     <!-- 弹幕 -->
-    <UTooltip :text="$t('chapter.danmaku')">
+    <UTooltip v-if="canEdit || showDanmaku" :text="$t('chapter.danmaku')">
       <UButton icon="i-lucide-message-square-text" color="success" variant="soft" size="xs"
         @click="() => { danmakuOpen = true }" />
     </UTooltip>
@@ -50,7 +50,7 @@
     :class-id="classIdNum" />
   <ChapterSelectModal v-model:open="selectOpen" :course-id="courseIdNum" :class-id="classIdNum" />
   <ChapterTimerModal v-model:open="timerOpen" />
-  <ChapterDanmakuModal v-model:open="danmakuOpen" :class-id="classIdNum" />
+  <ChapterDanmakuModal v-model:open="danmakuOpen" :class-id="classIdNum" :can-edit="canEdit" />
   <ChapterVoteModal v-model:open="voteOpen" :class-id="classIdNum" :can-edit="canEdit" />
   <ChapterQuickAnswerModal v-model:open="quickAnswerOpen" :class-id="classIdNum" :can-edit="canEdit" />
 </template>
@@ -59,6 +59,7 @@
 const route = useRoute()
 const { hasRole, isCourseTeacher, user } = useAuth()
 const { playFullscreen, togglePlay } = useChapterBtns()
+const { showDanmaku } = useLayoutState()
 const { sendInvite: wsSendInvite } = useWebSocket()
 const toast = useToast()
 const { t } = useI18n()

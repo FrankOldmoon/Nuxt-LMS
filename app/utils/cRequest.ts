@@ -6,6 +6,9 @@
  * - POST 请求：注入到 body
  * - 已有值时跳过，不覆盖调用方手动传入的参数
  *
+ * 日期字段由服务端中间件统一转换（server/middleware/convert-dates.ts），
+ * 前端直接传字符串即可，无需手动转 Date
+ *
  * @example
  * // 命令式调用（login、事件处理器等场景）
  * const result = await cRequest<LoginResult>('/api/login', { method: 'POST', body: { username, password } })

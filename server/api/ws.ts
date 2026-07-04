@@ -35,6 +35,22 @@ const votes = new Map<string, { classId: number; question: string; options: stri
 // 抢答数据：classId → { question, winner, submitted }
 const quickAnswers = new Map<number, { question: string; winner: string | null; submitted: Set<string> }>()
 
+// 竞赛数据：classId → raceState
+// raceState: { raceCid, courseId, currentQuestion, totalQuestions, answers: Map<questionCid, Map<userId, {answer, from, rate, correct}>>, activeQuestionCid, timeLimit, startedAt }
+interface RaceAnswer { answer: any; from: string; userId: number; rate: number; correct: boolean }
+interface RaceState {
+  raceCid: number
+  courseId: number
+  currentQuestion: number
+  totalQuestions: number
+  activeQuestionCid: number | null
+  timeLimit: number
+  startedAt: number
+  // questionCid → (userId → answer info)
+  answers: Map<number, Map<number, RaceAnswer>>
+}
+const raceStates = new Map<number, RaceState>()
+
 function broadcastToClass(cid: number, msg: string) {
   const room = classRooms.get(cid)
   if (room) {
@@ -140,6 +156,119 @@ export default defineWebSocketHandler({
         const cid = Number(classId)
         broadcastToClass(cid, JSON.stringify({ type: 'quickAnswerEnd' }))
         quickAnswers.delete(cid)
+      } else if (type === 'raceStart' && classId) {
+        // 教师开始竞赛
+        const cid = Number(classId)
+        const raceCid = Number(data.raceCid)
+        const courseId = Number(data.courseId)
+        const totalQuestions = Number(data.totalQuestions) || 0
+        raceStates.set(cid, {
+          raceCid, courseId, currentQuestion: 0, totalQuestions,
+          activeQuestionCid: null, timeLimit: Number(data.timeLimit) || 30,
+          startedAt: Date.now(), answers: new Map(),
+        })
+        broadcastToClass(cid, JSON.stringify({
+          type: 'raceStart', raceCid, courseId, from: data.from || 'teacher',
+          totalQuestions, timeLimit: data.timeLimit || 30,
+        }))
+      } else if (type === 'raceQuestion' && classId) {
+        // 教师推送题目
+        const cid = Number(classId)
+        const race = raceStates.get(cid)
+        if (!race) return
+        const questionCid = Number(data.questionCid)
+        const questionIndex = Number(data.questionIndex) || 0
+        race.currentQuestion = questionIndex
+        race.activeQuestionCid = questionCid
+        race.timeLimit = Number(data.timeLimit) || 30
+        if (!race.answers.has(questionCid)) {
+          race.answers.set(questionCid, new Map())
+        }
+        broadcastToClass(cid, JSON.stringify({
+          type: 'raceQuestion',
+          raceCid: race.raceCid,
+          question: data.question || '',
+          questionCid,
+          questionIndex,
+          totalQuestions: race.totalQuestions,
+          timeLimit: race.timeLimit,
+          options: data.options || [],
+          qtype: data.qtype || 'single',
+        }))
+      } else if (type === 'raceAnswer' && classId) {
+        // 学生提交答案
+        const cid = Number(classId)
+        const race = raceStates.get(cid)
+        if (!race || !race.activeQuestionCid) return
+        const userId = Number(data.userId)
+        const from = String(data.from || 'anonymous')
+        const questionCid = race.activeQuestionCid
+        const qAnswers = race.answers.get(questionCid)
+        if (!qAnswers || qAnswers.has(userId)) return
+        qAnswers.set(userId, {
+          answer: data.answer,
+          from,
+          userId,
+          rate: Number(data.rate) || 0,
+          correct: !!data.correct,
+        })
+        // 广播答题进度（不泄露答案）
+        broadcastToClass(cid, JSON.stringify({
+          type: 'raceAnswerUpdate',
+          raceCid: race.raceCid,
+          questionCid,
+          answeredCount: qAnswers.size,
+        }))
+      } else if (type === 'raceQuestionEnd' && classId) {
+        // 教师结束当前题目，展示结果
+        const cid = Number(classId)
+        const race = raceStates.get(cid)
+        if (!race || !race.activeQuestionCid) return
+        const questionCid = race.activeQuestionCid
+        const qAnswers = race.answers.get(questionCid)
+        const results: any[] = []
+        if (qAnswers) {
+          for (const [uid, info] of qAnswers) {
+            results.push({ userId: uid, from: info.from, correct: info.correct, rate: info.rate })
+          }
+        }
+        broadcastToClass(cid, JSON.stringify({
+          type: 'raceQuestionEnd',
+          raceCid: race.raceCid,
+          questionCid,
+          correctAnswer: data.correctAnswer || [],
+          results,
+          answeredCount: qAnswers?.size || 0,
+        }))
+        race.activeQuestionCid = null
+      } else if (type === 'raceEnd' && classId) {
+        // 教师结束竞赛
+        const cid = Number(classId)
+        const race = raceStates.get(cid)
+        if (!race) return
+        // 汇总所有题目结果
+        const summary: any[] = []
+        const userTotals = new Map<number, { from: string; score: number; correctCount: number }>()
+        for (const [qCid, qAnswers] of race.answers) {
+          for (const [uid, info] of qAnswers) {
+            if (!userTotals.has(uid)) {
+              userTotals.set(uid, { from: info.from, score: 0, correctCount: 0 })
+            }
+            const ut = userTotals.get(uid)!
+            if (info.correct) ut.correctCount++
+            ut.score += info.rate
+          }
+        }
+        for (const [uid, info] of userTotals) {
+          summary.push({ userId: uid, from: info.from, score: Math.round(info.score * 100) / 100, correctCount: info.correctCount })
+        }
+        summary.sort((a, b) => b.score - a.score)
+        broadcastToClass(cid, JSON.stringify({
+          type: 'raceEnd',
+          raceCid: race.raceCid,
+          leaderboard: summary,
+        }))
+        raceStates.delete(cid)
       }
     } catch (e) {
       peer.send(JSON.stringify({ type: 'error', message: 'Invalid message format' }))

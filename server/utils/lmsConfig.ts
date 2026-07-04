@@ -51,6 +51,14 @@ export const DEFAULT_LMS_CONFIG = {
     dailyExpCap: 100,          // 每日经验上限
     levelStep: 100,            // 每级所需经验（线性）
   },
+  // 课程功能开关（全局默认值，单课程可通过 config.lmsConfig.course 覆盖）
+  course: {
+    showDanmaku: true,           // 弹幕功能
+    showAnnouncement: true,      // 显示公告
+    showComments: true,          // 显示评论
+    showProgress: false,         // 显示学习进度
+    defaultChapterOpen: true,    // 新章节默认开放
+  },
   // 网盘存储
   storage: {
     driveSize: 1073741824,     // 个人网盘空间上限（字节），默认 1GB

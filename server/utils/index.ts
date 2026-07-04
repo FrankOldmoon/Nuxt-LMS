@@ -101,6 +101,8 @@ export function normalizeChapterDetail(ch: any): LmsChapterDetail {
 /** 归一化章节页面数据（DB chapter + course → LmsChapterPageData） */
 export function normalizeChapterPageData(ch: any, course: any): LmsChapterPageData {
   const cfg = getConfig(course)
+  // 合并全局 lmsConfig + 课程 lmsConfig，读取课程功能开关
+  const courseLms = mergeCourseLmsConfig(cfg)
   return {
     chapter: normalizeChapterDetail(ch),
     course: {
@@ -108,6 +110,7 @@ export function normalizeChapterPageData(ch: any, course: any): LmsChapterPageDa
       title: course.name,
       icon: cfg.icon || 'i-lucide-book-open',
       color: cfg.color || 'primary',
+      showDanmaku: courseLms?.course?.showDanmaku ?? true,
       chapters: (course.chapters || []).map(normalizeChapterSummary),
     },
   }

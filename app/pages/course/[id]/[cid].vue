@@ -76,7 +76,7 @@
 const route = useRoute()
 const chapterId = computed(() => route.params.cid as string)
 const courseId = computed(() => route.params.id as string)
-const { setToc, setEditableContent, setEditableMeta, contentVersion } = useLayoutState()
+const { setToc, setEditableContent, setEditableMeta, contentVersion, showDanmaku } = useLayoutState()
 const { navigation } = useSidebarNav()
 
 const { data: resp, pending, refresh, error } = cRequest.use<import('#shared/types/lms').LmsChapterPageData | null>(
@@ -98,6 +98,7 @@ watch(resp, (d) => {
   setToc(extractTocFromContent(d?.chapter?.content))
   setEditableContent(d?.chapter?.content ?? null)
   if (d?.chapter?.id) setEditableMeta('chapters', d.chapter.id, d.course.id)
+  showDanmaku.value = d.course.showDanmaku ?? true
 }, { immediate: true, flush: 'sync' })
 
 // 监听内容版本号，保存成功后重新获取数据（flush: sync 确保每次变化都触发）

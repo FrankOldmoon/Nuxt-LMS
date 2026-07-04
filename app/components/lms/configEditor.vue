@@ -124,12 +124,41 @@
                 </UFormField>
             </div>
         </div>
+
+        <!-- 课程功能开关（全局配置时显示，课程配置时由 configForm 单独管理） -->
+        <div v-if="!hideCourse" class="space-y-2">
+            <p class="text-sm font-medium">{{ $t('lmsConfig.course') }}</p>
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('courseEditor.showDanmaku') }}</span>
+                    <USwitch v-model="config.course.showDanmaku" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('courseEditor.showAnnouncement') }}</span>
+                    <USwitch v-model="config.course.showAnnouncement" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('courseEditor.showComments') }}</span>
+                    <USwitch v-model="config.course.showComments" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('courseEditor.showProgress') }}</span>
+                    <USwitch v-model="config.course.showProgress" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('courseEditor.defaultChapterOpen') }}</span>
+                    <USwitch v-model="config.course.defaultChapterOpen" />
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
 <script setup>
 const props = defineProps({
     modelValue: { type: Object, default: null },
+    // 课程配置场景下隐藏 course 分组（由 configForm 顶部开关单独管理）
+    hideCourse: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -142,6 +171,7 @@ const defaultConfig = {
     race: { participateExp: 10, rank1Exp: 100, rank2Exp: 80, rank3Exp: 60, participationExp: 30 },
     quiz: { submitExp: 3, passScore: 60, passBonusExp: 10 },
     general: { dailyExpCap: 100, levelStep: 100 },
+    course: { showDanmaku: true, showAnnouncement: true, showComments: true, showProgress: false, defaultChapterOpen: true },
 }
 
 const config = reactive(JSON.parse(JSON.stringify(defaultConfig)))
@@ -168,5 +198,10 @@ function deepMerge(target, source) {
     }
 }
 
-defineExpose({ getConfig: () => JSON.parse(JSON.stringify(config)) })
+defineExpose({ getConfig: () => {
+    const data = JSON.parse(JSON.stringify(config))
+    // 课程配置场景：移除 course 分组（由 configForm 顶部开关管理）
+    if (props.hideCourse) delete data.course
+    return data
+} })
 </script>

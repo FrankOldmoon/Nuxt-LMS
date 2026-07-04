@@ -1,7 +1,7 @@
 <template>
     <div class="question-render w-full space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 relative"
         :data-question-id="questionId"
-        @mouseenter.once="fetchRecord">
+        @mouseenter.once="onHover">
         <!-- 加载中 -->
         <div v-if="pending" class="flex items-center justify-center py-6 text-gray-400">
             <span>{{ $t('question.loading') }}</span>
@@ -48,8 +48,8 @@
                 :question-id="questionId" />
         </template>
 
-        <!-- 提交/重置（公共） -->
-        <div v-if="question" class="flex items-center gap-2 pt-3">
+        <!-- 提交/重置（公共，quiz 模式下隐藏） -->
+        <div v-if="question && !inQuiz" class="flex items-center gap-2 pt-3">
             <!-- 标签 -->
             <div v-if="question.tags && question.tags.length" class="flex flex-wrap gap-1">
                 <span v-for="(tag, idx) in question.tags" :key="idx"
@@ -137,6 +137,7 @@ import { computeCorrectRate, decryptAnswer } from './question/shared.ts'
 
 const props = defineProps({
     node: Object,
+    inQuiz: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['init'])
@@ -321,6 +322,8 @@ watch([fetchedQuestion, questionId], () => {
 
 // provide question 数据，供 select 渲染节点获取 options
 provide('questionData', question)
+// 告知深层子组件（如 code-block）当前在 quiz 中，隐藏运行/复制按钮
+provide('inQuiz', props.inQuiz)
 
 // questionId 为空时不显示加载态
 const pending = computed(() => !!questionId.value && fetchedPending.value)
@@ -359,7 +362,11 @@ function onSaved(ques) {
     }
 }
 
-// 鼠标移入时（仅一次）获取当前用户的提交记录，填充到 question.record
+// 鼠标移入时（仅一次）：非 quiz 模式获取当前用户的提交记录
+function onHover() {
+    if (props.inQuiz) return
+    fetchRecord()
+}
 async function fetchRecord() {
     if (!questionId.value || !editableCourseId.value) return
     try {
@@ -380,6 +387,54 @@ async function fetchRecord() {
         // 静默忽略（未登录或无记录）
     }
 }
+
+// ====================== 暴露给 quiz 的方法 ======================
+defineExpose({
+    // 获取当前 question 数据（quiz 用于 computeCorrectRate）
+    getQuestionData() {
+        return question.value
+    },
+    // 从 quiz record 填充（不提交后端）
+    fillFromRecord(record, rate) {
+        if (question.value && Array.isArray(record)) {
+            question.value.record = [...record]
+            question.value.correct_rate = rate !== undefined ? rate : computeCorrectRate(question.value)
+            submitted.value = true
+            fromRecord.value = true
+            isCorrect.value = (question.value.correct_rate || 0) > 0
+        }
+    },
+    // 显示结果（不提交后端，quiz submit 时调用）
+    showResult() {
+        if (!question.value) return { rate: 0, record: [] }
+        // 确保 answer 已解密（防止 SSR 遗留的加密状态）
+        if (Array.isArray(question.value.answer) && question.value.answer.some((a) => typeof a === 'string' && a.startsWith('enc:'))) {
+            question.value.answer = decryptAnswer(question.value.answer)
+        }
+        const rate = computeCorrectRate(question.value)
+        question.value.correct_rate = rate
+        submitted.value = true
+        fromRecord.value = false
+        isCorrect.value = rate > 0
+        return {
+            rate,
+            record: question.value.record ? [...question.value.record] : [],
+        }
+    },
+    // 重置（quiz 重试时调用）
+    resetForQuiz() {
+        if (renderRef.value) renderRef.value.reset()
+        submitted.value = false
+        isCorrect.value = false
+        fromRecord.value = false
+        showAnswer.value = false
+        if (question.value) question.value.record = []
+    },
+    // 是否有答案
+    get hasAnswer() {
+        return renderRef.value?.hasAnswer ?? false
+    },
+})
 </script>
 
 <style scoped>

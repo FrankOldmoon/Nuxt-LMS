@@ -17,35 +17,42 @@
       <USelect v-model="config.level" :items="levelOpts" class="w-full" />
     </UFormField>
 
-    <!-- config 开关项 -->
+    <!-- config 开关项（读取/写入 lmsConfig.course） -->
     <div class="space-y-3">
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm font-medium">{{ $t('courseEditor.defaultChapterOpen') }}</p>
           <p class="text-xs text-muted">{{ $t('courseEditor.defaultChapterOpenHint') }}</p>
         </div>
-        <USwitch v-model="config.defaultChapterOpen" />
+        <USwitch v-model="courseSwitches.defaultChapterOpen" />
       </div>
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm font-medium">{{ $t('courseEditor.showAnnouncement') }}</p>
           <p class="text-xs text-muted">{{ $t('courseEditor.showAnnouncementHint') }}</p>
         </div>
-        <USwitch v-model="config.showAnnouncement" />
+        <USwitch v-model="courseSwitches.showAnnouncement" />
       </div>
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm font-medium">{{ $t('courseEditor.showComments') }}</p>
           <p class="text-xs text-muted">{{ $t('courseEditor.showCommentsHint') }}</p>
         </div>
-        <USwitch v-model="config.showComments" />
+        <USwitch v-model="courseSwitches.showComments" />
       </div>
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm font-medium">{{ $t('courseEditor.showProgress') }}</p>
           <p class="text-xs text-muted">{{ $t('courseEditor.showProgressHint') }}</p>
         </div>
-        <USwitch v-model="config.showProgress" />
+        <USwitch v-model="courseSwitches.showProgress" />
+      </div>
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium">{{ $t('courseEditor.showDanmaku') }}</p>
+          <p class="text-xs text-muted">{{ $t('courseEditor.showDanmakuHint') }}</p>
+        </div>
+        <USwitch v-model="courseSwitches.showDanmaku" />
       </div>
     </div>
 
@@ -60,8 +67,8 @@
       <p v-if="extraConfigError" class="text-xs text-error mt-1">{{ extraConfigError }}</p>
     </UFormField>
 
-    <!-- LMS 学习行为参数（课程级覆盖） -->
-    <LmsConfigEditor ref="lmsConfigRef" v-model="lmsConfig" />
+    <!-- LMS 学习行为参数（课程级覆盖，course 分组由上方开关管理） -->
+    <LmsConfigEditor ref="lmsConfigRef" v-model="lmsConfig" hide-course />
   </div>
 </template>
 
@@ -72,10 +79,15 @@ const config = reactive({
   icon: '',
   color: 'primary',
   level: '',
-  defaultChapterOpen: true,
+})
+
+// 课程功能开关（存储在 lmsConfig.course 中，单课程可覆盖全局默认值）
+const courseSwitches = reactive({
+  showDanmaku: true,
   showAnnouncement: true,
   showComments: true,
   showProgress: false,
+  defaultChapterOpen: true,
 })
 
 const extraConfigText = ref('{}')
@@ -86,19 +98,23 @@ const lmsConfig = ref<any>(null)
 const colorOpts = computed(() => colorOptions())
 const levelOpts = computed(() => levelOptions())
 
-const KNOWN_KEYS = ['icon', 'color', 'level', 'defaultChapterOpen', 'showAnnouncement', 'showComments', 'showProgress', 'lmsConfig']
+const KNOWN_KEYS = ['icon', 'color', 'level', 'lmsConfig', 'showDanmaku', 'showAnnouncement', 'showComments', 'showProgress', 'defaultChapterOpen']
 
 /** 从课程 config 对象初始化表单 */
 function initFromConfig(cfg: Record<string, any>) {
   config.icon = cfg.icon || ''
   config.color = cfg.color || 'primary'
   config.level = cfg.level || t('home.levels.beginner')
-  config.showAnnouncement = cfg.showAnnouncement ?? true
-  config.showComments = cfg.showComments ?? true
-  config.showProgress = cfg.showProgress ?? false
-  config.defaultChapterOpen = cfg.defaultChapterOpen ?? true
 
-  // LMS 配置（课程级覆盖）
+  // 课程功能开关：优先读取 lmsConfig.course，兼容旧版顶层字段
+  const courseCfg = cfg.lmsConfig?.course || {}
+  courseSwitches.showDanmaku = courseCfg.showDanmaku ?? cfg.showDanmaku ?? true
+  courseSwitches.showAnnouncement = courseCfg.showAnnouncement ?? cfg.showAnnouncement ?? true
+  courseSwitches.showComments = courseCfg.showComments ?? cfg.showComments ?? true
+  courseSwitches.showProgress = courseCfg.showProgress ?? cfg.showProgress ?? false
+  courseSwitches.defaultChapterOpen = courseCfg.defaultChapterOpen ?? cfg.defaultChapterOpen ?? true
+
+  // LMS 配置（课程级覆盖，排除已单独管理的 course 分组开关）
   lmsConfig.value = cfg.lmsConfig || null
 
   const extra: Record<string, any> = {}
@@ -111,7 +127,7 @@ function initFromConfig(cfg: Record<string, any>) {
   extraConfigError.value = ''
 }
 
-/** 合并 config 已知字段 + lmsConfig + extra JSON，返回最终 config */
+/** 合并 config 已知字段 + lmsConfig.course 开关 + extra JSON，返回最终 config */
 function buildConfig(): Record<string, any> | null {
   let extra: Record<string, any> = {}
   try {
@@ -125,17 +141,12 @@ function buildConfig(): Record<string, any> | null {
     icon: config.icon || undefined,
     color: config.color,
     level: config.level,
-    showAnnouncement: config.showAnnouncement,
-    showComments: config.showComments,
-    showProgress: config.showProgress,
-    defaultChapterOpen: config.defaultChapterOpen,
     ...extra,
   }
-  // 添加 LMS 配置（课程级覆盖）
-  const lmsData = lmsConfigRef.value?.getConfig()
-  if (lmsData) {
-    result.lmsConfig = lmsData
-  }
+  // 获取 LMS 配置（hideCourse 时不含 course 分组），合并课程功能开关
+  const lmsData = lmsConfigRef.value?.getConfig() || {}
+  lmsData.course = { ...courseSwitches }
+  result.lmsConfig = lmsData
   return result
 }
 

@@ -1,12 +1,13 @@
 <template>
   <ClientOnly>
-    <ChapterDanmaku />
+    <ChapterDanmaku v-if="showDanmaku" />
   </ClientOnly>
 </template>
 
 <script setup lang="ts">
 const { user } = useAuth()
 const { wsConnected, connect, joinClass } = useWebSocket()
+const { showDanmaku } = useLayoutState()
 const classIdNum = computed(() => user.value?.defaultClass?.id || user.value?.classId)
 
 watch([classIdNum, wsConnected], () => {

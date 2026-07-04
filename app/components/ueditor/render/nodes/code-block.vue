@@ -2,7 +2,7 @@
   <div class="cb-wrapper" :class="`cb-theme-${theme}`">
     <div class="cb-header">
       <span class="cb-lang">{{ language }}</span>
-      <div class="flex items-center gap-2">
+      <div v-if="!inQuiz" class="flex items-center gap-2">
         <button v-if="isPython" class="cb-run" @click="ideOpen = true">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
         </button>
@@ -20,7 +20,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import { createLowlight, common } from 'lowlight'
 
 const lowlight = createLowlight(common)
@@ -28,6 +28,9 @@ const lowlight = createLowlight(common)
 const props = defineProps({
   node: { type: Object, required: true },
 })
+
+// 从父级 question 组件注入，quiz 模式下隐藏运行/复制按钮
+const inQuiz = inject('inQuiz', false)
 
 const attrs = computed(() => props.node.attrs || {})
 const language = computed(() => attrs.value.language || 'plaintext')
