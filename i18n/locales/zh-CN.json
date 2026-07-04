@@ -59,7 +59,11 @@
     "pause": "暂停",
     "reset": "重置",
     "resume": "继续",
-    "noClass": "请先选择班级"
+    "noClass": "请先选择班级",
+    "openToAll": "全局开放",
+    "openClasses": "开放班级",
+    "openUpdated": "开放状态已更新",
+    "openUpdateFailed": "开放状态更新失败"
   },
   "layout": {
     "menu": "菜单",
@@ -252,6 +256,8 @@
     "showCommentsHint": "在课程页面展示评论模块",
     "showProgress": "显示学习进度",
     "showProgressHint": "在课程页面展示学习进度",
+    "defaultChapterOpen": "新章节默认开放",
+    "defaultChapterOpenHint": "创建新章节时默认设置为开放状态",
     "extraConfig": "其他配置 (JSON)",
     "extraConfigPlaceholder": "自定义配置项，JSON 格式",
     "colors": {
@@ -398,7 +404,7 @@
     "htmlCodeLabel": "HTML 代码",
     "htmlCodePlaceholder": "在此输入 HTML 代码...",
     "htmlPreview": "实时预览",
-    "htmlHint": "iframe 内可通过 parent.postMessage({ type: 'correct_rate', rate: 0.8 }, '*') 传递得分率（0~1）",
+    "htmlHint": "iframe 内可通过 parent.postMessage(\\{ type: 'correct_rate', rate: 0.8 \\}, '*') 传递得分率（0~1）",
     "htmlCorrectRate": "正确率",
     "htmlDeterminedByIframe": "由 iframe 内代码判定",
     "typeShortAnswer": "简答题",
@@ -446,9 +452,9 @@
     "fillRegexMatch": "匹配成功",
     "fillRegexNoMatch": "不匹配",
     "optionPlaceholder": "输入选项",
-    "optionsHint": "下拉框选项，在内容中用 ||答案|| 插入下拉框",
-    "selectAnswerHint": "下拉答案（与内容中 ||答案|| 一一对应）",
-    "selectPlaceholderHint": "请在内容中使用 ||答案|| 插入下拉框，并在此设置选项",
+    "optionsHint": "下拉框选项，在内容中用 \\||答案\\|| 插入下拉框",
+    "selectAnswerHint": "下拉答案（与内容中 \\||答案\\|| 一一对应）",
+    "selectPlaceholderHint": "请在内容中使用 \\||答案\\|| 插入下拉框，并在此设置选项",
     "fillPlaceholder": "填空 {0}",
     "explanationLabel": "答案解析（学生提交后展示）",
     "explanationAnswer": "答案解析：",

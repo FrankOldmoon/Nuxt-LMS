@@ -1,3 +1,11 @@
+/**
+ * 新增章节：根据课程 config.defaultChapterOpen 设置章节初始 isOpen
+ * POST /api/lms/chapters/add
+ * body: { name, courseId, isOpen?, ... }
+ */
+import { db, schema } from '@nuxthub/db'
+import { eq } from 'drizzle-orm'
+
 export default eventHandler(async (event) => {
   const body = await readBody(event)
 
@@ -9,6 +17,17 @@ export default eventHandler(async (event) => {
   }
 
   try {
+    // 读取课程 config.defaultChapterOpen，若未显式传 isOpen 则用课程默认值
+    if (body.isOpen === undefined && body.courseId) {
+      const course = await db
+        .select({ config: schema.courses.config })
+        .from(schema.courses)
+        .where(eq(schema.courses.id, Number(body.courseId)))
+        .limit(1)
+      const cfg = (course[0]?.config as Record<string, any>) || {}
+      body.isOpen = cfg.defaultChapterOpen ?? true
+    }
+
     const result = await addTable('chapters', body)
     return cResp(result)
   } catch (error: any) {

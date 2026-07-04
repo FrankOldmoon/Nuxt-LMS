@@ -32,6 +32,10 @@ export function decryptValue(val: any): any {
     for (let i = 0; i < decoded.length; i++) {
       result += String.fromCharCode(decoded.charCodeAt(i) ^ ENC_KEY.charCodeAt(i % ENC_KEY.length))
     }
+    // 还原原始类型：纯数字字符串转回 number
+    if (result !== '' && !isNaN(Number(result))) {
+      return Number(result)
+    }
     return result
   } catch {
     return val

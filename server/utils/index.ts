@@ -92,6 +92,9 @@ export function normalizeChapterDetail(ch: any): LmsChapterDetail {
     id: ch.id,
     title: ch.name,
     content: (ch.content as Record<string, any>) || {},
+    questionIds: (ch.questionIds as number[]) || [],
+    homeworkIds: (ch.homeworkIds as number[]) || [],
+    commentIds: (ch.commentIds as number[]) || [],
   }
 }
 

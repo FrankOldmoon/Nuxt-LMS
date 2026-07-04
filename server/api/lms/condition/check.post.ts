@@ -6,14 +6,14 @@
  * 条件类型：
  *   - role: 检查用户角色（admin/teacher/student）
  *   - class: 检查用户是否属于指定班级
- *   - question: 检查用户是否完成指定题目
- *   - homework: 检查用户是否完成指定作业
- *   - comment: 检查用户是否完成指定评论
+ *   - question: 检查用户是否完成指定题目（value 为 cid 数组，需全部完成）
+ *   - homework: 检查用户是否完成指定作业（value 为 cid 数组，需全部完成）
+ *   - comment: 检查用户是否完成指定评论（value 为 cid 数组，需全部完成）
  *
  * 返回 { met: boolean, details: [{ type, value, met }] }
  */
 import { db, schema } from '@nuxthub/db'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, inArray } from 'drizzle-orm'
 
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
@@ -34,12 +34,10 @@ export default eventHandler(async (event) => {
     try {
       switch (cond.type) {
         case 'role':
-          // 检查用户角色
           met = user.roles.includes(cond.value)
           break
 
-        case 'class':
-          // 检查用户是否属于指定班级
+        case 'class': {
           const classId = Number(cond.value)
           if (classId) {
             const rows = await db
@@ -50,45 +48,53 @@ export default eventHandler(async (event) => {
             met = rows.length > 0
           }
           break
+        }
 
-        case 'question':
-          // 检查用户是否提交过指定题目
-          const qId = Number(cond.value)
-          if (qId) {
+        case 'question': {
+          // 多选：value 为 cid 数组，需全部完成
+          const qIds = Array.isArray(cond.value)
+            ? cond.value.map(Number).filter(Boolean)
+            : [Number(cond.value)].filter(Boolean)
+          if (qIds.length > 0) {
             const rows = await db
-              .select({ id: schema.userQuestions.id })
+              .select({ questionCid: schema.userQuestions.questionCid })
               .from(schema.userQuestions)
-              .where(and(eq(schema.userQuestions.userId, user.id), eq(schema.userQuestions.questionId, qId)))
-              .limit(1)
-            met = rows.length > 0
+              .where(and(eq(schema.userQuestions.userId, user.id), inArray(schema.userQuestions.questionCid, qIds)))
+            const doneSet = new Set(rows.map(r => r.questionCid))
+            met = qIds.every((id: number) => doneSet.has(id))
           }
           break
+        }
 
-        case 'homework':
-          // 检查用户是否提交过指定作业
-          const hId = Number(cond.value)
-          if (hId) {
+        case 'homework': {
+          const hIds = Array.isArray(cond.value)
+            ? cond.value.map(Number).filter(Boolean)
+            : [Number(cond.value)].filter(Boolean)
+          if (hIds.length > 0) {
             const rows = await db
-              .select({ id: schema.userHomeworks.id })
+              .select({ homeworkCid: schema.userHomeworks.homeworkCid })
               .from(schema.userHomeworks)
-              .where(and(eq(schema.userHomeworks.userId, user.id), eq(schema.userHomeworks.homeworkId, hId)))
-              .limit(1)
-            met = rows.length > 0
+              .where(and(eq(schema.userHomeworks.userId, user.id), inArray(schema.userHomeworks.homeworkCid, hIds)))
+            const doneSet = new Set(rows.map(r => r.homeworkCid))
+            met = hIds.every((id: number) => doneSet.has(id))
           }
           break
+        }
 
-        case 'comment':
-          // 检查用户是否完成指定评论（这里简化为是否发表过评论）
-          const cId = Number(cond.value)
-          if (cId) {
+        case 'comment': {
+          const cIds = Array.isArray(cond.value)
+            ? cond.value.map(Number).filter(Boolean)
+            : [Number(cond.value)].filter(Boolean)
+          if (cIds.length > 0) {
             const rows = await db
-              .select({ id: schema.userComments.id })
+              .select({ commentCid: schema.userComments.commentCid })
               .from(schema.userComments)
-              .where(and(eq(schema.userComments.userId, user.id), eq(schema.userComments.commentId, cId)))
-              .limit(1)
-            met = rows.length > 0
+              .where(and(eq(schema.userComments.userId, user.id), inArray(schema.userComments.commentCid, cIds)))
+            const doneSet = new Set(rows.map(r => r.commentCid))
+            met = cIds.every((id: number) => doneSet.has(id))
           }
           break
+        }
 
         default:
           met = false

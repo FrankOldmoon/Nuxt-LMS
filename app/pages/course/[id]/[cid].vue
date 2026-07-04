@@ -1,7 +1,11 @@
 <template>
+  
   <div v-if="data" class="flex gap-8">
     <!-- 左侧主内容 -->
     <div class="flex-1 min-w-0 max-w-none">
+      <!-- 章节访问控制栏（教师/管理员可见） -->
+      <ChapterAccessBar :chapter-id="Number(chapterId)" :course-id="Number(courseId)" />
+
       <!-- 章节头部 -->
       <div class="mb-8 pb-6 border-b border-default">
         <div class="flex items-center gap-2 text-sm text-muted mb-3">

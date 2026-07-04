@@ -39,12 +39,32 @@
                             class="flex-1"
                             @update:model-value="updateClassLabel(idx, $event)"
                         />
-                        <UInput
-                            v-else
+                        <USelect
+                            v-else-if="cond.type === 'question'"
                             v-model="cond.value"
-                            :placeholder="getPlaceholder(cond.type)"
+                            :items="questionOptions"
+                            multiple
                             size="sm"
                             class="flex-1"
+                            @update:model-value="updateTaskLabel(idx, $event, 'question')"
+                        />
+                        <USelect
+                            v-else-if="cond.type === 'homework'"
+                            v-model="cond.value"
+                            :items="homeworkOptions"
+                            multiple
+                            size="sm"
+                            class="flex-1"
+                            @update:model-value="updateTaskLabel(idx, $event, 'homework')"
+                        />
+                        <USelect
+                            v-else-if="cond.type === 'comment'"
+                            v-model="cond.value"
+                            :items="commentOptions"
+                            multiple
+                            size="sm"
+                            class="flex-1"
+                            @update:model-value="updateTaskLabel(idx, $event, 'comment')"
                         />
                         <UButton
                             icon="i-lucide-x"
@@ -85,8 +105,47 @@ import { NodeViewWrapper, nodeViewProps } from '@tiptap/vue-3'
 
 const props = defineProps(nodeViewProps)
 const { t } = useI18n()
+const { editableId } = useLayoutState()
 
 const showConfig = ref(false)
+
+// 当前章节的 question/homework/comment IDs
+const chapterTaskIds = ref({ questionIds: [], homeworkIds: [], commentIds: [] })
+
+const questionOptions = computed(() =>
+    (chapterTaskIds.value.questionIds || []).map(id => ({ label: `#${id}`, value: String(id) }))
+)
+const homeworkOptions = computed(() =>
+    (chapterTaskIds.value.homeworkIds || []).map(id => ({ label: `#${id}`, value: String(id) }))
+)
+const commentOptions = computed(() =>
+    (chapterTaskIds.value.commentIds || []).map(id => ({ label: `#${id}`, value: String(id) }))
+)
+
+async function loadChapterTasks() {
+    if (!editableId.value) return
+    try {
+        const data = await cRequest(`/api/lms/chapters/show?id=${editableId.value}`)
+        if (data?.chapter) {
+            chapterTaskIds.value = {
+                questionIds: data.chapter.questionIds || [],
+                homeworkIds: data.chapter.homeworkIds || [],
+                commentIds: data.chapter.commentIds || [],
+            }
+        }
+    } catch (e) {
+        console.error('[condition] 加载章节任务失败', e)
+    }
+}
+
+// 选择 task 时同步保存 label（多选时拼接近似显示）
+function updateTaskLabel(idx, val, type) {
+    const map = { question: questionOptions, homework: homeworkOptions, comment: commentOptions }
+    const opts = map[type].value
+    const vals = Array.isArray(val) ? val : [val]
+    const labels = vals.map(v => opts.find(o => o.value === v)?.label || v)
+    editConditions.value[idx].label = labels.join(', ')
+}
 
 const parseConfig = () => {
     try {
@@ -151,17 +210,29 @@ function getPlaceholder(type) {
 }
 
 function toggleConfig() {
-    editConditions.value = [...(config.value.conditions || [])]
+    editConditions.value = (config.value.conditions || []).map(c => {
+        // question/homework/comment 使用多选，确保 value 是数组
+        const taskTypes = ['question', 'homework', 'comment']
+        if (taskTypes.includes(c.type)) {
+            return { ...c, value: Array.isArray(c.value) ? c.value : (c.value ? [c.value] : []) }
+        }
+        return { ...c }
+    })
     editContent.value = config.value.content || ''
     showConfig.value = !showConfig.value
-    if (showConfig.value && classOptions.value.length === 0) {
-        loadClasses()
+    if (showConfig.value) {
+        if (classOptions.value.length === 0) loadClasses()
+        loadChapterTasks()
     }
 }
 
 function applyConfig() {
     const newConfig = {
-        conditions: editConditions.value.filter(c => c.value.trim()),
+        conditions: editConditions.value.filter(c => {
+            // question/homework/comment 是多选数组，role/class 是字符串
+            if (Array.isArray(c.value)) return c.value.length > 0
+            return String(c.value || '').trim()
+        }),
         content: editContent.value,
     }
     config.value = newConfig

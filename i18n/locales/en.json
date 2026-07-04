@@ -59,7 +59,11 @@
     "pause": "Pause",
     "reset": "Reset",
     "resume": "Resume",
-    "noClass": "Please select a class first"
+    "noClass": "Please select a class first",
+    "openToAll": "Open to All",
+    "openClasses": "Open Classes",
+    "openUpdated": "Access updated",
+    "openUpdateFailed": "Access update failed"
   },
   "layout": {
     "menu": "Menu",
@@ -252,6 +256,8 @@
     "showCommentsHint": "Display comments module on course page",
     "showProgress": "Show Progress",
     "showProgressHint": "Display learning progress on course page",
+    "defaultChapterOpen": "New chapters open by default",
+    "defaultChapterOpenHint": "New chapters are set to open by default",
     "extraConfig": "Extra Config (JSON)",
     "extraConfigPlaceholder": "Custom configuration in JSON",
     "colors": {

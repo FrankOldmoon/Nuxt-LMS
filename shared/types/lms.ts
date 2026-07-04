@@ -50,6 +50,9 @@ export interface LmsChapterDetail {
   id: number
   title: string
   content: UEditorContent
+  questionIds?: number[]
+  homeworkIds?: number[]
+  commentIds?: number[]
 }
 
 /** 章节页面数据（章节 + 所属课程含章节列表用于导航） */

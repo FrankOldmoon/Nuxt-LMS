@@ -48,7 +48,8 @@ function toggleAnswer(idx) {
   const pos = ans.indexOf(idx)
   if (pos > -1) ans.splice(pos, 1)
   else ans.push(idx)
-  props.form.answer = ans
+  // 按选项索引升序排序
+  props.form.answer = ans.sort((a, b) => a - b)
 }
 
 function addOption() {

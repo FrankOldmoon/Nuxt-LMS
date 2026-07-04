@@ -21,6 +21,13 @@
     <div class="space-y-3">
       <div class="flex items-center justify-between">
         <div>
+          <p class="text-sm font-medium">{{ $t('courseEditor.defaultChapterOpen') }}</p>
+          <p class="text-xs text-muted">{{ $t('courseEditor.defaultChapterOpenHint') }}</p>
+        </div>
+        <USwitch v-model="config.defaultChapterOpen" />
+      </div>
+      <div class="flex items-center justify-between">
+        <div>
           <p class="text-sm font-medium">{{ $t('courseEditor.showAnnouncement') }}</p>
           <p class="text-xs text-muted">{{ $t('courseEditor.showAnnouncementHint') }}</p>
         </div>
@@ -65,6 +72,7 @@ const config = reactive({
   icon: '',
   color: 'primary',
   level: '',
+  defaultChapterOpen: true,
   showAnnouncement: true,
   showComments: true,
   showProgress: false,
@@ -78,7 +86,7 @@ const lmsConfig = ref<any>(null)
 const colorOpts = computed(() => colorOptions())
 const levelOpts = computed(() => levelOptions())
 
-const KNOWN_KEYS = ['icon', 'color', 'level', 'showAnnouncement', 'showComments', 'showProgress', 'lmsConfig']
+const KNOWN_KEYS = ['icon', 'color', 'level', 'defaultChapterOpen', 'showAnnouncement', 'showComments', 'showProgress', 'lmsConfig']
 
 /** 从课程 config 对象初始化表单 */
 function initFromConfig(cfg: Record<string, any>) {
@@ -88,6 +96,7 @@ function initFromConfig(cfg: Record<string, any>) {
   config.showAnnouncement = cfg.showAnnouncement ?? true
   config.showComments = cfg.showComments ?? true
   config.showProgress = cfg.showProgress ?? false
+  config.defaultChapterOpen = cfg.defaultChapterOpen ?? true
 
   // LMS 配置（课程级覆盖）
   lmsConfig.value = cfg.lmsConfig || null
@@ -119,6 +128,7 @@ function buildConfig(): Record<string, any> | null {
     showAnnouncement: config.showAnnouncement,
     showComments: config.showComments,
     showProgress: config.showProgress,
+    defaultChapterOpen: config.defaultChapterOpen,
     ...extra,
   }
   // 添加 LMS 配置（课程级覆盖）
