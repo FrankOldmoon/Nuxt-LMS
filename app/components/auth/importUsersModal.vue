@@ -27,7 +27,7 @@
                     :headers="HEADERS"
                     :col-widths="COL_WIDTHS"
                     :active="isOpen"
-                    :show-header="false"
+                    :show-tools="false"
                     :show-footer="false"
                     class="flex-1 min-h-0"
                 />

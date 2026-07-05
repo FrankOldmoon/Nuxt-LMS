@@ -4,7 +4,7 @@
             <Sheet
                 :col-widths="{}"
                 :row-count="100"
-                :show-header="true"
+                :show-tools="true"
                 :show-footer="false"
                 :show-context-menu="false"
                 :active="true"

@@ -8,7 +8,7 @@ const props = defineProps({
     colWidths: { type: Object, default: () => ({}) },
     rowCount: { type: Number, default: 30 },
     active: { type: Boolean, default: true },
-    showHeader: { type: Boolean, default: true },
+    showTools: { type: Boolean, default: true },
     showFooter: { type: Boolean, default: true },
     showContextMenu: { type: Boolean, default: true },
     // 初始 cellData（用于恢复已保存的数据）
@@ -101,11 +101,21 @@ async function initSheet() {
     // 销毁已有实例
     destroyUniver()
 
-    // 构建 cellData：优先使用初始数据，无则空对象
+    // 构建 cellData：第 0 行始终放表头，第 1 行起放数据
     const cellData = {}
+    // 填入表头行
+    if (props.headers.length) {
+        const headerRow = {}
+        props.headers.forEach((text, c) => {
+            headerRow[c] = { v: text }
+        })
+        cellData[0] = headerRow
+    }
+    // 填入初始数据行（跳过第 0 行，保留表头）
     if (props.initialData) {
         for (const rowKey in props.initialData) {
             const r = Number(rowKey)
+            if (r === 0) continue
             cellData[r] = props.initialData[rowKey]
         }
     }
@@ -129,7 +139,7 @@ async function initSheet() {
         presets: [
             UniverSheetsCorePreset({
                 container: sheetContainer.value,
-                header: props.showHeader,
+                header: props.showTools,
                 footer: props.showFooter,
                 contextMenu: props.showContextMenu,
             }),
