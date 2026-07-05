@@ -43,7 +43,7 @@ export function normalizeCategory(cat: any): LmsSeries {
 }
 
 /** 归一化课程摘要（DB courses → LmsCourseSummary） */
-export function normalizeCourseSummary(course: any, chapterCount?: number): LmsCourseSummary {
+export function normalizeCourseSummary(course: any, chapterCount?: number, teachers: LmsMember[] = []): LmsCourseSummary {
   const cfg = getConfig(course)
   return {
     id: course.id,
@@ -56,6 +56,7 @@ export function normalizeCourseSummary(course: any, chapterCount?: number): LmsC
     categoryId: course.categoryId,
     chapterCount: chapterCount ?? course.chapters?.length ?? 0,
     coverImg: cfg.coverImg || null,
+    teachers,
   }
 }
 
@@ -64,6 +65,7 @@ export function normalizeChapterSummary(ch: any, userChapter?: any): LmsChapterS
   const result: LmsChapterSummary = {
     id: ch.id,
     title: ch.name,
+    isOpen: !!ch.isOpen,
   }
   if (userChapter) {
     result.isPass = !!userChapter.isPass
@@ -74,7 +76,7 @@ export function normalizeChapterSummary(ch: any, userChapter?: any): LmsChapterS
 /** 归一化课程详情（DB courses + chapters → LmsCourseDetail） */
 export function normalizeCourseDetail(course: any): LmsCourseDetail {
   const cfg = getConfig(course)
-  const chapters = (course.chapters || []).map(normalizeChapterSummary)
+  const chapters = (course.chapters || []).map(ch => normalizeChapterSummary(ch))
   return {
     id: course.id,
     title: course.name,
@@ -126,7 +128,7 @@ export function normalizeChapterPageData(ch: any, course: any, userChapter?: any
       showDanmaku: courseLms?.course?.showDanmaku ?? true,
       chapterBtns: courseLms?.chapterBtns ?? {},
       courseBtns: courseLms?.courseBtns ?? {},
-      chapters: (course.chapters || []).map(normalizeChapterSummary),
+      chapters: (course.chapters || []).map(ch => normalizeChapterSummary(ch)),
     },
   }
 }

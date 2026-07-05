@@ -1,45 +1,73 @@
 <template>
   <div v-if="course" class="flex flex-col gap-10">
-    <!-- Hero 区域 -->
-    <div class="relative rounded-2xl overflow-hidden">
-      <!-- 背景图/色 -->
-      <div class="h-64 sm:h-80">
-        <img
-          v-if="course.coverImg"
-          :src="course.coverImg"
-          :alt="course.title"
-          class="w-full h-full object-cover"
-        />
-        <div
-          v-else
-          class="w-full h-full"
-          :class="colorHeroBgClass(course.color)"
-        />
+    <!-- 课程头部：左图 + 右信息 -->
+    <div class="flex flex-col sm:flex-row gap-6 relative">
+      <!-- 右上角编辑按钮 -->
+      <div v-if="canEdit" class="absolute top-0 right-0 z-10">
+        <CourseEditor :course-id="Number(courseId)" @saved="refresh" />
       </div>
-      <!-- 渐变遮罩 -->
-      <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-      <!-- 内容叠加 -->
-      <div class="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
-        <div class="flex items-center gap-2 mb-2">
-          <UBadge :label="course.level" :color="levelColor(course.level)" variant="subtle" size="sm" />
-          <span class="text-sm text-white/80">{{ $t('course.chapters', { count: course.chapters.length }) }}</span>
+
+      <!-- 左侧：课程封面 -->
+      <div class="w-full sm:w-80 shrink-0">
+        <div class="aspect-16/10 rounded-2xl overflow-hidden bg-elevated">
+          <img
+            v-if="course.coverImg"
+            :src="course.coverImg"
+            :alt="course.title"
+            class="w-full h-full object-cover"
+          />
+          <img
+            v-else
+            :src="`https://picsum.photos/seed/course${course.id}/640/400`"
+            :alt="course.title"
+            class="w-full h-full object-cover"
+          />
         </div>
-        <h1 class="text-3xl sm:text-4xl font-bold text-white mb-3">
-          {{ course.title }}
-        </h1>
+      </div>
+
+      <!-- 右侧：课程信息 -->
+      <div class="flex-1 min-w-0 flex flex-col gap-4">
+        <!-- 标题行 -->
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <UBadge :label="course.level" :color="levelColor(course.level)" variant="subtle" size="sm" />
+            <span class="text-sm text-muted">{{ $t('course.chapters', { count: course.chapters.length }) }}</span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-bold text-highlighted">
+            {{ course.title }}
+          </h1>
+        </div>
+
         <!-- 标签 -->
-        <div v-if="course.tags?.length" class="flex flex-wrap gap-1.5 mb-4">
+        <div v-if="course.tags?.length" class="flex flex-wrap gap-1.5">
           <UBadge
             v-for="tag in course.tags"
             :key="tag"
             :label="tag"
-            variant="subtle"
+            color="neutral"
+            variant="outline"
             size="sm"
-            class="bg-white/20 text-white border-white/30"
           />
         </div>
+
+        <!-- 学习进度 -->
+        <div v-if="progressPercent !== null" class="flex items-center gap-3">
+          <div class="flex-1">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-sm text-muted">{{ $t('coursePanel.progress') }}</span>
+              <span class="text-sm font-semibold text-primary">{{ progressPercent }}%</span>
+            </div>
+            <div class="w-full h-2.5 bg-elevated rounded-full overflow-hidden">
+              <div
+                class="h-full bg-primary rounded-full transition-all duration-500"
+                :style="{ width: `${progressPercent}%` }"
+              />
+            </div>
+          </div>
+        </div>
+
         <!-- 教师 + 学生人数 -->
-        <div class="flex items-center gap-4 text-white/90 text-sm">
+        <div class="flex items-center gap-4 text-sm text-muted">
           <div v-if="course.teachers?.length" class="flex items-center gap-2">
             <UIcon name="i-lucide-chalkboard-teacher" class="size-4" />
             <div class="flex -space-x-2">
@@ -48,18 +76,18 @@
                 :key="teacher.userId"
                 :src="teacher.avatarImg || ''"
                 :alt="teacher.name"
-                class="size-7 rounded-full border-2 border-white/50 object-cover bg-elevated"
+                class="size-6 rounded-full border-2 border-default object-cover bg-elevated"
               />
               <div
                 v-if="course.teachers.length > 5"
-                class="size-7 rounded-full border-2 border-white/50 bg-white/30 flex items-center justify-center text-xs"
+                class="size-6 rounded-full border-2 border-default bg-elevated flex items-center justify-center text-xs text-muted"
               >
                 +{{ course.teachers.length - 5 }}
               </div>
             </div>
             <span>{{ course.teachers.map(t => t.name).join('、') }}</span>
           </div>
-          <div v-if="course.studentCount > 0" class="flex items-center gap-1.5">
+          <div class="flex items-center gap-1.5">
             <UIcon name="i-lucide-users" class="size-4" />
             <span>{{ course.studentCount }} {{ $t('course.students') }}</span>
           </div>
@@ -81,7 +109,7 @@
         {{ $t('course.chapterList') }}
       </h2>
 
-      <div class="flex flex-col gap-2">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
         <NuxtLink
           v-for="(item, index) in chapterTree"
           :key="item.id"
@@ -90,7 +118,7 @@
           :class="item.accessible === false ? 'cursor-not-allowed opacity-60' : ''"
         >
           <UCard
-            class="transition-all"
+            class="transition-all h-full"
             :class="item.accessible === false ? '' : 'hover:ring-2 hover:ring-primary/30'"
             :ui="{ body: 'flex items-center gap-4' }"
           >
@@ -100,6 +128,7 @@
             <div class="flex-1 min-w-0">
               <h3 class="text-base font-medium text-highlighted flex items-center gap-2">
                 <UIcon v-if="item.accessible === false" name="i-lucide-lock" class="size-4 text-muted" />
+                <UIcon v-if="item.isPass" name="i-lucide-circle-check" class="size-4 text-success" />
                 {{ item.label }}
               </h3>
             </div>
@@ -122,6 +151,7 @@
 const route = useRoute()
 const courseId = computed(() => route.params.id as string)
 const { setEditableContent, setEditableMeta, contentVersion, courseBtnsConfig, chapterBtnsConfig } = useLayoutState()
+const { hasRole, isCourseTeacher } = useAuth()
 
 const { data: resp, pending, refresh } = cRequest.use<import('#shared/types/lms').LmsCourseDetail | null>(
   () => `/api/lms/courses/show?id=${courseId.value}`,
@@ -130,9 +160,22 @@ const { data: resp, pending, refresh } = cRequest.use<import('#shared/types/lms'
 
 const course = computed(() => resp.value as import('#shared/types/lms').LmsCourseDetail | null)
 
+const canEdit = computed(() => {
+  if (!courseId.value) return false
+  return hasRole('admin') || isCourseTeacher(Number(courseId.value))
+})
+
 const hasContent = computed(() => {
   if (!course.value?.content) return false
   return Object.keys(course.value.content).length > 0
+})
+
+// 学习进度：已通过章节数 / 总章节数
+const progressPercent = computed(() => {
+  if (!course.value?.chapters?.length) return null
+  const total = course.value.chapters.length
+  const passed = course.value.chapters.filter(ch => ch.isPass).length
+  return Math.round((passed / total) * 100)
 })
 
 // 构建章节树：优先使用 orders，否则用 chapters 默认顺序
@@ -141,6 +184,8 @@ interface ChapterNode {
   label: string
   to?: string
   accessible: boolean
+  isOpen?: boolean
+  isPass?: boolean
   children?: ChapterNode[]
 }
 
@@ -149,7 +194,7 @@ const chapterTree = computed<ChapterNode[]>(() => {
   const chapters = course.value.chapters || []
   const orders = course.value.orders || []
   const cid = course.value.id
-  const accessMap = new Map(chapters.map(ch => [ch.id, ch.accessible]))
+  const chapterMap = new Map(chapters.map(ch => [ch.id, ch]))
 
   // 从 orders 构建树（仅取一级节点）
   if (orders.length > 0) {
@@ -157,12 +202,14 @@ const chapterTree = computed<ChapterNode[]>(() => {
     const rootItems = sorted.filter(o => !o.parentId)
     return rootItems.map(o => {
       const isChapter = o.id && !o.id.startsWith('custom-') && !isNaN(Number(o.id))
-      const accessible = isChapter ? (accessMap.get(Number(o.id)) ?? true) : true
+      const ch = isChapter ? chapterMap.get(Number(o.id)) : undefined
       return {
         id: isChapter ? Number(o.id) : o.id,
         label: o.label,
         to: isChapter ? `/course/${cid}/${o.id}` : (o.id === 'course' ? `/course/${cid}` : `/course/${cid}#${o.label}`),
-        accessible,
+        accessible: ch?.accessible ?? true,
+        isOpen: ch?.isOpen,
+        isPass: ch?.isPass,
       }
     })
   }
@@ -173,6 +220,8 @@ const chapterTree = computed<ChapterNode[]>(() => {
     label: ch.title,
     to: `/course/${cid}/${ch.id}`,
     accessible: ch.accessible ?? true,
+    isOpen: ch.isOpen,
+    isPass: ch.isPass,
   }))
 })
 

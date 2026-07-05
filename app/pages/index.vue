@@ -37,8 +37,6 @@
             :key="course.id"
             :course="course"
             :highlight="isCourseTeacher(course.id)"
-            :can-edit="hasRole('admin') || isCourseTeacher(course.id)"
-            @saved="handleCourseSaved"
           />
         </div>
       </section>
@@ -47,8 +45,8 @@
 </template>
 
 <script setup lang="ts">
-const { data: home, refresh: refreshHome } = useHome()
-const { isCourseTeacher, hasRole } = useAuth()
+const { data: home } = useHome()
+const { isCourseTeacher } = useAuth()
 
 const categories = computed(() => home.value?.categories ?? [])
 const courses = computed(() => home.value?.courses ?? [])
@@ -65,10 +63,5 @@ function getCoursesByCategory(categoryId: number) {
   }
 
   return catCourses
-}
-
-/** 课程设置保存后刷新首页数据 */
-async function handleCourseSaved() {
-  await refreshHome()
 }
 </script>

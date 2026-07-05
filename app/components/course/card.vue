@@ -5,14 +5,6 @@
       :class="highlight ? 'ring-2 ring-primary/30 shadow-lg shadow-primary/10' : ''"
       :ui="{ body: 'flex flex-col h-full p-0' }"
     >
-      <!-- 右上角设置按钮（管理员或课程编辑者可见） -->
-      <div
-        v-if="canEdit"
-        class="absolute top-3 right-3 z-10"
-      >
-        <CourseEditor :course-id="course.id" @saved="$emit('saved')" />
-      </div>
-
       <!-- 封面图片区域 -->
       <div class="relative aspect-16/10 overflow-hidden bg-elevated">
         <img
@@ -58,6 +50,26 @@
           />
         </div>
 
+        <!-- 教师信息 -->
+        <div v-if="course.teachers?.length" class="flex items-center gap-2 mb-4">
+          <div class="flex -space-x-2">
+            <img
+              v-for="teacher in course.teachers.slice(0, 4)"
+              :key="teacher.userId"
+              :src="teacher.avatarImg || ''"
+              :alt="teacher.name"
+              class="size-7 rounded-full border-2 border-default object-cover bg-elevated"
+            />
+            <div
+              v-if="course.teachers.length > 4"
+              class="size-7 rounded-full border-2 border-default bg-elevated flex items-center justify-center text-xs text-muted"
+            >
+              +{{ course.teachers.length - 4 }}
+            </div>
+          </div>
+          <span class="text-xs text-muted truncate">{{ course.teachers.map(t => t.name).join('、') }}</span>
+        </div>
+
         <!-- 底部信息 -->
         <div class="flex items-center justify-between pt-4 mt-auto border-t border-default">
           <span class="flex items-center gap-1.5 text-sm text-muted">
@@ -77,13 +89,8 @@
 <script setup lang="ts">
 import type { LmsCourseSummary } from '#shared/types/lms'
 
-const props = defineProps<{
+defineProps<{
   course: LmsCourseSummary
   highlight?: boolean
-  canEdit?: boolean
-}>()
-
-defineEmits<{
-  (e: 'saved'): void
 }>()
 </script>

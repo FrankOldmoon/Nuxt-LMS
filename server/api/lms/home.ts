@@ -1,5 +1,5 @@
 import { db, schema } from "@nuxthub/db";
-import { asc, eq, and, isNull, sql } from "drizzle-orm";
+import { asc, eq, and, isNull, sql, inArray, or } from "drizzle-orm";
 
 export default eventHandler(async (event) => {
   // 查询所有分类（按 order 排序）
@@ -12,6 +12,43 @@ export default eventHandler(async (event) => {
   const courses = await db.query.courses.findMany({
     with: { chapters: true },
   });
+
+  // 查询所有课程的教师/编辑者
+  const courseIds = courses.map(c => c.id)
+  const allMembers = courseIds.length > 0
+    ? await db
+        .select({
+          courseId: schema.userCourses.courseId,
+          userId: schema.userCourses.userId,
+          isTeacher: schema.userCourses.isTeacher,
+          isEditor: schema.userCourses.isEditor,
+          username: schema.users.username,
+          name: schema.users.name,
+          avatarImg: schema.users.avatarImg,
+        })
+        .from(schema.userCourses)
+        .innerJoin(schema.users, eq(schema.userCourses.userId, schema.users.id))
+        .where(and(
+          inArray(schema.userCourses.courseId, courseIds),
+          isNull(schema.userCourses.deletedAt),
+          or(
+            eq(schema.userCourses.isTeacher, true),
+            eq(schema.userCourses.isEditor, true),
+          ),
+        ))
+    : []
+  const teacherMap = new Map<number, LmsMember[]>()
+  for (const m of allMembers) {
+    if (!teacherMap.has(m.courseId)) teacherMap.set(m.courseId, [])
+    teacherMap.get(m.courseId)!.push({
+      userId: m.userId,
+      username: m.username,
+      name: m.name,
+      avatarImg: m.avatarImg,
+      isTeacher: !!m.isTeacher,
+      isEditor: !!m.isEditor,
+    })
+  }
 
   // 查询网站配置
   const siteConfig = await db.query.configs.findFirst({
@@ -42,7 +79,7 @@ export default eventHandler(async (event) => {
 
   return cResp({
     categories: categories.map(normalizeCategory),
-    courses: courses.map((c) => normalizeCourseSummary(c, c.chapters.length)),
+    courses: courses.map((c) => normalizeCourseSummary(c, c.chapters.length, teacherMap.get(c.id) || [])),
     config: siteConfig?.value ?? null,
     notifyUnread,
     msgUnread,

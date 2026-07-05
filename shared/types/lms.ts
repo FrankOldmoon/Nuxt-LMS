@@ -26,6 +26,7 @@ export interface LmsCourseSummary {
   categoryId: number
   chapterCount: number
   coverImg: string | null
+  teachers: LmsMember[]
 }
 
 /** 章节摘要（列表用） */
@@ -33,6 +34,8 @@ export interface LmsChapterSummary {
   id: number
   title: string
   accessible?: boolean
+  /** 章节是否默认开放 */
+  isOpen?: boolean
   /** 当前用户是否已完成本章全部任务（is_pass） */
   isPass?: boolean
 }

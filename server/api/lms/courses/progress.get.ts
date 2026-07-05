@@ -20,6 +20,7 @@ export default eventHandler(async (event) => {
     .select({
       id: schema.chapters.id,
       name: schema.chapters.name,
+      isOpen: schema.chapters.isOpen,
       questionIds: schema.chapters.questionIds,
       homeworkIds: schema.chapters.homeworkIds,
       commentIds: schema.chapters.commentIds,
@@ -90,7 +91,7 @@ export default eventHandler(async (event) => {
     }
   }
 
-  // 查询章节得分
+  // 查询章节得分及通过状态
   const chapterIds = chapters.map(ch => ch.id)
   const userChapters = chapterIds.length > 0
     ? await db
@@ -103,8 +104,47 @@ export default eventHandler(async (event) => {
     : []
 
   const scoreMap = new Map()
+  const passMap = new Map<number, boolean>()
   for (const uc of userChapters) {
     scoreMap.set(uc.chapterId, Number(uc.score) || 0)
+    passMap.set(uc.chapterId, !!uc.isPass)
+  }
+
+  // 计算每个章节对当前用户的可访问性（与 courses/show 逻辑一致）
+  const isAdmin = user?.roles?.includes('admin')
+  const isTeacher = await isCourseTeacher(user.id, courseId)
+  const canEditAll = isAdmin || isTeacher
+
+  let accessibleSet: Set<number>
+  if (canEditAll) {
+    // 教师/管理员：所有章节都可访问
+    accessibleSet = new Set(chapters.map(ch => ch.id))
+  } else {
+    accessibleSet = new Set<number>()
+    // 1. is_open=true 的章节
+    for (const ch of chapters) {
+      if (ch.isOpen) accessibleSet.add(ch.id)
+    }
+    // 2. 用户班级 open 的章节
+    const userClassRows = await db
+      .select({ classId: schema.userClasses.classId })
+      .from(schema.userClasses)
+      .where(eq(schema.userClasses.userId, user.id))
+    const userClassIds = userClassRows.map(r => r.classId)
+
+    if (userClassIds.length > 0 && chapterIds.length > 0) {
+      const classChapters = await db
+        .select({ chapterId: schema.classChapters.chapterId })
+        .from(schema.classChapters)
+        .where(and(
+          inArray(schema.classChapters.classId, userClassIds),
+          inArray(schema.classChapters.chapterId, chapterIds),
+          eq(schema.classChapters.open, true),
+        ))
+      for (const cc of classChapters) {
+        accessibleSet.add(cc.chapterId)
+      }
+    }
   }
 
   const result = chapters.map(ch => {
@@ -122,6 +162,9 @@ export default eventHandler(async (event) => {
       chapterId: ch.id,
       chapterName: ch.name,
       score: scoreMap.get(ch.id) || 0,
+      isPass: passMap.get(ch.id) || false,
+      isOpen: !!ch.isOpen,
+      accessible: accessibleSet.has(ch.id),
       items,
     }
   })

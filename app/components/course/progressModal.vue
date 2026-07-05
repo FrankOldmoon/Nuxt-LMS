@@ -6,6 +6,19 @@
                 <div class="p-6">
                     <h3 class="text-lg font-semibold mb-4">{{ t('coursePanel.progress') }}</h3>
 
+                    <!-- 总体学习进度 -->
+                    <div v-if="overallProgress !== null" class="mb-4 p-4 bg-elevated/50 rounded-lg">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium">{{ t('coursePanel.progress') }}</span>
+                            <span class="text-lg font-bold text-primary">{{ overallProgress }}%</span>
+                        </div>
+                        <div class="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-primary rounded-full transition-all duration-500"
+                                :style="{ width: `${overallProgress}%` }" />
+                        </div>
+                        <p class="text-xs text-muted mt-1.5">{{ passedCount }} / {{ totalCount }} {{ t('coursePanel.chapter') }}</p>
+                    </div>
+
                     <!-- 教师/管理员：选择学生查看进度 -->
                     <CourseUserSelect v-if="canSelectStudent" :course-id="Number(courseId)" @impersonated="onImpersonated" @restored="onImpersonated" />
 
@@ -36,6 +49,7 @@ import TaskModal from './taskModal.vue'
 
 const UButton = resolveComponent('UButton')
 const UTooltip = resolveComponent('UTooltip')
+const UIcon = resolveComponent('UIcon')
 
 const isOpen = defineModel('open', { default: false })
 const { t } = useI18n()
@@ -48,6 +62,9 @@ interface NavItem {
 
 interface ChapterData {
     score: number | null
+    isPass: boolean
+    isOpen: boolean
+    accessible: boolean
     items: TaskItem[]
 }
 
@@ -59,9 +76,13 @@ type TaskItem = {
 
 type ProgressRow = {
     label: string
+    to?: string
     score: number | null | undefined
     items: TaskItem[]
     isParent: boolean
+    isOpen?: boolean
+    accessible?: boolean
+    isPass?: boolean
     children?: ProgressRow[]
 }
 
@@ -103,12 +124,17 @@ function buildTree(navItems: NavItem[], dataMap: Record<number, ChapterData>): P
         return items.map((item: NavItem) => {
             const chapterId = extractChapterId(item.to || '')
             const hasChildren = !!item.children?.length
-            const nodeData: ChapterData = chapterId ? (dataMap[chapterId] || { score: null, items: [] }) : { score: null, items: [] }
+            const fallback = { score: null, isPass: false, isOpen: false, accessible: false, items: [] }
+            const nodeData: ChapterData = chapterId ? (dataMap[chapterId] || fallback) : fallback
             const row: ProgressRow = {
                 label: item.label,
+                to: chapterId ? item.to : undefined,
                 score: nodeData.score ?? null,
                 items: nodeData.items || [],
                 isParent: hasChildren,
+                isOpen: nodeData.isOpen,
+                accessible: nodeData.accessible,
+                isPass: nodeData.isPass,
             }
             // 递归子节点
             if (hasChildren) {
@@ -137,6 +163,8 @@ const columns: TableColumn<ProgressRow>[] = [
         accessorKey: 'label',
         header: () => t('coursePanel.chapter'),
         cell: ({ row }) => {
+            const orig = row.original as ProgressRow
+
             return h(
                 'div',
                 {
@@ -156,9 +184,28 @@ const columns: TableColumn<ProgressRow>[] = [
                         },
                         onClick: row.getToggleExpandedHandler(),
                     }),
-                    h('span', {
-                        class: (row.original as ProgressRow)?.isParent ? 'font-semibold' : '',
-                    }, row.getValue('label') as string),
+                    // 可访问的章节：文字超链接；不可访问：普通文字
+                    orig?.to && orig?.accessible
+                        ? h('a', {
+                              href: orig.to,
+                              class: 'text-primary hover:underline truncate',
+                              onClick: (e: Event) => e.stopPropagation(),
+                          }, row.getValue('label') as string)
+                        : h('span', {
+                              class: orig?.isParent ? 'font-semibold' : '',
+                          }, row.getValue('label') as string),
+                    // is_pass 图标
+                    orig?.isPass && orig?.to
+                        ? h(UTooltip, { text: t('coursePanel.done') }, () =>
+                              h(UIcon, { name: 'i-lucide-circle-check', class: 'size-4 text-success shrink-0' })
+                          )
+                        : null,
+                    // 不可访问时显示锁
+                    orig?.to && !orig?.accessible
+                        ? h(UTooltip, { text: t('chapter.notOpen') }, () =>
+                              h(UIcon, { name: 'i-lucide-lock', class: 'size-4 text-muted shrink-0' })
+                          )
+                        : null,
                 ],
             )
         },
@@ -225,11 +272,14 @@ async function loadData() {
     if (!props.courseId) return
     loading.value = true
     try {
-        const data = await cRequest(`/api/lms/courses/progress?courseId=${props.courseId}`) as { chapterId: number; score: number; items?: TaskItem[] }[]
+        const data = await cRequest(`/api/lms/courses/progress?courseId=${props.courseId}`) as { chapterId: number; score: number; isPass?: boolean; isOpen?: boolean; accessible?: boolean; items?: TaskItem[] }[]
         const map: Record<number, ChapterData> = {}
         for (const row of data) {
             map[row.chapterId] = {
                 score: row.score,
+                isPass: !!row.isPass,
+                isOpen: !!row.isOpen,
+                accessible: !!row.accessible,
                 items: row.items || [],
             }
         }
@@ -240,6 +290,14 @@ async function loadData() {
         loading.value = false
     }
 }
+
+// ---- 总体学习进度（基于 isPass 比例） ----
+const totalCount = computed(() => Object.keys(chapterData.value).length)
+const passedCount = computed(() => Object.values(chapterData.value as Record<number, ChapterData>).filter(ch => ch.isPass).length)
+const overallProgress = computed(() => {
+    if (totalCount.value === 0) return null
+    return Math.round((passedCount.value / totalCount.value) * 100)
+})
 
 watch(isOpen, (val) => {
     if (val) {
