@@ -1,5 +1,5 @@
 <template>
-  <UModal v-model:open="open" :ui="{ content: 'sm:max-w-lg' }">
+  <UModal v-model:open="open" :ui="{ content: 'sm:max-w-5xl' }">
     <UTooltip :text="$t('courseEditor.editCourse')" :content="{ side: 'bottom' }">
       <UButton
         color="neutral"
@@ -13,7 +13,7 @@
     </UTooltip>
 
     <template #content>
-      <div class="p-6 max-h-[80vh] overflow-y-auto">
+      <div class="p-6 max-h-[85vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-6">
           <h3 class="text-lg font-semibold">{{ $t('courseEditor.title') }}</h3>
         </div>
@@ -37,6 +37,10 @@
 
           <!-- config 编辑 -->
           <CourseEditorConfigForm ref="configFormRef" />
+
+          <!-- 课程内容编辑 -->
+          <USeparator :label="$t('courseEditor.content')" class="my-4" />
+          <Ueditor v-model="contentJson" :lock-id="lockId" />
 
           <!-- 教师/编辑者管理（仅管理员可见） -->
           <CourseEditorMembersManager
@@ -74,6 +78,7 @@ const loading = ref(false)
 const saving = ref(false)
 
 const canEdit = computed(() => hasRole('admin') || isCourseEditor(props.courseId))
+const lockId = computed(() => `courses_${props.courseId}`)
 
 const configFormRef = ref<{ initFromConfig: (cfg: Record<string, any>) => void; buildConfig: () => Record<string, any> | null } | null>(null)
 const membersRef = ref<{ loadMembers: () => Promise<void> } | null>(null)
@@ -83,6 +88,8 @@ const form = ref({
   code: '',
   tags: [] as string[],
 })
+
+const contentJson = ref(null)
 
 function openModal() {
   open.value = true
@@ -101,6 +108,7 @@ async function loadCourse() {
       code: data?.code || '',
       tags: (data?.tags as string[]) || [],
     }
+    contentJson.value = data?.content || null
     const cfg = (data?.config as Record<string, any>) || {}
     configFormRef.value?.initFromConfig(cfg)
     await membersRef.value?.loadMembers()
@@ -125,6 +133,7 @@ async function save() {
         code: form.value.code,
         tags: form.value.tags,
         config: finalConfig,
+        content: contentJson.value,
       },
     })
     toast.add({ title: t('courseEditor.saveSuccess'), color: 'success' })

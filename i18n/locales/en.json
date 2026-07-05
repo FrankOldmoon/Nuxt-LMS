@@ -375,7 +375,12 @@
     "noEditors": "No editors",
     "memberAdded": "Member added",
     "memberRemoved": "Member removed",
-    "memberUpdateFailed": "Failed to update member"
+    "memberUpdateFailed": "Failed to update member",
+    "coverImage": "Cover Image",
+    "imageOnly": "Only image files are allowed",
+    "imageTooLarge": "Image size cannot exceed 5MB",
+    "uploadFailed": "Upload failed",
+    "content": "Course Content"
   },
   "ueditor": {
     "markdown": {

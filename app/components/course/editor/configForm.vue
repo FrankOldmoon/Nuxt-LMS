@@ -2,6 +2,27 @@
   <div class="space-y-4">
     <USeparator :label="$t('courseEditor.configSection')" class="my-4" />
 
+    <!-- 封面图片 -->
+    <UFormField :label="$t('courseEditor.coverImage')" class="w-full">
+      <div class="flex items-center gap-3">
+        <div v-if="coverImg" class="relative group">
+          <img :src="coverImg" class="w-32 h-20 object-cover rounded-lg border border-default" />
+          <button
+            class="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+            @click="coverImg = ''"
+          >×</button>
+        </div>
+        <UButton
+          :icon="coverImg ? 'i-lucide-refresh-cw' : 'i-lucide-image-plus'"
+          variant="outline"
+          size="sm"
+          :loading="uploading"
+          @click="triggerCoverUpload"
+        />
+        <input ref="coverInputRef" type="file" accept="image/*" class="hidden" @change="onCoverFileSelected" />
+      </div>
+    </UFormField>
+
     <!-- config 中的图标 -->
     <UFormField :label="$t('courseEditor.icon')" class="w-full">
       <UInput v-model="config.icon" :placeholder="$t('courseEditor.iconPlaceholder')" class="w-full" />
@@ -74,12 +95,17 @@
 
 <script setup lang="ts">
 const { t } = useI18n()
+const toast = useToast()
 
 const config = reactive({
   icon: '',
   color: 'primary',
   level: '',
 })
+
+const coverImg = ref('')
+const uploading = ref(false)
+const coverInputRef = ref<HTMLInputElement | null>(null)
 
 // 课程功能开关（存储在 lmsConfig.course 中，单课程可覆盖全局默认值）
 const courseSwitches = reactive({
@@ -98,13 +124,49 @@ const lmsConfig = ref<any>(null)
 const colorOpts = computed(() => colorOptions())
 const levelOpts = computed(() => levelOptions())
 
-const KNOWN_KEYS = ['icon', 'color', 'level', 'lmsConfig', 'showDanmaku', 'showAnnouncement', 'showComments', 'showProgress', 'defaultChapterOpen']
+const KNOWN_KEYS = ['icon', 'color', 'level', 'coverImg', 'lmsConfig', 'showDanmaku', 'showAnnouncement', 'showComments', 'showProgress', 'defaultChapterOpen']
+
+function triggerCoverUpload() {
+  coverInputRef.value?.click()
+}
+
+async function onCoverFileSelected(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+
+  if (!file.type.startsWith('image/')) {
+    toast.add({ title: t('courseEditor.imageOnly'), color: 'error' })
+    return
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    toast.add({ title: t('courseEditor.imageTooLarge'), color: 'error' })
+    return
+  }
+
+  uploading.value = true
+  try {
+    const formData = new FormData()
+    formData.append('files', file)
+    const res = await $fetch<{ data: { url: string } }>('/api/upload', {
+      method: 'POST',
+      body: formData,
+    })
+    coverImg.value = res.data.url
+  } catch (err: any) {
+    toast.add({ title: err?.message || t('courseEditor.uploadFailed'), color: 'error' })
+  } finally {
+    uploading.value = false
+  }
+}
 
 /** 从课程 config 对象初始化表单 */
 function initFromConfig(cfg: Record<string, any>) {
   config.icon = cfg.icon || ''
   config.color = cfg.color || 'primary'
   config.level = cfg.level || t('home.levels.beginner')
+  coverImg.value = cfg.coverImg || ''
 
   // 课程功能开关：优先读取 lmsConfig.course，兼容旧版顶层字段
   const courseCfg = cfg.lmsConfig?.course || {}
@@ -141,6 +203,7 @@ function buildConfig(): Record<string, any> | null {
     icon: config.icon || undefined,
     color: config.color,
     level: config.level,
+    coverImg: coverImg.value || undefined,
     ...extra,
   }
   // 获取 LMS 配置（hideCourse 时不含 course 分组），合并课程功能开关

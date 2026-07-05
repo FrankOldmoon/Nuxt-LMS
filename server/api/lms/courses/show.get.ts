@@ -1,5 +1,5 @@
 import { db, schema } from "@nuxthub/db"
-import { eq, and, inArray } from "drizzle-orm"
+import { eq, and, inArray, isNull, or, not, sql } from "drizzle-orm"
 
 export default eventHandler(async (event) => {
   const id = requireQueryId(event)
@@ -18,6 +18,53 @@ export default eventHandler(async (event) => {
 
   // 归一化课程详情
   const result = normalizeCourseDetail(course)
+
+  // 查询教师列表
+  const teachers = await db
+    .select({
+      userId: schema.userCourses.userId,
+      isTeacher: schema.userCourses.isTeacher,
+      isEditor: schema.userCourses.isEditor,
+      username: schema.users.username,
+      name: schema.users.name,
+      avatarImg: schema.users.avatarImg,
+    })
+    .from(schema.userCourses)
+    .innerJoin(schema.users, eq(schema.userCourses.userId, schema.users.id))
+    .where(
+      and(
+        eq(schema.userCourses.courseId, id),
+        isNull(schema.userCourses.deletedAt),
+        or(
+          eq(schema.userCourses.isTeacher, true),
+          eq(schema.userCourses.isEditor, true),
+        ),
+      ),
+    )
+  result.teachers = teachers.map(t => ({
+    userId: t.userId,
+    username: t.username,
+    name: t.name,
+    avatarImg: t.avatarImg,
+    isTeacher: !!t.isTeacher,
+    isEditor: !!t.isEditor,
+  }))
+
+  // 查询学生人数
+  const studentRows = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(schema.userCourses)
+    .where(
+      and(
+        eq(schema.userCourses.courseId, id),
+        isNull(schema.userCourses.deletedAt),
+        not(or(
+          eq(schema.userCourses.isTeacher, true),
+          eq(schema.userCourses.isEditor, true),
+        )!),
+      ),
+    )
+  result.studentCount = Number(studentRows[0]?.count ?? 0)
 
   // 计算每个章节对当前用户的开放状态（SSR 友好）
   const user = await getCurrentUser(event)

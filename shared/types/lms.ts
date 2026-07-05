@@ -25,6 +25,7 @@ export interface LmsCourseSummary {
   tags: string[]
   categoryId: number
   chapterCount: number
+  coverImg: string | null
 }
 
 /** 章节摘要（列表用） */
@@ -46,6 +47,8 @@ export interface LmsCourseDetail extends Omit<LmsCourseSummary, 'chapterCount'> 
   chapters: LmsChapterSummary[]
   /** 导航排序配置（来自 courses 表的 orders 字段） */
   orders: { id: string; label: string; order: number; parentId?: string | null }[]
+  teachers: LmsMember[]
+  studentCount: number
 }
 
 /** 章节详情 */

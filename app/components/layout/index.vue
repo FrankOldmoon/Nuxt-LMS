@@ -25,6 +25,6 @@
 </template>
 
 <script setup lang="ts">
-const { showSidebar, showToc } = useLayoutState()
+const { showSidebar } = useLayoutState()
 const { playFullscreen } = useChapterBtns()
 </script>

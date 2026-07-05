@@ -11,6 +11,10 @@
         <div class="flex items-center gap-2 text-sm text-muted mb-3">
           <UIcon :name="data.course.icon" class="size-4" />
           <span>{{ data.course.title }}</span>
+          <!-- 移动端 toc 按钮 -->
+          <UButton class="lg:hidden ml-auto" icon="i-lucide-panel-right"
+            color="neutral" variant="outline" size="xs"
+            :label="$t('layout.toc')" @click="tocOpen = true" />
         </div>
         <h1 :id="chapterId" class="text-3xl font-bold text-highlighted scroll-mt-20">
           {{ data.chapter.title }}
@@ -70,6 +74,13 @@
     <p class="text-lg text-muted mb-4">{{ $t('chapter.notOpen') }}</p>
     <UButton :to="`/course/${courseId}`" :label="$t('chapter.backToCourse')" color="primary" variant="outline" />
   </div>
+
+  <!-- 移动端目录弹窗 -->
+  <USlideover v-model:open="tocOpen" :title="$t('layout.pageToc')" side="right">
+    <template #body>
+      <LayoutToc />
+    </template>
+  </USlideover>
 </template>
 
 <script setup lang="ts">
@@ -78,6 +89,13 @@ const chapterId = computed(() => route.params.cid as string)
 const courseId = computed(() => route.params.id as string)
 const { setToc, setEditableContent, setEditableMeta, contentVersion, showDanmaku, chapterBtnsConfig, courseBtnsConfig } = useLayoutState()
 const { navigation } = useSidebarNav()
+
+const tocOpen = ref(false)
+
+// 路由变化时自动关闭弹窗
+watch(() => route.fullPath, () => {
+  tocOpen.value = false
+})
 
 const { data: resp, pending, refresh, error } = cRequest.use<import('#shared/types/lms').LmsChapterPageData | null>(
   () => chapterId.value ? `/api/lms/chapters/show?id=${chapterId.value}` : '',

@@ -30,9 +30,14 @@
   },
   "devDependencies": {
     "@iconify-json/lucide": "^1.2.115",
+    "@nuxt/test-utils": "^4.0.3",
     "@types/nodemailer": "^8.0.1",
+    "@vue/test-utils": "^2.4.11",
+    "happy-dom": "^20.10.6",
     "less": "^4.6.7",
+    "playwright-core": "^1.61.1",
     "typescript": "^6.0.3",
+    "vitest": "^4.1.9",
     "vuedraggable": "^4.1.0"
   }
 }

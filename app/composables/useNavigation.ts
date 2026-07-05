@@ -232,7 +232,6 @@ export function useLayoutState() {
   const contentVersion = useState<number>('layout-content-version', () => 0)
   // 页面可通过 setLayout 覆盖；null 表示使用路由默认值
   const sidebarOverride = useState<boolean | null>('layout-sidebar-override', () => null)
-  const tocOverride = useState<boolean | null>('layout-toc-override', () => null)
   const showDanmaku = useState<boolean>('layout-show-danmaku', () => true)
   // 章节按钮开关配置（由章节页从 course lmsConfig 设置）
   const chapterBtnsConfig = useState<Record<string, boolean>>('layout-chapter-btns-config', () => ({
@@ -247,11 +246,10 @@ export function useLayoutState() {
   // 课程侧边栏导航版本号：章节完成状态变化时 +1，触发 useSidebarNav 重新拉取
   const courseNavVersion = useState<number>('layout-course-nav-version', () => 0)
 
-  // 路由默认：仅在课程页（/course/:id）和章节页（/course/:id/:cid）显示 aside 和 toc
+  // 路由默认：仅在章节页（/course/:id/:cid）显示 aside
   // 使用 computed 直接读取路由，确保 SSR 渲染阶段即可得到正确值
-  const isCourseOrChapterPage = computed(() => /^\/course\/[^/]+(\/[^/]+)?$/.test(route.path))
-  const showSidebar = computed(() => sidebarOverride.value ?? isCourseOrChapterPage.value)
-  const showToc = computed(() => tocOverride.value ?? isCourseOrChapterPage.value)
+  const isChapterPage = computed(() => /^\/course\/[^/]+\/[^/]+$/.test(route.path))
+  const showSidebar = computed(() => sidebarOverride.value ?? isChapterPage.value)
 
   function setToc(links: { id: string; text: string; children?: any[] }[]) {
     tocLinks.value = links
@@ -278,18 +276,16 @@ export function useLayoutState() {
     courseNavVersion.value++
   }
 
-  function setLayout(opts: { sidebar?: boolean | null; toc?: boolean | null }) {
+  function setLayout(opts: { sidebar?: boolean | null }) {
     if (opts.sidebar !== undefined) sidebarOverride.value = opts.sidebar
-    if (opts.toc !== undefined) tocOverride.value = opts.toc
   }
 
   // 路由变化时重置覆盖，回到路由默认（SSR 阶段无导航，不受影响）
   watch(() => route.path, () => {
     sidebarOverride.value = null
-    tocOverride.value = null
   })
 
-  return { tocLinks, editableContent, editableTable, editableId, editableCourseId, contentVersion, showSidebar, showToc, showDanmaku, chapterBtnsConfig, courseBtnsConfig, courseNavVersion, setToc, setEditableContent, setEditableMeta, notifyContentSaved, notifyCourseNavUpdate, setLayout }
+  return { tocLinks, editableContent, editableTable, editableId, editableCourseId, contentVersion, showSidebar, showDanmaku, chapterBtnsConfig, courseBtnsConfig, courseNavVersion, setToc, setEditableContent, setEditableMeta, notifyContentSaved, notifyCourseNavUpdate, setLayout }
 }
 
 /**

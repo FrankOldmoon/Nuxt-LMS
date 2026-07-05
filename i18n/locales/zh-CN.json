@@ -39,7 +39,10 @@
     "chapterList": "课程章节",
     "notFound": "课程不存在",
     "backToHome": "返回首页",
-    "chapters": "{count} 章节"
+    "chapters": "{count} 章节",
+    "teachers": "教师",
+    "students": "学生",
+    "aboutCourse": "课程简介"
   },
   "chapter": {
     "previous": "上一章",
@@ -375,7 +378,12 @@
     "noEditors": "暂无编辑者",
     "memberAdded": "成员已添加",
     "memberRemoved": "成员已移除",
-    "memberUpdateFailed": "成员更新失败"
+    "memberUpdateFailed": "成员更新失败",
+    "coverImage": "封面图片",
+    "imageOnly": "仅支持图片文件",
+    "imageTooLarge": "图片大小不能超过5MB",
+    "uploadFailed": "上传失败",
+    "content": "课程内容"
   },
   "ueditor": {
     "markdown": {

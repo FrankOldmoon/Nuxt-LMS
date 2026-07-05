@@ -55,6 +55,7 @@ export function normalizeCourseSummary(course: any, chapterCount?: number): LmsC
     tags: (course.tags as string[]) || [],
     categoryId: course.categoryId,
     chapterCount: chapterCount ?? course.chapters?.length ?? 0,
+    coverImg: cfg.coverImg || null,
   }
 }
 
@@ -83,10 +84,13 @@ export function normalizeCourseDetail(course: any): LmsCourseDetail {
     level: cfg.level || '入门',
     tags: (course.tags as string[]) || [],
     categoryId: course.categoryId,
+    coverImg: cfg.coverImg || null,
     content: (course.content as Record<string, any>) || {},
     config: cfg,
     chapters,
     orders: (course.orders as { id: string; label: string; order: number; parentId?: string | null }[]) || [],
+    teachers: [],
+    studentCount: 0,
   }
 }
 

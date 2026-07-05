@@ -30,6 +30,16 @@ const COLOR_BG_MAP: Record<string, string> = {
   neutral: 'bg-elevated',
 }
 
+/** 颜色值 → Hero 区域深色背景映射 */
+const COLOR_HERO_BG_MAP: Record<string, string> = {
+  primary: 'bg-primary',
+  success: 'bg-success',
+  info: 'bg-info',
+  warning: 'bg-warning',
+  error: 'bg-error',
+  neutral: 'bg-neutral-700',
+}
+
 /**
  * 获取难度级别对应的 UBadge color
  * 兼容 i18n 翻译后的 level 文本（如"入门"/"Beginner"）
@@ -55,6 +65,11 @@ export function colorTextClass(color: string): string {
 /** 获取颜色值对应的 Tailwind bg class */
 export function colorBgClass(color: string): string {
   return COLOR_BG_MAP[color] || 'bg-primary/10'
+}
+
+/** 获取颜色值对应的 Hero 区域深色背景 class */
+export function colorHeroBgClass(color: string): string {
+  return COLOR_HERO_BG_MAP[color] || 'bg-primary'
 }
 
 /** 颜色选项（用于 USelect / UInputMenu） */

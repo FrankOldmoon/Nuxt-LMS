@@ -366,7 +366,12 @@
     "noEditors": "暫無編輯者",
     "memberAdded": "成員已新增",
     "memberRemoved": "成員已移除",
-    "memberUpdateFailed": "成員更新失敗"
+    "memberUpdateFailed": "成員更新失敗",
+    "coverImage": "封面圖片",
+    "imageOnly": "僅支援圖片檔案",
+    "imageTooLarge": "圖片大小不能超過5MB",
+    "uploadFailed": "上傳失敗",
+    "content": "課程內容"
   },
   "ueditor": {
     "markdown": {
