@@ -15,31 +15,30 @@
         <UButton icon="i-lucide-graduation-cap" color="error" variant="soft" size="xs" @click="gradesOpen = true" />
       </UTooltip>
       <UTooltip v-if="courseBtnsConfig.showAnnouncements" :text="$t('coursePanel.announcements')">
-        <UButton icon="i-lucide-bell" color="success" variant="soft" size="xs" @click="announcementsOpen = true" />
+        <UButton icon="i-lucide-bell" color="secondary" variant="soft" size="xs" @click="announcementsOpen = true" />
       </UTooltip>
+      <template v-if="canEditCourse">
+        <UTooltip :text="$t('courseData.editor')">
+          <UButton icon="i-lucide-database" color="neutral" variant="soft" size="xs"
+            @click="contentPickerOpen = true" />
+        </UTooltip>
+        <NavEditor mode="course" :course-id="courseId" :navigation="navigation.slice(1)" @saved="handleSaved" />
+      </template>
     </div>
 
-    <!-- 编辑导航组件（管理员或课程编辑者可见） -->
-    <div v-if="hasRole('admin') || isCourseEditor(Number(courseId))">
-      <div class="flex items-center gap-1 mb-2">
-        <NavEditor mode="course" :course-id="courseId" :navigation="navigation.slice(1)" @saved="handleSaved" />
-        <CourseEditor :course-id="Number(courseId)" @saved="handleSaved" />
-        <CourseDataEditor :course-id="Number(courseId)" />
-        <UTooltip :text="$t('coursePanel.export')">
-          <UButton icon="i-lucide-download" color="success" variant="soft" size="xs" :loading="exporting"
-            @click="exportCourse" />
-        </UTooltip>
-      </div>
-      <div class="mt-4 space-y-3">
-        <UButton :label="selectedClassName || $t('classSelector.selectClass')"
-          :icon="selectedClassName ? 'i-lucide-school' : 'i-lucide-plus'" color="info" variant="outline" size="sm"
-          class="w-full justify-center" @click="() => { classModalOpen = true }" />
-      </div>
+    <!-- 班级选择器（教师/管理员可见） -->
+    <div v-if="canEditCourse" class="mb-3">
+      <UButton :label="selectedClassName || $t('classSelector.selectClass')"
+        :icon="selectedClassName ? 'i-lucide-school' : 'i-lucide-plus'" color="info" variant="outline" size="sm"
+        class="w-full justify-center" @click="classModalOpen = true" />
     </div>
 
     <UNavigationMenu :items="navItems" orientation="vertical" :highlight="true" color="primary" class="w-full" />
 
     <ClassModal v-model:open="classModalOpen" />
+
+    <!-- 内容管理弹窗（预览模式） -->
+    <UeditorContentPicker v-model="contentPickerOpen" preview-mode />
 
     <!-- 课程面板弹窗 -->
     <CourseProgressModal v-model:open="progressOpen" :course-id="courseId" :navigation="indexedNavigation" />
@@ -70,14 +69,24 @@ watch(courseNavVersion, () => {
 })
 
 const classModalOpen = ref(false)
+const contentPickerOpen = ref(false)
 const progressOpen = ref(false)
 const leaderboardOpen = ref(false)
 const groupsOpen = ref(false)
 const gradesOpen = ref(false)
 const announcementsOpen = ref(false)
-const exporting = ref(false)
 
 const selectedClassName = computed(() => user.value?.defaultClass?.name || '')
+
+// NavEditor 保存后刷新课程数据 + 侧边栏导航
+async function handleSaved() {
+  const nuxtApp = useNuxtApp()
+  const key = `/api/lms/courses/show?id=${courseId.value}`
+  if (nuxtApp.payload.data[key]) {
+    delete nuxtApp.payload.data[key]
+  }
+  await refresh()
+}
 
 const indexedNavigation = computed(() => indexNavItems(navigation.value, '', true))
 
@@ -131,52 +140,5 @@ function markNavDisabled(items: any[]): any[] {
     }
     return newItem
   })
-}
-
-async function handleSaved() {
-  if (refresh) {
-    const key = `/api/lms/courses/show?id=${courseId.value}`
-    const nuxtApp = useNuxtApp()
-    if (nuxtApp.payload.data[key]) {
-      delete nuxtApp.payload.data[key]
-    }
-    await refresh()
-  }
-}
-
-/**
- * 导出当前课程（含全部章节 / 题目 / 作业 / 评论 / 测验 / 竞赛）到 JSON 文件
- * - 调用 /api/lms/courses/export
- * - 用 Blob 触发浏览器下载
- * - 文件名：<courseCode 或 name>-<timestamp>.json
- */
-async function exportCourse() {
-  if (!courseId.value || exporting.value) return
-  exporting.value = true
-  try {
-    const data = await cRequest<any>('/api/lms/courses/export', {
-      query: { id: courseId.value },
-    })
-    const courseName = data?.course?.name || 'course'
-    const courseCode = data?.course?.code
-    const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
-    const safe = (s: string) => String(s).replace(/[\\/:*?"<>|]/g, '_')
-    const fileName = `${safe(courseCode || courseName)}-${ts}.json`
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = fileName
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  } catch (err: any) {
-    // eslint-disable-next-line no-console
-    console.error('export course failed', err)
-  } finally {
-    exporting.value = false
-  }
 }
 </script>

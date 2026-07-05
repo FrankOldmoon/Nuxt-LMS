@@ -35,9 +35,11 @@ const allItems = computed(() => [
     { label: t('ueditor.markdown.title'), icon: 'i-mdi:language-markdown', onSelect: () => { markdownOpen.value = true } },
     { label: t('ueditor.html.title'), icon: 'i-mdi:language-html5', onSelect: () => { htmlOpen.value = true } },
     { type: 'separator' },
-    { label: t('courseData.questionLabel'), icon: 'i-lucide-circle-help', onSelect: () => quickInsert('questions') },
-    { label: t('homework.label'), icon: 'i-lucide-book-open', onSelect: () => quickInsert('homeworks') },
-    { label: t('comment.label'), icon: 'i-lucide-message-circle', onSelect: () => quickInsert('comments') },
+    { label: `${t('courseData.questionLabel')}`, icon: 'i-lucide-circle-help', onSelect: () => openPicker('questions') },
+    { label: `${t('homework.label')}`, icon: 'i-lucide-book-open', onSelect: () => openPicker('homeworks') },
+    { label: `${t('comment.label')}`, icon: 'i-lucide-message-circle', onSelect: () => openPicker('comments') },
+    { label: `${t('quiz.label')}`, icon: 'i-lucide-clipboard-list', onSelect: () => openPicker('quizzes') },
+    { label: `${t('race.label')}`, icon: 'i-lucide-zap', onSelect: () => openPicker('races') },
     { type: 'separator' },
     { label: t('ueditor.insertInput'), icon: 'i-lucide-text-cursor-input', onSelect: () => insertQuestionNode('inputs') },
     { label: t('ueditor.insertSelect'), icon: 'i-lucide-chevron-down-square', onSelect: () => insertQuestionNode('select') },
@@ -49,13 +51,8 @@ const allItems = computed(() => [
     { label: t('ueditor.insertCondition'), icon: 'i-lucide-shield-check', onSelect: () => insertTypedSheet('condition') },
     { label: t('ueditor.insertTabs'), icon: 'i-lucide-panel-top', onSelect: () => insertTabs() },
     { label: t('ueditor.insertVfiles'), icon: 'i-lucide-folder-tree', onSelect: () => insertVfiles() },
-    { label: t('ueditor.insertQuiz'), icon: 'i-lucide-clipboard-list', onSelect: () => insertQuiz() },
-    { label: t('ueditor.insertRace'), icon: 'i-lucide-zap', onSelect: () => insertRace() },
     { label: t('ueditor.insertChatroom'), icon: 'i-lucide-message-square-text', onSelect: () => insertChatroom() },
-    { type: 'separator' },
-    { label: `${t('common.search')} ${t('courseData.questionLabel')}`, icon: 'i-lucide-circle-help', onSelect: () => openPicker('questions') },
-    { label: `${t('common.search')} ${t('homework.label')}`, icon: 'i-lucide-book-open', onSelect: () => openPicker('homeworks') },
-    { label: `${t('common.search')} ${t('comment.label')}`, icon: 'i-lucide-message-circle', onSelect: () => openPicker('comments') },
+    { label: t('ueditor.insertTimer'), icon: 'i-lucide-timer', onSelect: () => insertTimer() },
 ])
 
 function openPicker(type) {
@@ -163,26 +160,6 @@ function insertVfiles() {
     }).run()
 }
 
-// 插入 quiz 节点（空 cid，创建后回填）
-function insertQuiz() {
-    const editor = props.editor?.useEditor()
-    if (!editor) return
-    editor.chain().focus().insertContent({
-        type: 'vue',
-        attrs: { content: '0', type: 'quiz' },
-    }).run()
-}
-
-// 插入 race 节点（空 cid，创建后回填）
-function insertRace() {
-    const editor = props.editor?.useEditor()
-    if (!editor) return
-    editor.chain().focus().insertContent({
-        type: 'vue',
-        attrs: { content: '0', type: 'race' },
-    }).run()
-}
-
 // 插入班级聊天室节点（纯前端 ws，无 cid）
 function insertChatroom() {
     const editor = props.editor?.useEditor()
@@ -190,6 +167,17 @@ function insertChatroom() {
     editor.chain().focus().insertContent({
         type: 'vue',
         attrs: { content: '', type: 'chatroom' },
+    }).run()
+}
+
+// 插入计时器节点
+function insertTimer() {
+    const editor = props.editor?.useEditor()
+    if (!editor) return
+    const defaultConfig = JSON.stringify({ minutes: 1, seconds: 0 })
+    editor.chain().focus().insertContent({
+        type: 'vue',
+        attrs: { content: defaultConfig, type: 'timer' },
     }).run()
 }
 

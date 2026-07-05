@@ -21,7 +21,9 @@
     "delete": "删除",
     "loading": "加载中...",
     "select": "选择",
-    "confirm": "确认"
+    "confirm": "确认",
+    "close": "关闭",
+    "add": "新增"
   },
   "home": {
     "title": "课程系列",
@@ -42,7 +44,8 @@
     "chapters": "{count} 章节",
     "teachers": "教师",
     "students": "学生",
-    "aboutCourse": "课程简介"
+    "aboutCourse": "课程简介",
+    "startLearning": "开始学习"
   },
   "chapter": {
     "previous": "上一章",
@@ -84,6 +87,7 @@
     "invite": "邀请跳转",
     "inviteSent": "邀请已发送",
     "inviteFailed": "邀请发送失败",
+    "completed": "本章已完成",
     "danmaku": "弹幕",
     "danmakuPlaceholder": "输入弹幕内容...",
     "danmakuSend": "发送",
@@ -418,6 +422,7 @@
     "insertQuiz": "测验",
     "insertRace": "竞赛",
     "insertChatroom": "班级聊天室",
+    "insertTimer": "计时器",
     "tabs": "标签页",
     "tabsLabel": "标签名",
     "tabsAdd": "添加标签",

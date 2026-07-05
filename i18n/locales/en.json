@@ -21,7 +21,9 @@
     "delete": "Delete",
     "loading": "Loading...",
     "select": "Select",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "close": "Close",
+    "add": "Add"
   },
   "home": {
     "title": "Course Series",
@@ -39,7 +41,11 @@
     "chapterList": "Course Chapters",
     "notFound": "Course not found",
     "backToHome": "Back to Home",
-    "chapters": "{count} Chapters"
+    "chapters": "{count} Chapters",
+    "teachers": "Teachers",
+    "students": "students",
+    "aboutCourse": "About this course",
+    "startLearning": "Start Learning"
   },
   "chapter": {
     "previous": "Previous Chapter",
@@ -81,6 +87,7 @@
     "invite": "Invite to Jump",
     "inviteSent": "Invite sent",
     "inviteFailed": "Invite failed",
+    "completed": "Chapter completed",
     "danmaku": "Danmaku",
     "danmakuPlaceholder": "Type a message...",
     "danmakuSend": "Send",
@@ -415,6 +422,7 @@
     "insertQuiz": "Quiz",
     "insertRace": "Race",
     "insertChatroom": "Class Chatroom",
+    "insertTimer": "Timer",
     "tabs": "Tabs",
     "tabsLabel": "Tab Name",
     "tabsAdd": "Add Tab",

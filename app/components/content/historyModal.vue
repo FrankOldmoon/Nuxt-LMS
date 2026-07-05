@@ -2,8 +2,8 @@
   <UModal v-model:open="open" :ui="{ content: 'max-w-3xl' }">
     <UButton
       icon="i-lucide-history"
-      color="neutral"
-      variant="ghost"
+      color="info"
+      
       size="sm"
       :label="$t('layout.history')"
       class="justify-start"

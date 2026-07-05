@@ -30,6 +30,16 @@ export default eventHandler(async (event) => {
         eq(schema.comments.courseId, courseId),
         eq(schema.comments.cid, itemCid)
       ))
+    } else if (type === 'quiz') {
+      await db.delete(schema.quizzes).where(and(
+        eq(schema.quizzes.courseId, courseId),
+        eq(schema.quizzes.cid, itemCid)
+      ))
+    } else if (type === 'race') {
+      await db.delete(schema.races).where(and(
+        eq(schema.races.courseId, courseId),
+        eq(schema.races.cid, itemCid)
+      ))
     } else {
       return cResp(null, '未知类型', false)
     }

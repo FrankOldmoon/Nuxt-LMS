@@ -2,9 +2,12 @@
   <div v-if="course" class="flex flex-col gap-10">
     <!-- 课程头部：左图 + 右信息 -->
     <div class="flex flex-col sm:flex-row gap-6 relative">
-      <!-- 右上角编辑按钮 -->
-      <div v-if="canEdit" class="absolute top-0 right-0 z-10">
-        <CourseEditor :course-id="Number(courseId)" @saved="refresh" />
+      <!-- 右上角编辑工具栏 -->
+      <div v-if="canEdit" class="absolute top-0 right-0 z-10 flex items-center gap-1">
+        <CourseEditor :course-id="Number(courseId)" @saved="handleSaved" />
+        <UTooltip :text="$t('coursePanel.export')">
+          <UButton icon="i-lucide-download" color="success" variant="soft" size="xs" :loading="exporting" @click="exportCourse" />
+        </UTooltip>
       </div>
 
       <!-- 左侧：课程封面 -->
@@ -67,7 +70,7 @@
         </div>
 
         <!-- 教师 + 学生人数 -->
-        <div class="flex items-center gap-4 text-sm text-muted">
+        <div class="flex items-center gap-4 text-sm text-muted flex-wrap">
           <div v-if="course.teachers?.length" class="flex items-center gap-2">
             <UIcon name="i-lucide-chalkboard-teacher" class="size-4" />
             <div class="flex -space-x-2">
@@ -91,6 +94,18 @@
             <UIcon name="i-lucide-users" class="size-4" />
             <span>{{ course.studentCount }} {{ $t('course.students') }}</span>
           </div>
+        </div>
+
+        <!-- 开始学习按钮 -->
+        <div v-if="firstChapterUrl">
+          <UButton
+            :to="firstChapterUrl"
+            :label="$t('course.startLearning')"
+            icon="i-lucide-play"
+            color="primary"
+            size="lg"
+            class="mt-2"
+          />
         </div>
       </div>
     </div>
@@ -150,8 +165,9 @@
 <script setup lang="ts">
 const route = useRoute()
 const courseId = computed(() => route.params.id as string)
-const { setEditableContent, setEditableMeta, contentVersion, courseBtnsConfig, chapterBtnsConfig } = useLayoutState()
+const { setEditableContent, setEditableMeta, contentVersion, courseBtnsConfig, chapterBtnsConfig, courseNavVersion, notifyCourseNavUpdate } = useLayoutState()
 const { hasRole, isCourseTeacher } = useAuth()
+const { refresh: refreshNav } = useSidebarNav()
 
 const { data: resp, pending, refresh } = cRequest.use<import('#shared/types/lms').LmsCourseDetail | null>(
   () => `/api/lms/courses/show?id=${courseId.value}`,
@@ -168,6 +184,14 @@ const canEdit = computed(() => {
 const hasContent = computed(() => {
   if (!course.value?.content) return false
   return Object.keys(course.value.content).length > 0
+})
+
+// 第一个可访问章节的链接（排除自定义节点和锚点链接）
+const firstChapterUrl = computed(() => {
+  const first = chapterTree.value.find(ch =>
+    ch.accessible !== false && ch.to && !ch.to.includes('#')
+  )
+  return first?.to
 })
 
 // 学习进度：已通过章节数 / 总章节数
@@ -238,4 +262,59 @@ watch(resp, (detail) => {
 
 // 监听内容版本号，保存成功后重新获取数据
 watch(contentVersion, () => refresh(), { flush: 'sync' })
+
+// 课程侧边栏导航版本号变化时刷新（章节完成状态变化）
+watch(courseNavVersion, () => {
+  const nuxtApp = useNuxtApp()
+  const key = `/api/lms/courses/show?id=${courseId.value}`
+  if (nuxtApp.payload.data[key]) {
+    delete nuxtApp.payload.data[key]
+  }
+  refresh()
+  refreshNav()
+})
+
+// 课程导出
+const exporting = ref(false)
+async function exportCourse() {
+  if (!courseId.value || exporting.value) return
+  exporting.value = true
+  try {
+    const data = await cRequest<any>('/api/lms/courses/export', {
+      query: { id: courseId.value },
+    })
+    const courseName = data?.course?.name || 'course'
+    const courseCode = data?.course?.code
+    const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+    const safe = (s: string) => String(s).replace(/[\\/:*?"<>|]/g, '_')
+    const fileName = `${safe(courseCode || courseName)}-${ts}.json`
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = fileName
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  } catch (err: any) {
+    // eslint-disable-next-line no-console
+    console.error('export course failed', err)
+  } finally {
+    exporting.value = false
+  }
+}
+
+// 保存导航/课程后刷新数据
+async function handleSaved() {
+  const key = `/api/lms/courses/show?id=${courseId.value}`
+  const nuxtApp = useNuxtApp()
+  if (nuxtApp.payload.data[key]) {
+    delete nuxtApp.payload.data[key]
+  }
+  await refresh()
+  await refreshNav()
+  notifyCourseNavUpdate()
+}
 </script>

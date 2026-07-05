@@ -14,14 +14,16 @@
   "welcome": "歡迎",
   "common": {
     "cancel": "取消",
-    "reset": "重置",
+    "reset": "重設",
     "save": "儲存",
     "search": "搜尋",
     "edit": "編輯",
     "delete": "刪除",
     "loading": "載入中...",
     "select": "選擇",
-    "confirm": "確認"
+    "confirm": "確認",
+    "close": "關閉",
+    "add": "新增"
   },
   "home": {
     "title": "課程系列",
@@ -39,7 +41,11 @@
     "chapterList": "課程章節",
     "notFound": "課程不存在",
     "backToHome": "返回首頁",
-    "chapters": "{count} 章節"
+    "chapters": "{count} 章節",
+    "teachers": "教師",
+    "students": "學生",
+    "aboutCourse": "課程簡介",
+    "startLearning": "開始學習"
   },
   "chapter": {
     "previous": "上一章",
@@ -81,6 +87,7 @@
     "invite": "邀請跳轉",
     "inviteSent": "邀請已發送",
     "inviteFailed": "邀請發送失敗",
+    "completed": "本章已完成",
     "danmaku": "彈幕",
     "danmakuPlaceholder": "輸入彈幕內容...",
     "danmakuSend": "發送",
@@ -406,6 +413,7 @@
     "insertQuiz": "測驗",
     "insertRace": "競賽",
     "insertChatroom": "班級聊天室",
+    "insertTimer": "計時器",
     "tabs": "標籤頁",
     "tabsLabel": "標籤名",
     "tabsAdd": "新增標籤",

@@ -59,7 +59,13 @@ const open = computed({
 
 function initForm() {
   if (!props.comment) {
-    form.value = null
+    form.value = {
+      name: '',
+      content: '',
+      tags: [],
+      point: 1,
+    }
+    originalData = JSON.parse(JSON.stringify(form.value))
     return
   }
   const normalized = {

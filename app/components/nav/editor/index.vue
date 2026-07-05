@@ -1,7 +1,7 @@
 <template>
   <UModal v-model:open="open">
     <UTooltip :text="$t('navEditor.title')" :content="{ side: 'bottom' }">
-      <UButton color="primary" variant="ghost" size="sm" icon="i-lucide-list-tree" :aria-label="$t('navEditor.title')"
+      <UButton color="primary" variant="soft" size="xs" icon="i-lucide-list-tree" :aria-label="$t('navEditor.title')"
         @click="openModal" />
     </UTooltip>
 

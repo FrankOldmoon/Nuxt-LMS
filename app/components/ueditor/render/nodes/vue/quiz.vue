@@ -311,6 +311,7 @@ const quizTotalScore = computed(() => {
 // ====================== 用户记录 ======================
 
 async function fetchRecord() {
+    if (isTeacher.value) return
     if (!quizId.value || !editableCourseId.value) return
     try {
         const data = await cRequest(`/api/lms/quizzes/record?course_id=${editableCourseId.value}&cid=${quizId.value}`)
@@ -375,6 +376,7 @@ function fillRecordsToQuestions(records) {
 }
 
 onMounted(() => {
+    if (isTeacher.value) return
     fetchRecord()
     // 题目组件挂载后延迟同步状态（等 question 数据加载）
     const syncTimer = setInterval(() => {

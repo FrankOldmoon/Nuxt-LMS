@@ -4,7 +4,10 @@
         <UModal v-model:open="isOpen" :ui="{ content: 'max-w-4xl' }" scrollable>
             <template #content>
                 <div class="p-6">
-                    <h3 class="text-lg font-semibold mb-4">{{ t('coursePanel.progress') }}</h3>
+
+                    <!-- 教师/管理员：选择学生查看进度 -->
+                    <CourseUserSelect v-if="canSelectStudent" :course-id="Number(courseId)"
+                        @impersonated="onImpersonated" @restored="onImpersonated" />
 
                     <!-- 总体学习进度 -->
                     <div v-if="overallProgress !== null" class="mb-4 p-4 bg-elevated/50 rounded-lg">
@@ -19,8 +22,7 @@
                         <p class="text-xs text-muted mt-1.5">{{ passedCount }} / {{ totalCount }} {{ t('coursePanel.chapter') }}</p>
                     </div>
 
-                    <!-- 教师/管理员：选择学生查看进度 -->
-                    <CourseUserSelect v-if="canSelectStudent" :course-id="Number(courseId)" @impersonated="onImpersonated" @restored="onImpersonated" />
+                    
 
                     <div v-if="loading" class="py-8 text-center text-gray-400">{{ t('common.loading') }}</div>
                     <UTable v-else v-model:expanded="expanded" :data="tableData" :columns="columns"
@@ -50,6 +52,7 @@ import TaskModal from './taskModal.vue'
 const UButton = resolveComponent('UButton')
 const UTooltip = resolveComponent('UTooltip')
 const UIcon = resolveComponent('UIcon')
+const NuxtLink = resolveComponent('NuxtLink')
 
 const isOpen = defineModel('open', { default: false })
 const { t } = useI18n()
@@ -184,13 +187,16 @@ const columns: TableColumn<ProgressRow>[] = [
                         },
                         onClick: row.getToggleExpandedHandler(),
                     }),
-                    // 可访问的章节：文字超链接；不可访问：普通文字
+                    // 可访问的章节：内部路由链接；不可访问：普通文字
                     orig?.to && orig?.accessible
-                        ? h('a', {
-                              href: orig.to,
+                        ? h(NuxtLink, {
+                              to: orig.to,
                               class: 'text-primary hover:underline truncate',
-                              onClick: (e: Event) => e.stopPropagation(),
-                          }, row.getValue('label') as string)
+                              onClick: (e: Event) => {
+                                  e.stopPropagation()
+                                  isOpen.value = false
+                              },
+                          }, { default: () => row.getValue('label') as string })
                         : h('span', {
                               class: orig?.isParent ? 'font-semibold' : '',
                           }, row.getValue('label') as string),

@@ -67,7 +67,15 @@ let originalData = null
 // 弹窗打开时从 props.homework 深拷贝初始化 form
 function initForm() {
   if (!props.homework) {
-    form.value = null
+    form.value = {
+      name: '',
+      code: '',
+      content: '',
+      point: 1,
+      tags: [],
+      explanation: '',
+    }
+    originalData = JSON.parse(JSON.stringify(form.value))
     return
   }
   const normalized = {

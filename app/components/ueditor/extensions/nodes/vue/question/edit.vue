@@ -105,7 +105,18 @@ provide('questionForm', form)
 // 弹窗打开时从 props.question 深拷贝初始化 form
 function initForm() {
   if (!props.question) {
-    form.value = null
+    form.value = {
+      name: '',
+      type: 'single',
+      options: ['', '', '', ''],
+      answer: [0],
+      point: 1,
+      content: '',
+      explanation: '',
+      tags: [],
+      record: [],
+    }
+    originalData = JSON.parse(JSON.stringify(form.value))
     return
   }
   const normalized = {

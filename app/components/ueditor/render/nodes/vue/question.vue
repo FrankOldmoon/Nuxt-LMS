@@ -385,7 +385,7 @@ function onSaved(ques) {
 
 // 鼠标移入时（仅一次）：非 quiz/race 模式获取当前用户的提交记录
 function onHover() {
-    if (props.inQuiz || inRace) return
+    if (props.inQuiz || inRace || isTeacher.value) return
     fetchRecord()
 }
 async function fetchRecord() {

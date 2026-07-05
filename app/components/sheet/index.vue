@@ -111,11 +111,11 @@ async function initSheet() {
         })
         cellData[0] = headerRow
     }
-    // 填入初始数据行（跳过第 0 行，保留表头）
+    // 填入初始数据行（有表头时跳过第 0 行，无表头时从第 0 行开始）
     if (props.initialData) {
         for (const rowKey in props.initialData) {
             const r = Number(rowKey)
-            if (r === 0) continue
+            if (r === 0 && props.headers.length) continue
             cellData[r] = props.initialData[rowKey]
         }
     }

@@ -255,6 +255,7 @@ function onSaved(hw) {
 
 // 鼠标移入时（仅一次）获取当前用户的提交记录，填充到提交状态
 async function fetchRecord() {
+    if (isTeacher.value) return
     if (!homeworkId.value || !editableCourseId.value) return
     try {
         const data = await cRequest(`/api/lms/homeworks/record?course_id=${editableCourseId.value}&cid=${homeworkId.value}`)
