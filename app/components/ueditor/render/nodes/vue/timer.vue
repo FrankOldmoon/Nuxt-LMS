@@ -45,6 +45,7 @@ const props = defineProps({
 })
 
 const { t } = useI18n()
+const emit = defineEmits(['update'])
 
 const config = computed(() => {
     try {
@@ -86,6 +87,7 @@ const timerTextClass = computed(() => {
 function adjustMinutes(delta) {
     const newVal = setMinutes.value + delta
     if (newVal >= 0 && newVal <= 180) setMinutes.value = newVal
+    emit('update', { minutes: newVal, seconds: setSeconds.value })
 }
 
 function adjustSeconds(delta) {
@@ -98,6 +100,7 @@ function adjustSeconds(delta) {
         else newVal = 59
     }
     setSeconds.value = newVal
+    emit('update', { minutes: setMinutes.value, seconds: newVal })
 }
 
 function start() {

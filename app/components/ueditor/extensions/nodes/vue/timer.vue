@@ -7,11 +7,11 @@
             <UFormField :label="$t('chapter.seconds')" size="xs">
                 <UInput v-model.number="cfgSeconds" type="number" min="0" max="59" size="sm" class="w-24" />
             </UFormField>
-            <UButton size="xs" color="neutral" variant="outline" @click="showConfig = false">{{ $t('common.close') }}</UButton>
+            <UButton size="xs" color="neutral" variant="soft" @click="showConfig = false">{{ $t('common.save') }}</UButton>
         </div>
     </div>
     <div class="vue-node-body">
-        <UeditorRenderNodesVueTimer :node="node" />
+        <UeditorRenderNodesVueTimer :node="node" @update="onUpdate" />
     </div>
 </template>
 
@@ -56,4 +56,9 @@ watch([cfgMinutes, cfgSeconds], () => {
     config.value = newConfig
     props.updateAttributes({ content: JSON.stringify(newConfig) })
 })
+
+function onUpdate(newConfig) {
+    config.value = newConfig
+    props.updateAttributes({ content: JSON.stringify(newConfig) })
+}
 </script>

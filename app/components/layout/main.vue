@@ -1,9 +1,11 @@
 <template>
   <UPageBody>
-    <!-- 移动端工具栏：按钮弹开 aside -->
-    <div v-if="showSidebar" class="lg:hidden flex items-center gap-2 mb-4">
+    <!-- 移动端工具栏：menu + toc 按钮同一行 -->
+    <div v-if="showSidebar" class="lg:hidden flex items-center justify-between gap-2 mb-4">
       <UButton icon="i-lucide-panel-left" color="neutral" variant="outline"
         :label="$t('layout.menu')" @click="asideOpen = true" />
+      <UButton icon="i-lucide-panel-right" color="neutral" variant="outline"
+        :label="$t('layout.toc')" @click="mobileTocOpen = true" />
     </div>
 
     <!-- 页面内容 -->
@@ -20,11 +22,18 @@
         <LayoutAside />
       </template>
     </USlideover>
+
+    <!-- 移动端右侧目录弹窗 -->
+    <USlideover v-if="showSidebar" v-model:open="mobileTocOpen" :title="$t('layout.pageToc')" side="right">
+      <template #body>
+        <LayoutToc />
+      </template>
+    </USlideover>
   </UPageBody>
 </template>
 
 <script setup lang="ts">
-const { showSidebar } = useLayoutState()
+const { showSidebar, mobileTocOpen } = useLayoutState()
 const { playFullscreen } = useChapterBtns()
 const asideOpen = ref(false)
 
@@ -32,6 +41,7 @@ const asideOpen = ref(false)
 const route = useRoute()
 watch(() => route.fullPath, () => {
   asideOpen.value = false
+  mobileTocOpen.value = false
 })
 </script>
 

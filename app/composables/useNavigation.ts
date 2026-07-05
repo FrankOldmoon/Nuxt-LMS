@@ -98,6 +98,7 @@ function markDefaultOpen(items: NavigationMenuItem[], currentPath: string): bool
  */
 export function useSidebarNav() {
   const route = useRoute()
+  const { t } = useI18n()
 
   const courseId = computed(() => {
     const match = route.path.match(/^\/course\/([^/]+)/)
@@ -121,7 +122,7 @@ export function useSidebarNav() {
     const currentPath = route.path
     const orders = course.orders ?? []
     const chapters = course.chapters ?? []
-    const result: NavigationMenuItem[] = [{ label: '课程', to: `/course/${cid}` }]
+    const result: NavigationMenuItem[] = [{ label: t('course.home'), to: `/course/${cid}` }]
     // 如果有自定义 orders，使用 orders 构建导航（支持嵌套层级）
     if (orders.length > 0) {
       const sorted = [...orders].sort((a, b) => a.order - b.order)
@@ -245,6 +246,8 @@ export function useLayoutState() {
   }))
   // 课程侧边栏导航版本号：章节完成状态变化时 +1，触发 useSidebarNav 重新拉取
   const courseNavVersion = useState<number>('layout-course-nav-version', () => 0)
+  // 移动端 TOC 弹窗开关（由 main.vue 工具栏控制）
+  const mobileTocOpen = useState<boolean>('layout-mobile-toc-open', () => false)
 
   // 路由默认：仅在章节页（/course/:id/:cid）显示 aside
   // 使用 computed 直接读取路由，确保 SSR 渲染阶段即可得到正确值
@@ -285,7 +288,7 @@ export function useLayoutState() {
     sidebarOverride.value = null
   })
 
-  return { tocLinks, editableContent, editableTable, editableId, editableCourseId, contentVersion, showSidebar, showDanmaku, chapterBtnsConfig, courseBtnsConfig, courseNavVersion, setToc, setEditableContent, setEditableMeta, notifyContentSaved, notifyCourseNavUpdate, setLayout }
+  return { tocLinks, editableContent, editableTable, editableId, editableCourseId, contentVersion, showSidebar, showDanmaku, chapterBtnsConfig, courseBtnsConfig, courseNavVersion, mobileTocOpen, setToc, setEditableContent, setEditableMeta, notifyContentSaved, notifyCourseNavUpdate, setLayout }
 }
 
 /**

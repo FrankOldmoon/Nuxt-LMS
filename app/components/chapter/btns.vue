@@ -1,11 +1,5 @@
 <template>
   <div class="flex items-center gap-1 mb-3 flex-wrap">
-    <!-- 播放：全屏播放模式 -->
-    <UTooltip v-if="chapterBtnsConfig.showPlay" :text="playFullscreen ? $t('chapter.exitPlay') : $t('chapter.play')">
-      <UButton :icon="playFullscreen ? 'i-lucide-minimize' : 'i-lucide-play'"
-        :color="playFullscreen ? 'error' : 'primary'" variant="soft" size="xs" @click="togglePlay" />
-    </UTooltip>
-
     <!-- 得分：章节得分（教师/管理员可见） -->
     <UTooltip v-if="canEdit && chapterBtnsConfig.showScore" :text="$t('chapter.score')">
       <UButton icon="i-lucide-award" color="success" variant="soft" size="xs" @click="() => { scoreOpen = true }" />
@@ -58,7 +52,6 @@
 <script setup lang="ts">
 const route = useRoute()
 const { hasRole, isCourseTeacher, user } = useAuth()
-const { playFullscreen, togglePlay } = useChapterBtns()
 const { showDanmaku, chapterBtnsConfig } = useLayoutState()
 const { sendInvite: wsSendInvite } = useWebSocket()
 const toast = useToast()

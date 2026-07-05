@@ -45,7 +45,8 @@
     "teachers": "Teachers",
     "students": "students",
     "aboutCourse": "About this course",
-    "startLearning": "Start Learning"
+    "startLearning": "Start Learning",
+    "home": "Course"
   },
   "chapter": {
     "previous": "Previous Chapter",

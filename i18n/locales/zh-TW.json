@@ -45,7 +45,8 @@
     "teachers": "教師",
     "students": "學生",
     "aboutCourse": "課程簡介",
-    "startLearning": "開始學習"
+    "startLearning": "開始學習",
+    "home": "課程"
   },
   "chapter": {
     "previous": "上一章",
@@ -597,7 +598,7 @@
     "htmlCodeLabel": "HTML 程式碼",
     "htmlCodePlaceholder": "在此輸入 HTML 程式碼...",
     "htmlPreview": "即時預覽",
-    "htmlHint": "iframe 內可透過 parent.postMessage({ type: 'correct_rate', rate: 0.8 }, '*') 傳遞得分率（0~1）",
+    "htmlHint": "iframe 內可透過 parent.postMessage(\\{ type: 'correct_rate', rate: 0.8 \\}, '*') 傳遞得分率（0~1）",
     "htmlCorrectRate": "正確率",
     "htmlDeterminedByIframe": "由 iframe 內程式碼判定",
     "typeShortAnswer": "簡答題",
@@ -645,9 +646,9 @@
     "fillAnswerPlaceholder": "答案 {0}",
     "fillPlaceholderHint": "請在內容中使用 {0}、{1} 佔位，並在此配置對應的答案",
     "optionPlaceholder": "輸入選項",
-    "optionsHint": "下拉框選項，在內容中用 ||答案|| 插入下拉框",
-    "selectAnswerHint": "下拉答案（與內容中 ||答案|| 一一對應）",
-    "selectPlaceholderHint": "請在內容中使用 ||答案|| 插入下拉框，並在此設置選項",
+    "optionsHint": "下拉框選項，在內容中用 \\||答案\\|| 插入下拉框",
+    "selectAnswerHint": "下拉答案（與內容中 \\||答案\\|| 一一對應）",
+    "selectPlaceholderHint": "請在內容中使用 \\||答案\\|| 插入下拉框，並在此設置選項",
     "fillPlaceholder": "填空 {0}",
     "explanationLabel": "答案解析（學生提交後展示）",
     "explanationAnswer": "答案解析：",

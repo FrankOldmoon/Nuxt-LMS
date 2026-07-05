@@ -22,7 +22,6 @@
           <UButton icon="i-lucide-database" color="neutral" variant="soft" size="xs"
             @click="contentPickerOpen = true" />
         </UTooltip>
-        <NavEditor mode="course" :course-id="courseId" :navigation="navigation.slice(1)" @saved="handleSaved" />
       </template>
     </div>
 
@@ -33,7 +32,15 @@
         class="w-full justify-center" @click="classModalOpen = true" />
     </div>
 
-    <UNavigationMenu :items="navItems" orientation="vertical" :highlight="true" color="primary" class="w-full" />
+    <!-- 第一项：课程首页 + 编辑导航按钮（左右分布） -->
+    <div class="flex items-center justify-between mb-1">
+      <NuxtLink :to="courseHomeUrl" class="text-sm font-medium text-highlighted hover:text-primary transition-colors">
+        {{ firstNavLabel }}
+      </NuxtLink>
+      <NavEditor v-if="canEditCourse" mode="course" :course-id="courseId" :navigation="navigation.slice(1)" @saved="handleSaved" />
+    </div>
+
+    <UNavigationMenu :items="restNavItems" orientation="vertical" :highlight="true" color="primary" class="w-full" />
 
     <ClassModal v-model:open="classModalOpen" />
 
@@ -99,6 +106,11 @@ const navItems = computed(() => {
     : (markNavDisabled(indexedNavigation.value) as typeof indexedNavigation.value)
   return markPassed(base as any[])
 })
+
+// 第一项（课程首页）单独渲染，与 NavEditor 左右分布
+const firstNavLabel = computed(() => navItems.value[0]?.label ?? '')
+const courseHomeUrl = computed(() => navItems.value[0]?.to ?? `/course/${courseId.value}`)
+const restNavItems = computed(() => navItems.value.slice(1))
 
 // 递归标记已完成（is_pass）章节右侧显示 ✓ 徽标
 function markPassed(items: any[]): any[] {

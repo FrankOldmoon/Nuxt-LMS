@@ -24,6 +24,9 @@
         </div>
 
         <div v-else class="space-y-4">
+          <!-- 课程内容编辑 -->
+          <USeparator :label="$t('courseEditor.content')" class="my-4" />
+          <Ueditor v-model="contentJson" :lock-id="lockId" />
           <!-- 基础信息 -->
           <UFormField :label="$t('courseEditor.name')" class="w-full">
             <UInput v-model="form.name" :placeholder="$t('courseEditor.namePlaceholder')" class="w-full" />
@@ -37,10 +40,6 @@
 
           <!-- config 编辑 -->
           <CourseEditorConfigForm ref="configFormRef" />
-
-          <!-- 课程内容编辑 -->
-          <USeparator :label="$t('courseEditor.content')" class="my-4" />
-          <Ueditor v-model="contentJson" :lock-id="lockId" />
 
           <!-- 教师/编辑者管理（仅管理员可见） -->
           <CourseEditorMembersManager
