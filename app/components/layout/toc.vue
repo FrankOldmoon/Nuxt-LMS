@@ -24,7 +24,7 @@
 
         <template #body>
           <div class="p-4 min-w-[480px]">
-            <ueditor v-model="editableContent" :save-handler="handleSave" ref="ueditorRef" />
+            <ueditor v-model="editableContent" :save-handler="handleSave" :lock-id="lockId" ref="ueditorRef" />
           </div>
         </template>
         <template #footer>
@@ -55,6 +55,8 @@ const saving = ref(false)
 const { tocLinks, editableContent, editableTable, editableId, editableCourseId, notifyContentSaved } = useLayoutState()
 const { playFullscreen } = useChapterBtns()
 const nuxtApp = useNuxtApp()
+
+const lockId = computed(() => editableTable.value && editableId.value ? `${editableTable.value}_${editableId.value}` : null)
 
 // ── 全屏播放模式：标题导航 ──
 // 扁平化 tocLinks，得到有序标题列表

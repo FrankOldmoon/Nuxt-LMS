@@ -7,6 +7,8 @@
         <div ref="cinsertsWrapper" v-show="false">
             <Cinserts v-if="canEdit" :editor="editorRef" />
         </div>
+
+        <UeditorWs v-if="lockId" :lock-id="lockId" @update:readonly="onLockUpdate" />
     </client-only>
 </template>
 
@@ -14,6 +16,7 @@
 import { UmoEditor } from '@umoteam/editor'
 import extensions from './extensions'
 import Cinserts from './cinserts.vue'
+import UeditorWs from './ws.vue'
 
 const json = defineModel()
 const props = defineProps({
@@ -21,7 +24,13 @@ const props = defineProps({
         type: Function,
         default: null,
     },
+    lockId: {
+        type: [String, Number],
+        default: null,
+    },
 })
+
+const isReadonly = ref(false)
 
 // 仅 teacher 以上角色可编辑内容（显示 Cinserts）
 const { hasRole, isCourseEditor, isCourseTeacher } = useAuth()
@@ -42,6 +51,7 @@ const options = computed(() => ({
     },
     height: '600px',
     contentType: 'markdown',
+    readonly: isReadonly.value,
     extensions,
     async onSave(content, page, document) {
         if (props.saveHandler) {
@@ -69,7 +79,18 @@ const options = computed(() => ({
 const onCreated = () => {
     nextTick(() => {
         injectCinserts()
+        if (isReadonly.value) {
+            editorRef.value?.useEditor()?.setEditable(false)
+        }
     })
+}
+
+function onLockUpdate(readonly) {
+    isReadonly.value = readonly
+    const editor = editorRef.value?.useEditor()
+    if (editor) {
+        editor.setEditable(!readonly)
+    }
 }
 
 function injectCinserts() {
