@@ -8,6 +8,9 @@ import { dispatch } from './callbacks'
 
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null
 
+/** 已加入的小组房间 ID 集合（客户端单例，断线重连时自动重新加入） */
+const joinedGroupIds = new Set<string>()
+
 export function useWsConnection() {
   const ws = useState<WebSocket | null>('ws-connection', () => null)
   const wsConnected = useState<boolean>('ws-connected', () => false)
@@ -44,6 +47,10 @@ export function useWsConnection() {
         }
         if (joinedClassId.value) {
           joinClass(joinedClassId.value)
+        }
+        // 重新加入所有小组房间
+        for (const groupId of joinedGroupIds) {
+          send({ type: 'joinGroup', groupId })
         }
       }
 
@@ -83,7 +90,8 @@ export function useWsConnection() {
     }
     wsConnected.value = false
     joinedClassId.value = null
+    joinedGroupIds.clear()
   }
 
-  return { ws, wsConnected, joinedClassId, send, connect, disconnect, joinClass }
+  return { ws, wsConnected, joinedClassId, joinedGroupIds, send, connect, disconnect, joinClass }
 }

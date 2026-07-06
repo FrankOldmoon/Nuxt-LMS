@@ -46,6 +46,7 @@
 import { userPeers } from '../utils/ws/state'
 import { handleClassMessage, cleanupClassPeer } from '../utils/ws/class'
 import { handleRaceMessage, cleanupRacePeer } from '../utils/ws/race'
+import { handleGroupMessage, cleanupGroupPeer } from '../utils/ws/group'
 
 export default defineWebSocketHandler({
   open() {
@@ -68,9 +69,10 @@ export default defineWebSocketHandler({
         return
       }
 
-      // 尝试班级消息 → 竞赛消息
+      // 尝试班级消息 → 竞赛消息 → 小组消息
       if (handleClassMessage(peer, data)) return
       if (handleRaceMessage(peer, data)) return
+      if (handleGroupMessage(peer, data)) return
     } catch {
       peer.send(JSON.stringify({ type: 'error', message: 'Invalid message format' }))
     }
@@ -91,6 +93,9 @@ export default defineWebSocketHandler({
 
     // 清理竞赛房间
     cleanupRacePeer(peer)
+
+    // 清理小组房间
+    cleanupGroupPeer(peer)
   },
 
   error(_peer, error) {

@@ -21,11 +21,13 @@
 import { useWsConnection } from './ws/connection'
 import { useWsClass } from './ws/class'
 import { useWsRace } from './ws/race'
+import { useWsGroup } from './ws/group'
 
 export function useWebSocket() {
   const conn = useWsConnection()
   const classFeatures = useWsClass(conn)
   const raceFeatures = useWsRace(conn)
+  const groupFeatures = useWsGroup(conn)
 
   const { ws, wsConnected, joinedClassId, connect, disconnect, joinClass } = conn
 
@@ -36,5 +38,7 @@ export function useWebSocket() {
     ...classFeatures,
     // 竞赛功能
     ...raceFeatures,
+    // 小组功能
+    ...groupFeatures,
   }
 }

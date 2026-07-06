@@ -11,7 +11,7 @@ import type {
   QuickAnswerStartCallback, QuickAnswerResultCallback, QuickAnswerEndCallback,
   RaceJoinedCallback, RaceStartCallback, RaceQuestionCallback,
   RaceAnswerUpdateCallback, RaceScoresCallback, RaceQuestionEndCallback, RaceEndCallback,
-  OnlineUpdateCallback, RaceOnlineUpdateCallback, MessageCallback, ChatroomCallback,
+  OnlineUpdateCallback, RaceOnlineUpdateCallback, MessageCallback, ChatroomCallback, GroupChatCallback,
 } from './types'
 
 // ====================== 回调数组 ======================
@@ -36,6 +36,7 @@ export const onlineUpdateCallbacks: OnlineUpdateCallback[] = []
 export const raceOnlineUpdateCallbacks: RaceOnlineUpdateCallback[] = []
 export const messageCallbacks: MessageCallback[] = []
 export const chatroomCallbacks: ChatroomCallback[] = []
+export const groupChatCallbacks: GroupChatCallback[] = []
 
 /** 将收到的 WS 消息分发到对应回调数组 */
 export function dispatch(type: string, data: any) {
@@ -59,5 +60,6 @@ export function dispatch(type: string, data: any) {
     case 'raceOnlineUpdate': raceOnlineUpdateCallbacks.forEach(cb => cb(data)); break
     case 'message': messageCallbacks.forEach(cb => cb(data)); break
     case 'chatroom': chatroomCallbacks.forEach(cb => cb(data)); break
+    case 'groupChat': groupChatCallbacks.forEach(cb => cb(data)); break
   }
 }

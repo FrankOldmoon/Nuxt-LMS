@@ -1,6 +1,6 @@
 // server/api/upload.post.ts
 import { db, schema } from "@nuxthub/db"
-import { eq } from "drizzle-orm"
+import { eq, and, isNull } from "drizzle-orm"
 import { createHash } from "node:crypto"
 import { writeFile, mkdir, rename, rm } from "node:fs/promises"
 import { join, extname } from "node:path"
@@ -33,6 +33,10 @@ export default eventHandler(async (event) => {
   const originalName = fileField.filename
   const ext = extname(originalName).toLowerCase()
 
+  // 可选：小组网盘空间标识（设置后文件归属到小组共享空间）
+  const groupField = formData?.find(f => f.name === "group")
+  const group = groupField?.data ? String(Buffer.from(groupField.data).toString('utf8')).trim() : ''
+
   // 3. 禁止危险后缀
   const dangerous = [".exe", ".sh", ".bat", ".cmd", ".ps1", ".php"]
   if (dangerous.includes(ext)) {
@@ -52,9 +56,12 @@ export default eventHandler(async (event) => {
   // 4. 计算 SHA-256 哈希
   const hash = createHash("sha256").update(buffer).digest("hex")
 
-  // 5. 查重：如果已有相同哈希的文件，直接返回
+  // 5. 查重：小组文件按 hash + group 去重；个人文件按 hash + group IS NULL 去重
+  const dedupWhere = group
+    ? and(eq(schema.files.hash, hash), eq(schema.files.group, group))
+    : and(eq(schema.files.hash, hash), isNull(schema.files.group))
   const existing = await db.query.files.findFirst({
-    where: eq(schema.files.hash, hash),
+    where: dedupWhere,
   })
   if (existing) {
     return cResp({ url: `/api/file?pathname=${encodeURIComponent(existing.path.replace(/^\/+/, ''))}` }, "文件已存在", true)
@@ -83,13 +90,14 @@ export default eventHandler(async (event) => {
       type: fileField.type,
       size: buffer.length,
       userId: user.id,
+      group: group || null,
     }).returning()
   } catch (error: any) {
     // 路径唯一冲突：说明另一个请求已插入相同哈希的文件
     // 删除我们刚写入的临时文件，查询那条记录并返回
     await rm(tempFilePath).catch(() => { })
     const conflict = await db.query.files.findFirst({
-      where: eq(schema.files.hash, hash),
+      where: dedupWhere,
     })
     if (conflict) {
       return cResp({ url: `/api/file?pathname=${encodeURIComponent(conflict.path.replace(/^\/+/, ''))}` }, "文件已存在", true)

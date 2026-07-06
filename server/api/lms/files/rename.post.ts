@@ -11,11 +11,14 @@ export default eventHandler(async (event) => {
   if (!id) return cResp(null, 'id 不能为空', false)
   if (!name) return cResp(null, 'name 不能为空', false)
 
-  // 仅允许修改自己上传的、未删除的文件
+  // 查找文件（未删除）：小组文件任何成员可改；个人文件仅所有者可改
   const file = await db.query.files.findFirst({
-    where: and(eq(schema.files.id, id), eq(schema.files.userId, user.id), isNull(schema.files.deletedAt)),
+    where: and(eq(schema.files.id, id), isNull(schema.files.deletedAt)),
   })
   if (!file) return cResp(null, '文件不存在或无权限', false)
+  if (!file.group && file.userId !== user.id) {
+    return cResp(null, '文件不存在或无权限', false)
+  }
 
   await db.update(schema.files)
     .set({ name, updatedAt: new Date() })

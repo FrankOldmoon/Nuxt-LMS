@@ -29,3 +29,6 @@ export type MessageCallback = (data: { message: any }) => void
 
 // 班级聊天室回调
 export type ChatroomCallback = (data: { classId: number; userId: number; from: string; avatarImg: string | null; text: string; ts: number }) => void
+
+// 小组聊天室回调
+export type GroupChatCallback = (data: { groupId: string; userId: number; from: string; avatarImg: string | null; text: string; ts: number }) => void

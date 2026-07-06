@@ -23,7 +23,8 @@
     "select": "选择",
     "confirm": "确认",
     "close": "关闭",
-    "add": "新增"
+    "add": "新增",
+    "upload": "上传"
   },
   "home": {
     "title": "课程系列",
@@ -915,7 +916,12 @@
     "impersonateFailed": "切换失败",
     "restoreRole": "恢复身份",
     "restoreSuccess": "已恢复原始身份",
-    "restoreFailed": "恢复失败"
+    "restoreFailed": "恢复失败",
+    "members": "成员",
+    "groupChat": "小组聊天",
+    "groupFiles": "小组文件",
+    "selectGroup": "选择小组",
+    "noGroups": "暂无小组"
   },
   "myFiles": {
     "title": "网盘文件",
@@ -937,7 +943,9 @@
     "loadFailed": "加载文件失败",
     "pickFromDrive": "从网盘选择",
     "selected": "已选 {n} 个",
-    "confirmSelect": "确认选择"
+    "confirmSelect": "确认选择",
+    "uploadSuccess": "上传 \"{name}\" 成功",
+    "uploadFailed": "上传失败"
   },
   "announcement": {
     "title": "课程公告",

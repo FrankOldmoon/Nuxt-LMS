@@ -23,7 +23,8 @@
     "select": "Select",
     "confirm": "Confirm",
     "close": "Close",
-    "add": "Add"
+    "add": "Add",
+    "upload": "Upload"
   },
   "home": {
     "title": "Course Series",
@@ -904,7 +905,12 @@
     "impersonateFailed": "Switch failed",
     "restoreRole": "Restore Role",
     "restoreSuccess": "Role restored",
-    "restoreFailed": "Restore failed"
+    "restoreFailed": "Restore failed",
+    "members": "Members",
+    "groupChat": "Group Chat",
+    "groupFiles": "Group Files",
+    "selectGroup": "Select Group",
+    "noGroups": "No groups"
   },
   "myFiles": {
     "title": "My Files",
@@ -926,7 +932,9 @@
     "loadFailed": "Failed to load files",
     "pickFromDrive": "Pick from drive",
     "selected": "{n} selected",
-    "confirmSelect": "Confirm selection"
+    "confirmSelect": "Confirm selection",
+    "uploadSuccess": "Uploaded \"{name}\" successfully",
+    "uploadFailed": "Upload failed"
   },
   "announcement": {
     "title": "Course Announcements",

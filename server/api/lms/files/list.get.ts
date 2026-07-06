@@ -10,15 +10,19 @@ export default eventHandler(async (event) => {
   const sort = String(query.sort || 'createdAt') // createdAt | size | name
   const order = String(query.order || 'desc') // desc | asc
   const keyword = String(query.keyword || '').trim()
+  const group = String(query.group || '').trim()
 
-  // 构建条件：当前用户的、未删除的文件
+  // 构建条件：小组文件按 group 过滤（共享空间）；个人文件按 userId 过滤
+  const ownerFilter = group
+    ? eq(schema.files.group, group)
+    : eq(schema.files.userId, user.id)
   const where = keyword
     ? and(
-        eq(schema.files.userId, user.id),
+        ownerFilter,
         isNull(schema.files.deletedAt),
         like(schema.files.name, `%${keyword}%`),
       )
-    : and(eq(schema.files.userId, user.id), isNull(schema.files.deletedAt))
+    : and(ownerFilter, isNull(schema.files.deletedAt))
 
   // 总数
   const totalRows = await db
@@ -44,6 +48,7 @@ export default eventHandler(async (event) => {
       type: schema.files.type,
       size: schema.files.size,
       hash: schema.files.hash,
+      group: schema.files.group,
       createdAt: schema.files.createdAt,
     })
     .from(schema.files)

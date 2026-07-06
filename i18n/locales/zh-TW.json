@@ -23,7 +23,8 @@
     "select": "選擇",
     "confirm": "確認",
     "close": "關閉",
-    "add": "新增"
+    "add": "新增",
+    "upload": "上傳"
   },
   "home": {
     "title": "課程系列",
@@ -872,7 +873,12 @@
     "impersonateFailed": "切換失敗",
     "restoreRole": "恢復身份",
     "restoreSuccess": "已恢復原始身份",
-    "restoreFailed": "恢復失敗"
+    "restoreFailed": "恢復失敗",
+    "members": "成員",
+    "groupChat": "小組聊天",
+    "groupFiles": "小組文件",
+    "selectGroup": "選擇小組",
+    "noGroups": "暫無小組"
   },
   "myFiles": {
     "title": "網盤檔案",
@@ -894,7 +900,9 @@
     "loadFailed": "載入檔案失敗",
     "pickFromDrive": "從網盤選擇",
     "selected": "已選 {n} 個",
-    "confirmSelect": "確認選擇"
+    "confirmSelect": "確認選擇",
+    "uploadSuccess": "上傳 \"{name}\" 成功",
+    "uploadFailed": "上傳失敗"
   },
   "announcement": {
     "title": "課程公告",

@@ -77,6 +77,19 @@ export function broadcastToRace(pin: string, msg: string) {
   }
 }
 
+// ====================== 小组房间 ======================
+/** groupId = `${courseId}_${groupName}` → Set<peer> */
+export const groupRooms = new Map<string, Set<any>>()
+
+export function broadcastToGroup(groupId: string, msg: string) {
+  const room = groupRooms.get(groupId)
+  if (room) {
+    for (const p of room) {
+      p.send(msg)
+    }
+  }
+}
+
 /** 从 race answers 计算实时分数汇总 */
 export function computeRaceScores(race: RaceState) {
   const userTotals = new Map<number, { from: string; score: number; correctCount: number }>()
