@@ -67,15 +67,18 @@ export default eventHandler(async (event) => {
     return cResp({ url: `/api/file?pathname=${encodeURIComponent(existing.path.replace(/^\/+/, ''))}` }, "文件已存在", true)
   }
 
-  // 6. 准备日期目录
-  const dateStr = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
-  const dateDir = join(UPLOAD_ROOT, dateStr)
-  await mkdir(dateDir, { recursive: true })
+  // 6. 准备目录：以距离 2026-01-01 的天数为目录名
+  const baseDate = new Date('2026-01-01T00:00:00Z')
+  const now = new Date()
+  const daysSinceBase = Math.floor((now.getTime() - baseDate.getTime()) / (24 * 60 * 60 * 1000))
+  const dayDirName = String(daysSinceBase)
+  const dayDir = join(UPLOAD_ROOT, dayDirName)
+  await mkdir(dayDir, { recursive: true })
 
   // 7. 临时文件名：以哈希为名，扩展名不变
   const tempFileName = `${hash}${ext}`
-  const tempFilePath = join(dateDir, tempFileName)
-  const tempDbPath = `/${dateStr}/${tempFileName}`
+  const tempFilePath = join(dayDir, tempFileName)
+  const tempDbPath = `/${dayDirName}/${tempFileName}`
 
   // 8. 写入临时文件
   await writeFile(tempFilePath, buffer)
@@ -108,8 +111,8 @@ export default eventHandler(async (event) => {
 
   // 10. 重命名为最终文件名：{id}{ext}
   const finalFileName = `${record.id}${ext}`
-  const finalFilePath = join(dateDir, finalFileName)
-  const finalDbPath = `/${dateStr}/${finalFileName}`
+  const finalFilePath = join(dayDir, finalFileName)
+  const finalDbPath = `/${dayDirName}/${finalFileName}`
 
   await rename(tempFilePath, finalFilePath)
 

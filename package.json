@@ -23,6 +23,7 @@
     "@tiptap/markdown": "^3.27.1",
     "@tiptap/vue-3": "^3.27.1",
     "@umoteam/editor": "^10.2.1",
+    "browser-image-compression": "^2.0.2",
     "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.45.2",
     "lowlight": "^3.3.0",

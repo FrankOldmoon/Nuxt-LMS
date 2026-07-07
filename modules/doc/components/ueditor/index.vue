@@ -17,6 +17,7 @@ import { UmoEditor } from '@umoteam/editor'
 import extensions from './extensions'
 import Cinserts from './cinserts.vue'
 import UeditorWs from './ws.vue'
+import imageCompression from 'browser-image-compression'
 
 const json = defineModel()
 const props = defineProps({
@@ -31,6 +32,35 @@ const props = defineProps({
 })
 
 const isReadonly = ref(false)
+
+/**
+ * 图片压缩函数（使用 browser-image-compression 库）
+ * @param file - 原始图片文件
+ * @returns 压缩后的 File 对象
+ */
+async function compressImage(file) {
+    const options = {
+        maxSizeMB: 1,              // 最大 1MB
+        maxWidthOrHeight: 1920,    // 最大宽高 1920px
+        useWebWorker: true,        // 使用 Web Worker 提升性能
+        fileType: 'image/webp',    // 输出 WebP 格式
+        initialQuality: 0.8,      // 初始质量 80%
+    }
+
+    try {
+        const compressedFile = await imageCompression(file, options)
+        // 如果压缩后变大，返回原文件
+        if (compressedFile.size >= file.size) {
+            return file
+        }
+        // 重命名文件扩展名
+        const webpName = file.name.replace(/\.(png|jpg|jpeg|gif|bmp|webp)$/i, '.webp')
+        return new File([compressedFile], webpName, { type: 'image/webp' })
+    } catch (error) {
+        console.warn('图片压缩失败，使用原文件:', error)
+        return file
+    }
+}
 
 // 仅 teacher 以上角色可编辑内容（显示 Cinserts）
 const { hasRole, isCourseEditor, isCourseTeacher } = useAuth()
@@ -62,8 +92,19 @@ const options = computed(() => ({
     },
     async onFileUpload(file) {
         if (!file) throw new Error('File not found')
+
+        // 图片压缩处理
+        let processedFile = file
+        if (file.type.startsWith('image/')) {
+            processedFile = await compressImage(file, {
+                maxWidth: 1920,
+                maxHeight: 1920,
+                quality: 0.8,
+            })
+        }
+
         const formData = new FormData()
-        formData.append('files', file)
+        formData.append('files', processedFile)
         const res = await $fetch('/api/upload', {
             method: 'POST',
             body: formData,
