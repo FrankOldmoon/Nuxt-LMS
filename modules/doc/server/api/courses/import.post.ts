@@ -57,7 +57,7 @@ type ExportedData = {
 }
 
 export default eventHandler(async (event) => {
-  await requireAdmin(event)
+  const currentUser = await requireAdmin(event)
 
   const body = await readBody(event)
   const { data, categoryId: overrideCategoryId } = body as { data: ExportedData, categoryId?: number }
@@ -168,6 +168,7 @@ export default eventHandler(async (event) => {
       }
 
       // 7. comments：两遍处理（先顶层后子级）
+      // 使用当前登录用户作为 userId（原用户可能不存在）
       const allComments = (data.comments || []) as any[]
       const topLevel = allComments.filter((c) => c.parentId == null)
       const childLevel = allComments.filter((c) => c.parentId != null)
@@ -176,19 +177,20 @@ export default eventHandler(async (event) => {
       let cCid = 0
       // 顶层
       for (const c of topLevel) {
-        const { id: _id, cid: oldCid, courseId: _cId, createdAt, updatedAt, deletedAt, ...rest } = c
+        const { id: _id, cid: oldCid, courseId: _cId, userId: _oldUserId, createdAt, updatedAt, deletedAt, ...rest } = c
         cCid++
         const [inserted] = await tx.insert(schema.comments).values({
           ...rest,
           courseId: newCourseId,
           cid: cCid,
           parentId: null,
+          userId: currentUser.id, // 使用当前登录用户
         }).returning()
         if (inserted) commentMap.set(Number(oldCid), inserted.cid)
       }
       // 子级：parentId 来自 commentMap
       for (const c of childLevel) {
-        const { id: _id, cid: oldCid, courseId: _cId, createdAt, updatedAt, deletedAt, parentId, ...rest } = c
+        const { id: _id, cid: oldCid, courseId: _cId, userId: _oldUserId, createdAt, updatedAt, deletedAt, parentId, ...rest } = c
         cCid++
         const newParentId = commentMap.get(Number(parentId)) || null
         const [inserted] = await tx.insert(schema.comments).values({
@@ -196,6 +198,7 @@ export default eventHandler(async (event) => {
           courseId: newCourseId,
           cid: cCid,
           parentId: newParentId,
+          userId: currentUser.id, // 使用当前登录用户
         }).returning()
         if (inserted) commentMap.set(Number(oldCid), inserted.cid)
       }

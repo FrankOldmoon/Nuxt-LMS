@@ -68,6 +68,12 @@
 const route = useRoute()
 const chapterId = computed(() => route.params.cid as string)
 const courseId = computed(() => route.params.id as string)
+const { siteTitle } = useSiteConfig()
 
 const { data, pending, notFound, prevChapter, nextChapter } = useChapterPage(chapterId, courseId)
+
+// 设置页面标题
+useHead(computed(() => ({
+  title: data.value?.chapter?.title ? `${data.value.chapter.title} - ${siteTitle.value}` : siteTitle.value,
+})))
 </script>

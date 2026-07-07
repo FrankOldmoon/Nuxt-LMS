@@ -174,9 +174,15 @@
 const route = useRoute()
 const courseId = computed(() => route.params.id as string)
 const apiUrl = computed(() => `/api/courses/show?id=${courseId.value}`)
+const { siteTitle } = useSiteConfig()
 
 const { pending, course, canEdit, hasContent, chapterTree, firstChapterUrl,
         exporting, exportCourse, handleSaved,
         teachersModalOpen, membersRef, canManageTeachers } =
   useCourseDetailPage(courseId, apiUrl)
+
+// 设置页面标题
+useHead(computed(() => ({
+  title: course.value?.title ? `${course.value.title} - ${siteTitle.value}` : siteTitle.value,
+})))
 </script>
