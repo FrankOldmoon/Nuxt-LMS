@@ -1,5 +1,6 @@
 <template>
-  <div class="flex items-center gap-1 mb-3 flex-wrap">
+  <!-- 未登录时不显示按钮 -->
+  <div v-if="isLoggedIn" class="flex items-center gap-1 mb-3 flex-wrap">
     <!-- 得分：章节得分（教师/管理员可见） -->
     <UTooltip v-if="canEdit && chapterBtnsConfig.showScore" :text="$t('chapter.score')">
       <UButton icon="i-lucide-award" color="success" variant="soft" size="xs" @click="() => { scoreOpen = true }" />
@@ -62,6 +63,9 @@ const chapterId = computed(() => route.params.cid as string)
 const courseIdNum = computed(() => Number(courseId.value) || 0)
 const chapterIdNum = computed(() => Number(chapterId.value) || 0)
 const classIdNum = computed(() => user.value?.defaultClass?.id || user.value?.classId || 0)
+
+// 是否已登录
+const isLoggedIn = computed(() => !!user.value)
 
 // 教师或管理员才能操作得分/选择
 const canEdit = computed(() => {

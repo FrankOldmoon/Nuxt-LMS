@@ -23,6 +23,15 @@
       </div>
     </UFormField>
 
+    <!-- 图片裁剪弹窗 -->
+    <FormImageCropperModal
+      ref="cropperRef"
+      :title="$t('courseEditor.cropCover')"
+      :aspect-ratio="16/10"
+      stencil-type="rectangle"
+      @uploaded="onCropped"
+    />
+
     <!-- config 中的图标 -->
     <UFormField :label="$t('courseEditor.icon')" class="w-full">
       <UInput v-model="config.icon" :placeholder="$t('courseEditor.iconPlaceholder')" class="w-full" />
@@ -94,6 +103,7 @@
 </template>
 
 <script setup lang="ts">
+
 const { t } = useI18n()
 const toast = useToast()
 
@@ -106,6 +116,7 @@ const config = reactive({
 const coverImg = ref('')
 const uploading = ref(false)
 const coverInputRef = ref<HTMLInputElement | null>(null)
+const cropperRef = ref<{ setImage: (file: File) => void } | null>(null)
 
 // 课程功能开关（存储在 lmsConfig.course 中，单课程可覆盖全局默认值）
 const courseSwitches = reactive({
@@ -140,25 +151,14 @@ async function onCoverFileSelected(e: Event) {
     toast.add({ title: t('courseEditor.imageOnly'), color: 'error' })
     return
   }
-  if (file.size > 5 * 1024 * 1024) {
-    toast.add({ title: t('courseEditor.imageTooLarge'), color: 'error' })
-    return
-  }
 
-  uploading.value = true
-  try {
-    const formData = new FormData()
-    formData.append('files', file)
-    const res = await $fetch<{ data: { url: string } }>('/api/upload', {
-      method: 'POST',
-      body: formData,
-    })
-    coverImg.value = res.data.url
-  } catch (err: any) {
-    toast.add({ title: err?.message || t('courseEditor.uploadFailed'), color: 'error' })
-  } finally {
-    uploading.value = false
-  }
+  // 打开裁剪弹窗
+  cropperRef.value?.setImage(file)
+}
+
+// 裁剪完成后更新封面
+function onCropped(url: string) {
+  coverImg.value = url
 }
 
 /** 从课程 config 对象初始化表单 */

@@ -167,6 +167,8 @@ const { t } = useI18n()
 const { moduleLms } = useRuntimeConfig().public
 const { editableCourseId, editableId } = useLayoutState()
 const { hasRole, user } = useAuth()
+const isLoggedIn = computed(() => !!user.value)
+const toast = useToast()
 const chapterTask = useChapterTask()
 const { wsConnected, connect, raceJoin, onRaceJoined, sendRaceStart, onRaceStart, sendRaceQuestion, onRaceQuestion, sendRaceAnswer, onRaceAnswerUpdate, onRaceScores, sendRaceQuestionEnd, onRaceQuestionEnd, sendRaceEnd, onRaceEnd, sendRaceOnline, onRaceOnlineUpdate } = useWebSocket()
 
@@ -458,6 +460,11 @@ function checkStudentSubmit() {
 }
 
 function submitStudentAnswer() {
+    // 未登录时禁止提交
+    if (!isLoggedIn.value) {
+        toast.add({ title: t('common.loginRequired'), color: 'warning' })
+        return
+    }
     if (studentAnswered.value) return
     const comp = questionRef.value
     if (!comp) return

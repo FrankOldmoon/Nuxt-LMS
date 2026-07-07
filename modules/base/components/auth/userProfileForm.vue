@@ -17,6 +17,15 @@
             </p>
             <input ref="fileInputRef" type="file" accept="image/*" class="hidden" @change="onFileSelect" />
         </div>
+
+        <!-- 图片裁剪弹窗 -->
+        <FormImageCropperModal
+            ref="cropperRef"
+            :title="$t('profile.cropAvatar')"
+            :aspect-ratio="1"
+            stencil-type="circle"
+            @uploaded="onCropped"
+        />
         <UFormField :label="$t('profile.name')" class="w-full">
             <UInput v-model="form.name" :placeholder="$t('profile.namePlaceholder')" class="w-full" />
         </UFormField>
@@ -103,6 +112,7 @@ const genderOptions = computed(() => [
 
 const fileInputRef = ref<HTMLInputElement>()
 const uploading = ref(false)
+const cropperRef = ref<{ setImage: (file: File) => void } | null>(null)
 
 const showPwdModal = ref(false)
 const pwdSaving = ref(false)
@@ -142,37 +152,21 @@ async function onFileSelect(e: Event) {
     const target = e.target as HTMLInputElement
     const file = target.files?.[0]
     if (!file) return
+    target.value = ''
 
     if (!file.type.startsWith('image/')) {
         toast.add({ title: t('profile.invalidImageType'), color: 'error' })
         return
     }
-    if (file.size > 5 * 1024 * 1024) {
-        toast.add({ title: t('profile.imageTooLarge'), color: 'error' })
-        return
-    }
 
-    uploading.value = true
-    try {
-        const formData = new FormData()
-        formData.append('files', file)
+    // 打开裁剪弹窗
+    console.log('cropperRef.value', cropperRef.value)
+    cropperRef.value?.setImage(file)
+}
 
-        const resp = await $fetch<{ data: { url: string }; success: boolean; msg: string }>('/api/upload', {
-            method: 'POST',
-            body: formData,
-        })
-
-        if (!resp.success) {
-            throw new Error(resp.msg || t('profile.uploadFailed'))
-        }
-
-        form.value.avatarImg = resp.data.url
-        toast.add({ title: t('profile.uploadSuccess'), color: 'success' })
-    } catch (e: any) {
-        toast.add({ title: e.message || t('profile.uploadFailed'), color: 'error' })
-    } finally {
-        uploading.value = false
-        target.value = ''
-    }
+// 裁剪完成后更新头像
+function onCropped(url: string) {
+    form.value.avatarImg = url
+    toast.add({ title: t('profile.uploadSuccess'), color: 'success' })
 }
 </script>

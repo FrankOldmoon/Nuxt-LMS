@@ -37,6 +37,7 @@ export function setupChapterTask(opts: {
   initialIsPass?: boolean
 }): ChapterTaskContext {
   const { notifyCourseNavUpdate } = useLayoutState()
+  const { user } = useAuth()
 
   const taskMap = computed(() => {
     const map = extractChapterTasks(opts.content.value)
@@ -86,6 +87,9 @@ export function setupChapterTask(opts: {
   }
 
   async function doPersist() {
+    // 未登录时不记录学习进度
+    if (!user.value) return
+
     const chId = Number(opts.chapterId.value)
     if (!chId) return
     try {
@@ -103,7 +107,7 @@ export function setupChapterTask(opts: {
         notifyCourseNavUpdate()
       }
     } catch {
-      // 静默（未登录或网络错误）
+      // 静默（网络错误）
     }
   }
 

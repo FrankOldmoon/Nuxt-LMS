@@ -191,7 +191,9 @@ const emit = defineEmits(['saved'])
 
 const { t } = useI18n()
 const { editableCourseId } = useLayoutState()
-const { hasRole } = useAuth()
+const { user, hasRole } = useAuth()
+const isLoggedIn = computed(() => !!user.value)
+const toast = useToast()
 const { moduleLms } = useRuntimeConfig().public
 const QuizRecordsModal = moduleLms ? resolveComponent('QuizRecordsModal') : null
 const chapterTask = useChapterTask()
@@ -539,6 +541,11 @@ function switchQuestion(idx) {
 }
 
 async function submitQuiz() {
+    // 未登录时禁止提交
+    if (!isLoggedIn.value) {
+        toast.add({ title: t('common.loginRequired'), color: 'warning' })
+        return
+    }
     if (submitting.value) return
     confirmOpen.value = false
     submitting.value = true

@@ -4,8 +4,8 @@
       <ChapterBtns />
       <ClassUserCard />
 
-      <!-- 章节学习进度（heading 汇总） -->
-      <div v-if="chapterTask && totalHeadings > 0" class="pt-4 my-4 border-t border-default">
+      <!-- 章节学习进度（heading 汇总）- 仅登录用户显示 -->
+      <div v-if="isLoggedIn && chapterTask && totalHeadings > 0" class="pt-4 my-4 border-t border-default">
         <div class="flex items-center justify-between mb-1.5">
           <span class="text-xs text-muted">{{ $t('coursePanel.progress') }}</span>
           <span class="text-xs font-semibold" :class="allDone ? 'text-success' : 'text-primary'">
@@ -29,6 +29,11 @@
  * 由 DocToc 提供，改 doc 版本时 lms 自动同步。
  */
 import DocToc from '../../../doc/components/layout/toc.vue'
+
+const { user } = useAuth()
+
+// 是否已登录
+const isLoggedIn = computed(() => !!user.value)
 
 // 章节任务上下文（仅章节页存在，课程页为 null）
 const chapterTask = useChapterTask()

@@ -146,10 +146,14 @@ const emit = defineEmits(['init'])
 
 const { t } = useI18n()
 const { editableCourseId } = useLayoutState()
-const { hasRole } = useAuth()
+const { hasRole, user } = useAuth()
 const { moduleLms } = useRuntimeConfig().public
 const RecordsModal = moduleLms ? resolveComponent('QuestionRecordsModal') : null
 const chapterTask = useChapterTask()
+const toast = useToast()
+
+// 是否已登录
+const isLoggedIn = computed(() => !!user.value)
 
 const questionId = computed(() => Number(props.node?.attrs?.content) || 0)
 
@@ -239,6 +243,12 @@ const formattedAnswers = computed(() => {
 })
 
 function onSubmit() {
+    // 未登录时禁止提交
+    if (!isLoggedIn.value) {
+        toast.add({ title: t('common.loginRequired'), color: 'warning' })
+        return
+    }
+
     if (!renderRef.value) return
     if (inRace) {
         // race 模式：只显示结果，不向后端提交（race 的提交检测会自动处理）

@@ -93,6 +93,9 @@ const props = defineProps({
 
 const { editableCourseId } = useLayoutState()
 const { user, hasRole } = useAuth()
+const { t } = useI18n()
+const isLoggedIn = computed(() => !!user.value)
+const toast = useToast()
 const { moduleLms } = useRuntimeConfig().public
 const RecordsModal = moduleLms ? resolveComponent('CommentRecordsModal') : null
 const chapterTask = useChapterTask()
@@ -223,6 +226,11 @@ async function toggleLike(item) {
 
 // 回复评论
 async function onReply({ content, parentCid }) {
+    // 未登录时禁止提交
+    if (!isLoggedIn.value) {
+        toast.add({ title: t('common.loginRequired'), color: 'warning' })
+        return
+    }
     if (!content || !editableCourseId.value) return
     try {
         const result = await cRequest('/api/comments/add', {

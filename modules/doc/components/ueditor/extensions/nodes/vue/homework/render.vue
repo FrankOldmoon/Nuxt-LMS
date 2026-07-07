@@ -127,7 +127,9 @@ const emit = defineEmits(['saved'])
 const { t } = useI18n()
 
 const { editableCourseId, editableId } = useLayoutState()
-const { hasRole } = useAuth()
+const { user, hasRole } = useAuth()
+const isLoggedIn = computed(() => !!user.value)
+const toast = useToast()
 const { moduleLms } = useRuntimeConfig().public
 const RecordsModal = moduleLms ? resolveComponent('HomeworkRecordsModal') : null
 const chapterTask = useChapterTask()
@@ -197,6 +199,11 @@ function isRichDoc(content) {
 }
 
 async function onSubmit() {
+    // 未登录时禁止提交
+    if (!isLoggedIn.value) {
+        toast.add({ title: t('common.loginRequired'), color: 'warning' })
+        return
+    }
     if (!homeworkId.value || !editableCourseId.value) return
     submitting.value = true
     submitMsg.value = ''

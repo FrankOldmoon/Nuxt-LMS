@@ -1,27 +1,11 @@
 <template>
   <DocAside :transform-nav-items="transformNavItems">
     <template #top>
-      <!-- 工具栏按钮行 -->
-      <div class="flex items-center gap-1 mb-3 flex-wrap">
-        <UTooltip v-if="courseBtnsConfig.showProgress" :text="$t('coursePanel.progress')">
-          <UButton icon="i-lucide-trending-up" color="primary" variant="soft" size="xs" @click="progressOpen = true" />
-        </UTooltip>
-        <UTooltip v-if="courseBtnsConfig.showLeaderboard" :text="$t('coursePanel.leaderboard')">
-          <UButton icon="i-lucide-trophy" color="info" variant="soft" size="xs" @click="leaderboardOpen = true" />
-        </UTooltip>
-        <UTooltip v-if="courseBtnsConfig.showGroups" :text="$t('coursePanel.groups')">
-          <UButton icon="i-lucide-users" color="warning" variant="soft" size="xs" @click="groupsOpen = true" />
-        </UTooltip>
-        <UTooltip v-if="courseBtnsConfig.showGrades" :text="$t('coursePanel.grades')">
-          <UButton icon="i-lucide-graduation-cap" color="error" variant="soft" size="xs" @click="gradesOpen = true" />
-        </UTooltip>
-        <UTooltip v-if="courseBtnsConfig.showAnnouncements" :text="$t('coursePanel.announcements')">
-          <UButton icon="i-lucide-bell" color="secondary" variant="soft" size="xs" @click="announcementsOpen = true" />
-        </UTooltip>
-      </div>
+      <!-- 课程按钮 -->
+      <CourseBtns :course-id="courseId" :class-id="user?.defaultClass?.id || ''" :navigation="indexedNavigation" />
 
       <!-- 班级选择器（教师/管理员可见） -->
-      <div v-if="canEditCourse" class="mb-3">
+      <div v-if="isLoggedIn && canEditCourse" class="mb-3">
         <UButton :label="selectedClassName || $t('classSelector.selectClass')"
           :icon="selectedClassName ? 'i-lucide-school' : 'i-lucide-plus'" color="info" variant="outline" size="sm"
           class="w-full justify-center" @click="classModalOpen = true" />
@@ -30,15 +14,6 @@
 
     <template #bottom>
       <ClassModal v-model:open="classModalOpen" />
-
-      <!-- 课程面板弹窗 -->
-      <CourseProgressModal v-model:open="progressOpen" :course-id="courseId" :navigation="indexedNavigation" />
-      <CourseLeaderboardModal v-model:open="leaderboardOpen" :course-id="courseId"
-        :class-id="user?.defaultClass?.id || ''" />
-      <CourseGroupsModal v-model:open="groupsOpen" :course-id="courseId" :class-id="user?.defaultClass?.id || ''" />
-      <CourseGradesModal v-model:open="gradesOpen" :course-id="courseId" :class-id="user?.defaultClass?.id || ''" />
-      <CourseAnnouncementsModal v-model:open="announcementsOpen" :course-id="courseId"
-        :class-id="user?.defaultClass?.id || ''" />
     </template>
   </DocAside>
 </template>
@@ -54,16 +29,13 @@ import DocAside from '../../../doc/components/layout/aside.vue'
 
 const { hasRole, isCourseEditor, user } = useAuth()
 const { navigation, courseId, accessibleChapterIds, passedChapterIds } = useSidebarNav()
-const { courseBtnsConfig } = useLayoutState()
+
+// 是否已登录
+const isLoggedIn = computed(() => !!user.value)
 
 const canEditCourse = computed(() => hasRole('admin') || isCourseEditor(Number(courseId.value)))
 
 const classModalOpen = ref(false)
-const progressOpen = ref(false)
-const leaderboardOpen = ref(false)
-const groupsOpen = ref(false)
-const gradesOpen = ref(false)
-const announcementsOpen = ref(false)
 
 const selectedClassName = computed(() => user.value?.defaultClass?.name || '')
 
