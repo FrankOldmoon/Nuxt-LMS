@@ -5,9 +5,8 @@
 
     <!-- 内容管理弹窗（预览模式，教师/管理员可见） -->
     <div v-if="canEditCourse" class="mb-3">
-      <UButton icon="i-lucide-database" color="neutral" variant="soft" size="xs"
-        :label="$t('courseData.editor')" class="w-full justify-center"
-        @click="contentPickerOpen = true" />
+      <UButton icon="i-lucide-database" color="neutral" variant="soft" size="xs" :label="$t('courseData.editor')"
+        class="w-full justify-center" @click="contentPickerOpen = true" />
     </div>
 
     <!-- 第一项：课程首页 + 编辑导航按钮（左右分布） -->
@@ -15,10 +14,11 @@
       <NuxtLink :to="courseHomeUrl" class="text-sm font-medium text-highlighted hover:text-primary transition-colors">
         {{ firstNavLabel }}
       </NuxtLink>
-      <NavEditor v-if="canEditCourse" mode="course" :course-id="courseId" :navigation="navigation.slice(1)" @saved="handleSaved" />
+      <NavEditor v-if="canEditCourse" mode="course" :course-id="courseId" :navigation="navigation.slice(1)"
+        @saved="handleSaved" />
     </div>
 
-    <UNavigationMenu :items="restNavItems" orientation="vertical" :highlight="true" color="primary" class="w-full" />
+    <UNavigationMenu :items="restNavItems" orientation="vertical" :highlight="true" color="primary" class="w-full"  />
 
     <!-- 内容管理弹窗（预览模式） -->
     <UeditorContentPicker v-model="contentPickerOpen" preview-mode />
@@ -71,6 +71,7 @@ const canEditCourse = computed(() => hasRole('admin') || isCourseEditor(Number(c
 const navItems = computed(() =>
   props.transformNavItems ? props.transformNavItems(navigation.value) : navigation.value,
 )
+console.log({ navItems: navItems.value })
 const firstNavLabel = computed(() => navItems.value[0]?.label ?? '')
 const courseHomeUrl = computed(() => navItems.value[0]?.to ?? `/course/${courseId.value}`)
 const restNavItems = computed(() => navItems.value.slice(1))

@@ -142,7 +142,7 @@ export function useSidebarNav() {
       const sorted = [...orders].sort((a, b) => a.order - b.order)
 
       function buildItem(item: typeof sorted[number]): NavigationMenuItem {
-        const base: NavigationMenuItem = { label: item.label }
+        const base: NavigationMenuItem = { label: item.label, title: item.label }
         if (item.id && !item.id.startsWith('custom-') && !isNaN(Number(item.id))) {
           base.to = `/course/${cid}/${item.id}`
         } else if (item.id === 'course') {
@@ -177,6 +177,7 @@ export function useSidebarNav() {
     return result.concat(chapters.map((ch) => ({
       label: ch.title,
       to: `/course/${cid}/${ch.id}`,
+      title: ch.title
     })))
   })
 
@@ -212,6 +213,7 @@ export function indexNavItems(items: NavigationMenuItem[], prefix: string = '', 
     const newItem: NavigationMenuItem = {
       ...item,
       label: `${idx} ${item.label}`,
+      title: item.label
     }
     if (item.children?.length) {
       newItem.children = indexNavItems(item.children, idx, false)

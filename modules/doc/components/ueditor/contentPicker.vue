@@ -734,14 +734,14 @@ async function editCurrent() {
     await editItem(currentItem.value)
 }
 
-async function onEditSaved(savedData) {
+async function onEditSaved() {
     const wasAdding = editId.value === 0
     editOpen.value = false
     await fetchItems()
-    if (wasAdding && savedData?.cid) {
+    if (wasAdding) {
+        // 新增后跳转到最后一个
         if (props.previewMode) {
-            const idx = filtered.value.findIndex(i => i.cid === savedData.cid)
-            if (idx >= 0) currentIndex.value = idx
+            currentIndex.value = Math.max(0, filtered.value.length - 1)
         } else {
             page.value = totalPages.value
         }
@@ -816,7 +816,10 @@ async function doImport() {
         toast.add({ title: importMsg.value, color: 'success' })
         await fetchItems()
         importOpen.value = false
-        if (!props.previewMode) {
+        // 导入后跳转到最后一个
+        if (props.previewMode) {
+            currentIndex.value = Math.max(0, filtered.value.length - 1)
+        } else {
             page.value = totalPages.value
         }
     } else {

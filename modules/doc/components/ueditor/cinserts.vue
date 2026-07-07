@@ -38,19 +38,27 @@ const allItems = computed(() => {
         { label: t('ueditor.markdown.title'), icon: 'i-mdi:language-markdown', onSelect: () => { markdownOpen.value = true } },
         { label: t('ueditor.html.title'), icon: 'i-mdi:language-html5', onSelect: () => { htmlOpen.value = true } },
         { type: 'separator' },
-        { label: `${t('courseData.questionLabel')}`, icon: 'i-lucide-circle-help', onSelect: () => openPicker('questions') },
-        { label: `${t('homework.label')}`, icon: 'i-lucide-book-open', onSelect: () => openPicker('homeworks') },
-        { label: `${t('comment.label')}`, icon: 'i-lucide-message-circle', onSelect: () => openPicker('comments') },
-        { label: `${t('quiz.label')}`, icon: 'i-lucide-clipboard-list', onSelect: () => openPicker('quizzes') },
+        // 每种类型两个按钮：+ 直接插入空白 | 类型图标 选择已有
+        { label: t('courseData.questionLabel'), icon: 'i-lucide-plus', onSelect: () => insertVueNode('question') },
+        { label: t('courseData.questionLabel'), icon: 'i-lucide-circle-help', onSelect: () => openPicker('questions') },
+        { label: t('homework.label'), icon: 'i-lucide-plus', onSelect: () => insertVueNode('homework') },
+        { label: t('homework.label'), icon: 'i-lucide-book-open', onSelect: () => openPicker('homeworks') },
+        { label: t('comment.label'), icon: 'i-lucide-plus', onSelect: () => insertVueNode('comment') },
+        { label: t('comment.label'), icon: 'i-lucide-message-circle', onSelect: () => openPicker('comments') },
+        { label: t('quiz.label'), icon: 'i-lucide-plus', onSelect: () => insertVueNode('quiz') },
+        { label: t('quiz.label'), icon: 'i-lucide-clipboard-list', onSelect: () => openPicker('quizzes') },
     ]
     if (moduleLms) {
-        base.push({ label: `${t('race.label')}`, icon: 'i-lucide-zap', onSelect: () => openPicker('races') })
+        base.push(
+            { label: t('race.label'), icon: 'i-lucide-plus', onSelect: () => insertVueNode('race') },
+            { label: t('race.label'), icon: 'i-lucide-zap', onSelect: () => openPicker('races') },
+        )
     }
     base.push({ type: 'separator' })
     base.push(
         { label: t('ueditor.insertInput'), icon: 'i-lucide-text-cursor-input', onSelect: () => insertQuestionNode('inputs') },
         { label: t('ueditor.insertSelect'), icon: 'i-lucide-chevron-down-square', onSelect: () => insertQuestionNode('select') },
-        { label: t('HTML'), icon: 'i-mdi:language-html5', onSelect: () => insertTypedSheet('html') },   
+        { label: t('HTML'), icon: 'i-mdi:language-html5', onSelect: () => insertTypedSheet('html') },
         { label: t('ueditor.insertPdf'), icon: 'i-lucide-file-text', onSelect: () => insertTypedSheet('pdf') },
         { label: t('ueditor.insertOffice'), icon: 'i-lucide-file-spreadsheet', onSelect: () => insertTypedSheet('office') },
         { label: t('ueditor.insertMindmap'), icon: 'i-lucide-network', onSelect: () => insertVueNode('mindmap') },
@@ -78,7 +86,7 @@ function quickInsert(type) {
     onPickerConfirm([0])
 }
 
-// 插入通用 question 节点（inputs / select 等）
+// 插入自定义节点（inputs / select 等）
 function insertQuestionNode(type) {
     const editor = props.editor?.useEditor()
     if (!editor) return
