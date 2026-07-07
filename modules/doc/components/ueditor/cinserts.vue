@@ -134,12 +134,13 @@ function insertAichat() {
     const editor = props.editor?.useEditor()
     if (!editor) return
     const defaultConfig = JSON.stringify({
+        mode: 'api',
         title: '',
         preset: '',
         opening: '',
         apiKey: '',
         apiUrl: '',
-        model: 'gpt-4o-mini',
+        model: 'glm-4.5-air',
         thinking: false,
     })
     editor.chain().focus().insertContent({

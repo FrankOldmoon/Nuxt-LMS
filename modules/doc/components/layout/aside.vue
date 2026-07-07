@@ -71,7 +71,7 @@ const canEditCourse = computed(() => hasRole('admin') || isCourseEditor(Number(c
 const navItems = computed(() =>
   props.transformNavItems ? props.transformNavItems(navigation.value) : navigation.value,
 )
-console.log({ navItems: navItems.value })
+
 const firstNavLabel = computed(() => navItems.value[0]?.label ?? '')
 const courseHomeUrl = computed(() => navItems.value[0]?.to ?? `/course/${courseId.value}`)
 const restNavItems = computed(() => navItems.value.slice(1))

@@ -29,7 +29,7 @@ export default eventHandler(async (event) => {
     }
 
     const url = apiUrl.replace(/\/$/, '') + '/chat/completions'
-    const defaultModel = model || process.env.AI_MODEL || 'gpt-4o-mini'
+    const defaultModel = model || process.env.AI_MODEL || "glm-4.5-air";
 
     // 构建请求体
     const requestBody: Record<string, any> = {

@@ -1,4 +1,7 @@
 <template>
+    <UFormField :label="t('ai.mode')" size="sm">
+        <USelect v-model="cfgMode" :items="modeOptions" size="sm" class="w-full" />
+    </UFormField>
     <UFormField :label="t('ueditor.aichatTitle')" size="sm">
         <UInput v-model="cfgTitle" :placeholder="t('ueditor.aichatTitlePlaceholder')" size="sm" class="w-full" />
     </UFormField>
@@ -8,31 +11,57 @@
     <UFormField :label="t('ueditor.aichatOpening')" size="sm">
         <UTextarea v-model="cfgOpening" :rows="2" size="sm" class="w-full" />
     </UFormField>
-    <UFormField :label="t('ueditor.aichatModel')" size="sm">
+    <!-- API 模式：文本输入模型名 -->
+    <UFormField v-if="cfgMode === 'api'" :label="t('ueditor.aichatModel')" size="sm">
         <UInput v-model="cfgModel" :placeholder="t('ueditor.aichatModelPlaceholder')" size="sm" class="w-full" />
     </UFormField>
-    <UFormField :label="t('ueditor.aichatThinking')" size="sm" :hint="t('ueditor.aichatThinkingHint')">
+    <!-- 本地模式：下拉选择本地模型 -->
+    <UFormField v-else :label="t('ai.localModel')" size="sm">
+        <USelect v-model="cfgModel" :items="LOCAL_LLM_MODELS" size="sm" class="w-full" />
+    </UFormField>
+    <!-- thinking 仅 API 模式有效（本地 WebLLM 不支持） -->
+    <UFormField v-if="cfgMode === 'api'" :label="t('ueditor.aichatThinking')" size="sm" :hint="t('ueditor.aichatThinkingHint')">
         <USwitch v-model="cfgThinking" />
     </UFormField>
     <UButton size="xs" color="primary" @click="apply">{{ t('common.save') }}</UButton>
 </template>
 
 <script setup>
+import { LOCAL_LLM_MODELS, DEFAULT_LLM_MODEL } from '../../../../../../utils/ai'
+
 const props = defineProps({
     config: { type: Object, default: () => ({}) },
 })
 const emit = defineEmits(['update:config', 'close'])
 const { t } = useI18n()
 
+const cfgMode = ref(props.config?.mode || 'api')
 const cfgTitle = ref(props.config?.title || '')
 const cfgPreset = ref(props.config?.preset || '')
 const cfgOpening = ref(props.config?.opening || '')
-const cfgModel = ref(props.config?.model || '')
+const cfgModel = ref(props.config?.model || (cfgMode.value === 'local' ? DEFAULT_LLM_MODEL : 'glm-4.5-air'))
 const cfgThinking = ref(props.config?.thinking || false)
+
+const modeOptions = computed(() => [
+    { label: t('ai.modeLocal'), value: 'local' },
+    { label: t('ai.modeApi'), value: 'api' },
+])
+
+// 切换模式时重置 model 为对应模式的合理默认值，避免串用
+watch(cfgMode, (newMode, oldMode) => {
+    if (newMode === oldMode) return
+    const isLocalModel = LOCAL_LLM_MODELS.some(m => m.value === cfgModel.value)
+    if (newMode === 'local' && !isLocalModel) {
+        cfgModel.value = DEFAULT_LLM_MODEL
+    } else if (newMode === 'api' && isLocalModel) {
+        cfgModel.value = 'glm-4.5-air'
+    }
+})
 
 function apply() {
     const newConfig = {
         ...props.config,
+        mode: cfgMode.value,
         title: cfgTitle.value,
         preset: cfgPreset.value,
         opening: cfgOpening.value,

@@ -16,5 +16,10 @@ export default defineNuxtConfig({
     "./modules/doc",
     "./modules/lms",
   ],
-  ui:{fonts:false}
+  ui: { fonts: false },
+  vite: {
+    optimizeDeps: {
+      exclude: ["@mlc-ai/web-llm"],
+    },
+  },
 });
