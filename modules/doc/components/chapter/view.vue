@@ -151,7 +151,7 @@ const assistantPreset = computed(() => {
     '1. Be concise and to the point, avoid lengthy elaboration.',
     '2. Use appropriate metaphors and analogies to visualize abstract concepts.',
     '3. Answer strictly based on the above chapter content; frankly inform the user and provide guidance if the question goes beyond the scope of this chapter.',
-    '4. Respond in Chinese; English professional terminology may be retained.'
+    '4. Respond in English; professional terminology may be retained.'
   ].join('\n')
 })
 

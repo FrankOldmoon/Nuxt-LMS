@@ -26,8 +26,7 @@
                             <div v-if="msg._reasoningExpanded" class="mt-1 text-xs text-gray-500 dark:text-gray-400 leading-relaxed" v-html="renderContent(msg.reasoning)" />
                         </div>
                         <!-- 消息内容 -->
-                        <ueditorRender v-if="msg._isJson" :json="msg.content" />
-                        <div v-else v-html="renderContent(msg.content)" />
+                        <ueditorRender :json="msg.content" />
                         <!-- 朗读按钮（仅 assistant 文本消息） -->
                         <div v-if="canSpeak(msg)" class="flex justify-end mt-1">
                             <button type="button"
