@@ -12,14 +12,8 @@
         </div>
 
         <template v-else>
-            <!-- 右上角编辑按钮（仅教师） -->
-            <div v-if="isTeacher" class="absolute top-2 right-2 flex items-center gap-1 z-10">
-                <UButton icon="i-heroicons-pencil-square" variant="ghost" size="2xs"
-                    class="opacity-50 hover:opacity-100 transition-opacity" @click="editOpen = true" />
-            </div>
-
             <!-- 测验标题 + 信息 -->
-            <div class="flex items-center gap-3 mb-3 pr-6">
+            <div class="flex items-center gap-3 mb-3">
                 <span
                     class="px-2 py-0.5 bg-amber-50 dark:bg-amber-800 text-amber-600 dark:text-amber-300 rounded text-xs font-medium">
                     {{ $t('quiz.label') }}
@@ -27,6 +21,9 @@
                 <span class="font-semibold text-gray-800 dark:text-gray-200">{{ quiz.name }}</span>
                 <span v-if="quizId" class="text-xs text-gray-400">#{{ quizId }}</span>
                 <div class="flex items-center gap-2 ml-auto">
+                    <UButton v-if="isTeacher" icon="i-lucide-edit" variant="ghost" size="2xs"
+                        class="opacity-50 hover:opacity-100 transition-opacity"
+                        @click="editOpen = true" />
                     <UButton v-if="moduleLms && isTeacher" icon="i-heroicons-clipboard" variant="ghost" size="2xs"
                         class="opacity-50 hover:opacity-100 transition-opacity" @click="recordsOpen = true" />
                     <span class="text-xs text-gray-400">{{ quiz.point }}{{ $t('question.points') }}</span>
@@ -171,13 +168,13 @@
             </div>
         </template>
 
-        <!-- 编辑弹窗（仅教师） -->
-        <Edit v-model="editOpen" :quiz-id="quizId" :quiz="quiz" @saved="onSaved" />
-
         <!-- 记录弹窗（仅教师） -->
         <component v-if="moduleLms && isTeacher" :is="QuizRecordsModal" v-model="recordsOpen"
             :course-id="editableCourseId" :cid="quizId"
             :quiz-point="quiz.point || 100" :questions="quizQuestions" />
+
+        <!-- 编辑弹窗 -->
+        <Edit v-model="editOpen" :quiz-id="quizId" :quiz="quiz" @saved="onSaved" />
     </div>
 </template>
 
@@ -202,8 +199,8 @@ const chapterTask = useChapterTask()
 const quizId = computed(() => Number(props.node?.attrs?.content) || 0)
 const isTeacher = computed(() => hasRole('teacher') || hasRole('admin'))
 
-const recordsOpen = ref(false)
 const editOpen = ref(false)
+const recordsOpen = ref(false)
 
 // 默认测验
 const defaultQuiz = reactive({

@@ -1,117 +1,112 @@
 <template>
-    <div class="question-render w-full space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 relative"
-        :data-question-id="questionId"
-        @mouseenter.once="onHover">
-        <!-- 加载中 -->
-        <div v-if="pending" class="flex items-center justify-center py-6 text-gray-400">
-            <span>{{ $t('question.loading') }}</span>
+    <div class="question-render w-full relative">
+        <!-- 内联编辑面板（在上方显示） -->
+        <div v-if="showConfig" class="vue-node-config">
+            <Edit :question-id="questionId" :question="question" @saved="onSaved" />
         </div>
 
-        <!-- 题目未找到 -->
-        <div v-else-if="!question" class="text-center py-6 text-gray-400">
-            {{ $t('question.notFound') }} (cid: {{ questionId }})
-        </div>
-
-        <template v-else>
-            <!-- {{ question.record }}:{{ question.correct_rate }} -->
-            <!-- {{ question }} -->
-            <!-- 右上角编辑按钮 -->
-            <div class="absolute top-2 right-2 flex items-center gap-1 z-10">
-                <UButton icon="i-heroicons-pencil-square" variant="ghost" size="2xs"
-                    class="opacity-50 hover:opacity-100 transition-opacity"
-                    @click="editOpen = true" />
+        <div class="space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900"
+            :data-question-id="questionId"
+            @mouseenter.once="onHover">
+            <!-- 加载中 -->
+            <div v-if="pending" class="flex items-center justify-center py-6 text-gray-400">
+                <span>{{ $t('question.loading') }}</span>
             </div>
 
-            <!-- 题目标题 -->
-            <div class="flex items-center gap-3 mb-3 pr-6">
-                <span
-                    class="px-2 py-0.5 bg-blue-50 dark:bg-blue-800 text-blue-600 dark:text-blue-300 rounded text-xs font-medium">
-                    {{ typeLabel[question.type] }}
-                </span>
-                <span class="font-semibold text-gray-800 dark:text-gray-200">{{ question.name }}</span>
-                <span v-if="questionId" class="text-xs text-gray-400">#{{ questionId }}</span>
-                <div class="flex items-center gap-2 ml-auto">
-                    <UButton v-if="moduleLms && isTeacher" icon="i-heroicons-clipboard" variant="ghost" size="2xs"
-                        class="opacity-50 hover:opacity-100 transition-opacity"
-                        @click="recordsOpen = true" />
-                    <span class="text-xs text-gray-400 font-mono">{{ scoreDisplay }}</span>
-                </div>
+            <!-- 题目未找到 -->
+            <div v-else-if="!question" class="text-center py-6 text-gray-400">
+                {{ $t('question.notFound') }} (cid: {{ questionId }})
             </div>
 
-            <!-- 题目内容（html/composite 题型由组件内部处理） -->
-            <div v-if="question?.type !== 'html' && question?.type !== 'composite'" class="prose prose-sm dark:prose-invert max-w-none">
-                <ueditorRender :json="question.content" />
-            </div>
-
-            <!-- 题型特定渲染 -->
-            <component v-if="renderComponent" ref="renderRef" :is="renderComponent" :question="question"
-                :question-id="questionId" />
-        </template>
-
-        <!-- 提交/重置（公共，quiz 模式下隐藏） -->
-        <div v-if="question && !inQuiz" class="flex items-center gap-2 pt-3">
-            <!-- 标签 -->
-            <div v-if="question.tags && question.tags.length" class="flex flex-wrap gap-1">
-                <span v-for="(tag, idx) in question.tags" :key="idx"
-                    class="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded text-xs">
-                    {{ tag }}
-                </span>
-            </div>
-            <div class="flex gap-2 ml-auto">
-                <UButton variant="soft" size="sm" :disabled="!hasAnswer" @click="onReset">
-                    {{ $t('common.reset') }}
-                </UButton>
-                <UButton color="primary" size="sm" :disabled="!hasAnswer" @click="onSubmit">
-                    {{ $t('question.submit') }}
-                </UButton>
-            </div>
-        </div>
-
-        <!-- 结果（公共） -->
-        <div v-if="submitted" class="mt-4 space-y-3">
-            <ResultBanner :correct="isCorrect" :point="question?.point" />
-            <!-- 答案正确才显示正确答案和解析 -->
-            <template v-if="isCorrect">
-                <div class="mb-2">
-                    <span class="text-sm text-gray-500">{{ $t('question.correctAnswerLabel') }}</span>
-                    <div class="flex flex-wrap gap-2 mt-1">
-                        <div v-for="(ans, idx) in formattedAnswers" :key="idx"
-                            class="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded text-sm">
-                            <span class="font-medium text-green-700 dark:text-green-300">{{ ans }}</span>
-                        </div>
+            <template v-else>
+                <!-- 题目标题 -->
+                <div class="flex items-center gap-3 mb-3">
+                    <span
+                        class="px-2 py-0.5 bg-blue-50 dark:bg-blue-800 text-blue-600 dark:text-blue-300 rounded text-xs font-medium">
+                        {{ typeLabel[question.type] }}
+                    </span>
+                    <span class="font-semibold text-gray-800 dark:text-gray-200">{{ question.name }}</span>
+                    <span v-if="questionId" class="text-xs text-gray-400">#{{ questionId }}</span>
+                    <div class="flex items-center gap-2 ml-auto">
+                        <UButton v-if="moduleLms && isTeacher" icon="i-heroicons-clipboard" variant="ghost" size="2xs"
+                            class="opacity-50 hover:opacity-100 transition-opacity"
+                            @click="recordsOpen = true" />
+                        <span class="text-xs text-gray-400 font-mono">{{ scoreDisplay }}</span>
                     </div>
                 </div>
-                <ExplanationBlock :explanation="question?.explanation" />
+
+                <!-- 题目内容（html/composite 题型由组件内部处理） -->
+                <div v-if="question?.type !== 'html' && question?.type !== 'composite'" class="prose prose-sm dark:prose-invert max-w-none">
+                    <ueditorRender :json="question.content" />
+                </div>
+
+                <!-- 题型特定渲染 -->
+                <component v-if="renderComponent" ref="renderRef" :is="renderComponent" :question="question"
+                    :question-id="questionId" />
             </template>
-        </div>
 
-        <!-- 显示答案（仅教师可见，一直显示） -->
-        <div v-if="question && isTeacher" class="mt-4 flex items-start gap-2">
-            <UButton variant="soft" size="sm" @click="onShowAnswer">
-                {{ showAnswer ? $t('question.hideAnswer') : $t('question.showAnswer') }}
-            </UButton>
-            <div v-if="showAnswer" class="flex-1">
-                <!-- 正确答案 -->
-                <div class="mb-2">
-                    <span class="text-sm text-gray-500">{{ $t('question.correctAnswerLabel') }}</span>
-                    <div class="flex flex-wrap gap-2 mt-1">
-                        <div v-for="(ans, idx) in formattedAnswers" :key="idx"
-                            class="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded text-sm">
-                            <span class="font-medium text-green-700 dark:text-green-300">{{ ans }}</span>
+            <!-- 提交/重置（公共，quiz 模式下隐藏） -->
+            <div v-if="question && !inQuiz" class="flex items-center gap-2 pt-3">
+                <!-- 标签 -->
+                <div v-if="question.tags && question.tags.length" class="flex flex-wrap gap-1">
+                    <span v-for="(tag, idx) in question.tags" :key="idx"
+                        class="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded text-xs">
+                        {{ tag }}
+                    </span>
+                </div>
+                <div class="flex gap-2 ml-auto">
+                    <UButton variant="soft" size="sm" :disabled="!hasAnswer" @click="onReset">
+                        {{ $t('common.reset') }}
+                    </UButton>
+                    <UButton color="primary" size="sm" :disabled="!hasAnswer" @click="onSubmit">
+                        {{ $t('question.submit') }}
+                    </UButton>
+                </div>
+            </div>
+
+            <!-- 结果（公共） -->
+            <div v-if="submitted" class="mt-4 space-y-3">
+                <ResultBanner :correct="isCorrect" :point="question?.point" />
+                <!-- 答案正确才显示正确答案和解析 -->
+                <template v-if="isCorrect">
+                    <div class="mb-2">
+                        <span class="text-sm text-gray-500">{{ $t('question.correctAnswerLabel') }}</span>
+                        <div class="flex flex-wrap gap-2 mt-1">
+                            <div v-for="(ans, idx) in formattedAnswers" :key="idx"
+                                class="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded text-sm">
+                                <span class="font-medium text-green-700 dark:text-green-300">{{ ans }}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <!-- 答案解析 -->
-                <ExplanationBlock v-if="question?.explanation" :explanation="question?.explanation" />
+                    <ExplanationBlock :explanation="question?.explanation" />
+                </template>
             </div>
+
+            <!-- 显示答案（仅教师可见，一直显示） -->
+            <div v-if="question && isTeacher" class="mt-4 flex items-start gap-2">
+                <UButton variant="soft" size="sm" @click="onShowAnswer">
+                    {{ showAnswer ? $t('question.hideAnswer') : $t('question.showAnswer') }}
+                </UButton>
+                <div v-if="showAnswer" class="flex-1">
+                    <!-- 正确答案 -->
+                    <div class="mb-2">
+                        <span class="text-sm text-gray-500">{{ $t('question.correctAnswerLabel') }}</span>
+                        <div class="flex flex-wrap gap-2 mt-1">
+                            <div v-for="(ans, idx) in formattedAnswers" :key="idx"
+                                class="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded text-sm">
+                                <span class="font-medium text-green-700 dark:text-green-300">{{ ans }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 答案解析 -->
+                    <ExplanationBlock v-if="question?.explanation" :explanation="question?.explanation" />
+                </div>
+            </div>
+
+            <!-- 记录弹窗（仅教师） -->
+            <component v-if="moduleLms && isTeacher" :is="RecordsModal" v-model="recordsOpen"
+                :course-id="editableCourseId" :cid="questionId" :question="question" />
         </div>
-
-        <!-- 编辑弹窗 -->
-        <QuestionEdit v-model="editOpen" :question-id="questionId" :question="question" @saved="onSaved" />
-
-        <!-- 记录弹窗（仅教师） -->
-        <component v-if="moduleLms && isTeacher" :is="RecordsModal" v-model="recordsOpen"
-            :course-id="editableCourseId" :cid="questionId" :question="question" />
     </div>
 </template>
 
@@ -131,13 +126,24 @@ import MatchRender from '../../render/vue/question/match.vue'
 import CompositeRender from '../../render/vue/question/composite.vue'
 import ResultBanner from '../../render/vue/question/result-banner.vue'
 import ExplanationBlock from '../../render/vue/question/explanation-block.vue'
-import QuestionEdit from './edit.vue'
+import Edit from './edit.vue'
 import { computeCorrectRate, decryptAnswer } from '../../render/vue/question/shared.ts'
 
 const props = defineProps({
     node: Object,
     inQuiz: { type: Boolean, default: false },
 })
+
+// inject node-view 提供的状态
+const showConfig = inject('nodeViewShowConfig', ref(false))
+const meta = inject('nodeViewMeta', reactive({ title: '', icon: '', hasSettings: false }))
+
+// 设置组件元信息（告知 node-view 显示设置按钮）
+if (meta) {
+    meta.title = '题目'
+    meta.icon = 'i-lucide-circle-help'
+    meta.hasSettings = true
+}
 
 // race 模式：显示提交按钮但不向后端提交 question 记录
 const inRace = inject('inRace', false)
@@ -367,19 +373,23 @@ const scoreDisplay = computed(() => {
     return `[${fmt(obt)}/${fmt(total)}]`
 })
 
-const editOpen = ref(false)
 const recordsOpen = ref(false)
 
 function onSaved(ques) {
     // 新建题目：拿到新增 cid 后通知父节点更新 content 属性
     if (ques.cid && Number(ques.cid) !== questionId.value) {
         emit('init', ques.cid)
+        props.updateAttributes?.({ content: String(ques.cid) })
     }
     // 已有题目不再调用 refresh()：refresh 会触发 pending=true → loading 态闪烁，
     // 导致编辑按钮从 DOM 移除，modal 关闭时 Radix focus 回退到 body 造成文档滚动到顶部。
     // Object.assign 已用表单数据即时更新本地状态，无需重新拉取。
     if (question.value) {
         Object.assign(question.value, ques)
+    }
+    // 编辑保存后关闭配置面板
+    if (showConfig.value) {
+        showConfig.value = false
     }
 }
 
@@ -456,6 +466,10 @@ defineExpose({
     // 是否有答案
     get hasAnswer() {
         return renderRef.value?.hasAnswer ?? false
+    },
+    // 提供 data 给 index.vue 获取
+    get data() {
+        return question.value
     },
 })
 </script>

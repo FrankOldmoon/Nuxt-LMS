@@ -13,14 +13,8 @@
         </div>
 
         <template v-else>
-            <!-- 右上角编辑按钮（仅教师） -->
-            <div v-if="isTeacher" class="absolute top-2 right-2 flex items-center gap-1 z-10">
-                <UButton icon="i-heroicons-pencil-square" variant="ghost" size="2xs"
-                    class="opacity-50 hover:opacity-100 transition-opacity" @click="editOpen = true" />
-            </div>
-
             <!-- 作业标题 -->
-            <div class="flex items-center gap-3 mb-3 pr-6">
+            <div class="flex items-center gap-3 mb-3">
                 <span
                     class="px-2 py-0.5 bg-purple-50 dark:bg-purple-800 text-purple-600 dark:text-purple-300 rounded text-xs font-medium">
                     {{ $t('homework.label') }}
@@ -29,6 +23,9 @@
                 <span v-if="homework.code" class="text-xs text-gray-400 font-mono">{{ homework.code }}</span>
                 <span v-if="homeworkId" class="text-xs text-gray-400">#{{ homeworkId }}</span>
                 <div class="flex items-center gap-2 ml-auto">
+                    <UButton v-if="isTeacher" icon="i-lucide-edit" variant="ghost" size="2xs"
+                        class="opacity-50 hover:opacity-100 transition-opacity"
+                        @click="editOpen = true" />
                     <UButton v-if="moduleLms && isTeacher" icon="i-heroicons-clipboard" variant="ghost" size="2xs"
                         class="opacity-50 hover:opacity-100 transition-opacity"
                         @click="recordsOpen = true" />
@@ -113,7 +110,7 @@
         <component v-if="moduleLms && isTeacher" :is="RecordsModal" v-model="recordsOpen"
             :course-id="editableCourseId" :cid="homeworkId" :max-score="homework.point || 0" />
 
-        <!-- 编辑弹窗（仅教师） -->
+        <!-- 编辑弹窗 -->
         <Edit v-model="editOpen" :homework-id="homeworkId" :homework="homework" @saved="onSaved" />
     </div>
 </template>
@@ -182,8 +179,8 @@ watch([fetchedHomework, homeworkId], () => {
 // homeworkId 为空时不显示加载态
 const pending = computed(() => !!homeworkId.value && fetchedPending.value)
 
-const recordsOpen = ref(false)
 const editOpen = ref(false)
+const recordsOpen = ref(false)
 
 // 学生提交状态
 const submittedContent = ref('')

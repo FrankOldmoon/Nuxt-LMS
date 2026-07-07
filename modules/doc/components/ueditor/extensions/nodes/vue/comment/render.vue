@@ -1,32 +1,23 @@
 <template>
     <div class="comment-render w-full space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 relative"
         :data-comment-id="commentId">
-        <!-- 加载中 -->
-        <div v-if="pending" class="flex items-center justify-center py-6 text-gray-400">
-            <UIcon name="i-lucide-loader-2" class="animate-spin size-4 mr-2" />
-            <span class="text-xs">{{ $t('comment.loading') }}</span>
-        </div>
-
         <!-- 评论未找到 -->
-        <div v-else-if="!comment" class="text-center py-6 text-gray-400">
+        <div v-if="!comment" class="text-center py-6 text-gray-400">
             {{ $t('comment.notFound') }} (cid: {{ commentId }})
         </div>
 
         <template v-else>
-            <!-- 右上角编辑按钮（仅教师） -->
-            <div v-if="isTeacher" class="absolute top-2 right-2 flex items-center gap-1 z-10">
-                <UButton icon="i-heroicons-pencil-square" variant="ghost" size="2xs"
-                    class="opacity-50 hover:opacity-100 transition-opacity" @click="editOpen = true" />
-            </div>
-
             <!-- 评论标题 -->
-            <div class="flex items-center gap-3 mb-3 pr-6">
+            <div class="flex items-center gap-3 mb-3">
                 <span class="px-2 py-0.5 bg-teal-50 dark:bg-teal-800 text-teal-600 dark:text-teal-300 rounded text-xs font-medium">
                     {{ $t('comment.label') }}
                 </span>
                 <span class="font-semibold text-gray-800 dark:text-gray-200">{{ comment.name }}</span>
                 <span v-if="commentId" class="text-xs text-gray-400">#{{ commentId }}</span>
                 <div class="flex items-center gap-2 ml-auto">
+                    <UButton v-if="isTeacher" icon="i-lucide-edit" variant="ghost" size="2xs"
+                        class="opacity-50 hover:opacity-100 transition-opacity"
+                        @click="editOpen = true" />
                     <UButton v-if="moduleLms && isTeacher" icon="i-heroicons-clipboard" variant="ghost" size="2xs"
                         class="opacity-50 hover:opacity-100 transition-opacity"
                         @click="recordsOpen = true" />
@@ -80,7 +71,7 @@
             </div>
         </template>
 
-        <!-- 编辑弹窗（仅教师） -->
+        <!-- 编辑弹窗 -->
         <Edit v-model="editOpen" :comment-id="commentId" :comment="comment" @saved="onSaved" />
 
         <!-- 记录弹窗（仅教师） -->
@@ -90,15 +81,15 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import CommentForm from '../../render/vue/comment/comment-form.vue'
 import CommentList from '../../render/vue/comment/comment-list.vue'
 import Edit from './edit.vue'
 
 const props = defineProps({
     node: Object,
+    comment: Object,
 })
-const emit = defineEmits(['saved'])
 
 const { editableCourseId } = useLayoutState()
 const { user, hasRole } = useAuth()
@@ -109,15 +100,10 @@ const chapterTask = useChapterTask()
 const commentId = computed(() => Number(props.node?.attrs?.content) || 0)
 const isTeacher = computed(() => hasRole('teacher') || hasRole('admin'))
 
-// 默认评论（commentId 为空时填充，便于新建）
-const defaultComment = reactive({
-    name: '',
-    content: '',
-    tags: [],
-    point: 1,
-})
+const editOpen = ref(false)
+const recordsOpen = ref(false)
 
-// SSR-friendly data fetching
+// SSR-friendly data fetching（如果 props.comment 不存在，从 API 获取）
 const apiUrl = computed(() => {
     if (!commentId.value || !editableCourseId.value) return ''
     return `/api/comments/show?course_id=${editableCourseId.value}&cid=${commentId.value}`
@@ -126,29 +112,43 @@ const apiUrl = computed(() => {
 const { data: fetchedComment, pending: fetchedPending, refresh } = cRequest.use(apiUrl, {
     transform: (raw) => {
         if (!raw) return null
-        return reactive({
+        return {
             name: raw.name || '',
             content: raw.content || '',
             tags: Array.isArray(raw.tags) ? [...raw.tags] : [],
             point: Number(raw.point) || 0,
-            userId: raw.userId,
-        })
+        }
     },
 })
 
-const comment = ref(defaultComment)
-watch([fetchedComment, commentId], () => {
-    if (!commentId.value) {
-        comment.value = defaultComment
+// comment ref：优先使用 props.comment，否则使用 API 数据
+const comment = ref(null)
+watch([() => props.comment, fetchedComment], () => {
+    if (props.comment) {
+        comment.value = props.comment
     } else if (fetchedComment.value) {
         comment.value = fetchedComment.value
+    } else {
+        comment.value = null
     }
-}, { immediate: true, flush: 'sync' })
+}, { immediate: true })
 
-const pending = computed(() => !!commentId.value && fetchedPending.value)
+// 加载状态（仅用于 API 获取）
+const pending = computed(() => !props.comment && !!commentId.value && fetchedPending.value)
 
-const recordsOpen = ref(false)
-const editOpen = ref(false)
+function onSaved(updatedComment) {
+    // 新建评论：拿到新增 cid 后通知父节点更新 content 属性
+    if (updatedComment.cid && Number(updatedComment.cid) !== commentId.value) {
+        // 这里需要 emit 给父节点（如果需要）
+    } else {
+        // 已有评论：刷新接口数据
+        refresh()
+    }
+    // 本地立即更新内容，避免刷新期间空白
+    if (comment.value) {
+        Object.assign(comment.value, updatedComment)
+    }
+}
 
 // 子评论分页（前端分页，API 一次性获取全部）
 const pageSize = 5
@@ -268,21 +268,6 @@ async function onDelete(item) {
         // 静默
     }
 }
-
-// 编辑保存回调：通知父组件（编辑器中会调用 updateAttributes）
-function onSaved(cmt) {
-    // 不再调用 refresh()：refresh 会触发 pending=true → loading 态闪烁，
-    // 导致编辑按钮从 DOM 移除，modal 关闭时 Radix focus 回退到 body 造成文档滚动到顶部。
-    // Object.assign 已用表单数据即时更新本地状态，无需重新拉取。
-    if (comment.value) {
-        Object.assign(comment.value, cmt)
-    }
-    // 通知 index.vue（编辑器中会调用 updateAttributes 更新 content 属性）
-    emit('saved', cmt)
-}
-
-// 暴露 refresh 和 data 给 index.vue 调用
-defineExpose({ refresh, data: comment })
 </script>
 
 <style scoped>

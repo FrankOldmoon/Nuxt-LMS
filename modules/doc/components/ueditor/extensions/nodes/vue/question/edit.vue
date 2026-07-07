@@ -1,5 +1,6 @@
 <template>
-  <UModal v-model:open="open" scrollable>
+  <!-- Modal 模式（预览模式，有 modelValue） -->
+  <UModal v-if="isModal" v-model:open="open" scrollable>
     <template #content>
       <div v-if="form" class="p-6 space-y-4">
         <h2 class="text-lg font-semibold">{{ $t('common.edit') }} - {{ form.name || $t('question.namePlaceholder') }}</h2>
@@ -36,12 +37,52 @@
         <div class="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
           <span v-if="saveMsg" class="text-xs self-center" :class="saveOk ? 'text-green-500' : 'text-red-500'">{{ saveMsg }}</span>
           <UButton variant="soft" @click="resetForm">{{ $t('common.reset') }}</UButton>
-          <UButton variant="soft" @click="()=>{open = false}">{{ $t('common.cancel') }}</UButton>
+          <UButton variant="soft" @click="() => { open = false }">{{ $t('common.cancel') }}</UButton>
           <UButton color="primary" :loading="saving" @click="saveQuestion">{{ $t('common.save') }}</UButton>
         </div>
       </div>
     </template>
   </UModal>
+
+  <!-- 内联面板模式（编辑器模式，无 modelValue） -->
+  <div v-else-if="form" class="p-6 space-y-4">
+    <h2 class="text-lg font-semibold">{{ $t('common.edit') }} - {{ form.name || $t('question.namePlaceholder') }}</h2>
+
+    <!-- ========== 公共 UI：名称 / 类型 / 分值 ========== -->
+    <div class="flex items-center gap-3">
+      <UInput v-model="form.name" :placeholder="$t('question.namePlaceholder')" class="flex-1" size="sm" />
+      <USelect v-model="form.type" :items="typeOptions" size="sm" class="w-32" @change="onTypeChange" />
+      <UInput v-model.number="form.point" type="number" :placeholder="$t('question.pointPlaceholder')" size="sm" class="w-20" />
+    </div>
+
+    <!-- ========== 公共 UI：题目内容（html/composite 题型由组件内部处理） ========== -->
+    <div v-if="form?.type !== 'html' && form?.type !== 'composite'">
+      <label class="text-xs text-gray-500 mb-1 block">{{ $t('question.contentLabel') }}</label>
+      <richEditor v-model="form.content" />
+    </div>
+
+    <!-- ========== 题型特定组件 ========== -->
+    <component :is="typeComponent" v-if="typeComponent" :form="form" />
+
+    <!-- ========== 公共 UI：答案解析 ========== -->
+    <div>
+      <label class="text-xs text-gray-500 mb-1 block">{{ $t('question.explanationLabel') }}</label>
+      <richEditor v-model="form.explanation" />
+    </div>
+
+    <!-- ========== 公共 UI：标签 ========== -->
+    <div>
+      <label class="text-xs text-gray-500 mb-1 block">{{ $t('question.tagsLabel') }}</label>
+      <UInputTags v-model="form.tags" :placeholder="$t('question.tagPlaceholder')" :add-text="$t('question.addTag')" />
+    </div>
+
+    <!-- ========== 公共 UI：操作按钮 ========== -->
+    <div class="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+      <span v-if="saveMsg" class="text-xs self-center" :class="saveOk ? 'text-green-500' : 'text-red-500'">{{ saveMsg }}</span>
+      <UButton variant="soft" @click="resetForm">{{ $t('common.reset') }}</UButton>
+      <UButton color="primary" :loading="saving" @click="saveQuestion">{{ $t('common.save') }}</UButton>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -59,13 +100,18 @@ import MatchEditor from './match.vue'
 import CompositeEditor from './composite.vue'
 
 const props = defineProps({
-  modelValue: { type: Boolean, default: false },
+  // Modal 模式：通过 v-model 控制
+  modelValue: { type: Boolean, default: undefined },
   questionId: { type: Number, default: 0 },
   question: { type: Object, default: null },
 })
 
 const emit = defineEmits(['update:modelValue', 'saved'])
 
+// 判断是否为 Modal 模式（有 modelValue prop）
+const isModal = computed(() => props.modelValue !== undefined)
+
+// Modal 模式的 open 状态
 const open = computed({
   get: () => props.modelValue,
   set: (v) => emit('update:modelValue', v),
@@ -102,7 +148,7 @@ let originalData = null
 // provide form 给 select node-view，使其能读取 options
 provide('questionForm', form)
 
-// 弹窗打开时从 props.question 深拷贝初始化 form
+// 初始化 form
 function initForm() {
   if (!props.question) {
     form.value = {
@@ -225,7 +271,10 @@ async function saveQuestion() {
     saveOk.value = true
     saveMsg.value = t('question.saveSuccess')
     originalData = JSON.parse(JSON.stringify(form.value))
-    open.value = false
+    // Modal 模式：关闭弹窗
+    if (isModal.value) {
+      open.value = false
+    }
   } catch (err) {
     saveOk.value = false
     saveMsg.value = err.message || t('question.saveFailed')
@@ -234,11 +283,17 @@ async function saveQuestion() {
   }
 }
 
+// Modal 模式：弹窗打开时初始化 form
 watch(open, (val) => {
   if (val) initForm()
   else {
     form.value = null
     saveMsg.value = ''
   }
-})
+}, { immediate: true })
+
+// 内联模式：组件加载时初始化 form
+watch(() => props.question, () => {
+  if (!isModal.value) initForm()
+}, { immediate: true })
 </script>

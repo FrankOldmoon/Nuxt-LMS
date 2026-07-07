@@ -15,12 +15,6 @@
         </div>
 
         <template v-else>
-            <!-- 右上角编辑按钮（仅教师） -->
-            <div v-if="isTeacher" class="absolute top-2 right-2 flex items-center gap-1 z-10">
-                <UButton icon="i-heroicons-pencil-square" variant="ghost" size="2xs"
-                    class="opacity-50 hover:opacity-100 transition-opacity" @click="editOpen = true" />
-            </div>
-
             <!-- 竞赛标题 -->
             <div class="flex items-center gap-3 mb-3 pr-6">
                 <span class="px-2 py-0.5 bg-red-50 dark:bg-red-800 text-red-600 dark:text-red-300 rounded text-xs font-medium">
@@ -29,6 +23,9 @@
                 <span class="font-semibold text-gray-800 dark:text-gray-200">{{ race.name }}</span>
                 <span v-if="raceId" class="text-xs text-gray-400">#{{ raceId }}</span>
                 <div class="flex items-center gap-2 ml-auto">
+                    <UButton v-if="isTeacher" icon="i-lucide-edit" variant="ghost" size="2xs"
+                        class="opacity-50 hover:opacity-100 transition-opacity"
+                        @click="editOpen = true" />
                     <UIcon name="i-lucide-key" class="size-3.5 text-gray-400" />
                     <span class="text-xs font-mono text-gray-400">{{ pin }}</span>
                 </div>
@@ -150,7 +147,7 @@
             </div>
         </template>
 
-        <!-- 编辑弹窗（仅教师） -->
+        <!-- 编辑弹窗 -->
         <Edit v-model="editOpen" :race-id="raceId" :race="race" @saved="onSaved" />
     </div>
 </template>
@@ -234,7 +231,6 @@ const raceQuestions = computed(() => {
 
 // ====================== 状态变量 ======================
 const raceActive = ref(false)
-const editOpen = ref(false)
 const currentIndex = ref(-1)
 const currentQuestionCid = ref(0)
 const timeRemaining = ref(0)
@@ -246,6 +242,7 @@ const questionTop3 = ref([])
 const showPodium = ref(false)
 const raceScores = ref([])
 const scoresLoading = ref(false)
+const editOpen = ref(false)
 let timerInterval = null
 let submitCheckTimer = null
 
