@@ -32,6 +32,7 @@ interface AuthData {
   permissions: Permission[]
   editorCourseIds: number[]
   teacherCourseIds: number[]
+  classIds: number[]
 }
 
 // ====================== SSR 兼容的状态管理 ======================
@@ -68,6 +69,7 @@ export function useAuth() {
   const permissions = computed<Permission[]>(() => authData.value?.permissions ?? [])
   const editorCourseIds = computed<number[]>(() => authData.value?.editorCourseIds ?? [])
   const teacherCourseIds = computed<number[]>(() => authData.value?.teacherCourseIds ?? [])
+  const classIds = computed<number[]>(() => authData.value?.classIds ?? [])
   const isLoggedIn = computed(() => !!user.value)
   const isLoading = computed(() => status.value === 'pending')
 
@@ -132,6 +134,7 @@ export function useAuth() {
     permissions,
     editorCourseIds,
     teacherCourseIds,
+    classIds,
     isLoggedIn,
     isLoading,
     hasRole,

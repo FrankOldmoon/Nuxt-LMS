@@ -80,7 +80,7 @@
 </template>
 
 <script setup lang="ts">
-import type { LmsCourseSummary } from '#shared/types/lms'
+import type { LmsCourseSummary } from '#lms/types/lms'
 
 defineProps<{
   course: LmsCourseSummary

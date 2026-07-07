@@ -26,6 +26,12 @@
           </UFormField>
         </div>
 
+        <!-- 测验内容 -->
+        <div>
+          <label class="text-xs text-gray-500 mb-1 block">{{ $t('quiz.contentLabel') }}</label>
+          <richEditor v-model="form.content" />
+        </div>
+
         <!-- 题目选择 -->
         <div>
           <div class="flex items-center justify-between mb-2">
@@ -106,6 +112,7 @@ function initForm() {
       startAt: '',
       endAt: '',
       questions: [],
+      content: '',
     }
     return
   }
@@ -116,6 +123,7 @@ function initForm() {
     startAt: props.quiz.startAt ? formatDateTime(props.quiz.startAt) : '',
     endAt: props.quiz.endAt ? formatDateTime(props.quiz.endAt) : '',
     questions: normalizeQuestions(props.quiz.questions),
+    content: props.quiz.content || '',
   }
   form.value = normalized
 }

@@ -1,4 +1,4 @@
-import type { LmsClassUser } from '#shared/types/lms'
+import type { LmsClassUser } from '#lms/types/lms'
 
 /**
  * 全局班级用户缓存 composable

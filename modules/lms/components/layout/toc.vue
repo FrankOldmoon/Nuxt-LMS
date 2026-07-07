@@ -5,7 +5,7 @@
       <ClassUserCard />
 
       <!-- 章节学习进度（heading 汇总） -->
-      <div v-if="chapterTask && totalHeadings > 0" class="pt-4 mt-4 border-t border-default">
+      <div v-if="chapterTask && totalHeadings > 0" class="pt-4 my-4 border-t border-default">
         <div class="flex items-center justify-between mb-1.5">
           <span class="text-xs text-muted">{{ $t('coursePanel.progress') }}</span>
           <span class="text-xs font-semibold" :class="allDone ? 'text-success' : 'text-primary'">
@@ -16,10 +16,6 @@
           <div class="h-full rounded-full transition-all duration-500" :class="allDone ? 'bg-success' : 'bg-primary'"
             :style="{ width: `${progressPercent}%` }" />
         </div>
-        <p v-if="allDone" class="text-xs text-success text-center mt-1.5 flex items-center justify-center gap-1">
-          <UIcon name="i-lucide-circle-check" class="size-3.5" />
-          {{ $t('chapter.completed') }}
-        </p>
       </div>
     </template>
   </DocToc>

@@ -76,6 +76,7 @@ export default defineEventHandler(async (event) => {
   // 查询用户作为编辑者/教师的课程 ID 列表（lms 表，未启用 lms 时跳过）
   let editorCourseIds: number[] = []
   let teacherCourseIds: number[] = []
+  let classIds: number[] = []
 
   if ((schema as any).userCourses) {
     const editorCourseRows = await db
@@ -101,11 +102,21 @@ export default defineEventHandler(async (event) => {
     teacherCourseIds = teacherCourseRows.map((r) => r.courseId)
   }
 
+  // 查询用户所属的所有班级 ID（用于条件组件本地判断 class 条件）
+  if ((schema as any).userClasses) {
+    const classRows = await db
+      .select({ classId: (schema as any).userClasses.classId })
+      .from((schema as any).userClasses)
+      .where(eq((schema as any).userClasses.userId, userId))
+    classIds = classRows.map((r) => r.classId)
+  }
+
   return cResp({
     user: userRecord,
     roles: roleRows,
     permissions: permRows,
     editorCourseIds,
     teacherCourseIds,
+    classIds,
   })
 })

@@ -13,10 +13,14 @@ import { defineNuxtModule, createResolver, addComponentsDir, addImportsDir, addS
 export default defineNuxtModule({
   meta: { name: 'module-lms', configKey: 'moduleLms' },
   setup(_options, nuxt) {
+    const { resolve } = createResolver(import.meta.url)
+
+    // #lms 别名指向 lms 模块根目录，供 #lms/types/lms 类型导入使用。
+    // 始终注册（即使 lms 功能未启用），因为类型文件被 doc/base 模块引用。
+    nuxt.options.alias['#lms'] = resolve('.')
+
     const enabled = process.env.NUXT_MODULE_LMS === 'true'
     if (!enabled) return
-
-    const { resolve } = createResolver(import.meta.url)
 
     // 标记 lms 模块已启用，供组件条件渲染使用
     nuxt.options.runtimeConfig.public.moduleLms = true
@@ -79,10 +83,12 @@ export default defineNuxtModule({
     // （教师在 accessBar 切换章节 isOpen 或开放给班级时，服务端广播此消息）
     addPlugin(resolve('./plugins/ws-sync.client.ts'))
 
-    nuxt.hook('i18n:registerModule', () => ({
-      langDir: resolve('./i18n/locales'),
-      locales: [{ code: 'en', file: 'en.json' }],
-    }))
+    nuxt.hook('i18n:registerModule', (registerModule) => {
+      registerModule({
+        langDir: resolve('./i18n/locales'),
+        locales: [{ code: 'en', file: 'en.json' }],
+      })
+    })
 
     // WS 回调：vote/quickAnswer/race/group/chatroom/online 等由 lms 组件
     // 通过 useWebSocket().onXxx(cb) → registerWsHandler('xxx', cb) 注册到 base 连接层

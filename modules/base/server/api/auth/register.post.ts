@@ -1,7 +1,14 @@
 import { db, schema } from '@nuxthub/db'
 import { eq } from 'drizzle-orm'
+import { getSiteConfig } from '../../utils/siteConfig'
 
 export default defineEventHandler(async (event) => {
+  // 检查系统设置是否开放注册
+  const siteConfig = await getSiteConfig()
+  if (!siteConfig.allowRegistration) {
+    return cResp(null, 'Registration is disabled', false)
+  }
+
   const body = await readBody(event)
   const { username, password, name, email } = body || {}
 

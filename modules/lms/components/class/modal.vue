@@ -118,7 +118,7 @@
 </template>
 
 <script setup lang="ts">
-import type { LmsClass, LmsSearchUser } from '#shared/types/lms'
+import type { LmsClass, LmsSearchUser } from '#lms/types/lms'
 
 const open = defineModel<boolean>('open', { required: true })
 

@@ -374,11 +374,10 @@ function onSaved(ques) {
     // 新建题目：拿到新增 cid 后通知父节点更新 content 属性
     if (ques.cid && Number(ques.cid) !== questionId.value) {
         emit('init', ques.cid)
-    } else {
-        // 已有题目：刷新接口数据
-        refresh()
     }
-    // 本地立即更新内容，避免刷新期间空白
+    // 已有题目不再调用 refresh()：refresh 会触发 pending=true → loading 态闪烁，
+    // 导致编辑按钮从 DOM 移除，modal 关闭时 Radix focus 回退到 body 造成文档滚动到顶部。
+    // Object.assign 已用表单数据即时更新本地状态，无需重新拉取。
     if (question.value) {
         Object.assign(question.value, ques)
     }

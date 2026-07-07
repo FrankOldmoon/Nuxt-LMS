@@ -1,5 +1,5 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
-import type { LmsHomeData, LmsCourseDetail } from '#shared/types/lms'
+import type { LmsHomeData, LmsCourseDetail } from '#lms/types/lms'
 
 /**
  * 获取首页数据（分类 + 课程列表）
@@ -22,7 +22,7 @@ export function useHeaderNav() {
 
   const links = computed<NavigationMenuItem[]>(() => {
     const home = data.value
-    const base: NavigationMenuItem = { label: '首页', icon: 'i-lucide-home', to: '/' }
+    const base: NavigationMenuItem = { label: 'Home', icon: 'i-lucide-home', to: '/' }
     if (!home || !home.categories.length) return [base]
 
     return [

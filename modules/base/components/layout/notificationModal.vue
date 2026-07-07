@@ -82,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import type { LmsNotificationList } from '#shared/types/lms'
+import type { LmsNotificationList } from '#lms/types/lms'
 
 const isOpen = defineModel<boolean>('open', { default: false })
 

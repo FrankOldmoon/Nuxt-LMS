@@ -45,6 +45,8 @@
     "conditionQuestion": "Question",
     "conditionHomework": "Homework",
     "conditionComment": "Comment",
+    "conditionQuiz": "Quiz",
+    "conditionRace": "Race",
     "conditionClassId": "Class ID",
     "conditionQuestionId": "Question ID",
     "conditionHomeworkId": "Homework ID",

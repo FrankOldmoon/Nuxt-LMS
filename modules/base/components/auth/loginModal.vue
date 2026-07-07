@@ -16,6 +16,7 @@
             {{ $t('auth.login') }}
           </button>
           <button
+            v-if="allowRegistration"
             :class="[
               'flex-1 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer',
               activeTab === 'register'
@@ -38,7 +39,7 @@
 
         <!-- 注册表单 -->
         <AuthRegisterForm
-          v-if="activeTab === 'register'"
+          v-if="activeTab === 'register' && allowRegistration"
           @success="onSuccess"
           @switch-to-login="activeTab = 'login'"
         />
@@ -56,6 +57,7 @@
 <script setup lang="ts">
 const isOpen = defineModel<boolean>('open', { default: false })
 const activeTab = ref<'login' | 'register' | 'forgotPassword'>('login')
+const { allowRegistration } = useSiteConfig()
 
 const emit = defineEmits<{
   success: []

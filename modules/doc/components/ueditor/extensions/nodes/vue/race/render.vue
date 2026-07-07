@@ -500,13 +500,11 @@ const timeProgress = computed(() => {
     return (timeRemaining.value / totalTime.value) * 100
 })
 
-// 编辑保存回调：刷新数据 + 通知父组件（编辑器中会调用 updateAttributes）
+// 编辑保存回调：通知父组件（编辑器中会调用 updateAttributes）
 function onSaved(rc) {
-    if (!(rc.cid && Number(rc.cid) !== raceId.value)) {
-        // 已有竞赛：刷新接口数据
-        refresh()
-    }
-    // 本地立即更新内容，避免刷新期间空白
+    // 不再调用 refresh()：refresh 会触发 pending=true → loading 态闪烁，
+    // 导致编辑按钮从 DOM 移除，modal 关闭时 Radix focus 回退到 body 造成文档滚动到顶部。
+    // Object.assign 已用表单数据即时更新本地状态，无需重新拉取。
     if (race.value) {
         Object.assign(race.value, rc)
     }

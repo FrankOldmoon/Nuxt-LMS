@@ -4,10 +4,9 @@
       <div v-if="form" class="p-6 space-y-4">
         <h2 class="text-lg font-semibold">{{ $t('common.edit') }} - {{ form.name || $t('homework.namePlaceholder') }}</h2>
 
-        <!-- 名称 / 代码 / 分值 -->
+        <!-- 名称 / 分值 -->
         <div class="flex items-center gap-3">
           <UInput v-model="form.name" :placeholder="$t('homework.namePlaceholder')" class="flex-1" size="sm" />
-          <UInput v-model="form.code" :placeholder="$t('homework.codePlaceholder')" size="sm" class="w-32" />
           <UInput v-model.number="form.point" type="number" :placeholder="$t('question.pointPlaceholder')" size="sm" class="w-20" />
         </div>
 

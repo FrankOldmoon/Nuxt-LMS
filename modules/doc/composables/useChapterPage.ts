@@ -13,12 +13,12 @@ export function useChapterPage(chapterId: ComputedRef<string>, courseId: Compute
   const { setToc, setEditableContent, setEditableMeta, contentVersion } = useLayoutState()
   const { navigation } = useSidebarNav()
 
-  const { data: resp, pending, refresh, error } = cRequest.use<import('#shared/types/lms').LmsChapterPageData | null>(
+  const { data: resp, pending, refresh, error } = cRequest.use<import('#lms/types/lms').LmsChapterPageData | null>(
     () => chapterId.value ? `/api/chapters/show?id=${chapterId.value}` : '',
     { default: () => null },
   )
 
-  const data = computed(() => resp.value as import('#shared/types/lms').LmsChapterPageData | null)
+  const data = computed(() => resp.value as import('#lms/types/lms').LmsChapterPageData | null)
 
   const notFound = computed(() => !!error.value)
 

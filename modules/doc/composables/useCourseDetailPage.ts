@@ -14,12 +14,12 @@ export function useCourseDetailPage(courseId: ComputedRef<string>, apiUrl: Compu
   const { hasRole, isCourseTeacher } = useAuth()
   const { refresh: refreshNav } = useSidebarNav()
 
-  const { data: resp, pending, refresh } = cRequest.use<import('#shared/types/lms').LmsCourseDetail | null>(
+  const { data: resp, pending, refresh } = cRequest.use<import('#lms/types/lms').LmsCourseDetail | null>(
     () => apiUrl.value,
     { default: () => null },
   )
 
-  const course = computed(() => resp.value as import('#shared/types/lms').LmsCourseDetail | null)
+  const course = computed(() => resp.value as import('#lms/types/lms').LmsCourseDetail | null)
 
   const canEdit = computed(() => {
     if (!courseId.value) return false

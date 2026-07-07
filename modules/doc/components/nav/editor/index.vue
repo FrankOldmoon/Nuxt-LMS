@@ -316,26 +316,70 @@ async function saveCourseMode() {
   })
 }
 
-/** category 模式保存：按分类分组，分别更新各分类的 orders */
+/** category 模式保存：创建新分类/课程 + 更新各分类的 name 和 orders */
 async function saveCategoryMode() {
-  const groups: { categoryId: string; items: FlatNode[] }[] = []
-  let currentGroup: FlatNode[] | null = null
+  // 1. 创建新分类（depth=0 且 isNew），获取真实 id
+  //    必须先于课程创建，因为新课程需要 categoryId
+  for (const item of flatItems.value) {
+    if (item.depth === 0 && item.isNew && item.label.trim()) {
+      const resp = await cRequest<any[]>('/api/categories/add', {
+        method: 'POST',
+        body: { name: item.label.trim() },
+      })
+      if (resp && resp.length > 0) {
+        item.id = String(resp[0].id)
+        item.isNew = false
+      }
+    }
+  }
 
+  // 2. 创建新课程（depth>0 且 isNew），其所属分类为之前最近的已持久化 depth=0 节点
+  let currentCategoryId: string | null = null
+  for (const item of flatItems.value) {
+    if (item.depth === 0) {
+      // 新分类若创建失败（空标签）仍为 isNew，置 null 跳过其下课程创建，避免脏 categoryId
+      currentCategoryId = item.isNew ? null : item.id
+    } else if (item.depth > 0 && item.isNew && item.label.trim() && currentCategoryId) {
+      const resp = await cRequest<any[]>('/api/courses/add', {
+        method: 'POST',
+        body: {
+          name: item.label.trim(),
+          categoryId: Number(currentCategoryId),
+        },
+      })
+      if (resp && resp.length > 0) {
+        item.id = String(resp[0].id)
+        item.isNew = false
+      }
+    }
+  }
+
+  // 3. 过滤空标签的新建项
+  flatItems.value = flatItems.value.filter((item) => item.label.trim() || !item.isNew)
+
+  // 4. 按 category 分组（depth=0 为 category，depth>0 为其下 course）
+  const groups: { category: FlatNode; items: FlatNode[] }[] = []
+  let currentGroup: FlatNode[] | null = null
   for (const item of flatItems.value) {
     if (item.depth === 0) {
       currentGroup = []
-      groups.push({ categoryId: item.id, items: currentGroup })
+      groups.push({ category: item, items: currentGroup })
     } else if (currentGroup !== null && item.depth > 0) {
       currentGroup.push(item)
     }
   }
 
+  // 5. 转为 orders 并保存（含 category 的 name，后端据 orders[].label 同步更新 course 的 name）
   await Promise.all(
     groups.map((group) => {
       const orders = toOrdersForGroup(group.items, 0)
       return cRequest('/api/categories/update', {
         method: 'POST',
-        body: { id: group.categoryId, orders },
+        body: {
+          id: group.category.id,
+          name: group.category.label || t('navEditor.unnamed'),
+          orders,
+        },
       })
     })
   )

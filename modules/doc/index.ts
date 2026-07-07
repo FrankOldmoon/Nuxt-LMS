@@ -71,10 +71,12 @@ export default defineNuxtModule({
 
     addServerScanDir(resolve('./server'))
 
-    nuxt.hook('i18n:registerModule', () => ({
-      langDir: resolve('./i18n/locales'),
-      locales: [{ code: 'en', file: 'en.json' }],
-    }))
+    nuxt.hook('i18n:registerModule', (registerModule) => {
+      registerModule({
+        langDir: resolve('./i18n/locales'),
+        locales: [{ code: 'en', file: 'en.json' }],
+      })
+    })
 
     // 注册 WS 回调：lockJoin/lockRelease（编辑锁）注册到 base 连接层
     // 由 ueditor/ws.vue 调用 registerWsHandler('lockAcquired'/'lockDenied', cb)

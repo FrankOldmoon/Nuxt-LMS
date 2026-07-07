@@ -6,7 +6,7 @@ import type {
   LmsChapterDetail,
   LmsChapterPageData,
   LmsMember,
-} from '#shared/types/lms'
+} from '#lms/types/lms'
 
 /** 从 config jsonb 中安全取值 */
 function getConfig(course: any): Record<string, any> {

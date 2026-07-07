@@ -107,7 +107,7 @@
 </template>
 
 <script setup lang="ts">
-import type { LmsMember, LmsSearchUser } from '#shared/types/lms'
+import type { LmsMember, LmsSearchUser } from '#lms/types/lms'
 
 const props = defineProps<{
   courseId: number

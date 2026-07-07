@@ -45,6 +45,11 @@
                 </span>
             </div>
 
+            <!-- 测验内容 -->
+            <div v-if="quiz.content" class="prose prose-sm dark:prose-invert max-w-none mb-3">
+                <ueditorRender :json="quiz.content" />
+            </div>
+
             <!-- 已提交记录 -->
             <div v-if="userRecord"
                 class="mb-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-md">
@@ -209,6 +214,7 @@ const defaultQuiz = reactive({
     questions: [],
     startAt: null,
     endAt: null,
+    content: '',
 })
 
 const apiUrl = computed(() => {
@@ -227,6 +233,7 @@ const { data: fetchedQuiz, pending, refresh } = cRequest.use(apiUrl, {
             questions: raw.questions || [],
             startAt: raw.startAt,
             endAt: raw.endAt,
+            content: raw.content || '',
         })
     },
 })
@@ -577,13 +584,11 @@ async function submitQuiz() {
     }
 }
 
-// 编辑保存回调：刷新数据 + 通知父组件（编辑器中会调用 updateAttributes）
+// 编辑保存回调：通知父组件（编辑器中会调用 updateAttributes）
 function onSaved(qz) {
-    if (!(qz.cid && Number(qz.cid) !== quizId.value)) {
-        // 已有测验：刷新接口数据
-        refresh()
-    }
-    // 本地立即更新内容，避免刷新期间空白
+    // 不再调用 refresh()：refresh 会触发 pending=true → loading 态闪烁，
+    // 导致编辑按钮从 DOM 移除，modal 关闭时 Radix focus 回退到 body 造成文档滚动到顶部。
+    // Object.assign 已用表单数据即时更新本地状态，无需重新拉取。
     if (quiz.value) {
         Object.assign(quiz.value, qz)
     }

@@ -12,7 +12,7 @@
     <!-- 上层模块注入：ChapterBtns / ClassUserCard / 学习进度等（lms 用） -->
     <slot name="extra" />
 
-    <LayoutTocList :links="tocLinks" :title="$t('layout.pageToc')" class="w-full" />
+    <LayoutTocList :links="tocLinks" class="w-full" />
 
     <!-- 全屏播放模式：标题上下导航按钮 -->
     <div v-if="playFullscreen && flatHeadings.length"

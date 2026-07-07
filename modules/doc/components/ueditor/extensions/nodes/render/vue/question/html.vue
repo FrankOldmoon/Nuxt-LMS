@@ -1,9 +1,15 @@
 <template>
     <div>
         <!-- HTML 预览 iframe -->
-        <div class="border border-gray-200 dark:border-gray-600 rounded overflow-hidden">
-            <iframe ref="iframeRef" :srcdoc="htmlContent" sandbox="allow-scripts" class="w-full"
+        <div ref="containerRef" class="html-preview-container border border-gray-200 dark:border-gray-600 rounded overflow-hidden relative">
+            <iframe ref="iframeRef" :srcdoc="htmlContent" sandbox="allow-scripts" class="w-full html-preview-iframe"
                 style="min-height: 300px; border: 0;" />
+            <!-- 全屏按钮 -->
+            <UButton
+                :icon="isFullscreen ? 'i-lucide-minimize' : 'i-lucide-maximize'"
+                variant="ghost" size="2xs"
+                class="absolute top-2 right-2 z-10 opacity-50 hover:opacity-100 transition-opacity bg-white/80 dark:bg-gray-800/80"
+                @click="toggleFullscreen" />
         </div>
 
         <!-- 正确率提示（提交后显示） -->
@@ -28,6 +34,24 @@ const fromRecord = inject('questionFromRecord')
 const { editableCourseId, editableId } = useLayoutState()
 
 const iframeRef = ref(null)
+const containerRef = ref(null)
+const isFullscreen = ref(false)
+
+// 全屏切换
+function toggleFullscreen() {
+    if (!import.meta.client) return
+    const el = containerRef.value
+    if (!el) return
+    if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {})
+    } else {
+        el.requestFullscreen().catch(() => {})
+    }
+}
+
+function onFullscreenChange() {
+    isFullscreen.value = document.fullscreenElement === containerRef.value
+}
 
 // HTML 内容
 const htmlContent = computed(() => {
@@ -63,10 +87,16 @@ function onMessage(event) {
 
 onMounted(() => {
     window.addEventListener('message', onMessage)
+    document.addEventListener('fullscreenchange', onFullscreenChange)
 })
 
 onBeforeUnmount(() => {
     window.removeEventListener('message', onMessage)
+    document.removeEventListener('fullscreenchange', onFullscreenChange)
+    // 组件卸载时若仍在全屏，退出全屏
+    if (import.meta.client && document.fullscreenElement === containerRef.value) {
+        document.exitFullscreen().catch(() => {})
+    }
 })
 
 // 监听 record 变化（fetchRecord 回填场景）
@@ -108,3 +138,15 @@ function fillCorrectAnswer() {
 
 defineExpose({ submit, reset, hasAnswer, fillCorrectAnswer })
 </script>
+
+<style scoped>
+/* 全屏时 iframe 撑满屏幕 */
+.html-preview-container:fullscreen {
+    background: #fff;
+}
+.html-preview-container:fullscreen .html-preview-iframe {
+    width: 100%;
+    height: 100vh;
+    min-height: 100vh;
+}
+</style>

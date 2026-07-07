@@ -45,7 +45,7 @@
       </button>
     </div>
 
-    <p class="text-sm text-(--ui-text-muted) text-center mt-4">
+    <p v-if="allowRegistration" class="text-sm text-(--ui-text-muted) text-center mt-4">
       {{ $t('auth.noAccount') }}
       <button
         class="text-primary font-medium hover:underline cursor-pointer"
@@ -60,6 +60,7 @@
 <script setup lang="ts">
 const { login } = useAuth()
 const toast = useToast()
+const { allowRegistration } = useSiteConfig()
 
 const username = ref('')
 const password = ref('')

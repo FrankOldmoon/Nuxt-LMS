@@ -13,6 +13,10 @@
                 size="sm" class="flex-1" @update:model-value="updateTaskLabel(idx, $event, 'homework')" />
             <USelect v-else-if="cond.type === 'comment'" v-model="cond.value" :items="commentOptions" multiple
                 size="sm" class="flex-1" @update:model-value="updateTaskLabel(idx, $event, 'comment')" />
+            <USelect v-else-if="cond.type === 'quiz'" v-model="cond.value" :items="quizOptions" multiple
+                size="sm" class="flex-1" @update:model-value="updateTaskLabel(idx, $event, 'quiz')" />
+            <USelect v-else-if="cond.type === 'race'" v-model="cond.value" :items="raceOptions" multiple
+                size="sm" class="flex-1" @update:model-value="updateTaskLabel(idx, $event, 'race')" />
             <UButton icon="i-lucide-x" color="error" variant="ghost" size="xs"
                 @click="editConditions.splice(idx, 1)" />
         </div>
@@ -34,7 +38,7 @@ const emit = defineEmits(['update:config', 'close'])
 const { t } = useI18n()
 const { editableId } = useLayoutState()
 
-const chapterTaskIds = ref({ questionIds: [], homeworkIds: [], commentIds: [] })
+const chapterTaskIds = ref({ questionIds: [], homeworkIds: [], commentIds: [], quizIds: [], raceIds: [] })
 
 const questionOptions = computed(() =>
     (chapterTaskIds.value.questionIds || []).map(id => ({ label: `#${id}`, value: String(id) }))
@@ -45,16 +49,50 @@ const homeworkOptions = computed(() =>
 const commentOptions = computed(() =>
     (chapterTaskIds.value.commentIds || []).map(id => ({ label: `#${id}`, value: String(id) }))
 )
+const quizOptions = computed(() =>
+    (chapterTaskIds.value.quizIds || []).map(id => ({ label: `#${id}`, value: String(id) }))
+)
+const raceOptions = computed(() =>
+    (chapterTaskIds.value.raceIds || []).map(id => ({ label: `#${id}`, value: String(id) }))
+)
+
+/** 从 tiptap JSON content 中提取指定 vue 节点类型的 CID */
+function extractVueNodeIds(content, type) {
+    const ids = []
+    function traverse(node) {
+        if (!node || typeof node !== 'object') return
+        if (node.type === 'vue' && node.attrs?.type === type && node.attrs?.content) {
+            const numId = Number(node.attrs.content)
+            if (!isNaN(numId)) ids.push(numId)
+        }
+        if (Array.isArray(node.content)) {
+            for (const child of node.content) traverse(child)
+        } else if (node.content && typeof node.content === 'object') {
+            traverse(node.content)
+        }
+    }
+    if (Array.isArray(content)) {
+        for (const node of content) traverse(node)
+    } else if (content) {
+        traverse(content)
+    }
+    return ids
+}
 
 async function loadChapterTasks() {
     if (!editableId.value) return
     try {
         const data = await cRequest(`/api/chapters/show?id=${editableId.value}`)
         if (data?.chapter) {
+            // quizIds 已在 schema 中（但 extractIds 尚未提取），raceIds 无 schema 字段
+            // 两者均从 chapter content 中客户端提取
+            const content = data.chapter.content
             chapterTaskIds.value = {
                 questionIds: data.chapter.questionIds || [],
                 homeworkIds: data.chapter.homeworkIds || [],
                 commentIds: data.chapter.commentIds || [],
+                quizIds: extractVueNodeIds(content, 'quiz'),
+                raceIds: extractVueNodeIds(content, 'race'),
             }
         }
     } catch (e) {
@@ -63,7 +101,7 @@ async function loadChapterTasks() {
 }
 
 function updateTaskLabel(idx, val, type) {
-    const map = { question: questionOptions, homework: homeworkOptions, comment: commentOptions }
+    const map = { question: questionOptions, homework: homeworkOptions, comment: commentOptions, quiz: quizOptions, race: raceOptions }
     const opts = map[type].value
     const vals = Array.isArray(val) ? val : [val]
     const labels = vals.map(v => opts.find(o => o.value === v)?.label || v)
@@ -79,6 +117,8 @@ const conditionTypes = computed(() => [
     { label: t('ueditor.conditionQuestion'), value: 'question' },
     { label: t('ueditor.conditionHomework'), value: 'homework' },
     { label: t('ueditor.conditionComment'), value: 'comment' },
+    { label: t('ueditor.conditionQuiz'), value: 'quiz' },
+    { label: t('ueditor.conditionRace'), value: 'race' },
 ])
 
 const roleOptions = [
@@ -108,7 +148,7 @@ function updateClassLabel(idx, val) {
 // 打开时加载编辑值
 onMounted(() => {
     editConditions.value = (props.config?.conditions || []).map(c => {
-        const taskTypes = ['question', 'homework', 'comment']
+        const taskTypes = ['question', 'homework', 'comment', 'quiz', 'race']
         if (taskTypes.includes(c.type)) {
             return { ...c, value: Array.isArray(c.value) ? c.value : (c.value ? [c.value] : []) }
         }
