@@ -10,6 +10,6 @@
 const { siteTitle } = useSiteConfig()
 
 useHead(() => ({
-  title: siteTitle.value || 'Nuxt Hub',
+  title: siteTitle.value || 'AI LMS',
 }))
 </script>

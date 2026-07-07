@@ -40,10 +40,10 @@ export function useLmsConfig() {
   // 站点标题（支持国际化，如果配置中是对象则根据当前语言选择）
   const siteTitle = computed(() => {
     const title = config.value?.siteTitle
-    if (!title) return 'Nuxt Hub'
+    if (!title) return 'AI LMS'
     // 如果 title 是对象（如 { zh: '...', en: '...' }），根据当前语言选择
     if (typeof title === 'object' && title !== null) {
-      return title[locale.value] ?? title['en'] ?? 'Nuxt Hub'
+      return title[locale.value] ?? title['en'] ?? 'AI LMS'
     }
     return title
   })

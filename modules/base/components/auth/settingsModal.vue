@@ -117,7 +117,7 @@ const loading = ref(false)
 const saving = ref(false)
 
 const form = ref({
-  siteTitle: 'Nuxt Hub',
+  siteTitle: 'AI LMS',
   siteDescription: '',
   allowRegistration: true,
   siteLogo: '',
@@ -146,7 +146,7 @@ async function loadSettings() {
     const siteConfig = data.find((c) => c.id === 'site_config')
     if (siteConfig && siteConfig.value) {
       form.value = {
-        siteTitle: siteConfig.value.siteTitle ?? 'Nuxt Hub',
+        siteTitle: siteConfig.value.siteTitle ?? 'AI LMS',
         siteDescription: siteConfig.value.siteDescription ?? '',
         allowRegistration: siteConfig.value.allowRegistration ?? true,
         siteLogo: siteConfig.value.siteLogo ?? '',

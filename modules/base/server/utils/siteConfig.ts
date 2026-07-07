@@ -9,9 +9,9 @@ import { eq } from "drizzle-orm"
  */
 export const DEFAULT_SITE_CONFIG = {
   // 网站基础
-  siteTitle: 'Nuxt Hub',
+  siteTitle: 'AI LMS',
   siteDescription: '',
-  allowRegistration: true,
+  allowRegistration: false,
   siteLogo: '',
   pageSize: 20,
   // 邮件服务（用于忘记密码等邮件通知）
