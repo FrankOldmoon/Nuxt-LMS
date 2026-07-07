@@ -8,18 +8,26 @@ export default defineNuxtConfig({
     "@nuxt/ui",
     "@nuxtjs/i18n",
     "@nuxt/test-utils/module",
+    "./modules/base",
+    "./modules/doc",
+    "./modules/lms",
   ],
   i18n: {
     strategy: "no_prefix",
     locales: [
       { code: "en", iso: "en-US", name: "English", file: "en.json" },
-      { code: "zh-CN", iso: "zh-CN", name: "简体中文", file: "zh-CN.json" },
-      { code: "zh-TW", iso: "zh-TW", name: "繁體中文", file: "zh-TW.json" },
     ],
     defaultLocale: "en",
   },
   hub: {
     db: "postgresql",
+  },
+  runtimeConfig: {
+    public: {
+      moduleBase: false,
+      moduleDoc: false,
+      moduleLms: false,
+    },
   },
   css: ["~/assets/css/main.css"],
   ui: {

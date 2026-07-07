@@ -1,8 +1,16 @@
+/**
+ * 聚合 schema 入口（base + auth + doc + lms）
+ *
+ * @nuxthub/core 会扫描此文件，将所有导出的 pgTable 作为 schema 提供给 @nuxthub/db。
+ * 包含全部 36 张表。表定义只是声明，不影响运行时性能；
+ * API 代码通过各模块的 addServerScanDir 控制哪些可用。
+ *
+ * 注意：此文件必须自包含，不能有跨 module 的相对 import（@nuxthub/core 的 bundler 无法解析）。
+ */
 import {
   pgTable,
   serial,
   varchar,
-  text,
   integer,
   boolean,
   timestamp,
@@ -21,7 +29,7 @@ const withTimestamps = {
   deletedAt: timestamp('deleted_at'),
 };
 
-// ====================== 基础表（无外键依赖或仅依赖更早定义的表） ======================
+// ====================== 基础表 ======================
 
 export const roles = pgTable('roles', {
   id: serial('id').primaryKey(),
@@ -44,23 +52,40 @@ export const configs = pgTable('configs', {
   ...withTimestamps,
 });
 
-export const classes = pgTable('classes', {
-  id: serial('id').primaryKey(),
-  name: varchar('name', { length: 255 }).notNull(),
-  code: varchar('code', { length: 100 }).notNull().unique(),
-  ...withTimestamps,
-});
+export const rolePermissions = pgTable(
+  'role_permissions',
+  {
+    roleId: integer('role_id').notNull(),
+    permissionId: integer('permission_id').notNull(),
+    ...withTimestamps,
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.roleId, t.permissionId] }),
+    roleFk: foreignKey({ columns: [t.roleId], foreignColumns: [roles.id] }).onDelete('cascade'),
+    permFk: foreignKey({ columns: [t.permissionId], foreignColumns: [permissions.id] }).onDelete('cascade'),
+  }),
+);
 
-export const categories = pgTable('categories', {
-  id: serial('id').primaryKey(),
-  name: varchar('name', { length: 255 }).notNull(),
-  code: varchar('code', { length: 100 }),
-  order: integer('order').default(0),
-  orders: jsonb('orders').default('[]'),
-  ...withTimestamps,
-});
+export const files = pgTable(
+  'files',
+  {
+    id: serial('id').primaryKey(),
+    name: varchar('name', { length: 255 }).notNull(),
+    hash: varchar('hash', { length: 255 }).notNull(),
+    path: varchar('path', { length: 500 }).notNull().unique(),
+    type: varchar('type', { length: 100 }),
+    userId: integer('user_id'),
+    size: integer('size'),
+    group: varchar('group', { length: 100 }),
+    ...withTimestamps,
+  },
+  (t) => ({
+    userIdx: index('idx_files_user_id').on(t.userId),
+  }),
+);
 
-// ====================== 用户表（被后续表广泛引用） ======================
+// ====================== 用户表 ======================
+
 export const users = pgTable(
   'users',
   {
@@ -88,14 +113,12 @@ export const users = pgTable(
     ...withTimestamps,
   },
   (t) => ({
-    classFk: foreignKey({ columns: [t.classId], foreignColumns: [classes.id] }).onDelete('set null'), // 保留班级但不建议级联删除用户
     classIdx: index('idx_users_class_id').on(t.classId),
     emailIdx: index('idx_users_email').on(t.email),
-    usernameIdx: index('idx_users_username').on(t.username), // 用户名查询高频
-  })
+    usernameIdx: index('idx_users_username').on(t.username),
+  }),
 );
 
-// ----- 依赖 users 的表移到 users 之后 -----
 export const tokens = pgTable(
   'tokens',
   {
@@ -107,7 +130,7 @@ export const tokens = pgTable(
   (t) => ({
     userFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('cascade'),
     userIdx: index('idx_tokens_user_id').on(t.userId),
-  })
+  }),
 );
 
 export const userRoles = pgTable(
@@ -122,21 +145,7 @@ export const userRoles = pgTable(
     userFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('cascade'),
     roleFk: foreignKey({ columns: [t.roleId], foreignColumns: [roles.id] }).onDelete('cascade'),
     userRoleIdx: index('idx_user_roles_user_role').on(t.userId, t.roleId),
-  })
-);
-
-export const rolePermissions = pgTable(
-  'role_permissions',
-  {
-    roleId: integer('role_id').notNull(),
-    permissionId: integer('permission_id').notNull(),
-    ...withTimestamps,
-  },
-  (t) => ({
-    pk: primaryKey({ columns: [t.roleId, t.permissionId] }),
-    roleFk: foreignKey({ columns: [t.roleId], foreignColumns: [roles.id] }).onDelete('cascade'),
-    permFk: foreignKey({ columns: [t.permissionId], foreignColumns: [permissions.id] }).onDelete('cascade'),
-  })
+  }),
 );
 
 export const userClasses = pgTable(
@@ -150,14 +159,13 @@ export const userClasses = pgTable(
   (t) => ({
     pk: primaryKey({ columns: [t.userId, t.classId] }),
     userFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('cascade'),
-    classFk: foreignKey({ columns: [t.classId], foreignColumns: [classes.id] }).onDelete('cascade'),
     userIdx: index('idx_user_classes_user_id').on(t.userId),
     classIdx: index('idx_user_classes_class_id').on(t.classId),
-  })
+  }),
 );
 
 export const notifys = pgTable(
-  'notifications', // 表名改为 notifications
+  'notifications',
   {
     id: serial('id').primaryKey(),
     name: varchar('name', { length: 255 }).notNull(),
@@ -170,7 +178,7 @@ export const notifys = pgTable(
   (t) => ({
     userFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('cascade'),
     userIdx: index('idx_notifications_user_id').on(t.userId),
-  })
+  }),
 );
 
 export const messages = pgTable(
@@ -189,52 +197,40 @@ export const messages = pgTable(
     receiverFk: foreignKey({ columns: [t.receiverUserId], foreignColumns: [users.id], name: 'msg_receiver' }).onDelete('cascade'),
     senderIdx: index('idx_messages_sender').on(t.senderUserId),
     receiverIdx: index('idx_messages_receiver').on(t.receiverUserId),
-  })
+  }),
 );
 
-export const files = pgTable(
-  'files',
-  {
-    id: serial('id').primaryKey(),
-    name: varchar('name', { length: 255 }).notNull(),
-    hash: varchar('hash', { length: 255 }).notNull(),
-    path: varchar('path', { length: 500 }).notNull().unique(),
-    type: varchar('type', { length: 100 }),
-    userId: integer('user_id'),
-    size: integer('size'),
-    group: varchar('group', { length: 100 }),
-    ...withTimestamps,
-  },
-  (t) => ({
-    userFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('set null'),
-    userIdx: index('idx_files_user_id').on(t.userId),
-  })
-);
+// ====================== Relations ======================
 
-export const medals = pgTable('medals', {
+export const usersRelations = relations(users, ({ one, many }) => ({
+  userRoles: many(userRoles),
+  tokens: many(tokens),
+  userClasses: many(userClasses),
+  notifications: many(notifys),
+  sendMessages: many(messages, { relationName: 'msg_sender' }),
+  receiveMessages: many(messages, { relationName: 'msg_receiver' }),
+}));
+
+export const rolesRelations = relations(roles, ({ many }) => ({
+  rolePermissions: many(rolePermissions),
+  userRoles: many(userRoles),
+}));
+
+export const permissionsRelations = relations(permissions, ({ many }) => ({
+  rolePermissions: many(rolePermissions),
+}));
+
+// ====================== doc 表 ======================
+
+export const categories = pgTable('categories', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
-  content: jsonb('content'),
+  code: varchar('code', { length: 100 }),
+  order: integer('order').default(0),
+  orders: jsonb('orders').default('[]'),
   ...withTimestamps,
 });
 
-export const userMedals = pgTable(
-  'user_medals', // 统一复数
-  {
-    userId: integer('user_id').notNull(),
-    medalId: integer('medal_id').notNull(),
-    ...withTimestamps,
-  },
-  (t) => ({
-    pk: primaryKey({ columns: [t.userId, t.medalId] }),
-    userFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('cascade'),
-    medalFk: foreignKey({ columns: [t.medalId], foreignColumns: [medals.id] }).onDelete('cascade'),
-    userIdx: index('idx_user_medals_user_id').on(t.userId),
-    medalIdx: index('idx_user_medals_medal_id').on(t.medalId),
-  })
-);
-
-// ====================== 课程相关表（依赖 courses 及其上层） ======================
 export const courses = pgTable(
   'courses',
   {
@@ -310,6 +306,38 @@ export const courseVersions = pgTable(
   })
 );
 
+// ====================== lms 表 ======================
+
+export const classes = pgTable('classes', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  code: varchar('code', { length: 100 }).notNull().unique(),
+  ...withTimestamps,
+});
+
+export const medals = pgTable('medals', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  content: jsonb('content'),
+  ...withTimestamps,
+});
+
+export const userMedals = pgTable(
+  'user_medals',
+  {
+    userId: integer('user_id').notNull(),
+    medalId: integer('medal_id').notNull(),
+    ...withTimestamps,
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.medalId] }),
+    userFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('cascade'),
+    medalFk: foreignKey({ columns: [t.medalId], foreignColumns: [medals.id] }).onDelete('cascade'),
+    userIdx: index('idx_user_medals_user_id').on(t.userId),
+    medalIdx: index('idx_user_medals_medal_id').on(t.medalId),
+  })
+);
+
 export const announcements = pgTable(
   'announcements',
   {
@@ -328,7 +356,6 @@ export const announcements = pgTable(
   })
 );
 
-// ====================== 教学内容表（复合主键 course_id + cid） ======================
 export const questions = pgTable(
   'questions',
   {
@@ -353,7 +380,7 @@ export const questions = pgTable(
     pk: primaryKey({ columns: [t.courseId, t.cid] }),
     courseFk: foreignKey({ columns: [t.courseId], foreignColumns: [courses.id] }).onDelete('cascade'),
     courseIdx: index('idx_questions_course_id').on(t.courseId),
-    typeIdx: index('idx_questions_type').on(t.type), // 按题型查询频繁
+    typeIdx: index('idx_questions_type').on(t.type),
   })
 );
 
@@ -444,7 +471,6 @@ export const comments = pgTable(
     pk: primaryKey({ columns: [t.courseId, t.cid] }),
     courseFk: foreignKey({ columns: [t.courseId], foreignColumns: [courses.id] }).onDelete('cascade'),
     userFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('cascade'),
-    // 修复自引用外键：必须与复合主键匹配，保证父评论在同一课程内
     parentFk: foreignKey({
       columns: [t.courseId, t.parentId],
       foreignColumns: [t.courseId, t.cid],
@@ -454,9 +480,8 @@ export const comments = pgTable(
   })
 );
 
-// ====================== 用户行为中间表（统一复数，补齐索引） ======================
 export const userChapters = pgTable(
-  'user_chapters', // 复数
+  'user_chapters',
   {
     userId: integer('user_id').notNull(),
     chapterId: integer('chapter_id').notNull(),
@@ -493,7 +518,6 @@ export const userQuestions = pgTable(
   },
   (t) => ({
     pk: primaryKey({ columns: [t.userId, t.courseId, t.questionCid] }),
-    userFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('cascade'),
     questionFk: foreignKey({ columns: [t.courseId, t.questionCid], foreignColumns: [questions.courseId, questions.cid] }).onDelete('cascade'),
     userIdx: index('idx_user_questions_user_id').on(t.userId),
     questionIdx: index('idx_user_questions_question').on(t.courseId, t.questionCid),
@@ -525,8 +549,6 @@ export const userCourses = pgTable(
   },
   (t) => ({
     pk: primaryKey({ columns: [t.userId, t.courseId] }),
-    userFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('cascade'),
-    courseFk: foreignKey({ columns: [t.courseId], foreignColumns: [courses.id] }).onDelete('cascade'),
     userIdx: index('idx_user_courses_user_id').on(t.userId),
     courseIdx: index('idx_user_courses_course_id').on(t.courseId),
   })
@@ -539,7 +561,7 @@ export const userHomeworks = pgTable(
     courseId: integer('course_id').notNull(),
     homeworkCid: integer('homework_cid').notNull(),
     content: jsonb('content'),
-    score: numeric('score', { precision: 10, scale: 2 }), // 改为 numeric
+    score: numeric('score', { precision: 10, scale: 2 }),
     record: jsonb('record'),
     files: jsonb('files'),
     comment: jsonb('comment'),
@@ -547,7 +569,6 @@ export const userHomeworks = pgTable(
   },
   (t) => ({
     pk: primaryKey({ columns: [t.userId, t.courseId, t.homeworkCid] }),
-    userFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('cascade'),
     homeworkFk: foreignKey({ columns: [t.courseId, t.homeworkCid], foreignColumns: [homeworks.courseId, homeworks.cid] }).onDelete('cascade'),
     userIdx: index('idx_user_homeworks_user_id').on(t.userId),
     homeworkIdx: index('idx_user_homeworks_homework').on(t.courseId, t.homeworkCid),
@@ -565,7 +586,6 @@ export const userComments = pgTable(
   },
   (t) => ({
     pk: primaryKey({ columns: [t.userId, t.courseId, t.commentCid] }),
-    userFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('cascade'),
     commentFk: foreignKey({ columns: [t.courseId, t.commentCid], foreignColumns: [comments.courseId, comments.cid] }).onDelete('cascade'),
     userIdx: index('idx_user_comments_user_id').on(t.userId),
   })
@@ -583,7 +603,6 @@ export const userRaces = pgTable(
   },
   (t) => ({
     pk: primaryKey({ columns: [t.userId, t.courseId, t.raceCid] }),
-    userFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('cascade'),
     raceFk: foreignKey({ columns: [t.courseId, t.raceCid], foreignColumns: [races.courseId, races.cid] }).onDelete('cascade'),
     userIdx: index('idx_user_races_user_id').on(t.userId),
   })
@@ -604,13 +623,11 @@ export const userQuizzes = pgTable(
   },
   (t) => ({
     pk: primaryKey({ columns: [t.userId, t.courseId, t.quizCid] }),
-    userFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('cascade'),
     quizFk: foreignKey({ columns: [t.courseId, t.quizCid], foreignColumns: [quizzes.courseId, quizzes.cid] }).onDelete('cascade'),
     userIdx: index('idx_user_quizzes_user_id').on(t.userId),
   })
 );
 
-// ====================== 班级关联表（统一 class 命名，添加索引） ======================
 export const classChapters = pgTable(
   'class_chapters',
   {
@@ -683,45 +700,7 @@ export const activities = pgTable(
   })
 );
 
-// ====================== Relations 关联（名称与表名一致） ======================
-export const usersRelations = relations(users, ({ one, many }) => ({
-  bindClass: one(classes, { fields: [users.classId], references: [classes.id] }),
-  userRoles: many(userRoles),
-  tokens: many(tokens),
-  userClasses: many(userClasses),
-  notifications: many(notifys), // 关系名对应表变量 notifys（表仍叫 notifications，但变量名为 notifys，可统一）
-  sendMessages: many(messages, { relationName: 'msg_sender' }),
-  receiveMessages: many(messages, { relationName: 'msg_receiver' }),
-  uploadFiles: many(files),
-  chapters: many(chapters),
-  userChapters: many(userChapters),
-  userQuestions: many(userQuestions),
-  userCourses: many(userCourses),
-  userHomeworks: many(userHomeworks),
-  userComments: many(userComments),
-  userRaces: many(userRaces),
-  userQuizzes: many(userQuizzes),
-  userMedals: many(userMedals),
-  activities: many(activities),
-  courseComments: many(comments),
-}));
-
-export const rolesRelations = relations(roles, ({ many }) => ({
-  rolePermissions: many(rolePermissions),
-  userRoles: many(userRoles),
-}));
-
-export const permissionsRelations = relations(permissions, ({ many }) => ({
-  rolePermissions: many(rolePermissions),
-}));
-
-export const classesRelations = relations(classes, ({ many }) => ({
-  defaultUser: many(users),
-  userClasses: many(userClasses),
-  classChapters: many(classChapters),
-  classCourses: many(classCourses),
-  classRaces: many(classRaces),
-}));
+// ====================== doc Relations ======================
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
   courses: many(courses),
@@ -732,21 +711,17 @@ export const coursesRelations = relations(courses, ({ one, many }) => ({
   chapters: many(chapters),
   chapterVersions: many(chapterVersions),
   courseVersions: many(courseVersions),
-  announcements: many(announcements),
-  questions: many(questions),
-  homeworks: many(homeworks),
-  quizzes: many(quizzes),
-  races: many(races),
-  comments: many(comments),
-  userCourses: many(userCourses),
-  classCourses: many(classCourses),
 }));
 
 export const chaptersRelations = relations(chapters, ({ one, many }) => ({
   course: one(courses, { fields: [chapters.courseId], references: [courses.id] }),
-  author: one(users, { fields: [chapters.userId], references: [users.id] }),
   versions: many(chapterVersions),
-  userChapters: many(userChapters),
+}));
+
+// ====================== lms Relations ======================
+
+export const classesRelations = relations(classes, ({ many }) => ({
   classChapters: many(classChapters),
-  activities: many(activities),
+  classCourses: many(classCourses),
+  classRaces: many(classRaces),
 }));
