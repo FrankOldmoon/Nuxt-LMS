@@ -554,7 +554,11 @@ const open = computed({
 })
 
 // 选择模式的类型（单数）
-const singularType = computed(() => props.type.replace(/s$/, ''))
+// 注：不能用单纯 /s$/ 去尾 s，'quizzes' 会变成 'quizze' 而非 'quiz'，导致 API ?type=quizze 查不到
+const singularType = computed(() => {
+    const map = { questions: 'question', homeworks: 'homework', comments: 'comment', quizzes: 'quiz', races: 'race' }
+    return map[props.type] || props.type.replace(/s$/, '')
+})
 
 // 预览模式的类型筛选
 const filterType = ref('question')

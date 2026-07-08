@@ -110,6 +110,7 @@ export function normalizeChapterPageData(ch: any, course: any, userChapter?: any
       showDanmaku: courseLms?.course?.showDanmaku ?? true,
       chapterBtns: courseLms?.chapterBtns ?? {},
       courseBtns: courseLms?.courseBtns ?? {},
+      ai: courseLms?.ai ?? {},
       chapters: (course.chapters || []).map((ch: any) => normalizeChapterSummary(ch)),
     },
   }

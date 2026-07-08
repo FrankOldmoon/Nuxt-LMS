@@ -83,6 +83,21 @@ export const DEFAULT_LMS_CONFIG = {
     driveSize: 1073741824,     // 个人网盘空间上限（字节），默认 1GB
     teacherMultiplier: 1,      // teacher 角色空间倍率（driveSize * teacherMultiplier）
   },
+  // AI 助手配置（全局默认值，单课程可通过 config.lmsConfig.ai 覆盖）
+  ai: {
+    mode: 'api',                    // 'local' 浏览器本地 WebLLM / 'api' 服务端 API / 'ollama' 本地 Ollama
+    model: '',                      // API 模型名（空=服务端默认，env AI_MODEL 可覆盖）
+    thinking: false,                // API 思考模式（local/ollama 忽略）
+    apiUrl: '/api/aichat/chat',     // 前端调用的服务端代理端点（api 模式）
+    llmApiUrl: '',                  // 后端实际 LLM API 地址（env AI_API_URL 覆盖，如 https://open.bigmodel.cn/api/paas/v4）
+    llmApiKey: '',                  // 后端实际 LLM API Key（env AI_API_KEY 覆盖，敏感信息不暴露给前端）
+    ollamaUrl: 'http://localhost:11434', // 本地 Ollama 服务地址（ollama 模式，浏览器直连）
+    ollamaModel: '',                // Ollama 模型名（如 llama3.2, qwen2.5）
+    title: '',                      // 聊天标题（空=组件默认）
+    preset: '',                     // 系统预设/角色设定（空=组件默认）
+    opening: '',                    // 开场消息（空=组件默认）
+    ttsGender: 'female',            // TTS 语音性别：'female' | 'male'
+  },
 }
 
 // 内存缓存
@@ -133,6 +148,14 @@ export async function reloadLmsConfig(): Promise<any> {
     console.error('[lms_config] 加载失败，使用默认配置', e)
     _lmsConfig = DEFAULT_LMS_CONFIG
   }
+
+  // 环境变量覆盖 ai 配置（优先级最高，留空则保持数据库/默认值）
+  // 敏感信息（API Key）适合通过 .env 注入，不入库
+  const env = process.env
+  if (env.AI_API_KEY) _lmsConfig.ai.llmApiKey = env.AI_API_KEY
+  if (env.AI_API_URL) _lmsConfig.ai.llmApiUrl = env.AI_API_URL
+  if (env.AI_MODEL) _lmsConfig.ai.model = env.AI_MODEL
+
   _loaded = true
   return _lmsConfig
 }

@@ -4,8 +4,8 @@
  *
  * body: { messages, model?, thinking? }
  *
- * API Key / API URL 从 .env 读取（AI_API_KEY / AI_API_URL），
- * 前端不再传递敏感信息；model 可由前端覆盖，默认取 AI_MODEL 或 gpt-4o-mini
+ * API Key / API URL 从 lms_config.ai 读取（env AI_API_KEY / AI_API_URL / AI_MODEL 可覆盖），
+ * 前端不再传递敏感信息；model 可由前端覆盖，默认取 lms_config.ai.model 或 glm-4.5-air
  * 返回 SSE 流式响应（逐块透传，不缓冲）
  */
 export default eventHandler(async (event) => {
@@ -14,22 +14,23 @@ export default eventHandler(async (event) => {
     const body = await readBody(event)
     const { messages, model, thinking } = body
 
-    // 从环境变量读取敏感配置
-    const apiKey = process.env.AI_API_KEY
-    const apiUrl = process.env.AI_API_URL
+    // 从 lms_config.ai 读取敏感配置（reloadLmsConfig 中已应用 env 覆盖）
+    const aiConfig = getLmsConfigSync().ai || {}
+    const apiKey = aiConfig.llmApiKey
+    const apiUrl = aiConfig.llmApiUrl
 
     if (!apiKey) {
-        return cResp(null, '服务器未配置 AI_API_KEY', false)
+        return cResp(null, '服务器未配置 AI API Key（请在系统设置或 .env AI_API_KEY 中配置）', false)
     }
     if (!apiUrl) {
-        return cResp(null, '服务器未配置 AI_API_URL', false)
+        return cResp(null, '服务器未配置 AI API URL（请在系统设置或 .env AI_API_URL 中配置）', false)
     }
     if (!Array.isArray(messages) || !messages.length) {
         return cResp(null, 'messages 不能为空', false)
     }
 
     const url = apiUrl.replace(/\/$/, '') + '/chat/completions'
-    const defaultModel = model || process.env.AI_MODEL || "glm-4.5-air";
+    const defaultModel = model || aiConfig.model || "glm-4.5-air";
 
     // 构建请求体
     const requestBody: Record<string, any> = {

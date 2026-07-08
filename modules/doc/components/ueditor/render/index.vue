@@ -201,4 +201,11 @@ onBeforeUnmount(() => {
     pointer-events: auto !important;
   }
 }
+
+// Nuxt 暗黑模式：UMO 自身的暗黑变量挂在 [theme-mode=dark]，
+// 而 Nuxt 用 <html>.dark 类，两者不互通，导致暗黑下文字仍是深色。
+// 这里在 .dark 下把 UMO 文字变量桥接到白色（无闪烁，首帧即生效）。
+.dark .umo-editor-render {
+  --umo-text-color: #fff;
+}
 </style>

@@ -2,6 +2,45 @@
     <div class="space-y-4">
         <USeparator :label="$t('lmsConfig.title')" class="my-4" />
 
+        <!-- AI 助手配置 -->
+        <div class="space-y-2">
+            <p class="text-sm font-medium">{{ $t('lmsConfig.ai') }}</p>
+            <div class="grid grid-cols-2 gap-2">
+                <UFormField :label="$t('lmsConfig.aiMode')" size="xs">
+                    <USelect v-model="config.ai.mode" :items="aiModeOpts" size="xs" class="w-full" />
+                </UFormField>
+                <UFormField :label="$t('lmsConfig.aiTtsGender')" size="xs">
+                    <USelect v-model="config.ai.ttsGender" :items="ttsGenderOpts" size="xs" class="w-full" />
+                </UFormField>
+                <!-- Ollama 配置（ollama 模式） -->
+                <UFormField v-if="config.ai.mode === 'ollama'" :label="$t('lmsConfig.aiOllamaUrl')" size="xs" class="col-span-2">
+                    <UInput v-model="config.ai.ollamaUrl" placeholder="http://localhost:11434" size="xs" class="w-full" />
+                </UFormField>
+                <UFormField v-if="config.ai.mode === 'ollama'" :label="$t('lmsConfig.aiOllamaModel')" size="xs" class="col-span-2">
+                    <UInput v-model="config.ai.ollamaModel" placeholder="llama3.2" size="xs" class="w-full" />
+                </UFormField>
+                <!-- API 模式特有 -->
+                <UFormField v-if="config.ai.mode === 'api'" :label="$t('lmsConfig.aiModel')" size="xs" class="col-span-2">
+                    <UInput v-model="config.ai.model" :placeholder="$t('lmsConfig.aiModelPlaceholder')" size="xs" class="w-full" />
+                </UFormField>
+                <UFormField v-if="config.ai.mode === 'api'" :label="$t('lmsConfig.aiThinking')" size="xs">
+                    <USwitch v-model="config.ai.thinking" />
+                </UFormField>
+                <UFormField :label="$t('lmsConfig.aiApiUrl')" size="xs" class="col-span-2">
+                    <UInput v-model="config.ai.apiUrl" placeholder="/api/aichat/chat" size="xs" class="w-full" />
+                </UFormField>
+                <UFormField :label="$t('lmsConfig.aiTitle')" size="xs">
+                    <UInput v-model="config.ai.title" size="xs" class="w-full" />
+                </UFormField>
+                <UFormField :label="$t('lmsConfig.aiPreset')" size="xs" class="col-span-2">
+                    <UTextarea v-model="config.ai.preset" :rows="2" size="xs" class="w-full" />
+                </UFormField>
+                <UFormField :label="$t('lmsConfig.aiOpening')" size="xs" class="col-span-2">
+                    <UTextarea v-model="config.ai.opening" :rows="2" size="xs" class="w-full" />
+                </UFormField>
+            </div>
+        </div>
+
         <!-- 题目 -->
         <div class="space-y-2">
             <p class="text-sm font-medium">{{ $t('lmsConfig.question') }}</p>
@@ -221,6 +260,7 @@
 </template>
 
 <script setup>
+const { t: $t } = useI18n()
 const props = defineProps({
     modelValue: { type: Object, default: null },
     // 课程配置场景下隐藏 course 分组（由 configForm 顶部开关单独管理）
@@ -230,6 +270,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const defaultConfig = {
+    ai: { mode: 'api', model: '', thinking: false, apiUrl: '/api/aichat/chat', llmApiUrl: '', llmApiKey: '', ollamaUrl: 'http://localhost:11434', ollamaModel: '', title: '', preset: '', opening: '', ttsGender: 'female' },
     question: { submitExp: 2, correctBonusExp: 5, firstCorrectBonusExp: 10, maxSubmitCount: 999 },
     homework: { submitExp: 5, resubmitExp: 1, latePenalty: 0.8 },
     comment: { publishExp: 3, replyExp: 2, likeReceivedExp: 1, maxDailyExp: 20 },
@@ -241,6 +282,17 @@ const defaultConfig = {
     chapterBtns: { showPlay: true, showScore: true, showSelect: true, showTimer: true, showInvite: true, showDanmaku: true, showVote: true, showQuickAnswer: true },
     courseBtns: { showProgress: true, showLeaderboard: true, showGroups: true, showGrades: true, showAnnouncements: true },
 }
+
+const aiModeOpts = computed(() => [
+    { label: $t('lmsConfig.aiModeApi'), value: 'api' },
+    { label: $t('lmsConfig.aiModeLocal'), value: 'local' },
+    { label: $t('lmsConfig.aiModeOllama'), value: 'ollama' },
+])
+
+const ttsGenderOpts = computed(() => [
+    { label: $t('lmsConfig.aiTtsFemale'), value: 'female' },
+    { label: $t('lmsConfig.aiTtsMale'), value: 'male' },
+])
 
 const config = reactive(JSON.parse(JSON.stringify(defaultConfig)))
 

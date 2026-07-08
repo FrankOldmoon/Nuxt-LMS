@@ -369,15 +369,16 @@ async function saveCategoryMode() {
     }
   }
 
-  // 5. 转为 orders 并保存（含 category 的 name，后端据 orders[].label 同步更新 course 的 name）
+  // 5. 转为 orders 并保存（含 category 的 name + order，后端据 orders[].label 同步更新 course 的 name）
   await Promise.all(
-    groups.map((group) => {
+    groups.map((group, index) => {
       const orders = toOrdersForGroup(group.items, 0)
       return cRequest('/api/categories/update', {
         method: 'POST',
         body: {
           id: group.category.id,
           name: group.category.label || t('navEditor.unnamed'),
+          order: index,
           orders,
         },
       })

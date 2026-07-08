@@ -83,6 +83,8 @@ export interface LmsChapterPageData {
     chapterBtns?: Record<string, boolean>
     /** 课程按钮开关配置 */
     courseBtns?: Record<string, boolean>
+    /** AI 助手配置（全局 + 课程级合并） */
+    ai?: Record<string, any>
     chapters: LmsChapterSummary[]
   }
 }

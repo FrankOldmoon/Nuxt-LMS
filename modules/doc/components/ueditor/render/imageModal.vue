@@ -2,17 +2,24 @@
     <Teleport to="body">
         <Transition name="image-modal">
             <div v-if="open" class="image-modal-overlay" @click="close">
+                <!-- 图片铺满屏幕 -->
+                <img v-if="currentImage" :src="currentImage" class="image-modal-img" @click.stop="next" />
+
+                <!-- 顶部工具栏（hover 显示）：左计数 / 右关闭 -->
                 <div class="image-modal-toolbar" @click.stop>
-                    <span class="text-sm text-gray-300">{{ currentIndex + 1 }} / {{ images.length }}</span>
-                    <div class="flex items-center gap-2">
-                        <UButton icon="i-lucide-chevron-left" color="neutral" variant="ghost" size="sm" :disabled="images.length <= 1" @click="prev" />
-                        <UButton icon="i-lucide-chevron-right" color="neutral" variant="ghost" size="sm" :disabled="images.length <= 1" @click="next" />
-                        <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" @click="close" />
-                    </div>
+                    <span class="image-modal-counter">{{ currentIndex + 1 }} / {{ images.length }}</span>
+                    <UButton icon="i-lucide-x" color="neutral" variant="solid" size="sm" @click="close" />
                 </div>
-                <div class="image-modal-content" @click.stop>
-                    <img v-if="currentImage" :src="currentImage" class="image-modal-img" @click="next" />
-                </div>
+
+                <!-- 左右导航（hover 显示）-->
+                <UButton v-if="images.length > 1" icon="i-lucide-chevron-left" color="neutral" variant="solid"
+                    size="lg" class="image-modal-nav image-modal-nav-left" :disabled="images.length <= 1"
+                    @click.stop="prev" />
+                <UButton v-if="images.length > 1" icon="i-lucide-chevron-right" color="neutral" variant="solid"
+                    size="lg" class="image-modal-nav image-modal-nav-right" :disabled="images.length <= 1"
+                    @click.stop="next" />
+
+                <!-- 底部缩略图（hover 显示）-->
                 <div v-if="images.length > 1" class="image-modal-thumbs" @click.stop>
                     <div
                         v-for="(img, idx) in images"
@@ -78,24 +85,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
     position: fixed;
     inset: 0;
     z-index: 9999;
-    background: rgba(0, 0, 0, 0.9);
-    display: flex;
-    flex-direction: column;
-}
-.image-modal-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 20px;
-    flex-shrink: 0;
-}
-.image-modal-content {
-    flex: 1;
+    /* 背景透明度 50% */
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
-    min-height: 0;
 }
 .image-modal-img {
     max-width: 100%;
@@ -103,12 +97,64 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
     object-fit: contain;
     cursor: pointer;
 }
+
+/* ===== 覆盖层 UI：默认隐藏，hover 后显示 ===== */
+.image-modal-toolbar,
+.image-modal-nav,
 .image-modal-thumbs {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+.image-modal-overlay:hover .image-modal-toolbar,
+.image-modal-overlay:hover .image-modal-nav,
+.image-modal-overlay:hover .image-modal-thumbs {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* 顶部工具栏 */
+.image-modal-toolbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+}
+.image-modal-counter {
+    color: #fff;
+    font-size: 14px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 4px 10px;
+    border-radius: 6px;
+}
+
+/* 左右导航 */
+.image-modal-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+.image-modal-nav-left {
+    left: 20px;
+}
+.image-modal-nav-right {
+    right: 20px;
+}
+
+/* 底部缩略图 */
+.image-modal-thumbs {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
     display: flex;
     gap: 8px;
     padding: 12px 20px;
     overflow-x: auto;
-    flex-shrink: 0;
     justify-content: center;
 }
 .image-modal-thumb {
@@ -134,6 +180,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
     height: 100%;
     object-fit: cover;
 }
+
 .image-modal-enter-active,
 .image-modal-leave-active {
     transition: opacity 0.2s;

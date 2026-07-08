@@ -5,16 +5,22 @@
             <div class="flex items-center gap-2">
                 <UIcon name="i-lucide-terminal" class="text-gray-500" />
                 <span class="text-sm font-medium">{{ t('ide.title') }}</span>
-                <UBadge v-if="pyodideReady" variant="success" size="sm">{{ t('ide.pyodideReady') }}</UBadge>
-                <UBadge v-else variant="warning" size="sm">{{ t('ide.loadingPyodide') }}</UBadge>
+                <UBadge v-if="runnerReady" variant="success" size="sm">{{ t('ide.ready') }}</UBadge>
+                <UBadge v-else variant="warning" size="sm">{{ currentRunner?.loadingLabel || t('ide.loading') }}</UBadge>
             </div>
             <div class="flex items-center gap-2">
+                <USelect
+                    v-model="currentLang"
+                    :items="langItems"
+                    size="xs"
+                    class="w-36"
+                />
                 <UButton
                     icon="i-lucide-play"
                     color="primary"
                     size="xs"
                     :loading="running"
-                    :disabled="!pyodideReady || running"
+                    :disabled="!runnerReady || running"
                     @click="runCode"
                 >
                     {{ t('ide.run') }}
@@ -35,7 +41,7 @@
         <div class="ide-editor-area">
             <Monaco
                 v-model="code"
-                language="python"
+                :language="monacoLanguage"
                 theme="vs-dark"
                 :font-size="14"
             />
@@ -69,15 +75,25 @@
 </template>
 
 <script setup>
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { createPythonRunner } from './runners/python'
+import { createJavascriptRunner } from './runners/javascript'
+import { createCppRunner } from './runners/cpp'
+import { createJavaRunner } from './runners/java'
+import { monacoLang } from './runners/types'
+
 const { t } = useI18n()
 
 const props = defineProps({
     modelValue: { type: String, default: '' },
+    language: { type: String, default: 'python' },
 })
 
 const emit = defineEmits(['update:modelValue'])
 
-const code = ref(props.modelValue || `# Welcome to Python IDE
+// ========== 各语言默认示例代码 ==========
+const DEFAULT_CODE = {
+    python: `# Welcome to Python IDE
 import sys
 
 print("Hello, Pyodide!")
@@ -86,72 +102,125 @@ print(f"Python version: {sys.version}")
 # Try some math
 for i in range(5):
     print(f"  {i} squared = {i**2}")
-`)
+`,
+    javascript: `// Welcome to JavaScript IDE
+console.log("Hello, JavaScript!");
+
+// Try some math
+for (let i = 0; i < 5; i++) {
+  console.log(\`  \${i} squared = \${i ** 2}\`);
+}
+`,
+    cpp: `// Welcome to C++ IDE (JSCPP interpreter, limited STL support)
+#include <iostream>
+using namespace std;
+
+int main() {
+    cout << "Hello, C++!" << endl;
+    for (int i = 0; i < 5; i++) {
+        cout << "  " << i << " squared = " << i * i << endl;
+    }
+    return 0;
+}
+`,
+    java: `// Welcome to Java IDE (CheerpJ, entry class name is free)
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello, Java!");
+        for (int i = 0; i < 5; i++) {
+            System.out.println("  " + i + " squared = " + (i * i));
+        }
+    }
+}
+`,
+}
+
+// ========== 语言选择 ==========
+const LANGS = ['python', 'javascript', 'cpp', 'java']
+const langItems = computed(() => [
+    { label: t('ide.langPython'), value: 'python' },
+    { label: t('ide.langJavascript'), value: 'javascript' },
+    { label: t('ide.langCpp'), value: 'cpp' },
+    { label: t('ide.langJava'), value: 'java' },
+])
+
+const currentLang = ref(LANGS.includes(props.language) ? props.language : 'python')
+const monacoLanguage = computed(() => monacoLang(currentLang.value))
+
+// 每种语言独立保存代码，切换语言时保留各自编辑内容
+const codeByLang = {}
+LANGS.forEach((l) => { codeByLang[l] = DEFAULT_CODE[l] })
+// 初始语言若有外部传入代码，覆盖该语言默认值
+if (props.modelValue) {
+    codeByLang[currentLang.value] = props.modelValue
+}
+const code = ref(codeByLang[currentLang.value])
+
 const inputText = ref('')
 const output = ref('')
 const running = ref(false)
-const pyodideReady = ref(false)
-let pyodide = null
 
+// ========== Runner 工厂表 + 懒创建 ==========
+const FACTORIES = {
+    python: createPythonRunner,
+    javascript: createJavascriptRunner,
+    cpp: createCppRunner,
+    java: createJavaRunner,
+}
+const runners = {}
+// runners 是普通对象，新增 runner 时需要触发响应式更新
+const runnersVersion = ref(0)
+const currentRunner = computed(() => {
+    runnersVersion.value  // 依赖：runner 新增时递增触发重算
+    return runners[currentLang.value]
+})
+const runnerReady = computed(() => currentRunner.value?.ready.value ?? false)
+
+function getRunner(lang) {
+    if (!runners[lang]) {
+        runners[lang] = FACTORIES[lang]()
+        runnersVersion.value++  // 触发 currentRunner 重算
+        // 后台预加载运行时
+        runners[lang].init().catch((e) => {
+            output.value = t('ide.loadFailed', { msg: e.message })
+        })
+    }
+    return runners[lang]
+}
+
+// ========== v-model 同步 ==========
 watch(code, (val) => {
+    codeByLang[currentLang.value] = val
     emit('update:modelValue', val)
 })
 watch(() => props.modelValue, (val) => {
     if (val !== undefined && val !== code.value) {
         code.value = val
+        codeByLang[currentLang.value] = val
     }
 })
 
-// ========== Pyodide 加载 ==========
-const PYODIDE_CDN = 'https://cdn.jsdelivr.net/pyodide/v0.26.2/full/'
-
-function loadScript(url) {
-    return new Promise((resolve, reject) => {
-        if (document.querySelector(`script[src="${url}"]`)) {
-            resolve()
-            return
-        }
-        const script = document.createElement('script')
-        script.src = url
-        script.onload = resolve
-        script.onerror = reject
-        document.head.appendChild(script)
-    })
-}
-
-async function loadPyodide() {
-    if (window.loadPyodide) {
-        pyodide = await window.loadPyodide({ indexURL: PYODIDE_CDN })
-        pyodideReady.value = true
-        return
-    }
-    await loadScript(PYODIDE_CDN + 'pyodide.js')
-    pyodide = await window.loadPyodide({ indexURL: PYODIDE_CDN })
-    pyodideReady.value = true
-}
+// 切换语言：保存当前代码、载入目标代码、懒初始化 runner
+watch(currentLang, (newLang, oldLang) => {
+    if (oldLang) codeByLang[oldLang] = code.value
+    code.value = codeByLang[newLang] ?? DEFAULT_CODE[newLang]
+    emit('update:modelValue', code.value)
+    output.value = ''
+    getRunner(newLang)
+})
 
 // ========== 运行代码 ==========
 async function runCode() {
-    if (!pyodideReady.value || running.value) return
+    const runner = currentRunner.value
+    if (!runner || !runner.ready.value || running.value) return
     running.value = true
     output.value = ''
-
     try {
-        pyodide.setStdout({ batched: (text) => { output.value += text + '\n' } })
-        pyodide.setStderr({ batched: (text) => { output.value += text + '\n' } })
-
-        const inputLines = inputText.value.split('\n')
-        let inputIndex = 0
-        pyodide.setStdin({
-            stdin: () => {
-                if (inputIndex < inputLines.length) {
-                    return inputLines[inputIndex++]
-                }
-                return null
-            },
+        await runner.run({
+            code: code.value,
+            input: inputText.value,
+            onOutput: (text) => { output.value += text },
         })
-
-        await pyodide.runPythonAsync(code.value)
     } catch (e) {
         output.value += `\n${e.message || e}\n`
     } finally {
@@ -164,9 +233,11 @@ function clearOutput() {
 }
 
 onMounted(() => {
-    loadPyodide().catch((e) => {
-        output.value = t('ide.loadFailed', { msg: e.message })
-    })
+    getRunner(currentLang.value)
+})
+
+onBeforeUnmount(() => {
+    Object.values(runners).forEach((r) => r.cleanup?.())
 })
 </script>
 

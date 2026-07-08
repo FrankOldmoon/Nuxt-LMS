@@ -19,9 +19,9 @@
         multiple
         size="sm"
         class="min-w-[200px] max-w-[400px]"
-        :disabled="isOpen"
         @update:model-value="updateClassOpen"
       />
+      <span v-if="isOpen" class="text-xs text-muted whitespace-nowrap">{{ $t('chapter.openClassesHint') }}</span>
     </div>
   </div>
 </template>

@@ -30,13 +30,23 @@
             </template>
 
             <!-- API 设置 -->
-            <template v-else>
+            <template v-else-if="cfgMode === 'api'">
                 <UFormField :label="t('ueditor.aichatModel')" size="sm" :hint="t('ueditor.aichatThinkingHint')">
                     <UInput v-model="cfgApiModel" :placeholder="t('ueditor.aichatModelPlaceholder')" size="sm"
                         class="w-full" />
                 </UFormField>
                 <UFormField :label="t('ueditor.aichatThinking')" size="sm" :hint="t('ueditor.aichatThinkingHint')">
                     <USwitch v-model="cfgThinking" />
+                </UFormField>
+            </template>
+
+            <!-- Ollama 设置（浏览器直连本地 Ollama） -->
+            <template v-else-if="cfgMode === 'ollama'">
+                <UFormField :label="t('ai.ollamaUrl')" size="sm" :hint="t('ai.ollamaUrlHint')">
+                    <UInput v-model="cfgOllamaUrl" placeholder="http://localhost:11434" size="sm" class="w-full" />
+                </UFormField>
+                <UFormField :label="t('ai.ollamaModel')" size="sm">
+                    <UInput v-model="cfgOllamaModel" placeholder="llama3.2" size="sm" class="w-full" />
                 </UFormField>
             </template>
 
@@ -49,6 +59,9 @@
             </UFormField>
             <UFormField :label="t('ueditor.aichatOpening')" size="sm">
                 <UTextarea v-model="cfgOpening" :rows="2" size="sm" class="w-full" />
+            </UFormField>
+            <UFormField :label="t('ai.ttsGender')" size="sm">
+                <USelect v-model="cfgTtsGender" :items="genderOptions" size="sm" class="w-full" />
             </UFormField>
         </div>
 
@@ -92,7 +105,11 @@
             :model="chatboxModel"
             :thinking="chatboxThinking"
             :api-url="chatboxApiUrl"
+            :tts-gender="effTtsGender"
             :disabled="chatboxDisabled"
+            height-class="h-[200px] sm:h-[450px]"
+            @chunk="(c) => emit('chunk', c)"
+            @user-message="(txt) => emit('user-message', txt)"
         />
     </div>
 </template>
@@ -104,11 +121,16 @@ import type { LLMMessage } from '../../utils/ai'
 const { t } = useI18n()
 const toast = useToast()
 
+const emit = defineEmits<{
+    chunk: [content: string]
+    'user-message': [text: string]
+}>()
+
 const props = withDefaults(defineProps<{
     /** 显示参数设置面板（render.vue 复用时设为 false，由 edit.vue 提供参数） */
     showSettings?: boolean
-    /** 模式：local 浏览器本地 WebLLM / api 服务端 API */
-    mode?: 'local' | 'api'
+    /** 模式：local 浏览器本地 WebLLM / api 服务端 API / ollama 本地 Ollama（未传则回退 lms_config.ai.mode） */
+    mode?: 'local' | 'api' | 'ollama'
     title?: string
     opening?: string
     preset?: string
@@ -116,49 +138,77 @@ const props = withDefaults(defineProps<{
     model?: string
     thinking?: boolean
     apiUrl?: string
+    /** TTS 语音性别（未传则回退 lms_config.ai.ttsGender，默认 female） */
+    ttsGender?: 'female' | 'male'
+    /** 课程级合并后的 AI 配置（由章节页传入，覆盖全局 lms_config） */
+    aiConfig?: Record<string, any>
 }>(), {
     showSettings: true,
-    mode: DEFAULT_LLM_MODE,
-    thinking: false,
+    // mode/thinking/title/opening/preset/model/apiUrl/ttsGender/aiConfig 不设默认值，
+    // undefined 表示"未传"，用于区分"显式传值"和"需要回退 lms_config"
 })
 
-// ===================== 可编辑配置（仅 showSettings 时使用） =====================
-const cfgMode = ref<'local' | 'api'>(props.mode || DEFAULT_LLM_MODE)
-const cfgTitle = ref(props.title || '')
-const cfgPreset = ref(props.preset || '')
-const cfgOpening = ref(props.opening || '')
-const cfgThinking = ref(props.thinking || false)
-const cfgApiModel = ref(props.mode === 'api' ? (props.model || '') : '')
+// ===================== lms_config.ai 配置（全局或课程级） =====================
+const { aiConfig: globalAi } = useAiConfig()
+const aiCfg = computed(() => props.aiConfig ?? globalAi.value ?? {})
+
+// ===================== 可编辑配置（仅 showSettings 时使用，从 prop > lms_config > 硬编码 初始化） =====================
+const cfgMode = ref<'local' | 'api' | 'ollama'>(props.mode ?? aiCfg.value.mode ?? DEFAULT_LLM_MODE)
+const cfgTitle = ref(props.title ?? aiCfg.value.title ?? '')
+const cfgPreset = ref(props.preset ?? aiCfg.value.preset ?? '')
+const cfgOpening = ref(props.opening ?? aiCfg.value.opening ?? '')
+const cfgThinking = ref(props.thinking ?? aiCfg.value.thinking ?? false)
+const cfgApiModel = ref(props.mode === 'api' ? (props.model ?? aiCfg.value.model ?? '') : '')
+const cfgOllamaUrl = ref(props.mode === 'ollama' ? (props.model ?? '') : (aiCfg.value.ollamaUrl || 'http://localhost:11434'))
+const cfgOllamaModel = ref(aiCfg.value.ollamaModel || '')
+const cfgTtsGender = ref<'female' | 'male'>(props.ttsGender ?? aiCfg.value.ttsGender ?? 'female')
 const selectedLocalModel = ref(
     (props.mode === 'local' && props.model && LOCAL_LLM_MODELS.some(m => m.value === props.model))
         ? props.model
-        : DEFAULT_LLM_MODEL,
+        : (aiCfg.value.mode === 'local' && aiCfg.value.model && LOCAL_LLM_MODELS.some(m => m.value === aiCfg.value.model)
+            ? aiCfg.value.model
+            : DEFAULT_LLM_MODEL),
 )
 
 const modeOptions = computed(() => [
     { label: t('ai.modeLocal'), value: 'local' },
     { label: t('ai.modeApi'), value: 'api' },
+    { label: t('ai.modeOllama'), value: 'ollama' },
 ])
 
-// ===================== 有效配置（showSettings 用内部可编辑状态，否则直接读 props 保持响应式） =====================
-const effMode = computed(() => (props.showSettings ? cfgMode.value : (props.mode || DEFAULT_LLM_MODE)))
-const effTitle = computed(() => (props.showSettings ? cfgTitle.value : (props.title || '')))
-const effPreset = computed(() => (props.showSettings ? cfgPreset.value : (props.preset || '')))
-const effOpening = computed(() => (props.showSettings ? cfgOpening.value : (props.opening || '')))
-const effThinking = computed(() => (props.showSettings ? cfgThinking.value : (props.thinking || false)))
-const effApiModel = computed(() => (props.showSettings ? cfgApiModel.value : (props.model || '')))
+const genderOptions = computed(() => [
+    { label: t('ai.ttsFemale'), value: 'female' },
+    { label: t('ai.ttsMale'), value: 'male' },
+])
+
+// ===================== 有效配置（showSettings 用内部可编辑状态，否则 prop > lms_config > 硬编码） =====================
+const effMode = computed(() => props.showSettings ? cfgMode.value : (props.mode ?? aiCfg.value.mode ?? DEFAULT_LLM_MODE))
+const effTitle = computed(() => props.showSettings ? cfgTitle.value : (props.title ?? aiCfg.value.title ?? ''))
+const effPreset = computed(() => props.showSettings ? cfgPreset.value : (props.preset ?? aiCfg.value.preset ?? ''))
+const effOpening = computed(() => props.showSettings ? cfgOpening.value : (props.opening ?? aiCfg.value.opening ?? ''))
+const effThinking = computed(() => props.showSettings ? cfgThinking.value : (props.thinking ?? aiCfg.value.thinking ?? false))
+const effApiModel = computed(() => props.showSettings ? cfgApiModel.value : (props.model ?? aiCfg.value.model ?? ''))
+const effTtsGender = computed(() => props.showSettings ? cfgTtsGender.value : (props.ttsGender ?? aiCfg.value.ttsGender ?? 'female'))
+const effApiUrl = computed(() => props.apiUrl ?? aiCfg.value.apiUrl ?? '/api/aichat/chat')
+const effOllamaUrl = computed(() => props.showSettings ? cfgOllamaUrl.value : (aiCfg.value.ollamaUrl || 'http://localhost:11434'))
+const effOllamaModel = computed(() => props.showSettings ? cfgOllamaModel.value : (aiCfg.value.ollamaModel || ''))
 const effLocalModel = computed(() => {
     if (props.showSettings) return selectedLocalModel.value
-    return LOCAL_LLM_MODELS.some(m => m.value === props.model) ? (props.model as string) : DEFAULT_LLM_MODEL
+    const m = props.model ?? aiCfg.value.model
+    return LOCAL_LLM_MODELS.some(x => x.value === m) ? (m as string) : DEFAULT_LLM_MODEL
 })
 
 // ===================== 传给 chatbox 的最终参数 =====================
 const chatboxTitle = computed(() => effTitle.value || (effMode.value === 'local' ? t('ai.webllmTitle') : t('ueditor.aichat')))
 const chatboxPreset = computed(() => effPreset.value || (effMode.value === 'local' ? t('ai.webllmPreset') : 'You are a helpful assistant.'))
 const chatboxOpening = computed(() => effOpening.value || (effMode.value === 'local' ? t('ai.webllmOpening') : ''))
-const chatboxCustomSend = computed(() => (effMode.value === 'local' && state.ready ? handleCustomSend : undefined))
+const chatboxCustomSend = computed(() => {
+    if (effMode.value === 'local' && state.ready) return handleCustomSend
+    if (effMode.value === 'ollama') return handleOllamaSend
+    return undefined
+})
 const chatboxDisabled = computed(() => effMode.value === 'local' && !state.ready)
-const chatboxApiUrl = computed(() => (effMode.value === 'api' ? (props.apiUrl || '/api/aichat/chat') : undefined))
+const chatboxApiUrl = computed(() => (effMode.value === 'api' ? effApiUrl.value : undefined))
 const chatboxModel = computed(() => (effMode.value === 'api' ? effApiModel.value : undefined))
 const chatboxThinking = computed(() => (effMode.value === 'api' ? effThinking.value : undefined))
 
@@ -196,11 +246,11 @@ onMounted(() => {
     if (effMode.value === 'local') loadSelected()
 })
 
-// 模式切换：local→api 卸载，api→local 加载
+// 模式切换：local→api/ollama 卸载，api/ollama→local 加载
 watch(effMode, async (mode) => {
     if (mode === 'local' && !state.ready && !state.loading) {
         await loadSelected()
-    } else if (mode === 'api' && state.ready) {
+    } else if ((mode === 'api' || mode === 'ollama') && state.ready) {
         await unloadLLM()
     }
 })
@@ -225,6 +275,53 @@ async function handleCustomSend(
     onChunk: (content: string, reasoning?: string) => void,
 ): Promise<void> {
     await chatLLM(messages, onChunk)
+}
+
+/**
+ * Ollama 直连：浏览器直接调用本地 Ollama 的 OpenAI 兼容接口
+ * 需要 Ollama 设置 OLLAMA_ORIGINS=* 允许跨域
+ */
+async function handleOllamaSend(
+    messages: LLMMessage[],
+    onChunk: (content: string, reasoning?: string) => void,
+): Promise<void> {
+    const baseUrl = effOllamaUrl.value.replace(/\/$/, '')
+    const model = effOllamaModel.value || 'llama3.2'
+
+    const response = await fetch(`${baseUrl}/v1/chat/completions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model, messages, stream: true }),
+    })
+
+    if (!response.ok) {
+        const errText = await response.text().catch(() => '')
+        throw new Error(`Ollama 请求失败: ${response.status} ${errText}`)
+    }
+
+    const reader = response.body!.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+
+    while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+        for (const line of lines) {
+            if (!line.startsWith('data: ')) continue
+            const data = line.slice(6).trim()
+            if (data === '[DONE]') return
+            try {
+                const json = JSON.parse(data)
+                const delta = json.choices?.[0]?.delta
+                if (delta?.content) onChunk(delta.content)
+            } catch {
+                // 跳过无法解析的行
+            }
+        }
+    }
 }
 
 // 卸载时仅取消订阅（引擎为模块级单例，多实例共享，不在此释放）

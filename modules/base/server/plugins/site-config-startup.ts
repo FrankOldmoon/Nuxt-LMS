@@ -104,15 +104,16 @@ export default defineNitroPlugin(async () => {
           .values({
             username: ADMIN_USERNAME,
             password: hashedPwd,
-            name: '系统管理员',
-            preferName: 'Admin',
-            englishName: 'Admin',
-            gender: 'male',
-            email: 'admin@university.edu.cn',
+            name: "Admin",
+            preferName: "Admin",
+            englishName: "Admin",
+            gender: "male",
+            email: "admin@university.edu.cn",
             strongPwd: true,
-            defaultLocale: 'zh-CN',
+            defaultLocale: "en",
+            avatarImg: "/avatar.webp",
           })
-          .returning({ id: schema.users.id })
+          .returning({ id: schema.users.id });
 
         // 关联 admin 角色
         await db.insert(schema.userRoles).values({

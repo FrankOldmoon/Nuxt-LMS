@@ -80,15 +80,16 @@
           <slot name="teachers-extra" :course="course" />
         </div>
 
-        <!-- 开始学习按钮 -->
-        <div v-if="firstChapterUrl">
+        <!-- 开始学习按钮（无章节时教师可创建首章） -->
+        <div v-if="firstChapterUrl || canEdit">
           <UButton
-            :to="firstChapterUrl"
             :label="$t('course.startLearning')"
             icon="i-lucide-play"
             color="primary"
             size="lg"
             class="mt-2"
+            :loading="creatingChapter"
+            @click="startLearning"
           />
         </div>
       </div>
@@ -205,11 +206,50 @@ const emit = defineEmits<{
 }>()
 
 const { siteTitle } = useSiteConfig()
+const toast = useToast()
+const { t } = useI18n()
 
 // 设置页面标题
 useHead(computed(() => ({
   title: props.course?.title ? `${props.course.title} - ${siteTitle.value}` : siteTitle.value,
 })))
+
+// ==================== 开始学习 / 创建首章 ====================
+const creatingChapter = ref(false)
+
+async function startLearning() {
+  // 有章节：直接跳转第一章
+  if (props.firstChapterUrl) {
+    await navigateTo(props.firstChapterUrl)
+    return
+  }
+
+  // 无章节：教师创建首章后跳转
+  if (!props.canEdit) return
+  creatingChapter.value = true
+  try {
+    const resp = await cRequest<any[]>('/api/chapters/add', {
+      method: 'POST',
+      body: {
+        name: t('course.untitledChapter'),
+        courseId: Number(props.courseId),
+        isOpen: true,
+      },
+    })
+    if (resp && resp.length > 0) {
+      // 用 href 跳转，确保整页刷新加载新章节侧边栏数据
+      window.location.href = `/course/${props.courseId}/${resp[0].id}`
+    }
+  } catch (err: any) {
+    toast.add({
+      title: t('common.operationFailed'),
+      description: err?.message || String(err),
+      color: 'error',
+    })
+  } finally {
+    creatingChapter.value = false
+  }
+}
 
 // 教师管理弹窗（纯 UI 状态，由 CourseView 持有）
 const teachersModalOpen = ref(false)

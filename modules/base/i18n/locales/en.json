@@ -26,7 +26,8 @@
     "add": "Add",
     "upload": "Upload",
     "unnamed": "(Unnamed)",
-    "selectPlaceholder": "Select..."
+    "selectPlaceholder": "Select...",
+    "operationFailed": "Operation failed"
   },
   "home": {
     "title": "Course Series",
@@ -52,6 +53,7 @@
     "students": "students",
     "aboutCourse": "About this course",
     "startLearning": "Start Learning",
+    "untitledChapter": "Untitled Chapter",
     "home": "Course"
   },
   "chapter": {
@@ -89,6 +91,7 @@
     "noClass": "Please select a class first",
     "openToAll": "Open to All",
     "openClasses": "Open Classes",
+    "openClassesHint": "(not enforced while open to all)",
     "openUpdated": "Access updated",
     "openUpdateFailed": "Access update failed",
     "invite": "Invite to Jump",
@@ -200,7 +203,8 @@
     "passwordResetSuccess": "Password reset successfully",
     "backToHome": "Back to Home",
     "goLogin": "Go to Login",
-    "resetFailed": "Reset failed"
+    "resetFailed": "Reset failed",
+    "emailPlaceholder": "Enter your email"
   },
   "profile": {
     "title": "Profile",
@@ -858,11 +862,25 @@
     "passwordDefault": "default REDACTED"
   },
   "ide": {
+    "title": "Code IDE",
     "run": "Run",
     "clear": "Clear",
     "input": "Input",
     "inputPlaceholder": "Enter stdin here...",
-    "output": "Output"
+    "output": "Output",
+    "pyodideReady": "Python Ready",
+    "loadingPyodide": "Loading Python...",
+    "loadFailed": "Load failed: {msg}",
+    "language": "Language",
+    "langPython": "Python",
+    "langJavascript": "JavaScript",
+    "langCpp": "C++",
+    "langJava": "Java",
+    "ready": "Ready",
+    "loading": "Loading...",
+    "runTimeout": "Execution timed out",
+    "cppUnsupported": "Note: JSCPP has limited C++ support (no full STL).",
+    "javaLoading": "Loading Java runtime (first load ~10MB)..."
   },
   "coursePanel": {
     "progress": "Progress",

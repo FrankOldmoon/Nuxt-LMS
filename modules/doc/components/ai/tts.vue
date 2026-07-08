@@ -45,6 +45,19 @@
           </option>
         </select>
       </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          性别
+        </label>
+        <select
+          v-model="selectedGender"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="female">女声</option>
+          <option value="male">男声</option>
+        </select>
+      </div>
     </div>
 
     <div class="space-y-3 mb-4">
@@ -137,6 +150,7 @@ const ttsService = createTTSService()
 const text = ref('')
 const selectedLang = ref('zh-CN')
 const selectedVoice = ref('')
+const selectedGender = ref<'female' | 'male'>('female')
 const rate = ref(1)
 const pitch = ref(1)
 const volume = ref(1)
@@ -148,7 +162,7 @@ const voices = ref<SpeechSynthesisVoice[]>([])
 const isSupported = computed(() => ttsService.isSupported())
 
 const filteredVoices = computed(() => {
-  return ttsService.getVoicesByLanguage(selectedLang.value)
+  return ttsService.getVoicesByLanguage(selectedLang.value, selectedGender.value)
 })
 
 onMounted(() => {
@@ -181,7 +195,9 @@ const handleSpeak = async () => {
       rate: rate.value,
       pitch: pitch.value,
       volume: volume.value,
-      voice
+      voice,
+      // 显式选了语音时不传 gender（让 voice 优先），否则按性别筛选
+      gender: voice ? undefined : selectedGender.value
     })
   } catch (e: any) {
     error.value = e.message || '语音合成失败'

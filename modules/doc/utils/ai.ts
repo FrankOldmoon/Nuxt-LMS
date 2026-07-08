@@ -10,6 +10,12 @@ export interface TTSOptions {
   pitch?: number
   volume?: number
   voice?: SpeechSynthesisVoice
+  /** 语音性别筛选（仅当未传 voice 时生效） */
+  gender?: 'female' | 'male'
+  /** 语音开始播放时触发（用于驱动口型同步等） */
+  onStart?: () => void
+  /** 语音播放结束时触发（正常结束或被取消/出错） */
+  onEnd?: () => void
 }
 
 export interface TTSService {
@@ -18,10 +24,77 @@ export interface TTSService {
   pause: () => void
   resume: () => void
   getVoices: () => SpeechSynthesisVoice[]
-  getVoicesByLanguage: (lang: string) => SpeechSynthesisVoice[]
+  getVoicesByLanguage: (lang: string, gender?: 'female' | 'male') => SpeechSynthesisVoice[]
   isSupported: () => boolean
   isSpeaking: () => boolean
   isPaused: () => boolean
+}
+
+/**
+ * 常见女声语音名（macOS / Windows / Google）
+ */
+const FEMALE_VOICE_NAMES = [
+  'samantha', 'victoria', 'karen', 'moira', 'tessa', 'fiona', 'veena', 'alva',
+  'alice', 'anna', 'mei-jia', 'sin-ji', 'ting-ting', 'zhiyu',      // macOS 中文女声
+  'zira', 'huihui', 'yaoyao', 'tracy', 'xiaoxiao', 'yating', 'hanhan', // Windows 女声
+  'aria', 'jenny', 'michelle', 'google uk english female',
+  'google 普通话（中国大陆）', 'google 粤語（香港）',
+]
+
+/**
+ * 常见男声语音名
+ */
+const MALE_VOICE_NAMES = [
+  'alex', 'daniel', 'oliver', 'rishi', 'fred', 'tom',              // macOS
+  'david', 'mark', 'guy', 'kangkang', 'yunxi', 'yunyang',          // Windows
+]
+
+/**
+ * 检测语音的性别（按名字关键词推断）
+ * 注意：female 包含 male 子串，必须先检 female
+ */
+function detectVoiceGender(voice: SpeechSynthesisVoice): 'female' | 'male' | null {
+  const name = voice.name.toLowerCase()
+  // 先检 female 关键词（避免被 male 误匹配，因为 "female" 含 "male"）
+  if (/(female|女声|女|woman|girl)/.test(name)) return 'female'
+  // 用边界匹配 male，避免匹配到 "female"
+  if (/(^|[^a-z])male|男声|男|man\b|boy/.test(name)) return 'male'
+  // 再按已知女声名匹配
+  if (FEMALE_VOICE_NAMES.some(n => name.includes(n))) return 'female'
+  // 再按已知男声名匹配
+  if (MALE_VOICE_NAMES.some(n => name.includes(n))) return 'male'
+  return null
+}
+
+/**
+ * 等待语音列表加载完成（浏览器首次调用 getVoices() 可能返回空）
+ */
+function waitForVoices(synth: SpeechSynthesis, timeoutMs = 1000): Promise<void> {
+  return new Promise((resolve) => {
+    if (synth.getVoices().length > 0) {
+      resolve()
+      return
+    }
+    let resolved = false
+    const done = () => {
+      if (!resolved) { resolved = true; resolve() }
+    }
+    synth.addEventListener('voiceschanged', done, { once: true })
+    setTimeout(done, timeoutMs)
+  })
+}
+
+/**
+ * 按语言和性别筛选语音，无匹配时回退到该语言首个语音
+ */
+function pickVoice(synth: SpeechSynthesis, lang: string, gender?: 'female' | 'male'): SpeechSynthesisVoice | undefined {
+  const voices = synth.getVoices()
+  if (!voices.length) return undefined
+  const langVoices = voices.filter(v => v.lang.toLowerCase().startsWith(lang.toLowerCase()))
+  if (!langVoices.length) return undefined
+  if (!gender) return langVoices[0]
+  const matched = langVoices.filter(v => detectVoiceGender(v) === gender)
+  return matched[0] ?? langVoices[0]
 }
 
 /**
@@ -34,24 +107,31 @@ export function createTTSService(): TTSService {
     /**
      * 播放语音
      */
-    speak: (options: TTSOptions): Promise<void> => {
-      return new Promise((resolve, reject) => {
-        if (!synth) {
-          reject(new Error('当前环境不支持 Web Speech API'))
-          return
-        }
+    speak: async (options: TTSOptions): Promise<void> => {
+      if (!synth) {
+        throw new Error('当前环境不支持 Web Speech API')
+      }
 
-        const utterance = new SpeechSynthesisUtterance(options.text)
+      const utterance = new SpeechSynthesisUtterance(options.text)
 
-        if (options.lang) utterance.lang = options.lang
-        if (options.rate !== undefined) utterance.rate = options.rate
-        if (options.pitch !== undefined) utterance.pitch = options.pitch
-        if (options.volume !== undefined) utterance.volume = options.volume
-        if (options.voice) utterance.voice = options.voice
+      if (options.lang) utterance.lang = options.lang
+      if (options.rate !== undefined) utterance.rate = options.rate
+      if (options.pitch !== undefined) utterance.pitch = options.pitch
+      if (options.volume !== undefined) utterance.volume = options.volume
+      if (options.voice) {
+        utterance.voice = options.voice
+      } else if (options.gender) {
+        // 未指定语音但指定了性别：等待语音列表加载后按性别筛选
+        await waitForVoices(synth)
+        const picked = pickVoice(synth, options.lang || '', options.gender)
+        if (picked) utterance.voice = picked
+      }
 
-        utterance.onend = () => resolve()
-        utterance.onerror = (event) => reject(new Error(`语音合成失败: ${event.error}`))
-
+      return new Promise<void>((resolve, reject) => {
+        utterance.onstart = () => options.onStart?.()
+        // onEnd 在结束/取消/出错时统一触发，确保口型同步能停止
+        utterance.onend = () => { options.onEnd?.(); resolve() }
+        utterance.onerror = (event) => { options.onEnd?.(); reject(new Error(`语音合成失败: ${event.error}`)) }
         synth.speak(utterance)
       })
     },
@@ -86,17 +166,20 @@ export function createTTSService(): TTSService {
     },
 
     /**
-     * 根据语言获取语音列表
+     * 根据语言获取语音列表（可选按性别筛选，无匹配时回退到未筛选列表）
      */
-    getVoicesByLanguage: (lang: string): SpeechSynthesisVoice[] => {
+    getVoicesByLanguage: (lang: string, gender?: 'female' | 'male'): SpeechSynthesisVoice[] => {
       if (!synth) return []
-      return synth.getVoices().filter(voice =>
+      const langVoices = synth.getVoices().filter(voice =>
         voice.lang.toLowerCase().startsWith(lang.toLowerCase())
       )
+      if (!gender) return langVoices
+      const matched = langVoices.filter(v => detectVoiceGender(v) === gender)
+      return matched.length > 0 ? matched : langVoices
     },
 
     /**
-     * 检查是否支持 TTS
+     * 检测是否支持 TTS
      */
     isSupported: (): boolean => {
       return import.meta.client && 'speechSynthesis' in window

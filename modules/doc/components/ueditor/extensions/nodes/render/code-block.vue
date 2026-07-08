@@ -3,7 +3,7 @@
     <div class="cb-header">
       <span class="cb-lang">{{ language }}</span>
       <div v-if="!hideActions" class="flex items-center gap-2">
-        <button v-if="isPython" class="cb-run" @click="ideOpen = true">
+        <button v-if="canRun" class="cb-run" @click="ideOpen = true">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
             <polygon points="5 3 19 12 5 21 5 3"></polygon>
@@ -17,8 +17,8 @@
       <pre class="cb-code"><code v-html="highlightedHtml"></code></pre>
     </div>
 
-    <!-- Python IDE 弹窗 -->
-    <IdeModal v-model:open="ideOpen" :code="codeText" />
+    <!-- 代码 IDE 弹窗 -->
+    <IdeModal v-model:open="ideOpen" :code="codeText" :language="ideLanguage" />
   </div>
 </template>
 
@@ -41,7 +41,20 @@ const attrs = computed(() => props.node.attrs || {})
 const language = computed(() => attrs.value.language || 'plaintext')
 const theme = computed(() => attrs.value.theme || 'light')
 const textWrap = computed(() => attrs.value.textWrap)
-const isPython = computed(() => ['python', 'py'].includes(language.value))
+// 归一化语言标识（小写、去空格），兼容编辑器 lowlight 注册名、markdown 导入别名及大小写差异
+const normLang = computed(() => (language.value || '').toLowerCase().trim())
+const canRun = computed(() => {
+  const l = normLang.value
+  return ['python', 'py', 'python3',
+    'javascript', 'js', 'node'].includes(l)
+})
+// 归一化为 IDE 支持的语言标识
+const ideLanguage = computed(() => {
+  const l = normLang.value
+  if (['python', 'py', 'python3'].includes(l)) return 'python'
+  if (['javascript', 'js', 'node'].includes(l)) return 'javascript'
+  return 'python'
+})
 const ideOpen = ref(false)
 
 const codeText = computed(() =>

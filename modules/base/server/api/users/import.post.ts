@@ -75,6 +75,7 @@ export default eventHandler(async (event) => {
       preferName,
       englishName,
       classId,
+      avatarImg: '/avatar.webp',
     })
     toLink.push({ classId })
   }

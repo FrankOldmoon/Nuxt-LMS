@@ -11,15 +11,15 @@
     <UFormField :label="t('ueditor.aichatOpening')" size="sm">
         <UTextarea v-model="cfgOpening" :rows="2" size="sm" class="w-full" />
     </UFormField>
-    <!-- API 模式：文本输入模型名 -->
-    <UFormField v-if="cfgMode === 'api'" :label="t('ueditor.aichatModel')" size="sm">
-        <UInput v-model="cfgModel" :placeholder="t('ueditor.aichatModelPlaceholder')" size="sm" class="w-full" />
+    <!-- API / Ollama 模式：文本输入模型名 -->
+    <UFormField v-if="cfgMode === 'api' || cfgMode === 'ollama'" :label="t('ueditor.aichatModel')" size="sm">
+        <UInput v-model="cfgModel" :placeholder="cfgMode === 'ollama' ? 'llama3.2' : t('ueditor.aichatModelPlaceholder')" size="sm" class="w-full" />
     </UFormField>
     <!-- 本地模式：下拉选择本地模型 -->
     <UFormField v-else :label="t('ai.localModel')" size="sm">
         <USelect v-model="cfgModel" :items="LOCAL_LLM_MODELS" size="sm" class="w-full" />
     </UFormField>
-    <!-- thinking 仅 API 模式有效（本地 WebLLM 不支持） -->
+    <!-- thinking 仅 API 模式有效（本地 WebLLM / Ollama 不支持） -->
     <UFormField v-if="cfgMode === 'api'" :label="t('ueditor.aichatThinking')" size="sm" :hint="t('ueditor.aichatThinkingHint')">
         <USwitch v-model="cfgThinking" />
     </UFormField>
@@ -39,12 +39,13 @@ const cfgMode = ref(props.config?.mode || 'api')
 const cfgTitle = ref(props.config?.title || '')
 const cfgPreset = ref(props.config?.preset || '')
 const cfgOpening = ref(props.config?.opening || '')
-const cfgModel = ref(props.config?.model || (cfgMode.value === 'local' ? DEFAULT_LLM_MODEL : 'glm-4.5-air'))
+const cfgModel = ref(props.config?.model || (cfgMode.value === 'local' ? DEFAULT_LLM_MODEL : cfgMode.value === 'ollama' ? 'llama3.2' : 'glm-4.5-air'))
 const cfgThinking = ref(props.config?.thinking || false)
 
 const modeOptions = computed(() => [
     { label: t('ai.modeLocal'), value: 'local' },
     { label: t('ai.modeApi'), value: 'api' },
+    { label: t('ai.modeOllama'), value: 'ollama' },
 ])
 
 // 切换模式时重置 model 为对应模式的合理默认值，避免串用
@@ -55,6 +56,8 @@ watch(cfgMode, (newMode, oldMode) => {
         cfgModel.value = DEFAULT_LLM_MODEL
     } else if (newMode === 'api' && isLocalModel) {
         cfgModel.value = 'glm-4.5-air'
+    } else if (newMode === 'ollama' && isLocalModel) {
+        cfgModel.value = 'llama3.2'
     }
 })
 

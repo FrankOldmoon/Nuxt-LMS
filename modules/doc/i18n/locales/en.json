@@ -176,6 +176,7 @@
   },
   "courseData": {
     "editor": "Content Manager",
+    "search": "Search",
     "searchPlaceholder": "Search name, ID or tags...",
     "empty": "No content",
     "all": "All",
@@ -317,7 +318,18 @@
     "stopSpeaking": "Stop",
     "voiceNotSupported": "Voice is not supported in this browser",
     "chapterAssistant": "AI Chapter Tutor",
-    "chapterAssistantHint": "Ask the AI tutor about this chapter"
+    "chapterAssistantHint": "Ask the AI tutor about this chapter",
+    "digitalHuman": "Digital Human",
+    "vrmLoading": "Loading 3D avatar...",
+    "vrmLoadFailed": "Failed to load 3D avatar",
+    "vrmWebglNotSupported": "WebGL is not supported in your browser",
+    "ttsGender": "Voice Gender",
+    "ttsFemale": "Female",
+    "ttsMale": "Male",
+    "modeOllama": "Local Ollama",
+    "ollamaUrl": "Ollama URL",
+    "ollamaUrlHint": "Requires OLLAMA_ORIGINS=* env var for CORS",
+    "ollamaModel": "Ollama Model"
   },
   "common": {
     "loginRequired": "Please login first"

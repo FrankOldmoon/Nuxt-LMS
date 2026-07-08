@@ -7,7 +7,7 @@
         </div>
 
         <!-- 聊天界面 -->
-        <div class="flex flex-col h-[450px]">
+        <div class="flex flex-col" :class="heightClass">
             <!-- 消息列表 -->
             <div ref="msgListRef" class="flex-1 overflow-y-auto p-3 space-y-3" @scroll="onScroll">
                 <div v-for="(msg, idx) in messages" :key="idx" class="flex gap-2" :class="msg.role === 'user' ? 'flex-row-reverse' : ''">
@@ -109,6 +109,8 @@
 
 <script setup lang="ts">
 import { createASRService, createTTSService } from '../../utils/ai'
+import { feedVrmAudio, clearVrmAudio } from '../../utils/vrm'
+// 聊天框组件：支持 API 模式（SSE 流式）和本地模式（customSend），含语音输入输出
 
 interface ChatMessage {
     role: 'user' | 'assistant' | 'system'
@@ -135,17 +137,25 @@ const props = withDefaults(defineProps<{
     enableVoiceOutput?: boolean
     /** 语音语言代码，默认随 i18n locale 推断 */
     voiceLang?: string
+    /** TTS 语音性别，默认 female（全部女声） */
+    ttsGender?: 'female' | 'male'
     /** 禁用输入与发送（如本地模型加载中/未就绪） */
     disabled?: boolean
+    /** 聊天界面高度 class（可传响应式，如 h-[200px] sm:h-[450px]） */
+    heightClass?: string
 }>(), {
     enableVoiceInput: true,
     enableVoiceOutput: true,
+    ttsGender: 'female',
     disabled: false,
+    heightClass: 'h-[450px]',
 })
 
 const emit = defineEmits<{
     message: [msg: ChatMessage]
     error: [error: Error]
+    chunk: [content: string]
+    'user-message': [text: string]
 }>()
 
 const { t, locale } = useI18n()
@@ -300,7 +310,14 @@ async function speakMessage(idx: number) {
     // 停掉之前的朗读，避免队列堆积
     ttsService.stop()
     try {
-        await ttsService.speak({ text, lang: effectiveVoiceLang.value })
+        await ttsService.speak({
+            text,
+            lang: effectiveVoiceLang.value,
+            gender: props.ttsGender,
+            // 口型同步只在真实播放语音时驱动：开始时喂入文本，结束时清空
+            onStart: () => feedVrmAudio(text),
+            onEnd: () => clearVrmAudio(),
+        })
     } catch (e: any) {
         voiceError.value = e?.message || String(e)
     } finally {
@@ -367,6 +384,7 @@ async function handleSend() {
     inputText.value = ''
     userScrolledUp.value = false
     scrollToBottom()
+    emit('user-message', text)
 
     const apiMessages: ChatMessage[] = []
     if (props.preset) {
@@ -390,6 +408,7 @@ async function handleSend() {
                 if (reasoning) assistantMsg.reasoning += reasoning
                 messages.value = [...messages.value]
                 scrollToBottom()
+                emit('chunk', content)
             })
 
             // 如果返回了结果对象，使用它（非流式场景）
@@ -457,6 +476,7 @@ async function handleSend() {
                         assistantMsg.content += delta.content
                         messages.value = [...messages.value]
                         scrollToBottom()
+                        emit('chunk', delta.content)
                     }
                 } catch { /* skip */ }
             }
