@@ -23,10 +23,10 @@
           <span class="text-sm">{{ $t('courseEditor.loading') }}</span>
         </div>
 
-        <div v-else class="space-y-4">
+        <div v-show="!loading" class="space-y-4">
           <!-- 课程内容编辑 -->
           <USeparator :label="$t('courseEditor.content')" class="my-4" />
-          <Ueditor v-model="contentJson" :lock-id="lockId" />
+          <richEditor v-model="contentJson" :lock-id="lockId" />
           <!-- 基础信息 -->
           <UFormField :label="$t('courseEditor.name')" class="w-full">
             <UInput v-model="form.name" :placeholder="$t('courseEditor.namePlaceholder')" class="w-full" />
@@ -111,6 +111,7 @@ async function loadCourse() {
     const cfg = (data?.config as Record<string, any>) || {}
     configFormRef.value?.initFromConfig(cfg)
     await membersRef.value?.loadMembers()
+    
   } catch {
     toast.add({ title: t('courseEditor.loadFailed'), color: 'error' })
   } finally {

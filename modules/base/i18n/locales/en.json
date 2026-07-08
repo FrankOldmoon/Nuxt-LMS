@@ -273,6 +273,8 @@
     "siteLogoPlaceholder": "Enter logo URL",
     "pageSize": "Page Size",
     "pageSizePlaceholder": "Enter page size",
+    "maxFileSize": "Max File Size",
+    "maxFileSizePlaceholder": "Max upload size per file (MB)",
     "mailConfig": "Mail Service Config",
     "mailConfigHint": "For password reset and email notifications (SMTP)",
     "mailHost": "SMTP Host",

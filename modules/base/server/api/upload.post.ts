@@ -5,6 +5,7 @@ import { createHash } from "node:crypto"
 import { writeFile, mkdir, rename, rm } from "node:fs/promises"
 import { join, extname } from "node:path"
 import { readMultipartFormData } from "h3"
+import { getSiteConfigSync } from "../utils/siteConfig"
 
 // 字节格式化（用于空间不足提示）
 function formatBytes(n: number): string {
@@ -41,6 +42,18 @@ export default eventHandler(async (event) => {
   const dangerous = [".exe", ".sh", ".bat", ".cmd", ".ps1", ".php"]
   if (dangerous.includes(ext)) {
     return cResp(null, "不允许上传该类型文件", false)
+  }
+
+  // 3.1 检查单文件大小限制
+  const siteConfig = getSiteConfigSync()
+  const maxFileSizeMB = siteConfig.maxFileSize || 50
+  const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024
+  if (buffer.length > maxFileSizeBytes) {
+    return cResp(
+      { maxSize: maxFileSizeMB, actualSize: +(buffer.length / 1024 / 1024).toFixed(1) },
+      `文件过大：最大允许 ${maxFileSizeMB}MB，当前文件 ${formatBytes(buffer.length)}`,
+      false,
+    )
   }
 
   // 3.5 检查个人网盘空间是否足够（admin 不限）

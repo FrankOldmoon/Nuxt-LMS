@@ -14,6 +14,7 @@ export const DEFAULT_SITE_CONFIG = {
   allowRegistration: false,
   siteLogo: '',
   pageSize: 20,
+  maxFileSize: 50, // 单个文件上传大小限制（MB）
   // 邮件服务（用于忘记密码等邮件通知）
   mail: {
     host: '',              // SMTP 主机，如 smtp.qq.com

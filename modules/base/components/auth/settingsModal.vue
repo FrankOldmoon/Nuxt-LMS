@@ -52,6 +52,21 @@
             />
           </UFormField>
 
+          <!-- 单文件上传大小限制 -->
+          <UFormField :label="$t('settings.maxFileSize')" class="w-full">
+            <UInput
+              v-model.number="form.maxFileSize"
+              type="number"
+              :min="1"
+              :placeholder="$t('settings.maxFileSizePlaceholder')"
+              class="w-full"
+            >
+              <template #trailing>
+                <span class="text-xs text-muted">MB</span>
+              </template>
+            </UInput>
+          </UFormField>
+
           <!-- 邮件服务配置 -->
           <div class="border border-default rounded-lg p-4 space-y-3 bg-elevated/30">
             <div class="flex items-center gap-2">
@@ -129,6 +144,7 @@ const form = ref({
   allowRegistration: true,
   siteLogo: '',
   pageSize: 20,
+  maxFileSize: 50,
   mail: {
     host: '',
     port: 465,
@@ -172,6 +188,7 @@ async function loadSettings() {
         allowRegistration: siteConfig.value.allowRegistration ?? true,
         siteLogo: siteConfig.value.siteLogo ?? '',
         pageSize: siteConfig.value.pageSize ?? 20,
+        maxFileSize: siteConfig.value.maxFileSize ?? 50,
         mail: {
           host: siteConfig.value.mail?.host ?? '',
           port: siteConfig.value.mail?.port ?? 465,

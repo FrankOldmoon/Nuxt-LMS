@@ -102,8 +102,8 @@
         <UButton
           v-if="canManageTeachers"
           :label="$t('course.manageTeachers')"
-          icon="i-lucide-users-cog"
-          color="neutral"
+          icon="i-lucide-users"
+          color="primary"
           variant="outline"
           size="sm"
           @click="teachersModalOpen = true"
