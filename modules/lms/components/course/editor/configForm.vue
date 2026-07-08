@@ -17,6 +17,7 @@
 </template>
 
 <script setup lang="ts">
+import CourseEditorConfigForm from '../../../../doc/components/course/editor/configForm.vue'
 /**
  * lms 包装 doc 的课程编辑器配置表单
  *
