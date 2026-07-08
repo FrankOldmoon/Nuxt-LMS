@@ -77,6 +77,7 @@ export const DEFAULT_LMS_CONFIG = {
     showGroups: true,            // 小组
     showGrades: true,            // 成绩
     showAnnouncements: true,     // 公告
+    showWrongBook: true,         // 错题本
   },
   // 网盘存储
   storage: {

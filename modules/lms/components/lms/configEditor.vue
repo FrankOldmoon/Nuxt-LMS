@@ -254,6 +254,10 @@
                     <span class="text-xs">{{ $t('coursePanel.announcements') }}</span>
                     <USwitch v-model="config.courseBtns.showAnnouncements" />
                 </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('chapter.wrongBook') }}</span>
+                    <USwitch v-model="config.courseBtns.showWrongBook" />
+                </div>
             </div>
         </div>
     </div>
@@ -280,7 +284,7 @@ const defaultConfig = {
     general: { dailyExpCap: 100, levelStep: 100 },
     course: { showDanmaku: true, showAnnouncement: true, showComments: true, showProgress: false, defaultChapterOpen: true },
     chapterBtns: { showPlay: true, showScore: true, showSelect: true, showTimer: true, showInvite: true, showDanmaku: true, showVote: true, showQuickAnswer: true },
-    courseBtns: { showProgress: true, showLeaderboard: true, showGroups: true, showGrades: true, showAnnouncements: true },
+    courseBtns: { showProgress: true, showLeaderboard: true, showGroups: true, showGrades: true, showAnnouncements: true, showWrongBook: true },
 }
 
 const aiModeOpts = computed(() => [

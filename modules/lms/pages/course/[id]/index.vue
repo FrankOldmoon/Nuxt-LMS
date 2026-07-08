@@ -105,7 +105,7 @@ const progressPercent = computed(() => {
 watch(resp, (detail) => {
   if (!detail) return
   const lmsCfg = (detail as any)?.config?.lmsConfig || {}
-  courseBtnsConfig.value = { showProgress: true, showLeaderboard: true, showGroups: true, showGrades: true, showAnnouncements: true, ...(lmsCfg.courseBtns || {}) }
+  courseBtnsConfig.value = { showProgress: true, showLeaderboard: true, showGroups: true, showGrades: true, showAnnouncements: true, showWrongBook: true, ...(lmsCfg.courseBtns || {}) }
   chapterBtnsConfig.value = { showPlay: true, showScore: true, showSelect: true, showTimer: true, showInvite: true, showDanmaku: true, showVote: true, showQuickAnswer: true, ...(lmsCfg.chapterBtns || {}) }
 }, { immediate: true })
 </script>

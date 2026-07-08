@@ -350,7 +350,25 @@
     "ollamaUrlHint": "Requires OLLAMA_ORIGINS=* env var for CORS",
     "ollamaModel": "Ollama Model"
   },
+  "question": {
+    "allTypes": "All types",
+    "typeSingle": "Single choice",
+    "typeJudge": "True/False",
+    "typeMultiple": "Multiple choice",
+    "typeFill": "Fill in blank",
+    "typeSelect": "Dropdown",
+    "typeSort": "Sort",
+    "typeClassify": "Classify",
+    "typeMatch": "Match",
+    "typePuzzle": "Puzzle",
+    "typeHtml": "HTML",
+    "typeShortAnswer": "Short answer"
+  },
   "common": {
-    "loginRequired": "Please login first"
+    "loginRequired": "Please login first",
+    "loading": "Loading...",
+    "refresh": "Refresh",
+    "close": "Close",
+    "unnamed": "(unnamed)"
   }
 }

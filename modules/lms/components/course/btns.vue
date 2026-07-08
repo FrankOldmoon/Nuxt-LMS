@@ -16,6 +16,9 @@
     <UTooltip v-if="courseBtnsConfig.showAnnouncements" :text="$t('coursePanel.announcements')">
       <UButton icon="i-lucide-bell" color="secondary" variant="soft" size="xs" @click="announcementsOpen = true" />
     </UTooltip>
+    <UTooltip v-if="courseBtnsConfig.showWrongBook" :text="$t('chapter.wrongBook')">
+      <UButton icon="i-lucide-book-x" color="error" variant="soft" size="xs" @click="wrongBookOpen = true" />
+    </UTooltip>
   </div>
 
   <!-- 课程面板弹窗 -->
@@ -24,6 +27,7 @@
   <CourseGroupsModal v-model:open="groupsOpen" :course-id="courseId" :class-id="classId" />
   <CourseGradesModal v-model:open="gradesOpen" :course-id="courseId" :class-id="classId" />
   <CourseAnnouncementsModal v-model:open="announcementsOpen" :course-id="courseId" :class-id="classId" />
+  <CourseWrongBookModal v-model:open="wrongBookOpen" :course-id="Number(courseId) || 0" />
 </template>
 
 <script setup lang="ts">
@@ -44,4 +48,5 @@ const leaderboardOpen = ref(false)
 const groupsOpen = ref(false)
 const gradesOpen = ref(false)
 const announcementsOpen = ref(false)
+const wrongBookOpen = ref(false)
 </script>

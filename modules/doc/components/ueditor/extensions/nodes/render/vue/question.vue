@@ -311,8 +311,9 @@ const defaultQuestion = reactive({
 
 // SSR-friendly data fetching
 const apiUrl = computed(() => {
-    if (!questionId.value || !editableCourseId.value) return ''
-    return `/api/questions/show?course_id=${editableCourseId.value}&cid=${questionId.value}`
+    const cid = props.courseId || editableCourseId.value
+    if (!questionId.value || !cid) return ''
+    return `/api/questions/show?course_id=${cid}&cid=${questionId.value}`
 })
 
 const { data: fetchedQuestion, pending: fetchedPending, refresh } = cRequest.use(apiUrl, {
@@ -400,9 +401,10 @@ function onHover() {
     fetchRecord()
 }
 async function fetchRecord() {
-    if (!questionId.value || !editableCourseId.value) return
+    const cid = props.courseId || editableCourseId.value
+    if (!questionId.value || !cid) return
     try {
-        const data = await cRequest(`/api/questions/record?course_id=${editableCourseId.value}&cid=${questionId.value}`)
+        const data = await cRequest(`/api/questions/record?course_id=${cid}&cid=${questionId.value}`)
         if (data && question.value) {
             // records 只存最新一次作答，直接填充
             if (Array.isArray(data.records) && data.records.length > 0) {

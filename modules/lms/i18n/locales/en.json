@@ -87,7 +87,11 @@
     "quickAnswerWinner": "First to answer!",
     "quickAnswerYouWin": "You won!",
     "quickAnswerWaiting": "Waiting for answers...",
-    "quickAnswerNoActive": "No active quick answer"
+    "quickAnswerNoActive": "No active quick answer",
+    "wrongBook": "Wrong Book",
+    "wrongBookEmpty": "No wrong questions yet. Great job!",
+    "wrongTimes": "{n} wrong",
+    "wrongCountHint": "Number of times answered wrong"
   },
   "classSelector": {
     "selectClass": "Select Class",

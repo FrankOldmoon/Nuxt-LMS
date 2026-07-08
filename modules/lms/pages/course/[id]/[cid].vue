@@ -42,7 +42,7 @@ watch(resp, (d) => {
   if (!d) return
   showDanmaku.value = d.course.showDanmaku ?? true
   chapterBtnsConfig.value = { showPlay: true, showScore: true, showSelect: true, showTimer: true, showInvite: true, showDanmaku: true, showVote: true, showQuickAnswer: true, ...(d.course.chapterBtns || {}) }
-  courseBtnsConfig.value = { showProgress: true, showLeaderboard: true, showGroups: true, showGrades: true, showAnnouncements: true, ...(d.course.courseBtns || {}) }
+  courseBtnsConfig.value = { showProgress: true, showLeaderboard: true, showGroups: true, showGrades: true, showAnnouncements: true, showWrongBook: true, ...(d.course.courseBtns || {}) }
   // 切换章节时用服务端数据初始化任务状态（同一章节内容保存刷新不重置）
   if (d?.chapter?.id && d.chapter.id !== initedTaskChapterId) {
     initedTaskChapterId = d.chapter.id
