@@ -37,7 +37,7 @@ function getRouteIds() {
 /**
  * 将 course_id 和 chapter_id 注入到 URL query string（已有则跳过）
  */
-function injectToUrl(url: string, courseId: number, chapterId: number): string {
+export function injectToUrl(url: string, courseId: number, chapterId: number): string {
   let result = url
   if (typeof result == 'string' && courseId && !result.match(/[?&]course_id=/)) {
     result += (result.includes('?') ? '&' : '?') + `course_id=${courseId}`
@@ -51,7 +51,7 @@ function injectToUrl(url: string, courseId: number, chapterId: number): string {
 /**
  * 将 course_id 和 chapter_id 注入到 body（已有则跳过）
  */
-function injectToBody(body: any, courseId: number, chapterId: number): any {
+export function injectToBody(body: any, courseId: number, chapterId: number): any {
   if (!body || typeof body !== 'object') return body
   const result = { ...body }
   if (courseId && result.course_id === undefined) result.course_id = courseId

@@ -108,7 +108,7 @@ let _loaded = false
 /**
  * 深度合并默认配置和数据库配置
  */
-function mergeConfig(defaults: any, overrides: any): any {
+export function mergeConfig(defaults: any, overrides: any): any {
   if (!overrides) return defaults
   const result = { ...defaults }
   for (const key of Object.keys(defaults)) {
