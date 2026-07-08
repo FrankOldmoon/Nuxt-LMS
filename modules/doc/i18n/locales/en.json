@@ -110,7 +110,20 @@
     "vfilesFolderName": "Folder Name",
     "vfilesFileName": "File Name",
     "vfilesSelectHint": "Select a file on the left to view content",
-    "vfilesUnnamed": "(Unnamed)"
+    "vfilesUnnamed": "(Unnamed)",
+    "insertIvideo": "Interactive Video",
+    "ivideo": "Interactive Video",
+    "ivideoFile": "Video File",
+    "ivideoSelectHint": "Please upload or select a video file",
+    "ivideoPreview": "Video Preview (seek to the target time, then click \"Use Current\")",
+    "ivideoQuestions": "Interactive Questions",
+    "ivideoSelectQuestion": "Select Question",
+    "ivideoNoQuestions": "No questions, click \"Select Question\" to add interactive pop-ups",
+    "ivideoUseCurrentTime": "Use Current",
+    "ivideoTimeUnit": "sec",
+    "ivideoPaused": "Video paused at",
+    "ivideoMustCorrect": "Answer correctly to continue",
+    "ivideoContinue": "Continue Watching"
   },
   "navEditor": {
     "title": "Edit Navigation",

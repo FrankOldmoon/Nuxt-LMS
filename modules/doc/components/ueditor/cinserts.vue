@@ -67,6 +67,7 @@ const allItems = computed(() => {
         { label: t('ueditor.insertCondition'), icon: 'i-lucide-shield-check', onSelect: () => insertTypedSheet('condition') },
         { label: t('ueditor.insertTabs'), icon: 'i-lucide-panel-top', onSelect: () => insertTabs() },
         { label: t('ueditor.insertVfiles'), icon: 'i-lucide-folder-tree', onSelect: () => insertVfiles() },
+        { label: t('ueditor.insertIvideo'), icon: 'i-lucide-video', onSelect: () => insertIvideo() },
     )
     if (moduleLms) {
         base.push({ label: t('ueditor.insertChatroom'), icon: 'i-lucide-message-square-text', onSelect: () => insertChatroom() })
@@ -208,6 +209,17 @@ function insertChatroom() {
     editor.chain().focus().insertContent({
         type: 'vue',
         attrs: { content: '', type: 'chatroom' },
+    }).run()
+}
+
+// 插入互动视频节点（带默认配置）
+function insertIvideo() {
+    const editor = props.editor?.useEditor()
+    if (!editor) return
+    const defaultConfig = JSON.stringify({ src: '', questions: [] })
+    editor.chain().focus().insertContent({
+        type: 'vue',
+        attrs: { content: defaultConfig, type: 'ivideo' },
     }).run()
 }
 

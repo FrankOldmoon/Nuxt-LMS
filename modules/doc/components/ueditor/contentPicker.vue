@@ -207,8 +207,9 @@
                             <Monaco v-model="importJson" language="json" />
                         </div>
                         <details v-if="currentType === 'question'" class="text-xs">
-                            <summary class="cursor-pointer text-gray-500 hover:text-primary py-1 select-none">
+                            <summary class="cursor-pointer text-gray-500 hover:text-primary py-1 select-none flex items-center gap-2">
                                 Question Format Help
+                                <UButton icon="i-lucide-copy" size="xs" color="neutral" variant="ghost" @click.stop="copyPrompt" />
                             </summary>
                             <pre class="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-auto max-h-[300px] text-xs whitespace-pre-wrap border border-gray-200 dark:border-gray-700 leading-relaxed">{{ questionPrompt }}</pre>
                         </details>
@@ -544,6 +545,16 @@ async function doImport() {
     } else {
         importOk.value = false
         importMsg.value = t('courseData.importFailed')
+    }
+}
+
+// 复制题目格式参考文档
+async function copyPrompt() {
+    try {
+        await navigator.clipboard.writeText(questionPrompt)
+        toast.add({ title: t('common.copied'), color: 'success' })
+    } catch {
+        toast.add({ title: t('common.copyFailed'), color: 'error' })
     }
 }
 

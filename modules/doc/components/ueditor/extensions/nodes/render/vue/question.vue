@@ -142,7 +142,7 @@ const props = defineProps({
 // race 模式：显示提交按钮但不向后端提交 question 记录
 const inRace = inject('inRace', false)
 
-const emit = defineEmits(['init'])
+const emit = defineEmits(['init', 'submitted'])
 
 const { t } = useI18n()
 const { editableCourseId } = useLayoutState()
@@ -271,6 +271,8 @@ function onSubmit() {
         if (!props.inQuiz) {
             chapterTask?.reportNodeDone('question', questionId.value, isCorrect.value)
         }
+        // emit 提交结果，供父组件（如 ivideo）监听
+        emit('submitted', { isCorrect: isCorrect.value, questionId: questionId.value })
     }
 }
 
@@ -417,6 +419,8 @@ async function fetchRecord() {
                 isCorrect.value = (question.value.correct_rate || 0) > 0
                 // 上报历史完成状态
                 chapterTask?.reportNodeDone('question', questionId.value, isCorrect.value)
+                // emit 提交结果，供父组件（如 ivideo）监听
+                emit('submitted', { isCorrect: isCorrect.value, questionId: questionId.value })
             }
         }
     } catch (err) {
