@@ -18,8 +18,14 @@ export default defineNuxtConfig({
   ],
   ui: { fonts: false },
   vite: {
-    optimizeDeps: {
-      exclude: ["@mlc-ai/web-llm"],
+    server: {
+      // 允许指定域名
+      allowedHosts: [
+        "mxlms.oldmoon.cn",
+        // 本地调试可保留
+        "localhost",
+        "127.0.0.1",
+      ],
     },
   },
 });

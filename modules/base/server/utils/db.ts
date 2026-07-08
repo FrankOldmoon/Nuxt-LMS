@@ -255,6 +255,45 @@ export async function updateCourseMember(
   }
 }
 
+// ====================== 角色分配 ======================
+
+/**
+ * 给用户分配指定 code 的角色（幂等：已存在则跳过）
+ *
+ * 设计要点：
+ * - 通过 code 而非 id 查 role，避免硬编码 role id（site-config-startup 会自动创建 admin/teacher/student 三个基础角色）
+ * - 若 role code 不存在则返回 false 并 warn（不抛错，避免阻塞主流程；调用方自行决定如何处理）
+ * - onConflictDoNothing 避免重复插入报错
+ * - **不**在 remove 场景反向调用此函数清除 role，因为用户可能在多个课程/班级都是老师，
+ *   移除单个关联不应影响系统级 teacher 身份
+ *
+ * 使用场景：
+ * - 课程成员管理把 user 设为 teacher 时（members.post.ts）
+ * - 班级用户管理把 user 设为 isTeacher=true 时（classes/users.post.ts）
+ *
+ * @returns true=分配成功（或已存在），false=role code 不存在
+ */
+export async function assignRoleToUser(userId: number, roleCode: string): Promise<boolean> {
+  const roleRows = await db
+    .select({ id: schema.roles.id })
+    .from(schema.roles)
+    .where(and(eq(schema.roles.code, roleCode), isNull(schema.roles.deletedAt)))
+    .limit(1)
+
+  const roleRow = roleRows[0]
+  if (!roleRow) {
+    console.warn(`[assignRoleToUser] role code '${roleCode}' 不存在，跳过分配 (userId=${userId})`)
+    return false
+  }
+
+  await db
+    .insert(schema.userRoles)
+    .values({ userId, roleId: roleRow.id })
+    .onConflictDoNothing()
+
+  return true
+}
+
 // ====================== 用户搜索 ======================
 
 /**
