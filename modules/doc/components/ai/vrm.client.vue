@@ -281,8 +281,9 @@ async function loadVRMModel() {
     }
   })
 
-  // 初始放松表情
-  vrm.expressionManager?.setValue('relaxed', 0.15)
+  // 初始微笑表情（静默时更明显，说话时由 applySmile 动态调整）
+  vrm.expressionManager?.setValue('happy', 0.4)
+  vrm.expressionManager?.setValue('relaxed', 0.1)
 }
 
 // ===================== 动画循环 =====================
@@ -308,8 +309,8 @@ function animate() {
 }
 
 // ===================== 待机动画 =====================
-// 说话手势强度（0=静止下垂, 1=说话手势），平滑过渡
-let speakGestureIntensity = 0
+// 微笑强度（平滑过渡：静默时明显，说话时减弱让位口型 viseme）
+let smileIntensity = 0.4
 
 function applyIdleAnimations(time: number) {
   if (!vrm) return
@@ -327,88 +328,22 @@ function applyIdleAnimations(time: number) {
     head.rotation.x = Math.sin(time * 0.2) * 0.03
   }
 
-  // 说话手势
-  applySpeakingGestures(time)
+  // 微笑：面部保持微笑（不涉及手部动作）
+  applySmile()
 
   applyBlink(time)
 }
 
-// ===================== 说话手势 =====================
-// 思路：说话时把双手从「自然下垂」平滑过渡到「抱在胸前」——
-// 双手抬至胸前中线附近（不向两侧张开、不交叉），掌心/手指朝前方（朝向观众）而非自己胸部。
-// 然后在胸前位置做细微手势（小幅起伏、手腕轻转、偶发强调），不做左右晃动。
-// 静默时平滑回到下垂姿势。
-function applySpeakingGestures(time: number) {
-  // 目标强度：说话时趋向 1，静默时趋向 0（由 LLM 文本流驱动，与口型音频通道独立）
-  const target = (speechState.isSpeaking || speechState.pendingText) ? 1 : 0
-  speakGestureIntensity += (target - speakGestureIntensity) * 0.06
-
-  const leftUpperArm = vrm?.humanoid?.getNormalizedBoneNode?.('leftUpperArm')
-  const rightUpperArm = vrm?.humanoid?.getNormalizedBoneNode?.('rightUpperArm')
-  const leftLowerArm = vrm?.humanoid?.getNormalizedBoneNode?.('leftLowerArm')
-  const rightLowerArm = vrm?.humanoid?.getNormalizedBoneNode?.('rightLowerArm')
-  const leftHand = vrm?.humanoid?.getNormalizedBoneNode?.('leftHand')
-  const rightHand = vrm?.humanoid?.getNormalizedBoneNode?.('rightHand')
-  if (!leftUpperArm || !rightUpperArm) return
-
-  const i = speakGestureIntensity
-
-  // 静止下垂姿势（与 loadVRMModel 中设定一致）
-  const restUpperZ = 1.3     // |Z|=1.3 → 大臂下垂
-  const restUpperX = 0
-  const restLowerY = 0.3     // 小臂微弯
-  const restHandZ = 0
-  const restHandY = 0
-
-  // 抱在胸前姿势目标：
-  const chestUpperZ = 0.55   // 大臂抬起（|Z| 1.3 → 0.55，约 43°），不过度外张
-  const chestUpperX = -0.6   // 大臂前摆，肘部朝前，双手落到身前而非两侧
-  const chestLowerY = 0.9    // 小臂内收，把双手带到胸前中线（不过度内旋，避免掌心朝胸）
-  const chestHandZ = 0.1     // 手腕微翘
-  // 手腕绕小臂长轴旋转，让掌心/手指朝前方（朝观众）而非自己胸部
-  // 左右符号相反；若实际朝向不对，把这两个符号翻转即可
-  const chestHandYL = -1.1
-  const chestHandYR = 1.1
-
-  // 线性插值：i=0 完全下垂，i=1 完全抱在胸前
-  const upperZ = restUpperZ + (chestUpperZ - restUpperZ) * i
-  const upperX = restUpperX + (chestUpperX - restUpperX) * i
-  const lowerY = restLowerY + (chestLowerY - restLowerY) * i
-  const handZ = restHandZ + (chestHandZ - restHandZ) * i
-  const handYL = restHandY + (chestHandYL - restHandY) * i
-  const handYR = restHandY + (chestHandYR - restHandY) * i
-
-  // 胸前位置的细微手势（乘以 i，静默时归零；左右频率/相位错开更自然）
-  const bobL = Math.sin(time * 2.0) * 0.05
-  const bobR = Math.sin(time * 1.6 + 1.1) * 0.04
-  // 偶发强调（低频脉冲）：双手短暂上抬一点再落回
-  const pulse = Math.max(0, Math.sin(time * 0.7)) * 0.06
-  // 手腕轻微转动（像在比划）
-  const twistL = Math.sin(time * 1.8 + 0.3) * 0.06
-  const twistR = Math.sin(time * 1.5 + 1.5) * 0.05
-
-  // 大臂 Z：左负右正；强调时 |Z| 减小（更抬）
-  leftUpperArm.rotation.z = -(upperZ - pulse * i)
-  rightUpperArm.rotation.z = upperZ - pulse * i
-  // 大臂 X：前摆 + 上下起伏
-  leftUpperArm.rotation.x = upperX - pulse * 0.5 * i + bobL * i
-  rightUpperArm.rotation.x = upperX - pulse * 0.5 * i + bobR * i
-
-  // 小臂 Y：内收 + 轻微起伏（左右交叉，避免完全同步）
-  if (leftLowerArm) leftLowerArm.rotation.y = -lowerY + bobR * 0.5 * i
-  if (rightLowerArm) rightLowerArm.rotation.y = lowerY - bobL * 0.5 * i
-
-  // 手腕：掌心朝前（Y 旋转）+ 翘起/转动（Z）+ 上下轻摆（X）
-  if (leftHand) {
-    leftHand.rotation.y = handYL + twistL * 0.3 * i
-    leftHand.rotation.z = handZ + twistL * i
-    leftHand.rotation.x = Math.sin(time * 1.3) * 0.08 * i
-  }
-  if (rightHand) {
-    rightHand.rotation.y = handYR - twistR * 0.3 * i
-    rightHand.rotation.z = -handZ - twistR * i
-    rightHand.rotation.x = Math.sin(time * 1.1 + 0.9) * 0.08 * i
-  }
+// ===================== 微笑 =====================
+// 静默时保持明显微笑，说话时减弱以避免与口型 viseme 冲突
+function applySmile() {
+  const em = vrm?.expressionManager
+  if (!em) return
+  // 说话时（TTS 音频播放中）减弱微笑，让口型 viseme 主导
+  const target = (speechState.audioSpeaking || speechState.audioText) ? 0.12 : 0.4
+  smileIntensity += (target - smileIntensity) * 0.08
+  em.setValue('happy', smileIntensity)
+  em.setValue('relaxed', 0.1)
 }
 
 function applyBlink(time: number) {

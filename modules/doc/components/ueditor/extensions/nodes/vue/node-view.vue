@@ -3,7 +3,7 @@
         <div class="vue-node-container" contenteditable="false">
             <!-- 工具栏（仅有 meta.title 时显示） -->
             <div v-if="meta.title" class="vue-node-toolbar">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center">
                     <UIcon v-if="meta.icon" :name="meta.icon" class="text-gray-500" />
                     <span class="text-sm font-medium">{{ meta.title }}</span>
                 </div>

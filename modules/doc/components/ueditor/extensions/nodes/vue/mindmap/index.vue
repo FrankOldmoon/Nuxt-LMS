@@ -1,5 +1,7 @@
 <template>
-    <Edit v-if="showConfig" :config="nodeContent" @update:config="onConfigChange" @close="showConfig = false" />
+    <div class="p-2">
+        <Edit v-if="showConfig" :config="nodeContent" @update:config="onConfigChange" @close="showConfig = false" />
+    </div>
     <div class="vue-node-body">
         <Render :node="node" />
     </div>

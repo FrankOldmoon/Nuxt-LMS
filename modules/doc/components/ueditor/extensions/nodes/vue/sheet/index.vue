@@ -1,5 +1,7 @@
 <template>
-    <Edit v-if="showConfig" :config="config" @update:config="onConfigChange" @close="showConfig = false" />
+    <div class="p-2">
+        <Edit v-if="showConfig" :config="config" @update:config="onConfigChange" @close="showConfig = false" />
+    </div>
     <!-- Sheet 组件（始终显示，交互式编辑） -->
     <div class="vue-node-body" :style="{ height: `${sheetHeight}px` }">
         <Sheet ref="sheetRef" :col-widths="{}" :row-count="100" :show-tools="true" :show-footer="false"

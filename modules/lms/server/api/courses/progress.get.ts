@@ -68,7 +68,7 @@ export default eventHandler(async (event) => {
       .where(and(
         eq(schema.userHomeworks.userId, user.id),
         eq(schema.userHomeworks.courseId, courseId),
-        inArray(schema.userHomeworks.homeworkCids, [...new Set(allHomeworkCids)]),
+        inArray(schema.userHomeworks.homeworkCid, [...new Set(allHomeworkCids)]),
       ))
     for (const h of uhs) {
       homeworkStatusMap.set(h.homeworkCid, 'done')

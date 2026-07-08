@@ -1,5 +1,7 @@
 <template>
-    <Edit v-if="showConfig" :config="config" @update:config="onConfigChange" @close="showConfig = false" />
+    <div class="p-2">
+        <Edit v-if="showConfig" :config="config" @update:config="onConfigChange" @close="showConfig = false" />
+    </div>
     <div class="vue-node-body">
         <div v-if="!config.url" class="flex flex-col items-center justify-center py-10">
             <UIcon name="i-lucide-file-plus" class="size-8 text-gray-300" />

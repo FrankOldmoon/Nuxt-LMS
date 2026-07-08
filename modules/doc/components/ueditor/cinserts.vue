@@ -63,6 +63,7 @@ const allItems = computed(() => {
         { label: t('ueditor.insertOffice'), icon: 'i-lucide-file-spreadsheet', onSelect: () => insertTypedSheet('office') },
         { label: t('ueditor.insertMindmap'), icon: 'i-lucide-network', onSelect: () => insertVueNode('mindmap') },
         { label: t('ueditor.insertAichat'), icon: 'i-lucide-bot', onSelect: () => insertAichat() },
+        { label: t('ueditor.insertAigenerator'), icon: 'i-lucide-sparkles', onSelect: () => insertAigenerator() },
         { label: t('ueditor.insertCondition'), icon: 'i-lucide-shield-check', onSelect: () => insertTypedSheet('condition') },
         { label: t('ueditor.insertTabs'), icon: 'i-lucide-panel-top', onSelect: () => insertTabs() },
         { label: t('ueditor.insertVfiles'), icon: 'i-lucide-folder-tree', onSelect: () => insertVfiles() },
@@ -146,6 +147,24 @@ function insertAichat() {
     editor.chain().focus().insertContent({
         type: 'vue',
         attrs: { content: defaultConfig, type: 'aichat' },
+    }).run()
+}
+
+// 插入 aigenerator 节点（AI 无限出题，带默认配置）
+function insertAigenerator() {
+    const editor = props.editor?.useEditor()
+    if (!editor) return
+    const defaultConfig = JSON.stringify({
+        title: '',
+        questionType: 'single',
+        referenceText: '',
+        point: 1,
+        model: 'glm-4.5-air',
+        thinking: false,
+    })
+    editor.chain().focus().insertContent({
+        type: 'vue',
+        attrs: { content: defaultConfig, type: 'aigenerator' },
     }).run()
 }
 

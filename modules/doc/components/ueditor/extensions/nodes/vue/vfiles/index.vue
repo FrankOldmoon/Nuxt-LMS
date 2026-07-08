@@ -1,5 +1,7 @@
 <template>
-    <Edit v-if="showConfig" :config="config" @update:config="onConfigChange" @close="showConfig = false" />
+    <div class="p-2">
+        <Edit v-if="showConfig" :config="config" @update:config="onConfigChange" @close="showConfig = false" />
+    </div>
     <!-- 预览/编辑区（始终显示，交互式编辑文件内容） -->
     <div class="vue-node-body">
         <div class="flex" style="min-height: 300px;">
