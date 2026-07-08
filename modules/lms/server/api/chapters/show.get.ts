@@ -4,17 +4,20 @@ import { eq, and, inArray } from "drizzle-orm"
 /**
  * 章节详情 API（lms 覆盖版）
  *
- * 文件名覆盖约定：
- * - doc 模块：`chapters/show.get.ts` → 路由 GET /api/chapters/show
- * - lms 模块：`chapters/show.ts`     → 路由 ALL /api/chapters/show（注册顺序在 doc 之后，Nitro 同 method GET handler 被后注册者覆盖）
- *
- * 行为说明：
- * - 本文件仅在 NUXT_MODULE_LMS=true 时被注册（lms 模块启用才会 addServerScanDir）
- * - 因此不需要再读 process.env.NUXT_MODULE_LMS 守卫，所有 lms 特性（班级 gating / taskStatus / isPass / isOpen / classChapters）始终生效
- * - 行为与 doc 版本中 lmsEnabled=true 分支完全等价，仅去除了环境变量判断
+ * 覆盖机制：
+ * - 文件名：lms 用 `show.get.ts`（method=GET），doc 也用 `show.get.ts`（method=GET）
+ *   → 必须 method 相同，否则 hook 倒序去重会跳过不同 method 的 handler
+ * - 实际生效靠 lms/index.ts 的 `nitro:config` hook：
+ *   Nitro 的 nitroConfig.handlers 数组是 push 累加的，h3 router 匹配时取第一个命中的 handler。
+ *   lms 在 doc 之后 addServerScanDir，所以 lms 的 handler 在数组中排在 doc 之后。
+ *   hook 对 lmsOverridePaths 列表中的 path 做"倒序去重"，保留后注册者（lms），让 h3 命中 lms。
  *
  * 不要删除 doc/.../show.get.ts：
  * - lms 未启用时，doc 版本仍需工作（不带 lms 增强，但保持向后兼容）
+ * - lms 启用时，doc 版本会被 hook 移除
+ *
+ * 不要把 lms 文件改名为 `show.ts`（method=ALL）：
+ * - ALL 不会被去重（method 字段不同），doc 的 GET 仍然先被命中，覆盖失败
  */
 export default eventHandler(async (event) => {
   const id = requireQueryId(event)

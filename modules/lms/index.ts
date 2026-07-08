@@ -83,6 +83,37 @@ export default defineNuxtModule({
 
     addServerScanDir(resolve('./server'))
 
+    // ===== 覆盖 doc 模块的同名 server handler =====
+    // Nitro 的 nitroConfig.handlers 是 push 累加的，h3 router 匹配时取第一个命中的 handler。
+    // lms 在 doc 之后 addServerScanDir，所以 lms 的同名 handler 排在 doc 之后（数组末位），
+    // h3 永远先命中 doc 的 handler，导致 lms 覆盖 doc 失败。
+    //
+    // 解决方案：nitro:config hook 倒序去重，保留后注册者（lms）。
+    // 注意：lms 的覆盖文件必须与 doc 的 method 后缀一致（如都用 `show.get.ts`），
+    //      否则 method 字段不同，去重逻辑不会合并，doc 仍然先被命中。
+    nuxt.hook('nitro:config', (nitroConfig: any) => {
+      if (!nitroConfig.handlers) return
+      // 列出 lms 想要覆盖的 path（method 不需要列，hook 对每个 method 单独去重）
+      const overridePaths = new Set([
+        '/api/home',
+        '/api/chapters/show',
+        // 未来 lms 想覆盖 doc 的其他 endpoint 时在此追加
+      ])
+      const seen = new Set<string>()
+      const filtered: any[] = []
+      // 倒序遍历，第一次见到的同名 handler 保留
+      for (let i = nitroConfig.handlers.length - 1; i >= 0; i--) {
+        const h = nitroConfig.handlers[i]
+        if (overridePaths.has(h.route)) {
+          const key = `${h.method}:${h.route}`
+          if (seen.has(key)) continue
+          seen.add(key)
+        }
+        filtered.unshift(h)
+      }
+      nitroConfig.handlers = filtered
+    })
+
     // 客户端插件：监听 chapterAccessUpdate WS 消息，刷新当前课程侧边栏导航
     // （教师在 accessBar 切换章节 isOpen 或开放给班级时，服务端广播此消息）
     addPlugin(resolve('./plugins/ws-sync.client.ts'))

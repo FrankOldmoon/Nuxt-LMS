@@ -1,6 +1,21 @@
 import { db, schema } from "@nuxthub/db";
 import { asc, eq, and, isNull, sql, inArray, or } from "drizzle-orm";
 
+/**
+ * 首页数据 API（lms 覆盖版）
+ *
+ * 覆盖机制（与 chapters/show.get.ts 相同）：
+ * - 文件名：lms 用 `home.get.ts`（method=GET），doc 也用 `home.get.ts`（method=GET）
+ *   → 必须 method 相同，否则 hook 倒序去重不会合并
+ * - 实际生效靠 lms/index.ts 的 nitro:config hook：
+ *   Nitro 的 nitroConfig.handlers 是 push 累加的，h3 router 匹配时取第一个命中的 handler。
+ *   lms 在 doc 之后 addServerScanDir，所以 lms 的 handler 排在 doc 之后（数组末位），
+ *   h3 永远先命中 doc 的 handler。hook 倒序去重保留后注册者（lms），让 h3 命中 lms。
+ *
+ * 不要把 lms 文件改名为 `home.ts`（method=ALL）：
+ * - ALL 不会被去重（method 字段不同），doc 的 GET 仍然先被命中，覆盖失败
+ * - /api/home 实际上只接受 GET 请求（首页数据获取），不需要 ALL
+ */
 export default eventHandler(async (event) => {
   // 查询所有分类（按 order 排序）
   const categories = await db.query.categories.findMany({
