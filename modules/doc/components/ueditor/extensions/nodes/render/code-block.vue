@@ -46,13 +46,15 @@ const normLang = computed(() => (language.value || '').toLowerCase().trim())
 const canRun = computed(() => {
   const l = normLang.value
   return ['python', 'py', 'python3',
-    'javascript', 'js', 'node'].includes(l)
+    'javascript', 'js', 'node','cpp','java',].includes(l)
 })
 // 归一化为 IDE 支持的语言标识
 const ideLanguage = computed(() => {
   const l = normLang.value
   if (['python', 'py', 'python3'].includes(l)) return 'python'
   if (['javascript', 'js', 'node'].includes(l)) return 'javascript'
+  if (['cpp','c','c++'].includes(l)) return 'cpp'
+  if (['java'].includes(l)) return 'java'
   return 'python'
 })
 const ideOpen = ref(false)

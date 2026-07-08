@@ -123,12 +123,26 @@ int main() {
     return 0;
 }
 `,
-    java: `// Welcome to Java IDE (CheerpJ, entry class name is free)
+    java: `// Welcome to Java IDE (Pure JS interpreter, AP CS A syntax)
+import java.util.ArrayList;
+
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Hello, Java!");
-        for (int i = 0; i < 5; i++) {
-            System.out.println("  " + i + " squared = " + (i * i));
+        // Variables, loops, arrays
+        int[] a = {3, 1, 4, 1, 5, 9, 2, 6};
+        int sum = 0;
+        for (int i = 0; i < a.length; i++) {
+            sum += a[i];
+        }
+        System.out.println("sum = " + sum);
+
+        // ArrayList + enhanced for
+        ArrayList<String> list = new ArrayList<>();
+        list.add("apple");
+        list.add("banana");
+        list.add("cherry");
+        for (String s : list) {
+            System.out.println(s);
         }
     }
 }
