@@ -55,12 +55,24 @@ const classOptions = computed(() =>
   classes.value.map(c => ({ label: c.name, value: c.id }))
 )
 
-// 从页面传入的 chapterData 初始化（无需额外 API 请求）
-watch(() => props.chapterData, (data) => {
-  if (!data) return
-  isOpen.value = !!data.isOpen
-  selectedClassIds.value = (data.classChapters || []).filter(c => c.open).map(c => c.classId)
-}, { immediate: true })
+// 从 props.chapterData 同步本地状态
+// 关键修复：
+// 1) 用 toRef 包装 props.chapterData，得到稳定的响应式引用，避免 SSR/hydration 时 getter 失效
+// 2) 加 deep:true 确保对象内部属性变化也能被捕获（父组件 cRequest.use 的 onMounted refresh
+//    会创建新的 chapter 对象引用，但生产压缩后浅 watch 偶有不触发的情况）
+// 3) 去掉 `if (!data) return` 守卫，统一用可选链处理 undefined
+// 4) onMounted 强制再同步一次，兜底 SSR/hydration 边界时序差异
+const chapterDataRef = toRef(props, 'chapterData')
+
+function syncFromChapterData(data: typeof props.chapterData) {
+  console.log({ chapterData: data })
+  isOpen.value = !!data?.isOpen
+  selectedClassIds.value = (data?.classChapters || []).filter(c => c.open).map(c => c.classId)
+}
+
+watch(chapterDataRef, syncFromChapterData, { immediate: true, deep: true })
+
+onMounted(() => syncFromChapterData(props.chapterData))
 
 // 更新章节 isOpen
 async function updateOpen(val: boolean) {
