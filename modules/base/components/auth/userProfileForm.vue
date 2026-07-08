@@ -2,18 +2,18 @@
     <div class="space-y-4">
         <!-- 头像上传区域 -->
         <div class="flex flex-col items-center mb-6">
-            <div class="relative cursor-pointer group" :class="{ 'pointer-events-none opacity-60': !canEditGeneral }"
+            <div class="relative cursor-pointer group" :class="{ 'pointer-events-none opacity-60': !canEditAvatar }"
                 @click="triggerFileInput" role="button" tabindex="0"
                 @keydown.enter.prevent="triggerFileInput" @keydown.space.prevent="triggerFileInput">
                 <UAvatar :src="form.avatarImg" :alt="form.name" size="2xl" :text="form.name?.charAt(0)"
                     class="transition-opacity group-hover:opacity-70" />
-                <div v-if="canEditGeneral"
+                <div v-if="canEditAvatar"
                     class="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
                     <UIcon :name="uploading ? 'i-lucide-loader-circle' : 'i-lucide-camera'" class="size-6 text-white"
                         :class="{ 'animate-spin': uploading }" />
                 </div>
             </div>
-            <p v-if="canEditGeneral" class="text-xs text-(--ui-text-dimmed) mt-2">
+            <p v-if="canEditAvatar" class="text-xs text-(--ui-text-dimmed) mt-2">
                 {{ $t('profile.clickToUploadAvatar') }}
             </p>
             <input ref="fileInputRef" type="file" accept="image/*" class="hidden" @change="onFileSelect" />
@@ -41,7 +41,7 @@
         </UFormField>
         <UFormField :label="$t('profile.email')" class="w-full">
             <UInput v-model="form.email" type="email" :placeholder="$t('profile.emailPlaceholder')" class="w-full"
-                :disabled="!canEditGeneral" />
+                :disabled="!canEditEmail" />
         </UFormField>
         <UFormField :label="$t('profile.gender')" class="w-full">
             <USelect v-model="form.gender" :items="genderOptions" :placeholder="$t('profile.genderPlaceholder')"
@@ -62,7 +62,7 @@
         <!-- 修改密码 -->
         <div class="pt-2">
             <UButton :label="$t('profile.changePassword')" icon="i-lucide-key-round" color="neutral" variant="outline"
-                size="sm" @click="showPwdModal = true" />
+                size="sm" :disabled="!canEditPassword" @click="showPwdModal = true" />
         </div>
     </div>
 
@@ -118,11 +118,27 @@ const { classes, loadClasses } = useClasses()
 // 班级为 lms 概念，仅 lms 启用时显示班级字段
 const { moduleLms } = useRuntimeConfig().public
 
+// lms 启用时读取 allowSelfAvatarUpload 等用户端功能开关；lms 禁用时该 ref 为 undefined 视为允许
+// 注意：lms 禁用时不应依赖 useUserProfileConfig（避免跨模块依赖）。
+// 但因 useUserProfileConfig 在 lms 禁用时仍可正常调用（返回 true），安全。
+const {
+  allowSelfAvatarUpload,
+  allowChangePassword,
+  allowChangeEmail,
+} = useUserProfileConfig()
+
 // ===================== 基于当前用户角色的可编辑性 =====================
 // 学生端：只有手机和密码可改，其它只读
 // 班级：仅管理员可改，其它角色只读
+// 头像上传：lms_config.user.allowSelfAvatarUpload=false 时，所有用户均受限制（含 admin/teacher）
+// 邮箱修改：lms_config.user.allowChangeEmail=false 时，非 admin/teacher 角色不可改
+// 密码修改：lms_config.user.allowChangePassword=false 时，非 admin/teacher 角色不可改
+// 其它通用字段（name/...）：仍由 admin/teacher 角色决定
 const canEditGeneral = computed(() => hasRole('admin') || hasRole('teacher'))
+const canEditAvatar = computed(() => allowSelfAvatarUpload.value && canEditGeneral.value)
 const canEditClass = computed(() => hasRole('admin'))
+const canEditEmail = computed(() => allowChangeEmail.value && canEditGeneral.value)
+const canEditPassword = computed(() => allowChangePassword.value && canEditGeneral.value)
 
 const genderOptions = computed(() => [
   { label: t('profile.genderMale'), value: 'male' },
@@ -179,7 +195,7 @@ async function submitChangePassword() {
 }
 
 function triggerFileInput() {
-    if (!canEditGeneral.value) return
+    if (!canEditAvatar.value) return
     fileInputRef.value?.click()
 }
 

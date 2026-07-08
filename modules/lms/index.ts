@@ -37,6 +37,10 @@ export default defineNuxtModule({
         LayoutAside: resolve('./components/layout/aside.vue'),
         LayoutToc: resolve('./components/layout/toc.vue'),
         CourseCard: resolve('./components/course/card.vue'),
+        // 系统设置弹窗：lms 包装 base 版本，在 base 的 lms-config slot 中注入 LmsConfigEditor
+        AuthSettingsModal: resolve('./components/auth/settingsModal.vue'),
+        // 课程编辑器表单：lms 包装 doc 版本，在 doc 的 lms-config slot 中注入 LmsConfigEditor (hide-course)
+        CourseEditorConfigForm: resolve('./components/course/editor/configForm.vue'),
       }
       for (const [name, filePath] of Object.entries(overrides)) {
         const comp = components.find(c => c.pascalName === name)

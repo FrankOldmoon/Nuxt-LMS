@@ -84,8 +84,38 @@ export const DEFAULT_LMS_CONFIG = {
     driveSize: 1073741824,     // 个人网盘空间上限（字节），默认 1GB
     teacherMultiplier: 1,      // teacher 角色空间倍率（driveSize * teacherMultiplier）
   },
+  // 用户相关设置（控制用户端可用功能；admin/teacher 不受此限制）
+  user: {
+    allowSelfAvatarUpload: true,  // 是否允许普通用户自行上传头像
+    allowChangePassword: true,    // 是否允许普通用户修改密码
+    allowChangeEmail: true,       // 是否允许普通用户修改邮箱
+    allowChangeLocale: true,      // 是否允许普通用户切换界面语言
+    allowExportData: true,        // 是否允许普通用户导出个人学习数据
+  },
+  // 首页显隐开关（lms 首页 Hero/统计/最近学习/排行榜）
+  home: {
+    showHero: true,
+    showStats: true,
+    showRecentCourses: true,
+    showLeaderboard: true,
+  },
+  // 课程列表显隐与默认视图
+  courseList: {
+    showSearch: true,            // 顶部搜索框
+    showFilter: true,            // 标签/级别筛选
+    showSort: true,              // 排序控件
+    defaultView: 'grid',         // 'grid' | 'list'
+  },
+  // 章节播放页显隐开关
+  chapterPage: {
+    showOutline: true,           // 左侧大纲
+    showNote: true,              // 笔记面板
+    showDanmakuPanel: true,      // 弹幕面板
+    enableFullscreen: true,      // 全屏播放
+  },
   // AI 助手配置（全局默认值，单课程可通过 config.lmsConfig.ai 覆盖）
   ai: {
+    enabled: true,                   // AI 助手总开关（关闭后章节页不渲染 chatbox/llm）
     mode: 'api',                    // 'local' 浏览器本地 WebLLM / 'api' 服务端 API / 'ollama' 本地 Ollama
     model: '',                      // API 模型名（空=服务端默认，env AI_MODEL 可覆盖）
     thinking: false,                // API 思考模式（local/ollama 忽略）

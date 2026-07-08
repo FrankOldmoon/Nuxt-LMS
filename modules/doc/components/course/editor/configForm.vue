@@ -97,8 +97,8 @@
       <p v-if="extraConfigError" class="text-xs text-error mt-1">{{ extraConfigError }}</p>
     </UFormField>
 
-    <!-- LMS 学习行为参数（课程级覆盖，course 分组由上方开关管理） -->
-    <LmsConfigEditor ref="lmsConfigRef" v-model="lmsConfig" hide-course />
+    <!-- LMS 学习行为参数（lms 模块启用时由 lms 包装组件注入；lms 禁用时 slot 留空） -->
+    <slot name="lms-config" />
   </div>
 </template>
 

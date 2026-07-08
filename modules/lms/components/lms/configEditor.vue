@@ -2,9 +2,60 @@
     <div class="space-y-4">
         <USeparator :label="$t('lmsConfig.title')" class="my-4" />
 
+        <!-- 用户（全局控制用户端功能可用性；admin/teacher 不受限制） -->
+        <div class="space-y-2">
+            <p class="text-sm font-medium">{{ $t('lmsConfig.user') }}</p>
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-xs">{{ $t('lmsConfig.allowSelfAvatarUpload') }}</span>
+                        <p class="text-[10px] text-muted">{{ $t('lmsConfig.allowSelfAvatarUploadHint') }}</p>
+                    </div>
+                    <USwitch v-model="config.user.allowSelfAvatarUpload" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-xs">{{ $t('lmsConfig.allowChangePassword') }}</span>
+                        <p class="text-[10px] text-muted">{{ $t('lmsConfig.allowChangePasswordHint') }}</p>
+                    </div>
+                    <USwitch v-model="config.user.allowChangePassword" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-xs">{{ $t('lmsConfig.allowChangeEmail') }}</span>
+                        <p class="text-[10px] text-muted">{{ $t('lmsConfig.allowChangeEmailHint') }}</p>
+                    </div>
+                    <USwitch v-model="config.user.allowChangeEmail" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-xs">{{ $t('lmsConfig.allowChangeLocale') }}</span>
+                        <p class="text-[10px] text-muted">{{ $t('lmsConfig.allowChangeLocaleHint') }}</p>
+                    </div>
+                    <USwitch v-model="config.user.allowChangeLocale" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-xs">{{ $t('lmsConfig.allowExportData') }}</span>
+                        <p class="text-[10px] text-muted">{{ $t('lmsConfig.allowExportDataHint') }}</p>
+                    </div>
+                    <USwitch v-model="config.user.allowExportData" />
+                </div>
+            </div>
+        </div>
+
         <!-- AI 助手配置 -->
         <div class="space-y-2">
             <p class="text-sm font-medium">{{ $t('lmsConfig.ai') }}</p>
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-xs">{{ $t('lmsConfig.aiEnabled') }}</span>
+                        <p class="text-[10px] text-muted">{{ $t('lmsConfig.aiEnabledHint') }}</p>
+                    </div>
+                    <USwitch v-model="config.ai.enabled" />
+                </div>
+            </div>
             <div class="grid grid-cols-2 gap-2">
                 <UFormField :label="$t('lmsConfig.aiMode')" size="xs">
                     <USelect v-model="config.ai.mode" :items="aiModeOpts" size="xs" class="w-full" />
@@ -260,6 +311,90 @@
                 </div>
             </div>
         </div>
+
+        <!-- 首页显隐 -->
+        <div class="space-y-2">
+            <p class="text-sm font-medium">{{ $t('lmsConfig.home') }}</p>
+            <div class="grid grid-cols-2 gap-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('lmsConfig.showHero') }}</span>
+                    <USwitch v-model="config.home.showHero" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('lmsConfig.showStats') }}</span>
+                    <USwitch v-model="config.home.showStats" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('lmsConfig.showRecentCourses') }}</span>
+                    <USwitch v-model="config.home.showRecentCourses" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('lmsConfig.showLeaderboard') }}</span>
+                    <USwitch v-model="config.home.showLeaderboard" />
+                </div>
+            </div>
+        </div>
+
+        <!-- 课程列表显隐与默认视图 -->
+        <div class="space-y-2">
+            <p class="text-sm font-medium">{{ $t('lmsConfig.courseList') }}</p>
+            <div class="grid grid-cols-2 gap-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('lmsConfig.showSearch') }}</span>
+                    <USwitch v-model="config.courseList.showSearch" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('lmsConfig.showFilter') }}</span>
+                    <USwitch v-model="config.courseList.showFilter" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('lmsConfig.showSort') }}</span>
+                    <USwitch v-model="config.courseList.showSort" />
+                </div>
+                <UFormField :label="$t('lmsConfig.defaultView')" size="xs" class="col-span-2">
+                    <USelect v-model="config.courseList.defaultView" :items="defaultViewOpts" size="xs" class="w-full" />
+                </UFormField>
+            </div>
+        </div>
+
+        <!-- 章节播放页显隐 -->
+        <div class="space-y-2">
+            <p class="text-sm font-medium">{{ $t('lmsConfig.chapterPage') }}</p>
+            <div class="grid grid-cols-2 gap-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('lmsConfig.showOutline') }}</span>
+                    <USwitch v-model="config.chapterPage.showOutline" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('lmsConfig.showNote') }}</span>
+                    <USwitch v-model="config.chapterPage.showNote" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('lmsConfig.showDanmakuPanel') }}</span>
+                    <USwitch v-model="config.chapterPage.showDanmakuPanel" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">{{ $t('lmsConfig.enableFullscreen') }}</span>
+                    <USwitch v-model="config.chapterPage.enableFullscreen" />
+                </div>
+            </div>
+        </div>
+
+        <!-- 网盘存储 -->
+        <div class="space-y-2">
+            <p class="text-sm font-medium">{{ $t('lmsConfig.storage') }}</p>
+            <div class="grid grid-cols-2 gap-2">
+                <UFormField :label="$t('lmsConfig.driveSize')" size="xs" class="col-span-2">
+                    <template #hint>{{ $t('lmsConfig.driveSizeHint') }}</template>
+                    <UInput v-model.number="config.storage.driveSize" type="number" size="xs" class="w-full" />
+                </UFormField>
+                <UFormField :label="$t('lmsConfig.teacherMultiplier')" size="xs" class="col-span-2">
+                    <template #hint>{{ $t('lmsConfig.teacherMultiplierHint') }}</template>
+                    <UInput v-model.number="config.storage.teacherMultiplier" type="number" step="0.1" size="xs"
+                        class="w-full" />
+                </UFormField>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -274,7 +409,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const defaultConfig = {
-    ai: { mode: 'api', model: '', thinking: false, apiUrl: '/api/aichat/chat', llmApiUrl: '', llmApiKey: '', ollamaUrl: 'http://localhost:11434', ollamaModel: '', title: '', preset: '', opening: '', ttsGender: 'female' },
+    ai: { enabled: true, mode: 'api', model: '', thinking: false, apiUrl: '/api/aichat/chat', llmApiUrl: '', llmApiKey: '', ollamaUrl: 'http://localhost:11434', ollamaModel: '', title: '', preset: '', opening: '', ttsGender: 'female' },
     question: { submitExp: 2, correctBonusExp: 5, firstCorrectBonusExp: 10, maxSubmitCount: 999 },
     homework: { submitExp: 5, resubmitExp: 1, latePenalty: 0.8 },
     comment: { publishExp: 3, replyExp: 2, likeReceivedExp: 1, maxDailyExp: 20 },
@@ -285,6 +420,11 @@ const defaultConfig = {
     course: { showDanmaku: true, showAnnouncement: true, showComments: true, showProgress: false, defaultChapterOpen: true },
     chapterBtns: { showPlay: true, showScore: true, showSelect: true, showTimer: true, showInvite: true, showDanmaku: true, showVote: true, showQuickAnswer: true },
     courseBtns: { showProgress: true, showLeaderboard: true, showGroups: true, showGrades: true, showAnnouncements: true, showWrongBook: true },
+    user: { allowSelfAvatarUpload: true, allowChangePassword: true, allowChangeEmail: true, allowChangeLocale: true, allowExportData: true },
+    home: { showHero: true, showStats: true, showRecentCourses: true, showLeaderboard: true },
+    courseList: { showSearch: true, showFilter: true, showSort: true, defaultView: 'grid' },
+    chapterPage: { showOutline: true, showNote: true, showDanmakuPanel: true, enableFullscreen: true },
+    storage: { driveSize: 1073741824, teacherMultiplier: 1 },
 }
 
 const aiModeOpts = computed(() => [
@@ -296,6 +436,11 @@ const aiModeOpts = computed(() => [
 const ttsGenderOpts = computed(() => [
     { label: $t('lmsConfig.aiTtsFemale'), value: 'female' },
     { label: $t('lmsConfig.aiTtsMale'), value: 'male' },
+])
+
+const defaultViewOpts = computed(() => [
+    { label: $t('lmsConfig.defaultViewGrid'), value: 'grid' },
+    { label: $t('lmsConfig.defaultViewList'), value: 'list' },
 ])
 
 const config = reactive(JSON.parse(JSON.stringify(defaultConfig)))

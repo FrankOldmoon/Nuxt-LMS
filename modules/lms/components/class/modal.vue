@@ -23,7 +23,7 @@
         </div>
 
         <!-- 新增班级 -->
-        <div class="flex items-center gap-2 mt-3">
+        <div class="flex items-center gap-2 mt-3" v-if="hasRole('admin')">
           <UInput v-model="newClassName" :placeholder="$t('classSelector.newClassNamePlaceholder')" class="flex-1"
             size="sm" @keyup.enter="addClass" />
           <UButton :label="$t('classSelector.addClass')" icon="i-lucide-plus" size="sm" color="primary" variant="soft"
@@ -122,7 +122,7 @@ import type { LmsClass, LmsSearchUser } from '#lms/types/lms'
 
 const open = defineModel<boolean>('open', { required: true })
 
-const { user, refreshUser } = useAuth()
+const { user, refreshUser, hasRole } = useAuth()
 const toast = useToast()
 const { t } = useI18n()
 const { editableCourseId } = useLayoutState()
