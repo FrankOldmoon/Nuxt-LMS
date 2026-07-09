@@ -89,7 +89,7 @@
 
 <script setup lang="ts">
 // 跨模块导入：错题本需直接渲染 question 组件，并显式传入 courseId
-import QuestionRender from '../../../doc/components/ueditor/extensions/nodes/render/vue/question.vue'
+import QuestionRender from '../ueditor/extensions/nodes/vue/question/render.vue'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },

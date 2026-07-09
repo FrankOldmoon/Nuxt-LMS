@@ -82,7 +82,20 @@
 </template>
 
 <script setup lang="ts">
-import type { LmsNotificationList } from '#lms/types/lms'
+interface NotificationItem {
+  id: number
+  name: string
+  content: { text?: string } | null
+  readAt: string | null
+  createdAt: string
+}
+
+interface NotificationList {
+  items: NotificationItem[]
+  total: number
+  page: number
+  pageSize: number
+}
 
 const isOpen = defineModel<boolean>('open', { default: false })
 
@@ -91,7 +104,7 @@ const pageSize = 10
 
 const url = computed(() => `/api/notifications/list?page=${page.value}&pageSize=${pageSize}`)
 
-const { data: list, pending, refresh } = cRequest.use<LmsNotificationList>(
+const { data: list, pending, refresh } = cRequest.use<NotificationList>(
   url,
   { default: () => null, watch: [page], immediate: false },
 )

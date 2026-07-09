@@ -75,9 +75,7 @@ async function cRequest<T = any>(url: string, options: Record<string, any> = {})
     finalOptions.body = injectToBody(options.body, courseId, chapterId)
   }
 
-  console.log('[cRequest]', options.method || 'GET', finalUrl)
   const resp = await $fetch<{ data: T; success: boolean; msg: string }>(finalUrl, finalOptions)
-  console.log('[cRequest] response:', resp.success, resp.msg, resp.data)
   if (!resp.success) {
     throw new Error(resp.msg || '请求失败')
   }
@@ -107,9 +105,8 @@ cRequest.use = <T = any>(url: string | (() => string) | Ref<string>, options: Re
 
   // 教师以上角色（admin / teacher / editor）需要在客户端获取最新数据
   // 避免 SSR payload 缓存导致教师看到旧数据（如章节开放状态变更后不刷新）
-  const { hasRole, teacherCourseIds, editorCourseIds } = useAuth()
-  const isTeacherPlus = () =>
-    hasRole('admin') || teacherCourseIds.value.length > 0 || editorCourseIds.value.length > 0
+  const { hasRole } = useAuth()
+  const isTeacherPlus = () => hasRole('admin') || hasRole('teacher')
 
   const fetchResult = useFetch<T>(wrappedUrl, {
     ...rest,
@@ -123,7 +120,6 @@ cRequest.use = <T = any>(url: string | (() => string) | Ref<string>, options: Re
       return nuxtApp.payload.data[key] ?? nuxtApp.static.data[key]
     },
     transform: (raw: any) => {
-      console.log('[cRequest.use]', urlGetter(), raw)
       if (raw && typeof raw === 'object' && 'data' in raw && 'success' in raw) {
         return customTransform ? customTransform(raw.data) : (raw.data as T)
       }

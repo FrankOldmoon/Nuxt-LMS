@@ -1,24 +1,23 @@
 import nodemailer from 'nodemailer'
-import { getSiteConfigSync } from './siteConfig'
+import { getConfigByPrefix } from './config'
 
 /**
  * 邮件发送工具
  *
- * SMTP 配置从 site_config.mail 读取（管理员在 settingsModal 配置）
- * - host, port, secure, user, pass, from
+ * SMTP 配置从 site:mail.* 读取（管理员在 settingsModal 配置）
+ * - host, port, secure, user, pass, from, siteUrl
  *
- * 调用 sendMail() 前确保 site_config 已加载（启动插件会自动加载）
+ * 调用 sendMail() 前确保配置已加载（启动插件会自动加载）
  */
 
 let _transporter: nodemailer.Transporter | null = null
 let _transporterKey = ''
 
 /**
- * 根据当前 site_config 创建/复用 transporter
+ * 根据当前 site:mail 配置创建/复用 transporter
  */
-function getTransporter(): nodemailer.Transporter | null {
-  const cfg = getSiteConfigSync()
-  const mail = cfg?.mail
+async function getTransporter(): Promise<nodemailer.Transporter | null> {
+  const mail = await getConfigByPrefix('site:mail')
   if (!mail?.host || !mail?.user || !mail?.pass) return null
 
   const key = `${mail.host}:${mail.port}:${mail.user}`
@@ -41,13 +40,13 @@ function getTransporter(): nodemailer.Transporter | null {
  * @param html HTML 正文
  */
 export async function sendMail(to: string, subject: string, html: string): Promise<boolean> {
-  const transporter = getTransporter()
+  const transporter = await getTransporter()
   if (!transporter) {
     console.error('[mail] SMTP 未配置，无法发送邮件')
     return false
   }
-  const cfg = getSiteConfigSync()
-  const from = cfg?.mail?.from || cfg?.mail?.user
+  const mail = await getConfigByPrefix('site:mail')
+  const from = mail?.from || mail?.user
   try {
     await transporter.sendMail({ from, to, subject, html })
     return true

@@ -52,7 +52,8 @@
 
 <script setup lang="ts">
 const route = useRoute()
-const { hasRole, isCourseTeacher, user } = useAuth()
+const { hasRole, user } = useAuth()
+const { isCourseEditor, isCourseTeacher } = useAuthLms()
 const { showDanmaku, chapterBtnsConfig } = useLayoutState()
 const { sendInvite: wsSendInvite } = useWebSocket()
 const toast = useToast()

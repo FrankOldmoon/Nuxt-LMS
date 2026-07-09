@@ -95,7 +95,7 @@ async function handleCrop() {
         // 上传（不再次压缩，因为已经裁剪且转为 webp）
         const formData = new FormData()
         formData.append('files', croppedFile)
-        const res = await $fetch<{ data: { url: string }; success: boolean; msg: string }>('/api/upload', {
+        const res = await $fetch<{ data: { url: string }; success: boolean; msg: string }>('/api/files/upload', {
             method: 'POST',
             body: formData,
         })

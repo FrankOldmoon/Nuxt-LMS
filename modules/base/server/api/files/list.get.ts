@@ -59,7 +59,7 @@ export default eventHandler(async (event) => {
 
   const list = rows.map((r) => ({
     ...r,
-    url: `/api/file?pathname=${encodeURIComponent(r.path.replace(/^\/+/, ''))}`,
+    url: `/api/files/serve?pathname=${encodeURIComponent(r.path.replace(/^\/+/, ''))}`,
   }))
 
   return cResp({

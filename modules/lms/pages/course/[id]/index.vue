@@ -70,7 +70,7 @@
 <script setup lang="ts">
 const route = useRoute()
 const courseId = computed(() => route.params.id as string)
-const apiUrl = computed(() => `/api/lms/courses/show?id=${courseId.value}`)
+const apiUrl = computed(() => `/api/courses/show?id=${courseId.value}`)
 const { courseBtnsConfig, chapterBtnsConfig } = useLayoutState()
 
 const { resp, pending, course, canEdit, hasContent, chapterTree: baseChapterTree,

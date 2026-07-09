@@ -95,7 +95,6 @@ const isOpen = defineModel('open', { default: false })
 const { t } = useI18n()
 const { user } = useAuth()
 const toast = useToast()
-const { onMessage } = useWebSocket()
 const { refresh: refreshUnread } = useUnreadCounts()
 
 const conversations = ref([])
@@ -212,7 +211,7 @@ watch(isOpen, (val) => {
 })
 
 // WebSocket 实时消息：收到新消息时更新 UI
-onMessage((data) => {
+registerWsHandler('message', (data) => {
   const msg = data.message
   if (!msg) return
 

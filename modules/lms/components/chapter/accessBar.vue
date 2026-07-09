@@ -38,7 +38,8 @@ const props = defineProps<{
 
 const { t } = useI18n()
 const toast = useToast()
-const { hasRole, isCourseTeacher } = useAuth()
+const { hasRole } = useAuth()
+const { isCourseEditor, isCourseTeacher } = useAuthLms()
 const { classes, loadClasses } = useClasses()
 
 const canEdit = computed(() => {
@@ -65,7 +66,7 @@ const classOptions = computed(() =>
 const chapterDataRef = toRef(props, 'chapterData')
 
 function syncFromChapterData(data: typeof props.chapterData) {
-  console.log({ chapterData: data })
+
   isOpen.value = !!data?.isOpen
   selectedClassIds.value = (data?.classChapters || []).filter(c => c.open).map(c => c.classId)
 }

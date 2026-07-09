@@ -240,7 +240,7 @@ async function handleUpload(e: Event) {
         const formData = new FormData()
         formData.append('files', file)
         if (props.group) formData.append('group', props.group)
-        const resp: any = await $fetch('/api/upload', {
+        const resp: any = await $fetch('/api/files/upload', {
             method: 'POST',
             body: formData,
         })
@@ -318,7 +318,7 @@ function download(f: any) {
 
 // ========== 预览 ==========
 function preview(f: any) {
-    window.open(`/api/file?pathname=${encodeURIComponent(f.path.replace(/^\/+/, ''))}`, '_blank')
+    window.open(`/api/files/serve?pathname=${encodeURIComponent(f.path.replace(/^\/+/, ''))}`, '_blank')
 }
 
 // ========== 选择器模式 ==========
@@ -329,7 +329,7 @@ function buildFileData(f: any) {
         size: f.size,
         type: f.type,
         path: f.path,
-        url: `/api/file?pathname=${encodeURIComponent(f.path.replace(/^\/+/, ''))}`,
+        url: `/api/files/serve?pathname=${encodeURIComponent(f.path.replace(/^\/+/, ''))}`,
     }
 }
 

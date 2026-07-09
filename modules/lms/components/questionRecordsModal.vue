@@ -1,51 +1,50 @@
 <template>
-    <UModal v-model:open="open" scrollable fullscreen>
-        <template #content>
-            <div class="p-6 space-y-4 min-w-[600px]">
-                <h2 class="text-lg font-semibold">{{ $t('record.questionRecords') }}</h2>
+  <UModal v-model:open="open" scrollable fullscreen>
+    <template #content>
+      <div class="p-6 space-y-4 min-w-[600px]">
+        <h2 class="text-lg font-semibold">{{ $t('record.questionRecords') }}</h2>
 
-                <ClassUsersTable :rows="rows" :loading="pending" :extra-columns="extraColumns"
-                    :hide-actions="true" :hide-teachers="true" :default-sort="defaultSort">
-                    <!-- record 列：显示学生选择/填写的具体内容 + 正确与否 -->
-                    <template #record-cell="{ row }">
-                        <div class="flex items-start gap-2">
-                            <template v-if="row.original.record">
-                                <UIcon :name="recordIcon(row.original.record)" class="w-3.5 h-3.5 mt-0.5 shrink-0"
-                                    :class="recordIconClass(row.original.record)" />
-                                <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                                    <span v-for="(ans, idx) in formatUserAnswer(row.original.record)" :key="idx"
-                                        class="text-xs px-1.5 py-0.5 rounded"
-                                        :class="answerItemClass(row.original.record, idx)">
-                                        {{ ans }}
-                                    </span>
-                                    <span class="text-xs text-gray-400">→ {{ formatCorrectRate(row.original.record) }}</span>
-                                </div>
-                            </template>
-                            <span v-else class="text-xs text-gray-400">-</span>
-                        </div>
-                    </template>
-                </ClassUsersTable>
-
-                <!-- 选项分布柱状图（仅 single/multiple 类型） -->
-                <ClientOnly v-if="showOptionChart">
-                    <div class="mt-4 pt-4 border-t border-default">
-                        <h3 class="text-sm font-medium mb-2">{{ $t('record.optionDistribution') }}</h3>
-                        <Chart :option="optionChartOption" height="240" />
-                    </div>
-                </ClientOnly>
+        <ClassUsersTable :rows="rows" :loading="pending" :extra-columns="extraColumns" :hide-actions="true"
+          :hide-teachers="true" :default-sort="defaultSort">
+          <!-- record 列：显示学生选择/填写的具体内容 + 正确与否 -->
+          <template #record-cell="{ row }">
+            <div class="flex items-start gap-2">
+              <template v-if="row.original.record">
+                <UIcon :name="recordIcon(row.original.record)" class="w-3.5 h-3.5 mt-0.5 shrink-0"
+                  :class="recordIconClass(row.original.record)" />
+                <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                  <span v-for="(ans, idx) in formatUserAnswer(row.original.record)" :key="idx"
+                    class="text-xs px-1.5 py-0.5 rounded" :class="answerItemClass(row.original.record, idx)">
+                    {{ ans }}
+                  </span>
+                  <span class="text-xs text-gray-400">→ {{ formatCorrectRate(row.original.record) }}</span>
+                </div>
+              </template>
+              <span v-else class="text-xs text-gray-400">-</span>
             </div>
-        </template>
-    </UModal>
+          </template>
+        </ClassUsersTable>
+
+        <!-- 选项分布柱状图（仅 single/multiple 类型） -->
+        <ClientOnly v-if="showOptionChart">
+          <div class="mt-4 pt-4 border-t border-default">
+            <h3 class="text-sm font-medium mb-2">{{ $t('record.optionDistribution') }}</h3>
+            <Chart :option="optionChartOption" height="240" />
+          </div>
+        </ClientOnly>
+      </div>
+    </template>
+  </UModal>
 </template>
 
 <script setup>
-import { computeCorrectRate } from '../../doc/components/ueditor/extensions/nodes/render/vue/question/shared.ts'
+import { computeCorrectRate } from './ueditor/extensions/nodes/vue/question/render/shared.ts'
 
 const props = defineProps({
-    modelValue: { type: Boolean, default: false },
-    courseId: { type: Number, default: 0 },
-    cid: { type: Number, default: 0 },
-    question: { type: Object, default: null },
+  modelValue: { type: Boolean, default: false },
+  courseId: { type: Number, default: 0 },
+  cid: { type: Number, default: 0 },
+  question: { type: Object, default: null },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -54,60 +53,60 @@ const { t } = useI18n()
 const { students, fetchUsers, currentClassId } = useClassUsers()
 
 const open = computed({
-    get: () => props.modelValue,
-    set: (v) => emit('update:modelValue', v),
+  get: () => props.modelValue,
+  set: (v) => emit('update:modelValue', v),
 })
 
 const rows = ref([])
 const pending = ref(false)
 
 const extraColumns = computed(() => [{
-    id: 'record',
-    header: t('record.colRecord'),
-    sortingFn: (a, b) => (a.original.record ? 1 : 0) - (b.original.record ? 1 : 0),
+  id: 'record',
+  header: t('record.colRecord'),
+  sortingFn: (a, b) => (a.original.record ? 1 : 0) - (b.original.record ? 1 : 0),
 }])
 
 const defaultSort = [{ id: 'record', desc: true }]
 
 // 先用缓存学生数据填充 table，再异步合并 records
 function buildRows(recordsData) {
-    const recordMap = new Map((recordsData || []).map(r => [r.userId, r.record]))
-    rows.value = students.value.map(s => ({
-        id: s.id,
-        name: s.name,
-        preferName: s.preferName,
-        rollNumber: s.rollNumber,
-        avatarImg: s.avatarImg,
-        record: recordMap.get(s.id) || null,
-    }))
-    // 有记录的排前面
-    rows.value.sort((a, b) => {
-        const aHas = a.record ? 1 : 0
-        const bHas = b.record ? 1 : 0
-        return bHas - aHas
-    })
+  const recordMap = new Map((recordsData || []).map(r => [r.userId, r.record]))
+  rows.value = students.value.map(s => ({
+    id: s.id,
+    name: s.name,
+    preferName: s.preferName,
+    rollNumber: s.rollNumber,
+    avatarImg: s.avatarImg,
+    record: recordMap.get(s.id) || null,
+  }))
+  // 有记录的排前面
+  rows.value.sort((a, b) => {
+    const aHas = a.record ? 1 : 0
+    const bHas = b.record ? 1 : 0
+    return bHas - aHas
+  })
 }
 
 async function fetchRecords() {
-    if (!props.courseId || !props.cid) {
-        rows.value = []
-        return
-    }
-    // 先用缓存学生数据立即显示 table
-    buildRows([])
-    pending.value = true
-    try {
-        const data = await cRequest(`/api/questions/records?course_id=${props.courseId}&cid=${props.cid}`)
-        buildRows(data)
-    } catch {
-        rows.value = []
-    } finally {
-        pending.value = false
-    }
+  if (!props.courseId || !props.cid) {
+    rows.value = []
+    return
+  }
+  // 先用缓存学生数据立即显示 table
+  buildRows([])
+  pending.value = true
+  try {
+    const data = await cRequest(`/api/questions/records?course_id=${props.courseId}&cid=${props.cid}`)
+    buildRows(data)
+  } catch {
+    rows.value = []
+  } finally {
+    pending.value = false
+  }
 }
 
 watch(open, (val) => {
-    if (val) fetchRecords()
+  if (val) fetchRecords()
 })
 
 // 格式化作答内容
@@ -252,97 +251,97 @@ function answerItemClass(record, idx) {
 }
 
 function recordIconClass(record) {
-    const rate = Number(record?.correctRate) || 0
-    if (rate >= 1) return 'text-green-500'
-    if (rate > 0) return 'text-yellow-500'
-    return 'text-red-500'
+  const rate = Number(record?.correctRate) || 0
+  if (rate >= 1) return 'text-green-500'
+  if (rate > 0) return 'text-yellow-500'
+  return 'text-red-500'
 }
 
 function recordIcon(record) {
-    const rate = Number(record?.correctRate) || 0
-    if (rate >= 1) return 'i-heroicons-check-circle'
-    if (rate > 0) return 'i-heroicons-exclamation-circle'
-    return 'i-heroicons-x-circle'
+  const rate = Number(record?.correctRate) || 0
+  if (rate >= 1) return 'i-heroicons-check-circle'
+  if (rate > 0) return 'i-heroicons-exclamation-circle'
+  return 'i-heroicons-x-circle'
 }
 
 // ====================== 选项分布柱状图（single/multiple） ======================
 const showOptionChart = computed(() => {
-    const type = props.question?.type
-    return type === 'single' || type === 'multiple'
+  const type = props.question?.type
+  return type === 'single' || type === 'multiple'
 })
 
 // 统计每个选项被选择的人数
 const optionCounts = computed(() => {
-    const q = props.question
-    if (!q || !showOptionChart.value) return []
-    const options = q.options || []
-    const counts = new Array(options.length).fill(0)
-    for (const row of rows.value) {
-        const rec = row.record
-        if (!rec || !Array.isArray(rec.records)) continue
-        for (const idx of rec.records) {
-            const i = Number(idx)
-            if (i >= 0 && i < counts.length) counts[i]++
-        }
+  const q = props.question
+  if (!q || !showOptionChart.value) return []
+  const options = q.options || []
+  const counts = new Array(options.length).fill(0)
+  for (const row of rows.value) {
+    const rec = row.record
+    if (!rec || !Array.isArray(rec.records)) continue
+    for (const idx of rec.records) {
+      const i = Number(idx)
+      if (i >= 0 && i < counts.length) counts[i]++
     }
-    return options.map((opt, i) => ({
-        label: String.fromCharCode(65 + i),
-        text: typeof opt === 'string' ? opt : (opt?.text || opt?.name || ''),
-        count: counts[i],
-        isCorrect: Array.isArray(q.answer) && q.answer.includes(i),
-    }))
+  }
+  return options.map((opt, i) => ({
+    label: String.fromCharCode(65 + i),
+    text: typeof opt === 'string' ? opt : (opt?.text || opt?.name || ''),
+    count: counts[i],
+    isCorrect: Array.isArray(q.answer) && q.answer.includes(i),
+  }))
 })
 
 const optionChartOption = computed(() => {
-    const data = optionCounts.value
-    if (!data.length) return {}
-    const correctAnswer = Array.isArray(props.question?.answer) ? props.question.answer : []
-    return {
-        grid: { left: 40, right: 20, top: 20, bottom: 60 },
-        xAxis: {
-            type: 'category',
-            data: data.map(d => d.label),
-            axisLabel: { fontSize: 12, color: '#6b7280' },
-            axisTick: { show: false },
-            axisLine: { lineStyle: { color: '#e5e7eb' } },
+  const data = optionCounts.value
+  if (!data.length) return {}
+  const correctAnswer = Array.isArray(props.question?.answer) ? props.question.answer : []
+  return {
+    grid: { left: 40, right: 20, top: 20, bottom: 60 },
+    xAxis: {
+      type: 'category',
+      data: data.map(d => d.label),
+      axisLabel: { fontSize: 12, color: '#6b7280' },
+      axisTick: { show: false },
+      axisLine: { lineStyle: { color: '#e5e7eb' } },
+    },
+    yAxis: {
+      type: 'value',
+      minInterval: 1,
+      splitLine: { show: true, lineStyle: { type: 'dashed', color: '#e5e7eb' } },
+      axisLabel: { fontSize: 10, color: '#9ca3af' },
+    },
+    series: [{
+      type: 'bar',
+      data: data.map(d => ({
+        value: d.count,
+        itemStyle: {
+          color: d.isCorrect ? '#22c55e' : '#60a5fa',
+          borderRadius: [4, 4, 0, 0],
         },
-        yAxis: {
-            type: 'value',
-            minInterval: 1,
-            splitLine: { show: true, lineStyle: { type: 'dashed', color: '#e5e7eb' } },
-            axisLabel: { fontSize: 10, color: '#9ca3af' },
-        },
-        series: [{
-            type: 'bar',
-            data: data.map(d => ({
-                value: d.count,
-                itemStyle: {
-                    color: d.isCorrect ? '#22c55e' : '#60a5fa',
-                    borderRadius: [4, 4, 0, 0],
-                },
-            })),
-            barWidth: '50%',
-            label: {
-                show: true,
-                position: 'top',
-                fontSize: 12,
-                fontWeight: 'bold',
-                color: '#374151',
-                formatter: '{c}',
-            },
-            animationDuration: 600,
-        }],
-        tooltip: {
-            trigger: 'axis',
-            formatter: (params) => {
-                const idx = params[0]?.dataIndex
-                if (idx == null) return ''
-                const d = data[idx]
-                return `${d.label}: ${d.text}<br/>${t('record.selectedCount')}: ${d.count}${d.isCorrect ? ` (${t('record.correctAnswer')})` : ''}`
-            },
-        },
-        animation: true,
-        animationDuration: 600,
-    }
+      })),
+      barWidth: '50%',
+      label: {
+        show: true,
+        position: 'top',
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: '#374151',
+        formatter: '{c}',
+      },
+      animationDuration: 600,
+    }],
+    tooltip: {
+      trigger: 'axis',
+      formatter: (params) => {
+        const idx = params[0]?.dataIndex
+        if (idx == null) return ''
+        const d = data[idx]
+        return `${d.label}: ${d.text}<br/>${t('record.selectedCount')}: ${d.count}${d.isCorrect ? ` (${t('record.correctAnswer')})` : ''}`
+      },
+    },
+    animation: true,
+    animationDuration: 600,
+  }
 })
 </script>

@@ -6,7 +6,11 @@
           <h3 class="text-lg font-semibold">{{ $t('profile.title') }}</h3>
         </div>
 
-        <AuthUserProfileForm v-model="form" />
+        <AuthUserProfileForm v-model="form">
+          <template v-for="(_, name) in $slots" #[name]="slotData">
+            <slot :name="name" v-bind="slotData" />
+          </template>
+        </AuthUserProfileForm>
 
         <div class="flex justify-end gap-2 pt-4">
           <UButton

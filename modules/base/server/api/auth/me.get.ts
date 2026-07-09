@@ -73,50 +73,13 @@ export default defineEventHandler(async (event) => {
     .innerJoin(schema.permissions, eq(schema.rolePermissions.permissionId, schema.permissions.id))
     .where(eq(schema.userRoles.userId, userId))
 
-  // 查询用户作为编辑者/教师的课程 ID 列表（lms 表，未启用 lms 时跳过）
-  let editorCourseIds: number[] = []
-  let teacherCourseIds: number[] = []
-  let classIds: number[] = []
-
-  if ((schema as any).userCourses) {
-    const editorCourseRows = await db
-      .select({ courseId: (schema as any).userCourses.courseId })
-      .from((schema as any).userCourses)
-      .where(
-        and(
-          eq((schema as any).userCourses.userId, userId),
-          eq((schema as any).userCourses.isEditor, true),
-        ),
-      )
-    editorCourseIds = editorCourseRows.map((r) => r.courseId)
-
-    const teacherCourseRows = await db
-      .select({ courseId: (schema as any).userCourses.courseId })
-      .from((schema as any).userCourses)
-      .where(
-        and(
-          eq((schema as any).userCourses.userId, userId),
-          eq((schema as any).userCourses.isTeacher, true),
-        ),
-      )
-    teacherCourseIds = teacherCourseRows.map((r) => r.courseId)
-  }
-
-  // 查询用户所属的所有班级 ID（用于条件组件本地判断 class 条件）
-  if ((schema as any).userClasses) {
-    const classRows = await db
-      .select({ classId: (schema as any).userClasses.classId })
-      .from((schema as any).userClasses)
-      .where(eq((schema as any).userClasses.userId, userId))
-    classIds = classRows.map((r) => r.classId)
-  }
+  // 跨模块字段扩展钩子（如 lms 注入 editorCourseIds/teacherCourseIds/classIds）
+  const extra = await runOnMeEnrich(userRecord)
 
   return cResp({
     user: userRecord,
     roles: roleRows,
     permissions: permRows,
-    editorCourseIds,
-    teacherCourseIds,
-    classIds,
+    ...extra,
   })
 })

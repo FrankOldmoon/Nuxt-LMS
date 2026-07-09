@@ -1,12 +1,25 @@
 /**
  * WebSocket 共享状态与工具函数
  *
- * 所有房间、投票、抢答、竞赛状态集中管理，
- * 供 ws.ts 主处理器与各功能模块（class / race）共享。
+ * base 只提供用户级连接池 + 通用房间。
+ * lms 的 class/race/group 状态由 lms 自身维护（通过 ws/registry 注册 handler/cleanup）。
  */
 
 // ====================== 用户级连接池（私信推送） ======================
 export const userPeers = new Map<number, Set<any>>()
+
+/** 所有活跃连接（用于系统级广播，如 site-config-changed） */
+const allPeers = new Set<any>()
+
+/** 注册活跃连接（ws open 时调用） */
+export function trackPeer(peer: any) {
+  allPeers.add(peer)
+}
+
+/** 注销活跃连接（ws close 时调用） */
+export function untrackPeer(peer: any) {
+  allPeers.delete(peer)
+}
 
 /** 向指定用户的所有在线连接推送消息 */
 export function sendToUser(userId: number, msg: object) {
@@ -23,103 +36,62 @@ export function sendToUser(userId: number, msg: object) {
   }
 }
 
-// ====================== 班级房间 ======================
-export const classRooms = new Map<number, Set<any>>()
-
-export function broadcastToClass(cid: number, msg: string) {
-  const room = classRooms.get(cid)
-  if (room) {
-    for (const p of room) {
-      p.send(msg)
+/** 广播到所有在线连接（系统级消息，如配置变更） */
+export function broadcastToAll(msg: object) {
+  const text = JSON.stringify(msg)
+  for (const p of allPeers) {
+    try {
+      p.send(text)
+    } catch {
+      // 忽略
     }
   }
 }
 
-// ====================== 投票 / 抢答 ======================
-export const votes = new Map<string, { classId: number; question: string; options: string[]; results: number[]; votedUsers: Set<string> }>()
+// ====================== 通用房间 ======================
+/** roomId → 在线连接集合 */
+export const rooms = new Map<string, Set<any>>()
 
-export const quickAnswers = new Map<number, { question: string; winner: string | null; submitted: Set<string> }>()
-
-// ====================== 竞赛 ======================
-export interface RaceAnswer {
-  answer: any
-  from: string
-  userId: number
-  rate: number
-  correct: boolean
-  submittedAt: number
+/** 加入房间（同时记录 peer._rooms 以便关闭时高效清理） */
+export function joinRoom(roomId: string, peer: any) {
+  if (!rooms.has(roomId)) rooms.set(roomId, new Set())
+  rooms.get(roomId)!.add(peer)
+  if (!peer._rooms) peer._rooms = new Set<string>()
+  peer._rooms.add(roomId)
 }
 
-export interface RaceState {
-  raceCid: number
-  courseId: number
-  currentQuestion: number
-  totalQuestions: number
-  activeQuestionCid: number | null
-  timeLimit: number
-  questionStartedAt: number
-  startedAt: number
-  answers: Map<number, Map<number, RaceAnswer>>
+/** 离开房间 */
+export function leaveRoom(roomId: string, peer: any) {
+  const room = rooms.get(roomId)
+  if (!room) return
+  room.delete(peer)
+  if (room.size === 0) rooms.delete(roomId)
+  if (peer._rooms) peer._rooms.delete(roomId)
 }
 
-/** pin = `${classId}_${chapterId}` → RaceState */
-export const raceStates = new Map<string, RaceState>()
-
-/** pin → Set<peer> */
-export const raceRooms = new Map<string, Set<any>>()
-
-export function broadcastToRace(pin: string, msg: string) {
-  const room = raceRooms.get(pin)
-  if (room) {
-    for (const p of room) {
-      p.send(msg)
-    }
-  }
-}
-
-// ====================== 小组房间 ======================
-/** groupId = `${courseId}_${groupName}` → Set<peer> */
-export const groupRooms = new Map<string, Set<any>>()
-
-export function broadcastToGroup(groupId: string, msg: string) {
-  const room = groupRooms.get(groupId)
-  if (room) {
-    for (const p of room) {
-      p.send(msg)
-    }
-  }
-}
-
-/** 从 race answers 计算实时分数汇总 */
-export function computeRaceScores(race: RaceState) {
-  const userTotals = new Map<number, { from: string; score: number; correctCount: number }>()
-  for (const [, qAnswers] of race.answers) {
-    for (const [uid, info] of qAnswers) {
-      if (!userTotals.has(uid)) {
-        userTotals.set(uid, { from: info.from, score: 0, correctCount: 0 })
-      }
-      const ut = userTotals.get(uid)!
-      if (info.correct) ut.correctCount++
-      ut.score += info.rate
-    }
-  }
-  const summary: any[] = []
-  for (const [uid, info] of userTotals) {
-    summary.push({ userId: uid, from: info.from, score: Math.round(info.score * 100) / 100, correctCount: info.correctCount })
-  }
-  summary.sort((a, b) => b.score - a.score)
-  return summary
-}
-
-/** 获取 race 房间内所有在线用户 */
-export function getRaceOnlineUsers(pin: string): { userId: number; from: string }[] {
-  const room = raceRooms.get(pin)
-  if (!room) return []
-  const users: { userId: number; from: string }[] = []
+/** 广播到房间 */
+export function broadcastToRoom(roomId: string, msg: string) {
+  const room = rooms.get(roomId)
+  if (!room) return
   for (const p of room) {
-    const uid = (p as any)._userId
-    const from = (p as any)._userName
-    if (uid) users.push({ userId: uid, from: from || 'anonymous' })
+    try {
+      p.send(msg)
+    } catch {
+      // 忽略
+    }
   }
-  return users
+}
+
+/** 清理某 peer 所在的所有房间（连接关闭时调用） */
+export function cleanupPeerRooms(peer: any) {
+  const joined = peer._rooms as Set<string> | undefined
+  if (!joined) return
+  for (const roomId of joined) {
+    const room = rooms.get(roomId)
+    if (room) {
+      room.delete(peer)
+      if (room.size === 0) rooms.delete(roomId)
+    }
+  }
+  joined.clear()
 }

@@ -1,19 +1,24 @@
 import { db, schema } from '@nuxthub/db'
 import { eq, and, isNull } from 'drizzle-orm'
-import { generateToken } from '../../utils/auth'
 
 /**
  * 忘记密码 - 请求重置
  * body: { email }
  *
  * 流程：
- * 1. 按邮箱查找用户，存在才发邮件（不泄露邮箱是否存在）
- * 2. 生成 reset token 存入 tokens 表（name 带 reset_ 前缀，30 分钟有效）
- * 3. 发送含重置链接的邮件
+ * 1. 检查 site:allowForgotPassword 开关
+ * 2. 按邮箱查找用户，存在才发邮件（不泄露邮箱是否存在）
+ * 3. 生成 reset token 存入 tokens 表（name 带 reset_ 前缀，30 分钟有效）
+ * 4. 发送含重置链接的邮件
  *
  * 无论用户是否存在都返回成功（防枚举）
  */
 export default defineEventHandler(async (event) => {
+  // 检查是否启用忘记密码功能
+  if (!(await getConfig('site:allowForgotPassword'))) {
+    return cResp(null, 'Password reset is disabled', false)
+  }
+
   const body = await readBody(event)
   const { email } = body || {}
 
@@ -34,10 +39,9 @@ export default defineEventHandler(async (event) => {
   }
 
   const user = users[0]
-  const cfg = getSiteConfigSync()
-  const siteUrl = cfg?.mail?.siteUrl || ''
+  const mail = await getConfigByPrefix('site:mail')
 
-  if (!cfg?.mail?.host) {
+  if (!mail.host) {
     return cResp(null, '邮件服务未配置，请联系管理员', false)
   }
 
@@ -52,6 +56,7 @@ export default defineEventHandler(async (event) => {
   })
 
   // 拼接重置链接
+  const siteUrl = mail.siteUrl || ''
   const resetUrl = siteUrl
     ? `${siteUrl.replace(/\/$/, '')}/reset-password?token=${tokenStr}`
     : `/reset-password?token=${tokenStr}`

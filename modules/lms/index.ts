@@ -15,8 +15,13 @@ export default defineNuxtModule({
   setup(_options, nuxt) {
     const { resolve } = createResolver(import.meta.url)
 
+    nuxt.hook("hub:db:schema:extend", async ({ dialect, paths }) => {
+      // Add your module drizzle schema files for the given dialect
+      paths.push(resolve(`./server/db/schema.ts`));
+    });
+
     // #lms 别名指向 lms 模块根目录，供 #lms/types/lms 类型导入使用。
-    // 始终注册（即使 lms 功能未启用），因为类型文件被 doc/base 模块引用。
+    // 始终注册（即使 lms 功能未启用），因为类型文件NUXT_MODULE_LMS。
     nuxt.options.alias['#lms'] = resolve('.')
 
     const enabled = process.env.NUXT_MODULE_LMS === 'true'
@@ -28,26 +33,22 @@ export default defineNuxtModule({
     addComponentsDir({ path: resolve('./components'), pathPrefix: true })
 
     // Nuxt 的 addComponentsDir 对同名组件采用"先注册者胜"策略，
-    // doc 模块（先注册）的 layout/aside、layout/toc、course/card 会遮蔽 lms 版本。
-    // 用 components:extend 钩子将这 3 个组件的 filePath 指向 lms 版本，
-    // 使 lms 启用时其增强版（含工具栏按钮、ChapterBtns 等）生效。
-    // lms 未启用时，doc 版本仍正常使用。
     nuxt.hook('components:extend', (components) => {
       const overrides: Record<string, string> = {
         LayoutAside: resolve('./components/layout/aside.vue'),
         LayoutToc: resolve('./components/layout/toc.vue'),
-        CourseCard: resolve('./components/course/card.vue'),
-        // 系统设置弹窗：lms 包装 base 版本，在 base 的 lms-config slot 中注入 LmsConfigEditor
+        LayoutHeader: resolve('./components/layout/header/index.vue'),
+        Layout: resolve('./components/layout/index.vue'),
+        LayoutMain: resolve('./components/layout/main.vue'),
         AuthSettingsModal: resolve('./components/auth/settingsModal.vue'),
-        // 课程编辑器表单：lms 包装 doc 版本，在 doc 的 lms-config slot 中注入 LmsConfigEditor (hide-course)
         CourseEditorConfigForm: resolve('./components/course/editor/configForm.vue'),
       }
       for (const [name, filePath] of Object.entries(overrides)) {
         const comp = components.find(c => c.pascalName === name)
         if (comp) {
           comp.filePath = filePath
-          ;(comp as any).shortPath = filePath.replace(nuxt.options.srcDir + '/', '')
-          ;(comp as any).chunkName = `components/${name.toLowerCase()}`
+            ; (comp as any).shortPath = filePath.replace(nuxt.options.srcDir + '/', '')
+            ; (comp as any).chunkName = `components/${name.toLowerCase()}`
         }
       }
     })
@@ -83,36 +84,6 @@ export default defineNuxtModule({
 
     addServerScanDir(resolve('./server'))
 
-    // ===== 覆盖 doc 模块的同名 server handler =====
-    // Nitro 的 nitroConfig.handlers 是 push 累加的，h3 router 匹配时取第一个命中的 handler。
-    // lms 在 doc 之后 addServerScanDir，所以 lms 的同名 handler 排在 doc 之后（数组末位），
-    // h3 永远先命中 doc 的 handler，导致 lms 覆盖 doc 失败。
-    //
-    // 解决方案：nitro:config hook 倒序去重，保留后注册者（lms）。
-    // 注意：lms 的覆盖文件必须与 doc 的 method 后缀一致（如都用 `show.get.ts`），
-    //      否则 method 字段不同，去重逻辑不会合并，doc 仍然先被命中。
-    nuxt.hook('nitro:config', (nitroConfig: any) => {
-      if (!nitroConfig.handlers) return
-      // 列出 lms 想要覆盖的 path（method 不需要列，hook 对每个 method 单独去重）
-      const overridePaths = new Set([
-        '/api/home',
-        '/api/chapters/show',
-        // 未来 lms 想覆盖 doc 的其他 endpoint 时在此追加
-      ])
-      const seen = new Set<string>()
-      const filtered: any[] = []
-      // 倒序遍历，第一次见到的同名 handler 保留
-      for (let i = nitroConfig.handlers.length - 1; i >= 0; i--) {
-        const h = nitroConfig.handlers[i]
-        if (overridePaths.has(h.route)) {
-          const key = `${h.method}:${h.route}`
-          if (seen.has(key)) continue
-          seen.add(key)
-        }
-        filtered.unshift(h)
-      }
-      nitroConfig.handlers = filtered
-    })
 
     // 客户端插件：监听 chapterAccessUpdate WS 消息，刷新当前课程侧边栏导航
     // （教师在 accessBar 切换章节 isOpen 或开放给班级时，服务端广播此消息）
@@ -125,7 +96,5 @@ export default defineNuxtModule({
       })
     })
 
-    // WS 回调：vote/quickAnswer/race/group/chatroom/online 等由 lms 组件
-    // 通过 useWebSocket().onXxx(cb) → registerWsHandler('xxx', cb) 注册到 base 连接层
   },
 })

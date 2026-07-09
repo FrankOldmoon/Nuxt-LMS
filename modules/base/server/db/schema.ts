@@ -86,6 +86,13 @@ export const files = pgTable(
   }),
 );
 
+export const classes = pgTable('classes', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  code: varchar('code', { length: 100 }).notNull().unique(),
+  ...withTimestamps,
+});
+
 // ====================== 用户表（原 auth module） ======================
 
 export const users = pgTable(
@@ -116,6 +123,7 @@ export const users = pgTable(
   },
   (t) => ({
     classIdx: index('idx_users_class_id').on(t.classId),
+    classFk: foreignKey({ columns: [t.classId], foreignColumns: [classes.id] }).onDelete('set null'),
     emailIdx: index('idx_users_email').on(t.email),
     usernameIdx: index('idx_users_username').on(t.username),
   }),

@@ -45,8 +45,13 @@
 </template>
 
 <script setup lang="ts">
+const { siteTitle } = useSiteConfig()
+
+useHead(() => ({
+  title: siteTitle.value || 'AI LMS',
+}))
 const { data: home } = useHome()
-const { isCourseTeacher } = useAuth()
+const { isCourseTeacher } = useAuthLms()
 
 const categories = computed(() => home.value?.categories ?? [])
 const courses = computed(() => home.value?.courses ?? [])

@@ -15,8 +15,8 @@ export interface CompressOptions {
 }
 
 const DEFAULT_OPTIONS: CompressOptions = {
-    maxSizeMB: 1,
-    maxWidthOrHeight: 1920,
+    maxSizeMB: 2,
+    maxWidthOrHeight: 3840,
     quality: 0.8,
     fileType: 'image/webp',
 }
@@ -71,7 +71,7 @@ export async function compressAndUpload(file: File, options?: CompressOptions): 
     const formData = new FormData()
     formData.append('files', compressedFile)
 
-    const res = await $fetch<{ data: { url: string }; success: boolean; msg: string }>('/api/upload', {
+    const res = await $fetch<{ data: { url: string }; success: boolean; msg: string }>('/api/files/upload', {
         method: 'POST',
         body: formData,
     })

@@ -1,11 +1,9 @@
 import { db, schema } from '@nuxthub/db'
 import { eq } from 'drizzle-orm'
-import { getSiteConfig } from '../../utils/siteConfig'
 
 export default defineEventHandler(async (event) => {
   // 检查系统设置是否开放注册
-  const siteConfig = await getSiteConfig()
-  if (!siteConfig.allowRegistration) {
+  if (!(await getConfig('site:allowRegistration'))) {
     return cResp(null, 'Registration is disabled', false)
   }
 
@@ -15,6 +13,12 @@ export default defineEventHandler(async (event) => {
   // 参数校验
   if (!username || !password || !name) {
     return cResp(null, 'Username, password and name are required', false)
+  }
+
+  // 密码长度校验
+  const minLen = Number(await getConfig('site:passwordMinLength')) || 6
+  if (password.length < minLen) {
+    return cResp(null, `Password must be at least ${minLen} characters`, false)
   }
 
   // 检查用户名是否已存在
@@ -47,6 +51,9 @@ export default defineEventHandler(async (event) => {
       email: schema.users.email,
       avatarImg: schema.users.avatarImg,
     })
+
+  // 分配默认角色
+  await assignRoleToUser(user.id, String(await getConfig('site:defaultUserRole')) || 'student')
 
   // 生成 token 并存入数据库
   const tokenStr = generateToken()

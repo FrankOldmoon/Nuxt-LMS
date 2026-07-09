@@ -6,9 +6,6 @@
  */
 import { db, schema } from "@nuxthub/db"
 import { eq } from "drizzle-orm"
-import { hashPassword } from "../../../base/server/utils/auth"
-import { reloadLmsConfig, getLmsConfig } from "../../../base/server/utils/lmsConfig"
-
 const TEST_PASSWORD = 'REDACTED'
 const TEST_COUNT = 30
 const TEST_CLASS_NAME = 'test'
@@ -53,12 +50,11 @@ export default defineNitroPlugin(async () => {
       console.log(`[lms-config-startup] classes 表已存在 ${existingClasses[0].id} 等班级，跳过创建`)
     }
 
-    // 3. 创建 30 个 test 学生账号
+    // 3. 创建 30 个 test 学生账号（直接设置 users.classId=1）
     const hashedPwd = await hashPassword(TEST_PASSWORD)
     const now = new Date()
     const userInserts: any[] = []
     const roleInserts: any[] = []
-    const classInserts: any[] = []
 
     for (let i = 1; i <= TEST_COUNT; i++) {
       const num = String(i).padStart(2, '0')
@@ -75,6 +71,7 @@ export default defineNitroPlugin(async () => {
         strongPwd: true,
         defaultLocale: 'en',
         avatarImg: '/avatar.webp',
+        classId: 1, // 直接设置班级 ID，不通过 userClasses 关联表
         createdAt: now,
         updatedAt: now,
       })
@@ -87,16 +84,12 @@ export default defineNitroPlugin(async () => {
       .onConflictDoNothing()
       .returning({ id: schema.users.id, username: schema.users.username })
 
-    // 为成功插入的用户关联 student 角色 + class_id=1
+    // 为成功插入的用户关联 student 角色
     for (const u of insertedUsers) {
       roleInserts.push({ userId: u.id, roleId: studentRoleId })
-      classInserts.push({ userId: u.id, classId: 1 })
     }
     if (roleInserts.length) {
       await db.insert(schema.userRoles).values(roleInserts).onConflictDoNothing()
-    }
-    if (classInserts.length) {
-      await db.insert(schema.userClasses).values(classInserts).onConflictDoNothing()
     }
 
     // 4. 写入标记位到 lms_config，避免重复初始化

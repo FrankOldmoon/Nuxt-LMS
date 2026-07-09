@@ -1,20 +1,23 @@
 /**
- * WebSocket 连接管理
+ * WebSocket 连接管理（通用）
  *
- * 提供 ws 实例、连接状态、send / connect / disconnect / joinClass 方法。
+ * 提供 ws 实例、连接状态、send / connect / disconnect / joinRoom / leaveRoom 方法。
  * connect() 内部使用 dispatch 分发收到的消息。
+ *
+ * base 只提供通用房间机制；class/group 等业务房间由后续模块
+ * 通过 registerWsHandler（composables/ws/callbacks）+ 服务端
+ * registerWsServerHandler 自行处理。
  */
 import { dispatch } from './callbacks'
 
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null
 
-/** 已加入的小组房间 ID 集合（客户端单例，断线重连时自动重新加入） */
-const joinedGroupIds = new Set<string>()
+/** 已加入的房间 ID 集合（客户端单例，断线重连时自动重新加入） */
+const joinedRooms = new Set<string>()
 
 export function useWsConnection() {
   const ws = useState<WebSocket | null>('ws-connection', () => null)
   const wsConnected = useState<boolean>('ws-connected', () => false)
-  const joinedClassId = useState<number | null>('ws-joined-class', () => null)
 
   function send(data: object) {
     if (ws.value && ws.value.readyState === WebSocket.OPEN) {
@@ -22,9 +25,16 @@ export function useWsConnection() {
     }
   }
 
-  function joinClass(classId: number, userId?: number, from?: string) {
-    joinedClassId.value = classId
-    send({ type: 'join', classId, userId, from })
+  /** 加入指定房间（断线重连自动重新加入） */
+  function joinRoom(room: string) {
+    joinedRooms.add(room)
+    send({ type: 'join', room })
+  }
+
+  /** 离开房间 */
+  function leaveRoom(room: string) {
+    joinedRooms.delete(room)
+    send({ type: 'leave', room })
   }
 
   function connect() {
@@ -45,12 +55,9 @@ export function useWsConnection() {
         if (user.value?.id) {
           send({ type: 'registerUser', userId: user.value.id, from: user.value.name })
         }
-        if (joinedClassId.value) {
-          joinClass(joinedClassId.value)
-        }
-        // 重新加入所有小组房间
-        for (const groupId of joinedGroupIds) {
-          send({ type: 'joinGroup', groupId })
+        // 重新加入所有房间
+        for (const room of joinedRooms) {
+          send({ type: 'join', room })
         }
       }
 
@@ -89,9 +96,8 @@ export function useWsConnection() {
       ws.value = null
     }
     wsConnected.value = false
-    joinedClassId.value = null
-    joinedGroupIds.clear()
+    joinedRooms.clear()
   }
 
-  return { ws, wsConnected, joinedClassId, joinedGroupIds, send, connect, disconnect, joinClass }
+  return { ws, wsConnected, joinedRooms, send, connect, disconnect, joinRoom, leaveRoom }
 }

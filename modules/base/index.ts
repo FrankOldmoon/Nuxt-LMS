@@ -1,25 +1,40 @@
-import { defineNuxtModule, createResolver, addComponentsDir, addImportsDir, addServerScanDir, addPlugin } from '@nuxt/kit'
+import { defineNuxtModule, createResolver, addComponentsDir, addImportsDir, addServerScanDir, addPlugin, resolvePath } from '@nuxt/kit'
+import fs from 'fs'
 
 /**
- * base module（已合并 auth）
+ * base module（base 模块的重构版，自包含、不感知 doc/lms）
  *
  * 功能：
  * - 基础配置（i18n / hub / ui / nitro / css / runtimeConfig / appConfig）
  * - 基本页面布局（header/main/footer）、form 共用组件、共享 utils（cRequest 等）
- * - 系统设置、WebSocket 连接层、通用 CRUD
+ * - 系统设置（拍平 key 存储）、WebSocket 连接层、通用 CRUD
  * - 登录/注册/忘记密码、前后端身份认证、个人资料管理
  * - 系统通知、个人网盘、消息收发
- * - schema：roles/permissions/configs/files/users/tokens/userRoles/userClasses/notifys/messages
+ * - schema：roles/permissions/configs/files/users/tokens/userRoles/notifys/messages
+ *
+ * 扩展点（供后续模块引用，base 自身不感知后续模块）：
+ * - server hooks：runOnMeEnrich / runOnUserImported
+ * - ws handler 注册表：registerWsServerHandler / registerWsServerCleanup
+ * - client ws handler 注册表：registerWsHandler（composables/ws/callbacks）
+ * - 命名 slot：profile-extra / settings-extra / nav / header-right / nav-mobile
  *
  * base 必须在 modules 数组中排第一位，确保 i18n / hub / ui 等配置
  * 先于 @nuxthub/core / @nuxt/ui / @nuxtjs/i18n 执行。
  *
- * 脚手架阶段：NUXT_MODULE_BASE=false 时跳过功能注册（基础配置仍生效）。
+ * 开关：NUXT_MODULE_BASE=true 时注册功能（基础配置始终生效）。
+ * 同时设置 moduleBase=true 兼容 doc/lms 的 if(moduleBase) 检查。
  */
 export default defineNuxtModule({
-  meta: { name: 'module-base', configKey: 'moduleBase' },
+  meta: { name: 'module-base', configKey: 'modulebase' },
   setup(_options, nuxt) {
+    const enabled = process.env.NUXT_MODULE_BASE === 'true'
+    if (!enabled) return
     const { resolve } = createResolver(import.meta.url)
+
+    nuxt.hook("hub:db:schema:extend", async ({ dialect, paths }) => {
+      // Add your module drizzle schema files for the given dialect
+      paths.push(resolve(`./server/db/schema.ts`));
+    });
 
     // ========== 基础配置（原 nuxt.config.ts，需在第三方模块 setup 前设置）==========
 
@@ -45,13 +60,31 @@ export default defineNuxtModule({
     opts.runtimeConfig = opts.runtimeConfig || {}
     opts.runtimeConfig.public = {
       moduleBase: false,
+      modulebase: false,
       moduleDoc: false,
+      modulelms: false,
       moduleLms: false,
       ...(opts.runtimeConfig.public || {}),
     }
 
     // CSS（原 app/assets/css/main.css）
     nuxt.options.css = [...(nuxt.options.css || []), resolve('./assets/css/main.css')]
+
+    // App config（Nuxt UI v3 颜色配置）
+    // 每个语义颜色映射到 Tailwind 色板名，未配置的颜色不会生成 CSS 变量，导致样式失效
+    nuxt.options.appConfig = nuxt.options.appConfig || {}
+    ;(nuxt.options.appConfig as any).ui = {
+      ...((nuxt.options.appConfig as any).ui || {}),
+      colors: {
+        primary: 'green',
+        neutral: 'slate',
+        info: 'blue',
+        success: 'emerald',
+        warning: 'amber',
+        error: 'red',
+        secondary: 'purple',
+      },
+    }
 
     // Nitro
     // 注：scheduledTasks 格式为 { [cron]: taskName }（key=cron，value=taskName），
@@ -68,48 +101,33 @@ export default defineNuxtModule({
       '/api/**': { cors: true },
     }
 
-    // App config（原 app/app.config.ts）
-    nuxt.options.appConfig = nuxt.options.appConfig || {}
-    ;(nuxt.options.appConfig as any).ui = {
-      ...((nuxt.options.appConfig as any).ui || {}),
-      colors: { primary: 'green', neutral: 'slate' },
-    }
-
     // ========== base 模块功能注册（env 控制开关）==========
 
-    const enabled = process.env.NUXT_MODULE_BASE === 'true'
-    if (!enabled) return
-
     // 标记 base 模块已启用，供组件条件渲染使用
+    // 同时保留 moduleBase=true 兼容 doc/lms 的 if(moduleBase) 检查
     nuxt.options.runtimeConfig.public.moduleBase = true
+    nuxt.options.runtimeConfig.public.modulebase = true
 
     // 注册组件目录（pathPrefix: true → 子目录作为前缀，如 auth/loginModal.vue → AuthLoginModal）
     addComponentsDir({ path: resolve('./components'), pathPrefix: true })
 
     // 注册 composables / utils 自动导入
     // 注：addImportsDir 不会递归扫描子目录，ws/ 子目录需单独注册
-    //     useWsConnection / registerWsHandler 供 lms 模块跨模块调用
+    //     useWsConnection / registerWsHandler 供后续模块跨模块调用
     addImportsDir(resolve('./composables'))
     addImportsDir(resolve('./composables/ws'))
     addImportsDir(resolve('./utils'))
 
-    // lms 未启用时注册 useWebSocket stub（含 race/class/group no-op 方法）
-    // lms 启用时由 lms/composables/useWebSocket.ts 提供完整实现，
-    // 此处不注册以避免 "Duplicated imports" 警告
-    if (process.env.NUXT_MODULE_LMS !== 'true') {
-      addImportsDir(resolve('./composables/stubs'))
-    }
-
     // 注册 pages（合并到主 pages）
     nuxt.hook('pages:extend', (pages) => {
       // base 提供简洁首页 index.vue
-      // 注：lms 启用时会覆盖首页为课程列表
+      // 注：doc/lms 启用时可覆盖首页
       pages.push({
         name: 'base-home',
         path: '/',
         file: resolve('./pages/index.vue'),
       })
-      // 重置密码页（原 auth module）
+      // 重置密码页
       pages.push({
         name: 'auth-reset-password',
         path: '/reset-password',
@@ -128,7 +146,10 @@ export default defineNuxtModule({
       })
     })
 
-    // 注册客户端 plugin：恢复登录态（原 auth module）
+    // 注册客户端 plugin：恢复登录态
     addPlugin(resolve('./plugins/restore.client.ts'))
+
+    // 注册插件：站点配置单例预拉取（应用启动时调一次 /api/config/get，结果存 useState）
+    addPlugin(resolve('./plugins/site-config.ts'))
   },
 })

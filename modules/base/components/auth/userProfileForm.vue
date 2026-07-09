@@ -3,8 +3,8 @@
         <!-- 头像上传区域 -->
         <div class="flex flex-col items-center mb-6">
             <div class="relative cursor-pointer group" :class="{ 'pointer-events-none opacity-60': !canEditAvatar }"
-                @click="triggerFileInput" role="button" tabindex="0"
-                @keydown.enter.prevent="triggerFileInput" @keydown.space.prevent="triggerFileInput">
+                @click="triggerFileInput" role="button" tabindex="0" @keydown.enter.prevent="triggerFileInput"
+                @keydown.space.prevent="triggerFileInput">
                 <UAvatar :src="form.avatarImg" :alt="form.name" size="2xl" :text="form.name?.charAt(0)"
                     class="transition-opacity group-hover:opacity-70" />
                 <div v-if="canEditAvatar"
@@ -20,13 +20,8 @@
         </div>
 
         <!-- 图片裁剪弹窗 -->
-        <FormImageCropperModal
-            ref="cropperRef"
-            :title="$t('profile.cropAvatar')"
-            :aspect-ratio="1"
-            stencil-type="circle"
-            @uploaded="onCropped"
-        />
+        <FormImageCropperModal ref="cropperRef" :title="$t('profile.cropAvatar')" :aspect-ratio="1"
+            stencil-type="circle" @uploaded="onCropped" />
         <UFormField :label="$t('profile.name')" class="w-full">
             <UInput v-model="form.name" :placeholder="$t('profile.namePlaceholder')" class="w-full"
                 :disabled="!canEditGeneral" />
@@ -51,7 +46,7 @@
             <UInput v-model="form.rollNumber" :placeholder="$t('profile.rollNumberPlaceholder')" class="w-full"
                 :disabled="!canEditGeneral" />
         </UFormField>
-        <UFormField v-if="moduleLms" :label="$t('profile.class')" class="w-full">
+        <UFormField :label="$t('profile.class')" class="w-full">
             <USelect v-model="form.classId" :items="classOptions" :placeholder="$t('profile.classPlaceholder')"
                 class="w-full" :disabled="!canEditClass" />
         </UFormField>
@@ -98,15 +93,15 @@
 
 <script setup lang="ts">
 interface UserProfileForm {
-  name: string
-  preferName: string
-  englishName: string
-  email: string
-  gender: string
-  avatarImg: string
-  rollNumber: string
-  telephone: string
-  classId: number | null
+    name: string
+    preferName: string
+    englishName: string
+    email: string
+    gender: string
+    avatarImg: string
+    rollNumber: string
+    telephone: string
+    classId: number | null
 }
 
 const form = defineModel<UserProfileForm>({ required: true })
@@ -115,16 +110,14 @@ const toast = useToast()
 const { t } = useI18n()
 const { hasRole } = useAuth()
 const { classes, loadClasses } = useClasses()
-// 班级为 lms 概念，仅 lms 启用时显示班级字段
-const { moduleLms } = useRuntimeConfig().public
 
 // lms 启用时读取 allowSelfAvatarUpload 等用户端功能开关；lms 禁用时该 ref 为 undefined 视为允许
 // 注意：lms 禁用时不应依赖 useUserProfileConfig（避免跨模块依赖）。
 // 但因 useUserProfileConfig 在 lms 禁用时仍可正常调用（返回 true），安全。
 const {
-  allowSelfAvatarUpload,
-  allowChangePassword,
-  allowChangeEmail,
+    allowSelfAvatarUpload,
+    allowChangePassword,
+    allowChangeEmail,
 } = useUserProfileConfig()
 
 // ===================== 基于当前用户角色的可编辑性 =====================
@@ -141,18 +134,18 @@ const canEditEmail = computed(() => allowChangeEmail.value && canEditGeneral.val
 const canEditPassword = computed(() => allowChangePassword.value && canEditGeneral.value)
 
 const genderOptions = computed(() => [
-  { label: t('profile.genderMale'), value: 'male' },
-  { label: t('profile.genderFemale'), value: 'female' },
-  { label: t('profile.genderOther'), value: 'other' },
+    { label: t('profile.genderMale'), value: 'male' },
+    { label: t('profile.genderFemale'), value: 'female' },
+    { label: t('profile.genderOther'), value: 'other' },
 ])
 
 // 班级下拉选项：全局缓存 + 确保当前值始终有对应项（非 admin 时全局列表可能不含被编辑用户的班级）
 const classOptions = computed(() => {
-  const opts = classes.value.map((c) => ({ label: c.name, value: c.id }))
-  if (form.value.classId != null && !opts.some((o) => o.value === form.value.classId)) {
-    opts.unshift({ label: `${t('profile.class')} #${form.value.classId}`, value: form.value.classId })
-  }
-  return [{ label: '', value: null }, ...opts]
+    const opts = classes.value.map((c) => ({ label: c.name, value: c.id }))
+    if (form.value.classId != null && !opts.some((o) => o.value === form.value.classId)) {
+        opts.unshift({ label: `${t('profile.class')} #${form.value.classId}`, value: form.value.classId })
+    }
+    return [{ label: '', value: null }, ...opts]
 })
 
 const fileInputRef = ref<HTMLInputElement>()
@@ -165,33 +158,33 @@ const pwdForm = reactive({ oldPassword: '', newPassword: '', confirmPassword: ''
 
 // 加载班级列表（全局缓存，仅加载一次）
 onMounted(() => {
-  loadClasses()
+    loadClasses()
 })
 
 async function submitChangePassword() {
-  if (pwdForm.newPassword !== pwdForm.confirmPassword) {
-    toast.add({ title: t('profile.passwordMismatch'), color: 'error' })
-    return
-  }
-  pwdSaving.value = true
-  try {
-    await cRequest('/api/auth/change-password', {
-      method: 'POST',
-      body: {
-        oldPassword: pwdForm.oldPassword,
-        newPassword: pwdForm.newPassword,
-      },
-    })
-    toast.add({ title: t('profile.passwordChanged'), color: 'success' })
-    showPwdModal.value = false
-    pwdForm.oldPassword = ''
-    pwdForm.newPassword = ''
-    pwdForm.confirmPassword = ''
-  } catch (e: any) {
-    toast.add({ title: e.message || t('profile.passwordChangeFailed'), color: 'error' })
-  } finally {
-    pwdSaving.value = false
-  }
+    if (pwdForm.newPassword !== pwdForm.confirmPassword) {
+        toast.add({ title: t('profile.passwordMismatch'), color: 'error' })
+        return
+    }
+    pwdSaving.value = true
+    try {
+        await cRequest('/api/auth/change-password', {
+            method: 'POST',
+            body: {
+                oldPassword: pwdForm.oldPassword,
+                newPassword: pwdForm.newPassword,
+            },
+        })
+        toast.add({ title: t('profile.passwordChanged'), color: 'success' })
+        showPwdModal.value = false
+        pwdForm.oldPassword = ''
+        pwdForm.newPassword = ''
+        pwdForm.confirmPassword = ''
+    } catch (e: any) {
+        toast.add({ title: e.message || t('profile.passwordChangeFailed'), color: 'error' })
+    } finally {
+        pwdSaving.value = false
+    }
 }
 
 function triggerFileInput() {

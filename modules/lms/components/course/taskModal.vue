@@ -13,6 +13,7 @@
                 <QuestionRender v-if="type === 'question' && renderNode" :node="renderNode" />
                 <HomeworkRender v-else-if="type === 'homework' && renderNode" :node="renderNode" />
                 <CommentRender v-else-if="type === 'comment' && renderNode" :node="renderNode" />
+                <QuizRender v-else-if="type === 'quiz' && renderNode" :node="renderNode" />
 
                 <!-- 无数据 -->
                 <div v-else class="py-8 text-center text-gray-400">{{ t('common.noData') }}</div>
@@ -22,16 +23,16 @@
 </template>
 
 <script setup>
-import QuestionRender from '../../../doc/components/ueditor/extensions/nodes/render/vue/question.vue'
-import HomeworkRender from '../../../doc/components/ueditor/extensions/nodes/render/vue/homework.vue'
-import CommentRender from '../../../doc/components/ueditor/extensions/nodes/render/vue/comment.vue'
-
+import QuestionRender from '../ueditor/extensions/nodes/vue/question/render.vue'
+import HomeworkRender from '../ueditor/extensions/nodes/vue/homework/render.vue'
+import CommentRender from '../ueditor/extensions/nodes/vue/comment/render.vue'
+import QuizRender from '../ueditor/extensions/nodes/vue/quiz/render.vue'
 const isOpen = defineModel('open', { default: false })
 const { t } = useI18n()
 
 const props = defineProps({
     courseId: { type: [String, Number], default: '' },
-    type: { type: String, default: '' },   // question | homework | comment
+    type: { type: String, default: '' },   // question | homework | comment | quiz
     id: { type: Number, default: 0 },
     status: { type: String, default: '' },  // done | partial | todo
 })
@@ -51,14 +52,16 @@ const renderNode = computed(() => {
 const typeIcon = computed(() =>
     props.type === 'question' ? 'i-lucide-help-circle' :
     props.type === 'homework' ? 'i-lucide-file-text' :
-    props.type === 'comment' ? 'i-lucide-message-circle' : ''
+    props.type === 'comment' ? 'i-lucide-message-circle' :
+    props.type === 'quiz' ? 'i-lucide-quiz' : ''
 )
 
 // 标题
 const title = computed(() => {
     const typeName = props.type === 'question' ? t('coursePanel.question')
         : props.type === 'homework' ? t('coursePanel.homework')
-        : t('coursePanel.comment')
+        : props.type === 'comment' ? t('coursePanel.comment')
+        : props.type === 'quiz' ? t('coursePanel.quiz') : ''
     return `${typeName} #${props.id}`
 })
 

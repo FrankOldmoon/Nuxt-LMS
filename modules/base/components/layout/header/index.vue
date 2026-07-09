@@ -17,8 +17,8 @@
 
       <UColorModeButton />
 
-      <!-- 通知按钮（仅登录后显示） -->
-      <UTooltip v-if="isLoggedIn" :text="$t('notification.title')" :content="{ side: 'bottom' }">
+      <!-- 通知按钮（仅登录后显示；受 site:showNotify 控制） -->
+      <UTooltip v-if="isLoggedIn && showNotify" :text="$t('notification.title')" :content="{ side: 'bottom' }">
         <div class="relative">
           <UButton icon="i-lucide-bell" color="neutral" variant="ghost" :aria-label="$t('notification.title')"
             @click="() => { showNotificationModal = true }" />
@@ -29,8 +29,8 @@
         </div>
       </UTooltip>
 
-      <!-- 消息按钮（仅登录后显示） -->
-      <UTooltip v-if="isLoggedIn" :text="$t('message.title')" :content="{ side: 'bottom' }">
+      <!-- 消息按钮（仅登录后显示；受 site:showMsg 控制） -->
+      <UTooltip v-if="isLoggedIn && showMsg" :text="$t('message.title')" :content="{ side: 'bottom' }">
         <div class="relative">
           <UButton icon="i-lucide-message-square" color="neutral" variant="ghost" :aria-label="$t('message.title')"
             @click="() => { showMessageModal = true }" />
@@ -78,9 +78,9 @@
 const { user, isLoggedIn, hasRole, logout } = useAuth()
 const toast = useToast()
 const { t } = useI18n()
-const { siteTitle, logo } = useSiteConfig()
+const { siteTitle, logo, showNotify, showMsg, showMyFiles } = useSiteConfig()
 
-// 未读计数（直接 fetch /api/home，doc/lms 启用时才有数据，否则回退为 0）
+// 未读计数（fetch /api/notifications/unread）
 const { counts: unreadCounts, refresh: refreshUnread } = useUnreadCounts()
 
 const showLoginModal = ref(false)
@@ -118,15 +118,19 @@ const userMenuItems = computed(() => {
           showProfileModal.value = true
         },
       },
-      {
-        label: t('myFiles.title'),
-        icon: 'i-lucide-hard-drive',
-        onSelect: () => {
-          showMyFilesModal.value = true
-        },
-      },
     ],
   ]
+
+  // "My Files" 受 site:showMyFiles 控制
+  if (showMyFiles.value) {
+    items[0].push({
+      label: t('myFiles.title'),
+      icon: 'i-lucide-hard-drive',
+      onSelect: () => {
+        showMyFilesModal.value = true
+      },
+    })
+  }
 
   if (isAdmin.value) {
     items.push([

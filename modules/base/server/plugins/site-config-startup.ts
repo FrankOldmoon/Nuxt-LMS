@@ -1,37 +1,42 @@
 /**
- * 服务启动时加载 site_config 到内存缓存，并初始化默认值
- * 同时检查并创建默认 admin 账号
+ * 服务启动时：
+ * 1. 把 DEFAULT_SITE_CONFIG 每个 key 拍平播种为 configs 表独立行（不存在才插入）
+ * 2. 加载配置到内存缓存
+ * 3. 检查并创建默认 admin 账号 + 基础角色/权限
  */
 import { db, schema } from "@nuxthub/db"
 import { eq } from "drizzle-orm"
-import { DEFAULT_SITE_CONFIG, reloadSiteConfig } from "../utils/siteConfig"
-import { hashPassword, generateToken } from "../utils/auth"
+import { DEFAULT_SITE_CONFIG, reloadConfig } from "../utils/config"
+import { hashPassword } from "../utils/auth"
 
 // 固定 admin 账号配置
 const ADMIN_USERNAME = 'admin'
 const ADMIN_PASSWORD = 'REDACTED'
 
 export default defineNitroPlugin(async () => {
-  // 若 site_config 不存在则插入默认值
+  // 1. 拍平播种：每个 site:* key 独立一行
   try {
-    const row = await db.query.configs.findFirst({
-      where: eq(schema.configs.id, 'site_config'),
-    })
-    if (!row) {
-      await db.insert(schema.configs).values({
-        id: 'site_config',
-        value: DEFAULT_SITE_CONFIG,
+    for (const [key, defaultValue] of Object.entries(DEFAULT_SITE_CONFIG)) {
+      const existing = await db.query.configs.findFirst({
+        where: eq(schema.configs.id, key),
       })
-      console.log('[site_config] 已初始化默认配置')
+      if (!existing) {
+        await db.insert(schema.configs).values({
+          id: key,
+          value: defaultValue,
+        })
+      }
     }
+    console.log('[startup] site 配置已初始化（拍平键值）')
   } catch (e) {
-    console.error('[site_config] 初始化失败', e)
+    console.error('[startup] site 配置初始化失败', e)
   }
-  await reloadSiteConfig()
 
-  // 检查并创建默认 admin 账号
+  // 2. 加载到内存缓存
+  await reloadConfig()
+
+  // 3. 检查并创建默认 admin 账号
   try {
-    // 查询是否存在 admin 用户
     const existingAdmin = await db
       .select({ id: schema.users.id })
       .from(schema.users)
@@ -48,17 +53,17 @@ export default defineNitroPlugin(async () => {
 
       // 若 admin 角色不存在，先创建角色和权限
       if (adminRole.length === 0) {
-        // 创建基础权限
+        // base 通用权限（lms/doc 各自的权限由各模块 startup 自行添加）
         const permData = [
-          { name: '查看课程', code: 'course:read' },
-          { name: '编辑课程', code: 'course:write' },
           { name: '管理用户', code: 'user:manage' },
+          { name: '管理配置', code: 'config:manage' },
+          { name: '管理文件', code: 'file:manage' },
           { name: '发布公告', code: 'announce:write' },
         ]
         await db.insert(schema.permissions).values(permData).onConflictDoNothing()
         const permissions = await db.select().from(schema.permissions)
 
-        // 创建基础角色
+        // 基础角色
         const roleData = [
           { name: '管理员', code: 'admin' },
           { name: '教师', code: 'teacher' },
@@ -70,8 +75,8 @@ export default defineNitroPlugin(async () => {
         // 关联角色权限
         const rolePermMap: Record<string, number[]> = {
           admin: permissions.map(p => p.id),
-          teacher: permissions.filter(p => ['course:read', 'course:write', 'announce:write'].includes(p.code)).map(p => p.id),
-          student: permissions.filter(p => p.code === 'course:read').map(p => p.id),
+          teacher: permissions.filter(p => ['announce:write', 'file:manage'].includes(p.code)).map(p => p.id),
+          student: [],
         }
         const rolePermInserts: { roleId: number; permissionId: number }[] = []
         for (const role of roles) {
@@ -113,7 +118,7 @@ export default defineNitroPlugin(async () => {
             defaultLocale: "en",
             avatarImg: "/avatar.webp",
           })
-          .returning({ id: schema.users.id });
+          .returning({ id: schema.users.id })
 
         // 关联 admin 角色
         await db.insert(schema.userRoles).values({
@@ -130,13 +135,14 @@ export default defineNitroPlugin(async () => {
           .values({
             username: ADMIN_USERNAME,
             password: hashedPwd,
-            name: '系统管理员',
+            name: 'Admin',
             preferName: 'Admin',
             englishName: 'Admin',
             gender: 'male',
             email: 'admin@university.edu.cn',
             strongPwd: true,
-            defaultLocale: 'zh-CN',
+            defaultLocale: 'en',
+            avatarImg: '/avatar.webp',
           })
           .returning({ id: schema.users.id })
 

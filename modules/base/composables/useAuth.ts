@@ -30,9 +30,7 @@ interface AuthData {
   user: User
   roles: Role[]
   permissions: Permission[]
-  editorCourseIds: number[]
-  teacherCourseIds: number[]
-  classIds: number[]
+  [key: string]: any
 }
 
 // ====================== SSR 兼容的状态管理 ======================
@@ -44,6 +42,10 @@ interface AuthData {
  * - 使用 useFetch 在 SSR 阶段发起内部请求（cookie 自动转发）
  * - 返回数据被序列化到页面 payload 中，客户端 hydration 时直接还原
  * - 多个组件调用 useAuth() 共享同一份 useAsyncData 缓存
+ *
+ * base 仅返回 user/roles/permissions；后续模块（如 lms）可通过
+ * server 端 runOnMeEnrich 钩子向 /api/auth/me 注入额外字段，
+ * 这些字段会通过 [key: string]: any 透传到 authData 上。
  */
 export function useAuth() {
   // 使用 useFetch（底层 useAsyncData）实现 SSR 兼容
@@ -67,9 +69,6 @@ export function useAuth() {
   const user = computed(() => authData.value?.user ?? null)
   const roles = computed<Role[]>(() => authData.value?.roles ?? [])
   const permissions = computed<Permission[]>(() => authData.value?.permissions ?? [])
-  const editorCourseIds = computed<number[]>(() => authData.value?.editorCourseIds ?? [])
-  const teacherCourseIds = computed<number[]>(() => authData.value?.teacherCourseIds ?? [])
-  const classIds = computed<number[]>(() => authData.value?.classIds ?? [])
   const isLoggedIn = computed(() => !!user.value)
   const isLoading = computed(() => status.value === 'pending')
 
@@ -88,16 +87,6 @@ export function useAuth() {
   /** 检查当前用户是否拥有指定权限 */
   function hasPermission(code: string): boolean {
     return permissions.value.some((p) => p.code === code)
-  }
-
-  /** 检查当前用户是否是某课程的编辑者 */
-  function isCourseEditor(courseId: number): boolean {
-    return editorCourseIds.value.includes(courseId)
-  }
-
-  /** 检查当前用户是否是某课程的教师或编辑者 */
-  function isCourseTeacher(courseId: number): boolean {
-    return teacherCourseIds.value.includes(courseId) || editorCourseIds.value.includes(courseId)
   }
 
   // ====================== 变更方法（仅客户端调用） ======================
@@ -132,16 +121,11 @@ export function useAuth() {
     user,
     roles,
     permissions,
-    editorCourseIds,
-    teacherCourseIds,
-    classIds,
     isLoggedIn,
     isLoading,
     hasRole,
     hasAnyRole,
     hasPermission,
-    isCourseEditor,
-    isCourseTeacher,
     login,
     register,
     logout,

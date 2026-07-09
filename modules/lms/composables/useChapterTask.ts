@@ -1,5 +1,5 @@
 import type { Ref } from 'vue'
-import type { ChapterTaskMap } from '~/utils/chapterTask'
+import type { ChapterTaskMap } from '../utils/chapterTask'
 
 /**
  * 章节任务完成状态上下文
