@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-none">
-    <!-- 页面标题 -->
-    <div class="mb-12">
+    <!-- 页面标题（hero）：home.showHero 关闭时隐藏 -->
+    <div v-if="homeCfg.showHero" class="mb-12">
       <h1 class="text-4xl font-bold text-highlighted mb-3">
         {{ $t('home.title') }}
       </h1>
@@ -10,8 +10,14 @@
       </p>
     </div>
 
-    <!-- 按系列分组展示课程 -->
-    <div class="flex flex-col gap-16">
+    <!--
+      课程列表
+      - home.showRecentCourses=false 隐藏（占位，暂无该 section 时等同通过 hero 隐藏）
+      - home.showStats / home.showLeaderboard 由调用方按需在此模板中插入对应区块
+      - courseList.defaultView / showSearch / showFilter / showSort
+        预留给课程列表页 / 搜索页：当前首页只有 grid 展示
+    -->
+    <div v-if="homeCfg.showRecentCourses" class="flex flex-col gap-16">
       <section
         v-for="s in categories"
         :key="s.id"
@@ -30,8 +36,22 @@
           </span>
         </div>
 
-        <!-- 课程卡片网格 -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- 课程卡片网格（grid 模式固定 3 列；list 模式预留 CourseCard 后续扩展） -->
+        <div
+          v-if="courseListCfg.defaultView === 'list'"
+          class="flex flex-col gap-3"
+        >
+          <CourseCard
+            v-for="course in getCoursesByCategory(s.id)"
+            :key="course.id"
+            :course="course"
+            :highlight="isCourseTeacher(course.id)"
+          />
+        </div>
+        <div
+          v-else
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
           <CourseCard
             v-for="course in getCoursesByCategory(s.id)"
             :key="course.id"
@@ -50,15 +70,20 @@ const { siteTitle } = useSiteConfig()
 useHead(() => ({
   title: siteTitle.value || 'AI LMS',
 }))
-const { data: home } = useHome()
+const { data: homeData } = useHome()
 const { isCourseTeacher } = useAuthLms()
 
-const categories = computed(() => home.value?.categories ?? [])
-const courses = computed(() => home.value?.courses ?? [])
+
+
+// lms 公开配置：home.* / courseList.* 显隐与视图
+// 别名以避免与 useHome() 变量冲突
+const { home: homeCfg, courseList: courseListCfg } = useLmsPublicConfig()
+
+const categories = computed(() => homeData.value?.categories ?? [])
 
 function getCoursesByCategory(categoryId: number) {
   const cat = categories.value.find((c) => c.id === categoryId)
-  const catCourses = courses.value.filter((c) => c.categoryId === categoryId)
+  const catCourses = (homeData.value?.courses ?? []).filter((c) => c.categoryId === categoryId)
 
   // 如果分类有 orders 配置，按 orders 中的 order 排序显示
   if (cat?.orders && cat.orders.length > 0) {

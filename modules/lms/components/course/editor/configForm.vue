@@ -114,15 +114,24 @@
 /**
  * lms 课程编辑器配置表单
  *
- * 整合 doc 基础（封面/图标/颜色/难度/课程功能开关/extra JSON）和
- * lms 增强（学习行为参数：question/homework/quiz/comment/race/exp 规则、
- * 章节按钮、课程按钮、首页/课程列表/章节页显隐、AI 助手、网盘存储等）。
+ * course.config 结构（精简后）：
+ *   {
+ *     icon, color, level, coverImg,  // 课程特有字段
+ *     ...extra,                       // 自定义 JSON
+ *     lmsConfig: { ... }              // 课程级 lmsConfig 覆盖（运行时与全局 lms_config 深合并）
+ *   }
  *
  * 数据流：
- * - initFromConfig(cfg)：填充顶层字段（icon/color/level/coverImg）+ courseSwitches
- *   + extra JSON；同时把 cfg.lmsConfig 写入 lmsConfig ref，触发 LmsConfigEditor 内部 deep-merge。
- * - buildConfig()：返回 { icon, color, level, coverImg, ...extra, lmsConfig: { ...lmsData, course: courseSwitches } }，
- *   其中 lmsData = LmsConfigEditor.getConfig()（不含 course 分组），courseSwitches 覆盖优先级最高。
+ * - initFromConfig(cfg)：
+ *   1. 加载全局 lms_config（来自 /api/config/get）
+ *   2. courseSwitches 初始化：cfg.lmsConfig.course > 全局 lms_config.course > 硬编码默认
+ *      （不再从 cfg.showDanmaku 等顶层字段读取 — 这些已废弃）
+ *   3. lmsConfig.value 初始化：全局 lms_config + cfg.lmsConfig 深合并
+ *      （让 LmsConfigEditor 显示当前 effective 值，而非仅课程级覆盖）
+ *   4. extra 提取 cfg 中 KNOWN_KEYS 之外的自定义字段
+ * - buildConfig()：返回 { icon, color, level, coverImg, ...extra, lmsConfig: { ...lmsData, course: courseSwitches } }
+ *   - result.lmsConfig 是完整的 effective 配置（全局+课程级），与运行时再次合并等价
+ *   - courseSwitches 始终覆盖 lmsData.course（hideCourse 时 LmsConfigEditor 不输出 course 分组）
  */
 const { t } = useI18n()
 const toast = useToast()
@@ -138,7 +147,13 @@ const uploading = ref(false)
 const coverInputRef = ref<HTMLInputElement | null>(null)
 const cropperRef = ref<{ setImage: (file: File) => void } | null>(null)
 
-// 课程功能开关（存储在 lmsConfig.course 中，单课程可覆盖全局默认值）
+// 全局 lms_config 缓存（来自 /api/config/get，需 admin/teacher 权限）
+const globalLmsConfig = ref<any>(null)
+// 全局 lms_config.course.* 默认值（用于 courseSwitches 兜底）
+const globalCourse = computed(() => globalLmsConfig.value?.course || {})
+
+// 课程功能开关：lmsConfig.course.* 的课程级覆盖
+// 初始化顺序：课程级 lmsConfig.course > 全局 lms_config.course > 硬编码默认
 const courseSwitches = reactive({
   showDanmaku: true,
   showAnnouncement: true,
@@ -155,7 +170,39 @@ const lmsConfig = ref<any>(null)
 const colorOpts = computed(() => colorOptions())
 const levelOpts = computed(() => levelOptions())
 
+// KNOWN_KEYS：course.config 顶层只保留这些课程特有字段 + lmsConfig 覆盖
+// 注释：showDanmaku 等"出现在顶层"的旧字段不再写入 result，但仍在 KNOWN_KEYS 中
+// 防止它们落入 extra JSON（避免在 extraConfigText 出现冗余字段干扰用户）
 const KNOWN_KEYS = ['icon', 'color', 'level', 'coverImg', 'lmsConfig', 'showDanmaku', 'showAnnouncement', 'showComments', 'showProgress', 'defaultChapterOpen']
+
+/** 加载全局 lmsConfig（来自 /api/config/get） */
+async function loadGlobalLmsConfig() {
+  try {
+    const data = await cRequest<any>('/api/config/get')
+    globalLmsConfig.value = data || {}
+  } catch {
+    globalLmsConfig.value = {}
+  }
+}
+
+/** 深合并：target（defaults）中存在的 key 优先于 source（overrides） */
+function deepMerge(defaults: any, overrides: any): any {
+  if (!overrides) return defaults
+  if (defaults === null || typeof defaults !== 'object' || Array.isArray(defaults)) {
+    return overrides === undefined ? defaults : overrides
+  }
+  const result: any = { ...defaults }
+  for (const [key, val] of Object.entries(overrides)) {
+    const defVal = (defaults as any)[key]
+    if (val !== null && typeof val === 'object' && !Array.isArray(val)
+        && defVal !== null && typeof defVal === 'object' && !Array.isArray(defVal)) {
+      result[key] = deepMerge(defVal, val)
+    } else {
+      result[key] = val === undefined ? defVal : val
+    }
+  }
+  return result
+}
 
 function triggerCoverUpload() {
   coverInputRef.value?.click()
@@ -182,23 +229,33 @@ function onCropped(url: string) {
 }
 
 /** 从课程 config 对象初始化表单 */
-function initFromConfig(cfg: Record<string, any>) {
+async function initFromConfig(cfg: Record<string, any>) {
   config.icon = cfg.icon || ''
   config.color = cfg.color || 'primary'
   config.level = cfg.level || t('home.levels.beginner')
   coverImg.value = cfg.coverImg || ''
 
-  // 课程功能开关：优先读取 lmsConfig.course，兼容旧版顶层字段
-  const courseCfg = cfg.lmsConfig?.course || {}
-  courseSwitches.showDanmaku = courseCfg.showDanmaku ?? cfg.showDanmaku ?? true
-  courseSwitches.showAnnouncement = courseCfg.showAnnouncement ?? cfg.showAnnouncement ?? true
-  courseSwitches.showComments = courseCfg.showComments ?? cfg.showComments ?? true
-  courseSwitches.showProgress = courseCfg.showProgress ?? cfg.showProgress ?? false
-  courseSwitches.defaultChapterOpen = courseCfg.defaultChapterOpen ?? cfg.defaultChapterOpen ?? true
+  // 1. 加载全局 lmsConfig（首次必加载；后续 watcher 触发时已加载则跳过）
+  if (!globalLmsConfig.value) {
+    await loadGlobalLmsConfig()
+  }
 
-  // LMS 配置（课程级覆盖；LmsConfigEditor 自身会 deep-merge 到内部 defaultConfig）
-  lmsConfig.value = cfg.lmsConfig || null
+  // 2. 课程功能开关：课程级 cfg.lmsConfig.course > 全局 lms_config.course > 硬编码默认
+  //    不再从 cfg.showDanmaku 等顶层字段读取（这些字段不再存于 course.config 顶层）
+  const courseOverride = cfg.lmsConfig?.course || {}
+  const gc = globalCourse.value
+  courseSwitches.showDanmaku = courseOverride.showDanmaku ?? gc.showDanmaku ?? true
+  courseSwitches.showAnnouncement = courseOverride.showAnnouncement ?? gc.showAnnouncement ?? true
+  courseSwitches.showComments = courseOverride.showComments ?? gc.showComments ?? true
+  courseSwitches.showProgress = courseOverride.showProgress ?? gc.showProgress ?? false
+  courseSwitches.defaultChapterOpen = courseOverride.defaultChapterOpen ?? gc.defaultChapterOpen ?? true
 
+  // 3. lmsConfig 初始化：全局 lms_config + cfg.lmsConfig 深合并
+  //    LmsConfigEditor 内部还会再与 defaultConfig deep-merge，
+  //    最终显示 = defaults + 全局 + 课程级覆盖
+  lmsConfig.value = deepMerge(globalLmsConfig.value || {}, cfg.lmsConfig)
+
+  // 4. extra JSON：只包含不在 KNOWN_KEYS 中的字段（即课程特有的自定义字段）
   const extra: Record<string, any> = {}
   for (const key of Object.keys(cfg)) {
     if (!KNOWN_KEYS.includes(key)) {
@@ -226,7 +283,8 @@ function buildConfig(): Record<string, any> | null {
     coverImg: coverImg.value || undefined,
     ...extra,
   }
-  // 获取 LMS 配置（hideCourse 时不含 course 分组），合并课程功能开关
+  // LmsConfigEditor 返回完整 config（hide-course 不含 course 分组）
+  // 合并 courseSwitches 到 lmsData.course（始终覆盖，确保保存的是当前 UI 值）
   const lmsData = lmsConfigRef.value?.getConfig() || {}
   lmsData.course = { ...courseSwitches }
   result.lmsConfig = lmsData

@@ -2,20 +2,61 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 import type { LmsHomeData, LmsCourseDetail } from '#lms/types/lms'
 
 /**
- * 获取首页数据（分类 + 课程列表）
- * 供 header 导航和首页内容使用
- * useFetch 默认 SSR：服务端执行并序列化到客户端
+ * 模块级 flag：WS handler 在整个应用生命周期内只注册 1 次
+ * 收到 'home-changed' 时调用 refreshNuxtData 触发 useFetch 重新拉取 /api/home
+ */
+let _wsHandlerRegistered = false
+
+/**
+ * 获取首页数据（分类 + 课程列表 + 网站配置 + 未读计数）
+ *
+ * 单例机制（与 useLmsPublicConfig / useSiteConfig 一致）：
+ * - plugins/home-data.ts 在应用启动时调用 useFetch 拉取一次
+ * - 数据存入 useState('home-data')，所有组件共享同一份
+ * - 客户端 hydration 直接从 payload 还原，不发新请求
+ *
+ * 实时更新：
+ * - WS 广播 'home-changed'（由 categories/courses add|update|batch|delete|import 触发）
+ *   → 触发 refreshNuxtData('home-singleton-fetch')
+ *   → useFetch data 更新 → plugin watch 同步到 useState → 所有 computed 自动更新
+ *
+ * 收益：
+ * - 任意组件调用 useHome() 都不会产生新的 useFetch / 新的 network 请求
+ * - 所有使用首页数据的组件（useHeaderNav / pages/index.vue / etc.）共享同一份数据
+ * - 服务端改导航后所有客户端（包括其他 tab）实时同步
  */
 export function useHome() {
-  return cRequest.use<LmsHomeData>('/api/home', {
-    default: () => ({ categories: [], courses: [] }),
-  })
+  const data = useState<LmsHomeData>('home-data', () => ({
+    categories: [],
+    courses: [],
+    config: null as any,
+    notifyUnread: 0,
+    msgUnread: 0,
+  }))
+
+  // 客户端：订阅服务端 home-changed 广播，自动 refresh
+  if (import.meta.client && !_wsHandlerRegistered) {
+    _wsHandlerRegistered = true
+    try {
+      try { useWsConnection().connect() } catch { /* ignore */ }
+      registerWsHandler('home-changed', () => {
+        refreshNuxtData('home-singleton-fetch')
+      })
+    } catch {
+      // WS 模块未启用（base stub 模式），静默忽略
+    }
+  }
+
+  return {
+    data,
+    refresh: () => refreshNuxtData('home-singleton-fetch'),
+  }
 }
 
 /**
  * 顶部导航栏链接（水平菜单）
  * 第一级：课程系列；hover 下拉显示该系列下的课程
- * 数据来自 useHome() —— useFetch 按 URL 去重，不会重复请求
+ * 数据来自 useHome() —— 通过 useState 共享同一份数据
  */
 export function useHeaderNav() {
   const { data, refresh } = useHome()

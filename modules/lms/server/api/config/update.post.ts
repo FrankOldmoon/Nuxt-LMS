@@ -1,42 +1,51 @@
 import { db, schema } from "@nuxthub/db"
-import { eq } from "drizzle-orm"
+
+import { buildLmsConfigPairs, reloadLmsConfig, getLmsConfigSync } from '../../utils/lmsConfig'
 
 /**
- * 更新 LMS 配置（合并写入数据库，并刷新缓存）
+ * 更新 LMS 配置（拍平写入 lms:* 行，并刷新缓存）
+ *
+ * body: 树形对象（与原 lmsConfig 树形结构一致，便于前端 settingsModal 复用）
+ * 动作：
+ *   1. 拍平 body 为 lms:section.key 列表
+ *   2. 逐行 upsert 到 configs 表
+ *   3. reloadLmsConfig() 刷新内存缓存
+ *   4. WS 广播 'lms-config-changed' 通知前端 useAiConfig / useLmsPublicConfig 等自动 refresh
+ *
+ * 注意：本端点保留树形入参（兼容现有 settingsModal / LmsConfigEditor），
+ *       不需要前端适配。如前端已有 lms:* 拍平对象可改用 /api/config/update-batch。
  */
 export default eventHandler(async (event) => {
   await requireRole(event, ['teacher', 'admin'])
 
   const body = await readBody(event)
-  if (!body || typeof body !== 'object') {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
     return cResp(null, '配置格式无效', false)
   }
 
   try {
-    // 查询现有记录
-    const existing = await db.query.configs.findFirst({
-      where: eq(schema.configs.id, 'lms_config'),
-    })
-
-    // 合并：现有配置 + 新传入的配置
-    const currentValue = existing?.value || {}
-    const mergedValue = deepMerge(currentValue, body)
-
-    if (existing) {
-      // 更新
-      await db.update(schema.configs).set({
-        value: mergedValue,
-      }).where(eq(schema.configs.id, 'lms_config'))
-    } else {
-      // 新增
-      await db.insert(schema.configs).values({
-        id: 'lms_config',
-        value: mergedValue,
-      })
+    // 1. 拍平为 { 'lms:section.key': value } 列表
+    const pairs = buildLmsConfigPairs(body)
+    if (!pairs.length) {
+      return cResp(getLmsConfigSync())
     }
 
-    // 刷新内存缓存
+    // 2. 逐行 upsert
+    for (const { key, value } of pairs) {
+      await db
+        .insert(schema.configs)
+        .values({ id: key, value })
+        .onConflictDoUpdate({
+          target: schema.configs.id,
+          set: { value },
+        })
+    }
+
+    // 3. 刷新内存缓存
     await reloadLmsConfig()
+
+    // 4. WS 广播：所有在线客户端 useAiConfig/useLmsPublicConfig 自动 refresh
+    broadcastToAll({ type: 'lms-config-changed' })
 
     return cResp(getLmsConfigSync())
   } catch (error: any) {
@@ -44,18 +53,3 @@ export default eventHandler(async (event) => {
     return cResp(null, error.statusMessage || '更新失败', false)
   }
 })
-
-function deepMerge(target: any, source: any): any {
-  const result = { ...target }
-  for (const key of Object.keys(source)) {
-    if (
-      typeof source[key] === 'object' && !Array.isArray(source[key]) && source[key] !== null &&
-      typeof target[key] === 'object' && !Array.isArray(target[key]) && target[key] !== null
-    ) {
-      result[key] = deepMerge(target[key], source[key])
-    } else {
-      result[key] = source[key]
-    }
-  }
-  return result
-}

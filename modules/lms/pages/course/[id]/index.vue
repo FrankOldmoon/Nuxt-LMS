@@ -73,6 +73,10 @@ const courseId = computed(() => route.params.id as string)
 const apiUrl = computed(() => `/api/courses/show?id=${courseId.value}`)
 const { courseBtnsConfig, chapterBtnsConfig } = useLayoutState()
 
+// lms 公开配置：全局 courseBtns / chapterBtns 开关
+// 用于在所有课程上统一关闭某些功能（如管理员禁用"得分"按钮）
+const { courseBtns: courseBtnsPublic, chapterBtns: chapterBtnsPublic } = useLmsPublicConfig()
+
 const { resp, pending, course, canEdit, hasContent, chapterTree: baseChapterTree,
         exporting, exportCourse, handleSaved, canManageTeachers } =
   useCourseDetailPage(courseId, apiUrl)
@@ -102,10 +106,19 @@ const progressPercent = computed(() => {
 })
 
 // lms 扩展：数据变化时设置章节/课程按钮开关配置
+// 优先级：course.config.lmsConfig.{chapterBtns|courseBtns} > 全局 lms_config > 硬编码默认
 watch(resp, (detail) => {
   if (!detail) return
   const lmsCfg = (detail as any)?.config?.lmsConfig || {}
-  courseBtnsConfig.value = { showProgress: true, showLeaderboard: true, showGroups: true, showGrades: true, showAnnouncements: true, showWrongBook: true, ...(lmsCfg.courseBtns || {}) }
-  chapterBtnsConfig.value = { showPlay: true, showScore: true, showSelect: true, showTimer: true, showInvite: true, showDanmaku: true, showVote: true, showQuickAnswer: true, ...(lmsCfg.chapterBtns || {}) }
+  courseBtnsConfig.value = {
+    showProgress: true, showLeaderboard: true, showGroups: true, showGrades: true, showAnnouncements: true, showWrongBook: true,
+    ...(courseBtnsPublic.value || {}),
+    ...(lmsCfg.courseBtns || {}),
+  }
+  chapterBtnsConfig.value = {
+    showPlay: true, showScore: true, showSelect: true, showTimer: true, showInvite: true, showDanmaku: true, showVote: true, showQuickAnswer: true,
+    ...(chapterBtnsPublic.value || {}),
+    ...(lmsCfg.chapterBtns || {}),
+  }
 }, { immediate: true })
 </script>

@@ -6,21 +6,11 @@
     - 通过 on-save 回调把"提交 lms_config"的 async 函数注册到 base
   -->
   <AuthSettingsModal v-model:open="isOpen">
-    <template #lms-config="{ onSave }">
+    <template #settings-extra="{ onSave }">
       <div v-if="loading" class="flex justify-center py-4">
         <UIcon name="i-lucide-loader-circle" class="size-5 animate-spin text-muted" />
       </div>
-      <LmsConfigEditor
-        v-else
-        ref="editorRef"
-        v-model="lmsConfig"
-      />
-      <!--
-        注册保存回调到 base slot。
-        onSave 是在 slot props 阶段由 base 暴露的函数引用，
-        在这里调用 = 把 submitLmsConfig 注册到 base 的 slotSaveHandler。
-        loading=true 时不注册（避免空提交）。
-      -->
+      <LmsConfigEditor v-show="!loading" ref="editorRef" v-model="lmsConfig" />
       <span v-if="!loading" hidden>{{ onSave(submitLmsConfig) }}</span>
     </template>
   </AuthSettingsModal>

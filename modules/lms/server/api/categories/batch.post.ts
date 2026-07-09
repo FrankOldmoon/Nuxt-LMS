@@ -7,6 +7,8 @@ export default eventHandler(async (event) => {
 
   try {
     const result = await batchTable('categories', ids, action as any)
+    // 删除分类会影响首页导航（action 包含 delete）
+    broadcastToAll({ type: 'home-changed', reason: 'categories.batch' })
     return cResp(result)
   } catch (error: any) {
     console.error(`批量[${action}]操作分类失败:`, error)

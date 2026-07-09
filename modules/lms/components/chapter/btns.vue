@@ -23,8 +23,8 @@
         @click="sendInvite" />
     </UTooltip>
 
-    <!-- 弹幕 -->
-    <UTooltip v-if="(canEdit || showDanmaku) && chapterBtnsConfig.showDanmaku" :text="$t('chapter.danmaku')">
+    <!-- 弹幕：chapterBtnsConfig.showDanmaku 关闭 OR chapterPage.showDanmakuPanel 关闭时隐藏 -->
+    <UTooltip v-if="(canEdit || showDanmaku) && chapterBtnsConfig.showDanmaku && chapterPageCfg.showDanmakuPanel" :text="$t('chapter.danmaku')">
       <UButton icon="i-lucide-message-square-text" color="success" variant="soft" size="xs"
         @click="() => { danmakuOpen = true }" />
     </UTooltip>
@@ -56,6 +56,7 @@ const { hasRole, user } = useAuth()
 const { isCourseEditor, isCourseTeacher } = useAuthLms()
 const { showDanmaku, chapterBtnsConfig } = useLayoutState()
 const { sendInvite: wsSendInvite } = useWebSocket()
+const { chapterPage: chapterPageCfg } = useLmsPublicConfig()
 const toast = useToast()
 const { t } = useI18n()
 

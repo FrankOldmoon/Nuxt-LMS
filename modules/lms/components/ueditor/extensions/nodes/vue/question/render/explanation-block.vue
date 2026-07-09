@@ -1,8 +1,7 @@
 <template>
   <div v-if="explanation" class="p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
     <div class="text-xs text-gray-500 mb-1">{{ $t('question.explanationAnswer') }}</div>
-    <ueditorRender v-if="isRichDoc(explanation)" :json="explanation" />
-    <span v-else>{{ contentToText(explanation) }}</span>
+    <ueditorRender :json="explanation" />
   </div>
 </template>
 

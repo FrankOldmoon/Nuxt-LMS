@@ -33,6 +33,56 @@
           <UInputTags v-model="form.tags" :placeholder="$t('question.tagPlaceholder')" :add-text="$t('question.addTag')" />
         </div>
 
+        <!-- ========== JSON 原始数据编辑器（高级） ========== -->
+        <div class="border-t border-gray-100 dark:border-gray-800 pt-3">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <UIcon name="i-lucide-braces" class="size-4 text-gray-500" />
+              <span class="text-xs font-medium text-gray-700 dark:text-gray-300">
+                {{ $t('question.jsonEditor') }}
+              </span>
+              <span v-if="showJsonEditor" class="text-xs"
+                :class="jsonError ? 'text-red-500' : 'text-green-500'">
+                — {{ jsonError || $t('question.jsonValid') }}
+              </span>
+            </div>
+            <UButton size="2xs" variant="ghost"
+              :icon="showJsonEditor ? 'i-lucide-eye-off' : 'i-lucide-code'"
+              :label="showJsonEditor ? $t('common.hide') : $t('common.show')"
+              @click="showJsonEditor = !showJsonEditor" />
+          </div>
+          <div v-show="showJsonEditor"
+            class="border border-gray-200 dark:border-gray-700 rounded overflow-hidden"
+            style="height: 400px;">
+            <Monaco v-model="jsonText" language="json" :auto-format="!aiStreaming" />
+          </div>
+          <p v-if="showJsonEditor" class="text-xs text-gray-400 mt-1">
+            {{ $t('question.jsonHint') }}
+          </p>
+        </div>
+
+        <!-- ========== AI 出题（输入知识范围 → 流式生成到 Monaco） ========== -->
+        <AiGenerator v-if="hasTypePrompt" :type="form.type" @streaming="onAiStreaming" @stream-text="onAiStreamText" @generated="onAiGenerated" />
+
+        <!-- ========== 当前题型的英文出题说明 ========== -->
+        <details v-if="currentTypePrompt" class="text-xs">
+          <summary class="cursor-pointer text-gray-500 hover:text-primary py-1 select-none flex items-center gap-2">
+            <UIcon name="i-lucide-file-text" class="size-3.5" />
+            <span>{{ $t('question.typePrompt') }}</span>
+            <span class="text-gray-400">— {{ $t('question.typePromptHint') }}</span>
+            <UButton
+              size="2xs"
+              variant="ghost"
+              :icon="copyCopied ? 'i-lucide-check' : 'i-lucide-copy'"
+              :color="copyCopied ? 'success' : 'neutral'"
+              :label="$t('question.typePromptCopy')"
+              class="ml-auto"
+              @click.stop.prevent="copyCurrentPrompt"
+            />
+          </summary>
+          <pre class="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-auto max-h-[300px] text-xs whitespace-pre-wrap border border-gray-200 dark:border-gray-700 leading-relaxed">{{ currentTypePrompt }}</pre>
+        </details>
+
         <!-- ========== 公共 UI：操作按钮 ========== -->
         <div class="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
           <span v-if="saveMsg" class="text-xs self-center" :class="saveOk ? 'text-green-500' : 'text-red-500'">{{ saveMsg }}</span>
@@ -76,6 +126,56 @@
       <UInputTags v-model="form.tags" :placeholder="$t('question.tagPlaceholder')" :add-text="$t('question.addTag')" />
     </div>
 
+    <!-- ========== AI 出题（输入知识范围 → 流式生成到 Monaco） ========== -->
+    <AiGenerator v-if="hasTypePrompt" :type="form.type" @streaming="onAiStreaming" @stream-text="onAiStreamText" @generated="onAiGenerated" />
+
+    <!-- ========== JSON 原始数据编辑器（高级） ========== -->
+    <div class="border-t border-gray-100 dark:border-gray-800 pt-3">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2">
+          <UIcon name="i-lucide-braces" class="size-4 text-gray-500" />
+          <span class="text-xs font-medium text-gray-700 dark:text-gray-300">
+            {{ $t('question.jsonEditor') }}
+          </span>
+          <span v-if="showJsonEditor" class="text-xs"
+            :class="jsonError ? 'text-red-500' : 'text-green-500'">
+            — {{ jsonError || $t('question.jsonValid') }}
+          </span>
+        </div>
+        <UButton size="2xs" variant="ghost"
+          :icon="showJsonEditor ? 'i-lucide-eye-off' : 'i-lucide-code'"
+          :label="showJsonEditor ? $t('common.hide') : $t('common.show')"
+          @click="showJsonEditor = !showJsonEditor" />
+      </div>
+      <div v-show="showJsonEditor"
+        class="border border-gray-200 dark:border-gray-700 rounded overflow-hidden"
+        style="height: 400px;">
+        <Monaco v-model="jsonText" language="json" :auto-format="!aiStreaming" />
+      </div>
+      <p v-if="showJsonEditor" class="text-xs text-gray-400 mt-1">
+        {{ $t('question.jsonHint') }}
+      </p>
+    </div>
+
+    <!-- ========== 当前题型的英文出题说明 ========== -->
+    <details v-if="currentTypePrompt" class="text-xs">
+      <summary class="cursor-pointer text-gray-500 hover:text-primary py-1 select-none flex items-center gap-2">
+        <UIcon name="i-lucide-file-text" class="size-3.5" />
+        <span>{{ $t('question.typePrompt') }}</span>
+        <span class="text-gray-400">— {{ $t('question.typePromptHint') }}</span>
+        <UButton
+          size="2xs"
+          variant="ghost"
+          :icon="copyCopied ? 'i-lucide-check' : 'i-lucide-copy'"
+          :color="copyCopied ? 'success' : 'neutral'"
+          :label="$t('question.typePromptCopy')"
+          class="ml-auto"
+          @click.stop.prevent="copyCurrentPrompt"
+        />
+      </summary>
+      <pre class="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-auto max-h-[300px] text-xs whitespace-pre-wrap border border-gray-200 dark:border-gray-700 leading-relaxed">{{ currentTypePrompt }}</pre>
+    </details>
+
     <!-- ========== 公共 UI：操作按钮 ========== -->
     <div class="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
       <span v-if="saveMsg" class="text-xs self-center" :class="saveOk ? 'text-green-500' : 'text-red-500'">{{ saveMsg }}</span>
@@ -98,6 +198,10 @@ import HtmlEditor from './edit/html.vue'
 import ShortAnswerEditor from './edit/short-answer.vue'
 import MatchEditor from './edit/match.vue'
 import CompositeEditor from './edit/composite.vue'
+import VideoEditor from './edit/video.vue'
+import AiGenerator from './edit/ai-generator.vue'
+// 各题型的英文出题说明
+import { promptFor } from './edit/prompts.js'
 
 const props = defineProps({
   // Modal 模式：通过 v-model 控制
@@ -119,6 +223,7 @@ const open = computed({
 
 const { t } = useI18n()
 const { editableCourseId } = useLayoutState()
+const toast = useToast()
 
 const typeOptions = computed(() => [
   { label: t('question.typeSingle'), value: 'single' },
@@ -133,10 +238,11 @@ const typeOptions = computed(() => [
   { label: t('question.typeShortAnswer'), value: 'short-answer' },
   { label: t('question.typeMatch'), value: 'match' },
   { label: t('question.typeComposite'), value: 'composite' },
+  { label: t('question.typeVideo'), value: 'video' },
 ])
 
 // 题型 → 组件映射
-const componentMap = { single: SingleEditor, judge: JudgeEditor, multiple: MultipleEditor, fill: FillEditor, select: SelectEditor, sort: SortEditor, classify: ClassifyEditor, puzzle: PuzzleEditor, html: HtmlEditor, 'short-answer': ShortAnswerEditor, match: MatchEditor, composite: CompositeEditor }
+const componentMap = { single: SingleEditor, judge: JudgeEditor, multiple: MultipleEditor, fill: FillEditor, select: SelectEditor, sort: SortEditor, classify: ClassifyEditor, puzzle: PuzzleEditor, html: HtmlEditor, 'short-answer': ShortAnswerEditor, match: MatchEditor, composite: CompositeEditor, video: VideoEditor }
 const typeComponent = computed(() => componentMap[form.value?.type] || null)
 
 const saving = ref(false)
@@ -144,6 +250,101 @@ const saveMsg = ref('')
 const saveOk = ref(true)
 const form = ref(null)
 let originalData = null
+
+// ── JSON 原始数据编辑器（高级） ──
+const showJsonEditor = ref(false)
+const jsonText = ref('')
+const jsonError = ref('')
+let syncingFromForm = false
+let syncingFromJson = false
+
+// ── AI 流式生成状态（由子组件 ai-generator 驱动） ──
+const aiStreaming = ref(false)
+let aiGenSucceeded = false
+
+// 当前题型的英文出题说明（用于在 JSON 编辑器下方展示）
+const currentTypePrompt = computed(() => {
+    const t = form.value?.type
+    if (!t) return ''
+    return promptFor(t) || ''
+})
+
+// 当前题型是否有对应的出题 prompt（composite / video 无 prompt，不显示 AI 出题）
+const hasTypePrompt = computed(() => !!promptFor(form.value?.type))
+
+// 复制当前题型的出题说明
+const copyCopied = ref(false)
+let copyCopiedTimer = null
+async function copyCurrentPrompt() {
+    const text = currentTypePrompt.value
+    if (!text) return
+    try {
+        if (navigator?.clipboard?.writeText) {
+            await navigator.clipboard.writeText(text)
+        } else {
+            // 兼容旧浏览器
+            const ta = document.createElement('textarea')
+            ta.value = text
+            ta.style.position = 'fixed'
+            ta.style.opacity = '0'
+            document.body.appendChild(ta)
+            ta.select()
+            document.execCommand('copy')
+            document.body.removeChild(ta)
+        }
+        copyCopied.value = true
+        toast.add({ title: t('question.typePromptCopied'), color: 'success' })
+        if (copyCopiedTimer) clearTimeout(copyCopiedTimer)
+        copyCopiedTimer = setTimeout(() => { copyCopied.value = false }, 1500)
+    } catch {
+        toast.add({ title: t('question.typePromptCopyFailed'), color: 'error' })
+    }
+}
+
+// form.value → jsonText
+watch(form, (newForm) => {
+    if (syncingFromJson) return
+    if (!newForm) {
+        jsonText.value = ''
+        jsonError.value = ''
+        return
+    }
+    syncingFromForm = true
+    try {
+        jsonText.value = JSON.stringify(newForm, null, 2)
+        jsonError.value = ''
+    } catch (e) {
+        jsonError.value = e?.message || 'Serialize error'
+    } finally {
+        syncingFromForm = false
+    }
+}, { deep: true, immediate: true })
+
+// jsonText → form.value
+watch(jsonText, (newText) => {
+    if (syncingFromForm) return
+    // AI 流式期间禁止把（可能不完整的）流式 JSON 反写回 form，避免与 form→jsonText 形成反馈环覆盖流式输出
+    if (aiStreaming.value) return
+    if (!form.value) return
+    if (!String(newText || '').trim()) return  // 空输入 — 跳过
+    try {
+        const parsed = JSON.parse(newText)
+        if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+            jsonError.value = 'JSON must be an object'
+            return
+        }
+        syncingFromJson = true
+        // Update all keys present in parsed; keep form structure stable
+        for (const key of Object.keys(parsed)) {
+            form.value[key] = parsed[key]
+        }
+        jsonError.value = ''
+    } catch (e) {
+        jsonError.value = e?.message || 'Parse error'
+    } finally {
+        syncingFromJson = false
+    }
+})
 
 // provide form 给 select node-view，使其能读取 options
 provide('questionForm', form)
@@ -240,6 +441,11 @@ function onTypeChange() {
       form.value.answer = []
       form.value.content = []
       break
+    case 'video':
+      form.value.options = { src: '', questions: [] }
+      form.value.answer = []
+      form.value.content = ''
+      break
   }
 }
 
@@ -247,6 +453,45 @@ function resetForm() {
   if (originalData) form.value = JSON.parse(JSON.stringify(originalData))
   saveMsg.value = ''
 }
+
+// AI 流式生成开始/结束（开始时打开 JSON 编辑器并重置成功标记）
+function onAiStreaming(v) {
+  aiStreaming.value = v
+}
+
+// AI 流式输出（已剥离 ```json 围栏的纯 JSON 片段）实时写入 jsonText → Monaco
+// 注意：jsonText→form watch 被 aiStreaming 守卫跳过，不会把流式片段反写回 form
+function onAiStreamText(text) {
+  jsonText.value = text
+}
+
+// AI 生成的题目应用到表单（仅覆盖生成对象中存在的键，保留 record 等已有字段）
+function onAiGenerated(q) {
+  if (!form.value) return
+  aiGenSucceeded = true
+  for (const key of Object.keys(q)) {
+    form.value[key] = q[key]
+  }
+  toast.add({ title: t('question.aiGenerateApplied'), color: 'success' })
+}
+
+// 流式开始 → 自动展开 JSON 编辑器；非成功结束（停止/出错）→ 用 form 重建 jsonText
+watch(aiStreaming, (v) => {
+  if (v) {
+    showJsonEditor.value = true
+    aiGenSucceeded = false
+  } else if (!aiGenSucceeded && form.value) {
+    syncingFromForm = true
+    try {
+      jsonText.value = JSON.stringify(form.value, null, 2)
+      jsonError.value = ''
+    } catch (e) {
+      jsonError.value = e?.message || 'Serialize error'
+    } finally {
+      syncingFromForm = false
+    }
+  }
+})
 
 async function saveQuestion() {
   if (!form.value) return

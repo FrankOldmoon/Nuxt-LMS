@@ -142,6 +142,28 @@ export function computeCorrectRate(question: any): number {
     })
     return totalPoint > 0 ? correctPoint / totalPoint : 0
   }
+  if (type === 'video') {
+    // 视频题：同时满足才正确
+    // 1) watchedRatio >= 0.95（视频已观看 ≥ 95%）
+    // 2) 所有子题答对（subRecords[cid].correct === true）
+    // record[0] 形式：{ watchedRatio: 0~1, subRecords: { cid: { correct: bool } } }
+    const rec = Array.isArray(record) && record.length > 0 ? (record[0] || {}) : {}
+    const watchedRatio = Math.max(0, Math.min(1, Number(rec.watchedRatio) || 0))
+    const subRecords = (rec.subRecords && typeof rec.subRecords === 'object') ? rec.subRecords : {}
+    const opts = question.options
+    const subQuestions = (opts && typeof opts === 'object' && !Array.isArray(opts) && Array.isArray(opts.questions))
+      ? opts.questions
+      : []
+    if (subQuestions.length === 0) {
+      // 无子题时，只要视频看完就算通过
+      return watchedRatio >= 0.95 ? 1 : 0
+    }
+    const allCorrect = subQuestions.every((q: any) => {
+      const cid = Number(q.cid) || 0
+      return cid > 0 && subRecords[cid]?.correct === true
+    })
+    return (allCorrect && watchedRatio >= 0.95) ? 1 : 0
+  }
   return 0
 }
 

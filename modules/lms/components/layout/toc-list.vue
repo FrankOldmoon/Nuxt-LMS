@@ -1,5 +1,5 @@
 <template>
-  <nav class="flex flex-col gap-2">
+  <nav class="flex flex-col gap-2 overflow-y-auto h-[240px]">
     <template v-if="links?.length">
       <p v-if="title" class="text-sm font-semibold text-highlighted px-2 mb-1">
         {{ title }}

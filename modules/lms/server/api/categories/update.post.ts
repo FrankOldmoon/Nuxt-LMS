@@ -1,6 +1,7 @@
 import { db, schema } from '@nuxthub/db'
 import { eq } from 'drizzle-orm'
 
+
 export default eventHandler(async (event) => {
   // 仅管理员可更新分类
   await requireAdmin(event)
@@ -29,6 +30,8 @@ export default eventHandler(async (event) => {
     }
 
     const result = await updateTable('categories', Number(id), setData)
+    // 通知所有客户端：首页导航已更新（所有 useHome() 消费者自动 refresh）
+    broadcastToAll({ type: 'home-changed', reason: 'categories.update' })
     return cResp(result)
   } catch (error: any) {
     console.error('更新分类失败:', error)

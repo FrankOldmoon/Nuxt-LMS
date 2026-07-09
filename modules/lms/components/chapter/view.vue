@@ -49,8 +49,8 @@
       </div>
     </div>
 
-    <!-- 右侧目录（桌面端显示，滚动时固定） -->
-    <div class="hidden lg:block w-56 shrink-0">
+    <!-- 右侧目录（桌面端显示，滚动时固定）：chapterPage.showOutline 关闭时隐藏 -->
+    <div v-if="chapterPageCfg.showOutline" class="hidden lg:block w-56 shrink-0">
       <div class="sticky top-20">
         <UPageAside>
           <LayoutToc />
@@ -139,6 +139,11 @@ const props = withDefaults(defineProps<ChapterViewProps>(), {
 })
 
 const { siteTitle } = useSiteConfig()
+
+// lms 公开配置：chapterPage.* 控制章节页显隐
+// 教学/笔记/弹幕/全屏等开关在父页面 pages/course/[id]/[cid].vue 已应用到 layout state
+// 此处 chapterPageCfg.showOutline 用于本地右侧目录（LayoutToc）显隐
+const { chapterPage: chapterPageCfg } = useLmsPublicConfig()
 
 // 设置页面标题
 useHead(computed(() => ({

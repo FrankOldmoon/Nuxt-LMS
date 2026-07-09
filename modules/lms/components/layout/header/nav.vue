@@ -52,6 +52,13 @@ const { t } = useI18n()
 const importing = ref(false)
 const fileInputRef = ref<HTMLInputElement | null>(null)
 
+/**
+ * 导航保存后刷新：
+ * - 主要靠服务端广播 'home-changed'（categories/courses add|update|batch|delete|import）
+ *   → useHome() 内部 WS handler 触发 refreshNuxtData('home-singleton-fetch')
+ *   → 所有 useHeaderNav / pages/index.vue / 其他 useHome() 消费者实时更新
+ * - 此处再调用一次 refresh() 作为兜底（防止 WS 未连接或广播丢失）
+ */
 async function handleSaved() {
   if (refresh) {
     await refresh()

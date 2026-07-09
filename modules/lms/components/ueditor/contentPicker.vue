@@ -211,7 +211,7 @@
                                 Question Format Help
                                 <UButton icon="i-lucide-copy" size="xs" color="neutral" variant="ghost" @click.stop="copyPrompt" />
                             </summary>
-                            <pre class="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-auto max-h-[300px] text-xs whitespace-pre-wrap border border-gray-200 dark:border-gray-700 leading-relaxed">{{ questionPrompt }}</pre>
+                            <pre class="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-auto max-h-[300px] text-xs whitespace-pre-wrap border border-gray-200 dark:border-gray-700 leading-relaxed">{{ allPrompts() }}</pre>
                         </details>
                         <div v-if="importMsg" class="text-xs" :class="importOk ? 'text-green-500' : 'text-red-500'">
                             {{ importMsg }}
@@ -240,8 +240,8 @@ import HomeworkRender from './extensions/nodes/vue/homework/render.vue'
 import CommentRender from './extensions/nodes/vue/comment/render.vue'
 import QuizRender from './extensions/nodes/vue/quiz/render.vue'
 import RaceRender from './extensions/nodes/vue/race/render.vue'
-// 题目格式参考文档（纯文本，构建时内联）
-import questionPrompt from '../../question_prompt.md?raw'
+// 各题型的英文出题说明（原 question_prompt.md 已拆分为 edit/prompt-*.js）
+import { allPrompts } from './extensions/nodes/vue/question/edit/prompts.js'
 
 const props = defineProps({
     modelValue: { type: Boolean, default: false },
@@ -551,7 +551,7 @@ async function doImport() {
 // 复制题目格式参考文档
 async function copyPrompt() {
     try {
-        await navigator.clipboard.writeText(questionPrompt)
+        await navigator.clipboard.writeText(allPrompts())
         toast.add({ title: t('common.copied'), color: 'success' })
     } catch {
         toast.add({ title: t('common.copyFailed'), color: 'error' })

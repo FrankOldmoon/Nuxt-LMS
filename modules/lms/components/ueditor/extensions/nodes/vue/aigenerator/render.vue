@@ -80,7 +80,8 @@
 import { ref, computed, provide, watch, onMounted } from 'vue'
 import QuestionRender from '../question/render.vue'
 import { computeCorrectRate } from '../question/render/shared.ts'
-import questionPrompt from '../../../../../../question_prompt.md?raw'
+// 各题型的英文出题说明（原 question_prompt.md 已拆分为 edit/prompt-*.js）
+import { allPrompts } from '../question/edit/prompts.js'
 
 const props = defineProps({
     node: Object,
@@ -133,24 +134,23 @@ const currentQuestion = computed(() => questions.value[currentIndex.value] || nu
 // ====================== LLM 出题 ======================
 
 /**
- * 构建系统提示词：注入 question_prompt.md 规则 + 当前题型要求
+ * 构建系统提示词：注入各题型 prompt + 当前题型要求
  */
 function buildSystemPrompt() {
     const type = config.value.questionType || 'single'
     const label = typeLabel.value[type] || type
-    return `你是一个专业的出题专家。请严格遵循以下出题规则生成题目。
+    return `You are a professional question-generation expert. Please strictly follow the rules below to generate a question.
 
-出题规则与各题型 JSON 格式说明：
+Generation rules and JSON format description for each question type:
 
-${questionPrompt}
+${allPrompts()}
 
-当前出题要求：
-- 题型固定为 "${type}"（${label}）
-- 只输出一个完整的 JSON 对象，不要包含任何解释性文字
-- 不要使用 markdown 代码块标记（不要用 \`\`\`json 和 \`\`\`）
-- 确保 answer 字段与题目逻辑一致且正确
-- content 字段使用纯文本字符串
-- type 字段必须为 "${type}"`
+Current requirement:
+- The question type is fixed to "${type}" (${label})
+- Output ONLY one complete JSON object. You may wrap it in a \`\`\`json code block; any prose outside the block will be ignored.
+- Make sure the answer field is logically correct and consistent with the question
+- The content field should be a plain text string
+- The type field must be exactly "${type}"`
 }
 
 /**

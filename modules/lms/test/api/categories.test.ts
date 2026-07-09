@@ -22,7 +22,7 @@ const _mockSchema = {
 }
 vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
 
-import { resetAllStubs, setMockAuthState } from '../../../../test/setup/nuxt-stubs'
+import { resetAllStubs, setMockAuthState, getWsBroadcasts, clearWsBroadcasts } from '../../../../test/setup/nuxt-stubs'
 
 beforeEach(() => {
   resetAllStubs()
@@ -117,5 +117,46 @@ describe('API: categories/batch.post', () => {
     const handler = (await import('../../server/api/categories/batch.post')).default
     const result = await handler(makeEvent({ body: { ids: [1, 2], action: 'delete' } }))
     expect(result).toBeDefined()
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────
+// home-changed WebSocket 广播：导航数据变化时通知所有客户端
+// ─────────────────────────────────────────────────────────────────
+describe('API: navigation → home-changed WS 广播', () => {
+  beforeEach(() => {
+    resetChain()
+    clearWsBroadcasts()
+  })
+
+  it('categories/add 成功后广播 home-changed', async () => {
+    setMockAuthState({ id: 1, username: 'admin', roles: ['admin'], permissions: [] })
+    _mockDb.returning = vi.fn().mockResolvedValue([{ id: 1, name: '新分类' }])
+    const handler = (await import('../../server/api/categories/add.post')).default
+    await handler(makeEvent({ body: { name: '新分类' } }))
+    const broadcasts = getWsBroadcasts()
+    const homeChanged = broadcasts.find((b: any) => b?.type === 'home-changed')
+    expect(homeChanged).toBeDefined()
+    expect(homeChanged.reason).toBe('categories.add')
+  })
+
+  it('categories/update 成功后广播 home-changed', async () => {
+    setMockAuthState({ id: 1, username: 'admin', roles: ['admin'], permissions: [] })
+    const handler = (await import('../../server/api/categories/update.post')).default
+    await handler(makeEvent({ body: { id: 1, name: '新名称' } }))
+    const broadcasts = getWsBroadcasts()
+    const homeChanged = broadcasts.find((b: any) => b?.type === 'home-changed')
+    expect(homeChanged).toBeDefined()
+    expect(homeChanged.reason).toBe('categories.update')
+  })
+
+  it('categories/batch 成功后广播 home-changed', async () => {
+    setMockAuthState({ id: 1, username: 'admin', roles: ['admin'], permissions: [] })
+    const handler = (await import('../../server/api/categories/batch.post')).default
+    await handler(makeEvent({ body: { ids: [1, 2], action: 'delete' } }))
+    const broadcasts = getWsBroadcasts()
+    const homeChanged = broadcasts.find((b: any) => b?.type === 'home-changed')
+    expect(homeChanged).toBeDefined()
+    expect(homeChanged.reason).toBe('categories.batch')
   })
 })

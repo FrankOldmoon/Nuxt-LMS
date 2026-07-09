@@ -1,22 +1,22 @@
 <template>
-    <div class="vue-node-config">
+    <div class="space-y-4">
         <!-- 视频上传 -->
-        <UFormField :label="t('ueditor.ivideoFile')" size="sm">
-            <FormInputFile v-model="form.src" :multiple="false" :placeholder="t('ueditor.ivideoSelectHint')" />
+        <UFormField :label="t('question.videoFile')" size="sm">
+            <FormInputFile v-model="form.src" :multiple="false" :placeholder="t('question.videoSelectHint')" />
         </UFormField>
 
         <!-- 视频预览（可拖动到目标时间点后点击「使用当前时间」捕获时间戳） -->
         <div v-if="form.src">
-            <label class="text-xs text-gray-500 mb-1 block">{{ t('ueditor.ivideoPreview') }}</label>
+            <label class="text-xs text-gray-500 mb-1 block">{{ t('question.videoPreview') }}</label>
             <video ref="previewVideo" :src="form.src" controls preload="metadata"
                 class="w-full rounded border border-gray-200 dark:border-gray-700" style="max-height: 240px;" />
         </div>
 
-        <!-- 互动题目列表 -->
+        <!-- 弹题列表 -->
         <div>
             <div class="flex items-center justify-between mb-2">
-                <label class="text-sm font-medium">{{ t('ueditor.ivideoQuestions') }} ({{ form.questions.length }})</label>
-                <UButton size="xs" variant="outline" icon="i-lucide-plus" :label="t('ueditor.ivideoSelectQuestion')"
+                <label class="text-sm font-medium">{{ t('question.videoQuestions') }} ({{ form.questions.length }})</label>
+                <UButton size="xs" variant="outline" icon="i-lucide-plus" :label="t('question.videoSelectQuestion')"
                     @click="pickerOpen = true" />
             </div>
             <div v-if="form.questions.length" class="space-y-2">
@@ -25,20 +25,20 @@
                     <UIcon name="i-lucide-circle-help" class="size-4 text-gray-400 shrink-0" />
                     <span class="text-sm flex-1">{{ t('courseData.questionLabel') }} #{{ q.cid }}</span>
                     <UInput v-model.number="q.at" type="number" size="xs" class="w-20" :placeholder="0" />
-                    <span class="text-xs text-gray-400">{{ t('ueditor.ivideoTimeUnit') }}</span>
+                    <span class="text-xs text-gray-400">{{ t('question.videoTimeUnit') }}</span>
                     <UButton v-if="form.src" icon="i-lucide-target" color="neutral" variant="ghost" size="2xs"
-                        :label="t('ueditor.ivideoUseCurrentTime')" @click="captureTime(idx)" />
+                        :label="t('question.videoUseCurrentTime')" @click="captureTime(idx)" />
                     <span class="text-xs text-gray-400 w-12 text-right tabular-nums">{{ formatTime(q.at) }}</span>
                     <UButton icon="i-lucide-x" color="error" variant="ghost" size="2xs"
                         @click="form.questions.splice(idx, 1)" />
                 </div>
             </div>
-            <p v-else class="text-sm text-gray-400">{{ t('ueditor.ivideoNoQuestions') }}</p>
+            <p v-else class="text-sm text-gray-400">{{ t('question.videoNoQuestions') }}</p>
         </div>
 
-        <!-- 操作按钮 -->
-        <div class="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
-            <UButton color="primary" @click="apply">{{ t('common.save') }}</UButton>
+        <!-- 说明 -->
+        <div class="text-xs text-gray-500 bg-gray-50 dark:bg-gray-800 p-3 rounded">
+            {{ t('question.videoEditHint') }}
         </div>
 
         <!-- 题目选择器 -->
@@ -48,31 +48,34 @@
 
 <script setup>
 const props = defineProps({
-    config: { type: Object, default: () => ({}) },
+    form: { type: Object, required: true },
 })
-const emit = defineEmits(['update:config', 'close'])
 const { t } = useI18n()
 
 const previewVideo = ref(null)
 const pickerOpen = ref(false)
 
-// 从 config 深拷贝初始化 form（避免直接修改 props）
-const form = ref(parseForm(props.config))
-
-function parseForm(cfg) {
-    return {
-        src: cfg?.src || '',
-        questions: Array.isArray(cfg?.questions)
-            ? cfg.questions.map(q => ({ cid: Number(q.cid) || 0, at: Number(q.at) || 0 }))
-                .filter(q => q.cid > 0)
-            : [],
+// form.options 必须是对象：{ src, questions: [{cid, at}] }
+// 在父组件 onTypeChange 中初始化为对象，这里直接读写
+function ensureOptions() {
+    if (!props.form.options || typeof props.form.options !== 'object' || Array.isArray(props.form.options)) {
+        props.form.options = { src: '', questions: [] }
+    }
+    if (!Array.isArray(props.form.options.questions)) {
+        props.form.options.questions = []
+    }
+    if (typeof props.form.options.src !== 'string') {
+        props.form.options.src = ''
     }
 }
+ensureOptions()
+
+const form = props.form.options  // 简化模板引用
 
 function onPickQuestions(cids) {
     for (const cid of cids) {
-        if (!form.value.questions.some(q => q.cid === cid)) {
-            form.value.questions.push({ cid, at: 0 })
+        if (!form.questions.some(q => q.cid === cid)) {
+            form.questions.push({ cid, at: 0 })
         }
     }
 }
@@ -81,7 +84,7 @@ function onPickQuestions(cids) {
 function captureTime(idx) {
     const v = previewVideo.value
     if (!v) return
-    form.value.questions[idx].at = Math.floor(v.currentTime)
+    form.questions[idx].at = Math.floor(v.currentTime)
 }
 
 function formatTime(s) {
@@ -90,14 +93,5 @@ function formatTime(s) {
     const m = Math.floor(sec / 60)
     const ss = sec % 60
     return `${String(m).padStart(2, '0')}:${String(ss).padStart(2, '0')}`
-}
-
-function apply() {
-    // 按时间升序排序，保证播放时按顺序触发
-    const questions = form.value.questions
-        .slice()
-        .sort((a, b) => a.at - b.at)
-    emit('update:config', { src: form.value.src, questions })
-    emit('close')
 }
 </script>

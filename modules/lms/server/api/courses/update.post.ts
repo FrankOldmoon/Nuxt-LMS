@@ -1,6 +1,7 @@
 import { db, schema } from '@nuxthub/db'
 import { eq } from 'drizzle-orm'
 
+
 export default eventHandler(async (event) => {
   const body = await readBody(event)
   const { id, ...setData } = body
@@ -38,6 +39,8 @@ export default eventHandler(async (event) => {
     }
 
     const result = await updateTable('courses', Number(id), setData)
+    // 课程信息（标题/分类/状态等）变化会影响首页导航
+    broadcastToAll({ type: 'home-changed', reason: 'courses.update' })
     return cResp(result)
   } catch (error: any) {
     console.error('更新课程失败:', error)

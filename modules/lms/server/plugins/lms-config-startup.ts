@@ -1,8 +1,9 @@
 /**
- * 服务启动时加载 lms_config 到内存缓存
- * 并在首次启动时初始化 1 个 test 班级 + 30 个 test 学生账号
- *   - 若 classes 表为空，则新建 class(name='test', code='test', id=1)
- *   - 所有 test01~test30 账号的 class_id 都设为 1（写入 userClasses）
+ * 服务启动时：
+ *   1. 加载 lms 配置到内存缓存（reloadLmsConfig 内部自动迁移旧 lms_config 单行）
+ *   2. 首次启动时初始化 1 个 test 班级 + 30 个 test 学生账号
+ *      - 标记位使用拍平存储：configs(id='lms:_system.testAccountsSeeded', value=true)
+ *      - 不再写入 lms_config 单行 json
  */
 import { db, schema } from "@nuxthub/db"
 import { eq } from "drizzle-orm"
@@ -11,13 +12,19 @@ const TEST_COUNT = 30
 const TEST_CLASS_NAME = 'test'
 const TEST_CLASS_CODE = 'test'
 
+/** 拍平存储的系统标记位（lms: 前缀，_system 命名空间避免与业务配置冲突） */
+const SEED_FLAG_KEY = 'lms:_system.testAccountsSeeded'
+
 export default defineNitroPlugin(async () => {
   await reloadLmsConfig()
 
-  // 首次启动时初始化 test 班级 + 30 个 test 账号（仅一次，写入 lms_config 标记位）
+  // 首次启动时初始化 test 班级 + 30 个 test 账号（仅一次）
   try {
-    const cfg = getLmsConfig() as any
-    if (cfg.testAccountsSeeded) {
+    // 直接读拍平行，避免启动期 reload 时序问题
+    const flagRow = await db.query.configs.findFirst({
+      where: eq(schema.configs.id, SEED_FLAG_KEY),
+    })
+    if (flagRow?.value === true) {
       return
     }
 
@@ -71,7 +78,7 @@ export default defineNitroPlugin(async () => {
         strongPwd: true,
         defaultLocale: 'en',
         avatarImg: '/avatar.webp',
-        classId: 1, // 直接设置班级 ID，不通过 userClasses 关联表
+        classId: 1,
         createdAt: now,
         updatedAt: now,
       })
@@ -92,10 +99,14 @@ export default defineNitroPlugin(async () => {
       await db.insert(schema.userRoles).values(roleInserts).onConflictDoNothing()
     }
 
-    // 4. 写入标记位到 lms_config，避免重复初始化
-    await db.update(schema.configs)
-      .set({ value: { ...cfg, testAccountsSeeded: true } })
-      .where(eq(schema.configs.id, 'lms_config'))
+    // 4. 写入标记位（拍平存储，独立 lms:_system.testAccountsSeeded 行）
+    await db
+      .insert(schema.configs)
+      .values({ id: SEED_FLAG_KEY, value: true })
+      .onConflictDoUpdate({
+        target: schema.configs.id,
+        set: { value: true },
+      })
 
     console.log(`[lms-config-startup] 已初始化 ${insertedUsers.length}/${TEST_COUNT} 个 test 账号（密码: ${TEST_PASSWORD}，全部归属 class_id=1）`)
   } catch (e) {

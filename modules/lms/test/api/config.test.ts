@@ -23,10 +23,16 @@ const _mockSchema = {
 vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
 
 // Mock lmsConfig utils to use in-memory store (delegates to global stub)
+// 拍平存储所需：buildLmsConfigPairs 把树形对象转为 lms:* 拍平键值对列表
 vi.mock('../../server/utils/lmsConfig', () => ({
   getLmsConfigSync: () => (globalThis as any).getLmsConfigSync(),
   reloadLmsConfig: () => (globalThis as any).reloadLmsConfig(),
   getCourseLmsConfig: (id: number) => (globalThis as any).getCourseLmsConfig(id),
+  buildLmsConfigPairs: (obj: any) => (globalThis as any).buildLmsConfigPairs(obj),
+  flattenTree: (prefix: string, obj: any, result: Record<string, any>) =>
+    (globalThis as any).flattenTree(prefix, obj, result),
+  unflattenTree: (flat: Record<string, any>) => (globalThis as any).unflattenTree(flat),
+  mergeConfig: (defaults: any, overrides: any) => (globalThis as any).mergeConfig(defaults, overrides),
 }))
 
 import { resetAllStubs, setMockAuthState, setMockLmsConfig } from '../../../../test/setup/nuxt-stubs'
@@ -142,5 +148,65 @@ describe('API: config/update.post', () => {
     const handler = (await import('../../server/api/config/update.post')).default
     const result = await handler(makeEvent({ body: { ai: { mode: 'local' } } }))
     expect(result.success).toBe(true)
+  })
+
+  it('教师：拍平存储 body 为 lms:section.field 行（验证 buildLmsConfigPairs 调用）', async () => {
+    setMockAuthState({ id: 1, username: 'admin', roles: ['admin'], permissions: [] })
+    const { db } = await import('@nuxthub/db')
+    // 模拟 lms:* 拍平行已存在（跳过自动迁移）
+    vi.mocked(db.select).mockReturnValue({
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockResolvedValue([{ id: 'lms:ai.mode' }]),
+    } as any)
+    // 跟踪 db.insert 调用，验证每行 key 是 lms:section.field 格式
+    const insertCalls: any[] = []
+    vi.mocked(db.insert).mockImplementation(((..._args: any[]) => ({
+      values: (v: any) => {
+        insertCalls.push(v)
+        return {
+          onConflictDoUpdate: (_opts: any) => Promise.resolve(),
+        }
+      },
+    })) as any)
+    const { buildLmsConfigPairs } = await import('../../server/utils/lmsConfig')
+    const handler = (await import('../../server/api/config/update.post')).default
+    const result = await handler(makeEvent({
+      body: { ai: { mode: 'ollama', model: 'llama3.2' }, user: { allowChangePassword: false } },
+    }))
+    expect(result.success).toBe(true)
+    // 拍平后应该有 3 行：lms:ai.mode, lms:ai.model, lms:user.allowChangePassword
+    expect(insertCalls.length).toBeGreaterThanOrEqual(3)
+    const ids = insertCalls.map(c => c.id).sort()
+    expect(ids).toContain('lms:ai.mode')
+    expect(ids).toContain('lms:ai.model')
+    expect(ids).toContain('lms:user.allowChangePassword')
+    // 验证值正确
+    const modeRow = insertCalls.find(c => c.id === 'lms:ai.mode')
+    expect(modeRow.value).toBe('ollama')
+    // 验证 buildLmsConfigPairs 自身行为
+    const pairs = buildLmsConfigPairs({ ai: { mode: 'api' }, x: 1 })
+    expect(pairs.find(p => p.key === 'lms:ai.mode')?.value).toBe('api')
+    expect(pairs.find(p => p.key === 'lms:x')?.value).toBe(1)
+  })
+
+  it('教师：保存后调用 reloadLmsConfig 刷新缓存 + WS 广播 lms-config-changed', async () => {
+    setMockAuthState({ id: 1, username: 'admin', roles: ['admin'], permissions: [] })
+    const { db } = await import('@nuxthub/db')
+    vi.mocked(db.select).mockReturnValue({
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockResolvedValue([{ id: 'lms:ai.mode' }]),
+    } as any)
+    const { getWsBroadcasts, clearWsBroadcasts } = await import('../../../../test/setup/nuxt-stubs')
+    clearWsBroadcasts()
+    vi.mocked(db.insert).mockImplementation(((() => ({
+      values: () => ({ onConflictDoUpdate: () => Promise.resolve() }),
+    })) as any))
+    const handler = (await import('../../server/api/config/update.post')).default
+    await handler(makeEvent({ body: { ai: { mode: 'local' } } }))
+    const broadcasts = getWsBroadcasts()
+    const hasConfigChanged = broadcasts.some((b: any) => b?.type === 'lms-config-changed')
+    expect(hasConfigChanged).toBe(true)
   })
 })

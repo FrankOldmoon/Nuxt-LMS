@@ -129,6 +129,7 @@ import HtmlRender from './render/html.vue'
 import ShortAnswerRender from './render/short-answer.vue'
 import MatchRender from './render/match.vue'
 import CompositeRender from './render/composite.vue'
+import VideoRender from './render/video.vue'
 import ResultBanner from './render/result-banner.vue'
 import ExplanationBlock from './render/explanation-block.vue'
 import QuestionEdit from './edit.vue'
@@ -171,10 +172,16 @@ const typeLabel = computed(() => ({
     'short-answer': t('question.typeShortAnswer'),
     match: t('question.typeMatch'),
     composite: t('question.typeComposite'),
+    video: t('question.typeVideo'),
 }))
 
 // 题型 → 渲染组件
-const componentMap = { single: SingleRender, judge: JudgeRender, multiple: MultipleRender, fill: FillRender, select: SelectRender, sort: SortRender, classify: ClassifyRender, puzzle: PuzzleRender, html: HtmlRender, 'short-answer': ShortAnswerRender, match: MatchRender, composite: CompositeRender }
+const componentMap = {
+    single: SingleRender, judge: JudgeRender, multiple: MultipleRender, fill: FillRender,
+    select: SelectRender, sort: SortRender, classify: ClassifyRender, puzzle: PuzzleRender,
+    html: HtmlRender, 'short-answer': ShortAnswerRender, match: MatchRender,
+    composite: CompositeRender, video: VideoRender,
+}
 const renderComponent = computed(() => componentMap[question.value?.type] || null)
 const renderRef = ref(null)
 
@@ -272,8 +279,8 @@ function onSubmit() {
         if (!props.inQuiz) {
             chapterTask?.reportNodeDone('question', questionId.value, isCorrect.value)
         }
-        // emit 提交结果，供父组件（如 ivideo）监听
-        emit('submitted', { isCorrect: isCorrect.value, questionId: questionId.value })
+        // emit 提交结果，供父组件（如 video question）监听
+                emit('submitted', { isCorrect: isCorrect.value, questionId: questionId.value })
     }
 }
 
@@ -427,7 +434,7 @@ async function fetchRecord() {
                 isCorrect.value = (question.value.correct_rate || 0) > 0
                 // 上报历史完成状态
                 chapterTask?.reportNodeDone('question', questionId.value, isCorrect.value)
-                // emit 提交结果，供父组件（如 ivideo）监听
+                // emit 提交结果，供父组件（如 video question）监听
                 emit('submitted', { isCorrect: isCorrect.value, questionId: questionId.value })
             }
         }

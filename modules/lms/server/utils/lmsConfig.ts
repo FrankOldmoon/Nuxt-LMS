@@ -1,8 +1,19 @@
 import { db, schema } from "@nuxthub/db"
-import { eq } from "drizzle-orm"
+import { eq, like } from "drizzle-orm"
 
 /**
  * LMS 学习行为参数默认配置
+ *
+ * 存储模式：拍平到 configs 表（id = "lms:section.key"，value = 标量）
+ * 运行时内存中维护树形缓存，与历史 DEFAULT 树形接口保持兼容。
+ *
+ * 内部数据流：
+ *   reloadLmsConfig()    → 读 configs 表所有 lms:* 行 → 拍平 key/value 表
+ *                          → unflatten 成树 → 存到 _lmsConfig（cache）
+ *                          → 应用 env 覆盖（AI_API_KEY 等）
+ *
+ *   getLmsConfigSync()   → 返回 _lmsConfig 引用（未加载则返回 deep-clone 的默认）
+ *   getCourseLmsConfig() → 全局树 + 课程级 course.config.lmsConfig 深合并
  */
 export const DEFAULT_LMS_CONFIG = {
   // 题目相关
@@ -131,58 +142,136 @@ export const DEFAULT_LMS_CONFIG = {
   },
 }
 
-// 内存缓存
-let _lmsConfig: any = null
-let _loaded = false
+/** LMS 拍平键前缀（与 site: 对应） */
+export const LMS_KEY_PREFIX = 'lms:'
+
+/** 历史遗留：旧版单行 json 存储的 id（迁移完成后将删除） */
+const LEGACY_LMS_CONFIG_ID = 'lms_config'
+
+// ============== 树 ↔ 拍平 互转 ==============
+
+/**
+ * 将树形对象拍平为 "section.key.sub" 形式的键
+ *   flattenTree({ a: { b: 1, c: 2 } }) => { 'a.b': 1, 'a.c': 2 }
+ * 非对象（Date / Array）视为叶子值。
+ */
+export function flattenTree(prefix: string, obj: any, result: Record<string, any>) {
+  if (obj === null || obj === undefined) return
+  if (typeof obj !== 'object' || Array.isArray(obj) || obj instanceof Date) {
+    if (prefix) result[prefix] = obj
+    return
+  }
+  for (const [key, val] of Object.entries(obj)) {
+    const fullKey = prefix ? `${prefix}.${key}` : key
+    if (val !== null && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)) {
+      flattenTree(fullKey, val, result)
+    } else if (val !== undefined) {
+      result[fullKey] = val
+    }
+  }
+}
+
+/**
+ * 将 "section.key" 形式的拍平键还原为嵌套树
+ *   unflattenTree({ 'a.b': 1, 'a.c': 2 }) => { a: { b: 1, c: 2 } }
+ */
+export function unflattenTree(flat: Record<string, any>): any {
+  const result: any = {}
+  for (const [key, val] of Object.entries(flat)) {
+    if (val === undefined) continue
+    const parts = key.split('.')
+    let cur = result
+    for (let i = 0; i < parts.length - 1; i++) {
+      const p = parts[i]
+      if (!(p in cur) || cur[p] === null || typeof cur[p] !== 'object' || Array.isArray(cur[p])) {
+        cur[p] = {}
+      }
+      cur = cur[p]
+    }
+    cur[parts[parts.length - 1]] = val
+  }
+  return result
+}
+
+/** 深克隆（简单 JSON 兼容对象） */
+function deepClone<T>(v: T): T {
+  return JSON.parse(JSON.stringify(v))
+}
 
 /**
  * 深度合并默认配置和数据库配置
+ * - target 中存在的 key 优先于 defaults
+ * - 不递归 Date / Array（视为叶子）
  */
 export function mergeConfig(defaults: any, overrides: any): any {
   if (!overrides) return defaults
-  const result = { ...defaults }
-  for (const key of Object.keys(defaults)) {
-    if (typeof defaults[key] === 'object' && !Array.isArray(defaults[key])) {
-      result[key] = mergeConfig(defaults[key], overrides[key] || {})
+  if (defaults === null || typeof defaults !== 'object' || Array.isArray(defaults) || defaults instanceof Date) {
+    return overrides === undefined ? defaults : overrides
+  }
+  const result: any = { ...defaults }
+  for (const [key, val] of Object.entries(overrides)) {
+    const defVal = (defaults as any)[key]
+    if (val !== null && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)
+        && defVal !== null && typeof defVal === 'object' && !Array.isArray(defVal) && !(defVal instanceof Date)) {
+      result[key] = mergeConfig(defVal, val)
     } else {
-      result[key] = overrides[key] !== undefined ? overrides[key] : defaults[key]
+      result[key] = val === undefined ? defVal : val
     }
   }
   return result
 }
 
-/**
- * 获取 LMS 配置（带缓存）
- */
-export async function getLmsConfig(): Promise<any> {
-  if (_loaded && _lmsConfig) return _lmsConfig
-  return reloadLmsConfig()
-}
+// ============== 内部缓存 ==============
 
-/**
- * 同步获取已缓存的 LMS 配置（未加载时返回默认值）
- */
-export function getLmsConfigSync(): any {
-  return _lmsConfig || DEFAULT_LMS_CONFIG
-}
+/** 拍平默认值（key='a.b.c' 不带 lms: 前缀） */
+const _FLAT_DEFAULTS: Record<string, any> = (() => {
+  const r: Record<string, any> = {}
+  flattenTree('', DEFAULT_LMS_CONFIG, r)
+  return r
+})()
+
+/** 树形内存缓存 */
+let _lmsConfig: any = null
+let _loaded = false
+
+// ============== 公开 API ==============
 
 /**
  * 重新从数据库加载 LMS 配置并更新缓存
+ * 1. 读 configs 表所有 lms:* 行（拍平存储）
+ * 2. 首次加载时若发现旧版单行 json (id='lms_config')，自动迁移为 lms:* 拍平行
+ * 3. 合并 _FLAT_DEFAULTS + DB 值 → unflatten 为树 → 写入 _lmsConfig
+ * 4. 应用 env 变量覆盖（AI_API_KEY / AI_API_URL / AI_MODEL）
  */
 export async function reloadLmsConfig(): Promise<any> {
+  // 1. 自动迁移：旧版单行 json → 拍平行（仅一次）
+  await migrateLegacyLmsConfigIfNeeded()
+
+  // 2. 读所有 lms:* 行
+  let flat: Record<string, any> = { ..._FLAT_DEFAULTS }
   try {
-    const row = await db.query.configs.findFirst({
-      where: eq(schema.configs.id, 'lms_config'),
-    })
-    _lmsConfig = mergeConfig(DEFAULT_LMS_CONFIG, row?.value || {})
+    const rows = await db
+      .select({ id: schema.configs.id, value: schema.configs.value })
+      .from(schema.configs)
+      .where(like(schema.configs.id, `${LMS_KEY_PREFIX}%`))
+    for (const row of rows) {
+      // 去掉 lms: 前缀，还原为 'section.key' 形式
+      const key = row.id.startsWith(LMS_KEY_PREFIX) ? row.id.slice(LMS_KEY_PREFIX.length) : row.id
+      if (row.value !== undefined && row.value !== null) {
+        flat[key] = row.value
+      }
+    }
   } catch (e) {
     console.error('[lms_config] 加载失败，使用默认配置', e)
-    _lmsConfig = DEFAULT_LMS_CONFIG
+    flat = { ..._FLAT_DEFAULTS }
   }
 
-  // 环境变量覆盖 ai 配置（优先级最高，留空则保持数据库/默认值）
-  // 敏感信息（API Key）适合通过 .env 注入，不入库
+  // 3. 拍平 → 树
+  _lmsConfig = unflattenTree(flat)
+
+  // 4. 环境变量覆盖 ai 配置（优先级最高）
   const env = process.env
+  if (!_lmsConfig.ai) _lmsConfig.ai = {}
   if (env.AI_API_KEY) _lmsConfig.ai.llmApiKey = env.AI_API_KEY
   if (env.AI_API_URL) _lmsConfig.ai.llmApiUrl = env.AI_API_URL
   if (env.AI_MODEL) _lmsConfig.ai.model = env.AI_MODEL
@@ -191,9 +280,36 @@ export async function reloadLmsConfig(): Promise<any> {
   return _lmsConfig
 }
 
+/** 异步获取 LMS 配置（未加载则先加载） */
+export async function getLmsConfig(): Promise<any> {
+  if (_loaded && _lmsConfig) return _lmsConfig
+  return reloadLmsConfig()
+}
+
+/** 同步获取已缓存的 LMS 配置（未加载时返回默认值） */
+export function getLmsConfigSync(): any {
+  if (_lmsConfig) return _lmsConfig
+  return deepClone(DEFAULT_LMS_CONFIG)
+}
+
+/** 强制重置缓存（测试用） */
+export function _resetLmsConfigCache() {
+  _lmsConfig = null
+  _loaded = false
+}
+
 /**
- * 获取合并后的课程级配置
- * 全局 lms_config + 课程 config 中的 lms_config 覆盖
+ * 将树形对象拍平为 { 'lms:section.key': value } 形式，供 upsert
+ */
+export function buildLmsConfigPairs(obj: any): Array<{ key: string; value: any }> {
+  const flat: Record<string, any> = {}
+  flattenTree('', obj, flat)
+  return Object.entries(flat).map(([k, v]) => ({ key: `${LMS_KEY_PREFIX}${k}`, value: v }))
+}
+
+/**
+ * 异步获取合并后的课程级配置
+ * 全局 lms_config + 课程 config 中的 lmsConfig 覆盖
  */
 export async function getCourseLmsConfig(courseId: number): Promise<any> {
   const globalConfig = getLmsConfigSync()
@@ -222,4 +338,86 @@ export function mergeCourseLmsConfig(courseConfig: any): any {
     return mergeConfig(globalConfig, courseLmsConfig)
   }
   return globalConfig
+}
+
+// ============== 旧版数据迁移 ==============
+
+/**
+ * 旧版单行 json 迁移到拍平行（仅一次）
+ * - 检测：configs 表中 id='lms_config' 行存在
+ * - 动作：拍平其 value 为 lms:* 行后删除原行
+ * - 静默：若 lms:* 行已存在也跳过（避免覆盖新格式）
+ */
+async function migrateLegacyLmsConfigIfNeeded() {
+  try {
+    // 拍平行已有任意一条说明新格式生效，不再迁移
+    const sample = await db
+      .select({ id: schema.configs.id })
+      .from(schema.configs)
+      .where(like(schema.configs.id, `${LMS_KEY_PREFIX}%`))
+      .limit(1)
+    if (sample.length > 0) return
+
+    const legacy = await db.query.configs.findFirst({
+      where: eq(schema.configs.id, LEGACY_LMS_CONFIG_ID),
+    })
+    if (!legacy?.value || typeof legacy.value !== 'object') return
+
+    const pairs = buildLmsConfigPairs(legacy.value)
+    if (!pairs.length) {
+      // 空对象，直接删
+      await db.delete(schema.configs).where(eq(schema.configs.id, LEGACY_LMS_CONFIG_ID))
+      console.log('[lms_config] 已迁移：旧 lms_config 为空，已删除')
+      return
+    }
+
+    // 逐行 upsert（防御幂等）
+    for (const { key, value } of pairs) {
+      await db
+        .insert(schema.configs)
+        .values({ id: key, value })
+        .onConflictDoUpdate({
+          target: schema.configs.id,
+          set: { value },
+        })
+    }
+    // 删除旧行
+    await db.delete(schema.configs).where(eq(schema.configs.id, LEGACY_LMS_CONFIG_ID))
+    console.log(`[lms_config] 已迁移：${pairs.length} 个 lms:* 拍平键（来自旧 lms_config）`)
+  } catch (e) {
+    // 迁移失败不阻塞启动，记录错误
+    console.error('[lms_config] 旧版数据迁移失败', e)
+  }
+}
+
+/**
+ * 检测：当前是否存在 lms:* 拍平行（用于插件 / 迁移检查）
+ */
+export async function hasLmsFlatRows(): Promise<boolean> {
+  try {
+    const rows = await db
+      .select({ id: schema.configs.id })
+      .from(schema.configs)
+      .where(like(schema.configs.id, `${LMS_KEY_PREFIX}%`))
+      .limit(1)
+    return rows.length > 0
+  } catch {
+    return false
+  }
+}
+
+/**
+ * 检测：当前是否仍存在旧版 lms_config 单行（迁移未完成）
+ */
+export async function hasLegacyLmsConfig(): Promise<boolean> {
+  try {
+    const rows = await db
+      .select({ id: schema.configs.id })
+      .from(schema.configs)
+      .where(eq(schema.configs.id, LEGACY_LMS_CONFIG_ID))
+      .limit(1)
+    return rows.length > 0
+  } catch {
+    return false
+  }
 }

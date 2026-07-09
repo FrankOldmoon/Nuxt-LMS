@@ -2,13 +2,14 @@
     <client-only>
         <umo-editor v-bind="options" ref="editorRef" @changed="onChanged" @created="onCreated" @paste="onPaste">
         </umo-editor>
-
-        <!-- Cinserts 组件，初始隐藏，editor 创建后移动到工具栏（仅 teacher 以上角色可见） -->
         <div ref="cinsertsWrapper" v-show="false">
             <Cinserts v-if="canEdit" :editor="editorRef" />
         </div>
 
         <UeditorWs v-if="lockId" :lock-id="lockId" @update:readonly="onLockUpdate" />
+
+        <!-- teacher 可见的 AI 生成悬浮按钮（右下角） -->
+        <AiFloat :editor="editorRef" :readonly="isReadonly" />
     </client-only>
 </template>
 
@@ -17,6 +18,7 @@ import { UmoEditor } from '@umoteam/editor'
 import extensions from './extensions'
 import Cinserts from './cinserts.vue'
 import UeditorWs from './ws.vue'
+import AiFloat from './ai-float.vue'
 
 
 const json = defineModel()
@@ -29,6 +31,10 @@ const props = defineProps({
         type: [String, Number],
         default: null,
     },
+    showInsert: {
+        type: Boolean,
+        default: false,
+    },
 })
 
 const isReadonly = ref(false)
@@ -38,6 +44,7 @@ const { hasRole, isCourseEditor, isCourseTeacher } = useAuth()
 const route = useRoute()
 const courseId = computed(() => Number(route.params.id) || 0)
 const canEdit = computed(() => {
+    if (!props.showInsert) return false
     if (hasRole('admin') || hasRole('teacher')) return true
     return courseId.value ? isCourseEditor(courseId.value) || isCourseTeacher(courseId.value) : false
 })
@@ -116,16 +123,13 @@ const uploadImages = async () => {
                 })
                 node.attrs.src = res.data.url;
                 node.attrs.id = res.data.id;
-                console.log("uploadImages", node);
             }
         }
     });
 }
 
 const onPaste = async (content) => {
-    console.log("onPaste", content)
     await waitForSeconds(1)
-    console.log(editorRef.value.getJSON())
     await uploadImages()
 }
 

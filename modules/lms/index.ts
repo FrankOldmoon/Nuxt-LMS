@@ -89,6 +89,13 @@ export default defineNuxtModule({
     // （教师在 accessBar 切换章节 isOpen 或开放给班级时，服务端广播此消息）
     addPlugin(resolve('./plugins/ws-sync.client.ts'))
 
+    // 共享数据单例插件：应用启动时预拉取一次 /api/home 和 /api/config/lms-public，
+    // 存入 useState 后所有组件通过 useHome() / useLmsPublicConfig() 共享同一份数据。
+    // 注：模块 plugins/ 目录不会被 Nuxt 自动发现，必须显式 addPlugin() 注册
+    // （参考 base 模块的 site-config.ts 注册方式）。
+    addPlugin(resolve('./plugins/home-data.ts'))
+    addPlugin(resolve('./plugins/lms-public-config.ts'))
+
     nuxt.hook('i18n:registerModule', (registerModule) => {
       registerModule({
         langDir: resolve('./i18n/locales'),

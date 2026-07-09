@@ -5,6 +5,8 @@ export default eventHandler(async (event) => {
   const body = await readBody(event)
   try {
     const result = await addTable('courses', body)
+    // 通知所有客户端：首页导航已更新
+    broadcastToAll({ type: 'home-changed', reason: 'courses.add' })
     return cResp(result)
   } catch (error: any) {
     console.error('新增课程失败:', error)

@@ -1,7 +1,8 @@
 <template>
   <div>
     <!-- 播放/退出播放按钮（播放时显示在 TOC 最上方） -->
-    <div v-if="chapterBtnsConfig.showPlay" class="mb-3">
+    <!-- chapterBtnsConfig.showPlay 关闭 OR chapterPage.enableFullscreen 关闭时隐藏 -->
+    <div v-if="chapterBtnsConfig.showPlay && chapterPageCfg.enableFullscreen" class="mb-3">
       <UButton :label="playFullscreen ? $t('chapter.exitPlay') : $t('chapter.play')"
         :icon="playFullscreen ? 'i-lucide-minimize' : 'i-lucide-play'" :color="playFullscreen ? 'error' : 'primary'"
         variant="soft" size="sm" class="w-full justify-center" @click="togglePlay" />
@@ -37,6 +38,9 @@
       <UButton icon="i-lucide-chevron-down" size="sm" variant="outline"
         :disabled="currentHeadingIndex >= flatHeadings.length - 1" @click="goToHeading(1)" />
     </div>
+    <p v-if="playFullscreen && flatHeadings.length" class="text-xs text-muted text-center mt-1.5">
+      {{ $t('chapter.keyboardNavHint') }}
+    </p>
 
     <!-- 页面内容编辑器（管理员或课程编辑者可见） -->
     <div v-if="canEditContent" class="hidden lg:flex flex-col gap-3 pt-4 mt-4 border-t border-default">
@@ -45,7 +49,7 @@
 
         <template #body>
           <div class="p-4 min-w-[480px]">
-            <ueditor v-model="editableContent" :save-handler="handleSave" :lock-id="lockId" ref="ueditorRef" />
+            <ueditor v-model="editableContent" :save-handler="handleSave" :lock-id="lockId" ref="ueditorRef" :show-insert="true" />
           </div>
         </template>
         <template #footer>
@@ -57,7 +61,7 @@
       </UModal>
 
       <!-- 历史记录 -->
-      <ContentHistoryModal :table="editableTable" :id="editableId" />
+      <ChapterHistoryModal :table="editableTable" :id="editableId" />
     </div>
   </div>
 </template>
@@ -75,6 +79,9 @@ const saving = ref(false)
 
 const { tocLinks, editableContent, editableTable, editableId, editableCourseId, notifyContentSaved, chapterBtnsConfig } = useLayoutState()
 const { playFullscreen, togglePlay } = useChapterBtns()
+
+// lms 公开配置：chapterPage.enableFullscreen 控制播放按钮显隐
+const { chapterPage: chapterPageCfg } = useLmsPublicConfig()
 
 const lockId = computed(() => editableTable.value && editableId.value ? `${editableTable.value}_${editableId.value}` : null)
 
@@ -156,6 +163,24 @@ function goToHeading(direction: number) {
   }
 }
 
+// 全屏播放：键盘左右方向键 = 上下导航按钮（← 上一个标题 / → 下一个标题）
+function onPlayKeydown(e: KeyboardEvent) {
+  if (!playFullscreen.value) return
+  // 在输入框/文本域/可编辑区域内不拦截方向键，避免影响表单编辑
+  const target = e.target as HTMLElement | null
+  if (target) {
+    const tag = target.tagName
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable) return
+  }
+  if (e.key === 'ArrowLeft') {
+    e.preventDefault()
+    goToHeading(-1)
+  } else if (e.key === 'ArrowRight') {
+    e.preventDefault()
+    goToHeading(1)
+  }
+}
+
 watch([playFullscreen, tocLinks], () => {
   if (playFullscreen.value) {
     nextTick(() => setupNavObserver())
@@ -165,8 +190,16 @@ watch([playFullscreen, tocLinks], () => {
   }
 })
 
+// 进入/退出全屏播放时挂载/卸载键盘监听
+watch(playFullscreen, (v) => {
+  if (!import.meta.client) return
+  if (v) window.addEventListener('keydown', onPlayKeydown)
+  else window.removeEventListener('keydown', onPlayKeydown)
+})
+
 onBeforeUnmount(() => {
   navObserver?.disconnect()
+  if (import.meta.client) window.removeEventListener('keydown', onPlayKeydown)
 })
 
 // ── 内容编辑权限 ──

@@ -277,6 +277,8 @@ export default eventHandler(async (event) => {
       }
     })
 
+    // 导入会创建新分类 + 新课程，需要通知所有客户端刷新首页导航
+    broadcastToAll({ type: 'home-changed', reason: 'courses.import' })
     return cResp(result)
   } catch (error: any) {
     console.error('课程导入失败:', error)
