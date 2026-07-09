@@ -16,6 +16,8 @@ const _mockDb = {
   values: vi.fn().mockReturnThis(),
   update: vi.fn().mockReturnThis(),
   set: vi.fn().mockReturnThis(),
+  onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
+  onConflictDoUpdate: vi.fn().mockResolvedValue(undefined),
 }
 const _mockSchema = {
   configs: { id: 'id', value: 'value' },

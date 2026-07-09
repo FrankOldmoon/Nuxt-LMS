@@ -5,7 +5,7 @@
             <template #content>
                 <div class="p-6 space-y-4 min-w-[700px]">
                     <h2 class="text-lg font-semibold">{{ t('richEditor.title') }}</h2>
-                    <ueditor v-model="editJson" class="min-h-[300px] border rounded-md" />
+                    <ueditor v-model="editJson" :pasteable="pasteable" class="min-h-[300px] border rounded-md" />
                     <div class="flex justify-end gap-2">
                         <UButton variant="soft" @click="() => { isModalOpen = false }">{{ t('common.cancel') }}</UButton>
                         <UButton color="primary" @click="saveJson">{{ t('common.save') }}</UButton>
@@ -40,6 +40,13 @@ const { t } = useI18n()
 
 // v-model 支持 string | Tiptap JSON 对象
 const model = defineModel<string | Record<string, any>>({ default: '' })
+
+defineProps({
+    pasteable: {
+        type: Boolean,
+        default: true,
+    },
+})
 
 // 判断当前值是否为 JSON 对象（非数组、非 null、非字符串）
 const isJson = computed(

@@ -323,6 +323,18 @@ export function getCurrentUserId(_event: any): number | null {
   return null
 }
 
+/** addTable / updateTable / batchTable 桩 — 基础 CRUD 工具（auto-import，见 modules/base/server/utils/db.ts）
+ *  测试环境不连真实 db，这里返回最小可用值让端点逻辑（如 broadcastToAll）能继续执行 */
+export async function addTable(_tableName: string, data: Record<string, any>) {
+  return [data]
+}
+export async function updateTable(_tableName: string, _id: number, _data: Record<string, any>) {
+  return undefined
+}
+export async function batchTable(_tableName: string, _ids: number[], _action: any) {
+  return undefined
+}
+
 /** cResp — 统一响应包装（mock 版本） */
 export function cResp(data: any = null, msg: string = '', success: boolean = true) {
   return { data, msg, success }
@@ -559,14 +571,15 @@ export async function cRequest<T = any>(url: string, options: any = {}): Promise
   return useFetch(url, options)
 }
 
-/** useAuth 桩 — 完整 mock */
+/** useAuth 桩 — 完整 mock（login/register/logout 走 cRequest，便于测试断言 API 调用） */
 let _mockAuthUser: any = null
 let _mockAuthRoles: any[] = []
 let _mockAuthPermissions: any[] = []
+let _mockAuthExtra: any = {}
 export function useAuth() {
   const data = computed(() => {
     if (!_mockAuthUser) return null
-    return { user: _mockAuthUser, roles: _mockAuthRoles, permissions: _mockAuthPermissions }
+    return { user: _mockAuthUser, roles: _mockAuthRoles, permissions: _mockAuthPermissions, ..._mockAuthExtra }
   })
   const user = computed(() => _mockAuthUser)
   const roles = computed(() => _mockAuthRoles)
@@ -581,22 +594,38 @@ export function useAuth() {
     hasRole: (code: string) => _mockAuthRoles.some((r: any) => r.code === code),
     hasAnyRole: (codes: string[]) => codes.some(c => _mockAuthRoles.some((r: any) => r.code === c)),
     hasPermission: (code: string) => _mockAuthPermissions.some((p: any) => p.code === code),
-    login: async () => ({ user: _mockAuthUser, token: 'mock-token' }),
-    register: async () => ({ user: _mockAuthUser, token: 'mock-token' }),
-    logout: async () => {},
+    login: async (username: string, password: string) => {
+      return await cRequest<{ user: any; token: string }>('/api/auth/login', {
+        method: 'POST',
+        body: { username, password },
+      })
+    },
+    register: async (username: string, password: string, name: string, email?: string) => {
+      return await cRequest<{ user: any; token: string }>('/api/auth/register', {
+        method: 'POST',
+        body: { username, password, name, email },
+      })
+    },
+    logout: async () => {
+      await cRequest('/api/auth/logout', { method: 'POST' })
+    },
     refreshUser: async () => {},
     data,
+    // 暴露 authData 别名，与真实 useAuth 返回结构一致（供 useAuthLms 读取扩展字段）
+    authData: data,
   }
 }
-export function setMockAuthUser(user: any, roles: any[] = [], permissions: any[] = []) {
+export function setMockAuthUser(user: any, roles: any[] = [], permissions: any[] = [], extra: any = {}) {
   _mockAuthUser = user
   _mockAuthRoles = roles
   _mockAuthPermissions = permissions
+  _mockAuthExtra = extra
 }
 export function clearMockAuth() {
   _mockAuthUser = null
   _mockAuthRoles = []
   _mockAuthPermissions = []
+  _mockAuthExtra = {}
 }
 
 /** useWsConnection 桩 */
@@ -778,6 +807,9 @@ const _stubsToExpose: Record<string, any> = {
   allPeers,
   requireCourseTeacher,
   isCourseTeacher,
+  addTable,
+  updateTable,
+  batchTable,
   getLmsConfigSync,
   reloadLmsConfig,
   getCourseLmsConfig,

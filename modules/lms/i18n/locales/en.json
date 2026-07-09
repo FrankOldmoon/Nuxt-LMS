@@ -146,7 +146,8 @@
     "addTeachers": "Add Teachers",
     "searchTeacherPlaceholder": "Search teacher by name or username...",
     "addTeachersSuccess": "Teachers added successfully",
-    "addTeachersFailed": "Failed to add teachers"
+    "addTeachersFailed": "Failed to add teachers",
+    "noMyClasses": "You are not assigned to any classes yet"
   },
   "userCard": {
     "courseScore": "Course Score",
@@ -329,7 +330,7 @@
     "videoEditHint": "Add interactive questions to the video. They will pop up at the specified timestamp. All questions must be answered correctly and the full video must be watched for this question to be marked correct.",
     "jsonEditor": "JSON (Advanced)",
     "jsonValid": "Valid",
-    "jsonHint": "Edit question as raw JSON. Changes sync with the form in real-time.",
+    "jsonHint": "Edit as raw JSON. Changes sync with the form in real-time.",
     "typePrompt": "Question Type Prompt (English)",
     "typePromptHint": "Generation rules and JSON format for the current question type",
     "typePromptCopy": "Copy prompt",
@@ -570,7 +571,10 @@
     "groupChat": "Group Chat",
     "groupFiles": "Group Files",
     "selectGroup": "Select Group",
-    "noGroups": "No groups"
+    "noGroups": "No groups",
+    "marksScore": "Marks",
+    "ability": "Ability",
+    "learningStats": "Learning Stats"
   },
   "announcement": {
     "title": "Course Announcements",

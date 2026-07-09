@@ -28,6 +28,7 @@ export default eventHandler(async (event) => {
         quizScore: schema.userCourses.quizScore,
         commentScore: schema.userCourses.commentScore,
         raceScore: schema.userCourses.raceScore,
+        marksScore: schema.userCourses.marksScore,
         exp: schema.userCourses.exp,
         group: schema.userCourses.group,
       })
@@ -47,6 +48,7 @@ export default eventHandler(async (event) => {
       quizScore: Number(r.quizScore) || 0,
       commentScore: Number(r.commentScore) || 0,
       raceScore: Number(r.raceScore) || 0,
+      marksScore: Number(r.marksScore) || 0,
       exp: r.exp || 0,
     }])
   }
@@ -66,6 +68,7 @@ export default eventHandler(async (event) => {
       quizScore: schema.userCourses.quizScore,
       commentScore: schema.userCourses.commentScore,
       raceScore: schema.userCourses.raceScore,
+      marksScore: schema.userCourses.marksScore,
       exp: schema.userCourses.exp,
       group: schema.userCourses.group,
     })
@@ -85,6 +88,7 @@ export default eventHandler(async (event) => {
       quizScore: Number(r.quizScore) || 0,
       commentScore: Number(r.commentScore) || 0,
       raceScore: Number(r.raceScore) || 0,
+      marksScore: Number(r.marksScore) || 0,
       exp: r.exp || 0,
     }))
     .sort((a, b) => b.score - a.score)

@@ -27,28 +27,14 @@ describe('composables/useAuthLms', () => {
   })
 
   it('登录后 isLoggedIn=true, hasRole 生效', async () => {
+    // useAuthLms 复用 useAuth，LMS 扩展字段（editorCourseIds 等）通过
+    // setMockAuthUser 的第 4 个参数 extra 注入，模拟 server runOnMeEnrich
     setMockAuthUser(
       { id: 1, username: 'alice', name: 'Alice' },
       [{ code: 'teacher', name: 'Teacher' }],
-      [{ code: 'edit-course', name: 'Edit Course' }]
+      [{ code: 'edit-course', name: 'Edit Course' }],
+      { editorCourseIds: [1, 2], teacherCourseIds: [3], classIds: [10] }
     )
-    setMockFetchHandler(async (url) => {
-      if (url === '/api/auth/me') {
-        return {
-          data: {
-            user: { id: 1, username: 'alice', name: 'Alice' },
-            roles: [{ code: 'teacher', name: 'Teacher' }],
-            permissions: [{ code: 'edit-course', name: 'Edit Course' }],
-            editorCourseIds: [1, 2],
-            teacherCourseIds: [3],
-            classIds: [10],
-          },
-          success: true,
-          msg: '',
-        }
-      }
-      return { data: null, success: true, msg: '' }
-    })
     const { useAuthLms } = await import('../../composables/useAuthLms')
     const auth = useAuthLms()
     await flushPromises()

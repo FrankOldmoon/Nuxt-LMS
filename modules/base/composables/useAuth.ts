@@ -130,5 +130,8 @@ export function useAuth() {
     register,
     logout,
     refreshUser,
+    // 暴露原始 useFetch 数据，供后续模块（如 lms useAuthLms）读取扩展字段
+    // （editorCourseIds / teacherCourseIds / classIds 等由 server runOnMeEnrich 注入）
+    authData,
   }
 }

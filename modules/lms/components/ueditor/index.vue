@@ -35,6 +35,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    pasteable: {
+        type: Boolean,
+        default: true,
+    },
 })
 
 const isReadonly = ref(false)
@@ -99,6 +103,12 @@ const onCreated = () => {
         injectCinserts()
         if (isReadonly.value) {
             editorRef.value?.useEditor()?.setEditable(false)
+        }
+        // 禁用粘贴
+        if (!props.pasteable) {
+            editorRef.value?.useEditor()?.on('paste', ({ event }) => {
+                event.preventDefault()
+            })
         }
     })
 }

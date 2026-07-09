@@ -4,6 +4,24 @@
       <div class="p-6 w-full">
         <h3 class="text-lg font-semibold mb-4">{{ $t('classSelector.selectClass') }}</h3>
 
+        <!-- 加载中 -->
+        <div v-if="classLoading || myClassLoading" class="py-8 text-center text-muted text-sm">
+          <UIcon name="i-lucide-loader-circle" class="animate-spin size-5 inline-block" />
+        </div>
+
+        <!-- 学生模式：单选班级 -->
+        <template v-else-if="studentMode">
+          <div v-if="myClasses.length">
+            <URadioGroup v-model="selectedMyClassId" :items="myClassOptions" value-key="value" label-key="label"
+              @update:model-value="onMyClassChange" />
+          </div>
+          <div v-else class="text-sm text-muted py-8 text-center">
+            {{ $t('classSelector.noMyClasses') }}
+          </div>
+        </template>
+
+        <!-- 管理模式（admin/teacher） -->
+        <template v-else>
         <!-- 班级选择行 -->
         <div class="flex items-center gap-2">
           <UInputMenu v-model="selectedItem" :items="classOptions" value-key="value" label-key="label"
@@ -100,12 +118,13 @@
         <!-- 已选教师标签 -->
         <div v-if="selectedTeachers.length" class="flex flex-wrap gap-1.5">
           <UBadge v-for="u in selectedTeachers" :key="u.id" :label="u.name" color="warning" variant="subtle" size="xs">
-            <template #leading>
-              <UIcon name="i-lucide-x" class="size-3 cursor-pointer hover:text-error"
-                @click="removeSelectedTeacher(u.id)" />
-            </template>
-          </UBadge>
-        </div>
+              <template #leading>
+                <UIcon name="i-lucide-x" class="size-3 cursor-pointer hover:text-error"
+                  @click="removeSelectedTeacher(u.id)" />
+              </template>
+            </UBadge>
+          </div>
+        </template>
       </div>
 
       <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-default">
@@ -150,6 +169,47 @@ async function loadClasses() {
     await loadClassList()
   } finally {
     classLoading.value = false
+  }
+}
+
+// ==================== 学生模式（单选班级） ====================
+
+// 管理模式：admin 或在 /api/classes/list 中有教师班级；否则进入学生模式
+const studentMode = computed(() => !hasRole('admin') && classList.value.length === 0)
+const myClasses = ref<LmsClass[]>([])
+const myClassLoading = ref(false)
+const selectedMyClassId = ref<number | null>(null)
+
+const myClassOptions = computed(() =>
+  myClasses.value.map((c) => ({ label: c.name, value: c.id })),
+)
+
+async function loadMyClasses() {
+  myClassLoading.value = true
+  try {
+    const data = await cRequest<LmsClass[]>('/api/classes/mine')
+    myClasses.value = data || []
+    selectedMyClassId.value = selectedClassId.value ?? null
+  } catch {
+    myClasses.value = []
+  } finally {
+    myClassLoading.value = false
+  }
+}
+
+async function onMyClassChange(value: number | null) {
+  if (!value) return
+  const c = myClasses.value.find((c) => c.id === value)
+  if (!c) return
+  try {
+    await cRequest('/api/auth/me', {
+      method: 'PUT',
+      body: { defaultClass: { id: c.id, name: c.name } },
+    })
+    await refreshUser()
+    toast.add({ title: t('classSelector.updateSuccess'), color: 'success' })
+  } catch (e: any) {
+    toast.add({ title: e.message || t('classSelector.updateFailed'), color: 'error' })
   }
 }
 
@@ -360,8 +420,12 @@ watch(open, async (val) => {
     teacherSearchResults.value = []
     selectedTeachers.value = []
     await loadClasses()
-    // 加载完班级列表后，拉取当前班级用户
-    if (selectedClassId.value) await fetchUsers(selectedClassId.value, editableCourseId.value)
+    // 加载完班级列表后：学生模式加载可选班级，管理模式拉取当前班级用户
+    if (studentMode.value) {
+      await loadMyClasses()
+    } else if (selectedClassId.value) {
+      await fetchUsers(selectedClassId.value, editableCourseId.value)
+    }
   }
 })
 

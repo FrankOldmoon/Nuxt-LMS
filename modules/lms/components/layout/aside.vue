@@ -1,7 +1,7 @@
 <template>
   <div>
     <CourseBtns :course-id="courseId" :class-id="user?.defaultClass?.id || ''" :navigation="indexedNavigation" />
-    <div v-if="isLoggedIn && canEditCourse" class="mb-3">
+    <div v-if="isLoggedIn" class="mb-3">
       <UButton :label="selectedClassName || $t('classSelector.selectClass')"
         :icon="selectedClassName ? 'i-lucide-school' : 'i-lucide-plus'" color="info" variant="outline" size="sm"
         class="w-full justify-center" @click="classModalOpen = true" />

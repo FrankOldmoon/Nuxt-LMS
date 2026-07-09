@@ -108,3 +108,73 @@ describe('API: classes/users.get', () => {
     expect(typeof handler).toBe('function')
   })
 })
+
+describe('API: classes/mine', () => {
+  it('未登录抛 401', async () => {
+    const handler = (await import('../../server/api/classes/mine')).default
+    await expect(handler(makeEvent())).rejects.toThrow()
+  })
+
+  it('学生：返回主班级 + 关联班级（主班级不在关联中时单独查询）', async () => {
+    setMockAuthState({ id: 100, username: 'student', roles: ['student'], permissions: [] })
+    // 链 A: users.classId 查询 → limit
+    // 链 B: userClasses 关联查询 → orderBy
+    // 链 C: 主班级单独查询 → limit（因主班级 id=1 不在 associated 中）
+    _mockDb.limit = vi.fn()
+      .mockResolvedValueOnce([{ classId: 1 }])                       // A: users 查询
+      .mockResolvedValueOnce([{ id: 1, name: 'Main', code: 'M' }])   // C: 主班级查询
+    _mockDb.orderBy = vi.fn().mockResolvedValue([
+      { id: 2, name: 'Associated', code: 'A' },
+    ])
+    const handler = (await import('../../server/api/classes/mine')).default
+    const result = await handler(makeEvent())
+    expect(result.success).toBe(true)
+    expect(result.data).toHaveLength(2)
+    // 主班级在前，关联在后
+    expect(result.data[0].id).toBe(1)
+    expect(result.data[1].id).toBe(2)
+  })
+
+  it('学生：主班级已在关联中时不重复查询', async () => {
+    setMockAuthState({ id: 100, username: 'student', roles: ['student'], permissions: [] })
+    // A: users.classId = 1
+    _mockDb.limit = vi.fn().mockResolvedValueOnce([{ classId: 1 }])
+    // B: associated 已包含 class1
+    _mockDb.orderBy = vi.fn().mockResolvedValue([
+      { id: 1, name: 'Main', code: 'M' },
+      { id: 2, name: 'Other', code: 'O' },
+    ])
+    const handler = (await import('../../server/api/classes/mine')).default
+    const result = await handler(makeEvent())
+    expect(result.success).toBe(true)
+    expect(result.data).toHaveLength(2)
+    // 不应触发主班级单独查询（第二次 limit 调用）
+    expect(_mockDb.limit).toHaveBeenCalledTimes(1)
+  })
+
+  it('学生：无主班级且无关联返回空', async () => {
+    setMockAuthState({ id: 100, username: 'student', roles: ['student'], permissions: [] })
+    _mockDb.limit = vi.fn().mockResolvedValueOnce([{ classId: null }])
+    _mockDb.orderBy = vi.fn().mockResolvedValue([])
+    const handler = (await import('../../server/api/classes/mine')).default
+    const result = await handler(makeEvent())
+    expect(result.success).toBe(true)
+    expect(result.data).toEqual([])
+  })
+
+  it('学生：关联班级含重复时去重', async () => {
+    setMockAuthState({ id: 100, username: 'student', roles: ['student'], permissions: [] })
+    // 主班级 classId=2，已在 associated 中 → 不会触发第二次 limit
+    _mockDb.limit = vi.fn().mockResolvedValueOnce([{ classId: 2 }])
+    _mockDb.orderBy = vi.fn().mockResolvedValue([
+      { id: 2, name: 'Main', code: 'M' },
+      { id: 3, name: 'Other', code: 'O' },
+    ])
+    const handler = (await import('../../server/api/classes/mine')).default
+    const result = await handler(makeEvent())
+    expect(result.success).toBe(true)
+    const ids = result.data.map((c: any) => c.id)
+    expect(ids).toEqual([2, 3])
+    expect(new Set(ids).size).toBe(ids.length)
+  })
+})

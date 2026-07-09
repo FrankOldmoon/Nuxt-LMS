@@ -1,7 +1,7 @@
 <template>
     <div class="space-y-2">
-        <!-- 富文本编辑器 -->
-        <richEditor v-model="content" :placeholder="placeholder" />
+        <!-- 富文本编辑器（回帖禁用粘贴） -->
+        <richEditor v-model="content" :placeholder="placeholder" :pasteable="false" />
         <!-- 提交按钮 -->
         <div class="flex justify-end">
             <UButton size="sm" color="primary" variant="soft" :disabled="!hasContent"

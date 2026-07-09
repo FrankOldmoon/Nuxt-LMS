@@ -23,6 +23,34 @@
           <UInputTags v-model="form.tags" :placeholder="$t('comment.tagPlaceholder')" />
         </div>
 
+        <!-- ========== JSON 原始数据编辑器（高级） ========== -->
+        <div class="border-t border-gray-100 dark:border-gray-800 pt-3">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <UIcon name="i-lucide-braces" class="size-4 text-gray-500" />
+              <span class="text-xs font-medium text-gray-700 dark:text-gray-300">
+                {{ $t('question.jsonEditor') }}
+              </span>
+              <span v-if="showJsonEditor" class="text-xs"
+                :class="jsonError ? 'text-red-500' : 'text-green-500'">
+                — {{ jsonError || $t('question.jsonValid') }}
+              </span>
+            </div>
+            <UButton size="2xs" variant="ghost"
+              :icon="showJsonEditor ? 'i-lucide-eye-off' : 'i-lucide-code'"
+              :label="showJsonEditor ? $t('common.hide') : $t('common.show')"
+              @click="showJsonEditor = !showJsonEditor" />
+          </div>
+          <div v-show="showJsonEditor"
+            class="border border-gray-200 dark:border-gray-700 rounded overflow-hidden"
+            style="height: 400px;">
+            <Monaco v-model="jsonText" language="json" :auto-format="true" />
+          </div>
+          <p v-if="showJsonEditor" class="text-xs text-gray-400 mt-1">
+            {{ $t('question.jsonHint') }}
+          </p>
+        </div>
+
         <!-- 操作按钮 -->
         <div class="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
           <span v-if="saveMsg" class="text-xs self-center" :class="saveOk ? 'text-green-500' : 'text-red-500'">{{ saveMsg }}</span>
@@ -54,6 +82,34 @@
     <div>
       <label class="text-xs text-gray-500 mb-1 block">{{ $t('comment.tagsLabel') }}</label>
       <UInputTags v-model="form.tags" :placeholder="$t('comment.tagPlaceholder')" />
+    </div>
+
+    <!-- ========== JSON 原始数据编辑器（高级） ========== -->
+    <div class="border-t border-gray-100 dark:border-gray-800 pt-3">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2">
+          <UIcon name="i-lucide-braces" class="size-4 text-gray-500" />
+          <span class="text-xs font-medium text-gray-700 dark:text-gray-300">
+            {{ $t('question.jsonEditor') }}
+          </span>
+          <span v-if="showJsonEditor" class="text-xs"
+            :class="jsonError ? 'text-red-500' : 'text-green-500'">
+            — {{ jsonError || $t('question.jsonValid') }}
+          </span>
+        </div>
+        <UButton size="2xs" variant="ghost"
+          :icon="showJsonEditor ? 'i-lucide-eye-off' : 'i-lucide-code'"
+          :label="showJsonEditor ? $t('common.hide') : $t('common.show')"
+          @click="showJsonEditor = !showJsonEditor" />
+      </div>
+      <div v-show="showJsonEditor"
+        class="border border-gray-200 dark:border-gray-700 rounded overflow-hidden"
+        style="height: 400px;">
+        <Monaco v-model="jsonText" language="json" :auto-format="true" />
+      </div>
+      <p v-if="showJsonEditor" class="text-xs text-gray-400 mt-1">
+        {{ $t('question.jsonHint') }}
+      </p>
     </div>
 
     <!-- 操作按钮 -->
@@ -151,6 +207,55 @@ async function save() {
     saving.value = false
   }
 }
+
+// ── JSON 原始数据编辑器（高级） ──
+const showJsonEditor = ref(false)
+const jsonText = ref('')
+const jsonError = ref('')
+let syncingFromForm = false
+let syncingFromJson = false
+
+// form.value → jsonText
+watch(form, (newForm) => {
+  if (syncingFromJson) return
+  if (!newForm) {
+    jsonText.value = ''
+    jsonError.value = ''
+    return
+  }
+  syncingFromForm = true
+  try {
+    jsonText.value = JSON.stringify(newForm, null, 2)
+    jsonError.value = ''
+  } catch (e) {
+    jsonError.value = e?.message || 'Serialize error'
+  } finally {
+    syncingFromForm = false
+  }
+}, { deep: true, immediate: true })
+
+// jsonText → form.value
+watch(jsonText, (newText) => {
+  if (syncingFromForm) return
+  if (!form.value) return
+  if (!String(newText || '').trim()) return
+  try {
+    const parsed = JSON.parse(newText)
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+      jsonError.value = 'JSON must be an object'
+      return
+    }
+    syncingFromJson = true
+    for (const key of Object.keys(parsed)) {
+      form.value[key] = parsed[key]
+    }
+    jsonError.value = ''
+  } catch (e) {
+    jsonError.value = e?.message || 'Parse error'
+  } finally {
+    syncingFromJson = false
+  }
+})
 
 // Modal 模式：弹窗打开时初始化 form
 watch(open, (val) => {
