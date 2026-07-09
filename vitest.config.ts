@@ -1,10 +1,12 @@
 import { defineConfig } from "vitest/config";
+import vue from "@vitejs/plugin-vue";
 
 export default defineConfig({
   define: {
     // Nuxt 编译时常量，composable 测试中视为客户端
     "import.meta.client": "true",
   },
+  plugins: [vue()],
   test: {
     projects: [
       {
@@ -13,18 +15,34 @@ export default defineConfig({
           include: [
             "test/unit/*.{test,spec}.ts",
             "modules/*/test/unit/*.{test,spec}.ts",
+            "modules/*/test/api/*.{test,spec}.ts",
           ],
           environment: "node",
+          // 共享 setup：把 Nitro/Nuxt/composable auto-imports stub 暴露到 globalThis
+          setupFiles: ["./test/setup/unit-shared.ts"],
         },
       },
       {
         test: {
           name: "composables",
           // composable 测试：stub Nuxt auto-imports，用 happy-dom 提供 DOM API
-          include: ["modules/*/test/composables/*.{test,spec}.ts"],
+          include: [
+            "modules/*/test/composables/*.{test,spec}.ts",
+          ],
           environment: "happy-dom",
           setupFiles: ["./test/setup/nuxt-stubs.ts"],
         },
+      },
+      {
+        test: {
+          name: "components",
+          // 组件测试：用 happy-dom + @vue/test-utils
+          include: ["modules/*/test/components/*.{test,spec}.ts"],
+          environment: "happy-dom",
+          setupFiles: ["./test/setup/nuxt-stubs.ts"],
+        },
+        // 在 project 内部添加 vue plugin 以解析 .vue 文件
+        plugins: [vue()],
       },
       {
         test: {

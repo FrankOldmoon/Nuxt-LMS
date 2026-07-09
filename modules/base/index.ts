@@ -59,11 +59,6 @@ export default defineNuxtModule({
     // runtimeConfig 默认值（各模块启用时覆盖为 true）
     opts.runtimeConfig = opts.runtimeConfig || {}
     opts.runtimeConfig.public = {
-      moduleBase: false,
-      modulebase: false,
-      moduleDoc: false,
-      modulelms: false,
-      moduleLms: false,
       ...(opts.runtimeConfig.public || {}),
     }
 
@@ -73,34 +68,40 @@ export default defineNuxtModule({
     // App config（Nuxt UI v3 颜色配置）
     // 每个语义颜色映射到 Tailwind 色板名，未配置的颜色不会生成 CSS 变量，导致样式失效
     nuxt.options.appConfig = nuxt.options.appConfig || {}
-    ;(nuxt.options.appConfig as any).ui = {
-      ...((nuxt.options.appConfig as any).ui || {}),
-      colors: {
-        primary: 'green',
-        neutral: 'slate',
-        info: 'blue',
-        success: 'emerald',
-        warning: 'amber',
-        error: 'red',
-        secondary: 'purple',
-      },
-    }
+      ; (nuxt.options.appConfig as any).ui = {
+        ...((nuxt.options.appConfig as any).ui || {}),
+        colors: {
+          primary: 'green',
+          neutral: 'slate',
+          info: 'blue',
+          success: 'emerald',
+          warning: 'amber',
+          error: 'red',
+          secondary: 'purple',
+        },
+      }
 
     // Nitro
     // 注：scheduledTasks 格式为 { [cron]: taskName }（key=cron，value=taskName），
     // 非 { [taskName]: { cron } }，否则 Nitro 会将对象 stringify 为 [object Object]
     nuxt.options.nitro.scheduledTasks = { '0 0 * * *': 'build-search' }
-    nuxt.options.nitro.experimental = {
-      ...nuxt.options.nitro.experimental,
-      openAPI: true,
-      tasks: true,
-      websocket: true,
+    nuxt.options.nitro = {
+      ...nuxt.options.nitro,
+      compressPublicAssets: {
+        gzip: true,
+        brotli: true,
+      },
+      experimental: {
+        ...nuxt.options.nitro.experimental,
+        openAPI: true,
+        tasks: true,
+        websocket: true,
+      },
+      routeRules: {
+        ...nuxt.options.nitro.routeRules,
+        '/api/**': { cors: true },
+      }
     }
-    nuxt.options.nitro.routeRules = {
-      ...nuxt.options.nitro.routeRules,
-      '/api/**': { cors: true },
-    }
-
     // ========== base 模块功能注册（env 控制开关）==========
 
     // 标记 base 模块已启用，供组件条件渲染使用

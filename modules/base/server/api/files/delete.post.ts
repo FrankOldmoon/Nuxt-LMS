@@ -1,9 +1,5 @@
 import { db, schema } from '@nuxthub/db'
 import { eq, and, isNull } from 'drizzle-orm'
-import { resolve, join } from 'node:path'
-import { rm } from 'node:fs/promises'
-
-const UPLOAD_ROOT = resolve('./storage')
 
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
@@ -21,16 +17,10 @@ export default eventHandler(async (event) => {
     return cResp(null, '文件不存在或无权限', false)
   }
 
-  // 软删除数据库记录
+  // 软删除：仅标记 deletedAt，保留物理文件以便恢复
   await db.update(schema.files)
     .set({ deletedAt: new Date() })
     .where(eq(schema.files.id, id))
-
-  // 删除物理文件（安全校验路径在 UPLOAD_ROOT 内）
-  const absolutePath = resolve(UPLOAD_ROOT, file.path.replace(/^\/+/, ''))
-  if (absolutePath.startsWith(UPLOAD_ROOT + '/')) {
-    await rm(absolutePath, { force: true }).catch(() => {})
-  }
 
   return cResp({ id }, '删除成功')
 })

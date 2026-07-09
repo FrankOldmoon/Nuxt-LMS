@@ -1,6 +1,6 @@
 <template>
     <client-only>
-        <umo-editor v-bind="options" ref="editorRef" @changed="onChanged" @created="onCreated">
+        <umo-editor v-bind="options" ref="editorRef" @changed="onChanged" @created="onCreated" @paste="onPaste">
         </umo-editor>
 
         <!-- Cinserts 组件，初始隐藏，editor 创建后移动到工具栏（仅 teacher 以上角色可见） -->
@@ -71,14 +71,18 @@ const options = computed(() => ({
 
         const formData = new FormData()
         formData.append('files', processedFile)
-        const res = await $fetch('/api/upload', {
+        const res = await $fetch('/api/files/upload', {
             method: 'POST',
             body: formData,
         })
-        return { url: res.data.url, id: res.data.url }
+        return { url: res.data.url, id: res.data.id }
     },
     onFileDelete(id, url) {
-        console.error('The file has been deleted. Please configure the onFileDelete to completely delete the file from the server.')
+        //console.log({ id, url })
+        $fetch('/api/files/delete', {
+            method: 'POST',
+            body: { id },
+        })
     },
 }))
 
@@ -90,6 +94,39 @@ const onCreated = () => {
             editorRef.value?.useEditor()?.setEditable(false)
         }
     })
+}
+
+const traverse = (node, cb = null) => {
+    if (cb) {
+        cb(node);
+    }
+    if (node && node.content && Array.isArray(node.content)) {
+        node.content.forEach((n, index) => traverse(node.content[index], cb));
+    }
+};
+
+const uploadImages = async () => {
+    traverse(editorRef.value.getJSON(), async (node) => {
+        console.log({ node })
+        if (node && node.type === "image") {
+            if (node.attrs.src.startsWith("http") || node.attrs.src.startsWith("data:")) {
+                const res = await $fetch('/api/files/upload', {
+                    method: 'POST',
+                    body: { url: node.attrs.src },
+                })
+                node.attrs.src = res.data.url;
+                node.attrs.id = res.data.id;
+                console.log("uploadImages", node);
+            }
+        }
+    });
+}
+
+const onPaste = async (content) => {
+    console.log("onPaste", content)
+    await waitForSeconds(1)
+    console.log(editorRef.value.getJSON())
+    await uploadImages()
 }
 
 function onLockUpdate(readonly) {
