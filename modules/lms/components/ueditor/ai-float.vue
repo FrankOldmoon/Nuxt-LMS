@@ -70,6 +70,9 @@
 </template>
 
 <script setup>
+// markdownToTiptap 由 lms 模块的 addImportsDir('./utils') 自动注入，无需显式导入
+import { buildDocumentPrompt } from './prompt.js'
+
 const props = defineProps({
     // umo-editor 实例（父组件传入 editorRef 解包后的值，调用 useEditor() 得到 TipTap 编辑器）
     editor: { type: Object, default: null },
@@ -94,37 +97,158 @@ const genError = ref('')
 const mdContent = ref('')
 
 let abortController = null
-let rafId = null
+let applyTimer = null
+// 流式插入范围追踪：在光标处插入，后续用新累积内容替换该范围（避免重复插入）
+let insertStart = null
+let insertEnd = null
+const APPLY_INTERVAL = 120 // ms，时间节流减少 insertContent 高频调用
 
 // 获取 TipTap 编辑器实例
 function getEditor() {
     return props.editor?.useEditor?.() || null
 }
 
-// 把当前 mdContent 实时写入编辑器（setContent 为替换模式：用生成内容覆盖编辑器）
+// 把当前 mdContent 实时写入编辑器：先用 markdownToTiptap 转成 TipTap JSON 节点，
+// 再在光标处插入；后续用完整累积内容替换该范围（避免重复插入）
 function applyToEditor() {
     const editor = getEditor()
     if (!editor) return
+    if (!mdContent.value) return
     try {
-        editor.commands.setContent(mdContent.value, { contentType: 'markdown' })
+        // markdown → TipTap JSON（含 ```question 围栏 → vue 节点的解析）
+        const tiptapDoc = markdownToTiptap(mdContent.value)
+        const nodes = tiptapDoc.content || []
+        if (!nodes.length) return
+        if (insertStart === null) {
+            // 首次：记录光标位置，插入内容，记录结束位置
+            const start = editor.state.selection.from
+            editor.chain().focus()
+                .insertContent(nodes)
+                .run()
+            insertStart = start
+            insertEnd = editor.state.selection.from
+        } else {
+            // 后续：删除上次插入范围，重新插入完整累积内容（保证 markdown 整体正确渲染）
+            editor.chain().focus()
+                .deleteRange({ from: insertStart, to: insertEnd })
+                .insertContent(nodes)
+                .run()
+            insertEnd = editor.state.selection.from
+        }
     } catch (e) {
-        // 编辑器状态异常时忽略，避免中断流式输出
+        // 失败则重置范围追踪，下次重新从光标插入，避免位置错乱
+        insertStart = null
+        insertEnd = null
     }
 }
 
-// rAF 节流：合并同一帧内的多个 SSE chunk，减少 setContent 高频调用
+// 时间节流：合并短时间内的多个 SSE chunk，减少 insertContent 调用频率
 function scheduleApply() {
-    if (rafId != null) return
-    rafId = requestAnimationFrame(() => {
-        rafId = null
+    if (applyTimer != null) return
+    applyTimer = setTimeout(() => {
+        applyTimer = null
         applyToEditor()
-    })
+    }, APPLY_INTERVAL)
 }
 
 // 同步刷新最后一次写入（流结束前调用，确保编辑器显示完整内容）
 function flushApply() {
-    if (rafId != null) { cancelAnimationFrame(rafId); rafId = null }
+    if (applyTimer != null) { clearTimeout(applyTimer); applyTimer = null }
     applyToEditor()
+}
+
+// 触发文档自动保存（调用 umo-editor 的 saveContent，走 onSave 流程）
+async function triggerSave() {
+    try {
+        await props.editor?.saveContent?.(true)
+    } catch (e) {
+        // 保存失败不阻塞
+    }
+}
+
+// 把编辑器中所有内联（content 为对象）的 question 节点保存到 API，
+// 拿到 cid 后把 content 替换为 cid 字符串（变为 DB 题目，支持提交记录）。
+// 在流式生成结束后调用：题目已作为内联对象渲染，此处统一落库并替换引用。
+async function saveInlineQuestions() {
+    const editor = getEditor()
+    if (!editor) return
+    const courseId = useLayoutState().editableCourseId.value
+    if (!courseId) return
+
+    // 收集所有内联 question 节点（content 为 JSON 对象）及其位置
+    const targets = []
+    editor.state.doc.descendants((node, pos) => {
+        if (
+            node.type.name === 'vue' &&
+            node.attrs.type === 'question' &&
+            node.attrs.content != null &&
+            typeof node.attrs.content === 'object' &&
+            !Array.isArray(node.attrs.content)
+        ) {
+            targets.push({ pos, obj: node.attrs.content })
+        }
+    })
+    if (!targets.length) return
+
+    // 串行保存每道题到 /api/questions/add（白名单字段，避免多余字段写入 DB）
+    // 必须串行：/api/questions/add 通过 SELECT max(cid)+1 生成新 cid，
+    // 并行保存会让多个请求读到相同 max(cid)，导致主键 (courseId, cid) 冲突，
+    // 只有第一个 INSERT 成功，其余被 catch 吞成“新增失败”。
+    const results = []
+    for (const { obj } of targets) {
+        const body = {
+            course_id: courseId,
+            name: obj.name ?? 'question',
+            content: obj.content ?? '',
+            options: obj.options ?? [],
+            answer: obj.answer ?? [],
+            point: obj.point ?? 1,
+            type: obj.type ?? 'single',
+            tags: obj.tags ?? [],
+            extra: obj.extra ?? null,
+            explanation: obj.explanation ?? '',
+        }
+        try {
+            const res = await cRequest('/api/questions/add', { method: 'POST', body })
+            results.push(res?.cid ?? null)
+        } catch (e) {
+            results.push(null)
+        }
+    }
+
+    // 单次事务替换成功保存的节点 content → cid 字符串
+    // 用指纹（JSON.stringify）校验节点内容仍与保存时一致，防止位置漂移误替换
+    const tr = editor.state.tr
+    let saved = 0
+    let failed = 0
+    targets.forEach(({ pos, obj }, idx) => {
+        const cid = results[idx]
+        if (!cid) { failed++; return }
+        const node = tr.doc.nodeAt(pos)
+        if (
+            node &&
+            node.type.name === 'vue' &&
+            node.attrs.type === 'question' &&
+            typeof node.attrs.content === 'object' &&
+            JSON.stringify(node.attrs.content) === JSON.stringify(obj)
+        ) {
+            tr.setNodeMarkup(pos, undefined, { type: 'question', content: String(cid) })
+            saved++
+        } else {
+            failed++
+        }
+    })
+    if (saved > 0) {
+        editor.view.dispatch(tr)
+    }
+    if (saved > 0 || failed > 0) {
+        toast.add({
+            title: failed > 0
+                ? t('ueditor.aiFloat.questionSavedSome', { saved, failed })
+                : t('ueditor.aiFloat.questionSaved', { saved }),
+            color: failed > 0 ? 'warning' : 'success',
+        })
+    }
 }
 
 function openPanel() {
@@ -151,6 +275,9 @@ async function onGenerate() {
     stopped.value = false
     genError.value = ''
     mdContent.value = ''
+    // 重置插入范围追踪（每次生成独立追踪光标位置）
+    insertStart = null
+    insertEnd = null
 
     abortController = new AbortController()
 
@@ -158,7 +285,7 @@ async function onGenerate() {
         const messages = [
             {
                 role: 'system',
-                content: 'You are a helpful assistant that generates markdown content for an educational document. Return ONLY markdown content. Do not wrap the entire response in a code fence.',
+                content: buildDocumentPrompt(),
             },
             { role: 'user', content: text },
         ]
@@ -207,8 +334,7 @@ async function onGenerate() {
             }
         }
 
-        // 流结束：同步刷新最后一次写入，确保编辑器显示完整内容
-        flushApply()
+        // 流结束
         done.value = true
         toast.add({ title: t('ueditor.aiFloat.done'), color: 'success' })
     } catch (err) {
@@ -221,8 +347,15 @@ async function onGenerate() {
             done.value = true
         }
     } finally {
+        // 全部结束后：确保最后内容已写入编辑器，
+        // 再把内联题目落库并替换为 cid 引用，最后触发文档自动保存
+        flushApply()
         generating.value = false
         abortController = null
+        if (mdContent.value) {
+            await saveInlineQuestions()
+            await triggerSave()
+        }
     }
 }
 
@@ -232,6 +365,6 @@ function onStop() {
 
 onBeforeUnmount(() => {
     if (abortController) abortController.abort()
-    if (rafId != null) cancelAnimationFrame(rafId)
+    if (applyTimer != null) clearTimeout(applyTimer)
 })
 </script>

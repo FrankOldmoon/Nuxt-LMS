@@ -157,7 +157,16 @@ const toast = useToast()
 // 是否已登录
 const isLoggedIn = computed(() => !!user.value)
 
-const questionId = computed(() => Number(props.node?.attrs?.content) || 0)
+// content 可能是 cid 字符串（DB 题目）或内联 JSON 对象（AI 生成的未保存题目）
+const inlineQuestion = computed(() => {
+    const c = props.node?.attrs?.content
+    return (c != null && typeof c === 'object' && !Array.isArray(c)) ? c : null
+})
+const questionId = computed(() => {
+    // 内联题目（对象 content）无 cid
+    if (inlineQuestion.value) return 0
+    return Number(props.node?.attrs?.content) || 0
+})
 
 const typeLabel = computed(() => ({
     single: t('question.typeSingle'),
@@ -347,13 +356,30 @@ const { data: fetchedQuestion, pending: fetchedPending, refresh } = cRequest.use
 })
 
 // questionId 为空时使用默认单选题；否则使用接口数据
-// 优先使用 props.question（aigenerator 场景），否则从 API 获取
+// 优先级：props.question（aigenerator 场景）> 内联 JSON 对象（AI 生成的未保存题目）> API 获取
 // flush: 'sync' 确保 SSR 渲染时数据到达后同步更新，避免用 defaultQuestion 渲染
 const question = ref(props.question || defaultQuestion)
-watch([() => props.question, fetchedQuestion, questionId], () => {
+watch([() => props.question, () => inlineQuestion.value, fetchedQuestion, questionId], () => {
     // 优先使用 props.question（aigenerator 场景）
     if (props.question) {
         question.value = props.question
+        return
+    }
+    // 内联题目（AI 生成的未保存题目，content 为 JSON 对象）：直接用对象数据，不走 API
+    if (inlineQuestion.value) {
+        const q = inlineQuestion.value
+        question.value = reactive({
+            name: q.name || '',
+            content: q.content ?? '',
+            options: q.options != null ? q.options : [],
+            type: q.type || 'single',
+            point: Number(q.point) || 0,
+            answer: Array.isArray(q.answer) ? [...q.answer] : [],
+            explanation: q.explanation ?? '',
+            tags: Array.isArray(q.tags) ? [...q.tags] : [],
+            record: [],
+            correct_rate: 0,
+        })
         return
     }
     // 否则从 API 获取

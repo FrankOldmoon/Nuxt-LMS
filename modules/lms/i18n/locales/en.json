@@ -609,7 +609,9 @@
       "done": "Content inserted",
       "stopped": "Stopped",
       "failed": "Generation failed",
-      "editorNotReady": "Editor is not ready yet"
+      "editorNotReady": "Editor is not ready yet",
+      "questionSaved": "Saved {saved} question(s) to the question bank",
+      "questionSavedSome": "Saved {saved} question(s), {failed} failed"
     },
     "toc": {
       "heading": "Table of Contents",

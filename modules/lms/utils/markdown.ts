@@ -18,8 +18,58 @@ interface InlinePattern {
 }
 
 /**
+ * 解析 ```question {json}``` 围栏内容为 vue 节点。
+ * JSON 无效时返回 null（调用方降级为 codeBlock 保留原始内容）。
+ */
+function parseQuestionFence(raw: string): TiptapNode | null {
+  const text = raw.trim();
+  if (!text) return null;
+  // 容错：去除可能的多余 markdown 包裹
+  let cleaned = text;
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?\s*```\s*$/, '');
+  }
+  // 提取第一个 { 到最后一个 } 之间的内容，忽略前后多余文字
+  const start = cleaned.indexOf('{');
+  const end = cleaned.lastIndexOf('}');
+  if (start !== -1 && end !== -1 && end > start) {
+    cleaned = cleaned.slice(start, end + 1);
+  }
+  try {
+    const parsed = JSON.parse(cleaned);
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+      return null;
+    }
+    return {
+      type: 'vue',
+      attrs: { type: 'question', content: parsed },
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 构建代码围栏对应的 TipTap 节点：
+ * - question 语言 → 解析为 vue 节点（JSON 无效时降级为 codeBlock）
+ * - 其他语言 → codeBlock
+ */
+function buildFenceBlock(lang: string, raw: string): TiptapNode {
+  if (lang === 'question') {
+    const vueNode = parseQuestionFence(raw);
+    if (vueNode) return vueNode;
+  }
+  return {
+    type: 'codeBlock',
+    attrs: { language: lang },
+    content: [{ type: 'text', text: raw }],
+  };
+}
+
+/**
  * Markdown 转 Tiptap JSON 格式（TypeScript 版）
  * 新增支持 {{xxx}} 占位符语法 → 转为 inputs 节点（丢弃括号内内容）
+ * 新增支持 ```question {json}``` 围栏 → 转为 vue 节点（content 为解析后的 JSON 对象）
  */
 export function markdownToTiptap(markdown: string): TiptapNode {
   // 预处理：统一换行符
@@ -33,7 +83,8 @@ export function markdownToTiptap(markdown: string): TiptapNode {
       || /^>\s?/.test(line)
       || /^[-*+]\s+/.test(line)
       || /^\d+\.\s+/.test(line)
-      || /^---+$/.test(line.trim());
+      || /^---+$/.test(line.trim())
+      || /^\$\$/.test(line);
   }
 
   // 解析行内元素
@@ -57,6 +108,15 @@ export function markdownToTiptap(markdown: string): TiptapNode {
         handler: (match) => ({
           type: 'select',
           attrs: { content: match[1].trim() }
+        })
+      },
+      // 行内数学公式 $...$（内容不含 $ 和换行；不匹配 $$ 开头的块级公式）
+      // 要求紧贴 $ 的两侧为非空白字符，避免 "价格 $5 到 $10" 中的 $ 被误判为公式
+      {
+        regex: /^\$(\S(?:[^$\n]*\S)?)\$/,
+        handler: (match) => ({
+          type: 'inlineMath',
+          attrs: { latex: match[1] }
         })
       },
       // 图片 ![alt](url "title")
@@ -208,7 +268,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
 
       // 普通文本
       if (!matched) {
-        const specialIndex = remaining.search(/[!`*_~\[{|]/);
+        const specialIndex = remaining.search(/[!`*_~\[{|$]/);
         if (specialIndex === -1) {
           nodes.push({ type: 'text', text: remaining });
           remaining = '';
@@ -247,11 +307,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
           i++;
           continue;
         } else {
-          blocks.push({
-            type: 'codeBlock',
-            attrs: { language: codeLang },
-            content: [{ type: 'text', text: codeContent.join('\n') }]
-          });
+          blocks.push(buildFenceBlock(codeLang, codeContent.join('\n')));
           inCodeBlock = false;
           i++;
           continue;
@@ -261,6 +317,42 @@ export function markdownToTiptap(markdown: string): TiptapNode {
       if (inCodeBlock) {
         codeContent.push(line);
         i++;
+        continue;
+      }
+
+      // 块级数学公式 $$...$$（单行或多行）
+      if (/^\$\$/.test(line)) {
+        // 单行形式：$$ latex $$
+        const single = line.match(/^\$\$(.+)\$\$\s*$/);
+        if (single) {
+          blocks.push({
+            type: 'blockMath',
+            attrs: { latex: single[1].trim() }
+          });
+          i++;
+          continue;
+        }
+        // 多行形式：$$ 开头，收集到包含 $$ 的行
+        const mathLines: string[] = [];
+        const afterOpen = line.replace(/^\$\$/, '');
+        if (afterOpen.trim()) mathLines.push(afterOpen);
+        i++;
+        while (i < lines.length) {
+          const l = lines[i];
+          const closeIdx = l.indexOf('$$');
+          if (closeIdx !== -1) {
+            const before = l.slice(0, closeIdx);
+            if (before.trim()) mathLines.push(before);
+            i++;
+            break;
+          }
+          mathLines.push(l);
+          i++;
+        }
+        blocks.push({
+          type: 'blockMath',
+          attrs: { latex: mathLines.join('\n').trim() }
+        });
         continue;
       }
 
@@ -347,6 +439,11 @@ export function markdownToTiptap(markdown: string): TiptapNode {
         type: 'paragraph',
         content: parseInline(paraLines.join(' '))
       });
+    }
+
+    // 流式期间可能出现未闭合的代码块：把已累积的内容也输出，避免内容丢失
+    if (inCodeBlock) {
+      blocks.push(buildFenceBlock(codeLang, codeContent.join('\n')));
     }
 
     return blocks;

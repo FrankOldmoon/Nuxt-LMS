@@ -52,6 +52,104 @@ describe('utils/markdown - markdownToTiptap', () => {
     expect(result.content![0].attrs.language).toBe('')
   })
 
+  it('```question 围栏解析为 vue 节点（content 为 JSON 对象）', async () => {
+    const { markdownToTiptap } = await import('../../utils/markdown')
+    const md = '```question\n{"name":"Q1","type":"fill","content":"1+1=?","answer":["2"],"point":1}\n```'
+    const result = markdownToTiptap(md)
+    expect(result.content).toHaveLength(1)
+    const node = result.content![0]
+    expect(node.type).toBe('vue')
+    expect(node.attrs.type).toBe('question')
+    expect(node.attrs.content).toEqual({
+      name: 'Q1',
+      type: 'fill',
+      content: '1+1=?',
+      answer: ['2'],
+      point: 1,
+    })
+  })
+
+  it('```question 围栏 JSON 无效时降级为 codeBlock', async () => {
+    const { markdownToTiptap } = await import('../../utils/markdown')
+    const md = '```question\n{invalid json\n```'
+    const result = markdownToTiptap(md)
+    expect(result.content![0].type).toBe('codeBlock')
+    expect(result.content![0].attrs.language).toBe('question')
+  })
+
+  it('```question 围栏可被 prose 包裹（前后段落独立）', async () => {
+    const { markdownToTiptap } = await import('../../utils/markdown')
+    const md = '前面段落\n\n```question\n{"type":"single","options":["A","B"],"answer":[0]}\n```\n\n后面段落'
+    const result = markdownToTiptap(md)
+    expect(result.content).toHaveLength(3)
+    expect(result.content![0].type).toBe('paragraph')
+    expect(result.content![1].type).toBe('vue')
+    expect(result.content![1].attrs.type).toBe('question')
+    expect(result.content![2].type).toBe('paragraph')
+  })
+
+  it('未闭合的 ```question 围栏（流式中途）也能输出', async () => {
+    const { markdownToTiptap } = await import('../../utils/markdown')
+    // 流式期间围栏尚未闭合：完整 JSON 仍可解析为 vue 节点
+    const md = '```question\n{"type":"judge","options":["正确","错误"],"answer":[0]}'
+    const result = markdownToTiptap(md)
+    expect(result.content).toHaveLength(1)
+    expect(result.content![0].type).toBe('vue')
+    expect(result.content![0].attrs.content.type).toBe('judge')
+  })
+
+  it('单行块级数学公式 $$...$$ 解析为 blockMath', async () => {
+    const { markdownToTiptap } = await import('../../utils/markdown')
+    const md = '$$x^2 + y^2 = z^2$$'
+    const result = markdownToTiptap(md)
+    expect(result.content).toHaveLength(1)
+    expect(result.content![0].type).toBe('blockMath')
+    expect(result.content![0].attrs.latex).toBe('x^2 + y^2 = z^2')
+  })
+
+  it('多行块级数学公式 $$...$$ 解析为 blockMath（保留换行）', async () => {
+    const { markdownToTiptap } = await import('../../utils/markdown')
+    const md = '$$\nx = a + b\ny = c + d\n$$'
+    const result = markdownToTiptap(md)
+    expect(result.content).toHaveLength(1)
+    expect(result.content![0].type).toBe('blockMath')
+    expect(result.content![0].attrs.latex).toBe('x = a + b\ny = c + d')
+  })
+
+  it('块级公式与前后段落独立（不吞并相邻段落）', async () => {
+    const { markdownToTiptap } = await import('../../utils/markdown')
+    const md = '前面段落\n\n$$E = mc^2$$\n\n后面段落'
+    const result = markdownToTiptap(md)
+    expect(result.content).toHaveLength(3)
+    expect(result.content![0].type).toBe('paragraph')
+    expect(result.content![1].type).toBe('blockMath')
+    expect(result.content![1].attrs.latex).toBe('E = mc^2')
+    expect(result.content![2].type).toBe('paragraph')
+  })
+
+  it('行内数学公式 $...$ 解析为 inlineMath', async () => {
+    const { markdownToTiptap } = await import('../../utils/markdown')
+    const md = '已知 $a^2 + b^2 = c^2$，求斜边'
+    const result = markdownToTiptap(md)
+    expect(result.content![0].type).toBe('paragraph')
+    const inline = result.content![0].content || []
+    // 应包含一个 inlineMath 节点
+    const mathNode = inline.find((n: any) => n.type === 'inlineMath')
+    expect(mathNode).toBeDefined()
+    expect(mathNode.attrs.latex).toBe('a^2 + b^2 = c^2')
+  })
+
+  it('单独的 $ 不被误判为公式（保持字面文本）', async () => {
+    const { markdownToTiptap } = await import('../../utils/markdown')
+    const md = '价格 $5 到 $10 之间'
+    const result = markdownToTiptap(md)
+    expect(result.content![0].type).toBe('paragraph')
+    // 不应产生任何 inlineMath 节点
+    const inline = result.content![0].content || []
+    const mathNode = inline.find((n: any) => n.type === 'inlineMath')
+    expect(mathNode).toBeUndefined()
+  })
+
   it('引用块转换', async () => {
     const { markdownToTiptap } = await import('../../utils/markdown')
     const result = markdownToTiptap('> 引用内容\n> 第二行')
