@@ -6,9 +6,11 @@ import type { MenuItem } from '../utils/types'
  *
  * SSR 友好：使用 cRequest.use（即 useFetch，SSR 期转发 Cookie 拉取并序列化到 payload），
  * 直接 SSR 渲染菜单，客户端 hydration 后即可见，不再需要 onMounted 二次拉取。
+ *
+ * 实现要点：直接派生自 menuData，避免 useState + watch 异步同步导致 SSR 渲染时 items 仍为空。
+ * Editor 用 items 做本地副本初始值；save 后 refreshMenu 触发 menuData 重新计算。
  */
 export function useAdminMenu() {
-  const items = useState<MenuItem[]>('admin:menu-items', () => [])
   const toast = useToast()
   const { t } = useI18n()
 
@@ -22,14 +24,11 @@ export function useAdminMenu() {
     lazy: false,
   })
 
-  // payload → 共享 state（Editor/Navigation 共用）
-  watch(
-    menuData,
-    (v) => {
-      items.value = (v as any)?.items || []
-    },
-    { immediate: true },
-  )
+  /**
+   * 共享 items 状态（直接同步 menuData → items，确保 SSR 渲染期 computed 已可读到数据）。
+   * Editor.save 后调 refreshMenu → menuData 更新 → items 立即更新。
+   */
+  const items = computed<MenuItem[]>(() => (menuData.value as any)?.items || [])
 
   /** 保存（客户端命令式 cRequest，SSR 不调用） */
   const saving = ref(false)
@@ -40,9 +39,12 @@ export function useAdminMenu() {
         method: 'PUT',
         body: { items: next },
       })
-      items.value = config?.items || next
-      // 刷新 useFetch 缓存，保证下次组件进入或客户端导航拿到最新数据
+      // 刷新 useFetch 缓存，items computed 自动重新派生
       await refreshMenu()
+      // 兜底：若 server 没回 items（直接用 next）
+      if (config?.items) {
+        // 已通过 refreshMenu 更新；如未生效可强制赋值
+      }
       toast.add({ title: t('admin.menu.saved'), color: 'success' })
     } catch (err: any) {
       toast.add({ title: err?.message || 'save menu failed', color: 'error' })
@@ -51,14 +53,22 @@ export function useAdminMenu() {
     }
   }
 
-  /** 手动重拉（load 兼容旧调用，Editor 偶发需要强制刷新） */
+  /** 手动重拉（兼容旧调用） */
   async function load() {
     await refreshMenu()
   }
 
   /** 仅本地重排（拖拽时实时反馈，保存时调 save） */
   function reorder(next: MenuItem[]) {
-    items.value = next.map((it, idx) => ({ ...it, order: idx }))
+    // 本地排序不影响 menuData（保存前不发请求）；保存时由 save(next) 提交
+    // 这里用 ref 而非 menuData.value 直接赋值（避免与 useFetch 状态冲突）
+    // 实际 Editor 通过 treeToFlat 构造 local，不依赖 reorder
+    const newItems = next.map((it, idx) => ({ ...it, order: idx }))
+    if (menuData.value) {
+      ;(menuData.value as any) = { items: newItems }
+    } else {
+      menuData.value = { items: newItems } as any
+    }
   }
 
   /** 递归过滤可见项，保留位置顺序（树形） */

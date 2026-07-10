@@ -2,10 +2,10 @@
     <div class="homework-node w-full relative">
         <!-- 内联编辑面板（在上方显示） -->
         <div v-if="showConfig" class="vue-node-config">
-            <Edit :homework-id="homeworkId" :homework="homework" @saved="onSaved" />
+            <Edit :homework-id="homeworkId" :homework="homework" :course-id="courseId" @saved="onSaved" />
         </div>
 
-        <Render ref="renderRef" :node="node" @saved="onSaved" />
+        <Render ref="renderRef" :node="node" :course-id="courseId" @saved="onSaved" />
     </div>
 </template>
 

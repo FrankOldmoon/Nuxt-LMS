@@ -108,7 +108,7 @@
                         <div v-for="(q, idx) in quizQuestions" :key="q.id" v-show="currentIndex === idx"
                             :class="currentIndex === idx ? '' : 'pointer-events-none absolute inset-0 -z-10'">
                             <component :ref="(el) => { if (el) questionRefs[idx] = el }" :is="QuestionRender"
-                                :node="{ attrs: { type: 'question', content: String(q.id) } }" :in-quiz="true" />
+                            :node="{ attrs: { type: 'question', content: String(q.id) } }" :course-id="effectiveCourseId" :in-quiz="true" />
                         </div>
                     </div>
                 </div>
@@ -217,8 +217,8 @@ const defaultQuiz = reactive({
 })
 
 const apiUrl = computed(() => {
-    if (!quizId.value || !editableCourseId.value) return ''
-    return `/api/quizzes/show?course_id=${editableCourseId.value}&cid=${quizId.value}`
+    if (!quizId.value || !effectiveCourseId.value) return ''
+    return `/api/quizzes/show?course_id=${effectiveCourseId.value}&cid=${quizId.value}`
 })
 
 const { data: fetchedQuiz, pending, refresh } = cRequest.use(apiUrl, {
@@ -312,9 +312,9 @@ function syncQuestionStates() {
 
 async function fetchRecord() {
     if (isTeacher.value) return
-    if (!quizId.value || !editableCourseId.value) return
+    if (!quizId.value || !effectiveCourseId.value) return
     try {
-        const data = await cRequest(`/api/quizzes/record?course_id=${editableCourseId.value}&cid=${quizId.value}`)
+        const data = await cRequest(`/api/quizzes/record?course_id=${effectiveCourseId.value}&cid=${quizId.value}`)
         if (data) {
             // 判断是否是进行中状态：有 startedAt 但没有 submitedAt
             if (data.startedAt && !data.submitedAt) {

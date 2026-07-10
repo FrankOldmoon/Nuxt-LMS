@@ -183,13 +183,13 @@ async function save() {
     if (props.commentId) {
       await cRequest('/api/comments/update', {
         method: 'POST',
-        body: { id: props.commentId, course_id: editableCourseId.value, ...form.value },
+        body: { id: props.commentId, course_id: effectiveCourseId.value, ...form.value },
       })
       emit('saved', form.value)
     } else {
       const result = await cRequest('/api/comments/add', {
         method: 'POST',
-        body: { course_id: editableCourseId.value, ...form.value },
+        body: { course_id: effectiveCourseId.value, ...form.value },
       })
       emit('saved', { ...form.value, cid: result.cid })
     }

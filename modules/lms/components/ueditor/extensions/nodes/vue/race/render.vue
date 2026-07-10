@@ -160,12 +160,19 @@ import Edit from './edit.vue'
 
 const props = defineProps({
     node: Object,
+    courseId: { type: [Number, String], default: undefined }, // admin 后台复用时传入
 })
 const emit = defineEmits(['saved'])
 
 const { t } = useI18n()
 const { moduleLms } = useRuntimeConfig().public
 const { editableCourseId, editableId } = useLayoutState()
+const effectiveCourseId = computed(() => {
+    if (props.courseId !== undefined && props.courseId !== null && props.courseId !== '') {
+        return Number(props.courseId) || 0
+    }
+    return editableCourseId.value
+})
 const { hasRole, user } = useAuth()
 const isLoggedIn = computed(() => !!user.value)
 const toast = useToast()
@@ -199,8 +206,8 @@ const defaultRace = reactive({
 })
 
 const apiUrl = computed(() => {
-    if (!raceId.value || !editableCourseId.value) return ''
-    return `/api/races/show?course_id=${editableCourseId.value}&cid=${raceId.value}`
+    if (!raceId.value || !effectiveCourseId.value) return ''
+    return `/api/races/show?course_id=${effectiveCourseId.value}&cid=${raceId.value}`
 })
 
 const { data: fetchedRace, pending, refresh } = cRequest.use(apiUrl, {

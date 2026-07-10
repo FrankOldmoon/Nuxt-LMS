@@ -87,7 +87,7 @@
                 </div>
                 <!-- 已提交内容 -->
                 <div v-if="submittedContent" class="mt-2">
-                    <ueditorRender v-if="isRichDoc(submittedContent)" :json="submittedContent" />
+                    <ueditorRender v-if="isRichDoc(submittedContent)" :json="submittedContent" :course-id="effectiveCourseId" />
                     <p v-else class="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{{ submittedContent }}</p>
                 </div>
                 <!-- 已提交文件列表 -->
@@ -122,11 +122,19 @@ import Edit from './edit.vue'
 
 const props = defineProps({
     node: Object,
+    courseId: { type: [Number, String], default: undefined }, // 可选课程上下文：admin 后台复用时传入
 })
 const emit = defineEmits(['saved'])
 const { t } = useI18n()
 
 const { editableCourseId, editableId } = useLayoutState()
+// 优先使用 props.courseId（admin 复用场景），否则用全局 editableCourseId
+const effectiveCourseId = computed(() => {
+    if (props.courseId !== undefined && props.courseId !== null && props.courseId !== '') {
+        return Number(props.courseId) || 0
+    }
+    return editableCourseId.value
+})
 const { user, hasRole } = useAuth()
 const isLoggedIn = computed(() => !!user.value)
 const toast = useToast()
@@ -204,7 +212,7 @@ async function onSubmit() {
         toast.add({ title: t('common.loginRequired'), color: 'warning' })
         return
     }
-    if (!homeworkId.value || !editableCourseId.value) return
+    if (!homeworkId.value || !effectiveCourseId.value) return
     submitting.value = true
     submitMsg.value = ''
     try {
@@ -212,7 +220,7 @@ async function onSubmit() {
         await cRequest('/api/homeworks/submit', {
             method: 'POST',
             body: {
-                course_id: editableCourseId.value,
+                course_id: effectiveCourseId.value,
                 chapter_id: editableId.value,
                 homework_cid: homeworkId.value,
                 files,
@@ -246,9 +254,9 @@ function onReset() {
 // 鼠标移入时（仅一次）获取当前用户的提交记录，填充到提交状态
 async function fetchRecord() {
     if (isTeacher.value) return
-    if (!homeworkId.value || !editableCourseId.value) return
+    if (!homeworkId.value || !effectiveCourseId.value) return
     try {
-        const data = await cRequest(`/api/homeworks/record?course_id=${editableCourseId.value}&cid=${homeworkId.value}`)
+        const data = await cRequest(`/api/homeworks/record?course_id=${effectiveCourseId.value}&cid=${homeworkId.value}`)
         if (data) {
             // 填充已提交内容
             if (data.content) {

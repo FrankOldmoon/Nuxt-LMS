@@ -2,10 +2,10 @@
     <div class="quiz-render w-full relative">
         <!-- 内联编辑面板（在上方显示） -->
         <div v-if="showConfig" class="vue-node-config">
-            <Edit :quiz-id="quizId" :quiz="quiz" @saved="onSaved" />
+            <Edit :quiz-id="quizId" :quiz="quiz" :course-id="courseId" @saved="onSaved" />
         </div>
 
-        <Render ref="renderRef" :node="node" @saved="onSaved" />
+        <Render ref="renderRef" :node="node" :course-id="courseId" @saved="onSaved" />
     </div>
 </template>
 
@@ -16,6 +16,16 @@ import Render from './render.vue'
 import Edit from './edit.vue'
 
 const props = defineProps(nodeViewProps)
+
+import { inject as injectCourseId } from 'vue'
+const injectedCourseId = injectCourseId('renderCourseId', undefined)
+const { editableCourseId } = useLayoutState()
+const courseId = computed(() => {
+  if (injectedCourseId !== undefined && injectedCourseId !== null && injectedCourseId !== '') {
+    return Number(injectedCourseId) || 0
+  }
+  return editableCourseId.value
+})
 
 // inject node-view 提供的状态
 const showConfig = inject('nodeViewShowConfig', ref(false))

@@ -63,20 +63,36 @@
                 <UFormField :label="$t('lmsConfig.aiTtsGender')" size="xs">
                     <USelect v-model="config.ai.ttsGender" :items="ttsGenderOpts" size="xs" class="w-full" />
                 </UFormField>
-                <!-- Ollama 配置（ollama 模式） -->
-                <UFormField v-if="config.ai.mode === 'ollama'" :label="$t('lmsConfig.aiOllamaUrl')" size="xs" class="col-span-2">
-                    <UInput v-model="config.ai.ollamaUrl" placeholder="http://localhost:11434" size="xs" class="w-full" />
-                </UFormField>
-                <UFormField v-if="config.ai.mode === 'ollama'" :label="$t('lmsConfig.aiOllamaModel')" size="xs" class="col-span-2">
-                    <UInput v-model="config.ai.ollamaModel" placeholder="llama3.2" size="xs" class="w-full" />
-                </UFormField>
-                <!-- API 模式特有 -->
-                <UFormField v-if="config.ai.mode === 'api'" :label="$t('lmsConfig.aiModel')" size="xs" class="col-span-2">
-                    <UInput v-model="config.ai.model" :placeholder="$t('lmsConfig.aiModelPlaceholder')" size="xs" class="w-full" />
-                </UFormField>
-                <UFormField v-if="config.ai.mode === 'api'" :label="$t('lmsConfig.aiThinking')" size="xs">
-                    <USwitch v-model="config.ai.thinking" />
-                </UFormField>
+
+                <!-- API 模式：模型 + LLM API 地址 + Key + 思考模式 -->
+                <template v-if="config.ai.mode === 'api'">
+                    <UFormField :label="$t('lmsConfig.aiModel')" size="xs" class="col-span-2">
+                        <UInput v-model="config.ai.model" :placeholder="$t('lmsConfig.aiModelPlaceholder')" size="xs" class="w-full" />
+                    </UFormField>
+                    <UFormField :label="$t('lmsConfig.aiLlmApiUrl')" size="xs" class="col-span-2">
+                        <template #hint>{{ $t('lmsConfig.aiLlmApiUrlHint') }}</template>
+                        <UInput v-model="config.ai.llmApiUrl" :placeholder="$t('lmsConfig.aiLlmApiUrlPlaceholder')" size="xs" class="w-full" />
+                    </UFormField>
+                    <UFormField :label="$t('lmsConfig.aiLlmApiKey')" size="xs" class="col-span-2">
+                        <template #hint>{{ $t('lmsConfig.aiLlmApiKeyHint') }}</template>
+                        <UInput v-model="config.ai.llmApiKey" type="password" :placeholder="$t('lmsConfig.aiLlmApiKeyPlaceholder')" size="xs" class="w-full" />
+                    </UFormField>
+                    <UFormField :label="$t('lmsConfig.aiThinking')" size="xs">
+                        <USwitch v-model="config.ai.thinking" />
+                    </UFormField>
+                </template>
+
+                <!-- Ollama 模式：服务地址 + 模型名 -->
+                <template v-if="config.ai.mode === 'ollama'">
+                    <UFormField :label="$t('lmsConfig.aiOllamaUrl')" size="xs" class="col-span-2">
+                        <UInput v-model="config.ai.ollamaUrl" placeholder="http://localhost:11434" size="xs" class="w-full" />
+                    </UFormField>
+                    <UFormField :label="$t('lmsConfig.aiOllamaModel')" size="xs" class="col-span-2">
+                        <UInput v-model="config.ai.ollamaModel" placeholder="llama3.2" size="xs" class="w-full" />
+                    </UFormField>
+                </template>
+
+                <!-- 通用：服务端代理端点（前端调用的接口，非 LLM 提供方地址） -->
                 <UFormField :label="$t('lmsConfig.aiApiUrl')" size="xs" class="col-span-2">
                     <UInput v-model="config.ai.apiUrl" placeholder="/api/aichat/chat" size="xs" class="w-full" />
                 </UFormField>

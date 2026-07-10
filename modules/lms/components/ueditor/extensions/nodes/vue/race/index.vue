@@ -2,10 +2,10 @@
     <div class="race-wrapper w-full relative">
         <!-- 内联编辑面板（在上方显示） -->
         <div v-if="showConfig" class="vue-node-config">
-            <Edit :race-id="raceId" :race="race" @saved="onSaved" />
+            <Edit :race-id="raceId" :race="race" :course-id="courseId" @saved="onSaved" />
         </div>
 
-        <Render :node="node" @saved="onSaved" />
+        <Render :node="node" :course-id="courseId" @saved="onSaved" />
     </div>
 </template>
 
@@ -16,6 +16,16 @@ import Render from './render.vue'
 import Edit from './edit.vue'
 
 const props = defineProps(nodeViewProps)
+
+import { inject as injectCourseId } from 'vue'
+const injectedCourseId = injectCourseId('renderCourseId', undefined)
+const { editableCourseId } = useLayoutState()
+const courseId = computed(() => {
+  if (injectedCourseId !== undefined && injectedCourseId !== null && injectedCourseId !== '') {
+    return Number(injectedCourseId) || 0
+  }
+  return editableCourseId.value
+})
 
 // inject node-view 提供的状态
 const showConfig = inject('nodeViewShowConfig', ref(false))
@@ -30,8 +40,6 @@ if (meta) {
 
 const emit = defineEmits(['init'])
 
-const { editableCourseId } = useLayoutState()
-
 const raceId = computed(() => Number(props.node?.attrs?.content) || 0)
 
 // 默认竞赛
@@ -43,8 +51,8 @@ const defaultRace = reactive({
 })
 
 const apiUrl = computed(() => {
-    if (!raceId.value || !editableCourseId.value) return ''
-    return `/api/races/show?course_id=${editableCourseId.value}&cid=${raceId.value}`
+    if (!raceId.value || !courseId.value) return ''
+    return `/api/races/show?course_id=${courseId.value}&cid=${raceId.value}`
 })
 
 const { data: fetchedRace } = cRequest.use(apiUrl, {

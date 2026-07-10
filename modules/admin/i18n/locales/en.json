@@ -119,7 +119,8 @@
       "empty": "-",
       "true": "Yes",
       "false": "No",
-      "json": "JSON"
+      "json": "JSON",
+      "files": "{n} file(s)"
     },
     "form": {
       "required": "Required",
@@ -129,6 +130,10 @@
       "selectFk": "Select...",
       "course": "Course",
       "selectCourse": "Select course…",
+      "selectIcon": "Select icon…",
+      "iconName": "Or type icon name",
+      "uploadFiles": "Upload files…",
+      "cropImage": "Crop & upload",
       "continue": "Continue"
     },
     "guard": {

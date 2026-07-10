@@ -20,7 +20,7 @@
       </div>
 
       <!-- 章节内容 -->
-      <UeditorRender :json="data.chapter.content" />
+      <UeditorRender :json="data.chapter.content" :course-id="courseId" />
 
       <!-- 上一章/下一章导航 -->
       <div class="flex items-center justify-between gap-4 pt-8 mt-8 border-t border-default">

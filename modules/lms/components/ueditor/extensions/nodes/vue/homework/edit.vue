@@ -139,6 +139,7 @@ const props = defineProps({
   modelValue: { type: Boolean, default: undefined },
   homeworkId: { type: Number, default: 0 },
   homework: { type: Object, default: null },
+  courseId: { type: [Number, String], default: undefined }, // admin 后台复用时传入
 })
 
 const emit = defineEmits(['update:modelValue', 'saved'])
@@ -153,7 +154,30 @@ const open = computed({
 })
 
 const { t } = useI18n()
-const { editableCourseId } = useLayoutState()
+const { editableCourseId, setEditableMeta } = useLayoutState()
+// 优先使用 props.courseId（admin 复用场景），否则用全局 editableCourseId
+const effectiveCourseId = computed(() => {
+  if (props.courseId !== undefined && props.courseId !== null && props.courseId !== '') {
+    return Number(props.courseId) || 0
+  }
+  return editableCourseId.value
+})
+
+// 组件挂载期间临时设置 editableCourseId（确保内部 ueditor/ueditorRender 可获取）
+let prevCourseId = 0
+let prevTable = ''
+let prevId = 0
+onMounted(() => {
+  if (effectiveCourseId.value) {
+    prevCourseId = editableCourseId.value
+    setEditableMeta('homeworks', props.homeworkId || 0, effectiveCourseId.value)
+  }
+})
+onBeforeUnmount(() => {
+  if (prevCourseId !== editableCourseId.value) {
+    setEditableMeta(prevTable, prevId, prevCourseId)
+  }
+})
 
 const saving = ref(false)
 const saveMsg = ref('')
@@ -201,14 +225,14 @@ async function saveHomework() {
       // 已有作业：更新
       await cRequest('/api/homeworks/update', {
         method: 'POST',
-        body: { id: props.homeworkId, course_id: editableCourseId.value, ...form.value },
+        body: { id: props.homeworkId, course_id: effectiveCourseId.value, ...form.value },
       })
       emit('saved', form.value)
     } else {
       // 新作业：新增并拿回 cid
       const result = await cRequest('/api/homeworks/add', {
         method: 'POST',
-        body: { course_id: editableCourseId.value, ...form.value },
+        body: { course_id: effectiveCourseId.value, ...form.value },
       })
       emit('saved', { ...form.value, cid: result.cid })
     }

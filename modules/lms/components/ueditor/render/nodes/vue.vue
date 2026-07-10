@@ -1,5 +1,5 @@
 <template>
-    <component v-if="comp" :is="comp" :node="node" />
+    <component v-if="comp" :is="comp" :node="node" :course-id="effectiveCourseId" />
 </template>
 
 <script setup>
@@ -18,6 +18,21 @@ const compMap = Object.fromEntries(
 
 const props = defineProps({
   node: Object,
+  courseId: { type: [Number, String], default: undefined },
+})
+
+// 优先使用 props.courseId，再 fallback 到 RenderNode 注入的 renderCourseId，最后到全局 editableCourseId
+import { inject } from 'vue'
+const { editableCourseId } = useLayoutState()
+const injectedCourseId = inject('renderCourseId', undefined)
+const effectiveCourseId = computed(() => {
+  if (props.courseId !== undefined && props.courseId !== null && props.courseId !== '') {
+    return Number(props.courseId) || 0
+  }
+  if (injectedCourseId !== undefined && injectedCourseId !== null && injectedCourseId !== '') {
+    return Number(injectedCourseId) || 0
+  }
+  return editableCourseId.value
 })
 
 const comp = computed(() => {

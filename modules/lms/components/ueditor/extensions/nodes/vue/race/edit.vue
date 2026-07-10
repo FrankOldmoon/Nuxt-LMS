@@ -152,6 +152,7 @@ const props = defineProps({
   modelValue: { type: Boolean, default: undefined },
   raceId: { type: Number, default: 0 },
   race: { type: Object, default: null },
+  courseId: { type: [Number, String], default: undefined }, // admin 后台复用时传入
 })
 
 const emit = defineEmits(['update:modelValue', 'saved'])
@@ -166,7 +167,29 @@ const open = computed({
 })
 
 const { t } = useI18n()
-const { editableCourseId } = useLayoutState()
+const { editableCourseId, setEditableMeta } = useLayoutState()
+const effectiveCourseId = computed(() => {
+  if (props.courseId !== undefined && props.courseId !== null && props.courseId !== '') {
+    return Number(props.courseId) || 0
+  }
+  return editableCourseId.value
+})
+
+// 组件挂载期间临时设置 editableCourseId
+let prevCourseId = 0
+let prevTable = ''
+let prevId = 0
+onMounted(() => {
+  if (effectiveCourseId.value) {
+    prevCourseId = editableCourseId.value
+    setEditableMeta('races', props.raceId || 0, effectiveCourseId.value)
+  }
+})
+onBeforeUnmount(() => {
+  if (prevCourseId !== editableCourseId.value) {
+    setEditableMeta(prevTable, prevId, prevCourseId)
+  }
+})
 
 const saving = ref(false)
 const saveMsg = ref('')
@@ -219,14 +242,14 @@ async function saveRace() {
       // 已有竞赛：更新
       await cRequest('/api/races/update', {
         method: 'POST',
-        body: { id: props.raceId, course_id: editableCourseId.value, ...form.value },
+        body: { id: props.raceId, course_id: effectiveCourseId.value, ...form.value },
       })
       emit('saved', { ...form.value, cid: props.raceId })
     } else {
       // 新竞赛：新增并拿回 cid
       const result = await cRequest('/api/races/add', {
         method: 'POST',
-        body: { course_id: editableCourseId.value, ...form.value },
+        body: { course_id: effectiveCourseId.value, ...form.value },
       })
       emit('saved', { ...form.value, cid: result.cid })
     }

@@ -39,6 +39,11 @@ const props = defineProps({
         type: Boolean,
         default: true,
     },
+    // 课程 ID：admin 后台复用时传入，覆盖 route.params.id
+    courseId: {
+        type: [Number, String],
+        default: undefined,
+    },
 })
 
 const isReadonly = ref(false)
@@ -46,11 +51,17 @@ const isReadonly = ref(false)
 // 仅 teacher 以上角色可编辑内容（显示 Cinserts）
 const { hasRole, isCourseEditor, isCourseTeacher } = useAuth()
 const route = useRoute()
-const courseId = computed(() => Number(route.params.id) || 0)
+// 优先使用 props.courseId（admin 复用场景），否则用 route.params.id
+const effectiveCourseId = computed(() => {
+    if (props.courseId !== undefined && props.courseId !== null && props.courseId !== '') {
+        return Number(props.courseId) || 0
+    }
+    return Number(route.params.id) || 0
+})
 const canEdit = computed(() => {
     if (!props.showInsert) return false
     if (hasRole('admin') || hasRole('teacher')) return true
-    return courseId.value ? isCourseEditor(courseId.value) || isCourseTeacher(courseId.value) : false
+    return effectiveCourseId.value ? isCourseEditor(effectiveCourseId.value) || isCourseTeacher(effectiveCourseId.value) : false
 })
 
 const editorRef = ref(null)

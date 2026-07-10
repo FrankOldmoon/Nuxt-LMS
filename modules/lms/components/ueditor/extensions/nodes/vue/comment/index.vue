@@ -2,10 +2,10 @@
     <div class="comment-render w-full relative">
         <!-- 内联编辑面板（在上方显示） -->
         <div v-if="showConfig" class="vue-node-config">
-            <Edit :comment-id="commentId" :comment="comment" @saved="onSaved" />
+            <Edit :comment-id="commentId" :comment="comment" :course-id="courseId" @saved="onSaved" />
         </div>
 
-        <Render :node="node" :comment="comment" />
+        <Render :node="node" :comment="comment" :course-id="courseId" />
     </div>
 </template>
 
@@ -15,6 +15,16 @@ import Render from './render.vue'
 import Edit from './edit.vue'
 
 const props = defineProps(nodeViewProps)
+
+import { inject } from 'vue'
+const injectedCourseId = inject('renderCourseId', undefined)
+const { editableCourseId } = useLayoutState()
+const courseId = computed(() => {
+  if (injectedCourseId !== undefined && injectedCourseId !== null && injectedCourseId !== '') {
+    return Number(injectedCourseId) || 0
+  }
+  return editableCourseId.value
+})
 
 // inject node-view 提供的状态
 const showConfig = inject('nodeViewShowConfig', ref(false))
@@ -30,12 +40,11 @@ if (meta) {
 const emit = defineEmits(['init'])
 
 const commentId = computed(() => Number(props.node?.attrs?.content) || 0)
-const { editableCourseId } = useLayoutState()
 
 // 获取评论数据
 const apiUrl = computed(() => {
-    if (!commentId.value || !editableCourseId.value) return ''
-    return `/api/comments/show?course_id=${editableCourseId.value}&cid=${commentId.value}`
+    if (!commentId.value || !courseId.value) return ''
+    return `/api/comments/show?course_id=${courseId.value}&cid=${commentId.value}`
 })
 
 const { data: comment } = cRequest.use(apiUrl, {

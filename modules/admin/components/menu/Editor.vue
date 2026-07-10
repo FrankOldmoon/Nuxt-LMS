@@ -67,14 +67,14 @@
 
         <UFormField :label="t('admin.menu.selectTable')" :description="t('admin.menu.tableDesc')">
           <USelectMenu
-            :model-value="editingItem.table || ''"
+            :model-value="editingItem.table || GROUP_VALUE"
             :items="tableItems"
             value-key="value"
             option-attribute="label"
             :placeholder="t('admin.menu.selectTable')"
             size="sm"
             class="w-full"
-            @update:model-value="(v: any) => (editingItem.table = v || undefined)"
+            @update:model-value="(v: any) => (editingItem.table = !v || v === GROUP_VALUE ? undefined : v)"
           />
         </UFormField>
 
@@ -113,9 +113,10 @@ function genKey(): number {
   return keyCounter++
 }
 
-// 表选项（含「分组」空选项）
+// 表选项（含「分组」占位项：value 不能为空字符串，否则 USelectMenu 内部 ComboboxItem 校验报错）
+const GROUP_VALUE = '__group__'
 const tableItems = computed(() => [
-  { label: t('admin.menu.group'), value: '' },
+  { label: t('admin.menu.group'), value: GROUP_VALUE },
   ...tables.value.map((tb) => ({ label: tb.name, value: tb.name })),
 ])
 

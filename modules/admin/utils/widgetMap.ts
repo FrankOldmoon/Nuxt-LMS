@@ -1,7 +1,13 @@
 import type { ColumnMeta } from './types'
 
-/** 图片列名匹配（含 img/avatar/logo/url） */
-const IMAGE_RE = /(img|avatar|logo|url)$/i
+/** 图片列名匹配（含 img/avatar/logo/cover/banner/photo/head） */
+const IMAGE_RE = /(img|image|avatar|logo|cover|banner|photo|head(er)?|thumb(nail)?)$/i
+/** URL 结尾的列名（应作为纯 URL 字符串处理） */
+const URL_END_RE = /url|link|href$/i
+/** 图标列名匹配（icon）—— 兼容 icon / menuIcon / menu_icon / MenuIcon */
+const ICON_RE = /(?:^|[A-Z_-])icon$/i
+/** 文件列名匹配（files/fileUrls/attachment/attachments） */
+const FILE_RE = /(files|fileUrls|attachments?)$/i
 
 /**
  * 为 cform 选择表单控件类型
@@ -36,8 +42,20 @@ export function widgetFor(column: ColumnMeta): string {
   // 数字
   if (column.dataType === 'number') return 'number'
 
-  // 图片
-  if (IMAGE_RE.test(column.jsName)) return 'image'
+  // 字符串特殊类型（仅在 string 时匹配）
+  if (column.dataType === 'string') {
+    // 文件字段（FormInputFile）—— 优先于 URL/Image，因为 files 也可能包含 URL
+    if (FILE_RE.test(column.jsName)) return 'file'
+
+    // 图标字段（FormInputIcon）
+    if (ICON_RE.test(column.jsName)) return 'icon'
+
+    // URL 结尾 → 纯 URL 字符串
+    if (URL_END_RE.test(column.jsName)) return 'image'
+
+    // 图片字段（FormInputFile + FormImageCropperModal）
+    if (IMAGE_RE.test(column.jsName)) return 'imageCropper'
+  }
 
   return 'text'
 }
@@ -64,8 +82,12 @@ export function cellTypeFor(column: ColumnMeta): string {
   // 外键
   if (column.fkTable) return 'fk'
 
-  // 图片
-  if (IMAGE_RE.test(column.jsName)) return 'image'
+  // 字符串特殊类型
+  if (column.dataType === 'string') {
+    if (FILE_RE.test(column.jsName)) return 'file'
+    if (ICON_RE.test(column.jsName)) return 'icon'
+    if (IMAGE_RE.test(column.jsName) || URL_END_RE.test(column.jsName)) return 'image'
+  }
 
   // 数字
   if (column.dataType === 'number') return 'number'
@@ -78,5 +100,15 @@ export function cellTypeFor(column: ColumnMeta): string {
 
 /** 图片列名判定（供 cellView 额外判断） */
 export function isImageColumn(column: ColumnMeta): boolean {
-  return IMAGE_RE.test(column.jsName) && column.dataType === 'string'
+  return column.dataType === 'string' && (IMAGE_RE.test(column.jsName) || URL_END_RE.test(column.jsName))
+}
+
+/** 图标列名判定（供 cellView 额外判断） */
+export function isIconColumn(column: ColumnMeta): boolean {
+  return ICON_RE.test(column.jsName) && column.dataType === 'string'
+}
+
+/** 文件列名判定（供 cellView 额外判断） */
+export function isFileColumn(column: ColumnMeta): boolean {
+  return FILE_RE.test(column.jsName) && column.dataType === 'string'
 }

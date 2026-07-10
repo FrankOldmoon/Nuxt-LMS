@@ -4,20 +4,20 @@
 
   <!-- Doc 根节点：无包裹直接渲染子节点 -->
   <template v-else-if="node.type === 'doc'">
-    <RenderNode v-for="(child, index) in node.content" :key="index" :node="child" />
+    <RenderNode v-for="(child, index) in node.content" :key="index" :node="child" :course-id="courseId" />
   </template>
 
   <!-- 匹配到注册类型的节点：动态组件渲染 -->
-  <component v-else-if="currentComponent" :is="currentComponent" :node="node" />
+  <component v-else-if="currentComponent" :is="currentComponent" :node="node" :course-id="courseId" />
 
   <!-- 未知节点类型：div 包裹降级渲染 -->
   <div v-else>
-    <RenderNode v-for="(child, index) in node.content" :key="index" :node="child" />
+    <RenderNode v-for="(child, index) in node.content" :key="index" :node="child" :course-id="courseId" />
   </div>
 </template>
 
 <script>
-import { defineComponent, computed } from 'vue'
+import { defineComponent, computed, provide, inject } from 'vue'
 import { renderTextWithMarks } from './helpers'
 
 // 所有节点类型 → 渲染组件 映射（导入保持不变）

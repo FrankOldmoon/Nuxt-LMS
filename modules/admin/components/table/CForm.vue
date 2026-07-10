@@ -1,5 +1,5 @@
 <template>
-  <UModal v-model:open="open" :ui="{ content: 'max-w-2xl' }">
+  <UModal v-model:open="open" :ui="{ content: 'max-w-2xl' }" scrollable>
     <template #content>
       <component
         v-if="hasFormOverride"
@@ -80,6 +80,7 @@
                   :is="richEditorComp"
                   v-if="richEditorComp"
                   v-model="form[col.jsName]"
+                  :course-id="rowCourseId"
                 />
                 <UTextarea
                   v-else
@@ -87,7 +88,7 @@
                   :rows="4"
                   size="sm"
                   class="w-full font-mono text-xs"
-                  :placeholder="{ }"
+                  placeholder='{ }'
                 />
                 <template #fallback>
                   <UTextarea
@@ -95,7 +96,7 @@
                     :rows="4"
                     size="sm"
                     class="w-full font-mono text-xs"
-                    :placeholder="{ }"
+                    placeholder='{ }'
                   />
                 </template>
               </ClientOnly>
@@ -111,14 +112,76 @@
                 :rows="4"
                 size="sm"
                 class="w-full font-mono text-xs"
-                :placeholder="{ }"
+                placeholder='{ }'
               />
               <div v-if="jsonErrors[col.jsName]" class="text-xs text-error mt-1">
                 {{ t('admin.form.invalidJson') }}
               </div>
             </template>
 
-            <!-- 图片 -->
+            <!-- 图标选择（FormInputIcon） -->
+            <div v-else-if="widget(col) === 'icon'" class="flex items-center gap-2">
+              <FormInputIcon
+                v-model="form[col.jsName]"
+                size="sm"
+                :placeholder="t('admin.form.selectIcon')"
+              />
+              <UInput
+                v-model="form[col.jsName]"
+                size="sm"
+                class="flex-1"
+                :placeholder="t('admin.form.iconName')"
+              />
+            </div>
+
+            <!-- 文件上传（FormInputFile，多文件） -->
+            <div v-else-if="widget(col) === 'file'">
+              <FormInputFile
+                v-model="form[col.jsName]"
+                multiple
+                size="sm"
+                :placeholder="t('admin.form.uploadFiles')"
+              />
+              <div v-if="form[col.jsName] && Array.isArray(form[col.jsName]) && form[col.jsName].length" class="mt-2 space-y-1">
+                <div
+                  v-for="(url, idx) in (form[col.jsName] as string[])"
+                  :key="idx"
+                  class="flex items-center gap-2 text-xs"
+                >
+                  <UIcon name="i-lucide-link" class="size-3 text-muted shrink-0" />
+                  <a :href="url" target="_blank" class="text-blue-500 hover:underline truncate">{{ url }}</a>
+                </div>
+              </div>
+            </div>
+
+            <!-- 图片裁剪上传（ImageCropperTrigger + FormImageCropperModal） -->
+            <div v-else-if="widget(col) === 'imageCropper'" class="space-y-2">
+              <div class="flex items-center gap-2">
+                <UInput
+                  v-model="form[col.jsName]"
+                  size="sm"
+                  class="flex-1"
+                  placeholder="https://..."
+                />
+                <UAvatar
+                  v-if="form[col.jsName]"
+                  :src="String(form[col.jsName])"
+                  size="sm"
+                  class="cursor-pointer"
+                  @click="previewImage = true"
+                />
+                <TableImageCropperTrigger
+                  @uploaded="(url) => { form[col.jsName] = url }"
+                />
+              </div>
+              <UModal v-model:open="previewImage">
+                <template #content>
+                  <img :src="String(form[col.jsName])" class="max-w-full max-h-[80vh] mx-auto" />
+                </template>
+              </UModal>
+            </div>
+
+            <!-- 旧版 image（纯 URL，保留兼容） -->
             <div v-else-if="widget(col) === 'image'" class="flex items-center gap-2">
               <UInput v-model="form[col.jsName]" size="sm" class="flex-1" placeholder="https://..." />
               <UAvatar v-if="form[col.jsName]" :src="String(form[col.jsName])" size="sm" />
@@ -195,6 +258,18 @@ const fkOptions = reactive<Record<string, { id: number; label: string }[]>>({})
 const fkLoading = reactive<Record<string, boolean>>({})
 const saving = ref(false)
 
+/**
+ * 从当前行推导 courseId：admin 后台富文本编辑器（RichEditor）需要它来正确显示
+ * 课程上下文内的 question / homework 等节点。优先 courseId，兼容 course_id 字段。
+ */
+const rowCourseId = computed(() => {
+  const r: any = props.row
+  if (!r) return undefined
+  const v = r.courseId ?? r.course_id
+  if (v === undefined || v === null || v === '') return undefined
+  return Number(v) || undefined
+})
+
 const editableColumns = computed(() =>
   props.columns.filter((c) => widgetFor(c) !== 'readonly'),
 )
@@ -206,6 +281,9 @@ function widget(col: ColumnMeta): string {
 function isDateTime(col: ColumnMeta): boolean {
   return col.columnType === 'PgTimestamp'
 }
+
+// ============ 图片裁剪 ============
+const previewImage = ref(false)
 
 /** 初始化表单数据 + 加载 FK 选项 */
 async function initForm() {

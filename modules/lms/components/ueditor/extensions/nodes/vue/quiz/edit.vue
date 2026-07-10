@@ -184,6 +184,7 @@ const props = defineProps({
   modelValue: { type: Boolean, default: undefined },
   quizId: { type: Number, default: 0 },
   quiz: { type: Object, default: null },
+  courseId: { type: [Number, String], default: undefined }, // admin 后台复用时传入
 })
 
 const emit = defineEmits(['update:modelValue', 'saved'])
@@ -198,7 +199,29 @@ const open = computed({
 })
 
 const { t } = useI18n()
-const { editableCourseId } = useLayoutState()
+const { editableCourseId, setEditableMeta } = useLayoutState()
+const effectiveCourseId = computed(() => {
+  if (props.courseId !== undefined && props.courseId !== null && props.courseId !== '') {
+    return Number(props.courseId) || 0
+  }
+  return editableCourseId.value
+})
+
+// 组件挂载期间临时设置 editableCourseId
+let prevCourseId = 0
+let prevTable = ''
+let prevId = 0
+onMounted(() => {
+  if (effectiveCourseId.value) {
+    prevCourseId = editableCourseId.value
+    setEditableMeta('quizzes', props.quizId || 0, effectiveCourseId.value)
+  }
+})
+onBeforeUnmount(() => {
+  if (prevCourseId !== editableCourseId.value) {
+    setEditableMeta(prevTable, prevId, prevCourseId)
+  }
+})
 
 const saving = ref(false)
 const saveMsg = ref('')
@@ -276,13 +299,13 @@ async function saveQuiz() {
     if (props.quizId) {
       await cRequest('/api/quizzes/update', {
         method: 'POST',
-        body: { id: props.quizId, course_id: editableCourseId.value, ...payload },
+        body: { id: props.quizId, course_id: effectiveCourseId.value, ...payload },
       })
       emit('saved', { ...form.value, cid: props.quizId, point: totalPoint.value })
     } else {
       const result = await cRequest('/api/quizzes/add', {
         method: 'POST',
-        body: { course_id: editableCourseId.value, ...payload },
+        body: { course_id: effectiveCourseId.value, ...payload },
       })
       emit('saved', { ...form.value, cid: result.cid, point: totalPoint.value })
     }

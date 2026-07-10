@@ -3,7 +3,7 @@
     <div v-if="renderContent" class="umo-editor-content is-readonly" :style="{ lineHeight: defaultLineHeight }"
       :spellcheck="false">
       <div class="umo-editor" contenteditable="false" style="padding: 0px; min-height: 100%;" ref="renderNodeRef">
-        <RenderNode :node="renderContent" />
+        <RenderNode :node="renderContent" :course-id="effectiveCourseId" />
       </div>
     </div>
 
@@ -36,6 +36,36 @@ const props = defineProps({
     type: String,
     default: '#fff',
   },
+  // 课程 ID：admin 后台复用本组件时传入，覆盖全局 editableCourseId
+  // 使内部 vue 节点（如 question/homework 等）能获取正确的 course 上下文
+  courseId: {
+    type: [Number, String],
+    default: undefined,
+  },
+})
+
+// 透传 courseId 给子节点（provide 让深层 Vue 节点也能读取）
+const { editableCourseId, setEditableMeta } = useLayoutState()
+const effectiveCourseId = computed(() => {
+  if (props.courseId !== undefined && props.courseId !== null && props.courseId !== '') {
+    return Number(props.courseId) || 0
+  }
+  return editableCourseId.value
+})
+
+// 渲染期间临时设置 editableCourseId，确保子节点（特别是 useLayoutState 读取的）能拿到 courseId
+// 注意：onBeforeUnmount 时还原
+let prevCourseId = 0
+watch(effectiveCourseId, (v) => {
+  prevCourseId = editableCourseId.value
+  if (v) setEditableMeta('__render__', 0, v)
+}, { immediate: true })
+
+onBeforeUnmount(() => {
+  // 还原原值（其他页面/组件仍在使用 editableCourseId）
+  if (prevCourseId !== editableCourseId.value) {
+    setEditableMeta('__render__', 0, prevCourseId)
+  }
 })
 
 const renderNodeRef = ref(null)

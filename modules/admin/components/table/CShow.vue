@@ -1,5 +1,5 @@
 <template>
-  <UModal v-model:open="open" :ui="{ content: 'max-w-2xl' }">
+  <UModal v-model:open="open" :ui="{ content: 'max-w-2xl' }" scrollable>
     <template #content>
       <component
         v-if="hasShowOverride"

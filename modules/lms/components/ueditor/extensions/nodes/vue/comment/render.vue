@@ -27,7 +27,7 @@
 
             <!-- 评论内容 -->
             <div class="prose prose-sm dark:prose-invert max-w-none">
-                <ueditorRender :json="comment.content" />
+                <ueditorRender :json="comment.content" :course-id="effectiveCourseId" />
             </div>
 
             <!-- 标签 -->
@@ -89,9 +89,16 @@ import Edit from './edit.vue'
 const props = defineProps({
     node: Object,
     comment: Object,
+    courseId: { type: [Number, String], default: undefined }, // admin 后台复用时传入
 })
 
 const { editableCourseId } = useLayoutState()
+const effectiveCourseId = computed(() => {
+    if (props.courseId !== undefined && props.courseId !== null && props.courseId !== '') {
+        return Number(props.courseId) || 0
+    }
+    return editableCourseId.value
+})
 const { user, hasRole } = useAuth()
 const { t } = useI18n()
 const isLoggedIn = computed(() => !!user.value)
@@ -231,12 +238,12 @@ async function onReply({ content, parentCid }) {
         toast.add({ title: t('common.loginRequired'), color: 'warning' })
         return
     }
-    if (!content || !editableCourseId.value) return
+    if (!content || !effectiveCourseId.value) return
     try {
         const result = await cRequest('/api/comments/add', {
             method: 'POST',
             body: {
-                course_id: editableCourseId.value,
+                course_id: effectiveCourseId.value,
                 content,
                 parentId: parentCid,
                 name: '',
