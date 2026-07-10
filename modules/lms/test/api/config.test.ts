@@ -111,22 +111,22 @@ describe('API: config/get', () => {
   })
 })
 
-describe('API: config/update.post', () => {
+describe('API: lms-config/update.post', () => {
   it('未登录返回 401', async () => {
     setMockAuthState(null)
-    const handler = (await import('../../server/api/config/update.post')).default
+    const handler = (await import('../../server/api/lms-config/update.post')).default
     await expect(handler(makeEvent({ body: { experience: { correctExp: 20 } } }))).rejects.toThrow()
   })
 
   it('非教师抛 403', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
-    const handler = (await import('../../server/api/config/update.post')).default
+    const handler = (await import('../../server/api/lms-config/update.post')).default
     await expect(handler(makeEvent({ body: { experience: { correctExp: 20 } } }))).rejects.toThrow()
   })
 
   it('无效 body 返回失败', async () => {
     setMockAuthState({ id: 1, username: 'admin', roles: ['admin'], permissions: [] })
-    const handler = (await import('../../server/api/config/update.post')).default
+    const handler = (await import('../../server/api/lms-config/update.post')).default
     const result = await handler(makeEvent({ body: null }))
     expect(result.success).toBe(false)
   })
@@ -138,7 +138,7 @@ describe('API: config/update.post', () => {
       id: 'lms_config',
       value: { ai: { mode: 'api' }, experience: { correctExp: 10 } },
     } as any)
-    const handler = (await import('../../server/api/config/update.post')).default
+    const handler = (await import('../../server/api/lms-config/update.post')).default
     const result = await handler(makeEvent({ body: { experience: { correctExp: 20 } } }))
     expect(result.success).toBe(true)
   })
@@ -147,7 +147,7 @@ describe('API: config/update.post', () => {
     setMockAuthState({ id: 1, username: 'admin', roles: ['admin'], permissions: [] })
     const { db } = await import('@nuxthub/db')
     vi.mocked(db.query.configs.findFirst).mockResolvedValue(null as any)
-    const handler = (await import('../../server/api/config/update.post')).default
+    const handler = (await import('../../server/api/lms-config/update.post')).default
     const result = await handler(makeEvent({ body: { ai: { mode: 'local' } } }))
     expect(result.success).toBe(true)
   })
@@ -172,7 +172,7 @@ describe('API: config/update.post', () => {
       },
     })) as any)
     const { buildLmsConfigPairs } = await import('../../server/utils/lmsConfig')
-    const handler = (await import('../../server/api/config/update.post')).default
+    const handler = (await import('../../server/api/lms-config/update.post')).default
     const result = await handler(makeEvent({
       body: { ai: { mode: 'ollama', model: 'llama3.2' }, user: { allowChangePassword: false } },
     }))
@@ -205,7 +205,7 @@ describe('API: config/update.post', () => {
     vi.mocked(db.insert).mockImplementation(((() => ({
       values: () => ({ onConflictDoUpdate: () => Promise.resolve() }),
     })) as any))
-    const handler = (await import('../../server/api/config/update.post')).default
+    const handler = (await import('../../server/api/lms-config/update.post')).default
     await handler(makeEvent({ body: { ai: { mode: 'local' } } }))
     const broadcasts = getWsBroadcasts()
     const hasConfigChanged = broadcasts.some((b: any) => b?.type === 'lms-config-changed')
