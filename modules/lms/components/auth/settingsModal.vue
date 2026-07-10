@@ -56,8 +56,9 @@ async function loadLmsConfig() {
 async function submitLmsConfig(): Promise<void> {
   if (!editorRef.value) return
   const data = editorRef.value.getConfig() || {}
-  // /api/config/update 服务端是 deep-merge，这里把整个 config 传过去即可
-  await cRequest('/api/config/update', {
+  // /api/lms-config/update 服务端是 deep-merge，这里把整个 config 传过去即可
+  // （路径原为 /api/config/update，与 base 模块同名冲突，base 先注册会覆盖 lms 路由）
+  await cRequest('/api/lms-config/update', {
     method: 'POST',
     body: data,
   })
