@@ -5,9 +5,6 @@ import { buildLmsConfigPairs, reloadLmsConfig, getLmsConfigSync } from '../../ut
 /**
  * 更新 LMS 配置（拍平写入 lms:* 行，并刷新缓存）
  *
- * 路径：POST /api/lms-config/update
- * （原 /api/config/update 路径与 base 模块冲突被覆盖，已迁移到独立路径）
- *
  * body: 树形对象（与原 lmsConfig 树形结构一致，便于前端 settingsModal 复用）
  * 动作：
  *   1. 拍平 body 为 lms:section.key 列表

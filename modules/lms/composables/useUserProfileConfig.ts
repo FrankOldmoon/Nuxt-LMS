@@ -13,7 +13,7 @@ import { useLmsPublicConfig } from './useLmsPublicConfig'
  * 数据源：useLmsPublicConfig().user（来自 /api/config/lms-public 公开端点，无需鉴权）
  *   - 学生可读取，UI 决定字段是否禁用
  *   - 存储已拍平：lms:user.allowSelfAvatarUpload 等独立行
- *   - 实际修改仍由 admin 在 settingsModal 通过 /api/lms-config/update 提交
+ *   - 实际修改仍由 admin 在 settingsModal 通过 /api/config/update 提交
  *
  * 注意：
  * - lms 禁用时此组合式函数仍可调用（useLmsPublicConfig 内部 fallback），返回 5 个开关均为 true
