@@ -208,6 +208,7 @@ const props = defineProps({
   modelValue: { type: Boolean, default: undefined },
   questionId: { type: Number, default: 0 },
   question: { type: Object, default: null },
+  courseId: { type: Number, default: undefined }, // 可选课程上下文：覆盖全局 editableCourseId（admin 后台复用时传入）
 })
 
 const emit = defineEmits(['update:modelValue', 'saved'])
@@ -223,6 +224,8 @@ const open = computed({
 
 const { t } = useI18n()
 const { editableCourseId } = useLayoutState()
+// 可选 courseId prop 覆盖全局 editableCourseId（admin 后台复用时传入）
+const effectiveCourseId = computed(() => props.courseId || editableCourseId.value)
 const toast = useToast()
 
 const typeOptions = computed(() => [
@@ -502,14 +505,14 @@ async function saveQuestion() {
       // 已有题目：更新
       await cRequest('/api/questions/update', {
         method: 'POST',
-        body: { id: props.questionId, course_id: editableCourseId.value, ...form.value },
+        body: { id: props.questionId, course_id: effectiveCourseId.value, ...form.value },
       })
       emit('saved', form.value)
     } else {
       // 新题目：新增并拿回 cid
       const result = await cRequest('/api/questions/add', {
         method: 'POST',
-        body: { course_id: editableCourseId.value, ...form.value },
+        body: { course_id: effectiveCourseId.value, ...form.value },
       })
       emit('saved', { ...form.value, cid: result.cid })
     }

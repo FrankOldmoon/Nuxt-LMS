@@ -1,4 +1,4 @@
-import { defineNuxtModule, createResolver, addComponentsDir, addImportsDir, addServerScanDir, addPlugin, resolvePath } from '@nuxt/kit'
+import { defineNuxtModule, createResolver, addComponentsDir, addImportsDir, addServerScanDir, addPlugin, addLayout, resolvePath } from '@nuxt/kit'
 import fs from 'fs'
 
 /**
@@ -111,6 +111,9 @@ export default defineNuxtModule({
 
     // 注册组件目录（pathPrefix: true → 子目录作为前缀，如 auth/loginModal.vue → AuthLoginModal）
     addComponentsDir({ path: resolve('./components'), pathPrefix: true })
+
+    // 注册默认布局：引入现有 <Layout> 组件（header/main/footer），供前台页面使用
+    addLayout(resolve('./layouts/default.vue'), 'default')
 
     // 注册 composables / utils 自动导入
     // 注：addImportsDir 不会递归扫描子目录，ws/ 子目录需单独注册

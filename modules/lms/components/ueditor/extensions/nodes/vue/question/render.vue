@@ -107,11 +107,11 @@
         </div>
 
         <!-- 编辑弹窗 -->
-        <QuestionEdit v-model="editOpen" :question-id="questionId" :question="question" @saved="onSaved" />
+        <QuestionEdit v-model="editOpen" :question-id="questionId" :question="question" :course-id="effectiveCourseId" @saved="onSaved" />
 
         <!-- 记录弹窗（仅教师） -->
         <component v-if="moduleLms && isTeacher" :is="RecordsModal" v-model="recordsOpen"
-            :course-id="editableCourseId" :cid="questionId" :question="question" />
+            :course-id="effectiveCourseId" :cid="questionId" :question="question" />
     </div>
 </template>
 
@@ -139,6 +139,7 @@ const props = defineProps({
     node: Object,
     question: Object, // 可选的 question 对象，如果有则直接使用，不调用 API（aigenerator 用）
     inQuiz: { type: Boolean, default: false },
+    courseId: { type: Number, default: undefined }, // 可选课程上下文：覆盖全局 editableCourseId（admin 后台复用本组件时传入）
 })
 
 // race 模式：显示提交按钮但不向后端提交 question 记录
@@ -148,6 +149,8 @@ const emit = defineEmits(['init', 'submitted'])
 
 const { t } = useI18n()
 const { editableCourseId } = useLayoutState()
+// 可选 courseId prop 覆盖全局 editableCourseId（admin 后台复用本组件时传入行数据的 courseId）
+const effectiveCourseId = computed(() => props.courseId || editableCourseId.value)
 const { hasRole, user } = useAuth()
 const { moduleLms } = useRuntimeConfig().public
 const RecordsModal = moduleLms ? resolveComponent('QuestionRecordsModal') : null
@@ -330,7 +333,7 @@ const defaultQuestion = reactive({
 
 // SSR-friendly data fetching
 const apiUrl = computed(() => {
-    const cid = props.courseId || editableCourseId.value
+    const cid = effectiveCourseId.value
     if (!questionId.value || !cid) return ''
     return `/api/questions/show?course_id=${cid}&cid=${questionId.value}`
 })
@@ -444,7 +447,7 @@ function onHover() {
     fetchRecord()
 }
 async function fetchRecord() {
-    const cid = props.courseId || editableCourseId.value
+    const cid = effectiveCourseId.value
     if (!questionId.value || !cid) return
     try {
         const data = await cRequest(`/api/questions/record?course_id=${cid}&cid=${questionId.value}`)

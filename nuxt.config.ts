@@ -10,6 +10,7 @@ export default defineNuxtConfig({
     "@nuxtjs/i18n",
     "@nuxt/test-utils/module",
     "./modules/lms",
+    "./modules/admin",
   ],
   ui: { fonts: false },
   vite: {
