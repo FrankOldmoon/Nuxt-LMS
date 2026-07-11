@@ -1,5 +1,5 @@
 <template>
-    <UModal title="Modal with title" v-model:open="open">
+    <UModal title="Modal with title" v-model:open="open"  fullscreen scrollable>
         
         <template #body>
             <div class="flex flex-col gap-4 p-4">

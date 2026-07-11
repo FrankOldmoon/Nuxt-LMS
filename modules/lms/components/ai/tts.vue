@@ -135,7 +135,7 @@
     </div>
 
     <div v-if="!isSupported" class="mt-4 p-3 bg-yellow-100 text-yellow-700 rounded-md">
-      您的浏览器不支持 Web Speech API
+      语音合成需要在浏览器环境中使用
     </div>
   </div>
 </template>
@@ -143,7 +143,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { createTTSService, languageMap } from '../../utils/ai'
-import type { SpeechSynthesisVoice } from '../../utils/ai'
+import type { TTSVoice } from '../../utils/ai'
 
 const ttsService = createTTSService()
 
@@ -157,7 +157,7 @@ const volume = ref(1)
 const isSpeaking = ref(false)
 const isPaused = ref(false)
 const error = ref('')
-const voices = ref<SpeechSynthesisVoice[]>([])
+const voices = ref<TTSVoice[]>([])
 
 const isSupported = computed(() => ttsService.isSupported())
 
@@ -166,15 +166,8 @@ const filteredVoices = computed(() => {
 })
 
 onMounted(() => {
-  if (import.meta.client && 'speechSynthesis' in window) {
-    // 加载语音列表
-    voices.value = ttsService.getVoices()
-
-    // 监听语音列表变化（某些浏览器异步加载语音）
-    window.speechSynthesis.onvoiceschanged = () => {
-      voices.value = ttsService.getVoices()
-    }
-  }
+  // edge-tts 语音列表为静态预置，无需异步加载
+  voices.value = ttsService.getVoices()
 })
 
 const handleSpeak = async () => {

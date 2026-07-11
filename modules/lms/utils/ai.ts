@@ -1,7 +1,20 @@
 /**
  * TTS (Text-to-Speech) 工具函数
- * 使用浏览器 Web Speech API 实现
+ * 通过服务端 edge-tts API 合成语音，客户端用 HTMLAudioElement 播放
+ *
+ * 数据流：speak(text) → POST /api/aichat/tts → MP3 blob → Audio.play()
  */
+
+/** 语音对象（与浏览器 SpeechSynthesisVoice 接口形状兼容，voiceURI 存储 edge-tts 语音名） */
+export interface TTSVoice {
+  name: string
+  lang: string
+  voiceURI: string
+  default?: boolean
+}
+
+/** 兼容旧导入：tts.vue 中 import type { SpeechSynthesisVoice } from ai */
+export type SpeechSynthesisVoice = TTSVoice
 
 export interface TTSOptions {
   text: string
@@ -9,7 +22,7 @@ export interface TTSOptions {
   rate?: number
   pitch?: number
   volume?: number
-  voice?: SpeechSynthesisVoice
+  voice?: TTSVoice
   /** 语音性别筛选（仅当未传 voice 时生效） */
   gender?: 'female' | 'male'
   /** 语音开始播放时触发（用于驱动口型同步等） */
@@ -23,154 +36,225 @@ export interface TTSService {
   stop: () => void
   pause: () => void
   resume: () => void
-  getVoices: () => SpeechSynthesisVoice[]
-  getVoicesByLanguage: (lang: string, gender?: 'female' | 'male') => SpeechSynthesisVoice[]
+  getVoices: () => TTSVoice[]
+  getVoicesByLanguage: (lang: string, gender?: 'female' | 'male') => TTSVoice[]
   isSupported: () => boolean
   isSpeaking: () => boolean
   isPaused: () => boolean
 }
 
 /**
- * 常见女声语音名（macOS / Windows / Google）
+ * edge-tts 常用语音列表（按语言分组，含男女声）
+ * voiceURI 即 edge-tts 语音名，发送到 /api/aichat/tts 的 voice 参数
  */
-const FEMALE_VOICE_NAMES = [
-  'samantha', 'victoria', 'karen', 'moira', 'tessa', 'fiona', 'veena', 'alva',
-  'alice', 'anna', 'mei-jia', 'sin-ji', 'ting-ting', 'zhiyu',      // macOS 中文女声
-  'zira', 'huihui', 'yaoyao', 'tracy', 'xiaoxiao', 'yating', 'hanhan', // Windows 女声
-  'aria', 'jenny', 'michelle', 'google uk english female',
-  'google 普通话（中国大陆）', 'google 粤語（香港）',
+const EDGE_TTS_VOICES: TTSVoice[] = [
+  // 中文
+  { name: '晓晓 (女声)', lang: 'zh-CN', voiceURI: 'zh-CN-XiaoxiaoNeural' },
+  { name: '云希 (男声)', lang: 'zh-CN', voiceURI: 'zh-CN-YunxiNeural' },
+  { name: '晓伊 (女声)', lang: 'zh-CN', voiceURI: 'zh-CN-XiaoyiNeural' },
+  { name: '云扬 (男声)', lang: 'zh-CN', voiceURI: 'zh-CN-YunyangNeural' },
+  { name: '曉臻 (女声)', lang: 'zh-TW', voiceURI: 'zh-TW-HsiaoChenNeural' },
+  { name: '雲瑞 (男声)', lang: 'zh-TW', voiceURI: 'zh-TW-YunJuiNeural' },
+  // 英语
+  { name: 'Emma (Female)', lang: 'en-US', voiceURI: 'en-US-EmmaMultilingualNeural' },
+  { name: 'Jenny (Female)', lang: 'en-US', voiceURI: 'en-US-JennyNeural' },
+  { name: 'Guy (Male)', lang: 'en-US', voiceURI: 'en-US-GuyNeural' },
+  { name: 'Davis (Male)', lang: 'en-US', voiceURI: 'en-US-DavisNeural' },
+  { name: 'Sonia (Female)', lang: 'en-GB', voiceURI: 'en-GB-SoniaNeural' },
+  { name: 'Ryan (Male)', lang: 'en-GB', voiceURI: 'en-GB-RyanNeural' },
+  // 日语
+  { name: '七海 (女声)', lang: 'ja-JP', voiceURI: 'ja-JP-NanamiNeural' },
+  { name: '圭太 (男声)', lang: 'ja-JP', voiceURI: 'ja-JP-KeitaNeural' },
+  // 韩语
+  { name: '선히 (Female)', lang: 'ko-KR', voiceURI: 'ko-KR-SunHiNeural' },
+  { name: '인준 (Male)', lang: 'ko-KR', voiceURI: 'ko-KR-InJoonNeural' },
+  // 法语
+  { name: 'Denise (Female)', lang: 'fr-FR', voiceURI: 'fr-FR-DeniseNeural' },
+  { name: 'Henri (Male)', lang: 'fr-FR', voiceURI: 'fr-FR-HenriNeural' },
+  // 德语
+  { name: 'Katja (Female)', lang: 'de-DE', voiceURI: 'de-DE-KatjaNeural' },
+  { name: 'Conrad (Male)', lang: 'de-DE', voiceURI: 'de-DE-ConradNeural' },
+  // 西班牙语
+  { name: 'Elvira (Female)', lang: 'es-ES', voiceURI: 'es-ES-ElviraNeural' },
+  { name: 'Alvaro (Male)', lang: 'es-ES', voiceURI: 'es-ES-AlvaroNeural' },
+  // 意大利语
+  { name: 'Elsa (Female)', lang: 'it-IT', voiceURI: 'it-IT-ElsaNeural' },
+  { name: 'Diego (Male)', lang: 'it-IT', voiceURI: 'it-IT-DiegoNeural' },
+  // 俄语
+  { name: 'Svetlana (Female)', lang: 'ru-RU', voiceURI: 'ru-RU-SvetlanaNeural' },
+  { name: 'Dmitry (Male)', lang: 'ru-RU', voiceURI: 'ru-RU-DmitryNeural' },
+  // 葡萄牙语
+  { name: 'Francisca (Female)', lang: 'pt-BR', voiceURI: 'pt-BR-FranciscaNeural' },
+  { name: 'Antonio (Male)', lang: 'pt-BR', voiceURI: 'pt-BR-AntonioNeural' },
 ]
 
-/**
- * 常见男声语音名
- */
-const MALE_VOICE_NAMES = [
-  'alex', 'daniel', 'oliver', 'rishi', 'fred', 'tom',              // macOS
-  'david', 'mark', 'guy', 'kangkang', 'yunxi', 'yunyang',          // Windows
-]
-
-/**
- * 检测语音的性别（按名字关键词推断）
- * 注意：female 包含 male 子串，必须先检 female
- */
-function detectVoiceGender(voice: SpeechSynthesisVoice): 'female' | 'male' | null {
-  const name = voice.name.toLowerCase()
-  // 先检 female 关键词（避免被 male 误匹配，因为 "female" 含 "male"）
-  if (/(female|女声|女|woman|girl)/.test(name)) return 'female'
-  // 用边界匹配 male，避免匹配到 "female"
-  if (/(^|[^a-z])male|男声|男|man\b|boy/.test(name)) return 'male'
-  // 再按已知女声名匹配
-  if (FEMALE_VOICE_NAMES.some(n => name.includes(n))) return 'female'
-  // 再按已知男声名匹配
-  if (MALE_VOICE_NAMES.some(n => name.includes(n))) return 'male'
+/** 从语音名称推断性别 */
+function detectVoiceGender(voice: TTSVoice): 'female' | 'male' | null {
+  if (/(女声|女|Female)/i.test(voice.name)) return 'female'
+  if (/(男声|男|Male)/i.test(voice.name)) return 'male'
   return null
 }
 
 /**
- * 等待语音列表加载完成（浏览器首次调用 getVoices() 可能返回空）
- */
-function waitForVoices(synth: SpeechSynthesis, timeoutMs = 1000): Promise<void> {
-  return new Promise((resolve) => {
-    if (synth.getVoices().length > 0) {
-      resolve()
-      return
-    }
-    let resolved = false
-    const done = () => {
-      if (!resolved) { resolved = true; resolve() }
-    }
-    synth.addEventListener('voiceschanged', done, { once: true })
-    setTimeout(done, timeoutMs)
-  })
-}
-
-/**
- * 按语言和性别筛选语音，无匹配时回退到该语言首个语音
- */
-function pickVoice(synth: SpeechSynthesis, lang: string, gender?: 'female' | 'male'): SpeechSynthesisVoice | undefined {
-  const voices = synth.getVoices()
-  if (!voices.length) return undefined
-  const langVoices = voices.filter(v => v.lang.toLowerCase().startsWith(lang.toLowerCase()))
-  if (!langVoices.length) return undefined
-  if (!gender) return langVoices[0]
-  const matched = langVoices.filter(v => detectVoiceGender(v) === gender)
-  return matched[0] ?? langVoices[0]
-}
-
-/**
  * 创建 TTS 服务实例
+ * 通过 /api/aichat/tts（edge-tts）合成语音，客户端用 HTMLAudioElement 播放
  */
 export function createTTSService(): TTSService {
-  const synth = import.meta.client ? window.speechSynthesis : null
+  let audio: HTMLAudioElement | null = null
+  let objectUrl: string | null = null
+  let abortController: AbortController | null = null
+  let currentOnEnd: (() => void) | null = null
+  let currentResolve: (() => void) | null = null
+  let speaking = false
+
+  /** 释放音频资源（不触发 onEnd，不 resolve Promise） */
+  function cleanup(): void {
+    if (abortController) {
+      abortController.abort()
+      abortController = null
+    }
+    if (objectUrl) {
+      URL.revokeObjectURL(objectUrl)
+      objectUrl = null
+    }
+    if (audio) {
+      audio.onplay = null
+      audio.onended = null
+      audio.onerror = null
+      audio.src = ''
+      audio = null
+    }
+    speaking = false
+  }
+
+  /** 停止当前播放：释放资源 + 触发 onEnd + resolve speak() 的 Promise */
+  function stopCurrent(): void {
+    const onEnd = currentOnEnd
+    const resolve = currentResolve
+    cleanup()
+    currentOnEnd = null
+    currentResolve = null
+    onEnd?.()
+    resolve?.()
+  }
 
   return {
     /**
      * 播放语音
+     * POST /api/aichat/tts → MP3 blob → Audio.play()
      */
     speak: async (options: TTSOptions): Promise<void> => {
-      if (!synth) {
-        throw new Error('当前环境不支持 Web Speech API')
+      // 停止当前播放（若有）
+      stopCurrent()
+
+      speaking = true
+      abortController = new AbortController()
+      currentOnEnd = options.onEnd || null
+
+      try {
+        const resp = await fetch('/api/aichat/tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: options.text,
+            voice: options.voice?.voiceURI,
+            rate: options.rate,
+            pitch: options.pitch,
+            volume: options.volume,
+            lang: options.lang,
+            // 显式选了 voice 时不传 gender（让 voice 优先）
+            gender: options.voice ? undefined : options.gender,
+          }),
+          signal: abortController.signal,
+        })
+
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}))
+          throw new Error(err.msg || `TTS 请求失败: ${resp.status}`)
+        }
+
+        const blob = await resp.blob()
+
+        // stop() 在 fetch 期间被调用 → abortController 已被 cleanup 置空，静默返回
+        if (!abortController) return
+
+        objectUrl = URL.createObjectURL(blob)
+        audio = new Audio(objectUrl)
+
+        return new Promise<void>((resolve, reject) => {
+          currentResolve = resolve
+
+          audio!.onplay = () => options.onStart?.()
+          audio!.onended = () => {
+            currentOnEnd = null
+            currentResolve = null
+            cleanup()
+            options.onEnd?.()
+            resolve()
+          }
+          audio!.onerror = () => {
+            currentOnEnd = null
+            currentResolve = null
+            cleanup()
+            options.onEnd?.()
+            reject(new Error('音频播放失败'))
+          }
+          audio!.play().catch((e) => {
+            currentOnEnd = null
+            currentResolve = null
+            cleanup()
+            options.onEnd?.()
+            reject(e)
+          })
+        })
+      } catch (e: any) {
+        // stop() 导致的 AbortError → 已由 stopCurrent 处理，静默返回
+        if (e.name === 'AbortError' || !abortController) return
+        currentOnEnd = null
+        currentResolve = null
+        cleanup()
+        options.onEnd?.()
+        throw e
       }
-
-      const utterance = new SpeechSynthesisUtterance(options.text)
-
-      if (options.lang) utterance.lang = options.lang
-      if (options.rate !== undefined) utterance.rate = options.rate
-      if (options.pitch !== undefined) utterance.pitch = options.pitch
-      if (options.volume !== undefined) utterance.volume = options.volume
-      if (options.voice) {
-        utterance.voice = options.voice
-      } else if (options.gender) {
-        // 未指定语音但指定了性别：等待语音列表加载后按性别筛选
-        await waitForVoices(synth)
-        const picked = pickVoice(synth, options.lang || '', options.gender)
-        if (picked) utterance.voice = picked
-      }
-
-      return new Promise<void>((resolve, reject) => {
-        utterance.onstart = () => options.onStart?.()
-        // onEnd 在结束/取消/出错时统一触发，确保口型同步能停止
-        utterance.onend = () => { options.onEnd?.(); resolve() }
-        utterance.onerror = (event) => { options.onEnd?.(); reject(new Error(`语音合成失败: ${event.error}`)) }
-        synth.speak(utterance)
-      })
     },
 
     /**
      * 停止播放
      */
     stop: () => {
-      if (synth) synth.cancel()
+      stopCurrent()
     },
 
     /**
      * 暂停播放
      */
     pause: () => {
-      if (synth) synth.pause()
+      if (audio && !audio.paused) {
+        audio.pause()
+      }
     },
 
     /**
      * 恢复播放
      */
     resume: () => {
-      if (synth) synth.resume()
+      if (audio && audio.paused) {
+        audio.play().catch(() => {})
+      }
     },
 
     /**
      * 获取所有可用的语音
      */
-    getVoices: (): SpeechSynthesisVoice[] => {
-      if (!synth) return []
-      return synth.getVoices()
+    getVoices: (): TTSVoice[] => {
+      return EDGE_TTS_VOICES
     },
 
     /**
      * 根据语言获取语音列表（可选按性别筛选，无匹配时回退到未筛选列表）
      */
-    getVoicesByLanguage: (lang: string, gender?: 'female' | 'male'): SpeechSynthesisVoice[] => {
-      if (!synth) return []
-      const langVoices = synth.getVoices().filter(voice =>
+    getVoicesByLanguage: (lang: string, gender?: 'female' | 'male'): TTSVoice[] => {
+      const langVoices = EDGE_TTS_VOICES.filter(voice =>
         voice.lang.toLowerCase().startsWith(lang.toLowerCase())
       )
       if (!gender) return langVoices
@@ -179,24 +263,24 @@ export function createTTSService(): TTSService {
     },
 
     /**
-     * 检测是否支持 TTS
+     * 检测是否支持 TTS（需要浏览器 Audio 构造器播放服务端合成的 MP3）
      */
     isSupported: (): boolean => {
-      return import.meta.client && 'speechSynthesis' in window
+      return typeof window !== 'undefined' && typeof window.Audio !== 'undefined'
     },
 
     /**
      * 检查是否正在播放
      */
     isSpeaking: (): boolean => {
-      return synth ? synth.speaking : false
+      return speaking
     },
 
     /**
      * 检查是否暂停
      */
     isPaused: (): boolean => {
-      return synth ? synth.paused : false
+      return !!audio && audio.paused && speaking
     }
   }
 }

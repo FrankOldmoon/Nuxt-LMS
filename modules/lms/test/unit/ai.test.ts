@@ -87,59 +87,61 @@ describe('utils/ai - checkWebGPU', () => {
   })
 })
 
-describe('utils/ai - TTS service (unit env, synth may be null)', () => {
-  it('isSupported 返回 boolean（可能为 false）', async () => {
+describe('utils/ai - TTS service (unit env, API-based)', () => {
+  it('isSupported 在 node 环境（无 window）返回 false', async () => {
     const { createTTSService } = await import('../../utils/ai')
     const svc = createTTSService()
-    // node 环境无真实 speechSynthesis，synth 可能为 null → 返回 false
-    // happy-dom 环境有完整 speechSynthesis，isSupported 返回 true
-    const result = svc.isSupported()
-    if (result !== undefined) {
-      expect(typeof result).toBe('boolean')
-    }
-    // undefined 也接受（兼容老实现）
+    expect(svc.isSupported()).toBe(false)
   })
 
-  it('getVoices 返回数组（可能为空）', async () => {
+  it('getVoices 返回 edge-tts 语音列表（非空）', async () => {
     const { createTTSService } = await import('../../utils/ai')
     const svc = createTTSService()
     const voices = svc.getVoices()
     expect(Array.isArray(voices)).toBe(true)
+    expect(voices.length).toBeGreaterThan(0)
+    // 每个语音都有 name / lang / voiceURI
+    voices.forEach(v => {
+      expect(v).toHaveProperty('name')
+      expect(v).toHaveProperty('lang')
+      expect(v).toHaveProperty('voiceURI')
+    })
   })
 
-  it('getVoicesByLanguage 返回数组（与 synth.getVoices() 一致）', async () => {
+  it('getVoicesByLanguage 按语言筛选', async () => {
     const { createTTSService } = await import('../../utils/ai')
     const svc = createTTSService()
-    // 不依赖具体数量，只验证返回类型
-    const en = svc.getVoicesByLanguage('en')
-    expect(Array.isArray(en)).toBe(true)
+    const zh = svc.getVoicesByLanguage('zh-CN')
+    expect(zh.length).toBeGreaterThan(0)
+    expect(zh.every(v => v.lang.startsWith('zh-CN'))).toBe(true)
   })
 
-  it('getVoicesByLanguage 不传 gender 与传 lang 一致', async () => {
+  it('getVoicesByLanguage 按性别筛选', async () => {
     const { createTTSService } = await import('../../utils/ai')
     const svc = createTTSService()
-    // 当 synth 为 null 时两者都返回 []
-    // 当 synth 有 voices 时，两者都应返回 lang 匹配的 voices
+    const female = svc.getVoicesByLanguage('zh-CN', 'female')
+    const male = svc.getVoicesByLanguage('zh-CN', 'male')
+    expect(female.length).toBeGreaterThan(0)
+    expect(male.length).toBeGreaterThan(0)
+  })
+
+  it('getVoicesByLanguage 不传 gender 与传 undefined 一致', async () => {
+    const { createTTSService } = await import('../../utils/ai')
+    const svc = createTTSService()
     expect(svc.getVoicesByLanguage('en')).toEqual(svc.getVoicesByLanguage('en', undefined as any))
   })
 
-  it('speak 在无 speechSynthesis 时抛错', async () => {
-    const ai = await import('../../utils/ai')
-    // 临时删除 speechSynthesis
-    const saved = (globalThis as any).speechSynthesis
-    ;(globalThis as any).speechSynthesis = undefined
-    const svc = ai.createTTSService()
+  it('speak 在 API 不可用时 rejects', async () => {
+    const { createTTSService } = await import('../../utils/ai')
+    const svc = createTTSService()
+    // node 环境无服务端 → fetch 失败
     await expect(svc.speak({ text: 'hello' })).rejects.toThrow()
-    ;(globalThis as any).speechSynthesis = saved
   })
 
-  it('speak 在服务端（无 import.meta.client）抛错', async () => {
+  it('speak 返回 Promise', async () => {
     const ai = await import('../../utils/ai')
-    // import.meta.client 由 vitest.config.ts define = 'true'，无法动态修改
-    // 此处只验证 happy path 不抛错
     const svc = ai.createTTSService()
     const p = svc.speak({ text: 'test' })
-    // 不 await（避免 SpeechSynthesisUtterance 的 onend 未触发）
     p.catch(() => {})
     expect(p).toBeInstanceOf(Promise)
   })

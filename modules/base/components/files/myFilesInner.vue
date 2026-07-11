@@ -50,9 +50,13 @@
                     <td class="py-2 pr-2">
                         <div class="flex items-center gap-2">
                             <UIcon :name="fileIcon(f)" class="shrink-0 text-gray-400" />
-                            <span v-if="renamingId !== f.id" class="truncate">{{ f.name }}</span>
-                            <UInput v-else v-model="renameValue" size="xs" autofocus class="flex-1"
-                                @keydown.enter="confirmRename(f)" @keydown.esc="cancelRename" />
+                            <div class="min-w-0 flex-1">
+                                <span v-if="renamingId !== f.id" class="truncate block">{{ f.name }}</span>
+                                <UInput v-else v-model="renameValue" size="xs" autofocus class="flex-1"
+                                    @keydown.enter="confirmRename(f)" @keydown.esc="cancelRename" />
+                                <div v-if="renamingId !== f.id && f.path" class="text-xs text-gray-400 truncate"
+                                    :title="f.path">{{ f.path }}</div>
+                            </div>
                         </div>
                     </td>
                     <td class="py-2 px-2 text-gray-500">{{ formatBytes(f.size) }}</td>
@@ -78,7 +82,17 @@
                                     <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="xs"
                                         @click="cancelRename" />
                                 </template>
-                                <UTooltip :text="t('myFiles.preview')">
+                                <!-- 图片类型：hover 时显示预览 -->
+                                <UPopover v-if="isImage(f)" mode="hover" :content="{ align: 'center', side: 'left' }">
+                                    <UButton icon="i-lucide-eye" color="neutral" variant="ghost" size="xs"
+                                        @click="preview(f)" />
+                                    <template #content>
+                                        <img :src="fileUrl(f)" :alt="f.name"
+                                            class="max-w-xs max-h-80 object-contain rounded" loading="lazy" />
+                                    </template>
+                                </UPopover>
+                                <!-- 其他类型：点击预览 -->
+                                <UTooltip v-else :text="t('myFiles.preview')">
                                     <UButton icon="i-lucide-eye" color="neutral" variant="ghost" size="xs"
                                         @click="preview(f)" />
                                 </UTooltip>
@@ -191,6 +205,18 @@ function fileIcon(f: any) {
     if (/\.(xls|xlsx|csv)$/.test(name)) return 'i-lucide-file-spreadsheet'
     if (/\.(ppt|pptx)$/.test(name)) return 'i-lucide-file'
     return 'i-lucide-file'
+}
+
+/** 判断文件是否为图片 */
+function isImage(f: any) {
+    const name = (f.name || '').toLowerCase()
+    const type = f.type || ''
+    return type.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|svg|bmp)$/.test(name)
+}
+
+/** 获取文件访问 URL */
+function fileUrl(f: any) {
+    return `/api/files/serve?pathname=${encodeURIComponent(f.path.replace(/^\/+/, ''))}`
 }
 
 // ========== 数据加载 ==========
