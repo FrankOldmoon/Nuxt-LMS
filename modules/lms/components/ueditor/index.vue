@@ -183,6 +183,7 @@ function injectCinserts() {
 const onChanged = () => {
     const markdown = editorRef.value.useEditor().getMarkdown()
     json.value = editorRef.value.getJSON()
+    console.log({ markdown, json: json.value })
     tiptapEditor.value = editorRef.value.useEditor()
 }
 

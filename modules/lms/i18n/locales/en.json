@@ -96,7 +96,10 @@
     "wrongBook": "Wrong Book",
     "wrongBookEmpty": "No wrong questions yet. Great job!",
     "wrongTimes": "{n} wrong",
-    "wrongCountHint": "Number of times answered wrong"
+    "wrongCountHint": "Number of times answered wrong",
+    "exportPpt": "PPT",
+    "exportPptSuccess": "PPT exported successfully",
+    "exportPptFailed": "Failed to export PPT"
   },
   "classSelector": {
     "selectClass": "Select Class",

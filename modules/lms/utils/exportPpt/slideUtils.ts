@@ -1,0 +1,33 @@
+/**
+ * 幻灯片分页工具
+ */
+
+import type { SlideContext } from './types'
+
+/** 创建新页，可选标题 */
+export function newSlide(ctx: SlideContext, pres: any, title?: string): void {
+  ctx.slide = pres.addSlide()
+  ctx.currentY = ctx.startY
+  if (title) {
+    ctx.slide.addText(title, {
+      x: ctx.marginX,
+      y: 0.3,
+      w: ctx.contentWidth,
+      h: 0.7,
+      fontSize: 28,
+      bold: true,
+      color: '2B579A',
+      fontFace: 'Calibri',
+      valign: 'middle',
+    })
+    // 标题下方装饰线
+    ctx.slide.addShape('line', {
+      x: ctx.marginX,
+      y: 1.05,
+      w: ctx.contentWidth,
+      h: 0,
+      line: { color: '2B579A', width: 1.5 },
+    })
+    ctx.currentY = 1.25
+  }
+}

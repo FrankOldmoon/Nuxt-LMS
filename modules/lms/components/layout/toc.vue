@@ -1,11 +1,16 @@
 <template>
   <div>
-    <!-- 播放/退出播放按钮（播放时显示在 TOC 最上方） -->
-    <!-- chapterBtnsConfig.showPlay 关闭 OR chapterPage.enableFullscreen 关闭时隐藏 -->
-    <div v-if="chapterBtnsConfig.showPlay && chapterPageCfg.enableFullscreen" class="mb-3">
-      <UButton :label="playFullscreen ? $t('chapter.exitPlay') : $t('chapter.play')"
+    <!-- 播放/退出播放按钮 + PPT 导出按钮 -->
+    <!-- chapterBtnsConfig.showPlay 关闭 OR chapterPage.enableFullscreen 关闭时仅显示 PPT 按钮 -->
+    <div class="mb-3 flex gap-2">
+      <UButton v-if="chapterBtnsConfig.showPlay && chapterPageCfg.enableFullscreen"
+        :label="playFullscreen ? $t('chapter.exitPlay') : $t('chapter.play')"
         :icon="playFullscreen ? 'i-lucide-minimize' : 'i-lucide-play'" :color="playFullscreen ? 'error' : 'primary'"
-        variant="soft" size="sm" class="w-full justify-center" @click="togglePlay" />
+        variant="soft" size="sm" class="flex-1 justify-center" @click="togglePlay" />
+      <UButton :label="$t('chapter.exportPpt')" icon="i-lucide-presentation"
+        :loading="exportingPpt" variant="soft" color="neutral" size="sm"
+        :class="chapterBtnsConfig.showPlay && chapterPageCfg.enableFullscreen ? '' : 'w-full justify-center'"
+        @click="handleExportPpt" />
     </div>
 
     <!-- lms 专有：章节按钮、班级卡片、学习进度 -->
@@ -38,9 +43,6 @@
       <UButton icon="i-lucide-chevron-down" size="sm" variant="outline"
         :disabled="currentHeadingIndex >= flatHeadings.length - 1" @click="goToHeading(1)" />
     </div>
-    <p v-if="playFullscreen && flatHeadings.length" class="text-xs text-muted text-center mt-1.5">
-      {{ $t('chapter.keyboardNavHint') }}
-    </p>
     <!-- 页面内容编辑器（管理员或课程编辑者可见） -->
     <div v-if="canEditContent" class="flex flex-col gap-3 pt-4 mt-4 border-t border-default">
       <UModal v-model:open="editModalOpen" fullscreen scrollable>
@@ -73,6 +75,7 @@ const { t } = useI18n()
 const ueditorRef = ref()
 const editModalOpen = ref(false)
 const saving = ref(false)
+const exportingPpt = ref(false)
 
 const { tocLinks, chapterContent, notifyContentSaved, chapterBtnsConfig } = useLayoutState()
 const { chapterId, courseId } = useLmsContext()
@@ -81,7 +84,7 @@ const { playFullscreen, togglePlay } = useChapterBtns()
 // lms 公开配置：chapterPage.enableFullscreen 控制播放按钮显隐
 const { chapterPage: chapterPageCfg } = useLmsPublicConfig()
 
-const lockId = computed(() => chapterId.value ? `chapters_${chapterId.value}` : null)
+const lockId = computed(() => chapterId.value ? `chapters_${chapterId.value}` : undefined)
 
 // ── 登录状态 ──
 const isLoggedIn = computed(() => !!user.value)
@@ -225,6 +228,22 @@ async function handleSaveClick() {
     toast.add({ title: e.message || t('layout.saveFailed'), color: 'error' })
   } finally {
     saving.value = false
+  }
+}
+
+// ── PPT 导出 ──
+async function handleExportPpt() {
+  if (!chapterContent.value) return
+  exportingPpt.value = true
+  try {
+    const title = tocLinks.value[0]?.text || 'Chapter'
+    const { exportChapterToPpt } = await import('../../utils/exportPpt')
+    await exportChapterToPpt(chapterContent.value, title, courseId.value)
+    toast.add({ title: t('chapter.exportPptSuccess'), color: 'success' })
+  } catch (e: any) {
+    toast.add({ title: e.message || t('chapter.exportPptFailed'), color: 'error' })
+  } finally {
+    exportingPpt.value = false
   }
 }
 </script>
