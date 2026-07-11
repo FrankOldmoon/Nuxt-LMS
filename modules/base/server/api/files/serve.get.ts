@@ -25,14 +25,14 @@ export default eventHandler(async (event) => {
 
   const pathname = getQuery(event).pathname as string
   if (!pathname) {
-    throw createError({ statusCode: 400, statusMessage: '缺少 pathname 参数' })
+    throw createError({ statusCode: 400, message: '缺少 pathname 参数' })
   }
 
   // 安全校验：去除前导 / 避免 resolve 当作绝对路径，拼接后必须以 UPLOAD_ROOT 开头
   const safePathname = pathname.replace(/^\/+/, '')
   const absolutePath = resolve(UPLOAD_ROOT, safePathname)
   if (!absolutePath.startsWith(UPLOAD_ROOT + '/') && absolutePath !== UPLOAD_ROOT) {
-    throw createError({ statusCode: 403, statusMessage: '禁止的路径访问' })
+    throw createError({ statusCode: 403, message: '禁止的路径访问' })
   }
 
   // 检查文件是否存在
@@ -41,7 +41,7 @@ export default eventHandler(async (event) => {
       access(absolutePath, (err) => err ? reject(err) : resolve())
     })
   } catch {
-    throw createError({ statusCode: 404, statusMessage: '文件不存在' })
+    throw createError({ statusCode: 404, message: '文件不存在' })
   }
 
   const ext = extname(safePathname).toLowerCase()

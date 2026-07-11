@@ -34,11 +34,12 @@ export default eventHandler(async (event) => {
     })
 
     // 计算经验值
-    let gainedExp = qConfig.submitExp
-    if (isCorrect) {
-      gainedExp += qConfig.correctBonusExp
-      if (!existing?.firstRight) {
-        gainedExp += qConfig.firstCorrectBonusExp
+    // 已答对过的题目再次提交不再给经验（防止刷经验）
+    let gainedExp = 0
+    if (!existing?.firstRight) {
+      gainedExp = qConfig.submitExp
+      if (isCorrect) {
+        gainedExp += qConfig.correctBonusExp + qConfig.firstCorrectBonusExp
       }
     }
     const newSubmitCount = (existing?.submitCount || 0) + 1

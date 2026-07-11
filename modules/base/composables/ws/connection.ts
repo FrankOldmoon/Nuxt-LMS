@@ -51,9 +51,10 @@ export function useWsConnection() {
       socket.onopen = () => {
         wsConnected.value = true
         // 注册用户级连接（用于私信推送）
-        const { user } = useAuth()
-        if (user.value?.id) {
-          send({ type: 'registerUser', userId: user.value.id, from: user.value.name })
+        // 使用 getAuthUserSync 从 payload 缓存读取，避免在回调中调用 useFetch
+        const user = getAuthUserSync()
+        if (user?.id) {
+          send({ type: 'registerUser', userId: user.id, from: user.name })
         }
         // 重新加入所有房间
         for (const room of joinedRooms) {

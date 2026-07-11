@@ -56,7 +56,7 @@ export async function requireCourseTeacher(event: any, courseId: number): Promis
 
   if (await isCourseEditor(user.id, courseId)) return user
 
-  throw createError({ statusCode: 403, statusMessage: '无权限：仅管理员或课程编辑者可操作' })
+  throw createError({ statusCode: 403, message: '无权限：仅管理员或课程编辑者可操作' })
 }
 
 /**
@@ -69,7 +69,7 @@ export async function requireChapterTeacher(event: any, chapterId: number): Prom
   if (user.roles.includes('admin')) return user
 
   if (!(schema as any).chapters) {
-    throw createError({ statusCode: 403, statusMessage: '无权限' })
+    throw createError({ statusCode: 403, message: '无权限' })
   }
 
   // 查询章节所属课程
@@ -80,10 +80,10 @@ export async function requireChapterTeacher(event: any, chapterId: number): Prom
     .limit(1)
 
   if (!rows[0]) {
-    throw createError({ statusCode: 404, statusMessage: '章节不存在' })
+    throw createError({ statusCode: 404, message: '章节不存在' })
   }
 
   if (await isCourseEditor(user.id, rows[0].courseId)) return user
 
-  throw createError({ statusCode: 403, statusMessage: '无权限：仅管理员或该课程的编辑者可操作' })
+  throw createError({ statusCode: 403, message: '无权限：仅管理员或该课程的编辑者可操作' })
 }

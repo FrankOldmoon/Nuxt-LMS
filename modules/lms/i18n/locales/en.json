@@ -757,7 +757,13 @@
     "batchImportHint": "One item per line, 2 spaces per indent level:\nLevel 1\n  Level 2\n    Level 3",
     "batchImportPlaceholder": "Level 1\n  Level 2\n    Level 3",
     "batchImportConfirm": "Import",
-    "batchImportEmpty": "Please enter content"
+    "batchImportEmpty": "Please enter content",
+    "aiGenerate": "AI Generate",
+    "aiGenerating": "AI is generating…",
+    "aiGenerateError": "AI generation failed: ",
+    "aiPromptPlaceholder": "Describe what to generate, e.g. \"Python basics course outline\"",
+    "aiModeCategory": "category navigation",
+    "aiModeCourse": "course chapter"
   },
   "courseEditor": {
     "title": "Course Settings",
@@ -827,6 +833,7 @@
     "deleted": "Deleted",
     "deleteFailed": "Delete failed",
     "import": "Import",
+    "export": "Export",
     "insert": "Insert",
     "importTitle": "Batch Import",
     "importHint": "Enter JSON array format, each object is a record's fields",
@@ -909,7 +916,8 @@
   "contentPicker": {
     "example": "Example",
     "jsonMustBeArray": "JSON must be an array",
-    "importFailedCount": ", {count} failed"
+    "importFailedCount": ", {count} failed",
+    "exportSuccess": "Exported {count} items"
   },
   "ai": {
     "mode": "Mode",

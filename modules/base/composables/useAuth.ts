@@ -51,6 +51,8 @@ export function useAuth() {
   // 使用 useFetch（底层 useAsyncData）实现 SSR 兼容
   // 服务端请求时会自动转发浏览器 cookie，客户端会从 payload 还原数据
   const { data: authData, refresh: refreshUser, status } = useFetch('/api/auth/me', {
+    // 显式 key，供 getAuthUserSync 从 payload 缓存读取
+    key: 'auth:me',
     // 服务端也请求（SSR），确保首屏就有用户数据
     server: true,
     // 懒加载关闭，setup 阶段即发起请求
@@ -134,4 +136,14 @@ export function useAuth() {
     // （editorCourseIds / teacherCourseIds / classIds 等由 server runOnMeEnrich 注入）
     authData,
   }
+}
+
+/**
+ * 同步读取当前认证用户（从 payload 缓存，不触发 useFetch）
+ * 适用于不能调用 useAuth() 的非 setup 上下文（如 WebSocket 回调、watch 回调）
+ */
+export function getAuthUserSync(): User | null {
+  const nuxtApp = useNuxtApp()
+  const authData = nuxtApp.payload.data['auth:me'] as AuthData | null | undefined
+  return authData?.user ?? null
 }

@@ -9,7 +9,7 @@ import {
  */
 export function validateTable(tableName: string | undefined): string {
   if (!tableName || !(tableName in schema)) {
-    throw createError({ statusCode: 400, statusMessage: `无效的表名: ${tableName}` })
+    throw createError({ statusCode: 400, message: `无效的表名: ${tableName}` })
   }
   return tableName
 }
@@ -37,7 +37,7 @@ export async function listTable(tableName: string) {
 export async function showTable(tableName: string, id: number) {
   const table = getTable(tableName)
   if (!('id' in table)) {
-    throw createError({ statusCode: 400, statusMessage: `表 ${tableName} 为复合主键表，不支持按 id 查询` })
+    throw createError({ statusCode: 400, message: `表 ${tableName} 为复合主键表，不支持按 id 查询` })
   }
   const rows = await db.select().from(table).where(eq(table.id, id)).limit(1)
   return rows[0] ?? null
@@ -61,7 +61,7 @@ export async function addTable(tableName: string, data: Record<string, any>) {
 export async function updateTable(tableName: string, id: number, data: Record<string, any>) {
   const table = getTable(tableName)
   if (!('id' in table)) {
-    throw createError({ statusCode: 400, statusMessage: `表 ${tableName} 为复合主键表，不支持按 id 更新` })
+    throw createError({ statusCode: 400, message: `表 ${tableName} 为复合主键表，不支持按 id 更新` })
   }
   const result = await db.update(table).set(data).where(eq(table.id, id))
   return result
@@ -85,18 +85,18 @@ export async function batchTable(
   action: BatchAction,
 ) {
   if (!ids || !Array.isArray(ids) || ids.length === 0) {
-    throw createError({ statusCode: 400, statusMessage: 'ids 不能为空' })
+    throw createError({ statusCode: 400, message: 'ids 不能为空' })
   }
   if (!VALID_ACTIONS.includes(action)) {
     throw createError({
       statusCode: 400,
-      statusMessage: `无效的 action: ${action}，可选值: ${VALID_ACTIONS.join(', ')}`,
+      message: `无效的 action: ${action}，可选值: ${VALID_ACTIONS.join(', ')}`,
     })
   }
 
   const table = getTable(tableName)
   if (!('id' in table)) {
-    throw createError({ statusCode: 400, statusMessage: `表 ${tableName} 为复合主键表，不支持按 id 批量操作` })
+    throw createError({ statusCode: 400, message: `表 ${tableName} 为复合主键表，不支持按 id 批量操作` })
   }
   const idList = ids.map(Number)
 

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <CourseBtns :course-id="courseId" :class-id="user?.defaultClass?.id || ''" :navigation="indexedNavigation" />
+    <CourseBtns :course-id="courseId" :navigation="indexedNavigation" />
     <div v-if="isLoggedIn" class="mb-3">
       <UButton :label="selectedClassName || $t('classSelector.selectClass')"
         :icon="selectedClassName ? 'i-lucide-school' : 'i-lucide-plus'" color="info" variant="outline" size="sm"

@@ -1,4 +1,4 @@
-import type { Ref } from 'vue'
+import { shallowRef, type Ref } from 'vue'
 import type { ChapterTaskMap } from '../utils/chapterTask'
 
 /**
@@ -19,9 +19,18 @@ export interface ChapterTaskContext {
 
 const CHAPTER_TASK_KEY = 'chapter-task-context'
 
-/** 子组件注入上下文（无上下文时返回 null，如课程页） */
+/**
+ * 模块级共享 ref：允许不在 provide/inject 子树内的组件访问当前章节任务上下文。
+ * 典型场景：移动端 TOC 在 USlideover（layout 层，是页面的父组件）中渲染，
+ * 无法通过 inject 获取页面内 setupChapterTask 提供的上下文。
+ * setupChapterTask 设置此 ref，onBeforeUnmount 清除。
+ */
+const sharedChapterTaskCtx = shallowRef<ChapterTaskContext | null>(null)
+
+/** 子组件注入上下文（无上下文时返回 null，如课程页或移动端 slideover 回退） */
 export function useChapterTask(): ChapterTaskContext | null {
-  return inject<ChapterTaskContext | null>(CHAPTER_TASK_KEY, null)
+  const injected = inject<ChapterTaskContext | null>(CHAPTER_TASK_KEY, null)
+  return injected || sharedChapterTaskCtx.value
 }
 
 /**
@@ -140,6 +149,8 @@ export function setupChapterTask(opts: {
   }
 
   provide(CHAPTER_TASK_KEY, ctx)
+  // 同时通过模块级 ref 共享，供不在 provide 子树内的组件访问（如移动端 slideover 中的 TOC）
+  sharedChapterTaskCtx.value = ctx
 
   // ===== 纯文字 heading 停留计时（客户端） =====
   if (import.meta.client) {
@@ -207,6 +218,8 @@ export function setupChapterTask(opts: {
       if (persistTimer) clearTimeout(persistTimer)
       // 离开页面时立即持久化一次
       doPersist()
+      // 清除模块级共享 ref，防止下一个页面读到旧的上下文
+      sharedChapterTaskCtx.value = null
     })
   }
 

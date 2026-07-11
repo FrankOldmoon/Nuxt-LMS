@@ -383,7 +383,7 @@ export function clearMockTableMeta() {
 /** validateTable 桩 — 校验表名在 mock schema 中，否则抛 400 */
 export function validateTable(tableName: string | undefined): string {
   if (!tableName || !_mockSchemaTables.includes(tableName)) {
-    throw createError({ statusCode: 400, statusMessage: `无效的表名: ${tableName}` })
+    throw createError({ statusCode: 400, message: `无效的表名: ${tableName}` })
   }
   return tableName
 }

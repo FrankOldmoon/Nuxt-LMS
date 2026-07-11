@@ -171,15 +171,15 @@ describe('API: questions/submit', () => {
     expect(_mockDb.insert).toHaveBeenCalled()
   })
 
-  it('已有记录：更新而非插入', async () => {
+  it('已答对的题目再次提交不给经验', async () => {
     setMockAuthState({ id: 1, username: 'student', roles: ['student'], permissions: [] })
-    _mockDb.query.userQuestions.findFirst = vi.fn().mockResolvedValue({ firstRight: true, score: '5', submitCount: 1, wrongCount: 0 })
+    _mockDb.query.userQuestions.findFirst = vi.fn().mockResolvedValue({ firstRight: true, score: '10', submitCount: 1, wrongCount: 0 })
     _mockDb.returning = vi.fn().mockResolvedValue([])
     const handler = (await import('../../server/api/questions/submit.post')).default
     const result = await handler(makeEvent({ body: { course_id: 1, question_cid: 1, correct_rate: 1, point: 10, user_answer: ['A'] } }))
     expect(result.success).toBe(true)
-    // 已 firstRight=true，不再给 firstCorrectBonusExp
-    expect(result.data.gainedExp).toBe(7) // submitExp(2) + correctBonusExp(5)
+    // 已 firstRight=true，再次答对不再给任何经验
+    expect(result.data.gainedExp).toBe(0)
     // 验证 update 被调用，insert 未被调用
     expect(_mockDb.update).toHaveBeenCalled()
     expect(_mockDb.insert).not.toHaveBeenCalled()

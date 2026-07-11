@@ -40,6 +40,36 @@
       <div class="p-6 space-y-4">
         <h3 class="text-lg font-medium">{{ $t('navEditor.batchImport') }}</h3>
         <p class="text-sm text-muted whitespace-pre-line">{{ $t('navEditor.batchImportHint') }}</p>
+
+        <!-- AI 生成 -->
+        <div class="space-y-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+          <div class="flex gap-2">
+            <UInput
+              v-model="aiPrompt"
+              :placeholder="$t('navEditor.aiPromptPlaceholder')"
+              size="sm"
+              class="flex-1"
+              :disabled="aiGenerating"
+              @keydown.enter="aiGenerate"
+            />
+            <UButton
+              icon="i-lucide-sparkles"
+              color="primary"
+              variant="solid"
+              size="sm"
+              :loading="aiGenerating"
+              :disabled="!aiPrompt.trim() || aiGenerating"
+              @click="aiGenerate"
+            >
+              {{ $t('navEditor.aiGenerate') }}
+            </UButton>
+          </div>
+          <p v-if="aiGenerating" class="text-xs text-primary flex items-center gap-1">
+            <UIcon name="i-lucide-loader-2" class="animate-spin size-3" />
+            {{ $t('navEditor.aiGenerating') }}
+          </p>
+        </div>
+
         <UTextarea
           v-model="importText"
           :placeholder="$t('navEditor.batchImportPlaceholder')"
@@ -96,6 +126,10 @@ let keyCounter = 0
 // 批量导入
 const importOpen = ref(false)
 const importText = ref('')
+
+// AI 生成
+const aiPrompt = ref('')
+const aiGenerating = ref(false)
 
 /** category 模式最大层级 1（二级目录），course 模式最大层级 2（三级目录） */
 const maxDepth = computed(() => props.mode === 'category' ? 1 : 2)
@@ -200,6 +234,87 @@ function doBatchImport() {
 
   importText.value = ''
   importOpen.value = false
+}
+
+/** AI 生成：调用 /api/aichat/chat 流式生成批量导入格式的缩进文本 */
+async function aiGenerate() {
+  const prompt = aiPrompt.value.trim()
+  if (!prompt || aiGenerating.value) return
+
+  aiGenerating.value = true
+  importText.value = ''
+
+  // 构建系统提示：指定输出格式（缩进文本，2空格一层，不超过最大层级）
+  const maxLevels = maxDepth.value + 1
+  const modeLabel = props.mode === 'category'
+    ? t('navEditor.aiModeCategory')
+    : t('navEditor.aiModeCourse')
+
+  const systemPrompt = `You are a navigation structure generator. Generate a ${modeLabel} outline based on the user's request.
+
+Output format rules (STRICTLY follow):
+- One item per line
+- Use 2 spaces for each indent level (no tabs, no markdown)
+- Maximum ${maxLevels} levels (depth 0 to ${maxDepth.value})
+- Output ONLY the indented text, no explanations, no code fences, no markdown
+- Use concise, clear labels
+
+Example:
+Item A
+  Item A.1
+  Item A.2
+Item B
+  Item B.1`
+
+  try {
+    const resp = await fetch('/api/aichat/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: prompt },
+        ],
+      }),
+    })
+
+    if (!resp.ok) {
+      const errData = await resp.json().catch(() => ({}))
+      throw new Error(errData.msg || resp.statusText)
+    }
+
+    const reader = resp.body?.getReader()
+    if (!reader) throw new Error('No reader available')
+
+    const decoder = new TextDecoder()
+    let buffer = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue
+        const data = line.slice(6).trim()
+        if (data === '[DONE]') continue
+        try {
+          const json = JSON.parse(data)
+          const delta = json.choices?.[0]?.delta
+          if (delta?.content) {
+            importText.value += delta.content
+          }
+        } catch { /* skip */ }
+      }
+    }
+  } catch (e: any) {
+    console.error('AI 生成失败:', e)
+    importText.value = t('navEditor.aiGenerateError') + (e.message || '')
+  } finally {
+    aiGenerating.value = false
+  }
 }
 
 watch(open, (val) => {

@@ -125,7 +125,7 @@ describe('API: crud/[table]/update.post', () => {
 
   it('回归 Bug 4：复合主键表 updateTable 抛错误', async () => {
     setMockAuthState({ id: 1, username: 'admin', name: 'Admin', roles: ['admin'], permissions: [] })
-    globalThis.updateTable = vi.fn().mockRejectedValue(Object.assign(new Error('复合主键表'), { statusMessage: '表 userRoles 为复合主键表，不支持按 id 更新' }))
+    globalThis.updateTable = vi.fn().mockRejectedValue(Object.assign(new Error('复合主键表'), { message: '表 userRoles 为复合主键表，不支持按 id 更新' }))
     const handler = (await import('../../server/api/crud/[table]/update.post')).default
     const result = await handler(makeEvent({ params: { table: 'userRoles' }, body: { id: 5, roleId: 2 } }))
     expect(result.success).toBe(false)
@@ -158,7 +158,7 @@ describe('API: crud/[table]/batch.post', () => {
 
   it('回归 Bug 4：复合主键表 batchTable 抛错误', async () => {
     setMockAuthState({ id: 1, username: 'admin', name: 'Admin', roles: ['admin'], permissions: [] })
-    globalThis.batchTable = vi.fn().mockRejectedValue(Object.assign(new Error('复合主键表'), { statusMessage: '表 userRoles 为复合主键表，不支持按 id 批量操作' }))
+    globalThis.batchTable = vi.fn().mockRejectedValue(Object.assign(new Error('复合主键表'), { message: '表 userRoles 为复合主键表，不支持按 id 批量操作' }))
     const handler = (await import('../../server/api/crud/[table]/batch.post')).default
     const result = await handler(makeEvent({ params: { table: 'userRoles' }, body: { ids: [1], action: 'delete' } }))
     expect(result.success).toBe(false)

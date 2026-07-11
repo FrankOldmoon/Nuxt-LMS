@@ -18,21 +18,25 @@
                         </UBadge>
                     </div>
 
-                    <!-- 预览模式：类型筛选 + 搜索 + 新增 + 导入 -->
+                    <!-- 预览模式：类型筛选 + 搜索 + 新增 + 导入 + 导出 -->
                     <div v-if="previewMode" class="flex items-center gap-2">
                         <USelect v-model="filterType" :items="typeOptions" size="sm" class="w-32" />
                         <UInput v-model="keyword" :placeholder="$t('courseData.searchPlaceholder')"
                             icon="i-lucide-search" size="sm" class="flex-1" />
-                        <UButton size="sm" color="primary" variant="soft" icon="i-lucide-plus" @click="addNew">
+                        <UButton size="sm" color="info" variant="soft" icon="i-lucide-plus" @click="addNew">
                             {{ $t('common.add') }}
                         </UButton>
                         <UButton size="sm" color="primary" variant="soft" icon="i-lucide-upload"
                             @click="importOpen = true">
                             {{ $t('courseData.import') }}
                         </UButton>
+                        <UButton size="sm" color="warning" variant="soft" icon="i-lucide-download"
+                            :disabled="!filtered.length" @click="exportItems">
+                            {{ $t('courseData.export') }}
+                        </UButton>
                     </div>
 
-                    <!-- 选择模式：搜索 + 新增 + 导入 -->
+                    <!-- 选择模式：搜索 + 新增 + 导入 + 导出 -->
                     <div v-if="!previewMode" class="flex items-center gap-2">
                         <UInput v-model="keyword" :placeholder="$t('courseData.searchPlaceholder')"
                             icon="i-lucide-search" size="sm" class="flex-1" />
@@ -42,6 +46,10 @@
                         <UButton size="sm" color="primary" variant="soft" icon="i-lucide-upload"
                             @click="importOpen = true">
                             {{ $t('courseData.import') }}
+                        </UButton>
+                        <UButton size="sm" color="primary" variant="soft" icon="i-lucide-download"
+                            :disabled="!filtered.length" @click="exportItems">
+                            {{ $t('courseData.export') }}
                         </UButton>
                     </div>
                 </div>
@@ -554,6 +562,34 @@ async function copyPrompt() {
     } catch {
         toast.add({ title: t('common.copyFailed'), color: 'error' })
     }
+}
+
+// 批量导出：将当前类型的所有条目导出为可重新导入的 JSON
+// 去除 course_id、cid、createdAt、updatedAt 等无关属性，展平 extra
+function exportItems() {
+    if (!filtered.value.length) return
+
+    const cleanItems = filtered.value.map(item => {
+        // 解构出需要排除的字段
+        const { type: _wrapperType, cid, createdAt, updatedAt, extra, ...rest } = item
+        // 展平 extra，qtype 改回 type（DB 列名）
+        const flatExtra = { ...extra }
+        if (flatExtra.qtype !== undefined) {
+            flatExtra.type = flatExtra.qtype
+            delete flatExtra.qtype
+        }
+        return { ...rest, ...flatExtra }
+    })
+
+    const json = JSON.stringify(cleanItems, null, 2)
+    const blob = new Blob([json], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${currentType.value}_export.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.add({ title: t('contentPicker.exportSuccess', { count: cleanItems.length }), color: 'success' })
 }
 
 watch(open, (val) => {

@@ -66,7 +66,7 @@ export default eventHandler(async (event) => {
     }
 
     if (!classAccessible) {
-      throw createError({ statusCode: 403, statusMessage: '该章节尚未开放' })
+      throw createError({ statusCode: 403, message: '该章节尚未开放' })
     }
   }
 

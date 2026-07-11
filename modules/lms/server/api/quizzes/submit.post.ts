@@ -95,9 +95,12 @@ export default eventHandler(async (event) => {
   const qConfig = config.quiz
   const passScore = qConfig.passScore || 60
   const isPassed = totalScore >= passScore
+  // 是否已经及格过（已有记录且最高分达到及格线）
+  const alreadyPassed = !!(existing && (Number(existing.score) || 0) >= passScore)
 
   let gainedExp = qConfig.submitExp
-  if (isPassed) gainedExp += qConfig.passBonusExp
+  // passBonusExp 仅首次及格时发放，已及格过的测验再次提交不再给
+  if (isPassed && !alreadyPassed) gainedExp += qConfig.passBonusExp
 
   const newSubmitCount = currentCount + 1
 

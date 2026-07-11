@@ -28,7 +28,7 @@
 <script setup lang="ts">
 const { t } = useI18n()
 const toast = useToast()
-const { hasRole, refreshUser } = useAuth()
+const { hasRole, refreshUser, user } = useAuth()
 const { students, fetchUsers } = useClassUsers()
 
 const props = defineProps<{
@@ -37,7 +37,6 @@ const props = defineProps<{
 
 // 记录原始角色（教师或管理员），切换学生后仍保留显示
 const originalIsAdmin = computed(() => hasRole('admin'))
-const originalIsTeacher = computed(() => hasRole('teacher') || hasRole('admin'))
 const isAdmin = ref(false)
 
 const loading = ref(false)
@@ -70,7 +69,6 @@ async function loadStudents() {
       const data = await cRequest<any[]>('/api/users/students')
       allStudents.value = data || []
     } else {
-      const { user } = useAuth()
       const classId = user.value?.defaultClass?.id
       if (classId) {
         await fetchUsers(classId, props.courseId)

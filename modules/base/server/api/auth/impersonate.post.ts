@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
       .where(and(eq(schema.tokens.name, originalToken), isNull(schema.tokens.deletedAt)))
       .limit(1)
     if (!tokenRow[0]) {
-      throw createError({ statusCode: 401, statusMessage: '原始 token 无效' })
+      throw createError({ statusCode: 401, message: '原始 token 无效' })
     }
     authUserId = tokenRow[0].userId
   } else if (currentToken) {
@@ -36,11 +36,11 @@ export default defineEventHandler(async (event) => {
       .where(and(eq(schema.tokens.name, currentToken), isNull(schema.tokens.deletedAt)))
       .limit(1)
     if (!tokenRow[0]) {
-      throw createError({ statusCode: 401, statusMessage: '未认证' })
+      throw createError({ statusCode: 401, message: '未认证' })
     }
     authUserId = tokenRow[0].userId
   } else {
-    throw createError({ statusCode: 401, statusMessage: '未认证' })
+    throw createError({ statusCode: 401, message: '未认证' })
   }
 
   // 验证原始用户是教师或管理员
@@ -51,7 +51,7 @@ export default defineEventHandler(async (event) => {
     .where(eq(schema.userRoles.userId, authUserId))
   const isPrivileged = roleRows.some(r => r.code === 'teacher' || r.code === 'admin')
   if (!isPrivileged) {
-    throw createError({ statusCode: 403, statusMessage: '无权限：仅教师/管理员可切换身份' })
+    throw createError({ statusCode: 403, message: '无权限：仅教师/管理员可切换身份' })
   }
 
   const body = await readBody(event)

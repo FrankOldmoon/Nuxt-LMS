@@ -12,7 +12,6 @@
 
     <ChapterBtns />
     <ClassUserCard />
-    <!-- {{ isLoggedIn }}:{{ chapterTask }}:{{ totalHeadings }} -->
 
     <!-- 章节学习进度（heading 汇总）- 仅登录用户显示 -->
     <div v-if="isLoggedIn && chapterTask && totalHeadings > 0" class="pt-4 my-4 border-t border-default">
@@ -42,9 +41,8 @@
     <p v-if="playFullscreen && flatHeadings.length" class="text-xs text-muted text-center mt-1.5">
       {{ $t('chapter.keyboardNavHint') }}
     </p>
-
     <!-- 页面内容编辑器（管理员或课程编辑者可见） -->
-    <div v-if="canEditContent" class="hidden lg:flex flex-col gap-3 pt-4 mt-4 border-t border-default">
+    <div v-if="canEditContent" class="flex flex-col gap-3 pt-4 mt-4 border-t border-default">
       <UModal v-model:open="editModalOpen" fullscreen scrollable>
         <UButton icon="i-lucide-edit" color="primary" size="sm" :label="$t('layout.editPage')" class="justify-start" />
 
@@ -89,18 +87,14 @@ const lockId = computed(() => chapterId.value ? `chapters_${chapterId.value}` : 
 const isLoggedIn = computed(() => !!user.value)
 
 // ── lms 章节学习进度（仅在 mode=lms 时使用） ──
-const chapterTask = computed(() => {
-  try {
-    return useChapterTask()
-  } catch {
-    return null
-  }
-})
+// setup 阶段调用 useChapterTask()：inject 在 setup 中生效，
+// 移动端 slideover 中的 TOC 不在 provide 子树内，回退到 sharedChapterTaskCtx
+const chapterTask = useChapterTask()
 
-const totalHeadings = computed(() => chapterTask.value?.taskMap.value.headings?.length ?? 0)
+const totalHeadings = computed(() => chapterTask?.taskMap.value.headings?.length ?? 0)
 const doneHeadings = computed(() => {
-  if (!chapterTask.value) return 0
-  return chapterTask.value.taskMap.value.headings.filter(h => chapterTask.value!.taskStatus.value[h.id]).length
+  if (!chapterTask) return 0
+  return chapterTask.taskMap.value.headings.filter(h => chapterTask.taskStatus.value[h.id]).length
 })
 const progressPercent = computed(() => {
   if (totalHeadings.value === 0) return 0

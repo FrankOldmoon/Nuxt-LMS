@@ -220,6 +220,20 @@ describe('API: quizzes/submit', () => {
     // 验证 addCourseScore 被调用（分数提高）
     expect((globalThis as any).addCourseScore).toHaveBeenCalled()
   })
+
+  it('已及格的测验再次提交提高分数时不给 passBonusExp', async () => {
+    setMockAuthState({ id: 1, username: 'student', roles: ['student'], permissions: [] })
+    _mockDb.query.quizzes.findFirst = vi.fn().mockResolvedValue({ courseId: 1, cid: 1, submitLimit: 3, submitCount: 1 })
+    // 已有记录 score=80（已及格，80 >= 60）
+    _mockDb.query.userQuizzes.findFirst = vi.fn().mockResolvedValue({ submitCount: 1, score: '80', startedAt: new Date() })
+    // 本次 score=90 > 80 → 分数提高，但已及格过，不给 passBonusExp
+    const records = [{ questionCid: 1, rate: 0.9, point: 100, answer: 'A' }]
+    const handler = (await import('../../server/api/quizzes/submit.post')).default
+    const result = await handler(makeEvent({ body: { course_id: 1, quiz_cid: 1, records } }))
+    expect(result.success).toBe(true)
+    // 已及格过：只有 submitExp(3)，不再给 passBonusExp(10)
+    expect(result.data.gainedExp).toBe(3)
+  })
 })
 
 // ====================== add.post.ts ======================

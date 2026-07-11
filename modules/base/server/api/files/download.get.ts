@@ -20,17 +20,17 @@ export default eventHandler(async (event) => {
   const user = await requireAuth(event)
 
   const id = Number(getQuery(event).id)
-  if (!id) throw createError({ statusCode: 400, statusMessage: '缺少 id 参数' })
+  if (!id) throw createError({ statusCode: 400, message: '缺少 id 参数' })
 
   // 仅允许下载自己的文件
   const file = await db.query.files.findFirst({
     where: and(eq(schema.files.id, id), eq(schema.files.userId, user.id), isNull(schema.files.deletedAt)),
   })
-  if (!file) throw createError({ statusCode: 404, statusMessage: '文件不存在或无权限' })
+  if (!file) throw createError({ statusCode: 404, message: '文件不存在或无权限' })
 
   const absolutePath = resolve(UPLOAD_ROOT, file.path.replace(/^\/+/, ''))
   if (!absolutePath.startsWith(UPLOAD_ROOT + '/')) {
-    throw createError({ statusCode: 403, statusMessage: '禁止的路径访问' })
+    throw createError({ statusCode: 403, message: '禁止的路径访问' })
   }
 
   try {
@@ -38,7 +38,7 @@ export default eventHandler(async (event) => {
       access(absolutePath, (err) => err ? reject(err) : resolve())
     })
   } catch {
-    throw createError({ statusCode: 404, statusMessage: '文件不存在' })
+    throw createError({ statusCode: 404, message: '文件不存在' })
   }
 
   const ext = extname(file.path).toLowerCase()

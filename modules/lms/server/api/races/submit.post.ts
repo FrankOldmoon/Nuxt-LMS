@@ -26,7 +26,9 @@ export default eventHandler(async (event) => {
   const rConfig = config.race
 
   // 计算经验值（按排名需要在 race 结束后统一计算，这里给参与经验）
-  const gainedExp = rConfig.participateExp || rConfig.participationExp || 0
+  // 仅首次提交给参与经验，重复提交不再给
+  const participationExp = rConfig.participateExp || rConfig.participationExp || 0
+  let gainedExp = 0
 
   const existing = await db.query.userRaces.findFirst({
     where: and(
@@ -38,7 +40,7 @@ export default eventHandler(async (event) => {
 
   try {
     if (existing) {
-      // 已有记录：取最高分
+      // 已有记录：取最高分，不再给参与经验
       const prevScore = Number(existing.score) || 0
       const bestScore = Math.max(prevScore, score)
       await db.update(schema.userRaces).set({
@@ -53,6 +55,8 @@ export default eventHandler(async (event) => {
         await addCourseScore(user.id, courseId, score - prevScore, 'raceScore', 0)
       }
     } else {
+      // 新记录：给参与经验
+      gainedExp = participationExp
       await db.insert(schema.userRaces).values({
         userId: user.id,
         courseId,

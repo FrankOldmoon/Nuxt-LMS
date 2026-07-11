@@ -103,7 +103,7 @@ export async function getCurrentUser(event: any): Promise<AuthUser | null> {
 export async function requireAuth(event: any): Promise<AuthUser> {
   const user = await getCurrentUser(event)
   if (!user) {
-    throw createError({ statusCode: 401, statusMessage: '请先登录' })
+    throw createError({ statusCode: 401, message: '请先登录' })
   }
   return user
 }
@@ -115,7 +115,7 @@ export async function requireRole(event: any, roleCodes: string[]): Promise<Auth
   const user = await requireAuth(event)
   const hasRole = roleCodes.some((code) => user.roles.includes(code))
   if (!hasRole) {
-    throw createError({ statusCode: 403, statusMessage: '无权限执行此操作' })
+    throw createError({ statusCode: 403, message: '无权限执行此操作' })
   }
   return user
 }
@@ -127,7 +127,7 @@ export async function requirePermission(event: any, permCodes: string[]): Promis
   const user = await requireAuth(event)
   const hasPerm = permCodes.some((code) => user.permissions.includes(code))
   if (!hasPerm) {
-    throw createError({ statusCode: 403, statusMessage: '无权限执行此操作' })
+    throw createError({ statusCode: 403, message: '无权限执行此操作' })
   }
   return user
 }
