@@ -12,6 +12,7 @@
 
     <ChapterBtns />
     <ClassUserCard />
+    <!-- {{ isLoggedIn }}:{{ chapterTask }}:{{ totalHeadings }} -->
 
     <!-- 章节学习进度（heading 汇总）- 仅登录用户显示 -->
     <div v-if="isLoggedIn && chapterTask && totalHeadings > 0" class="pt-4 my-4 border-t border-default">
@@ -69,10 +70,11 @@
 <script setup lang="ts">
 const { hasRole, user } = useAuth()
 const { isCourseEditor } = useAuthLms()
+const route = useRoute()
 const toast = useToast()
 const { t } = useI18n()
 const nuxtApp = useNuxtApp()
-
+const chapterId = computed(() => route.params.cid as string)
 const ueditorRef = ref()
 const editModalOpen = ref(false)
 const saving = ref(false)
@@ -212,9 +214,9 @@ const canEditContent = computed(() => {
 
 async function handleSave(content: Record<string, any>) {
   const json = content?.json ?? content
-  await cRequest(`/api/${editableTable.value}/update`, {
+  await cRequest(`/api/chapters/update`, {
     method: 'POST',
-    body: { id: editableId.value, content: json },
+    body: { id: chapterId.value, content: json },
   })
   return 1
 }
