@@ -78,6 +78,8 @@ const props = defineProps({
     editor: { type: Object, default: null },
     // 编辑器是否只读（被他人锁定时隐藏 AI 按钮）
     readonly: { type: Boolean, default: false },
+    // 是否允许 AI 生成时插入 question 题目块（仅 showInsert 时为 true）
+    canInsertQuestion: { type: Boolean, default: false },
 })
 
 const { t } = useI18n()
@@ -285,7 +287,7 @@ async function onGenerate() {
         const messages = [
             {
                 role: 'system',
-                content: buildDocumentPrompt(),
+                content: buildDocumentPrompt(props.canInsertQuestion),
             },
             { role: 'user', content: text },
         ]

@@ -34,22 +34,26 @@ const { t } = useI18n()
 // 正则模式字符串
 const regexPattern = ref('')
 
-// 初始化
-function initRegex() {
-  const ans = props.form.answer
+// form.answer → regexPattern（初始化 + 响应外部变更，如 AI 生成）
+watch(() => props.form.answer, (ans) => {
+  let val = ''
   if (Array.isArray(ans) && ans.length && typeof ans[0] === 'string') {
-    regexPattern.value = ans[0]
+    val = ans[0]
   } else if (typeof ans === 'string') {
-    regexPattern.value = ans
-  } else {
-    regexPattern.value = ''
+    val = ans
   }
-}
-initRegex()
+  if (val !== regexPattern.value) {
+    regexPattern.value = val
+  }
+}, { immediate: true })
 
-// 同步到 form.answer（存储为 [regexString]）
+// regexPattern → form.answer（存储为 [regexString]）
 watch(regexPattern, (val) => {
-  props.form.answer = [val || '']
+  const newVal = [val || '']
+  const current = props.form.answer
+  // 值相同时跳过，避免与 form.answer → regexPattern 的 watch 形成反馈环
+  if (Array.isArray(current) && current.length === 1 && current[0] === newVal[0]) return
+  props.form.answer = newVal
   props.form.options = []
 }, { immediate: true })
 

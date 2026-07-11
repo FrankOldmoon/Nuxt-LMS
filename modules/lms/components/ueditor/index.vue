@@ -3,13 +3,13 @@
         <umo-editor v-bind="options" ref="editorRef" @changed="onChanged" @created="onCreated" @paste="onPaste">
         </umo-editor>
         <div ref="cinsertsWrapper" v-show="false">
-            <Cinserts v-if="canEdit" :editor="editorRef" />
+            <Cinserts v-if="canInsert" :editor="editorRef" />
         </div>
 
         <UeditorWs v-if="lockId" :lock-id="lockId" @update:readonly="onLockUpdate" />
 
         <!-- teacher 可见的 AI 生成悬浮按钮（右下角） -->
-        <AiFloat :editor="editorRef" :readonly="isReadonly" />
+        <AiFloat :editor="editorRef" :readonly="isReadonly" :can-insert-question="canInsert" />
     </client-only>
 </template>
 
@@ -58,7 +58,7 @@ const effectiveCourseId = computed(() => {
     }
     return Number(route.params.id) || 0
 })
-const canEdit = computed(() => {
+const canInsert = computed(() => {
     if (!props.showInsert) return false
     if (hasRole('admin') || hasRole('teacher')) return true
     return effectiveCourseId.value ? isCourseEditor(effectiveCourseId.value) || isCourseTeacher(effectiveCourseId.value) : false

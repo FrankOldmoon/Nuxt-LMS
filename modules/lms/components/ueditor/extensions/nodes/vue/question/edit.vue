@@ -255,6 +255,10 @@ const saveMsg = ref('')
 const saveOk = ref(true)
 const form = ref(null)
 let originalData = null
+// 实时预览控制：initForm 期间跳过同步，避免初始化赋值触发不必要的 render 更新
+let skipPreviewSync = false
+// Modal 模式：标记是否通过 save 关闭（取消关闭时需还原 props.question）
+let justSaved = false
 
 // ── JSON 原始数据编辑器（高级） ──
 const showJsonEditor = ref(false)
@@ -356,6 +360,8 @@ provide('questionForm', form)
 
 // 初始化 form
 function initForm() {
+  // 初始化期间跳过实时预览同步，避免 form 赋值触发不必要的 render 更新
+  skipPreviewSync = true
   if (!props.question) {
     form.value = {
       name: '',
@@ -369,6 +375,7 @@ function initForm() {
       record: [],
     }
     originalData = JSON.parse(JSON.stringify(form.value))
+    nextTick(() => { skipPreviewSync = false })
     return
   }
   const normalized = {
@@ -385,7 +392,22 @@ function initForm() {
   }
   form.value = normalized
   originalData = JSON.parse(JSON.stringify(normalized))
+  nextTick(() => { skipPreviewSync = false })
 }
+
+// 实时预览：form 可编辑字段变化时同步到 props.question，使 render 区实时反映编辑内容
+watch(form, (newForm) => {
+  if (skipPreviewSync || !newForm || !props.question) return
+  const q = props.question
+  q.name = newForm.name
+  q.type = newForm.type
+  q.point = newForm.point
+  q.content = newForm.content
+  q.options = newForm.options
+  q.answer = newForm.answer
+  q.explanation = newForm.explanation
+  q.tags = newForm.tags
+}, { deep: true })
 
 function onTypeChange() {
   if (!form.value) return
@@ -526,8 +548,9 @@ async function saveQuestion() {
     saveOk.value = true
     saveMsg.value = t('question.saveSuccess')
     originalData = JSON.parse(JSON.stringify(form.value))
-    // Modal 模式：关闭弹窗
+    // Modal 模式：标记已保存后关闭弹窗（取消关闭时据此跳过还原）
     if (isModal.value) {
+      justSaved = true
       open.value = false
     }
   } catch (err) {
@@ -540,8 +563,23 @@ async function saveQuestion() {
 
 // Modal 模式：弹窗打开时初始化 form
 watch(open, (val) => {
-  if (val) initForm()
-  else {
+  if (val) {
+    justSaved = false
+    initForm()
+  } else {
+    // 取消关闭（未保存）：把实时预览写回 props.question 的变更还原到原始状态
+    if (!justSaved && originalData && props.question) {
+      const q = props.question
+      q.name = originalData.name
+      q.type = originalData.type
+      q.point = originalData.point
+      q.content = Array.isArray(originalData.content) ? JSON.parse(JSON.stringify(originalData.content)) : originalData.content
+      q.options = originalData.options != null ? JSON.parse(JSON.stringify(originalData.options)) : []
+      q.answer = Array.isArray(originalData.answer) ? [...originalData.answer] : []
+      q.explanation = originalData.explanation || ''
+      q.tags = Array.isArray(originalData.tags) ? [...originalData.tags] : []
+    }
+    justSaved = false
     form.value = null
     saveMsg.value = ''
   }

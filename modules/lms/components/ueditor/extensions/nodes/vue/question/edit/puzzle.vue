@@ -54,22 +54,30 @@ const config = ref({
   split: 3,
 })
 
-function initConfig() {
-  const opts = props.form.options
+// form.options → config（初始化 + 响应外部变更，如 AI 生成）
+watch(() => props.form.options, (opts) => {
+  let val = { url: '', split: 3 }
   if (opts && typeof opts === 'object' && !Array.isArray(opts)) {
-    config.value = {
+    val = {
       url: opts.url || '',
       split: Number(opts.split) || 3,
     }
   }
-}
-initConfig()
+  if (JSON.stringify(val) !== JSON.stringify(config.value)) {
+    config.value = val
+  }
+}, { immediate: true })
 
 const splitHint = computed(() => t('question.puzzleSplitHint', { n: config.value.split * config.value.split }))
 
 // config 变化时同步到 form.options 和 form.answer
 watch(config, (val) => {
-  props.form.options = { url: val.url, split: val.split }
+  const newOpts = { url: val.url, split: val.split }
+  const curOpts = props.form.options
+  // 值相同时跳过，避免反馈环
+  if (curOpts && typeof curOpts === 'object' && !Array.isArray(curOpts) &&
+    curOpts.url === newOpts.url && Number(curOpts.split) === newOpts.split) return
+  props.form.options = newOpts
   const n = val.split * val.split
   props.form.answer = Array.from({ length: n }, (_, i) => i)
 }, { deep: true, immediate: true })

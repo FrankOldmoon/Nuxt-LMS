@@ -43,22 +43,29 @@ const props = defineProps({
 // pairs: [{ left: '左', right: '右' }]
 const pairs = ref([])
 
-function initPairs() {
-    const opts = props.form.options
+// form.options → pairs（初始化 + 响应外部变更，如 AI 生成）
+watch(() => props.form.options, (opts) => {
+    let val
     if (Array.isArray(opts) && opts.length && typeof opts[0] === 'object' && 'left' in opts[0]) {
-        pairs.value = opts.map(p => ({ left: p.left || '', right: p.right || '' }))
+        val = opts.map(p => ({ left: p.left || '', right: p.right || '' }))
     } else {
-        pairs.value = [
+        val = [
             { left: '', right: '' },
             { left: '', right: '' },
         ]
     }
-}
-initPairs()
+    if (JSON.stringify(val) !== JSON.stringify(pairs.value)) {
+        pairs.value = val
+    }
+}, { immediate: true })
 
 // pairs 变化时同步到 form.options 和 form.answer
 watch(pairs, (val) => {
-    props.form.options = val.map(p => ({ left: p.left, right: p.right }))
+    const newOpts = val.map(p => ({ left: p.left, right: p.right }))
+    const curOpts = props.form.options
+    // 值相同时跳过，避免反馈环
+    if (JSON.stringify(newOpts) === JSON.stringify(curOpts)) return
+    props.form.options = newOpts
     props.form.answer = val.map((_, i) => i)
 }, { deep: true, immediate: true })
 

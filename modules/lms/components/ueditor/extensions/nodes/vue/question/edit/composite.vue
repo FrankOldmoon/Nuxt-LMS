@@ -98,16 +98,17 @@ function getSubEditor(type) {
 // 子题列表（存储在 form.content 中）
 const subQuestions = ref([])
 
-function initSubQuestions() {
-  const content = props.form.content
-  if (Array.isArray(content)) {
-    subQuestions.value = content
-  } else {
-    subQuestions.value = []
-    props.form.content = subQuestions.value
+// form.content → subQuestions（初始化 + 响应外部变更，如 AI 生成）
+watch(() => props.form.content, (content) => {
+  const val = Array.isArray(content) ? content : []
+  if (val !== subQuestions.value) {
+    subQuestions.value = val
   }
-}
-initSubQuestions()
+  // content 不是数组时，同步空数组到 form（保持引用一致）
+  if (!Array.isArray(props.form.content)) {
+    props.form.content = val
+  }
+}, { immediate: true })
 
 // 总分
 const totalPoint = computed(() => {
@@ -124,8 +125,10 @@ watch([subQuestions, totalPoint], () => {
     (sub.tags || []).forEach(tag => allTags.add(tag))
   })
   props.form.tags = Array.from(allTags)
-  // content 保持引用同步
-  props.form.content = subQuestions.value
+  // content 保持引用同步（相同时跳过，避免反馈环）
+  if (props.form.content !== subQuestions.value) {
+    props.form.content = subQuestions.value
+  }
 }, { deep: true, immediate: true })
 
 function addSub() {
