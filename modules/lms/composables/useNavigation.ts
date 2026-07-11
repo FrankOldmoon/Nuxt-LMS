@@ -59,40 +59,26 @@ export function useHome() {
  * 数据来自 useHome() —— 通过 useState 共享同一份数据
  */
 export function useHeaderNav() {
-  const { data, refresh } = useHome()
+  const { refresh } = useHome()
+  const { categories, getCoursesByCategory } = useHomeCourses()
 
   const links = computed<NavigationMenuItem[]>(() => {
-    const home = data.value
     const base: NavigationMenuItem = { label: 'Home', icon: 'i-lucide-home', to: '/' }
-    if (!home || !home.categories.length) return [base]
+    if (!categories.value.length) return [base]
 
     return [
       base,
-      ...home.categories.map<NavigationMenuItem>((cat) => {
-        const catCourses = home.courses.filter((c) => c.categoryId === cat.id)
-        let orderedCourses = catCourses
-
-        // 如果分类有 orders 配置，按 orders 中的 order 排序显示
-        if (cat.orders && cat.orders.length > 0) {
-          const courseMap = new Map(catCourses.map((c) => [String(c.id), c]))
-          const sorted = [...cat.orders].sort((a, b) => a.order - b.order)
-          orderedCourses = sorted
-            .filter((o) => courseMap.has(o.id))
-            .map((o) => courseMap.get(o.id)!)
-        }
-
-        return {
-          label: cat.title,
-          icon: cat.icon,
-          _meta: { type: 'category', id: String(cat.id) },
-          children: orderedCourses.map((c) => ({
-            label: c.title,
-            to: `/course/${c.id}`,
-            icon: c.icon,
-            _meta: { type: 'course', id: String(c.id) },
-          })),
-        }
-      }),
+      ...categories.value.map<NavigationMenuItem>((cat) => ({
+        label: cat.title,
+        icon: cat.icon,
+        _meta: { type: 'category', id: String(cat.id) },
+        children: getCoursesByCategory(cat.id).map((c) => ({
+          label: c.title,
+          to: `/course/${c.id}`,
+          icon: c.icon,
+          _meta: { type: 'course', id: String(c.id) },
+        })),
+      })),
     ]
   })
 
