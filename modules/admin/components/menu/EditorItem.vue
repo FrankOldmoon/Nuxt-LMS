@@ -38,41 +38,15 @@
     />
 
     <!-- 操作按钮组 -->
-    <div class="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-      <UButton
-        icon="i-lucide-pencil"
-        variant="ghost"
-        size="xs"
-        color="primary"
-        :title="t('admin.menu.editItem')"
-        @click.stop="$emit('openEdit', index)"
-      />
-      <UButton
-        v-if="item.depth < maxDepth"
-        icon="i-lucide-plus"
-        variant="ghost"
-        size="xs"
-        color="primary"
-        :title="t('admin.menu.addChild')"
-        @click.stop="$emit('addChild', index)"
-      />
-      <UButton
-        icon="i-lucide-list-plus"
-        variant="ghost"
-        size="xs"
-        color="primary"
-        :title="t('admin.menu.addSibling')"
-        @click.stop="$emit('addSibling', index)"
-      />
-      <UButton
-        icon="i-lucide-trash-2"
-        variant="ghost"
-        size="xs"
-        color="error"
-        :title="t('admin.menu.delete')"
-        @click.stop="$emit('delete', index)"
-      />
-    </div>
+    <MenuEditorItemActions
+      :item="item"
+      :index="index"
+      :max-depth="maxDepth"
+      @open-edit="$emit('openEdit', $event)"
+      @add-child="$emit('addChild', $event)"
+      @add-sibling="$emit('addSibling', $event)"
+      @delete="$emit('delete', $event)"
+    />
   </div>
 </template>
 
