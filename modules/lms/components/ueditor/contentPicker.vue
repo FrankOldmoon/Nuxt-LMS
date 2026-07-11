@@ -252,14 +252,12 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'confirm'])
 
 const { t } = useI18n()
-const { editableCourseId } = useLayoutState()
+const { courseId } = useLmsContext()
 const toast = useToast()
 
 // race / chatroom 已迁回 doc 模块，组件始终可用；
 // moduleLms 仅控制是否在 UI 中显示 race 相关选项（无 lms 时无班级概念）
 const { moduleLms } = useRuntimeConfig().public
-
-const courseId = computed(() => editableCourseId.value)
 
 const open = computed({
     get: () => props.modelValue,

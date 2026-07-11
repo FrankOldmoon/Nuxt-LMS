@@ -62,6 +62,6 @@ export default eventHandler(async (event) => {
     return cResp({ gainedExp })
   } catch (error: any) {
     console.error('提交作业失败:', error)
-    return cResp(null, error.statusMessage || '提交失败', false)
+    return cResp(null, error.message || '提交失败', false)
   }
 })

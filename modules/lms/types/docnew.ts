@@ -68,6 +68,8 @@ export interface LmsChapterDetail {
   taskStatus?: Record<string, boolean>
   /** 当前用户是否已完成本章全部任务 */
   isPass?: boolean
+  /** 用户章节记录（tiptap JSON，AI 生成内容 + 用户编辑） */
+  record?: any
 }
 
 /** 章节页面数据（章节 + 所属课程含章节列表用于导航） */

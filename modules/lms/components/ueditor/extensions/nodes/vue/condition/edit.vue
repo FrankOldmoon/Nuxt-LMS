@@ -36,7 +36,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:config', 'close'])
 const { t } = useI18n()
-const { editableId } = useLayoutState()
+const { chapterId } = useLmsContext()
 
 const chapterTaskIds = ref({ questionIds: [], homeworkIds: [], commentIds: [], quizIds: [], raceIds: [] })
 
@@ -80,9 +80,9 @@ function extractVueNodeIds(content, type) {
 }
 
 async function loadChapterTasks() {
-    if (!editableId.value) return
+    if (!chapterId.value) return
     try {
-        const data = await cRequest(`/api/chapters/show?id=${editableId.value}`)
+        const data = await cRequest(`/api/chapters/show?id=${chapterId.value}`)
         if (data?.chapter) {
             // quizIds 已在 schema 中（但 extractIds 尚未提取），raceIds 无 schema 字段
             // 两者均从 chapter content 中客户端提取

@@ -282,7 +282,7 @@ export default eventHandler(async (event) => {
     return cResp(result)
   } catch (error: any) {
     console.error('课程导入失败:', error)
-    return cResp(null, error.statusMessage || error.message || '导入失败', false)
+    return cResp(null, error.message || error.message || '导入失败', false)
   }
 })
 

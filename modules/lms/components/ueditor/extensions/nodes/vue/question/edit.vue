@@ -199,6 +199,7 @@ import ShortAnswerEditor from './edit/short-answer.vue'
 import MatchEditor from './edit/match.vue'
 import CompositeEditor from './edit/composite.vue'
 import VideoEditor from './edit/video.vue'
+import EvaluationEditor from './edit/evaluation.vue'
 import AiGenerator from './edit/ai-generator.vue'
 // 各题型的英文出题说明
 import { promptFor } from './edit/prompts.js'
@@ -223,9 +224,9 @@ const open = computed({
 })
 
 const { t } = useI18n()
-const { editableCourseId } = useLayoutState()
-// 可选 courseId prop 覆盖全局 editableCourseId（admin 后台复用时传入）
-const effectiveCourseId = computed(() => props.courseId || editableCourseId.value)
+const { courseId: ctxCourseId } = useLmsContext()
+// 可选 courseId prop 覆盖全局 courseId（admin 后台复用时传入）
+const effectiveCourseId = computed(() => props.courseId || ctxCourseId.value)
 const toast = useToast()
 
 const typeOptions = computed(() => [
@@ -242,10 +243,11 @@ const typeOptions = computed(() => [
   { label: t('question.typeMatch'), value: 'match' },
   { label: t('question.typeComposite'), value: 'composite' },
   { label: t('question.typeVideo'), value: 'video' },
+  { label: t('question.typeEvaluation'), value: 'evaluation' },
 ])
 
 // 题型 → 组件映射
-const componentMap = { single: SingleEditor, judge: JudgeEditor, multiple: MultipleEditor, fill: FillEditor, select: SelectEditor, sort: SortEditor, classify: ClassifyEditor, puzzle: PuzzleEditor, html: HtmlEditor, 'short-answer': ShortAnswerEditor, match: MatchEditor, composite: CompositeEditor, video: VideoEditor }
+const componentMap = { single: SingleEditor, judge: JudgeEditor, multiple: MultipleEditor, fill: FillEditor, select: SelectEditor, sort: SortEditor, classify: ClassifyEditor, puzzle: PuzzleEditor, html: HtmlEditor, 'short-answer': ShortAnswerEditor, match: MatchEditor, composite: CompositeEditor, video: VideoEditor, evaluation: EvaluationEditor }
 const typeComponent = computed(() => componentMap[form.value?.type] || null)
 
 const saving = ref(false)
@@ -446,6 +448,11 @@ function onTypeChange() {
       break
     case 'video':
       form.value.options = { src: '', questions: [] }
+      form.value.answer = []
+      form.value.content = ''
+      break
+    case 'evaluation':
+      form.value.options = { goal: '', threshold: 0.8 }
       form.value.answer = []
       form.value.content = ''
       break

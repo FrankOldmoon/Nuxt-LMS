@@ -2,7 +2,7 @@
     <div class="relative w-full">
         <UModal v-model:open="isModalOpen" fullscreen scrollable>
             <UButton v-show="false" />
-            <template #content>
+            <template #body>
                 <div class="p-6 space-y-4 min-w-[700px]">
                     <h2 class="text-lg font-semibold">{{ t('richEditor.title') }}</h2>
                     <ueditor v-model="editJson" :pasteable="pasteable" class="min-h-[300px] border rounded-md" />
@@ -22,14 +22,18 @@
                 :aria-label="t('richEditor.openEditor')" @click="openEditor" />
         </div>
 
-        <!-- JSON 模式：渲染富文本（只读） + 右上角半透明输入按钮 -->
-        <div v-if="isJson" class="relative border rounded-md p-3 min-h-[72px] cursor-pointer">
-            <div @click="openEditor">
-                <ueditorRender :json="model" />
+        <!-- JSON 模式：渲染富文本（可交互） + 右上角编辑按钮（弹 modal 编辑） -->
+        <div v-if="isJson" class="relative border rounded-md p-3 min-h-[72px]">
+            <ueditorRender :json="model" />
+            <div class="absolute top-0 right-0 flex items-center gap-1 z-10">
+                <UButton icon="i-heroicons-pencil-square" variant="ghost" size="sm"
+                    class="opacity-50 hover:opacity-100 transition-opacity"
+                    :aria-label="t('richEditor.openEditor')" @click="openEditor" />
+                <UButton v-if="allowTextMode" icon="i-heroicons-book-open" variant="ghost" size="sm"
+                    class="opacity-50 hover:opacity-100 transition-opacity"
+                    :aria-label="t('richEditor.switchToText')"
+                    @click="switchToTextMode" />
             </div>
-            <UButton icon="i-heroicons-book-open" variant="ghost" size="sm"
-                class="absolute top-0 right-0 opacity-50 hover:opacity-100 transition-opacity z-10" :aria-label="t('richEditor.switchToText')"
-                @click="switchToTextMode" />
         </div>
     </div>
 </template>
@@ -43,6 +47,10 @@ const model = defineModel<string | Record<string, any>>({ default: '' })
 
 defineProps({
     pasteable: {
+        type: Boolean,
+        default: true,
+    },
+    allowTextMode: {
         type: Boolean,
         default: true,
     },

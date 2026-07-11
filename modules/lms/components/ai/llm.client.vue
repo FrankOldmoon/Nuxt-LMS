@@ -98,6 +98,7 @@
 
         <!-- 聊天界面（核心） -->
         <aiChatbox
+            ref="chatboxRef"
             :title="chatboxTitle"
             :opening="chatboxOpening"
             :preset="chatboxPreset"
@@ -110,6 +111,7 @@
             height-class="h-[200px] sm:h-[450px]"
             @chunk="(c) => emit('chunk', c)"
             @user-message="(txt) => emit('user-message', txt)"
+            @message="(msg) => emit('message', msg)"
         />
     </div>
 </template>
@@ -124,6 +126,7 @@ const toast = useToast()
 const emit = defineEmits<{
     chunk: [content: string]
     'user-message': [text: string]
+    message: [msg: any]
 }>()
 
 const props = withDefaults(defineProps<{
@@ -151,6 +154,17 @@ const props = withDefaults(defineProps<{
 // ===================== lms_config.ai 配置（全局或课程级） =====================
 const { aiConfig: globalAi } = useAiConfig()
 const aiCfg = computed(() => props.aiConfig ?? globalAi.value ?? {})
+
+const chatboxRef = ref<any>(null)
+
+defineExpose({
+    refreshMessages() {
+        chatboxRef.value?.refreshMessages()
+    },
+    getMessages() {
+        return chatboxRef.value?.getMessages()
+    },
+})
 
 // ===================== 可编辑配置（仅 showSettings 时使用，从 prop > lms_config > 硬编码 初始化） =====================
 const cfgMode = ref<'local' | 'api' | 'ollama'>(props.mode ?? aiCfg.value.mode ?? DEFAULT_LLM_MODE)

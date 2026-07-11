@@ -103,6 +103,6 @@ export default eventHandler(async (event) => {
     return cResp({ items, total, page: pageNum, pageSize: size })
   } catch (error: any) {
     console.error('错题本查询失败:', error)
-    return cResp(null, error.statusMessage || '查询错题失败', false)
+    return cResp(null, error.message || '查询错题失败', false)
   }
 })

@@ -50,7 +50,7 @@
 
         <template #body>
           <div class="p-4 min-w-[480px]">
-            <ueditor v-model="editableContent" :save-handler="handleSave" :lock-id="lockId" ref="ueditorRef" :show-insert="true" />
+            <ueditor v-model="chapterContent" :save-handler="handleSave" :lock-id="lockId" ref="ueditorRef" :show-insert="true" />
           </div>
         </template>
         <template #footer>
@@ -62,7 +62,7 @@
       </UModal>
 
       <!-- 历史记录 -->
-      <ChapterHistoryModal :table="editableTable" :id="editableId" />
+      <ChapterHistoryModal :table="'chapters'" :id="chapterId" />
     </div>
   </div>
 </template>
@@ -70,22 +70,20 @@
 <script setup lang="ts">
 const { hasRole, user } = useAuth()
 const { isCourseEditor } = useAuthLms()
-const route = useRoute()
 const toast = useToast()
 const { t } = useI18n()
-const nuxtApp = useNuxtApp()
-const chapterId = computed(() => route.params.cid as string)
 const ueditorRef = ref()
 const editModalOpen = ref(false)
 const saving = ref(false)
 
-const { tocLinks, editableContent, editableTable, editableId, editableCourseId, notifyContentSaved, chapterBtnsConfig } = useLayoutState()
+const { tocLinks, chapterContent, notifyContentSaved, chapterBtnsConfig } = useLayoutState()
+const { chapterId, courseId } = useLmsContext()
 const { playFullscreen, togglePlay } = useChapterBtns()
 
 // lms 公开配置：chapterPage.enableFullscreen 控制播放按钮显隐
 const { chapterPage: chapterPageCfg } = useLmsPublicConfig()
 
-const lockId = computed(() => editableTable.value && editableId.value ? `${editableTable.value}_${editableId.value}` : null)
+const lockId = computed(() => chapterId.value ? `chapters_${chapterId.value}` : null)
 
 // ── 登录状态 ──
 const isLoggedIn = computed(() => !!user.value)
@@ -207,9 +205,7 @@ onBeforeUnmount(() => {
 // ── 内容编辑权限 ──
 const canEditContent = computed(() => {
   if (hasRole('admin')) return true
-  if (editableTable.value === 'courses') return isCourseEditor(editableId.value)
-  if (editableTable.value === 'chapters') return isCourseEditor(editableCourseId.value)
-  return false
+  return isCourseEditor(courseId.value)
 })
 
 async function handleSave(content: Record<string, any>) {
@@ -224,16 +220,7 @@ async function handleSave(content: Record<string, any>) {
 async function handleSaveClick() {
   saving.value = true
   try {
-    await handleSave(editableContent.value)
-
-    const table = editableTable.value
-    const id = editableId.value
-    const courseId = editableCourseId.value
-    for (const key of Object.keys(nuxtApp.payload.data)) {
-      if (key.includes(`/${table}/show`) || key.includes(`course_id=${courseId}`) || key.includes(`id=${id}`)) {
-        delete nuxtApp.payload.data[key]
-      }
-    }
+    await handleSave(chapterContent.value)
 
     toast.add({ title: t('layout.saveSuccess'), color: 'success' })
     editModalOpen.value = false

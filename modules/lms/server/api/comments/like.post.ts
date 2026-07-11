@@ -45,6 +45,6 @@ export default eventHandler(async (event) => {
     }
   } catch (error: any) {
     console.error('点赞失败:', error)
-    return cResp(null, error.statusMessage || '操作失败', false)
+    return cResp(null, error.message || '操作失败', false)
   }
 })

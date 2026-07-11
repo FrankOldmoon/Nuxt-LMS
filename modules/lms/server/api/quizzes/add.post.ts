@@ -31,6 +31,6 @@ export default eventHandler(async (event) => {
     return cResp(result[0])
   } catch (error: any) {
     console.error('新增测验失败:', error)
-    return cResp(null, error.statusMessage || '新增失败', false)
+    return cResp(null, error.message || '新增失败', false)
   }
 })

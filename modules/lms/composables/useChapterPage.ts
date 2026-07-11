@@ -10,7 +10,7 @@ import type { ComputedRef } from 'vue'
  * 按钮配置、任务状态初始化等。
  */
 export function useChapterPage(chapterId: ComputedRef<string>, courseId: ComputedRef<string>) {
-  const { setToc, setEditableContent, setEditableMeta, contentVersion } = useLayoutState()
+  const { setToc, setChapterContent, contentVersion } = useLayoutState()
   const { navigation } = useSidebarNav()
 
   const { data: resp, pending, refresh, error } = cRequest.use<import('#lms/types/lms').LmsChapterPageData | null>(
@@ -22,9 +22,8 @@ export function useChapterPage(chapterId: ComputedRef<string>, courseId: Compute
 
   const notFound = computed(() => !!error.value)
 
-  // 数据变化时设置 TOC + 可编辑内容
-  // flush: 'sync' 确保在 SSR Suspense 恢复时同步执行，
-  // 避免嵌套 Suspense 子组件（如 question）渲染时 editableCourseId 仍为初始值 0
+  // 数据变化时设置 TOC + 章节内容
+  // flush: 'sync' 确保在 SSR Suspense 恢复时同步执行
   watch(resp, (d) => {
     if (!d) return
     const links = extractTocFromContent(d?.chapter?.content)
@@ -34,12 +33,19 @@ export function useChapterPage(chapterId: ComputedRef<string>, courseId: Compute
     } else {
       setToc(links)
     }
-    setEditableContent(d?.chapter?.content ?? null)
-    if (d?.chapter?.id) setEditableMeta('chapters', d.chapter.id, d.course.id)
+    setChapterContent(d?.chapter?.content ?? null)
   }, { immediate: true, flush: 'sync' })
 
   // 内容保存成功后重新获取数据
-  watch(contentVersion, () => refresh(), { flush: 'sync' })
+  // 清除 useFetch 的 payload/static 缓存（getCachedData 会回退到这些缓存返回旧数据），
+  // 用精确 key 清除后 refresh() 必然重新请求服务端
+  watch(contentVersion, () => {
+    const nuxtApp = useNuxtApp()
+    const key = `/api/chapters/show?id=${chapterId.value}`
+    delete nuxtApp.payload.data[key]
+    if (nuxtApp.static?.data) delete nuxtApp.static.data[key]
+    refresh()
+  }, { flush: 'sync' })
 
   // 扁平化侧边栏导航，得到按 orders 排序的线性列表（带序号前缀）
   const flatNav = computed(() => {

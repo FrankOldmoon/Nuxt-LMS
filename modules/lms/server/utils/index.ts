@@ -92,6 +92,7 @@ export function normalizeChapterDetail(ch: any, userChapter?: any): LmsChapterDe
   if (userChapter) {
     result.taskStatus = (userChapter.taskStatus as Record<string, boolean>) || {}
     result.isPass = !!userChapter.isPass
+    result.record = userChapter.record
   }
   return result
 }

@@ -12,6 +12,6 @@ export default eventHandler(async (event) => {
     return cResp(result)
   } catch (error: any) {
     console.error('新增分类失败:', error)
-    return cResp(null, error.statusMessage || '新增失败', false)
+    return cResp(null, error.message || '新增失败', false)
   }
 })

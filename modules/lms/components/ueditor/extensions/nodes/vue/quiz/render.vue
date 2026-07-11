@@ -170,7 +170,7 @@
 
         <!-- 记录弹窗（仅教师） -->
         <component v-if="moduleLms && isTeacher" :is="QuizRecordsModal" v-model="recordsOpen"
-            :course-id="editableCourseId" :cid="quizId"
+            :course-id="courseId" :cid="quizId"
             :quiz-point="quiz.point || 100" :questions="quizQuestions" />
 
         <!-- 编辑弹窗 -->
@@ -190,7 +190,7 @@ const props = defineProps({
 const emit = defineEmits(['saved'])
 
 const { t } = useI18n()
-const { editableCourseId } = useLayoutState()
+const { courseId } = useLmsContext()
 const { user, hasRole } = useAuth()
 const isLoggedIn = computed(() => !!user.value)
 const toast = useToast()
@@ -458,7 +458,7 @@ function startQuiz() {
     cRequest('/api/quizzes/submit', {
         method: 'POST',
         body: {
-            course_id: editableCourseId.value,
+            course_id: courseId.value,
             quiz_cid: quizId.value,
             records: [],
             start_only: true,
@@ -556,7 +556,7 @@ async function submitQuiz() {
         const result = await cRequest('/api/quizzes/submit', {
             method: 'POST',
             body: {
-                course_id: editableCourseId.value,
+                course_id: courseId.value,
                 quiz_cid: quizId.value,
                 records,
             },

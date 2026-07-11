@@ -15,7 +15,7 @@
  * setupNuxtStubs()
  * ```
  */
-import { ref, computed, reactive, watch, watchEffect, onMounted, onBeforeUnmount, onUnmounted, onBeforeMount, nextTick, getCurrentInstance } from 'vue'
+import { ref, computed, reactive, watch, watchEffect, onMounted, onBeforeUnmount, onUnmounted, onBeforeMount, nextTick, getCurrentInstance, toValue } from 'vue'
 
 // ===================== 1. Nuxt auto-imports =====================
 
@@ -82,7 +82,7 @@ export function useFetch(url: any, options: any = {}) {
       let resp: any
       // 优先用 _mockFetchHandler（可完整 mock 响应）
       if (_mockFetchHandler) {
-        resp = await _mockFetchHandler(url, options)
+        resp = await _mockFetchHandler(toValue(url), options)
       } else if (url === '/api/auth/me' && _mockAuthUser) {
         // 兼容旧的 _mockAuthUser 短路
         resp = {
@@ -139,7 +139,7 @@ export function setMockRuntimeConfig(cfg: any) {
 let _mockFetchHandler: ((url: string, options: any) => Promise<any>) | null = null
 export async function $fetch(url: any, options: any = {}): Promise<any> {
   if (_mockFetchHandler) {
-    return _mockFetchHandler(url, options)
+    return _mockFetchHandler(toValue(url), options)
   }
   // 默认返回 success 包裹格式
   return { data: null, success: true, msg: '' }
@@ -174,6 +174,67 @@ export async function navigateTo(to: any) {
   _mockRouter.push(to)
   return Promise.resolve()
 }
+
+/** useToast — Nuxt UI toast，测试中收集 add 调用便于断言 */
+const _toastCalls: any[] = []
+export function useToast() {
+  return {
+    add: (opts: any) => { _toastCalls.push(opts) },
+    remove: (_id: any) => {},
+    update: (_id: any, _opts: any) => {},
+  }
+}
+export function getToastCalls() { return _toastCalls }
+export function clearToastCalls() { _toastCalls.length = 0 }
+
+/** defineNuxtRouteMiddleware — 路由中间件定义，返回传入函数 */
+export function defineNuxtRouteMiddleware(fn: (to: any, from: any) => any) {
+  return fn
+}
+
+/** getRouterParam — 从 event.params 读取路由参数 */
+export function getRouterParam(event: any, name: string): string | undefined {
+  return event?.params?.[name]
+}
+
+/** useLayoutState — layout 共享状态（lms useChapterTask 用） */
+let _mockLayoutState: any = { notifyCourseNavUpdate: () => {} }
+export function useLayoutState() {
+  return _mockLayoutState
+}
+export function setMockLayoutState(state: any) {
+  _mockLayoutState = { ..._mockLayoutState, ...state }
+}
+
+/** provide / inject — Vue 依赖注入桩（useLmsContext 用，无组件上下文时用 Map 存储） */
+const _provideStore = new Map<any, any>()
+export function provide(key: any, value: any) {
+  _provideStore.set(key, value)
+}
+export function inject(key: any, defaultValue?: any) {
+  return _provideStore.has(key) ? _provideStore.get(key) : defaultValue
+}
+export function clearProvideStore() {
+  _provideStore.clear()
+}
+
+/** useLmsContext 桩 — 返回可配置的 courseId/chapterId computed refs */
+let _mockLmsCourseId = ref(0)
+let _mockLmsChapterId = ref(0)
+export function useLmsContext() {
+  return {
+    courseId: computed(() => _mockLmsCourseId.value),
+    chapterId: computed(() => _mockLmsChapterId.value),
+  }
+}
+export function setMockLmsContext(courseId: number, chapterId: number = 0) {
+  _mockLmsCourseId.value = courseId
+  _mockLmsChapterId.value = chapterId
+}
+
+/** provideLmsContext / provideLmsCourseId — 桩（测试中 no-op） */
+export function provideLmsContext(_courseId: any, _chapterId?: any) {}
+export function provideLmsCourseId(_courseId: any) {}
 
 /** createError */
 export function createError(opts: { statusCode?: number; statusMessage?: string; message?: string }) {
@@ -277,6 +338,11 @@ export function clearMeEnrichHandlers() {
   _meEnrichHandlers.length = 0
 }
 
+/** runOnUserImported 桩 — 用户导入后跨模块扩展钩子（空实现，不阻塞） */
+export async function runOnUserImported(_inserted: any[], _rawUsers: any[]): Promise<void> {
+  /* no-op stub */
+}
+
 /** useStorage (Nitro) */
 export function useStorage() {
   return {
@@ -284,6 +350,42 @@ export function useStorage() {
     setItem: async () => {},
     removeItem: async () => {},
   }
+}
+
+/** getSchemaTables 桩 — 返回可配置的表名列表（admin server utils/端点 auto-import） */
+let _mockSchemaTables: string[] = ['users', 'courses', 'chapters', 'questions', 'roles', 'permissions']
+export function getSchemaTables(): string[] {
+  return [..._mockSchemaTables].sort()
+}
+export function setMockSchemaTables(tables: string[]) {
+  _mockSchemaTables = [...tables]
+}
+
+/** getTableMeta 桩 — 返回可配置的表元数据（admin 端点 auto-import） */
+const _mockTableMetaStore: Record<string, any> = {}
+export function getTableMeta(tableName: string): any {
+  return _mockTableMetaStore[tableName] || {
+    name: tableName,
+    hasId: true,
+    compositePk: false,
+    readOnly: false,
+    labelColumn: 'name',
+    columns: [{ name: 'id', jsName: 'id', dataType: 'number', columnType: 'PgSerial', notNull: true, hasDefault: true, isPrimaryKey: true, isAutoIncrement: true, isTimestamp: false, isDeletedAt: false }],
+  }
+}
+export function setMockTableMeta(tableName: string, meta: any) {
+  _mockTableMetaStore[tableName] = meta
+}
+export function clearMockTableMeta() {
+  Object.keys(_mockTableMetaStore).forEach(k => delete _mockTableMetaStore[k])
+}
+
+/** validateTable 桩 — 校验表名在 mock schema 中，否则抛 400 */
+export function validateTable(tableName: string | undefined): string {
+  if (!tableName || !_mockSchemaTables.includes(tableName)) {
+    throw createError({ statusCode: 400, statusMessage: `无效的表名: ${tableName}` })
+  }
+  return tableName
 }
 
 // ===================== 2.5. base 模块 server utils 桩 =====================
@@ -334,6 +436,18 @@ export async function updateTable(_tableName: string, _id: number, _data: Record
 export async function batchTable(_tableName: string, _ids: number[], _action: any) {
   return undefined
 }
+export async function showTable(_tableName: string, id: number) {
+  return { id }
+}
+export async function listTablePaged(_tableName: string, query: any) {
+  return { data: [], total: 0, page: query?.page || 1, pageSize: query?.pageSize || 20, columns: [], meta: { name: _tableName, hasId: true, compositePk: false, columns: [], readOnly: false } }
+}
+export async function importTableRows(_tableName: string, rows: Record<string, any>[]) {
+  return { inserted: rows.length, errors: [] }
+}
+export async function exportTableRows(_tableName: string, _query?: any) {
+  return []
+}
 
 /** cResp — 统一响应包装（mock 版本） */
 export function cResp(data: any = null, msg: string = '', success: boolean = true) {
@@ -373,7 +487,7 @@ export function generateToken(): string {
 }
 
 /** requireAuth / requireRole / requireAdmin / requirePermission 桩 */
-let _mockAuthState: { id: number; username: string; roles: string[]; permissions: string[] } | null = null
+let _mockAuthState: { id: number; username: string; name: string; roles: string[]; permissions: string[] } | null = null
 export function setMockAuthState(state: typeof _mockAuthState) {
   _mockAuthState = state
 }
@@ -566,9 +680,18 @@ export async function cRequest<T = any>(url: string, options: any = {}): Promise
   return resp as T
 }
 
-/** 给 cRequest 加 .use 方法（composables 测试用） */
+/** 给 cRequest 加 .use 方法（composables 测试用） — 模拟真实 cRequest.use 的 transform 解包逻辑 */
 ;(cRequest as any).use = (url: any, options: any = {}) => {
-  return useFetch(url, options)
+  const { transform: customTransform, ...rest } = options
+  return useFetch(url, {
+    ...rest,
+    transform: (raw: any) => {
+      if (raw && typeof raw === 'object' && 'data' in raw && 'success' in raw) {
+        return customTransform ? customTransform(raw.data) : raw.data
+      }
+      return customTransform ? customTransform(raw) : raw
+    },
+  })
 }
 
 /** useAuth 桩 — 完整 mock（login/register/logout 走 cRequest，便于测试断言 API 调用） */
@@ -727,6 +850,27 @@ try {
   }
 } catch { /* ignore */ }
 
+// ===================== 4b. admin 模块 utils 桩 =====================
+
+/** 表个性化覆盖注册表（与 admin/utils/tableOverride.ts 同构） */
+const _tableOverrideRegistry: Record<string, any> = {}
+export function registerTableOverride(table: string, override: any) {
+  _tableOverrideRegistry[table] = { ..._tableOverrideRegistry[table], ...override }
+}
+export function clearTableOverrideRegistry() {
+  for (const k of Object.keys(_tableOverrideRegistry)) delete _tableOverrideRegistry[k]
+}
+export function useTableOverride(table: any) {
+  const name = computed(() => toValue(table))
+  const override = computed(() => _tableOverrideRegistry[name.value] || {})
+  return {
+    override,
+    hasFormOverride: computed(() => !!override.value.form),
+    hasShowOverride: computed(() => !!override.value.show),
+    hasDeleteOverride: computed(() => !!override.value.delete),
+  }
+}
+
 // ===================== 5. 初始化入口 =====================
 
 /** 全局 setup 入口 — composable 测试在 beforeEach 中调用 */
@@ -751,6 +895,7 @@ const _stubsToExpose: Record<string, any> = {
   onBeforeMount,
   nextTick,
   getCurrentInstance,
+  toValue,
   // Nuxt auto-imports
   useState,
   useRoute,
@@ -761,12 +906,9 @@ const _stubsToExpose: Record<string, any> = {
   useI18n,
   useRuntimeConfig,
   $fetch,
-  refreshNuxtData,
-  useHead,
-  useSeoMeta,
-  definePageMeta,
-  navigateTo,
+  refreshNuxtData, useHead, useSeoMeta, definePageMeta, navigateTo,
   createError,
+  useToast, defineNuxtRouteMiddleware, getRouterParam, useLayoutState,
   // Nitro auto-imports
   defineEventHandler,
   eventHandler,
@@ -783,6 +925,7 @@ const _stubsToExpose: Record<string, any> = {
   registerMeEnrich,
   runOnMeEnrich,
   clearMeEnrichHandlers,
+  runOnUserImported,
   cResp,
   hashPassword,
   verifyPassword,
@@ -810,6 +953,10 @@ const _stubsToExpose: Record<string, any> = {
   addTable,
   updateTable,
   batchTable,
+  showTable,
+  listTablePaged,
+  importTableRows,
+  exportTableRows,
   getLmsConfigSync,
   reloadLmsConfig,
   getCourseLmsConfig,
@@ -821,6 +968,13 @@ const _stubsToExpose: Record<string, any> = {
   buildLmsConfigPairs,
   getLastLmsPairs,
   useStorage,
+  getSchemaTables, setMockSchemaTables,
+  getTableMeta, setMockTableMeta, clearMockTableMeta,
+  validateTable,
+  // admin module utils
+  useTableOverride,
+  registerTableOverride,
+  clearTableOverrideRegistry,
   // base module utils
   cRequest,
   useAuth,
@@ -844,6 +998,8 @@ const _stubsToExpose: Record<string, any> = {
   dispatchWsHandler,
   clearMockWsHandlers,
   clearUseState,
+  getToastCalls, clearToastCalls,
+  setMockLayoutState,
   resetAllStubs,
 }
 
@@ -865,11 +1021,19 @@ export function resetAllStubs() {
   clearWsBroadcasts()
   clearWsSentToUser()
   clearMockLmsConfig()
+  clearToastCalls()
+  clearMockTableMeta()
+  clearTableOverrideRegistry()
   _mockAuthState = null
   _mockRefreshHandlers.clear()
   _mockQuery = {}
   _mockRoute = { params: {}, query: {}, path: '/', fullPath: '/' }
   _mockCookies = {}
+  _mockSchemaTables = ['users', 'courses', 'chapters', 'questions', 'roles', 'permissions']
+  _mockLayoutState = { notifyCourseNavUpdate: () => {} }
+  clearProvideStore()
+  _mockLmsCourseId.value = 0
+  _mockLmsChapterId.value = 0
   userPeers.clear()
   allPeers.clear()
 }

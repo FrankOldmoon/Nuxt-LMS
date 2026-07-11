@@ -27,7 +27,7 @@ const props = defineProps({
 const submitted = inject('questionSubmitted')
 const isCorrect = inject('questionIsCorrect')
 const fromRecord = inject('questionFromRecord')
-const { editableCourseId, editableId } = useLayoutState()
+const { courseId, chapterId } = useLmsContext()
 const selected = ref(-1)
 
 const hasAnswer = computed(() => selected.value >= 0)
@@ -76,8 +76,8 @@ function submit() {
     userAnswer: [selected.value],
     isCorrect: correct,
     correctRate: correct ? 1 : 0,
-        courseId: editableCourseId.value,
-        chapterId: editableId.value,
+        courseId: courseId.value,
+        chapterId: chapterId.value,
         point: props.question.point,
   })
   return { isCorrect: correct }

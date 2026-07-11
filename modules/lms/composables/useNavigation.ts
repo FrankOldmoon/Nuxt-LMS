@@ -269,13 +269,8 @@ export function indexNavItems(items: NavigationMenuItem[], prefix: string = '', 
 export function useLayoutState() {
   const route = useRoute()
   const tocLinks = useState<{ id: string; text: string; children?: any[] }[]>('layout-toc', () => [])
-  // 当前页面可编辑的内容（tiptap JSON），供 toc.vue 中的 ueditor 编辑
-  const editableContent = useState<any | null>('layout-editable-content', () => null)
-  // 可编辑内容对应的表名和记录标识（DB name 列），供保存时调用 update API
-  const editableTable = useState<string>('layout-editable-table', () => '')
-  const editableId = useState<number>('layout-editable-id', () => 0)
-  // 可编辑内容所属的课程 ID（章节编辑时需要此信息来判断编辑权限）
-  const editableCourseId = useState<number>('layout-editable-course-id', () => 0)
+  // 当前章节内容（tiptap JSON），供 toc.vue 中的 ueditor 编辑
+  const chapterContent = useState<any | null>('layout-chapter-content', () => null)
   // 内容版本号：保存成功后 +1，页面监听此值来刷新数据
   const contentVersion = useState<number>('layout-content-version', () => 0)
   // 页面可通过 setLayout 覆盖；null 表示使用路由默认值
@@ -305,16 +300,8 @@ export function useLayoutState() {
     tocLinks.value = links
   }
 
-  function setEditableContent(content: any | null) {
-    editableContent.value = content
-  }
-
-  function setEditableMeta(table: string, id: number, courseId?: number) {
-    editableTable.value = table
-    editableId.value = id
-    if (courseId !== undefined) {
-      editableCourseId.value = courseId
-    }
+  function setChapterContent(content: any | null) {
+    chapterContent.value = content
   }
 
   function notifyContentSaved() {
@@ -335,5 +322,5 @@ export function useLayoutState() {
     sidebarOverride.value = null
   })
 
-  return { tocLinks, editableContent, editableTable, editableId, editableCourseId, contentVersion, showSidebar, showDanmaku, chapterBtnsConfig, courseBtnsConfig, courseNavVersion, mobileTocOpen, setToc, setEditableContent, setEditableMeta, notifyContentSaved, notifyCourseNavUpdate, setLayout }
+  return { tocLinks, chapterContent, contentVersion, showSidebar, showDanmaku, chapterBtnsConfig, courseBtnsConfig, courseNavVersion, mobileTocOpen, setToc, setChapterContent, notifyContentSaved, notifyCourseNavUpdate, setLayout }
 }

@@ -102,7 +102,7 @@ const { t } = useI18n()
 const submitted = inject('questionSubmitted')
 const isCorrect = inject('questionIsCorrect')
 const fromRecord = inject('questionFromRecord')
-const { editableCourseId, editableId } = useLayoutState()
+const { courseId, chapterId } = useLmsContext()
 const chapterTask = useChapterTask()
 
 // ── 配置解析 ──
@@ -261,8 +261,8 @@ defineExpose({
                 userAnswer: [passed ? 1 : 0],
                 isCorrect: passed,
                 correctRate: passed ? 1 : 0,
-                courseId: editableCourseId.value,
-                chapterId: editableId.value,
+                courseId: courseId.value,
+                chapterId: chapterId.value,
                 point: props.question?.point,
             })
         })

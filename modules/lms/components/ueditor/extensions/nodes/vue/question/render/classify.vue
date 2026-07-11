@@ -67,7 +67,7 @@ const props = defineProps({
 const submitted = inject('questionSubmitted')
 const isCorrect = inject('questionIsCorrect')
 const fromRecord = inject('questionFromRecord')
-const { editableCourseId, editableId } = useLayoutState()
+const { courseId, chapterId } = useLmsContext()
 
 // 扁平化所有选项：[{ text, flatIndex, correctCat }]
 const flatItems = computed(() => {
@@ -203,8 +203,8 @@ function submit() {
     userAnswer: record,
     isCorrect: correct,
     correctRate: computeCorrectRate(props.question),
-    courseId: editableCourseId.value,
-    chapterId: editableId.value,
+    courseId: courseId.value,
+    chapterId: chapterId.value,
     point: props.question.point,
   })
   return { isCorrect: correct }

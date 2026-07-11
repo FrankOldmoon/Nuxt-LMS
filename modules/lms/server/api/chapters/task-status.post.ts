@@ -61,6 +61,6 @@ export default eventHandler(async (event) => {
     return cResp({ isPass, newMedals })
   } catch (error: any) {
     console.error('保存章节任务状态失败:', error)
-    return cResp(null, error.statusMessage || '保存失败', false)
+    return cResp(null, error.message || '保存失败', false)
   }
 })

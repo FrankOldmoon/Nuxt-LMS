@@ -141,7 +141,7 @@ const open = computed({
 })
 
 const { t } = useI18n()
-const { editableCourseId } = useLayoutState()
+const { courseId: effectiveCourseId } = useLmsContext()
 
 const saving = ref(false)
 const saveMsg = ref('')

@@ -15,6 +15,6 @@ export default eventHandler(async (event) => {
     return cResp(result, result.errors.length ? `已插入 ${result.inserted} 行，${result.errors.length} 行失败` : `已插入 ${result.inserted} 行`)
   } catch (error: any) {
     console.error('导入失败:', error)
-    return cResp(null, error.statusMessage || '导入失败', false)
+    return cResp(null, error.message || '导入失败', false)
   }
 })

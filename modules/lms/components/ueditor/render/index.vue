@@ -45,28 +45,16 @@ const props = defineProps({
 })
 
 // 透传 courseId 给子节点（provide 让深层 Vue 节点也能读取）
-const { editableCourseId, setEditableMeta } = useLayoutState()
+const { courseId: ctxCourseId } = useLmsContext()
 const effectiveCourseId = computed(() => {
   if (props.courseId !== undefined && props.courseId !== null && props.courseId !== '') {
     return Number(props.courseId) || 0
   }
-  return editableCourseId.value
+  return ctxCourseId.value
 })
 
-// 渲染期间临时设置 editableCourseId，确保子节点（特别是 useLayoutState 读取的）能拿到 courseId
-// 注意：onBeforeUnmount 时还原
-let prevCourseId = 0
-watch(effectiveCourseId, (v) => {
-  prevCourseId = editableCourseId.value
-  if (v) setEditableMeta('__render__', 0, v)
-}, { immediate: true })
-
-onBeforeUnmount(() => {
-  // 还原原值（其他页面/组件仍在使用 editableCourseId）
-  if (prevCourseId !== editableCourseId.value) {
-    setEditableMeta('__render__', 0, prevCourseId)
-  }
-})
+// provide 给子树（替代旧的 setEditableMeta 临时设置/还原）
+provideLmsCourseId(effectiveCourseId)
 
 const renderNodeRef = ref(null)
 const defaultLineHeight = computed(() => props.lineHeight)
@@ -235,7 +223,9 @@ onBeforeUnmount(() => {
 // Nuxt 暗黑模式：UMO 自身的暗黑变量挂在 [theme-mode=dark]，
 // 而 Nuxt 用 <html>.dark 类，两者不互通，导致暗黑下文字仍是深色。
 // 这里在 .dark 下把 UMO 文字变量桥接到白色（无闪烁，首帧即生效）。
+
 .dark .umo-editor-render {
-  --umo-text-color: #fff;
+    --umo-content-text-color: #fff !important;
+    color: #fff !important;
 }
 </style>

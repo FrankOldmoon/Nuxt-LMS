@@ -42,7 +42,7 @@ const props = defineProps({
 const submitted = inject('questionSubmitted')
 const isCorrect = inject('questionIsCorrect')
 const fromRecord = inject('questionFromRecord')
-const { editableCourseId, editableId } = useLayoutState()
+const { courseId, chapterId } = useLmsContext()
 
 // 从 options 读取图片 URL 和分割数
 const opts = computed(() => {
@@ -154,8 +154,8 @@ function submit() {
     userAnswer: [...pieces.value],
     isCorrect: correct,
     correctRate: computeCorrectRate(props.question),
-    courseId: editableCourseId.value,
-    chapterId: editableId.value,
+    courseId: courseId.value,
+    chapterId: chapterId.value,
     point: props.question.point,
   })
   return { isCorrect: correct }

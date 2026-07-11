@@ -88,7 +88,7 @@ const props = defineProps({
 })
 
 const { t } = useI18n()
-const { editableCourseId, editableId } = useLayoutState()
+const { courseId, chapterId } = useLmsContext()
 const { hasRole, user } = useAuth()
 const chapterTask = useChapterTask()
 const toast = useToast()
@@ -354,8 +354,8 @@ async function onSubmitted({ isCorrect, questionId }) {
         await cRequest('/api/aichat/award', {
             method: 'POST',
             body: {
-                course_id: editableCourseId.value,
-                chapter_id: editableId.value,
+                course_id: courseId.value,
+                chapter_id: chapterId.value,
                 correct_rate: rate,
                 point: qData.point || config.value.point || 1,
             },

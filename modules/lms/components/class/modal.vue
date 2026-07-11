@@ -144,7 +144,7 @@ const open = defineModel<boolean>('open', { required: true })
 const { user, refreshUser, hasRole } = useAuth()
 const toast = useToast()
 const { t } = useI18n()
-const { editableCourseId } = useLayoutState()
+const { courseId } = useLmsContext()
 const { fetchUsers } = useClassUsers()
 
 // ==================== 班级选择 ====================
@@ -225,7 +225,7 @@ async function onClassChange() {
     })
     await refreshUser()
     // 切换班级时重新拉取用户
-    await fetchUsers(c.id, editableCourseId.value)
+    await fetchUsers(c.id, courseId.value)
     toast.add({ title: t('classSelector.updateSuccess'), color: 'success' })
   } catch (e: any) {
     toast.add({ title: e.message || t('classSelector.updateFailed'), color: 'error' })
@@ -348,7 +348,7 @@ async function addStudentsToClass() {
     })
     toast.add({ title: t('classSelector.addStudentsSuccess'), color: 'success' })
     selectedStudents.value = []; studentSearch.value = ''; studentSearchResults.value = []
-    if (selectedClassId.value) await fetchUsers(selectedClassId.value, editableCourseId.value)
+    if (selectedClassId.value) await fetchUsers(selectedClassId.value, courseId.value)
   } catch (e: any) {
     toast.add({ title: e.message || t('classSelector.addStudentsFailed'), color: 'error' })
   } finally { addingStudents.value = false }
@@ -399,7 +399,7 @@ async function addTeachersToClass() {
     })
     toast.add({ title: t('classSelector.addTeachersSuccess'), color: 'success' })
     selectedTeachers.value = []; teacherSearch.value = ''; teacherSearchResults.value = []
-    if (selectedClassId.value) await fetchUsers(selectedClassId.value, editableCourseId.value)
+    if (selectedClassId.value) await fetchUsers(selectedClassId.value, courseId.value)
   } catch (e: any) {
     toast.add({ title: e.message || t('classSelector.addTeachersFailed'), color: 'error' })
   } finally { addingTeachers.value = false }
@@ -424,12 +424,12 @@ watch(open, async (val) => {
     if (studentMode.value) {
       await loadMyClasses()
     } else if (selectedClassId.value) {
-      await fetchUsers(selectedClassId.value, editableCourseId.value)
+      await fetchUsers(selectedClassId.value, courseId.value)
     }
   }
 })
 
 onMounted(async () => {
-  if (selectedClassId.value) await fetchUsers(selectedClassId.value, editableCourseId.value)
+  if (selectedClassId.value) await fetchUsers(selectedClassId.value, courseId.value)
 })
 </script>

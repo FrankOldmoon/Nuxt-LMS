@@ -16,7 +16,7 @@ const props = defineProps({
 const submitted = inject('questionSubmitted')
 const isCorrect = inject('questionIsCorrect')
 const fromRecord = inject('questionFromRecord')
-const { editableCourseId, editableId } = useLayoutState()
+const { courseId, chapterId } = useLmsContext()
 const fillAnswers = ref([])
 let inputEls = []
 
@@ -169,8 +169,8 @@ function submit() {
     userAnswer: fillAnswers.value.map(a => (a || '').trim()),
     isCorrect: correct,
     correctRate: computeCorrectRate(props.question),
-    courseId: editableCourseId.value,
-    chapterId: editableId.value,
+    courseId: courseId.value,
+    chapterId: chapterId.value,
     point: props.question.point,
   })
   styleInputs()

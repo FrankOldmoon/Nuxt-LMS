@@ -164,6 +164,11 @@ export function computeCorrectRate(question: any): number {
     })
     return (allCorrect && watchedRatio >= 0.95) ? 1 : 0
   }
+  if (type === 'evaluation') {
+    // 评价题：record[0] 存储 { progress: 0~1, passed: bool, messages: [...] }
+    const rec = Array.isArray(record) && record.length > 0 ? (record[0] || {}) : {}
+    return Math.max(0, Math.min(1, Number(rec.progress) || 0))
+  }
   return 0
 }
 

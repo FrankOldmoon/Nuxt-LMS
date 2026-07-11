@@ -108,7 +108,7 @@
 
         <!-- 记录弹窗（仅教师） -->
         <component v-if="moduleLms && isTeacher" :is="RecordsModal" v-model="recordsOpen"
-            :course-id="editableCourseId" :cid="homeworkId" :max-score="homework.point || 0" />
+            :course-id="courseId" :cid="homeworkId" :max-score="homework.point || 0" />
 
         <!-- 编辑弹窗 -->
         <Edit v-model="editOpen" :homework-id="homeworkId" :homework="homework" @saved="onSaved" />
@@ -127,13 +127,13 @@ const props = defineProps({
 const emit = defineEmits(['saved'])
 const { t } = useI18n()
 
-const { editableCourseId, editableId } = useLayoutState()
-// 优先使用 props.courseId（admin 复用场景），否则用全局 editableCourseId
+const { courseId, chapterId } = useLmsContext()
+// 优先使用 props.courseId（admin 复用场景），否则用 useLmsContext 的 courseId
 const effectiveCourseId = computed(() => {
     if (props.courseId !== undefined && props.courseId !== null && props.courseId !== '') {
         return Number(props.courseId) || 0
     }
-    return editableCourseId.value
+    return courseId.value
 })
 const { user, hasRole } = useAuth()
 const isLoggedIn = computed(() => !!user.value)
@@ -158,8 +158,8 @@ const defaultHomework = reactive({
 
 // SSR-friendly data fetching
 const apiUrl = computed(() => {
-    if (!homeworkId.value || !editableCourseId.value) return ''
-    return `/api/homeworks/show?course_id=${editableCourseId.value}&cid=${homeworkId.value}`
+    if (!homeworkId.value || !effectiveCourseId.value) return ''
+    return `/api/homeworks/show?course_id=${effectiveCourseId.value}&cid=${homeworkId.value}`
 })
 
 const { data: fetchedHomework, pending: fetchedPending, refresh } = cRequest.use(apiUrl, {
@@ -221,7 +221,7 @@ async function onSubmit() {
             method: 'POST',
             body: {
                 course_id: effectiveCourseId.value,
-                chapter_id: editableId.value,
+                chapter_id: chapterId.value,
                 homework_cid: homeworkId.value,
                 files,
                 content: submittedContent.value,

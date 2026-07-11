@@ -199,7 +199,7 @@ const props = defineProps<{
 
 const { t } = useI18n()
 const toast = useToast()
-const { editableCourseId } = useLayoutState()
+const { courseId: ctxCourseId } = useLmsContext()
 const { classUsers, classUsersLoading, fetchUsers: fetchClassUsers } = useClassUsers()
 
 const users = ref<any[]>([])
@@ -301,7 +301,7 @@ const groupRows = ref<any[]>([])
 const groupSorting = ref([{ id: 'avgScore', desc: true }])
 
 // 当前课程 ID（提前定义，供下方 watch immediate 使用）
-const currentCourseId = computed(() => props.courseId || editableCourseId.value)
+const currentCourseId = computed(() => props.courseId || ctxCourseId.value)
 
 const tabItems = computed(() => [
   { label: t('classSelector.tabStudents'), value: 'students', icon: 'i-lucide-user' },

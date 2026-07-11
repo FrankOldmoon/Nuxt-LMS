@@ -14,6 +14,6 @@ export default eventHandler(async (event) => {
     return cResp(result)
   } catch (error: any) {
     console.error(`批量[${action}]操作课程失败:`, error)
-    return cResp(null, error.statusMessage || '批量操作失败', false)
+    return cResp(null, error.message || '批量操作失败', false)
   }
 })

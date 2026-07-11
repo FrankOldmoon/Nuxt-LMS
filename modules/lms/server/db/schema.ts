@@ -304,6 +304,7 @@ export const userChapters = pgTable(
     taskStatus: jsonb('task_status'),
     isPass: boolean('is_pass').default(false),
     readTime: integer('read_time').default(0),
+    record: jsonb('record').default('[]'),
     ...withTimestamps,
   },
   (t) => ({

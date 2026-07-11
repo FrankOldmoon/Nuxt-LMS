@@ -40,6 +40,6 @@ export default eventHandler(async (event) => {
     return cResp({ success: true, added: userIds.length })
   } catch (error: any) {
     console.error('添加班级用户失败:', error)
-    return cResp(null, error.statusMessage || '添加失败', false)
+    return cResp(null, error.message || '添加失败', false)
   }
 })

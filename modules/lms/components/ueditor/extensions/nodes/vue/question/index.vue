@@ -33,7 +33,7 @@ if (meta) {
 
 const emit = defineEmits(['init'])
 
-const { editableCourseId } = useLayoutState()
+const { courseId: ctxCourseId } = useLmsContext()
 const chapterTask = useChapterTask()
 
 const questionId = computed(() => Number(props.node?.attrs?.content) || 0)

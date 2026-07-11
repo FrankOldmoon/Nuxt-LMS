@@ -166,12 +166,12 @@ const emit = defineEmits(['saved'])
 
 const { t } = useI18n()
 const { moduleLms } = useRuntimeConfig().public
-const { editableCourseId, editableId } = useLayoutState()
+const { courseId, chapterId } = useLmsContext()
 const effectiveCourseId = computed(() => {
     if (props.courseId !== undefined && props.courseId !== null && props.courseId !== '') {
         return Number(props.courseId) || 0
     }
-    return editableCourseId.value
+    return courseId.value
 })
 const { hasRole, user } = useAuth()
 const isLoggedIn = computed(() => !!user.value)
@@ -185,7 +185,6 @@ provide('inRace', true)
 const raceId = computed(() => Number(props.node?.attrs?.content) || 0)
 const isTeacher = computed(() => hasRole('teacher') || hasRole('admin'))
 const classId = computed(() => user.value?.defaultClass?.id || user.value?.classId || 0)
-const chapterId = computed(() => editableId.value || 0)
 // pin = classId_chapterId
 const pin = computed(() => `${classId.value}_${chapterId.value}`)
 
@@ -403,7 +402,7 @@ onRaceEnd((data) => {
 // ====================== 教师控制 ======================
 function startRace() {
     if (!pin.value) return
-    sendRaceStart(pin.value, raceId.value, editableCourseId.value, raceQuestions.value.length, race.value.gapTime, user.value?.name || 'teacher')
+    sendRaceStart(pin.value, raceId.value, courseId.value, raceQuestions.value.length, race.value.gapTime, user.value?.name || 'teacher')
     raceActive.value = true
     currentIndex.value = -1
     currentQuestionCid.value = 0

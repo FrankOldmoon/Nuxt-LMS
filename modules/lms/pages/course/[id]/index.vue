@@ -73,6 +73,9 @@ const courseId = computed(() => route.params.id as string)
 const apiUrl = computed(() => `/api/courses/show?id=${courseId.value}`)
 const { courseBtnsConfig, chapterBtnsConfig } = useLayoutState()
 
+// 为子树（含弹窗内组件）提供 course 上下文
+provideLmsContext(courseId)
+
 // lms 公开配置：全局 courseBtns / chapterBtns 开关
 // 用于在所有课程上统一关闭某些功能（如管理员禁用"得分"按钮）
 const { courseBtns: courseBtnsPublic, chapterBtns: chapterBtnsPublic } = useLmsPublicConfig()

@@ -34,6 +34,7 @@
     "notOpen": "This chapter is not yet open",
     "play": "Play",
     "exitPlay": "Exit Play",
+    "aiContent": "AI Notes",
     "score": "Score",
     "select": "Select",
     "timer": "Timer",
@@ -382,7 +383,18 @@
     "aiGenerateDone": "Generation complete, applied to form",
     "aiGenerateStopped": "Generation stopped",
     "aiGenerateFailed": "AI generation failed",
-    "aiGenerateApplied": "Applied to form"
+    "aiGenerateApplied": "Applied to form",
+    "typeEvaluation": "Evaluation",
+    "evaluationGoalLabel": "Evaluation Goal",
+    "evaluationGoalPlaceholder": "e.g. Master the Pythagorean theorem",
+    "evaluationThresholdLabel": "Pass Threshold",
+    "evaluationThresholdHint": "Mastery level required to pass (0~1)",
+    "evaluationProgress": "Mastery Progress",
+    "evaluationPassed": "Goal mastered!",
+    "evaluationNotPassed": "Need {threshold}% mastery to pass",
+    "evaluationChatTitle": "AI Evaluation Chat",
+    "evaluationOpening": "Let's evaluate your mastery of: {goal}. I'll ask you questions and we'll chat. Ready?",
+    "evaluationGeneratedQuestions": "Generated Questions"
   },
   "homework": {
     "label": "Homework",

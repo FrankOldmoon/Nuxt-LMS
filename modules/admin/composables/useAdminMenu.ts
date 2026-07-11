@@ -64,11 +64,7 @@ export function useAdminMenu() {
     // 这里用 ref 而非 menuData.value 直接赋值（避免与 useFetch 状态冲突）
     // 实际 Editor 通过 treeToFlat 构造 local，不依赖 reorder
     const newItems = next.map((it, idx) => ({ ...it, order: idx }))
-    if (menuData.value) {
-      ;(menuData.value as any) = { items: newItems }
-    } else {
-      menuData.value = { items: newItems } as any
-    }
+    menuData.value = { items: newItems } as any
   }
 
   /** 递归过滤可见项，保留位置顺序（树形） */

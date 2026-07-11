@@ -25,7 +25,7 @@
                             </div>
                             <div v-if="msg._reasoningExpanded" class="mt-1 text-xs text-gray-500 dark:text-gray-400 leading-relaxed" v-html="renderContent(msg.reasoning)" />
                         </div>
-                        <!-- 消息内容 -->
+                        <!-- 消息内容（ueditorRender 可直接渲染 markdown 文本，包括 question 语法） -->
                         <ueditorRender :json="msg.content" />
                         <!-- 朗读按钮（仅 assistant 文本消息） -->
                         <div v-if="canSpeak(msg)" class="flex justify-end mt-1">
@@ -362,9 +362,9 @@ watch(loading, (isLoading) => {
     }
 })
 
-// 发送消息
-async function handleSend() {
-    const text = inputText.value.trim()
+// 发送消息（接受可选的外部文本，用于程序化调用如 evaluation 答题反馈）
+async function handleSend(externalText?: string | Event) {
+    const text = (typeof externalText === 'string' ? externalText : inputText.value).trim()
     if (!text || loading.value || props.disabled) return
 
     // 未登录检查
@@ -381,7 +381,8 @@ async function handleSend() {
     }
 
     messages.value.push({ role: 'user', content: text })
-    inputText.value = ''
+    // 仅当从输入框发送时清空（程序化调用不清空输入框）
+    if (typeof externalText !== 'string') inputText.value = ''
     userScrolledUp.value = false
     scrollToBottom()
     emit('user-message', text)
@@ -511,6 +512,12 @@ defineExpose({
     },
     getMessages() {
         return messages.value
+    },
+    refreshMessages() {
+        messages.value = [...messages.value]
+    },
+    send(text: string) {
+        if (typeof text === 'string' && text.trim()) handleSend(text)
     },
 })
 </script>

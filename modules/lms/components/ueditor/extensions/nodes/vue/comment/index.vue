@@ -16,15 +16,7 @@ import Edit from './edit.vue'
 
 const props = defineProps(nodeViewProps)
 
-import { inject } from 'vue'
-const injectedCourseId = inject('renderCourseId', undefined)
-const { editableCourseId } = useLayoutState()
-const courseId = computed(() => {
-  if (injectedCourseId !== undefined && injectedCourseId !== null && injectedCourseId !== '') {
-    return Number(injectedCourseId) || 0
-  }
-  return editableCourseId.value
-})
+const { courseId } = useLmsContext()
 
 // inject node-view 提供的状态
 const showConfig = inject('nodeViewShowConfig', ref(false))

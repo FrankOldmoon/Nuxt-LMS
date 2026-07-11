@@ -59,6 +59,6 @@ export default eventHandler(async (event) => {
     return cResp({ success: true, delta: numDelta })
   } catch (error: any) {
     console.error('加减分失败:', error)
-    return cResp(null, error.statusMessage || '加减分失败', false)
+    return cResp(null, error.message || '加减分失败', false)
   }
 })

@@ -10,6 +10,7 @@ const ID_EXTRACT_MAP = {
   question: 'questionIds',
   homework: 'homeworkIds',
   comment: 'commentIds',
+  quiz: 'quizIds',
 } as const
 
 /** 递归遍历 Tiptap JSON content，提取指定类型 vue 节点的 ID */
@@ -18,6 +19,7 @@ function extractIds(content: any): Record<string, number[]> {
     questionIds: [],
     homeworkIds: [],
     commentIds: [],
+    quizIds: [],
   }
 
   function traverse(node: any) {
@@ -94,6 +96,6 @@ export default eventHandler(async (event) => {
     return cResp(result)
   } catch (error: any) {
     console.error('更新章节失败:', error)
-    return cResp(null, error.statusMessage || '更新失败', false)
+    return cResp(null, error.message || '更新失败', false)
   }
 })

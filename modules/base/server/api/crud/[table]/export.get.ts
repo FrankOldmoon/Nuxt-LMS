@@ -23,6 +23,6 @@ export default eventHandler(async (event) => {
     return cResp(rows)
   } catch (error: any) {
     console.error('导出失败:', error)
-    return cResp(null, error.statusMessage || '导出失败', false)
+    return cResp(null, error.message || '导出失败', false)
   }
 })

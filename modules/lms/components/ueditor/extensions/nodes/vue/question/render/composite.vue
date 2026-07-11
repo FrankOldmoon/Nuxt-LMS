@@ -31,7 +31,7 @@ const props = defineProps({
 const submitted = inject('questionSubmitted')
 const isCorrect = inject('questionIsCorrect')
 const fromRecord = inject('questionFromRecord')
-const { editableCourseId, editableId } = useLayoutState()
+const { courseId, chapterId } = useLmsContext()
 
 // 子题列表（存储在 question.content 中）
 const subQuestions = computed(() => {
@@ -132,8 +132,8 @@ function submit() {
     userAnswer: fullRecord,
     isCorrect: correct,
     correctRate,
-    courseId: editableCourseId.value,
-    chapterId: editableId.value,
+    courseId: courseId.value,
+    chapterId: chapterId.value,
     point: totalPoint,
   })
   return { isCorrect: correct }

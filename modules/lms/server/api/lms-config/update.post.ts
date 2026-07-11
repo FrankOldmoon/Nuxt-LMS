@@ -53,6 +53,6 @@ export default eventHandler(async (event) => {
     return cResp(getLmsConfigSync())
   } catch (error: any) {
     console.error('[lms_config] 更新失败', error)
-    return cResp(null, error.statusMessage || '更新失败', false)
+    return cResp(null, error.message || '更新失败', false)
   }
 })

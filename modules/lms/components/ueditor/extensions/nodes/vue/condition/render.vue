@@ -41,7 +41,8 @@ const props = defineProps({
     node: Object,
 })
 const { t } = useI18n()
-const { roles, classIds } = useAuth()
+const { roles } = useAuth()
+const { classIds } = useAuthLms()
 
 const config = computed(() => {
     try {

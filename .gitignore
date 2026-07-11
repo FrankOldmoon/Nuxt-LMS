@@ -25,4 +25,3 @@ logs
 .trae
 ecosystem.config.cjs
 public/mlc-models
-server/db/migrations

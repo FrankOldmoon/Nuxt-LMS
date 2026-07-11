@@ -19,6 +19,6 @@ export default eventHandler(async (event) => {
     return cResp({ success: true })
   } catch (error: any) {
     console.error('恢复课程版本失败:', error)
-    return cResp(null, error.statusMessage || '恢复失败', false)
+    return cResp(null, error.message || '恢复失败', false)
   }
 })

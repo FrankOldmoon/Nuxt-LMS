@@ -51,6 +51,6 @@ export default eventHandler(async (event) => {
     }
   } catch (error: any) {
     console.error(`questions 批量[${action}]操作失败:`, error)
-    return cResp(null, error.statusMessage || 'questions 批量操作失败', false)
+    return cResp(null, error.message || 'questions 批量操作失败', false)
   }
 })

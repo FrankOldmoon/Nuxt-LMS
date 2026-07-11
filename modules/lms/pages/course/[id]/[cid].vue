@@ -22,6 +22,9 @@ const chapterId = computed(() => route.params.cid as string)
 const courseId = computed(() => route.params.id as string)
 const { showDanmaku, chapterBtnsConfig, courseBtnsConfig } = useLayoutState()
 
+// 为子树（含弹窗内组件）提供 course/chapter 上下文
+provideLmsContext(courseId, chapterId)
+
 // lms 公开配置：全局 courseBtns / chapterBtns 开关（管理员在 settings 中统一关闭某些功能时生效）
 const { courseBtns: courseBtnsPublic, chapterBtns: chapterBtnsPublic } = useLmsPublicConfig()
 

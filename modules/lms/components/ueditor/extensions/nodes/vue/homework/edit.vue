@@ -154,30 +154,16 @@ const open = computed({
 })
 
 const { t } = useI18n()
-const { editableCourseId, setEditableMeta } = useLayoutState()
-// 优先使用 props.courseId（admin 复用场景），否则用全局 editableCourseId
+const { courseId: ctxCourseId } = useLmsContext()
 const effectiveCourseId = computed(() => {
   if (props.courseId !== undefined && props.courseId !== null && props.courseId !== '') {
     return Number(props.courseId) || 0
   }
-  return editableCourseId.value
+  return ctxCourseId.value
 })
 
-// 组件挂载期间临时设置 editableCourseId（确保内部 ueditor/ueditorRender 可获取）
-let prevCourseId = 0
-let prevTable = ''
-let prevId = 0
-onMounted(() => {
-  if (effectiveCourseId.value) {
-    prevCourseId = editableCourseId.value
-    setEditableMeta('homeworks', props.homeworkId || 0, effectiveCourseId.value)
-  }
-})
-onBeforeUnmount(() => {
-  if (prevCourseId !== editableCourseId.value) {
-    setEditableMeta(prevTable, prevId, prevCourseId)
-  }
-})
+// provide 给子树（替代旧的 setEditableMeta 临时设置/还原）
+provideLmsCourseId(effectiveCourseId)
 
 const saving = ref(false)
 const saveMsg = ref('')

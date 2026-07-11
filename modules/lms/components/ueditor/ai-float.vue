@@ -172,7 +172,7 @@ async function triggerSave() {
 async function saveInlineQuestions() {
     const editor = getEditor()
     if (!editor) return
-    const courseId = useLayoutState().editableCourseId.value
+    const courseId = useLmsContext().courseId.value
     if (!courseId) return
 
     // 收集所有内联 question 节点（content 为 JSON 对象）及其位置

@@ -3,7 +3,7 @@
  *
  * vitest.config.ts 中 unit 项目通过 setupFiles 引用此文件。
  */
-import { ref, computed, reactive, watch, watchEffect, onMounted, onBeforeUnmount, onUnmounted, onBeforeMount, nextTick, getCurrentInstance } from 'vue'
+import { ref, computed, reactive, watch, watchEffect, onMounted, onBeforeUnmount, onUnmounted, onBeforeMount, nextTick, getCurrentInstance, toValue } from 'vue'
 import {
   getQuery, setMockQuery,
   getCookie, setMockCookie, clearMockCookies,
@@ -12,6 +12,7 @@ import {
   setCookie, deleteCookie,
   getRequestIP,
   registerMeEnrich, runOnMeEnrich, clearMeEnrichHandlers,
+  runOnUserImported,
   getConfig, setMockConfigValue, setMockConfigStore, clearMockConfigStore,
   assignRoleToUser, getAssignedRoles, clearAssignedRoles,
   getCurrentUserId,
@@ -31,16 +32,24 @@ import {
   useI18n, setMockI18n,
   useRuntimeConfig, setMockRuntimeConfig,
   refreshNuxtData, useHead, useSeoMeta, definePageMeta, navigateTo,
+  useToast, getToastCalls, clearToastCalls,
+  defineNuxtRouteMiddleware, getRouterParam, useLayoutState, setMockLayoutState,
+  provide, inject, useLmsContext, setMockLmsContext, provideLmsContext, provideLmsCourseId,
   useAuth, setMockAuthUser, clearMockAuth,
   useWsConnection, cRequest,
   registerWsHandler, dispatchWsHandler, clearMockWsHandlers,
+  getSchemaTables, setMockSchemaTables,
+  getTableMeta, setMockTableMeta, clearMockTableMeta,
+  validateTable,
+  useTableOverride, registerTableOverride, clearTableOverrideRegistry,
+  showTable, listTablePaged, importTableRows, exportTableRows,
   resetAllStubs,
 } from './nuxt-stubs'
 
 const _exports: Record<string, any> = {
   // Vue auto-imports
   ref, computed, reactive, watch, watchEffect,
-  onMounted, onBeforeUnmount, onUnmounted, onBeforeMount, nextTick, getCurrentInstance,
+  onMounted, onBeforeUnmount, onUnmounted, onBeforeMount, nextTick, getCurrentInstance, toValue,
   // Nuxt auto-imports
   getQuery, setMockQuery,
   getCookie, setMockCookie, clearMockCookies,
@@ -49,6 +58,7 @@ const _exports: Record<string, any> = {
   setCookie, deleteCookie,
   getRequestIP,
   registerMeEnrich, runOnMeEnrich, clearMeEnrichHandlers,
+  runOnUserImported,
   getConfig, setMockConfigValue, setMockConfigStore, clearMockConfigStore,
   assignRoleToUser, getAssignedRoles, clearAssignedRoles,
   getCurrentUserId,
@@ -68,9 +78,17 @@ const _exports: Record<string, any> = {
   useI18n, setMockI18n,
   useRuntimeConfig, setMockRuntimeConfig,
   refreshNuxtData, useHead, useSeoMeta, definePageMeta, navigateTo,
+  useToast, getToastCalls, clearToastCalls,
+  defineNuxtRouteMiddleware, getRouterParam, useLayoutState, setMockLayoutState,
+  provide, inject, useLmsContext, setMockLmsContext, provideLmsContext, provideLmsCourseId,
   useAuth, setMockAuthUser, clearMockAuth,
   useWsConnection, cRequest,
   registerWsHandler, dispatchWsHandler, clearMockWsHandlers,
+  getSchemaTables, setMockSchemaTables,
+  getTableMeta, setMockTableMeta, clearMockTableMeta,
+  validateTable,
+  useTableOverride, registerTableOverride, clearTableOverrideRegistry,
+  showTable, listTablePaged, importTableRows, exportTableRows,
   resetAllStubs,
 }
 

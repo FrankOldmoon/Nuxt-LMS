@@ -51,13 +51,17 @@ function parseQuestionFence(raw: string): TiptapNode | null {
 
 /**
  * 构建代码围栏对应的 TipTap 节点：
- * - question 语言 → 解析为 vue 节点（JSON 无效时降级为 codeBlock）
+ * - question 语言 → 解析为 vue 节点（JSON 无效时跳过，不降级为 codeBlock，
+ *   避免流式中途将残缺 JSON 以 codeBlock 形式渲染出来；流式完成后 JSON 完整即正常渲染 question render）
  * - 其他语言 → codeBlock
+ * 返回 null 表示跳过该围栏（调用方不 push 到 blocks）
  */
-function buildFenceBlock(lang: string, raw: string): TiptapNode {
+function buildFenceBlock(lang: string, raw: string): TiptapNode | null {
   if (lang === 'question') {
     const vueNode = parseQuestionFence(raw);
     if (vueNode) return vueNode;
+    // question 围栏 JSON 无效（如流式中途不完整）：跳过，不降级为 codeBlock
+    return null;
   }
   return {
     type: 'codeBlock',
@@ -293,25 +297,34 @@ export function markdownToTiptap(markdown: string): TiptapNode {
     let inCodeBlock = false;
     let codeContent: string[] = [];
     let codeLang = '';
+    // 开围栏的反引号数量（CommonMark：闭围栏须至少同等数量）
+    let codeFenceLen = 0;
 
     while (i < lines.length) {
       const line = lines[i];
 
-      // 代码块处理
-      const fenceMatch = line.match(/^```(\w*)$/);
+      // 代码块处理：支持 3+ 反引号围栏（如 ````doc ... ````）
+      // 4 反引号围栏允许内部包含 3 反引号 question 块而不冲突
+      const fenceMatch = line.match(/^(`{3,})(\w*)$/);
       if (fenceMatch) {
         if (!inCodeBlock) {
+          // 开启围栏
           inCodeBlock = true;
-          codeLang = fenceMatch[1] || '';
+          codeLang = fenceMatch[2] || '';
+          codeFenceLen = fenceMatch[1].length;
           codeContent = [];
           i++;
           continue;
-        } else {
-          blocks.push(buildFenceBlock(codeLang, codeContent.join('\n')));
+        } else if (fenceMatch[1].length >= codeFenceLen) {
+          // 关闭围栏：反引号数量足够
+          const fenceBlock = buildFenceBlock(codeLang, codeContent.join('\n'));
+          if (fenceBlock) blocks.push(fenceBlock);
           inCodeBlock = false;
+          codeFenceLen = 0;
           i++;
           continue;
         }
+        // 反引号数量不足（如 4 围栏内的 3 反引号行），视为代码内容，落入下方 inCodeBlock 分支
       }
 
       if (inCodeBlock) {
@@ -435,6 +448,12 @@ export function markdownToTiptap(markdown: string): TiptapNode {
         paraLines.push(lines[i]);
         i++;
       }
+      // 安全网：如果当前行被 isBlockStart 识别但未被前面的处理器消费
+      // （如不支持的围栏语法），强制将该行作为段落内容消费，避免无限循环
+      if (paraLines.length === 0 && i < lines.length) {
+        paraLines.push(lines[i]);
+        i++;
+      }
       blocks.push({
         type: 'paragraph',
         content: parseInline(paraLines.join(' '))
@@ -443,7 +462,8 @@ export function markdownToTiptap(markdown: string): TiptapNode {
 
     // 流式期间可能出现未闭合的代码块：把已累积的内容也输出，避免内容丢失
     if (inCodeBlock) {
-      blocks.push(buildFenceBlock(codeLang, codeContent.join('\n')));
+      const fenceBlock = buildFenceBlock(codeLang, codeContent.join('\n'));
+      if (fenceBlock) blocks.push(fenceBlock);
     }
 
     return blocks;

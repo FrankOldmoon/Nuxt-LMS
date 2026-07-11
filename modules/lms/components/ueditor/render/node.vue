@@ -146,6 +146,7 @@ export default defineComponent({
   components: { TextRenderer },
   props: {
     node: { type: Object, required: true },
+    courseId: { type: [Number, String], default: undefined },
   },
   computed: {
     currentComponent() {

@@ -12,7 +12,9 @@ export default eventHandler(async (event) => {
     return cResp(null, '缺少 id 参数', false)
   }
 
-  delete body.cid, body.course_id
+  delete body.cid
+  delete body.course_id
+  delete body.id
 
   try {
     const result = await db.update(schema.questions).set(body).where(and(
@@ -22,6 +24,6 @@ export default eventHandler(async (event) => {
     return cResp(result)
   } catch (error: any) {
     console.error('更新失败:', error)
-    return cResp(null, error.statusMessage || '更新失败', false)
+    return cResp(null, error.message || '更新失败', false)
   }
 })

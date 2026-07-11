@@ -31,7 +31,7 @@ const props = defineProps({
 const submitted = inject('questionSubmitted')
 const isCorrect = inject('questionIsCorrect')
 const fromRecord = inject('questionFromRecord')
-const { editableCourseId, editableId } = useLayoutState()
+const { courseId, chapterId } = useLmsContext()
 
 const iframeRef = ref(null)
 const containerRef = ref(null)
@@ -118,8 +118,8 @@ function submit() {
         userAnswer: [rate],
         isCorrect: correct,
         correctRate: rate,
-        courseId: editableCourseId.value,
-        chapterId: editableId.value,
+        courseId: courseId.value,
+        chapterId: chapterId.value,
         point: props.question.point,
     })
     return { isCorrect: correct }

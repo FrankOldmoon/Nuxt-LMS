@@ -11,7 +11,6 @@
 import { nodeViewProps } from '@tiptap/vue-3'
 import Edit from './edit.vue'
 import Render from './render.vue'
-console.log('aigenerator index.vue')
 const props = defineProps(nodeViewProps)
 const { t } = useI18n()
 

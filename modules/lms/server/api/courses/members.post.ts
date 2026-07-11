@@ -32,6 +32,6 @@ export default eventHandler(async (event) => {
     return cResp({ success: true })
   } catch (error: any) {
     console.error('更新课程成员失败:', error)
-    return cResp(null, error.statusMessage || '更新失败', false)
+    return cResp(null, error.message || '更新失败', false)
   }
 })

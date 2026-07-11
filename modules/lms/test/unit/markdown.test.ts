@@ -69,12 +69,22 @@ describe('utils/markdown - markdownToTiptap', () => {
     })
   })
 
-  it('```question 围栏 JSON 无效时降级为 codeBlock', async () => {
+  it('```question 围栏 JSON 无效时跳过（不降级为 codeBlock）', async () => {
     const { markdownToTiptap } = await import('../../utils/markdown')
     const md = '```question\n{invalid json\n```'
     const result = markdownToTiptap(md)
-    expect(result.content![0].type).toBe('codeBlock')
-    expect(result.content![0].attrs.language).toBe('question')
+    // 无效 JSON 的 question 围栏应被跳过，不以 codeBlock 渲染残缺 JSON
+    expect(result.content).toHaveLength(0)
+  })
+
+  it('```question 围栏 JSON 不完整时跳过（流式中途不渲染 codeBlock）', async () => {
+    const { markdownToTiptap } = await import('../../utils/markdown')
+    // 流式中途：JSON 尚未写完，围栏也未闭合
+    const md = '口语化指导文本\n\n```question\n{"type":"single","options":["A"'
+    const result = markdownToTiptap(md)
+    // 口语化段落保留，question 围栏跳过
+    expect(result.content).toHaveLength(1)
+    expect(result.content![0].type).toBe('paragraph')
   })
 
   it('```question 围栏可被 prose 包裹（前后段落独立）', async () => {
@@ -260,5 +270,77 @@ describe('utils/markdown - markdownToTiptap', () => {
     const result = markdownToTiptap('段1\n\n段2\n\n段3')
     expect(result.content).toHaveLength(3)
     result.content!.forEach((b: any) => expect(b.type).toBe('paragraph'))
+  })
+
+  // ===== 4 反引号围栏（````doc ... ````）— 修复死循环 bug 的回归测试 =====
+
+  it('4 反引号 doc 围栏解析为 codeBlock（不进入死循环）', async () => {
+    const { markdownToTiptap } = await import('../../utils/markdown')
+    const md = '````doc\n## 标题\n一些内容\n````'
+    const result = markdownToTiptap(md)
+    expect(result.content).toHaveLength(1)
+    expect(result.content![0].type).toBe('codeBlock')
+    expect(result.content![0].attrs.language).toBe('doc')
+    expect(result.content![0].content![0].text).toContain('标题')
+  })
+
+  it('4 反引号围栏内的 3 反引号 question 块视为代码内容（不提前闭合）', async () => {
+    const { markdownToTiptap } = await import('../../utils/markdown')
+    const md = [
+      '````doc',
+      '## 练习',
+      '```question',
+      '{"type":"single","options":["A","B"],"answer":[0]}',
+      '```',
+      '````',
+    ].join('\n')
+    const result = markdownToTiptap(md)
+    // 整体应为一个 codeBlock（4 反引号围栏），内部的 3 反引号不拆分
+    expect(result.content).toHaveLength(1)
+    expect(result.content![0].type).toBe('codeBlock')
+    expect(result.content![0].attrs.language).toBe('doc')
+    // 内部 3 反引号 question 行应作为代码文本保留
+    const codeText = result.content![0].content![0].text
+    expect(codeText).toContain('question')
+    expect(codeText).toContain('"type":"single"')
+  })
+
+  it('4 反引号围栏前后的段落独立', async () => {
+    const { markdownToTiptap } = await import('../../utils/markdown')
+    const md = '前面段落\n\n````doc\n内容\n````\n\n后面段落'
+    const result = markdownToTiptap(md)
+    expect(result.content).toHaveLength(3)
+    expect(result.content![0].type).toBe('paragraph')
+    expect(result.content![1].type).toBe('codeBlock')
+    expect(result.content![2].type).toBe('paragraph')
+  })
+
+  it('未闭合的 4 反引号围栏（流式中途）也能输出', async () => {
+    const { markdownToTiptap } = await import('../../utils/markdown')
+    const md = '````doc\n## 流式中的内容'
+    const result = markdownToTiptap(md)
+    expect(result.content).toHaveLength(1)
+    expect(result.content![0].type).toBe('codeBlock')
+    expect(result.content![0].attrs.language).toBe('doc')
+  })
+
+  it('5+ 反引号围栏同样支持', async () => {
+    const { markdownToTiptap } = await import('../../utils/markdown')
+    const md = '`````doc\n含 ```` 4反引号\n`````'
+    const result = markdownToTiptap(md)
+    expect(result.content).toHaveLength(1)
+    expect(result.content![0].type).toBe('codeBlock')
+    expect(result.content![0].attrs.language).toBe('doc')
+  })
+
+  it('安全网：不支持的围栏语法不导致死循环', async () => {
+    const { markdownToTiptap } = await import('../../utils/markdown')
+    // ``` foo bar — 3 反引号 + 空格 + 文字
+    // isBlockStart 返回 true（以 ``` 开头），但 fence 正则不匹配（空格不是 \w）
+    // 安全网应将其作为段落消费，避免无限循环
+    const md = '``` foo bar\n后续内容'
+    const result = markdownToTiptap(md)
+    expect(result.type).toBe('doc')
+    expect(result.content!.length).toBeGreaterThan(0)
   })
 })

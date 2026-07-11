@@ -20,6 +20,6 @@ export default eventHandler(async (event) => {
     return cResp({ reset: true })
   } catch (error: any) {
     console.error('重置密码失败:', error)
-    return cResp(null, error.statusMessage || '重置失败', false)
+    return cResp(null, error.message || '重置失败', false)
   }
 })

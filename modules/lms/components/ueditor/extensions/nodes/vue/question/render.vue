@@ -1,7 +1,10 @@
 <template>
-    <div class="question-render w-full space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 relative"
+    <div class="question-render w-full space-y-4 p-4 border rounded-lg bg-white dark:bg-gray-900 relative transition-colors duration-300"
+        :class="containerBorderClass"
         :data-question-id="questionId"
         @mouseenter.once="onHover">
+        <!-- 答对烟花效果 -->
+        <Fireworks v-if="showFireworks" @done="showFireworks = false" />
         <!-- 加载中 -->
         <div v-if="pending" class="flex items-center justify-center py-6 text-gray-400">
             <span>{{ $t('question.loading') }}</span>
@@ -130,8 +133,10 @@ import ShortAnswerRender from './render/short-answer.vue'
 import MatchRender from './render/match.vue'
 import CompositeRender from './render/composite.vue'
 import VideoRender from './render/video.vue'
+import EvaluationRender from './render/evaluation.vue'
 import ResultBanner from './render/result-banner.vue'
 import ExplanationBlock from './render/explanation-block.vue'
+import Fireworks from './render/fireworks.vue'
 import QuestionEdit from './edit.vue'
 import { computeCorrectRate, decryptAnswer } from './render/shared.ts'
 
@@ -145,12 +150,15 @@ const props = defineProps({
 // race 模式：显示提交按钮但不向后端提交 question 记录
 const inRace = inject('inRace', false)
 
+// evaluation 评估对话内联题目答题回调（由 evaluation.vue provide，穿透多层子组件）
+const onEvaluationAnswered = inject('onEvaluationAnswered', null)
+
 const emit = defineEmits(['init', 'submitted'])
 
 const { t } = useI18n()
-const { editableCourseId } = useLayoutState()
-// 可选 courseId prop 覆盖全局 editableCourseId（admin 后台复用本组件时传入行数据的 courseId）
-const effectiveCourseId = computed(() => props.courseId || editableCourseId.value)
+const { courseId: ctxCourseId } = useLmsContext()
+// 可选 courseId prop 覆盖全局 courseId（admin 后台复用本组件时传入行数据的 courseId）
+const effectiveCourseId = computed(() => props.courseId || ctxCourseId.value)
 const { hasRole, user } = useAuth()
 const { moduleLms } = useRuntimeConfig().public
 const RecordsModal = moduleLms ? resolveComponent('QuestionRecordsModal') : null
@@ -185,6 +193,7 @@ const typeLabel = computed(() => ({
     match: t('question.typeMatch'),
     composite: t('question.typeComposite'),
     video: t('question.typeVideo'),
+    evaluation: t('question.typeEvaluation'),
 }))
 
 // 题型 → 渲染组件
@@ -192,7 +201,7 @@ const componentMap = {
     single: SingleRender, judge: JudgeRender, multiple: MultipleRender, fill: FillRender,
     select: SelectRender, sort: SortRender, classify: ClassifyRender, puzzle: PuzzleRender,
     html: HtmlRender, 'short-answer': ShortAnswerRender, match: MatchRender,
-    composite: CompositeRender, video: VideoRender,
+    composite: CompositeRender, video: VideoRender, evaluation: EvaluationRender,
 }
 const renderComponent = computed(() => componentMap[question.value?.type] || null)
 const renderRef = ref(null)
@@ -203,6 +212,19 @@ const isCorrect = ref(false)
 const showAnswer = ref(false)
 // 标记是否来自 fetchRecord 回填（回填时可重新作答，submit 后不可）
 const fromRecord = ref(false)
+// 答对时触发烟花动画（仅 submit 触发，hover 回填 record 不触发）
+const showFireworks = ref(false)
+
+// 容器边框颜色：submit/hover 回填后正确绿色、错误红色，重置或重新操作恢复原色
+const containerBorderClass = computed(() => {
+    if (submitted.value && isCorrect.value) {
+        return 'border-green-400 dark:border-green-500'
+    }
+    if (submitted.value && !isCorrect.value) {
+        return 'border-red-400 dark:border-red-500'
+    }
+    return 'border-gray-200 dark:border-gray-700'
+})
 
 // provide 给子组件，让子组件能感知提交状态（如禁用选项、样式变化）
 provide('questionSubmitted', submitted)
@@ -255,6 +277,11 @@ const formattedAnswers = computed(() => {
         // 大题：显示子题数量
         const subs = Array.isArray(question.value.content) ? question.value.content : []
         return [t('question.compositeSubCount', { count: subs.length })]
+    } else if (type === 'evaluation') {
+        // 评价题：显示通过阈值
+        const opts = question.value.options || {}
+        const threshold = (opts && typeof opts === 'object' && !Array.isArray(opts) && typeof opts.threshold === 'number') ? opts.threshold : 0.8
+        return [`${t('question.evaluationThresholdLabel')}: ${Math.round(threshold * 100)}%`]
     } else {
         // 填空题/下拉题：直接显示答案文本，正则答案加标记
         const options = question.value.options || []
@@ -280,6 +307,7 @@ function onSubmit() {
         isCorrect.value = rate > 0
         submitted.value = true
         fromRecord.value = false
+        showFireworks.value = isCorrect.value
         return
     }
     const result = renderRef.value.submit()
@@ -287,12 +315,17 @@ function onSubmit() {
         isCorrect.value = result.isCorrect
         submitted.value = true
         fromRecord.value = false
+        showFireworks.value = result.isCorrect
         // 上报题目完成状态（quiz 模式下由 quiz 统一上报）
         if (!props.inQuiz) {
             chapterTask?.reportNodeDone('question', questionId.value, isCorrect.value)
         }
         // emit 提交结果，供父组件（如 video question）监听
                 emit('submitted', { isCorrect: isCorrect.value, questionId: questionId.value })
+        // 通知 evaluation 父组件（内联题目在 evaluation 对话中作答时，通过 provide/inject 回传结果）
+        if (onEvaluationAnswered) {
+            onEvaluationAnswered({ isCorrect: isCorrect.value, question: question.value })
+        }
     }
 }
 
@@ -303,6 +336,7 @@ function onReset() {
     isCorrect.value = false
     showAnswer.value = false
     fromRecord.value = false
+    showFireworks.value = false
     question.value.record = []
 }
 
@@ -449,6 +483,8 @@ function onHover() {
 async function fetchRecord() {
     const cid = effectiveCourseId.value
     if (!questionId.value || !cid) return
+    // evaluation 题型自己管理 record 的获取与恢复（fetchAndRestore）
+    if (question.value?.type === 'evaluation') return
     try {
         const data = await cRequest(`/api/questions/record?course_id=${cid}&cid=${questionId.value}`)
         if (data && question.value) {
@@ -512,6 +548,7 @@ defineExpose({
         isCorrect.value = false
         fromRecord.value = false
         showAnswer.value = false
+        showFireworks.value = false
         if (question.value) question.value.record = []
     },
     // 是否有答案

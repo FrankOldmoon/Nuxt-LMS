@@ -76,7 +76,7 @@
 
         <!-- 记录弹窗（仅教师） -->
         <component v-if="moduleLms && isTeacher" :is="RecordsModal" v-model="recordsOpen"
-            :course-id="editableCourseId" :cid="commentId" />
+            :course-id="courseId" :cid="commentId" />
     </div>
 </template>
 
@@ -92,12 +92,12 @@ const props = defineProps({
     courseId: { type: [Number, String], default: undefined }, // admin 后台复用时传入
 })
 
-const { editableCourseId } = useLayoutState()
+const { courseId: ctxCourseId } = useLmsContext()
 const effectiveCourseId = computed(() => {
     if (props.courseId !== undefined && props.courseId !== null && props.courseId !== '') {
         return Number(props.courseId) || 0
     }
-    return editableCourseId.value
+    return ctxCourseId.value
 })
 const { user, hasRole } = useAuth()
 const { t } = useI18n()
@@ -115,8 +115,8 @@ const recordsOpen = ref(false)
 
 // SSR-friendly data fetching（如果 props.comment 不存在，从 API 获取）
 const apiUrl = computed(() => {
-    if (!commentId.value || !editableCourseId.value) return ''
-    return `/api/comments/show?course_id=${editableCourseId.value}&cid=${commentId.value}`
+    if (!commentId.value || !effectiveCourseId.value) return ''
+    return `/api/comments/show?course_id=${effectiveCourseId.value}&cid=${commentId.value}`
 })
 
 const { data: fetchedComment, pending: fetchedPending, refresh } = cRequest.use(apiUrl, {
@@ -181,10 +181,10 @@ watch([children, totalPages], () => {
 })
 
 async function fetchComments() {
-    if (!commentId.value || !editableCourseId.value) return
+    if (!commentId.value || !effectiveCourseId.value) return
     listPending.value = true
     try {
-        const data = await cRequest(`/api/comments/list?course_id=${editableCourseId.value}&cid=${commentId.value}`)
+        const data = await cRequest(`/api/comments/list?course_id=${effectiveCourseId.value}&cid=${commentId.value}`)
         if (data) {
             rootComment.value = data.root || null
             children.value = data.children || []
@@ -217,7 +217,7 @@ async function toggleLike(item) {
         await cRequest('/api/comments/like', {
             method: 'POST',
             body: {
-                course_id: editableCourseId.value,
+                course_id: effectiveCourseId.value,
                 comment_cid: item.cid,
                 like: newLike,
             },
@@ -273,7 +273,7 @@ async function onDelete(item) {
         await cRequest('/api/comments/delete', {
             method: 'POST',
             body: {
-                course_id: editableCourseId.value,
+                course_id: effectiveCourseId.value,
                 cid: item.cid,
             },
         })

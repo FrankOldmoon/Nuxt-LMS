@@ -1,5 +1,5 @@
 import { db, schema } from '@nuxthub/db'
-import { eq, and, count, sql } from 'drizzle-orm'
+import { eq, and, count, sql, isNull } from 'drizzle-orm'
 
 // ====================== 类型定义 ======================
 
@@ -251,8 +251,8 @@ export function shouldAwardMedal(content: MedalContent, metrics: UserMetrics): b
  * @returns 新授予的 medalId 数组
  */
 export async function checkAndAwardMedals(userId: number, courseId: number): Promise<number[]> {
-  // 获取所有奖章
-  const allMedals = await db.select().from(schema.medals)
+  // 获取所有未软删除的奖章
+  const allMedals = await db.select().from(schema.medals).where(isNull(schema.medals.deletedAt))
   if (allMedals.length === 0) return []
 
   // 获取用户已有奖章

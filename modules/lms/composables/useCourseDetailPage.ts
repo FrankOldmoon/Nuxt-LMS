@@ -10,7 +10,7 @@ import type { ComputedRef, Ref } from 'vue'
  * firstChapterUrl（排除不可访问章节）、progressPercent、按钮配置等。
  */
 export function useCourseDetailPage(courseId: ComputedRef<string>, apiUrl: ComputedRef<string>) {
-  const { setEditableContent, setEditableMeta, contentVersion, courseNavVersion, notifyCourseNavUpdate } = useLayoutState()
+  const { courseNavVersion, notifyCourseNavUpdate } = useLayoutState()
   const { hasRole } = useAuth()
   const { isCourseEditor, isCourseTeacher } = useAuthLms()
   const { refresh: refreshNav } = useSidebarNav()
@@ -70,17 +70,6 @@ export function useCourseDetailPage(courseId: ComputedRef<string>, apiUrl: Compu
     const first = chapterTree.value.find(ch => ch.to && !ch.to.includes('#'))
     return first?.to
   })
-
-  // 数据变化时设置可编辑内容
-  watch(resp, (detail) => {
-    if (!detail) return
-    const content = detail?.content
-    setEditableContent(content ?? null)
-    if (detail?.id) setEditableMeta('courses', detail.id, detail.id)
-  }, { immediate: true })
-
-  // 内容保存成功后重新获取数据
-  watch(contentVersion, () => refresh(), { flush: 'sync' })
 
   // 课程导航版本变化时刷新（参数化 key，适配 doc/lms 不同 API URL）
   watch(courseNavVersion, () => {

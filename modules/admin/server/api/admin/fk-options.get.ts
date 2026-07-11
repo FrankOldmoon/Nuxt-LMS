@@ -11,6 +11,10 @@ export default eventHandler(async (event) => {
   }
 
   const meta = getTableMeta(tableName)
+  // 复合主键表无 id 列，无法提供 id 选项 → 返回空
+  if (!meta.hasId) {
+    return cResp([])
+  }
   const labelCol = (typeof query.label === 'string' && query.label) || meta.labelColumn || 'id'
 
   // 校验标签列存在，否则回退到 id

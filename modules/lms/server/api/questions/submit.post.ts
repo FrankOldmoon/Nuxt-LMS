@@ -59,6 +59,7 @@ export default eventHandler(async (event) => {
         submitCount: newSubmitCount,
         wrongCount,
         correctRate: String(rate),
+        firstRight: (existing.firstRight || isCorrect),
       }).where(and(
         eq(schema.userQuestions.userId, user.id),
         eq(schema.userQuestions.courseId, courseId),
@@ -94,6 +95,6 @@ export default eventHandler(async (event) => {
     return cResp({ gainedExp, score, scoreDelta })
   } catch (error: any) {
     console.error('提交题目失败:', error)
-    return cResp(null, error.statusMessage || '提交失败', false)
+    return cResp(null, error.message || '提交失败', false)
   }
 })

@@ -28,17 +28,14 @@
 </template>
 
 <script setup>
-
-
 const props = defineProps({
     config: { type: Object, default: () => ({}) },
 })
 const emit = defineEmits(['update:config', 'close'])
 const { t } = useI18n()
 
-// 当前章节内容（来自 useLayoutState 的 editableContent，章节页会写入）
-const { editableContent } = useLayoutState()
-const chapterContent = computed(() => editableContent.value)
+// 当前章节内容（来自 useLayoutState 的 chapterContent，章节页会写入）
+const { chapterContent } = useLayoutState()
 
 const cfgTitle = ref(props.config?.title || '')
 const cfgQuestionType = ref(props.config?.questionType || 'single')

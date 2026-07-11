@@ -51,6 +51,6 @@ export default eventHandler(async (event) => {
     return cResp({ gainedExp, score })
   } catch (error: any) {
     console.error('AI 出题积分奖励失败:', error)
-    return cResp(null, error.statusMessage || '积分奖励失败', false)
+    return cResp(null, error.message || '积分奖励失败', false)
   }
 })

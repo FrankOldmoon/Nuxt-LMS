@@ -40,7 +40,7 @@ const props = defineProps({
 const submitted = inject('questionSubmitted')
 const isCorrect = inject('questionIsCorrect')
 const fromRecord = inject('questionFromRecord')
-const { editableCourseId, editableId } = useLayoutState()
+const { courseId, chapterId } = useLmsContext()
 
 // dragList: [{ originalIndex: 2 }, { originalIndex: 0 }, ...] — 驱动 vuedraggable
 const dragList = ref([])
@@ -128,8 +128,8 @@ function submit() {
     userAnswer: [...userOrder.value],
     isCorrect: correct,
     correctRate: computeCorrectRate(props.question),
-    courseId: editableCourseId.value,
-    chapterId: editableId.value,
+    courseId: courseId.value,
+    chapterId: chapterId.value,
     point: props.question.point,
   })
   return { isCorrect: correct }

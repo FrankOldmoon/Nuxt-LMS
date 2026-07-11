@@ -88,7 +88,7 @@ const props = defineProps({
 const submitted = inject('questionSubmitted')
 const isCorrect = inject('questionIsCorrect')
 const fromRecord = inject('questionFromRecord')
-const { editableCourseId, editableId } = useLayoutState()
+const { courseId, chapterId } = useLmsContext()
 
 // 左侧项（原始顺序）
 const leftItems = computed(() => props.question.options || [])
@@ -324,8 +324,8 @@ function submit() {
     userAnswer: buildRecordArray(),
     isCorrect: correct,
     correctRate: computeCorrectRate(props.question),
-    courseId: editableCourseId.value,
-    chapterId: editableId.value,
+    courseId: courseId.value,
+    chapterId: chapterId.value,
     point: props.question.point,
   })
   return { isCorrect: correct }

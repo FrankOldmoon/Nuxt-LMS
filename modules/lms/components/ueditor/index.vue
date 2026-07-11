@@ -135,7 +135,7 @@ const traverse = (node, cb = null) => {
 
 const uploadImages = async () => {
     traverse(editorRef.value.getJSON(), async (node) => {
-        console.log({ node })
+        //console.log({ node })
         if (node && node.type === "image") {
             if (node.attrs.src.startsWith("http") || node.attrs.src.startsWith("data:")) {
                 const res = await $fetch('/api/files/upload', {

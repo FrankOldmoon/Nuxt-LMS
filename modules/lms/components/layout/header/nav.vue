@@ -7,6 +7,10 @@
       :content-orientation="orientation === 'horizontal' ? 'vertical' : 'vertical'"
       color="primary"
       variant="pill"
+      :ui="{
+        content: 'w-auto min-w-[220px] max-w-[480px]',
+        childLinkLabel: 'overflow-visible whitespace-nowrap'
+      }"
     />
     <NavEditor
       v-if="hasRole('admin')"

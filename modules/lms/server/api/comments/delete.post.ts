@@ -41,6 +41,6 @@ export default eventHandler(async (event) => {
     return cResp({ deleted: true })
   } catch (error: any) {
     console.error('删除评论失败:', error)
-    return cResp(null, error.statusMessage || '删除失败', false)
+    return cResp(null, error.message || '删除失败', false)
   }
 })

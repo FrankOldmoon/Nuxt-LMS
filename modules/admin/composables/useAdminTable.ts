@@ -83,7 +83,7 @@ export function useAdminTable(tableName: MaybeRefOrGetter<string>) {
   function buildQuery(): string {
     const params = new URLSearchParams()
     params.set('page', String(page.value))
-    params.set('pageSize', String(page.value === 0 ? pageSize.value : pageSize.value))
+    params.set('pageSize', String(pageSize.value))
     if (sort.value) params.set('sort', `${sort.value.column}:${sort.value.dir}`)
     if (search.value.trim()) params.set('search', search.value.trim())
     if (includeDeleted.value) params.set('includeDeleted', 'true')

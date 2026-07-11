@@ -36,6 +36,9 @@ export async function listTable(tableName: string) {
  */
 export async function showTable(tableName: string, id: number) {
   const table = getTable(tableName)
+  if (!('id' in table)) {
+    throw createError({ statusCode: 400, statusMessage: `表 ${tableName} 为复合主键表，不支持按 id 查询` })
+  }
   const rows = await db.select().from(table).where(eq(table.id, id)).limit(1)
   return rows[0] ?? null
 }
@@ -57,6 +60,9 @@ export async function addTable(tableName: string, data: Record<string, any>) {
  */
 export async function updateTable(tableName: string, id: number, data: Record<string, any>) {
   const table = getTable(tableName)
+  if (!('id' in table)) {
+    throw createError({ statusCode: 400, statusMessage: `表 ${tableName} 为复合主键表，不支持按 id 更新` })
+  }
   const result = await db.update(table).set(data).where(eq(table.id, id))
   return result
 }
@@ -89,6 +95,9 @@ export async function batchTable(
   }
 
   const table = getTable(tableName)
+  if (!('id' in table)) {
+    throw createError({ statusCode: 400, statusMessage: `表 ${tableName} 为复合主键表，不支持按 id 批量操作` })
+  }
   const idList = ids.map(Number)
 
   switch (action) {
