@@ -424,6 +424,9 @@ describe('API: chapters/task-status', () => {
     setMockAuthState({ id: 1, username: 's', name: 's', roles: ['student'], permissions: [] })
     _mockDb.query.userChapters.findFirst = vi.fn().mockResolvedValue({ userId: 1, chapterId: 1, isPass: false })
     _mockDb.limit = vi.fn().mockResolvedValueOnce([{ courseId: 10 }])
+    // updateCourseProgress 内部用 db.select().from().where()（无 .limit()），
+    // 使 db 对象 thenable 让这些查询 resolve 为空数组 → total=0 → 提前返回，不抛错
+    _mockDb.then = (resolve: any) => resolve([])
     const checkSpy = vi.fn().mockResolvedValue([100, 200])
     ;(globalThis as any).checkAndAwardMedals = checkSpy
     const handler = (await import('../../server/api/chapters/task-status.post')).default

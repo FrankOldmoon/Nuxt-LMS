@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 type MyStats = {
     courseScore: number
     exp: number
+    coin: number
     chapterScore: number | null
 }
 
@@ -35,12 +36,13 @@ export function useUserCardSetup() {
     const stats = useState<MyStats>('user-card-stats', () => ({
         courseScore: 0,
         exp: 0,
+        coin: 0,
         chapterScore: null,
     }))
 
     async function fetchStats() {
         if (!courseId.value) {
-            stats.value = { courseScore: 0, exp: 0, chapterScore: null }
+            stats.value = { courseScore: 0, exp: 0, coin: 0, chapterScore: null }
             return
         }
         try {
@@ -87,6 +89,7 @@ export function useUserCardSetup() {
 
     const courseScore = computed(() => stats.value.courseScore)
     const exp = computed(() => stats.value.exp)
+    const coin = computed(() => stats.value.coin)
     const chapterScore = computed(() => stats.value.chapterScore)
 
     // 经验 → 等级换算
@@ -112,6 +115,7 @@ export function useUserCardSetup() {
 
     // 积分显示（保留 1 位小数）
     const courseScoreDisplay = computed(() => courseScore.value.toFixed(1))
+    const coinDisplay = computed(() => String(coin.value))
     const chapterScoreDisplay = computed(() =>
         chapterScore.value == null ? '—' : chapterScore.value.toFixed(1),
     )
@@ -123,6 +127,6 @@ export function useUserCardSetup() {
 
     return {
         user, myMedals, medalIconColor, hasCourse, levelInfo, hasChapter,
-        courseScoreDisplay, chapterScoreDisplay, refresh,
+        courseScoreDisplay, coinDisplay, chapterScoreDisplay, refresh,
     }
 }

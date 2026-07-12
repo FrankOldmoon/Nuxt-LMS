@@ -14,7 +14,7 @@
  */
 import { db, schema } from '@nuxthub/db'
 import { and, eq } from 'drizzle-orm'
-import { calcQuizScore, calcQuizExp } from '../../utils/quizSubmit/score'
+import { calcQuizScore, calcQuizExp, calcQuizCoin } from '../../utils/quizSubmit/score'
 import { handleQuizStartOnly } from '../../utils/quizSubmit/startOnly'
 import { insertUserQuiz, updateUserQuizBestScore, incrementQuizSubmitCount } from '../../utils/quizSubmit/persist'
 import { notifyCourseProgressMax } from '../../utils/submit/progress'
@@ -63,6 +63,7 @@ export default eventHandler(async (event) => {
   const qConfig = config.quiz
   const existingBestScore = existing ? Number(existing.score) || 0 : null
   const gainedExp = calcQuizExp({ qConfig, totalScore, existingBestScore })
+  const gainedCoin = calcQuizCoin({ qConfig, totalScore, existingBestScore })
   const isPassed = totalScore >= (qConfig.passScore || 60)
   const newSubmitCount = currentCount + 1
   const now = new Date()
@@ -86,10 +87,11 @@ export default eventHandler(async (event) => {
     score: finalScore,
     scoreKey: 'quizScore',
     exp: gainedExp,
+    coin: gainedCoin,
   })
 
   // 8. 更新测验全局计数
   await incrementQuizSubmitCount(courseId, quizCid, quiz.submitCount)
 
-  return cResp({ gainedExp, score: totalScore, correctCount, isPassed, submitCount: newSubmitCount })
+  return cResp({ gainedExp, gainedCoin, score: totalScore, correctCount, isPassed, submitCount: newSubmitCount })
 })

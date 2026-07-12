@@ -49,16 +49,25 @@
     <div v-if="hasCourse" class="mt-3 pt-3 border-t border-default space-y-1.5 text-sm">
       <div class="flex items-center justify-between">
         <span class="flex items-center gap-1.5 text-muted">
-          <UIcon name="i-lucide-trophy" class="size-3.5" />
+          <UIcon name="i-lucide-trophy" class="size-3.5 text-blue-500"/>
           {{ $t('userCard.courseScore') }}
         </span>
         <span class="font-mono font-medium text-highlighted">
           {{ courseScoreDisplay }}
         </span>
       </div>
+      <div class="flex items-center justify-between">
+        <span class="flex items-center gap-1.5 text-muted">
+          <UIcon name="i-lucide-coins" class="size-3.5 text-yellow-500" />
+          {{ $t('userCard.coin') }}
+        </span>
+        <span class="font-mono font-medium text-highlighted">
+          {{ coinDisplay }}
+        </span>
+      </div>
       <div v-if="hasChapter" class="flex items-center justify-between">
         <span class="flex items-center gap-1.5 text-muted">
-          <UIcon name="i-lucide-book-open" class="size-3.5" />
+          <UIcon name="i-lucide-book-open" class="size-3.5 text-green-500" />
           {{ $t('userCard.chapterScore') }}
         </span>
         <span class="font-mono font-medium text-highlighted">
@@ -74,7 +83,7 @@ import { useUserCardSetup } from './useUserCard'
 
 const {
   user, myMedals, medalIconColor, hasCourse, levelInfo, hasChapter,
-  courseScoreDisplay, chapterScoreDisplay, refresh,
+  courseScoreDisplay, coinDisplay, chapterScoreDisplay, refresh,
 } = useUserCardSetup()
 
 defineExpose({ refresh })

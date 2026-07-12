@@ -36,6 +36,7 @@ vi.mock('../../server/utils/submit/questions/upsert', () => ({
 }))
 vi.mock('../../server/utils/submit/questions/calc', () => ({
   calcQuestionGainedExp: vi.fn().mockReturnValue(5),
+  calcQuestionGainedCoin: vi.fn().mockReturnValue(5),
   calcQuestionScoreDelta: vi.fn().mockReturnValue(0),
 }))
 vi.mock('../../server/utils/submit/progress', () => ({

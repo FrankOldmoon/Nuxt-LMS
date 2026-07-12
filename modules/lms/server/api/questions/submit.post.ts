@@ -16,7 +16,7 @@ import { parseSubmitContext } from '../../utils/submit/context'
 import { notifyCourseProgress } from '../../utils/submit/progress'
 import { withSubmitHandler } from '../../utils/submit/handler'
 import { upsertUserQuestion } from '../../utils/submit/questions/upsert'
-import { calcQuestionGainedExp } from '../../utils/submit/questions/calc'
+import { calcQuestionGainedExp, calcQuestionGainedCoin } from '../../utils/submit/questions/calc'
 
 export default withSubmitHandler('提交题目失败', async (event) => {
   const ctx = await parseSubmitContext(event, {
@@ -45,8 +45,14 @@ export default withSubmitHandler('提交题目失败', async (event) => {
     trackSubmitCount: true,
   })
 
-  // 2. 计算经验值
+  // 2. 计算经验值 + 金币
   const gainedExp = calcQuestionGainedExp({
+    qConfig,
+    isCorrect,
+    isFirstSubmit: !existing,
+    newSubmitCount,
+  })
+  const gainedCoin = calcQuestionGainedCoin({
     qConfig,
     isCorrect,
     isFirstSubmit: !existing,
@@ -63,7 +69,8 @@ export default withSubmitHandler('提交题目失败', async (event) => {
     score: scoreDelta,
     scoreKey: 'questionScore',
     exp: gainedExp,
+    coin: gainedCoin,
   })
 
-  return cResp({ gainedExp, score, scoreDelta })
+  return cResp({ gainedExp, gainedCoin, score, scoreDelta })
 })

@@ -8,6 +8,8 @@ import { eq, and, inArray, sql } from "drizzle-orm"
  *
  * 客户端负责计算每个 heading 的完成状态（hover 阅读停留 3s + 互动组件提交全部答对），
  * 这里仅做 upsert 持久化；is_pass 由客户端根据全部 heading 完成情况计算。
+ *
+ * 当某个 heading 从未完成变为完成时，奖励 chapter.headingExp 经验 + chapter.headingCoin 金币。
  * 当 is_pass 从 false 变为 true 时，触发奖章检查。
  *
  * 当 is_pass 状态发生变化时，同步更新 user_courses.records.progress
@@ -27,6 +29,8 @@ export default eventHandler(async (event) => {
     : {}
   const isPass = !!body.is_pass
   let newMedals: number[] = []
+  let gainedExp = 0
+  let gainedCoin = 0
 
   try {
     const existing = await db.query.userChapters.findFirst({
@@ -34,6 +38,14 @@ export default eventHandler(async (event) => {
     })
 
     const wasPass = !!existing?.isPass
+    const oldTaskStatus = (existing?.taskStatus && typeof existing.taskStatus === 'object')
+      ? existing.taskStatus as Record<string, boolean>
+      : {}
+
+    // 找出新完成的 heading（旧状态非 true → 新状态 true）
+    const newHeadingIds = Object.keys(taskStatus).filter(
+      (key) => taskStatus[key] === true && !oldTaskStatus[key],
+    )
 
     if (existing) {
       await db.update(schema.userChapters).set({
@@ -49,27 +61,38 @@ export default eventHandler(async (event) => {
       })
     }
 
-    // 章节通过状态变化时，更新课程通过比并检查奖章
-    if (isPass !== wasPass) {
-      const chapter = await db
-        .select({ courseId: schema.chapters.courseId })
-        .from(schema.chapters)
-        .where(eq(schema.chapters.id, chapterId))
-        .limit(1)
-      if (chapter[0]) {
-        const courseId = chapter[0].courseId
-        // 并行：更新课程通过比 + 检查奖章（仅在变为通过时）
-        const tasks: Promise<unknown>[] = [
-          updateCourseProgress(user.id, courseId),
-        ]
-        if (isPass && !wasPass) {
-          tasks.push(checkAndAwardMedals(user.id, courseId).then(m => { newMedals = m }))
-        }
-        await Promise.all(tasks)
+    // 加载 courseId（heading 奖励和 is_pass 逻辑都需要）
+    const chapter = await db
+      .select({ courseId: schema.chapters.courseId })
+      .from(schema.chapters)
+      .where(eq(schema.chapters.id, chapterId))
+      .limit(1)
+    const courseId = chapter[0]?.courseId || 0
+
+    // heading 完成奖励：每个新完成的 heading 发放 headingExp + headingCoin
+    if (courseId && newHeadingIds.length > 0) {
+      const config = await getCourseLmsConfig(courseId)
+      const headingExp = config?.chapter?.headingExp || 0
+      const headingCoin = config?.chapter?.headingCoin || 0
+      if (headingExp > 0 || headingCoin > 0) {
+        gainedExp = headingExp * newHeadingIds.length
+        gainedCoin = headingCoin * newHeadingIds.length
+        await addCourseScore(user.id, courseId, 0, 'marksScore', gainedExp, gainedCoin)
       }
     }
 
-    return cResp({ isPass, newMedals })
+    // 章节通过状态变化时，更新课程通过比并检查奖章
+    if (isPass !== wasPass && courseId) {
+      const tasks: Promise<unknown>[] = [
+        updateCourseProgress(user.id, courseId),
+      ]
+      if (isPass && !wasPass) {
+        tasks.push(checkAndAwardMedals(user.id, courseId).then(m => { newMedals = m }))
+      }
+      await Promise.all(tasks)
+    }
+
+    return cResp({ isPass, newMedals, gainedExp, gainedCoin })
   } catch (error: any) {
     // drizzle 的 DrizzleQueryError 把真正的 PG 错误藏在 error.cause 里
     const pgError = error?.cause?.message || error?.message || '保存失败'

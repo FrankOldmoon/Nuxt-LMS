@@ -16,7 +16,7 @@ import { SubmitContextError } from '../../utils/submit/context'
 import { notifyCourseProgress } from '../../utils/submit/progress'
 import { withSubmitHandler } from '../../utils/submit/handler'
 import { upsertUserQuestion } from '../../utils/submit/questions/upsert'
-import { calcQuestionGainedExp } from '../../utils/submit/questions/calc'
+import { calcQuestionGainedExp, calcQuestionGainedCoin } from '../../utils/submit/questions/calc'
 
 export default withSubmitHandler('AI 出题积分奖励失败', async (event) => {
   const user = await requireAuth(event)
@@ -53,8 +53,14 @@ export default withSubmitHandler('AI 出题积分奖励失败', async (event) =>
     trackSubmitCount: false,
   })
 
-  // 2. 计算经验值（与 questions/submit 一致）
+  // 2. 计算经验值 + 金币（与 questions/submit 一致）
   const gainedExp = calcQuestionGainedExp({
+    qConfig,
+    isCorrect,
+    isFirstSubmit: !existing,
+    newSubmitCount,
+  })
+  const gainedCoin = calcQuestionGainedCoin({
     qConfig,
     isCorrect,
     isFirstSubmit: !existing,
@@ -71,7 +77,8 @@ export default withSubmitHandler('AI 出题积分奖励失败', async (event) =>
     score: scoreDelta,
     scoreKey: 'questionScore',
     exp: gainedExp,
+    coin: gainedCoin,
   })
 
-  return cResp({ gainedExp, score, scoreDelta })
+  return cResp({ gainedExp, gainedCoin, score, scoreDelta })
 })

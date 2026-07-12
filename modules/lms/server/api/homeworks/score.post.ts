@@ -48,7 +48,7 @@ export default eventHandler(async (event) => {
     }
 
     // 更新 userCourses：homeworkScore + score
-    await addCourseScore(userId, courseId, scoreDelta, 'homeworkScore', 0)
+    await addCourseScore(userId, courseId, scoreDelta, 'homeworkScore', 0, 0)
 
     return cResp(result[0])
   } catch (error: any) {

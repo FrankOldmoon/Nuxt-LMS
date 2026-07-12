@@ -4,23 +4,31 @@
 import type { QuestionCalcArgs } from './types'
 
 /**
- * 计算题目提交的经验值（防刷规则）
- *  - 首次提交：submitExp
- *  - 首次提交且答对：submitExp + correctBonusExp + firstCorrectBonusExp
- *  - 超过 maxSubmitCount：gainedExp=0
+ * 计算题目提交的经验值/金币（防刷规则）
+ *  - 首次提交：submitExp / submitCoin
+ *  - 首次提交且答对：submit + correctBonus + firstCorrectBonus
+ *  - 超过 maxSubmitCount：gainedExp=0 / gainedCoin=0
  */
-export function calcQuestionGainedExp(args: QuestionCalcArgs): number {
-  let gainedExp = 0
+function calcQuestionGained(args: QuestionCalcArgs, suffix: 'Exp' | 'Coin'): number {
+  let gained = 0
   if (args.isFirstSubmit) {
-    gainedExp = args.qConfig.submitExp || 0
+    gained = args.qConfig[`submit${suffix}`] || 0
     if (args.isCorrect) {
-      gainedExp += (args.qConfig.correctBonusExp || 0) + (args.qConfig.firstCorrectBonusExp || 0)
+      gained += (args.qConfig[`correctBonus${suffix}`] || 0) + (args.qConfig[`firstCorrectBonus${suffix}`] || 0)
     }
   }
   if (args.newSubmitCount > (args.qConfig.maxSubmitCount || Infinity)) {
-    gainedExp = 0
+    gained = 0
   }
-  return gainedExp
+  return gained
+}
+
+export function calcQuestionGainedExp(args: QuestionCalcArgs): number {
+  return calcQuestionGained(args, 'Exp')
+}
+
+export function calcQuestionGainedCoin(args: QuestionCalcArgs): number {
+  return calcQuestionGained(args, 'Coin')
 }
 
 /**

@@ -32,14 +32,18 @@ export default withSubmitHandler('提交作业失败', async (event) => {
   const prevResubmitCount = Number(recordMeta._submitCount || 0)
   const nextResubmitCount = prevResubmitCount + 1
 
-  // 2. 计算经验值
+  // 2. 计算经验值 + 金币
   let gainedExp: number
+  let gainedCoin: number
   if (!existing) {
     gainedExp = hConfig.submitExp
+    gainedCoin = hConfig.submitCoin
   } else if (nextResubmitCount > maxResubmitCount) {
     gainedExp = 0
+    gainedCoin = 0
   } else {
     gainedExp = hConfig.resubmitExp
+    gainedCoin = hConfig.resubmitCoin
   }
 
   // 3. 写 userHomeworks
@@ -65,14 +69,15 @@ export default withSubmitHandler('提交作业失败', async (event) => {
     })
   }
 
-  // 4. 更新 userCourses.exp（作业分数 = 0，经验 = gainedExp）+ 奖章
+  // 4. 更新 userCourses.exp + coin（作业分数 = 0，经验/金币 = gained）+ 奖章
   await notifyCourseProgress({
     userId: user.id,
     courseId,
     score: 0,
     scoreKey: 'homeworkScore',
     exp: gainedExp,
+    coin: gainedCoin,
   })
 
-  return cResp({ gainedExp })
+  return cResp({ gainedExp, gainedCoin })
 })

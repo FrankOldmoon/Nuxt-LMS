@@ -25,6 +25,7 @@ export default withSubmitHandler('提交竞赛成绩失败', async (event) => {
   const records = body.records
   const score = Number(body.total_score) || 0
   const participationExp = rConfig.participateExp || rConfig.participationExp || 0
+  const participationCoin = rConfig.participateCoin || rConfig.participationCoin || 0
 
   // 1. 查找已有记录
   const existing = await findUserSubmitRecord(user.id, courseId, 'race', raceCid)
@@ -32,6 +33,7 @@ export default withSubmitHandler('提交竞赛成绩失败', async (event) => {
   const bestScore = Math.max(prevScore, score)
   const isFirstSubmit = !existing
   const gainedExp = isFirstSubmit ? participationExp : 0
+  const gainedCoin = isFirstSubmit ? participationCoin : 0
 
   // 2. 写 userRaces（取最高分）
   if (existing) {
@@ -60,7 +62,8 @@ export default withSubmitHandler('提交竞赛成绩失败', async (event) => {
     score: bestScore,
     scoreKey: 'raceScore',
     exp: gainedExp,
+    coin: gainedCoin,
   })
 
-  return cResp({ gainedExp, score })
+  return cResp({ gainedExp, gainedCoin, score })
 })

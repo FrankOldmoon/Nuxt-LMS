@@ -17,7 +17,7 @@ export default eventHandler(async (event) => {
   const chapterId = Number(query.chapterId) || 0
 
   if (!courseId) {
-    return cResp({ courseScore: 0, exp: 0, chapterScore: null })
+    return cResp({ courseScore: 0, exp: 0, coin: 0, chapterScore: null })
   }
 
   // 课程总分 + 经验值
@@ -25,6 +25,7 @@ export default eventHandler(async (event) => {
     .select({
       score: schema.userCourses.score,
       exp: schema.userCourses.exp,
+      coin: schema.userCourses.coin,
     })
     .from(schema.userCourses)
     .where(and(
@@ -63,6 +64,7 @@ export default eventHandler(async (event) => {
   return cResp({
     courseScore: courseRow ? Number(courseRow.score) || 0 : 0,
     exp: courseRow ? Number(courseRow.exp) || 0 : 0,
+    coin: courseRow ? Number(courseRow.coin) || 0 : 0,
     chapterScore,
   })
 })

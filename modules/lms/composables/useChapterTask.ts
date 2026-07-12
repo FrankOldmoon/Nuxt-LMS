@@ -12,6 +12,7 @@ import type { ChapterTaskMap } from '../utils/chapterTask'
  * - heading 完成状态（taskStatus）持久化，且为"sticky"——一旦完成不再回退
  * - 已完成的 heading 下的内容不再显示 hover 黄色高亮
  * - 未登录时不记录、不高亮（trackReading 由页面层根据登录态 gating）
+ * - 最后一个 block 标黄后延迟 1s 再记录 heading 完成，并弹出 toast 提示
  */
 export interface ChapterTaskContext {
   taskMap: Ref<ChapterTaskMap>
@@ -60,6 +61,8 @@ export function setupChapterTask(opts: {
 }): ChapterTaskContext {
   const { notifyCourseNavUpdate } = useLayoutState()
   const { user } = useAuth()
+  const toast = useToast()
+  const { t } = useI18n()
 
   const taskMap = computed(() => {
     const map = extractChapterTasks(opts.content.value)
@@ -127,6 +130,9 @@ export function setupChapterTask(opts: {
   // hover 已读块集合（不持久化，刷新重置）
   const readBlocks = ref<Set<string>>(new Set())
 
+  // 延迟完成的 heading 定时器（最后一个 block 标黄后 1s 再记录完成）
+  const pendingCompletion = new Map<string, ReturnType<typeof setTimeout>>()
+
   function isBlockRead(key: string): boolean {
     return readBlocks.value.has(key)
   }
@@ -148,6 +154,17 @@ export function setupChapterTask(opts: {
     return m
   })
 
+  /** 检查 heading 是否满足完成条件（不实际标记，用于判断是否需要延迟） */
+  function wouldCompleteHeading(headingId: string): boolean {
+    if (taskStatus.value[headingId]) return false
+    const tasks = taskMap.value.tasksByHeading[headingId] || []
+    const tasksDone = tasks.length === 0 || tasks.every(t => nodeStatus.value[t.key])
+    if (!tasksDone) return false
+    const blocks = blockLayout.value.byHeading[headingId] || []
+    const blocksRead = blocks.length === 0 || blocks.every(idx => readBlocks.value.has(idx))
+    return blocksRead
+  }
+
   /**
    * 重算某个 heading 的完成状态。
    * sticky：已完成的 heading 不再回退（避免刷新后未 hover 导致已完成任务回退）。
@@ -156,6 +173,7 @@ export function setupChapterTask(opts: {
    */
   function recomputeHeading(headingId: string): boolean {
     if (taskStatus.value[headingId]) return false // sticky
+    if (pendingCompletion.has(headingId)) return false // 正在延迟中，等待定时器触发
     const tasks = taskMap.value.tasksByHeading[headingId] || []
     const tasksDone = tasks.length === 0 || tasks.every(t => nodeStatus.value[t.key])
     if (!tasksDone) return false
@@ -229,7 +247,26 @@ export function setupChapterTask(opts: {
     // 重新赋值以稳定触发响应式
     readBlocks.value = new Set([...readBlocks.value, key])
     const hid = blockLayout.value.blockToHeading[key]
-    if (hid) checkHeading(hid)
+    if (!hid) return
+
+    // 最后一个 block 标黄后，延迟 1s 再记录完成（让用户看到黄色高亮 + toast 提示）
+    if (wouldCompleteHeading(hid) && !pendingCompletion.has(hid)) {
+      const timer = setTimeout(() => {
+        pendingCompletion.delete(hid)
+        checkHeading(hid)
+        if (taskStatus.value[hid]) {
+          const heading = taskMap.value.headings.find(h => h.id === hid)
+          toast.add({
+            title: t('chapter.headingCompleted', { name: heading?.text || hid }),
+            color: 'success',
+            icon: 'i-lucide-check-circle',
+          })
+        }
+      }, 1000)
+      pendingCompletion.set(hid, timer)
+    } else {
+      checkHeading(hid)
+    }
   }
 
   const ctx: ChapterTaskContext = {
@@ -268,6 +305,9 @@ export function setupChapterTask(opts: {
 
     onBeforeUnmount(() => {
       if (persistTimer) clearTimeout(persistTimer)
+      // 清除延迟完成定时器，避免离开页面后触发 toast
+      for (const timer of pendingCompletion.values()) clearTimeout(timer)
+      pendingCompletion.clear()
       // 离开页面时立即持久化一次
       doPersist()
       // 清除模块级共享 ref，防止下一个页面读到旧的上下文

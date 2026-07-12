@@ -105,6 +105,7 @@ export function resetDb(db: any, extraQuery: Record<string, any> = {}) {
     db[m] = vi.fn().mockReturnThis()
   }
   db.returning = vi.fn().mockResolvedValue([])
+  db.then = undefined // 重置 thenable 标记（个别测试需设为函数使链式查询可 await）
   // 重新初始化 query
   if (db.query) {
     const queryDefaults: Record<string, any> = {}
