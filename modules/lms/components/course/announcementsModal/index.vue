@@ -16,6 +16,7 @@ const props = defineProps({
   courseId: { type: [String, Number], default: '' },
 })
 
+
 const isOpen = defineModel('open', { default: false })
 const { t } = useI18n()
 

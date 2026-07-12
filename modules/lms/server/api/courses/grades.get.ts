@@ -15,6 +15,13 @@ export default eventHandler(async (event) => {
   if (!courseId) return cResp(null, '缺少 courseId', false)
   if (!classId) return cResp(null, '缺少 classId', false)
 
+  // 从 records jsonb 中提取 progress（章节通过比，0~100）
+  const extractProgress = (records: any): number => {
+    if (!records || typeof records !== 'object') return 0
+    const p = Number(records.progress)
+    return isNaN(p) ? 0 : p
+  }
+
   // 教师或管理员可查看所有成绩，学生只能看自己的
   const isTeacher = await isCourseTeacher(user.id, courseId)
   if (!isTeacher && !user.roles.includes('admin')) {
@@ -29,7 +36,8 @@ export default eventHandler(async (event) => {
         commentScore: schema.userCourses.commentScore,
         raceScore: schema.userCourses.raceScore,
         marksScore: schema.userCourses.marksScore,
-        exp: schema.userCourses.exp,
+        extraScore: schema.userCourses.extraScore,
+        records: schema.userCourses.records,
         group: schema.userCourses.group,
       })
       .from(schema.userCourses)
@@ -37,20 +45,30 @@ export default eventHandler(async (event) => {
         eq(schema.userCourses.courseId, courseId),
         eq(schema.userCourses.userId, user.id),
       ))
-    if (myGrade.length === 0) return cResp([])
-    const r = myGrade[0]
-    return cResp([{
-      userId: r.userId,
-      group: r.group || '',
-      score: Number(r.score) || 0,
-      questionScore: Number(r.questionScore) || 0,
-      homeworkScore: Number(r.homeworkScore) || 0,
-      quizScore: Number(r.quizScore) || 0,
-      commentScore: Number(r.commentScore) || 0,
-      raceScore: Number(r.raceScore) || 0,
-      marksScore: Number(r.marksScore) || 0,
-      exp: r.exp || 0,
-    }])
+    // 附带课程的评分标准（grade_criteria），供前端换算等第
+    const courseRow = await db
+      .select({ gradeCriteria: schema.courses.gradeCriteria })
+      .from(schema.courses)
+      .where(eq(schema.courses.id, courseId))
+      .limit(1)
+    if (myGrade.length === 0) return cResp({ grades: [], gradeCriteria: courseRow[0]?.gradeCriteria ?? null })
+    const r = myGrade[0]!
+    return cResp({
+      grades: [{
+        userId: r.userId,
+        group: r.group || '',
+        score: Number(r.score) || 0,
+        questionScore: Number(r.questionScore) || 0,
+        homeworkScore: Number(r.homeworkScore) || 0,
+        quizScore: Number(r.quizScore) || 0,
+        commentScore: Number(r.commentScore) || 0,
+        raceScore: Number(r.raceScore) || 0,
+        marksScore: Number(r.marksScore) || 0,
+        extraScore: Number(r.extraScore) || 0,
+        progress: extractProgress(r.records),
+      }],
+      gradeCriteria: courseRow[0]?.gradeCriteria ?? null,
+    })
   }
 
   // 获取该班级学生 userIds
@@ -69,7 +87,8 @@ export default eventHandler(async (event) => {
       commentScore: schema.userCourses.commentScore,
       raceScore: schema.userCourses.raceScore,
       marksScore: schema.userCourses.marksScore,
-      exp: schema.userCourses.exp,
+      extraScore: schema.userCourses.extraScore,
+      records: schema.userCourses.records,
       group: schema.userCourses.group,
     })
     .from(schema.userCourses)
@@ -89,9 +108,20 @@ export default eventHandler(async (event) => {
       commentScore: Number(r.commentScore) || 0,
       raceScore: Number(r.raceScore) || 0,
       marksScore: Number(r.marksScore) || 0,
-      exp: r.exp || 0,
+      extraScore: Number(r.extraScore) || 0,
+      progress: extractProgress(r.records),
     }))
     .sort((a, b) => b.score - a.score)
 
-  return cResp(result)
+  // 附带课程的评分标准（grade_criteria），供前端换算等第
+  const courseRow = await db
+    .select({ gradeCriteria: schema.courses.gradeCriteria })
+    .from(schema.courses)
+    .where(eq(schema.courses.id, courseId))
+    .limit(1)
+
+  return cResp({
+    grades: result,
+    gradeCriteria: courseRow[0]?.gradeCriteria ?? null,
+  })
 })

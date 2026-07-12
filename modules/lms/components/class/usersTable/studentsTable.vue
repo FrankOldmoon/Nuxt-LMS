@@ -3,6 +3,10 @@
     <ClassUsersTableTeachers />
 
     <!-- 学生表格 -->
+    <div v-if="students.length" class="flex justify-end mb-2">
+      <UButton icon="i-lucide-download" size="xs" color="neutral" variant="outline"
+        :label="t('classSelector.export')" @click="openExport" />
+    </div>
     <UTable
       v-if="students.length"
       v-model:sorting="sorting"
@@ -59,6 +63,9 @@
     </UTable>
 
     <ClassUsersTableChart />
+
+    <!-- 导出弹窗 -->
+    <ClassUsersTableExportSheet v-model:open="exportOpen" />
   </div>
 </template>
 
@@ -71,4 +78,9 @@ const {
   numberMap, sortableHeader,
   onNumberBlur, autoFillNumbers, openEdit, openReset,
 } = useClassUsersTableContext()
+
+const exportOpen = ref(false)
+function openExport() {
+  exportOpen.value = true
+}
 </script>

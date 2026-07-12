@@ -1,5 +1,5 @@
 import { db, schema } from "@nuxthub/db"
-import { eq, and } from "drizzle-orm"
+import { eq, and, inArray, sql } from "drizzle-orm"
 
 
 /**
@@ -9,6 +9,9 @@ import { eq, and } from "drizzle-orm"
  * 客户端负责计算每个 heading 的完成状态（文字停留 5s / 提交全部答对），
  * 这里仅做 upsert 持久化；is_pass 由客户端根据全部 heading 完成情况计算。
  * 当 is_pass 从 false 变为 true 时，触发奖章检查。
+ *
+ * 当 is_pass 状态发生变化时，同步更新 user_courses.records.progress
+ * （整个课程所有章节的通过比 = 已通过章节数 / 课程总章节数）。
  */
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
@@ -46,15 +49,23 @@ export default eventHandler(async (event) => {
       })
     }
 
-    // 章节从未通过变为通过时，检查奖章
-    if (isPass && !wasPass) {
+    // 章节通过状态变化时，更新课程通过比并检查奖章
+    if (isPass !== wasPass) {
       const chapter = await db
         .select({ courseId: schema.chapters.courseId })
         .from(schema.chapters)
         .where(eq(schema.chapters.id, chapterId))
         .limit(1)
       if (chapter[0]) {
-        newMedals = await checkAndAwardMedals(user.id, chapter[0].courseId)
+        const courseId = chapter[0].courseId
+        // 并行：更新课程通过比 + 检查奖章（仅在变为通过时）
+        const tasks: Promise<unknown>[] = [
+          updateCourseProgress(user.id, courseId),
+        ]
+        if (isPass && !wasPass) {
+          tasks.push(checkAndAwardMedals(user.id, courseId).then(m => { newMedals = m }))
+        }
+        await Promise.all(tasks)
       }
     }
 
@@ -64,3 +75,43 @@ export default eventHandler(async (event) => {
     return cResp(null, error.message || '保存失败', false)
   }
 })
+
+/**
+ * 更新用户在某课程的章节通过比，存入 user_courses.records.progress
+ * progress = 已通过章节数 / 课程总章节数 × 100（百分比，0~100）
+ */
+async function updateCourseProgress(userId: number, courseId: number) {
+  // 课程下所有章节 id
+  const courseChapters = await db
+    .select({ id: schema.chapters.id })
+    .from(schema.chapters)
+    .where(eq(schema.chapters.courseId, courseId))
+  const total = courseChapters.length
+  if (total === 0) return
+  const chapterIds = courseChapters.map(c => c.id)
+
+  // 用户已通过的章节数
+  const passed = await db
+    .select({ chapterId: schema.userChapters.chapterId })
+    .from(schema.userChapters)
+    .where(and(
+      eq(schema.userChapters.userId, userId),
+      eq(schema.userChapters.isPass, true),
+      inArray(schema.userChapters.chapterId, chapterIds),
+    ))
+  const progress = Math.round((passed.length / total) * 100)
+
+  // upsert 到 user_courses.records.progress（jsonb 合并，不覆盖其它 key）
+  await db.insert(schema.userCourses)
+    .values({
+      userId,
+      courseId,
+      records: { progress },
+    })
+    .onConflictDoUpdate({
+      target: [schema.userCourses.userId, schema.userCourses.courseId],
+      set: {
+        records: sql`COALESCE(${schema.userCourses.records}, '{}'::jsonb) || jsonb_build_object('progress', ${progress})`,
+      },
+    })
+}

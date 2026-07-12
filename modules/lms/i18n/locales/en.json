@@ -158,7 +158,11 @@
     "addTeachersSuccess": "Teachers added successfully",
     "addTeachersFailed": "Failed to add teachers",
     "noMyClasses": "You are not assigned to any classes yet",
-    "actions": "Actions"
+    "actions": "Actions",
+    "export": "Export",
+    "exportTitle": "Export Students",
+    "exportHint": "Preview of student data. Click Download XLSX to save.",
+    "downloadXlsx": "Download XLSX"
   },
   "userCard": {
     "courseScore": "Course Score",
@@ -598,8 +602,25 @@
     "selectGroup": "Select Group",
     "noGroups": "No groups",
     "marksScore": "Marks",
+    "extraScore": "Extra",
     "ability": "Ability",
-    "learningStats": "Learning Stats"
+    "learningStats": "Learning Stats",
+    "grade": "Grade",
+    "criteria": "Grading Criteria",
+    "criteriaHint": "Score weights & grade-level thresholds",
+    "weights": "Score Weights",
+    "weightsHint": "Final score = Σ( score / maxScore × percent ). Defaults: maxScore=100, percents sum to 100.",
+    "item": "Item",
+    "maxScore": "Max",
+    "percent": "Percent",
+    "percentSum": "Sum",
+    "levels": "Grade Levels",
+    "letter": "Letter",
+    "minScore": "Min Score",
+    "addLevel": "Add Level",
+    "resetCriteria": "Reset to Defaults",
+    "criteriaSaved": "Grading criteria saved",
+    "criteriaSaveFailed": "Failed to save grading criteria"
   },
   "announcement": {
     "title": "Course Announcements",
@@ -992,6 +1013,7 @@
     "unnamed": "(unnamed)",
     "show": "Show",
     "hide": "Hide",
-    "stop": "Stop"
+    "stop": "Stop",
+    "unsaved": "Unsaved"
   }
 }

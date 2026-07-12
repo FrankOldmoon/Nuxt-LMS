@@ -46,6 +46,8 @@ export type UEditorContent = Record<string, any>
 /** 课程详情（含完整章节列表 + 富文本内容） */
 export interface LmsCourseDetail extends Omit<LmsCourseSummary, 'chapterCount'> {
   content: UEditorContent
+  /** 课程评分标准 */
+  grade_criteria: [],
   config: Record<string, any>
   chapters: LmsChapterSummary[]
   /** 导航排序配置（来自 courses 表的 orders 字段） */
