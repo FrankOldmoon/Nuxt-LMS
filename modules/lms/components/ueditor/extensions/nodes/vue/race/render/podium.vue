@@ -41,5 +41,6 @@
 </template>
 
 <script setup>
+import { useRaceRenderContext } from '../useRaceRender'
 const { t, raceActive, questionTop3 } = useRaceRenderContext()
 </script>

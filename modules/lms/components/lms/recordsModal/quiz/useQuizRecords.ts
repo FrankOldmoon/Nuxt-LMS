@@ -26,15 +26,16 @@ export function useQuizRecords(props: QuizRecordsProps, emit: QuizRecordsEmit) {
     // 额外列：总分 + 正确率 + 提交次数 + 每道题一列
     const extraColumns = computed(() => {
         const cols = [
-            { id: 'score', header: t('quiz.score') },
-            { id: 'correctRate', header: t('quiz.correctRate') },
-            { id: 'submitCount', header: t('quiz.submitLimit') },
+            { id: 'score', header: t('quiz.score'), canSort: true },
+            { id: 'correctRate', header: t('quiz.correctRate'), canSort: true },
+            { id: 'submitCount', header: t('quiz.submitLimit'), canSort: true },
         ]
         // 每道题一列，列名为 Q1/Q2/...
         props.questions.forEach((q, idx) => {
             cols.push({
                 id: `q${q.id}`,
                 header: `Q${idx + 1}`,
+                canSort: true,
             })
         })
         return cols

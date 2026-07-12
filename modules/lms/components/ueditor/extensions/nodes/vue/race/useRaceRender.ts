@@ -387,6 +387,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         timeRemaining, formatTime, timeProgress, showPodium, questionTop3,
         studentAnswered, questionRef, onSaved, startRace, nextQuestion,
         endQuestion, endRace, refresh,
+        useRaceRenderContext
     }
     provide(RaceRenderKey, ctx)
     return ctx

@@ -18,6 +18,7 @@
 </template>
 
 <script setup>
+import { useRaceRenderContext } from '../useRaceRender'
 const {
     studentRows, scoresLoading, scoreColumns, getScoreClass,
 } = useRaceRenderContext()

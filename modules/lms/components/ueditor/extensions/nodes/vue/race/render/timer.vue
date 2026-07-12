@@ -19,6 +19,7 @@
 </template>
 
 <script setup>
+import { useRaceRenderContext } from '../useRaceRender'
 const {
     t, timeRemaining, formatTime, timeProgress,
     currentIndex, raceQuestions,

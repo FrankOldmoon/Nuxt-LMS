@@ -14,6 +14,7 @@
 </template>
 
 <script setup>
+import { useRaceRenderContext } from '../useRaceRender'
 const {
     t, raceQuestions, currentIndex, currentQuestionCid,
     endRace, endQuestion, nextQuestion,

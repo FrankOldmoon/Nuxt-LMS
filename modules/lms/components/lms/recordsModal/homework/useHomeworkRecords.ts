@@ -28,7 +28,7 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
             header: t('record.colRecord'),
             sortingFn: (a, b) => (a.original.record ? 1 : 0) - (b.original.record ? 1 : 0),
         },
-        { id: 'score', header: t('record.score') },
+        { id: 'score', header: t('record.score'), canSort: true },
     ])
 
     const defaultSort = [{ id: 'record', desc: true }]

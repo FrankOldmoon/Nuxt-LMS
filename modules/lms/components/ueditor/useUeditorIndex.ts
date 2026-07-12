@@ -162,7 +162,7 @@ export function useUeditorIndex(props: any, json: any) {
     const onChanged = () => {
         const markdown = editorRef.value.useEditor().getMarkdown()
         json.value = editorRef.value.getJSON()
-        console.log({ markdown, json: json.value })
+        //console.log({ markdown, json: json.value })
         tiptapEditor.value = editorRef.value.useEditor()
     }
 

@@ -14,5 +14,6 @@
 </template>
 
 <script setup>
+import { useRaceRenderContext } from '../useRaceRender'
 const { t, isTeacher, raceQuestions, startRace } = useRaceRenderContext()
 </script>
