@@ -9,6 +9,7 @@
  * - 范围内若无可提交任务 → 纯文字 heading，需停留 5s 完成
  * - 范围内若有可提交任务 → 全部答对/提交后才算完成
  */
+import { extractText } from './tiptapText'
 
 /** 可提交的任务节点类型（对应 vue 节点的 attrs.type） */
 export const SUBMITTABLE_TYPES = ['question', 'homework', 'comment', 'quiz', 'race'] as const
@@ -31,18 +32,6 @@ export interface ChapterTaskMap {
   headings: HeadingInfo[]
   /** headingId → 其下方的可提交任务列表（纯文字 heading 对应空数组） */
   tasksByHeading: Record<string, HeadingTask[]>
-}
-
-/** 从 tiptap inline content 中递归提取纯文本 */
-function extractText(nodes: any[]): string {
-  if (!nodes) return ''
-  return nodes
-    .map((node: any) => {
-      if (node.type === 'text') return node.text ?? ''
-      if (node.content) return extractText(node.content)
-      return ''
-    })
-    .join('')
 }
 
 /**

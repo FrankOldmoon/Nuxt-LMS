@@ -18,7 +18,7 @@
         </div>
       </div>
 
-      <UeditorRender :json="data.chapter.content" :course-id="courseId" />
+      <UeditorRender :json="data.chapter.content" :course-id="courseId" :track-reading="!!user" />
 
       <!-- AI 生成内容（用户可编辑，禁止切换纯文本模式） -->
       <div class="mt-8 pt-6 border-t border-default">
@@ -82,4 +82,5 @@ import type { ChapterViewProps } from '../../../composables/useChapterView'
 
 const props = withDefaults(defineProps<ChapterViewProps>(), { extraCondition: false })
 const { chapterPageCfg, aiRecord, saveRecord } = useChapterView(props)
+const { user } = useAuth()
 </script>

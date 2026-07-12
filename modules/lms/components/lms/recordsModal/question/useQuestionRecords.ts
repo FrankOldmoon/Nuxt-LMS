@@ -26,9 +26,14 @@ export function useQuestionRecords(props: QuestionRecordsProps, emit: QuestionRe
         id: 'record',
         header: t('record.colRecord'),
         sortingFn: (a, b) => (a.original.record ? 1 : 0) - (b.original.record ? 1 : 0),
+    },{
+        id: 'score',
+        header: t('record.score'),
+        canSort: true,
+        sortingFn: (a, b) => (a.original.record?.score || 0) - (b.original.record?.score || 0),
     }])
 
-    const defaultSort = [{ id: 'record', desc: true }]
+    const defaultSort = [{ id: 'score', desc: true }]
 
     // 先用缓存学生数据填充 table，再异步合并 records
     function buildRows(recordsData) {

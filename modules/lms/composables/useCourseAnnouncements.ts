@@ -88,15 +88,6 @@ export function useCourseAnnouncements(
     return String(content)
   }
 
-  function extractText(node: any): string {
-    if (!node) return ''
-    if (typeof node === 'string') return node
-    if (Array.isArray(node)) return node.map(extractText).join('')
-    if (node.text) return node.text
-    if (Array.isArray(node.content)) return node.content.map(extractText).join('')
-    return ''
-  }
-
   function toggleCreateForm() {
     showCreateForm.value = !showCreateForm.value
     if (!showCreateForm.value) {
@@ -195,7 +186,6 @@ export function useCourseAnnouncements(
     toggleClass,
     formatTime,
     renderContent,
-    extractText,
     toggleCreateForm,
     loadData,
     createAnnouncement,

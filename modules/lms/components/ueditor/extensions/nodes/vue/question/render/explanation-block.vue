@@ -9,20 +9,4 @@
 defineProps({
   explanation: { default: '' },
 })
-
-function contentToText(content) {
-  if (typeof content === 'string') return content
-  if (content && typeof content === 'object') return extractText(content)
-  return ''
-}
-function extractText(node) {
-  if (!node) return ''
-  if (typeof node === 'string') return node
-  if (node.text) return node.text
-  if (node.content && Array.isArray(node.content)) return node.content.map(extractText).join('')
-  return ''
-}
-function isRichDoc(content) {
-  return content && typeof content === 'object' && !Array.isArray(content) && content.type
-}
 </script>

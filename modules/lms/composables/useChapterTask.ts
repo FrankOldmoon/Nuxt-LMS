@@ -3,18 +3,31 @@ import type { ChapterTaskMap } from '../utils/chapterTask'
 
 /**
  * 章节任务完成状态上下文
- * - taskStatus: headingId → 是否完成
- * - nodeStatus: "type:cid" → 是否完成（可提交任务的实时状态）
- * - reportNodeDone: 子组件（question/homework/comment/quiz/race）提交后上报
- * - markHeadingDone: 纯文字 heading 停留 5s 后标记完成
+ *
+ * 完成标准（所有 heading 通用）：
+ * 1. 该 heading 下方所有可提交互动组件（question/homework/comment/quiz/race）全部 submit 答对
+ * 2. 该 heading 下方所有块级图文内容（段落/图片/codeBlock/列表/表格/callout 等）都被鼠标 hover 停留 3s
+ *
+ * - hover 已读状态不持久化，刷新页面后重新开始
+ * - heading 完成状态（taskStatus）持久化，且为"sticky"——一旦完成不再回退
+ * - 已完成的 heading 下的内容不再显示 hover 黄色高亮
+ * - 未登录时不记录、不高亮（trackReading 由页面层根据登录态 gating）
  */
 export interface ChapterTaskContext {
   taskMap: Ref<ChapterTaskMap>
   taskStatus: Ref<Record<string, boolean>>
   nodeStatus: Ref<Record<string, boolean>>
   isPass: Ref<boolean>
+  /** 互动组件提交后上报 */
   reportNodeDone: (type: string, cid: number, done: boolean) => void
-  markHeadingDone: (headingId: string, done: boolean) => void
+  /** 某个可阅读块所属 heading id；无则 null。key 形如 "3" 或 "3.1"（列表项） */
+  blockHeadingOf: (key: string) => string | null
+  /** 该块是否已被 hover 阅读过 */
+  isBlockRead: (key: string) => boolean
+  /** 标记某块为已读（hover 停留 3s 后调用） */
+  markBlockRead: (key: string) => void
+  /** 某个 heading 是否已完成（sticky） */
+  isHeadingDone: (headingId: string) => boolean
 }
 
 const CHAPTER_TASK_KEY = 'chapter-task-context'
@@ -34,7 +47,7 @@ export function useChapterTask(): ChapterTaskContext | null {
 }
 
 /**
- * 在章节页初始化任务上下文：provide 给子组件，并设置停留计时与持久化
+ * 在章节页初始化任务上下文：provide 给子组件，并设置 hover 阅读追踪与持久化
  */
 export function setupChapterTask(opts: {
   content: Ref<Record<string, any> | null | undefined>
@@ -63,6 +76,69 @@ export function setupChapterTask(opts: {
   const nodeStatus = ref<Record<string, boolean>>({})
   const isPass = ref(!!opts.initialIsPass)
 
+  // ===== 顶层块布局：建立 blockKey → headingId 的映射 =====
+  // 仅追踪需要 hover 阅读的块级内容（排除 heading 自身与 vue 互动节点）
+  // vue 互动节点（question/homework/...）走 submit 上报路径，不计入阅读要求
+  // 列表节点（bulletList/orderedList/taskList）按 listItem/taskItem 拆分，
+  // 每个 <li> 单独作为一个可阅读块（逐行标黄），key 形如 "${topIndex}.${itemIndex}"
+  // 空段落（无文字、仅有 hardBreak/空白）不纳入追踪，否则用户无法 hover 导致卡住
+  const LIST_TYPES = new Set(['bulletList', 'orderedList', 'taskList'])
+  function isEmptyParagraph(node: any): boolean {
+    if (node.type !== 'paragraph') return false
+    if (!node.content || node.content.length === 0) return true
+    return node.content.every((child: any) => {
+      if (child.type === 'text') return !child.text || !child.text.trim()
+      if (child.type === 'hardBreak') return true
+      return false
+    })
+  }
+  const blockLayout = computed(() => {
+    const byHeading: Record<string, string[]> = {}
+    const blockToHeading: Record<string, string> = {}
+    const topBlocks = (opts.content.value?.content) || []
+    // 章节标题 h1（合成）作为初始当前 heading，其下的顶层块归属它
+    let curHeading = String(opts.chapterId.value)
+    topBlocks.forEach((child: any, index: number) => {
+      if (!child) return
+      if (child.type === 'heading') {
+        const id = child.attrs?.id || child.attrs?.['data-toc-id']
+        if (id) curHeading = String(id)
+        return
+      }
+      if (child.type === 'vue') return // 互动组件走 submit 路径
+      if (isEmptyParagraph(child)) return // 空行不纳入 hover 追踪
+      // 列表：每个 listItem/taskItem 单独作为一个可阅读块
+      if (LIST_TYPES.has(child.type) && Array.isArray(child.content)) {
+        child.content.forEach((_item: any, j: number) => {
+          const key = `${index}.${j}`
+          blockToHeading[key] = curHeading
+          ;(byHeading[curHeading] ||= []).push(key)
+        })
+        return
+      }
+      // 其它块级内容（段落/图片/codeBlock/表格/callout 等）整体作为一个可阅读块
+      const key = String(index)
+      blockToHeading[key] = curHeading
+      ;(byHeading[curHeading] ||= []).push(key)
+    })
+    return { byHeading, blockToHeading }
+  })
+
+  // hover 已读块集合（不持久化，刷新重置）
+  const readBlocks = ref<Set<string>>(new Set())
+
+  function isBlockRead(key: string): boolean {
+    return readBlocks.value.has(key)
+  }
+
+  function blockHeadingOf(key: string): string | null {
+    return blockLayout.value.blockToHeading[key] ?? null
+  }
+
+  function isHeadingDone(headingId: string): boolean {
+    return !!taskStatus.value[headingId]
+  }
+
   // 反向索引：nodeKey → headingId，便于上报时定位所属 heading
   const nodeToHeading = computed<Record<string, string>>(() => {
     const m: Record<string, string> = {}
@@ -72,12 +148,30 @@ export function setupChapterTask(opts: {
     return m
   })
 
-  // 重算某个 heading 的完成状态（仅对有任务的 heading）
-  function recomputeHeading(headingId: string) {
+  /**
+   * 重算某个 heading 的完成状态。
+   * sticky：已完成的 heading 不再回退（避免刷新后未 hover 导致已完成任务回退）。
+   * 完成条件：所有 submit 任务答对 AND 所有可阅读块已 hover。
+   * @returns 是否刚把该 heading 置为完成
+   */
+  function recomputeHeading(headingId: string): boolean {
+    if (taskStatus.value[headingId]) return false // sticky
     const tasks = taskMap.value.tasksByHeading[headingId] || []
-    if (tasks.length === 0) return // 纯文字 heading 由停留计时处理
-    const allDone = tasks.every(t => nodeStatus.value[t.key])
-    taskStatus.value = { ...taskStatus.value, [headingId]: allDone }
+    const tasksDone = tasks.length === 0 || tasks.every(t => nodeStatus.value[t.key])
+    if (!tasksDone) return false
+    const blocks = blockLayout.value.byHeading[headingId] || []
+    const blocksRead = blocks.length === 0 || blocks.every(idx => readBlocks.value.has(idx))
+    if (!blocksRead) return false
+    taskStatus.value = { ...taskStatus.value, [headingId]: true }
+    return true
+  }
+
+  /** recomputeHeading 的包装：若状态翻转则重算 isPass 并安排持久化 */
+  function checkHeading(headingId: string) {
+    if (recomputeHeading(headingId)) {
+      recomputePass()
+      schedulePersist()
+    }
   }
 
   function recomputePass() {
@@ -125,18 +219,17 @@ export function setupChapterTask(opts: {
     const key = `${type}:${cid}`
     nodeStatus.value = { ...nodeStatus.value, [key]: done }
     const hid = nodeToHeading.value[key]
-    if (hid) {
-      recomputeHeading(hid)
-      recomputePass()
-      schedulePersist()
-    }
+    if (hid) checkHeading(hid)
   }
 
-  function markHeadingDone(headingId: string, done: boolean) {
-    if (taskStatus.value[headingId] === done) return
-    taskStatus.value = { ...taskStatus.value, [headingId]: done }
-    recomputePass()
-    schedulePersist()
+  /** hover 停留 3s 后标记块已读 */
+  function markBlockRead(key: string) {
+    if (!user.value) return
+    if (readBlocks.value.has(key)) return
+    // 重新赋值以稳定触发响应式
+    readBlocks.value = new Set([...readBlocks.value, key])
+    const hid = blockLayout.value.blockToHeading[key]
+    if (hid) checkHeading(hid)
   }
 
   const ctx: ChapterTaskContext = {
@@ -145,76 +238,35 @@ export function setupChapterTask(opts: {
     nodeStatus,
     isPass,
     reportNodeDone,
-    markHeadingDone,
+    blockHeadingOf,
+    isBlockRead,
+    markBlockRead,
+    isHeadingDone,
   }
 
   provide(CHAPTER_TASK_KEY, ctx)
   // 同时通过模块级 ref 共享，供不在 provide 子树内的组件访问（如移动端 slideover 中的 TOC）
   sharedChapterTaskCtx.value = ctx
 
-  // ===== 纯文字 heading 停留计时（客户端） =====
+  // ===== 客户端：内容/布局变化时重算所有 heading =====
   if (import.meta.client) {
-    let observer: IntersectionObserver | null = null
-    let dwellTimer: any = null
-    let activeId: string | null = null
-
-    function setActive(id: string) {
-      if (id === activeId) return
-      activeId = id
-      if (dwellTimer) {
-        clearTimeout(dwellTimer)
-        dwellTimer = null
-      }
-      // 仅纯文字 heading 且未完成时启动 5s 计时
-      const tasks = taskMap.value.tasksByHeading[id] || []
-      if (tasks.length === 0 && !taskStatus.value[id]) {
-        dwellTimer = setTimeout(() => {
-          markHeadingDone(id, true)
-          dwellTimer = null
-        }, 5000)
-      }
-    }
-
-    function setupDwell() {
-      observer?.disconnect()
-      observer = null
-      const ids = taskMap.value.headings.map(h => h.id)
-      if (!ids.length) return
-
-      observer = new IntersectionObserver(
-        (entries) => {
-          const visible = entries
-            .filter(e => e.isIntersecting)
-            .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
-          if (visible.length && visible[0]?.target?.id) {
-            setActive(visible[0].target.id)
-          }
-        },
-        { rootMargin: '-80px 0px -70% 0px', threshold: [0, 1] },
-      )
-
-      // 等 heading DOM 渲染完成
-      nextTick(() => {
-        ids.forEach(id => {
-          const el = document.getElementById(id)
-          if (el) observer?.observe(el)
-        })
-      })
-    }
-
-    onMounted(() => {
-      nextTick(() => setupDwell())
-    })
-
-    // 内容变化时重建观察
-    watch(taskMap, () => {
-      nextTick(() => setupDwell())
-    })
+    // 内容加载后重算所有 heading 完成状态（sticky，已完成的不会回退）。
+    // 覆盖时序问题：question 可能在 content 完全加载前就已答对上报，
+    // 此时 nodeToHeading 尚未建立 → reportNodeDone 内的 checkHeading 未命中；
+    // 此 watcher 在 taskMap 就绪后统一补救，让已答对的任务正确触发完成。
+    // 同时覆盖空 heading（无任务且无可阅读块）自动完成的原始需求。
+    watch(
+      [taskMap, blockLayout],
+      () => {
+        if (!user.value) return
+        for (const h of taskMap.value.headings) {
+          checkHeading(h.id)
+        }
+      },
+      { flush: 'post', immediate: true },
+    )
 
     onBeforeUnmount(() => {
-      observer?.disconnect()
-      observer = null
-      if (dwellTimer) clearTimeout(dwellTimer)
       if (persistTimer) clearTimeout(persistTimer)
       // 离开页面时立即持久化一次
       doPersist()

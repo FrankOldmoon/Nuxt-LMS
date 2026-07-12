@@ -6,7 +6,7 @@ import { eq, and, inArray, sql } from "drizzle-orm"
  * 持久化当前用户在某章节的 heading 任务完成状态
  * body: { chapter_id, task_status: { [headingId]: boolean }, is_pass: boolean }
  *
- * 客户端负责计算每个 heading 的完成状态（文字停留 5s / 提交全部答对），
+ * 客户端负责计算每个 heading 的完成状态（hover 阅读停留 3s + 互动组件提交全部答对），
  * 这里仅做 upsert 持久化；is_pass 由客户端根据全部 heading 完成情况计算。
  * 当 is_pass 从 false 变为 true 时，触发奖章检查。
  *

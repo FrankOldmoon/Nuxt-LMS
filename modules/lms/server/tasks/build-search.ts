@@ -2,6 +2,7 @@ import { db, schema } from '@nuxthub/db'
 import { isNull, eq } from 'drizzle-orm'
 import { resolve } from 'path'
 import { writeFile, mkdir } from 'fs/promises'
+import { extractText } from '#lms/utils/tiptapText'
 
 interface SearchEntry {
   text: string
@@ -11,20 +12,6 @@ interface SearchEntry {
   url: string
   sourceName: string
   sourceType: 'course' | 'chapter'
-}
-
-/**
- * 递归提取 tiptap inline content 节点中的纯文本
- */
-function extractText(nodes: any[]): string {
-  if (!nodes) return ''
-  return nodes
-    .map((node: any) => {
-      if (node.type === 'text') return node.text ?? ''
-      if (node.content) return extractText(node.content)
-      return ''
-    })
-    .join('')
 }
 
 /**

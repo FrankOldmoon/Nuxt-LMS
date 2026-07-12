@@ -1,21 +1,9 @@
+import { extractText } from './tiptapText'
+
 export interface TocLink {
   id: string
   text: string
   children?: TocLink[]
-}
-
-/**
- * 从 tiptap inline content 节点中递归提取纯文本
- */
-function extractText(nodes: any[]): string {
-  if (!nodes) return ''
-  return nodes
-    .map((node: any) => {
-      if (node.type === 'text') return node.text ?? ''
-      if (node.content) return extractText(node.content)
-      return ''
-    })
-    .join('')
 }
 
 /**

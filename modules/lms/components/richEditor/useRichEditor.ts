@@ -39,13 +39,5 @@ export function useRichEditor(props: any, model: Ref<string | Record<string, any
         return extractText(doc)
     }
 
-    function extractText(node: any): string {
-        if (node.text) return node.text
-        if (node.content && Array.isArray(node.content)) {
-            return node.content.map(extractText).join('')
-        }
-        return ''
-    }
-
     return { isJson, isModalOpen, editJson, openEditor, saveJson, switchToTextMode }
 }

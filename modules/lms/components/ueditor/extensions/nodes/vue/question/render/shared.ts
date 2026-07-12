@@ -208,25 +208,6 @@ export async function submitQuestion(params: {
 }
 
 /**
- * 将 Tiptap JSON 内容提取为纯文本
- */
-export function contentToText(content: any): string {
-  if (typeof content === 'string') return content
-  if (content && typeof content === 'object') return extractText(content)
-  return ''
-}
-
-function extractText(node: any): string {
-  if (!node) return ''
-  if (typeof node === 'string') return node
-  if (node.text) return node.text
-  if (node.content && Array.isArray(node.content)) {
-    return node.content.map(extractText).join('')
-  }
-  return ''
-}
-
-/**
  * 判断内容是否为 Tiptap 富文本 JSON（有 type + content 字段的对象）
  */
 export function isRichDoc(content: any): boolean {

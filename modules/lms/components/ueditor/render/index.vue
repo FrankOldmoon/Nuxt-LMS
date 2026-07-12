@@ -3,7 +3,7 @@
     <div v-if="renderContent" class="umo-editor-content is-readonly" :style="{ lineHeight: defaultLineHeight }"
       :spellcheck="false">
       <div class="umo-editor" contenteditable="false" style="padding: 0px; min-height: 100%;" ref="renderNodeRef">
-        <RenderNode :node="renderContent" :course-id="effectiveCourseId" />
+        <RenderNode :node="renderContent" :course-id="effectiveCourseId" :track-reading="trackReading" />
       </div>
     </div>
 
@@ -41,6 +41,12 @@ const props = defineProps({
   courseId: {
     type: [Number, String],
     default: undefined,
+  },
+  // 是否追踪 hover 阅读进度：仅章节主内容区（已登录）开启
+  // 嵌套 ueditorRender（题目内容/作业说明等）不开启，避免误计入阅读进度
+  trackReading: {
+    type: Boolean,
+    default: false,
   },
 })
 

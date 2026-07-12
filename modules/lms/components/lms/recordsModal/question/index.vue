@@ -17,11 +17,13 @@
                     class="text-xs px-1.5 py-0.5 rounded" :class="answerItemClass(row.original.record, idx)">
                     {{ ans }}
                   </span>
-                  <span class="text-xs text-gray-400">→ {{ formatCorrectRate(row.original.record) }}</span>
                 </div>
               </template>
               <span v-else class="text-xs text-gray-400">-</span>
             </div>
+          </template>
+          <template #score-cell="{ row }">
+            {{ row.original.record?.score || '-'  }}
           </template>
         </ClassUsersTable>
 

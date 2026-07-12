@@ -359,6 +359,7 @@ export const userCourses = pgTable(
     number: varchar('number', { length: 100 }),
     group: varchar('group', { length: 100 }),
     exp: integer('exp').default(0),
+    coin: integer('coin').default(0),
     ...withTimestamps,
   },
   (t) => ({
