@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import AuthSettingsModal from '../../../base/components/auth/settingsModal.vue'
+import AuthSettingsModal from '../../../base/components/auth/settings/modal.vue'
 /**
  * lms 包装 settingsModal
  *

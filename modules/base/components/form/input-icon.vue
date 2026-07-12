@@ -1,5 +1,4 @@
 <template>
-  <!-- 触发按钮：显示当前图标或占位 -->
   <UPopover v-model:open="popoverOpen" :ui="{ content: 'w-72' }">
     <button type="button"
       class="inline-flex items-center gap-2 px-2 py-1 rounded border border-default bg-elevated/30 hover:bg-elevated/60 transition-colors text-xs"
@@ -12,7 +11,6 @@
 
     <template #content>
       <div class="p-3 space-y-2">
-        <!-- 搜索框 -->
         <UInput
           v-model="searchText"
           icon="i-lucide-search"
@@ -22,7 +20,6 @@
           @keydown.enter.prevent="selectMatchIcon"
         />
 
-        <!-- 图标网格 -->
         <div class="max-h-56 overflow-y-auto">
           <div class="grid grid-cols-8 gap-1">
             <div
@@ -43,7 +40,6 @@
           </div>
         </div>
 
-        <!-- 分页栏 -->
         <div class="flex items-center justify-between pt-2 border-t border-default">
           <span class="text-xs text-muted">
             {{ $t('formIcon.pageInfo', { total: filterIcons.length, page, totalPage }) }}
@@ -59,87 +55,22 @@
 </template>
 
 <script setup>
-import lucideJson from '@iconify-json/lucide/icons.json'
-
-const allLucideIcons = Object.keys(lucideJson.icons)
-
 const props = defineProps({
-  modelValue: {
-    type: String,
-    default: '',
-  },
-  placeholder: {
-    type: String,
-    default: '',
-  },
-  /** 图标颜色 class（如 text-amber-400），从父组件传入 */
-  iconColor: {
-    type: String,
-    default: '',
-  },
-  pageSize: {
-    type: Number,
-    default: 40,
-  },
+  modelValue: { type: String, default: '' },
+  placeholder: { type: String, default: '' },
+  iconColor: { type: String, default: '' },
+  pageSize: { type: Number, default: 40 },
 })
 
 const emit = defineEmits(['update:modelValue'])
 
-const popoverOpen = ref(false)
-const searchText = ref('')
-const page = ref(1)
-
-// 本地副本，确保组件内响应式
-const innerValue = ref(props.modelValue)
-watch(() => props.modelValue, (val) => { innerValue.value = val })
-watch(innerValue, (val) => { emit('update:modelValue', val) })
-
-// 图标全名：兼容 i-lucide-xxx 和 lucide:xxx
-function fullIconName(name) {
-  if (!name) return 'i-lucide-circle'
-  if (name.startsWith('i-') || name.includes(':')) return name
-  return `i-lucide-${name}`
-}
-
-// 筛选图标
-const filterIcons = computed(() => {
-  const keyword = searchText.value.trim().toLowerCase()
-  if (!keyword) return allLucideIcons
-  return allLucideIcons.filter(name => name.toLowerCase().includes(keyword))
-})
-
-// 总页数
-const totalPage = computed(() => Math.ceil(filterIcons.value.length / props.pageSize) || 1)
-
-// 当前分页图标
-const pageIcons = computed(() => {
-  const start = (page.value - 1) * props.pageSize
-  const end = start + props.pageSize
-  return filterIcons.value.slice(start, end)
-})
-
-// 搜索词变更重置页码
-watch(searchText, () => { page.value = 1 })
-
-// 弹窗打开时重置搜索
-watch(popoverOpen, (val) => {
-  if (val) {
-    searchText.value = ''
-    page.value = 1
-  }
-})
-
-// 选择图标
-function selectIcon(name) {
-  innerValue.value = name
-  popoverOpen.value = false
-}
-
-// 回车选中第一个匹配图标
-function selectMatchIcon() {
-  const kw = searchText.value.trim()
-  if (!kw) return
-  const firstMatch = filterIcons.value[0]
-  if (firstMatch) selectIcon(firstMatch)
-}
+const {
+  popoverOpen, searchText, page, innerValue,
+  fullIconName, filterIcons, totalPage, pageIcons,
+  selectIcon, selectMatchIcon,
+} = useIconPicker(
+  () => props.modelValue,
+  () => props.pageSize,
+  (val) => emit('update:modelValue', val),
+)
 </script>
