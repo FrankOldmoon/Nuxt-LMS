@@ -48,6 +48,7 @@ export function useCinserts(props: any, emit: any) {
             { label: t('ueditor.insertAigenerator'), icon: 'i-lucide-sparkles', onSelect: () => insertAigenerator() },
             { label: t('ueditor.insertCondition'), icon: 'i-lucide-shield-check', onSelect: () => insertTypedSheet('condition') },
             { label: t('ueditor.insertTabs'), icon: 'i-lucide-panel-top', onSelect: () => insertTabs() },
+            { label: t('ueditor.insertStepper'), icon: 'i-lucide-list', onSelect: () => insertStepper() },
             { label: t('ueditor.insertVfiles'), icon: 'i-lucide-folder-tree', onSelect: () => insertVfiles() },
         )
         if (moduleLms) {
@@ -163,6 +164,23 @@ export function useCinserts(props: any, emit: any) {
         editor.chain().focus().insertContent({
             type: 'vue',
             attrs: { content: defaultConfig, type: 'tabs' },
+        }).run()
+    }
+
+    // 插入步骤节点（带默认配置）
+    function insertStepper() {
+        const editor = props.editor?.useEditor()
+        if (!editor) return
+        const defaultConfig = JSON.stringify({
+            orientation: 'horizontal',
+            steps: [
+                { title: '', description: '' },
+                { title: '', description: '' },
+            ],
+        })
+        editor.chain().focus().insertContent({
+            type: 'vue',
+            attrs: { content: defaultConfig, type: 'stepper' },
         }).run()
     }
 

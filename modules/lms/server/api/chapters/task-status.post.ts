@@ -71,8 +71,10 @@ export default eventHandler(async (event) => {
 
     return cResp({ isPass, newMedals })
   } catch (error: any) {
-    console.error('保存章节任务状态失败:', error)
-    return cResp(null, error.message || '保存失败', false)
+    // drizzle 的 DrizzleQueryError 把真正的 PG 错误藏在 error.cause 里
+    const pgError = error?.cause?.message || error?.message || '保存失败'
+    console.error('保存章节任务状态失败:', pgError, error?.cause || error)
+    return cResp(null, pgError, false)
   }
 })
 
@@ -111,7 +113,7 @@ async function updateCourseProgress(userId: number, courseId: number) {
     .onConflictDoUpdate({
       target: [schema.userCourses.userId, schema.userCourses.courseId],
       set: {
-        records: sql`COALESCE(${schema.userCourses.records}, '{}'::jsonb) || jsonb_build_object('progress', ${progress})`,
+        records: sql`COALESCE(${schema.userCourses.records}, '{}'::jsonb) || jsonb_build_object('progress', ${progress}::int)`,
       },
     })
 }

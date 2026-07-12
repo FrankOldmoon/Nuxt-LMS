@@ -157,11 +157,13 @@ export function useUniverSheet(
     })
 
     // 监听单元格数据变化
+    // Univer SDK 没有 WorkbookValueChanged 事件，使用 CommandExecuted 替代
+    // CommandExecuted 在所有命令执行后触发（包括单元格编辑、格式修改等）
+    // 配合外层 500ms 防抖，不会频繁保存
     try {
       const EventEnum = univerAPI.Event
-      const eventName = EventEnum?.WorkbookValueChanged || EventEnum?.WorkbookCellEdited || 'WorkbookValueChanged'
-      if (eventName) {
-        univerAPI.addEvent(eventName, () => { onChange() })
+      if (EventEnum?.CommandExecuted) {
+        univerAPI.addEvent(EventEnum.CommandExecuted, () => { onChange() })
       }
     } catch (_) { /* noop */ }
   }
