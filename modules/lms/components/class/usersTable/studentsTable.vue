@@ -64,6 +64,7 @@
 
 <script setup lang="ts">
 const { t } = useI18n()
+
 const {
   showGroup, activeTab, sorting, students, columns,
   hideNumber, hideActions, extraColumns,

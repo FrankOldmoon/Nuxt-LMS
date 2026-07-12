@@ -30,8 +30,10 @@ vi.mock('@nuxthub/db', () => ({
 }))
 
 import { db } from '@nuxthub/db'
-import { shouldAwardMedal, collectUserMetrics, checkAndAwardMedals, DEFAULT_MEDALS } from '../../server/utils/medals'
-import type { MedalContent, UserMetrics } from '../../server/utils/medals'
+import { shouldAwardMedal, checkAndAwardMedals } from '../../server/utils/medals/checker'
+import { collectUserMetrics } from '../../server/utils/medals/metrics'
+import { DEFAULT_MEDALS } from '../../server/utils/medals/default-medals'
+import type { MedalContent, UserMetrics } from '../../server/utils/medals/types'
 import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'
 
 /** 创建 thenable 链式 mock：await chain 可直接获得 result */

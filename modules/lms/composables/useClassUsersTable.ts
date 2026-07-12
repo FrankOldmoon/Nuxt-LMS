@@ -1,11 +1,22 @@
-import { h, resolveComponent, inject, provide, type InjectionKey } from 'vue'
+import { h, inject, provide, type InjectionKey } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
+
+interface ExtraColumn {
+  id: string
+  header: any
+  /** 传 true 即可启用排序（内部自动补充 accessorKey + sortableHeader） */
+  canSort?: boolean
+  /** 自定义排序函数（与 canSort 二选一或同时使用） */
+  sortingFn?: any
+  /** 显式指定取值字段（默认用 id） */
+  accessorKey?: string
+}
 
 interface ClassUsersTableProps {
   classId: number | null
   courseId?: number
   rows?: any[]
-  extraColumns?: { id: string; header: any; sortingFn?: any }[]
+  extraColumns?: ExtraColumn[]
   hideActions?: boolean
   hideTeachers?: boolean
   hideNumber?: boolean
@@ -28,12 +39,25 @@ export function useClassUsersTableContext() {
   return ctx
 }
 
+/** 需要调用方解析后传入的 UI 组件引用 */
+interface ClassUsersTableUiComponents {
+  UButton: any
+}
+
 /**
  * 班级用户表格：学生/教师列表 + 编号管理 + 在线状态 + 小组 + 得分图表 + 重置密码
+ *
+ * 注意：UButton 必须由调用方（index.vue）在 setup 顶层 resolveComponent 解析后传入。
+ * 因为 composable 内部 resolveComponent 返回的可能是字符串，而 h() 真正在 UTable
+ * 的 header() 中渲染发生在 mount 之后，字符串引用会 lookup 失败（按钮列不显示）。
  */
-export function useClassUsersTable(props: ClassUsersTableProps) {
+export function useClassUsersTable(
+  props: ClassUsersTableProps,
+  ui: ClassUsersTableUiComponents,
+) {
   const { t } = useI18n()
   const toast = useToast()
+  const { UButton } = ui
   const { courseId: ctxCourseId } = useLmsContext()
   const { classUsers, classUsersLoading, fetchUsers: fetchClassUsers } = useClassUsers()
 
@@ -257,7 +281,7 @@ export function useClassUsersTable(props: ClassUsersTableProps) {
   }
 
   // ====================== 排序表头 ======================
-  const UButton = resolveComponent('UButton')
+  
 
   function sortableHeader(label: string) {
     return ({ column }: { column: any }) => {
@@ -378,7 +402,7 @@ export function useClassUsersTable(props: ClassUsersTableProps) {
     if (props.showOnline) {
       cols.push({
         id: 'online',
-        header: '',
+        header: sortableHeader(t('classSelector.online')),
         cell: ({ row }) => {
           const uid = row.original.id
           const online = onlineMap[uid] ?? isOnlineByLoginAt(row.original.loginAt)
@@ -406,11 +430,26 @@ export function useClassUsersTable(props: ClassUsersTableProps) {
       { accessorKey: 'rollNumber', header: sortableHeader(t('classSelector.colRollNumber')) },
     )
     if (!props.hideActions) {
-      cols.push({ id: 'resetPassword', header: '' })
-      cols.push({ id: 'actions', header: '' })
+      cols.push({ id: 'resetPassword', header: t('classSelector.resetPassword') })
+      cols.push({ id: 'actions', header: t('classSelector.actions') })
     }
     if (props.extraColumns?.length) {
-      cols.push(...props.extraColumns)
+      // canSort / sortingFn 触发自动装配：
+      // 1. accessorKey 缺省时用 id 补上 → TanStack Table 创建 accessorFn → getCanSort() = true
+      // 2. header 为字符串时自动包装 sortableHeader → 渲染可点击的排序按钮
+      // 3. sortingFn 缺省时由 TanStack Table 的 getAutoSortingFn 按数据类型自动选择
+      for (const col of props.extraColumns) {
+        if (col.canSort || col.sortingFn) {
+          const merged: any = { ...col }
+          if (!merged.accessorKey) merged.accessorKey = col.id
+          if (typeof merged.header === 'string') {
+            merged.header = sortableHeader(merged.header as string)
+          }
+          cols.push(merged)
+        } else {
+          cols.push(col)
+        }
+      }
     }
     return cols
   })
@@ -461,4 +500,4 @@ export function useClassUsersTable(props: ClassUsersTableProps) {
   }
 }
 
-export type { ClassUsersTableProps }
+export type { ClassUsersTableProps, ExtraColumn }

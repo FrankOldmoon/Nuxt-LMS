@@ -1,4 +1,4 @@
-import { getConfig } from '../../utils/config'
+import { getConfig } from '../../utils/config/reload'
 
 /**
  * 公开（无鉴权）：返回站点配置的安全子集（剥离 mail 凭据等敏感字段）

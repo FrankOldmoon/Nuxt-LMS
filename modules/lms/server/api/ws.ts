@@ -57,6 +57,7 @@ export default defineWebSocketHandler({
     try {
       const data = JSON.parse(message.text())
       const { type } = data
+      //console.log('[ws] received:', type, 'data:', JSON.stringify(data).slice(0, 200))
 
       // 用户级注册（私信推送）
       if (type === 'registerUser') {
@@ -70,9 +71,15 @@ export default defineWebSocketHandler({
       }
 
       // 尝试班级消息 → 竞赛消息 → 小组消息
-      if (handleClassMessage(peer, data)) return
-      if (handleRaceMessage(peer, data)) return
-      if (handleGroupMessage(peer, data)) return
+      try {
+        if (handleClassMessage(peer, data)) return
+      } catch (e) { console.error('[ws] class handler error:', e); peer.send(JSON.stringify({ type: 'error', message: 'class handler error' })); return }
+      try {
+        if (handleRaceMessage(peer, data)) return
+      } catch (e) { console.error('[ws] race handler error:', e); peer.send(JSON.stringify({ type: 'error', message: 'race handler error' })); return }
+      try {
+        if (handleGroupMessage(peer, data)) return
+      } catch (e) { console.error('[ws] group handler error:', e); peer.send(JSON.stringify({ type: 'error', message: 'group handler error' })); return }
     } catch {
       peer.send(JSON.stringify({ type: 'error', message: 'Invalid message format' }))
     }

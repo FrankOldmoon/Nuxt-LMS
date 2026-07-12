@@ -1,6 +1,6 @@
 import { db, schema } from '@nuxthub/db'
 import { eq, isNull, and, sum } from 'drizzle-orm'
-import { getConfigSync } from './config'
+import { getConfigSync } from './config/state'
 
 const ADMIN = 'admin'
 const TEACHER = 'teacher'

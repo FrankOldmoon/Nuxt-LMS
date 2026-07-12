@@ -33,7 +33,7 @@ beforeEach(() => {
 
 describe('server/utils/config - DEFAULT_SITE_CONFIG', () => {
   it('导出默认配置对象', async () => {
-    const { DEFAULT_SITE_CONFIG } = await import('../../server/utils/config')
+    const { DEFAULT_SITE_CONFIG } = await import('../../server/utils/config/defaults')
     expect(DEFAULT_SITE_CONFIG['site:title']).toBe('AI LMS')
     expect(DEFAULT_SITE_CONFIG['site:allowRegistration']).toBe(false)
     expect(DEFAULT_SITE_CONFIG['site:allowForgotPassword']).toBe(true)
@@ -44,7 +44,8 @@ describe('server/utils/config - DEFAULT_SITE_CONFIG', () => {
 
 describe('server/utils/config - reloadConfig', () => {
   it('从数据库加载 site:* 配置并合并默认值', async () => {
-    const { reloadConfig, getConfigSync } = await import('../../server/utils/config')
+    const { reloadConfig } = await import('../../server/utils/config/reload')
+    const { getConfigSync } = await import('../../server/utils/config/state')
     const fakeRows = [
       { id: 'site:title', value: 'My LMS' },
       { id: 'site:allowRegistration', value: true },
@@ -62,7 +63,7 @@ describe('server/utils/config - reloadConfig', () => {
   })
 
   it('数据库查询失败时回退到默认值', async () => {
-    const { reloadConfig } = await import('../../server/utils/config')
+    const { reloadConfig } = await import('../../server/utils/config/reload')
     const chain = _mockDb.select()
     chain.where = vi.fn().mockRejectedValueOnce(new Error('DB error'))
     _mockDb.select.mockReturnValueOnce(chain as any)
@@ -81,7 +82,7 @@ describe('server/utils/config - reloadConfig', () => {
     const chain = _mockDb.select()
     chain.where = vi.fn().mockResolvedValueOnce([])
     _mockDb.select.mockReturnValueOnce(chain as any)
-    const { reloadConfig } = await import('../../server/utils/config')
+    const { reloadConfig } = await import('../../server/utils/config/reload')
     const result = await reloadConfig()
     expect(result['site:mail.host']).toBe('smtp.gmail.com')
     expect(result['site:mail.port']).toBe(587)
@@ -93,7 +94,7 @@ describe('server/utils/config - reloadConfig', () => {
 
 describe('server/utils/config - getConfig', () => {
   it('未加载时自动 reload', async () => {
-    const { getConfig } = await import('../../server/utils/config')
+    const { getConfig } = await import('../../server/utils/config/reload')
     const chain = _mockDb.select()
     chain.where = vi.fn().mockResolvedValueOnce([])
     _mockDb.select.mockReturnValueOnce(chain as any)
@@ -102,7 +103,7 @@ describe('server/utils/config - getConfig', () => {
   })
 
   it('传 key 返回单值', async () => {
-    const { getConfig } = await import('../../server/utils/config')
+    const { getConfig } = await import('../../server/utils/config/reload')
     const chain = _mockDb.select()
     chain.where = vi.fn().mockResolvedValueOnce([])
     _mockDb.select.mockReturnValueOnce(chain as any)
@@ -111,7 +112,7 @@ describe('server/utils/config - getConfig', () => {
   })
 
   it('不传 key 返回整个配置副本', async () => {
-    const { getConfig } = await import('../../server/utils/config')
+    const { getConfig } = await import('../../server/utils/config/reload')
     const chain = _mockDb.select()
     chain.where = vi.fn().mockResolvedValueOnce([])
     _mockDb.select.mockReturnValueOnce(chain as any)
@@ -123,12 +124,13 @@ describe('server/utils/config - getConfig', () => {
 
 describe('server/utils/config - getConfigSync', () => {
   it('未加载时返回默认值', async () => {
-    const { getConfigSync } = await import('../../server/utils/config')
+    const { getConfigSync } = await import('../../server/utils/config/state')
     expect(getConfigSync('site:title')).toBe('AI LMS')
   })
 
   it('返回缓存值', async () => {
-    const { reloadConfig, getConfigSync } = await import('../../server/utils/config')
+    const { reloadConfig } = await import('../../server/utils/config/reload')
+    const { getConfigSync } = await import('../../server/utils/config/state')
     const chain = _mockDb.select()
     chain.where = vi.fn().mockResolvedValueOnce([{ id: 'site:title', value: 'Cached' }])
     _mockDb.select.mockReturnValueOnce(chain as any)
@@ -139,7 +141,7 @@ describe('server/utils/config - getConfigSync', () => {
 
 describe('server/utils/config - getConfigByPrefix', () => {
   it('按前缀返回去掉前缀的配置项', async () => {
-    const { reloadConfig, getConfigByPrefix } = await import('../../server/utils/config')
+    const { reloadConfig, getConfigByPrefix } = await import('../../server/utils/config/reload')
     const chain = _mockDb.select()
     chain.where = vi.fn().mockResolvedValueOnce([])
     _mockDb.select.mockReturnValueOnce(chain as any)
@@ -152,7 +154,7 @@ describe('server/utils/config - getConfigByPrefix', () => {
   })
 
   it('不带 . 时返回的 key 含前导点（slice 不跳过点）', async () => {
-    const { reloadConfig, getConfigByPrefix } = await import('../../server/utils/config')
+    const { reloadConfig, getConfigByPrefix } = await import('../../server/utils/config/reload')
     const chain = _mockDb.select()
     chain.where = vi.fn().mockResolvedValueOnce([])
     _mockDb.select.mockReturnValueOnce(chain as any)

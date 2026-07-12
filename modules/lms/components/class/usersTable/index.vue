@@ -36,7 +36,7 @@ const props = defineProps<{
   classId: number | null
   courseId?: number
   rows?: any[]
-  extraColumns?: { id: string; header: any; sortingFn?: any }[]
+  extraColumns?: ExtraColumn[]
   hideActions?: boolean
   hideTeachers?: boolean
   hideNumber?: boolean
@@ -47,7 +47,10 @@ const props = defineProps<{
   showGroup?: boolean
 }>()
 
-const ctx = useClassUsersTable(props)
+// 在 setup 阶段解析 UI 组件引用，传入 composable。
+// 避免 composable 内部 resolveComponent 返回字符串导致 h() 渲染失败。
+const UButton = resolveComponent('UButton')
+const ctx = useClassUsersTable(props, { UButton })
 provideClassUsersTable(ctx)
 
 const {

@@ -20,8 +20,7 @@ export default defineNuxtModule({
       paths.push(resolve(`./server/db/schema.ts`));
     });
 
-    // #lms 别名指向 lms 模块根目录，供 #lms/types/lms 类型导入使用。
-    // 始终注册（即使 lms 功能未启用），因为类型文件NUXT_MODULE_LMS。
+
     nuxt.options.alias['#lms'] = resolve('.')
 
     const enabled = process.env.NUXT_MODULE_LMS === 'true'
@@ -83,6 +82,20 @@ export default defineNuxtModule({
     })
 
     addServerScanDir(resolve('./server'))
+
+    // 覆盖 base 模块同路径 API：base 与 lms 都通过 addServerScanDir 把
+    // server 目录加入 nitro:config 的 scanDirs，Nitro 按顺序扫描，先注册者胜。
+    // 默认 base 先 addScanDir（modules 数组中 base 在前），base 胜出。
+    // 此处用 nitro:config hook 把 lms/server 移到 scanDirs 最前，使 lms 先被
+    // 扫描；任何同 route+method 的 lms handler 会先于 base 注册，Nitro 去重
+    // 时保留 lms 版本，从而实现 lms 覆盖 base。
+    nuxt.hook('nitro:config', (config) => {
+      const lmsServerDir = resolve('./server')
+      const dirs = config.scanDirs ||= []
+      const filtered = dirs.filter((d: string) => d !== lmsServerDir)
+      filtered.unshift(lmsServerDir)
+      config.scanDirs = filtered
+    })
 
 
     // 客户端插件：监听 chapterAccessUpdate WS 消息，刷新当前课程侧边栏导航

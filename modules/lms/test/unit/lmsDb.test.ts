@@ -26,22 +26,21 @@ vi.mock('@nuxthub/db', () => ({
   },
 }))
 
-vi.mock('../../../base/server/utils/db', () => ({
+vi.mock('../../../base/server/utils/db/crud', () => ({
   showTable: vi.fn(),
   updateTable: vi.fn(),
 }))
 
 import { db } from '@nuxthub/db'
-import { showTable, updateTable } from '../../../base/server/utils/db'
+import { showTable, updateTable } from '../../../base/server/utils/db/crud'
 import {
   saveContentVersion,
   listContentVersions,
   getContentVersion,
   restoreContentVersion,
-  getCourseMembers,
-  updateCourseMember,
-  getClassUsers,
-} from '../../server/utils/db'
+} from '../../server/utils/db/versions'
+import { getCourseMembers, updateCourseMember } from '../../server/utils/db/courseMembers'
+import { getClassUsers } from '../../server/utils/db/classUsers'
 import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'
 
 /** 创建 thenable 链式 mock：所有链方法返回 this，await chain 获得 result */

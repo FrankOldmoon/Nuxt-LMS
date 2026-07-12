@@ -1,75 +1,66 @@
-import { db, schema } from "@nuxthub/db"
-import { eq, and } from "drizzle-orm"
-// addCourseScoreMax 通过 Nuxt auto-import 从 utils/userScore 引入（无需显式 import）
-
 /**
  * 提交竞赛成绩
- * body: course_id, race_cid, records, total_score
+ * POST /api/races/submit
+ * body: { course_id, race_cid, records, total_score }
  * records: [{ questionCid, rate, point, answer }]
- * 将成绩存入 userRaces 表，并更新 userCourses.raceScore（取最高分模式）
+ *
+ * 防刷策略（详见 utils/submit/race.ts）：
+ *  - 已有记录：取最高分（不累加），不再给经验
+ *  - 首次提交：给参与经验（participateExp）
  */
-export default eventHandler(async (event) => {
-  const user = await requireAuth(event)
+import { db, schema } from '@nuxthub/db'
+import { and, eq } from 'drizzle-orm'
+import { parseSubmitContext } from '../../utils/submit/context'
+import { findUserSubmitRecord } from '../../utils/submit/record'
+import { notifyCourseProgressMax } from '../../utils/submit/progress'
+import { withSubmitHandler } from '../../utils/submit/handler'
 
-  const body = await readBody(event)
-  const { course_id, race_cid, records, total_score } = body
+export default withSubmitHandler('提交竞赛成绩失败', async (event) => {
+  const ctx = await parseSubmitContext(event, {
+    cidField: 'race_cid',
+    sectionKey: 'race',
+  })
+  const { user, courseId, cid: raceCid, section: rConfig, body } = ctx
 
-  if (!course_id || !race_cid) {
-    return cResp(null, '缺少参数', false)
-  }
-
-  const courseId = Number(course_id)
-  const raceCid = Number(race_cid)
-  const score = Number(total_score) || 0
-
-  // 读取 LMS 配置
-  const config = await getCourseLmsConfig(courseId)
-  const rConfig = config.race
-
-  // 计算经验值（按排名需要在 race 结束后统一计算，这里给参与经验）
-  // 仅首次提交给参与经验，重复提交不再给
+  const records = body.records
+  const score = Number(body.total_score) || 0
   const participationExp = rConfig.participateExp || rConfig.participationExp || 0
-  let gainedExp = 0
 
-  const existing = await db.query.userRaces.findFirst({
-    where: and(
+  // 1. 查找已有记录
+  const existing = await findUserSubmitRecord(user.id, courseId, 'race', raceCid)
+  const prevScore = Number(existing?.score) || 0
+  const bestScore = Math.max(prevScore, score)
+  const isFirstSubmit = !existing
+  const gainedExp = isFirstSubmit ? participationExp : 0
+
+  // 2. 写 userRaces（取最高分）
+  if (existing) {
+    await db.update(schema.userRaces).set({
+      records,
+      score: String(bestScore),
+    }).where(and(
       eq(schema.userRaces.userId, user.id),
       eq(schema.userRaces.courseId, courseId),
-      eq(schema.userRaces.raceCid, raceCid)
-    )
+      eq(schema.userRaces.raceCid, raceCid),
+    ))
+  } else {
+    await db.insert(schema.userRaces).values({
+      userId: user.id,
+      courseId,
+      raceCid,
+      records,
+      score: String(score),
+    })
+  }
+
+  // 3. 更新 userCourses.raceScore（最高分模式 + 参与经验）
+  await notifyCourseProgressMax({
+    userId: user.id,
+    courseId,
+    score: bestScore,
+    scoreKey: 'raceScore',
+    exp: gainedExp,
   })
 
-  try {
-    if (existing) {
-      // 已有记录：取最高分，不再给参与经验
-      const prevScore = Number(existing.score) || 0
-      const bestScore = Math.max(prevScore, score)
-      await db.update(schema.userRaces).set({
-        records,
-        score: String(bestScore),
-      }).where(and(
-        eq(schema.userRaces.userId, user.id),
-        eq(schema.userRaces.courseId, courseId),
-        eq(schema.userRaces.raceCid, raceCid)
-      ))
-      // userCourses.raceScore 取最高分（不累加），避免重复刷分
-      await addCourseScoreMax(user.id, courseId, bestScore, 'raceScore', 0)
-    } else {
-      // 新记录：给参与经验
-      gainedExp = participationExp
-      await db.insert(schema.userRaces).values({
-        userId: user.id,
-        courseId,
-        raceCid,
-        records,
-        score: String(score),
-      })
-      await addCourseScoreMax(user.id, courseId, score, 'raceScore', gainedExp)
-    }
-
-    return cResp({ gainedExp, score })
-  } catch (error: any) {
-    console.error('提交竞赛成绩失败:', error)
-    return cResp(null, error.message || '提交失败', false)
-  }
+  return cResp({ gainedExp, score })
 })

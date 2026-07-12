@@ -19,7 +19,7 @@ vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
 
 // ---- Mock config（getConfigSync）----
 let _configValues: Record<string, any> = {}
-vi.mock('../../server/utils/config', () => ({
+vi.mock('../../server/utils/config/state', () => ({
   getConfigSync: (key: string) => _configValues[key],
 }))
 

@@ -1,6 +1,6 @@
 <template>
     <UModal v-model:open="open" scrollable fullscreen>
-        <template #content>
+        <template #body>
             <div class="p-6 space-y-4 min-w-[600px]">
                 <h2 class="text-lg font-semibold">{{ $t('record.commentRecords') }}</h2>
 

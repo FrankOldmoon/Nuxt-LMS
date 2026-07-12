@@ -7,9 +7,15 @@
  * 仅教师/管理员可调用。
  */
 import { db, schema } from '@nuxthub/db'
-import { eq, and, inArray } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
+import {
+  queryStudentQuestionStatus,
+  queryStudentHomeworkStatus,
+  queryStudentCommentStatus,
+  queryStudentChapterScores,
+} from '../../utils/chapterScores/query'
+import { assembleChapterScores } from '../../utils/chapterScores/assemble'
 
-type ItemStatus = 'done' | 'partial' | 'todo'
 
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
@@ -20,11 +26,11 @@ export default eventHandler(async (event) => {
   if (!chapterId) return cResp(null, '缺少 chapterId', false)
   if (!classId) return cResp(null, '缺少 classId', false)
 
-  // 权限校验：教师或管理员
+  // 1. 权限校验：教师或管理员
   const canView = user.roles.includes('admin') || (courseId > 0 && await isCourseTeacher(user.id, courseId))
   if (!canView) return cResp(null, '无权限', false)
 
-  // 获取章节的 task IDs
+  // 2. 章节信息（含 cids 列表）
   const chapter = await db
     .select({
       id: schema.chapters.id,
@@ -36,7 +42,6 @@ export default eventHandler(async (event) => {
     .from(schema.chapters)
     .where(eq(schema.chapters.id, chapterId))
     .limit(1)
-
   if (!chapter[0]) return cResp(null, '章节不存在', false)
 
   const ch = chapter[0]
@@ -45,99 +50,19 @@ export default eventHandler(async (event) => {
   const hIds = (ch.homeworkIds as number[] | null) || []
   const cIds = (ch.commentIds as number[] | null) || []
 
-  // 获取班级学生
+  // 3. 班级学生（排除教师）
   const classUsers = await getClassUsers(classId, cid)
   const studentIds = classUsers.filter(u => !u.isTeacher).map(u => u.id)
   if (studentIds.length === 0) return cResp([])
 
-  // 查询章节得分
-  const userChapters = await db
-    .select({
-      userId: schema.userChapters.userId,
-      score: schema.userChapters.score,
-    })
-    .from(schema.userChapters)
-    .where(and(
-      eq(schema.userChapters.chapterId, chapterId),
-      inArray(schema.userChapters.userId, studentIds),
-    ))
-  const scoreMap = new Map<number, number>()
-  for (const uc of userChapters) {
-    scoreMap.set(uc.userId, Number(uc.score) || 0)
-  }
+  // 4. 批量查状态 / 得分（并发）
+  const [questionStatusMap, homeworkStatusMap, commentStatusMap, scoreMap] = await Promise.all([
+    queryStudentQuestionStatus(cid, studentIds, qIds),
+    queryStudentHomeworkStatus(cid, studentIds, hIds),
+    queryStudentCommentStatus(cid, studentIds, cIds),
+    queryStudentChapterScores(chapterId, studentIds),
+  ])
 
-  // 批量查询题目完成情况
-  const questionStatusMap = new Map<string, ItemStatus>() // key: userId:questionCid
-  if (qIds.length > 0) {
-    const uqs = await db
-      .select({
-        userId: schema.userQuestions.userId,
-        questionCid: schema.userQuestions.questionCid,
-        correctRate: schema.userQuestions.correctRate,
-      })
-      .from(schema.userQuestions)
-      .where(and(
-        eq(schema.userQuestions.courseId, cid),
-        inArray(schema.userQuestions.userId, studentIds),
-        inArray(schema.userQuestions.questionCid, [...new Set(qIds)]),
-      ))
-    for (const q of uqs) {
-      const rate = Number(q.correctRate) || 0
-      questionStatusMap.set(`${q.userId}:${q.questionCid}`, rate >= 1 ? 'done' : 'partial')
-    }
-  }
-
-  // 批量查询作业提交情况
-  const homeworkStatusMap = new Map<string, ItemStatus>()
-  if (hIds.length > 0) {
-    const uhs = await db
-      .select({
-        userId: schema.userHomeworks.userId,
-        homeworkCid: schema.userHomeworks.homeworkCid,
-      })
-      .from(schema.userHomeworks)
-      .where(and(
-        eq(schema.userHomeworks.courseId, cid),
-        inArray(schema.userHomeworks.userId, studentIds),
-        inArray(schema.userHomeworks.homeworkCid, [...new Set(hIds)]),
-      ))
-    for (const h of uhs) {
-      homeworkStatusMap.set(`${h.userId}:${h.homeworkCid}`, 'done')
-    }
-  }
-
-  // 批量查询评论互动情况
-  const commentStatusMap = new Map<string, ItemStatus>()
-  if (cIds.length > 0) {
-    const ucs = await db
-      .select({
-        userId: schema.userComments.userId,
-        commentCid: schema.userComments.commentCid,
-      })
-      .from(schema.userComments)
-      .where(and(
-        eq(schema.userComments.courseId, cid),
-        inArray(schema.userComments.userId, studentIds),
-        inArray(schema.userComments.commentCid, [...new Set(cIds)]),
-      ))
-    for (const c of ucs) {
-      commentStatusMap.set(`${c.userId}:${c.commentCid}`, 'done')
-    }
-  }
-
-  // 组装结果
-  const result = studentIds.map(uid => {
-    const items = [
-      ...qIds.map(id => ({ id, type: 'question' as const, status: questionStatusMap.get(`${uid}:${id}`) || 'todo' as ItemStatus })),
-      ...hIds.map(id => ({ id, type: 'homework' as const, status: homeworkStatusMap.get(`${uid}:${id}`) || 'todo' as ItemStatus })),
-      ...cIds.map(id => ({ id, type: 'comment' as const, status: commentStatusMap.get(`${uid}:${id}`) || 'todo' as ItemStatus })),
-    ]
-    return {
-      userId: uid,
-      score: scoreMap.get(uid) || 0,
-      items,
-    }
-  })
-
-  return cResp(result)
+  // 5. 装配（含每学生 taskStatus；progress 由前端用章节 headings 计算）
+  return cResp(assembleChapterScores(studentIds, qIds, hIds, cIds, scoreMap, questionStatusMap, homeworkStatusMap, commentStatusMap))
 })

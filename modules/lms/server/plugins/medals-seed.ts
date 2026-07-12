@@ -1,5 +1,5 @@
 import { db, schema } from '@nuxthub/db'
-import { DEFAULT_MEDALS } from '../utils/medals'
+import { DEFAULT_MEDALS } from '../utils/medals/default-medals'
 
 /**
  * 服务启动时检查 medals 表是否为空，若空则写入默认奖章

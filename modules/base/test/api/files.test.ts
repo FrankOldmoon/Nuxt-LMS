@@ -137,7 +137,7 @@ describe('API: files/delete.post (soft delete)', () => {
 describe('API: files/upload.post — 软删除后重新上传', () => {
   it('查重 WHERE 子句包含 isNull(deletedAt)（源代码静态校验）', async () => {
     const text = await (await import('node:fs')).promises.readFile(
-      '/Users/oldmoon/Documents/ubuntu/nuxt_lms_2026/modules/base/server/api/files/upload.post.ts',
+      '/Users/oldmoon/Documents/ubuntu/nuxt_lms_2026/modules/base/server/utils/upload/validate.ts',
       'utf8'
     )
     // dedup 查重（主流程 + catch 分支）必须过滤 deletedAt
@@ -145,14 +145,13 @@ describe('API: files/upload.post — 软删除后重新上传', () => {
     expect(matches.length).toBeGreaterThanOrEqual(2)
   })
 
-  it('dedupWhere 变量同时覆盖主查重与 catch 冲突查重', async () => {
+  it('buildDedupWhere 同时覆盖主查重与 catch 冲突查重', async () => {
     const text = await (await import('node:fs')).promises.readFile(
-      '/Users/oldmoon/Documents/ubuntu/nuxt_lms_2026/modules/base/server/api/files/upload.post.ts',
+      '/Users/oldmoon/Documents/ubuntu/nuxt_lms_2026/modules/base/server/utils/upload/validate.ts',
       'utf8'
     )
-    // 第一处：主流程查重 findFirst
-    expect(text).toMatch(/const existing = await db\.query\.files\.findFirst\(\{ where: dedupWhere \}\)/)
-    // 第二处：catch 分支冲突查重 findFirst
-    expect(text).toMatch(/const conflict = await db\.query\.files\.findFirst\(\{ where: dedupWhere \}\)/)
+    // buildDedupWhere 必须在 group 与非 group 两个分支都包含 isNull(deletedAt)
+    expect(text).toMatch(/and\(eq\(schema\.files\.hash, hash\), eq\(schema\.files\.group, group\), isNull\(schema\.files\.deletedAt\)\)/)
+    expect(text).toMatch(/and\(eq\(schema\.files\.hash, hash\), isNull\(schema\.files\.group\), isNull\(schema\.files\.deletedAt\)\)/)
   })
 })

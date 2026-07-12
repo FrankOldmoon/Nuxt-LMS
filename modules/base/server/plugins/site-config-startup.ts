@@ -6,7 +6,8 @@
  */
 import { db, schema } from "@nuxthub/db"
 import { eq } from "drizzle-orm"
-import { DEFAULT_SITE_CONFIG, reloadConfig } from "../utils/config"
+import { DEFAULT_SITE_CONFIG } from "../utils/config/defaults"
+import { reloadConfig } from "../utils/config/reload"
 import { hashPassword } from "../utils/auth"
 
 // 固定 admin 账号配置

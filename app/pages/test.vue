@@ -1,3 +1,7 @@
 <template>
-    <UButton color="warning">112311</UButton>11
+    <UButtons color="warning">112311</UButtons>11
 </template>
+
+<script setup lang="ts">
+const UButtons = resolveComponent('UButton')
+</script>

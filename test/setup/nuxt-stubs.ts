@@ -256,6 +256,11 @@ export function defineEventHandler(handler: (event: any) => any) {
 /** eventHandler — 别名（部分文件用此小写形式） */
 export const eventHandler = defineEventHandler
 
+/** defineWebSocketHandler 桩 — 透传配置对象，测试中可直接访问 cfg.message / open / close */
+export function defineWebSocketHandler(cfg: any) {
+  return cfg
+}
+
 /** getQuery */
 let _mockQuery: Record<string, any> = {}
 export function getQuery(event?: any): Record<string, any> {
@@ -263,6 +268,15 @@ export function getQuery(event?: any): Record<string, any> {
 }
 export function setMockQuery(q: Record<string, any>) {
   _mockQuery = q
+}
+
+/** getQueryId / requireQueryId — base/server/utils/response.ts auto-imports */
+export function getQueryId(event: any): number {
+  return Number(getQuery(event).id)
+}
+export function requireQueryId(event: any): number | null {
+  const id = Number(getQuery(event).id)
+  return id || null
 }
 
 /** getCookie */
@@ -306,6 +320,14 @@ export function setCookie(event: any, name: string, value: string, _opts?: any) 
 }
 export function deleteCookie(event: any, name: string, _opts?: any) {
   if (event.cookies) delete event.cookies[name]
+}
+
+/** setResponseHeader / sendStream 桩（Nitro 额外 auto-imports） */
+export function setResponseHeader(_event: any, _name: string, _value: any) {
+  /* stub */
+}
+export async function sendStream(_event: any, stream: any) {
+  return stream
 }
 
 /** getRequestIP 桩 */
@@ -562,19 +584,73 @@ export const allPeers = new Set<any>()
 export function trackPeer(_userId: number, _peer: any) {}
 export function untrackPeer(_peer: any) {}
 
-/** requireCourseTeacher 桩 */
+/** requireCourseTeacher 桩 — admin 直接通过，其他角色需 isCourseTeacher 验证
+ *  优先使用 globalThis 上的覆盖（测试可注入 mock），否则用默认实现 */
 export async function requireCourseTeacher(_event: any, _courseId?: number) {
   if (!_mockAuthState) {
     const err: any = new Error('请先登录')
     err.statusCode = 401
     throw err
   }
-  return _mockAuthState
+  if (_mockAuthState.roles.includes('admin')) return _mockAuthState
+  if (_mockAuthState.roles.includes('teacher')) {
+    // teacher 还需通过 isCourseTeacher 二次验证
+    const _isCourseTeacher = (globalThis as any).isCourseTeacher ?? isCourseTeacher
+    if (await _isCourseTeacher(_mockAuthState.id, _courseId ?? 0)) return _mockAuthState
+  }
+  const err: any = new Error('无权限操作此课程')
+  err.statusCode = 403
+  throw err
 }
 
 /** isCourseTeacher 桩（LMS 扩展用） */
 export async function isCourseTeacher(_userId: number, _courseId: number): Promise<boolean> {
   return false
+}
+
+/** broadcastToClass / classRooms 桩（LMS 章节班级广播） */
+const _classRooms = new Map<number, Set<any>>()
+export const classRooms = _classRooms
+export function broadcastToClass(_classId: number, _msg: any) {
+  // 默认 no-op；测试可通过 _wsBroadcasts 追踪（与 broadcastToAll 一致）
+  _wsBroadcasts.push({ classId: _classId, msg: _msg })
+}
+export function joinClassRoom(_classId: number, _peer: any) {
+  if (!_classRooms.has(_classId)) _classRooms.set(_classId, new Set())
+  _classRooms.get(_classId)!.add(_peer)
+}
+export function leaveClassRoom(_classId: number, _peer: any) {
+  _classRooms.get(_classId)?.delete(_peer)
+}
+
+/** normalizeChapterPageData 桩（lms server/utils/normalize/chapter 的默认实现） */
+export function normalizeChapterPageData(ch: any, course: any, userChapter?: any) {
+  return {
+    chapter: {
+      id: ch.id,
+      title: ch.name,
+      content: ch.content || {},
+      questionIds: ch.questionIds || [],
+      homeworkIds: ch.homeworkIds || [],
+      commentIds: ch.commentIds || [],
+      isOpen: !!ch.isOpen,
+      taskStatus: userChapter?.taskStatus || {},
+      isPass: !!userChapter?.isPass,
+      record: userChapter?.record,
+    },
+    course: {
+      id: course.id,
+      title: course.name,
+      icon: 'i-lucide-book-open',
+      color: 'primary',
+      chapters: course.chapters || [],
+    },
+  }
+}
+
+/** saveContentVersion 桩 */
+export async function saveContentVersion(_type: string, _entityId: number, _content: any): Promise<any> {
+  return { id: 1, type: _type, entityId: _entityId, content: _content, createdAt: new Date() }
 }
 
 /** LMS config auto-imports 桩 */
@@ -913,12 +989,16 @@ const _stubsToExpose: Record<string, any> = {
   defineEventHandler,
   eventHandler,
   getQuery,
+  getQueryId,
+  requireQueryId,
   getCookie,
   readBody,
   sendError,
   setResponseStatus,
   setHeader,
   getHeader,
+  setResponseHeader,
+  sendStream,
   setCookie,
   deleteCookie,
   getRequestIP,
@@ -950,6 +1030,12 @@ const _stubsToExpose: Record<string, any> = {
   allPeers,
   requireCourseTeacher,
   isCourseTeacher,
+  broadcastToClass,
+  classRooms,
+  joinClassRoom,
+  leaveClassRoom,
+  normalizeChapterPageData,
+  saveContentVersion,
   addTable,
   updateTable,
   batchTable,

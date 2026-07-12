@@ -1,6 +1,7 @@
 import { db, schema } from "@nuxthub/db"
 
-import { buildLmsConfigPairs, reloadLmsConfig, getLmsConfigSync } from '../../utils/lmsConfig'
+import { buildLmsConfigPairs } from '../../utils/lmsConfig/migration'
+import { reloadLmsConfig, getLmsConfigSync } from '../../utils/lmsConfig/cache'
 
 /**
  * 更新 LMS 配置（拍平写入 lms:* 行，并刷新缓存）

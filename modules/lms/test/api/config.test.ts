@@ -24,17 +24,15 @@ const _mockSchema = {
 }
 vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
 
-// Mock lmsConfig utils to use in-memory store (delegates to global stub)
-// 拍平存储所需：buildLmsConfigPairs 把树形对象转为 lms:* 拍平键值对列表
-vi.mock('../../server/utils/lmsConfig', () => ({
+// Mock lmsConfig sub-modules to delegate to global stubs
+// lms-config/update.post.ts explicitly imports from cache + migration;
+// config/get.ts & config/ai.get.ts use auto-import (globalThis stub) for getLmsConfigSync/getCourseLmsConfig
+vi.mock('../../server/utils/lmsConfig/cache', () => ({
   getLmsConfigSync: () => (globalThis as any).getLmsConfigSync(),
   reloadLmsConfig: () => (globalThis as any).reloadLmsConfig(),
-  getCourseLmsConfig: (id: number) => (globalThis as any).getCourseLmsConfig(id),
+}))
+vi.mock('../../server/utils/lmsConfig/migration', () => ({
   buildLmsConfigPairs: (obj: any) => (globalThis as any).buildLmsConfigPairs(obj),
-  flattenTree: (prefix: string, obj: any, result: Record<string, any>) =>
-    (globalThis as any).flattenTree(prefix, obj, result),
-  unflattenTree: (flat: Record<string, any>) => (globalThis as any).unflattenTree(flat),
-  mergeConfig: (defaults: any, overrides: any) => (globalThis as any).mergeConfig(defaults, overrides),
 }))
 
 import { resetAllStubs, setMockAuthState, setMockLmsConfig } from '../../../../test/setup/nuxt-stubs'
@@ -171,7 +169,7 @@ describe('API: lms-config/update.post', () => {
         }
       },
     })) as any)
-    const { buildLmsConfigPairs } = await import('../../server/utils/lmsConfig')
+    const { buildLmsConfigPairs } = await import('../../server/utils/lmsConfig/migration')
     const handler = (await import('../../server/api/lms-config/update.post')).default
     const result = await handler(makeEvent({
       body: { ai: { mode: 'ollama', model: 'llama3.2' }, user: { allowChangePassword: false } },

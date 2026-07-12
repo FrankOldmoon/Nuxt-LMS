@@ -43,6 +43,8 @@
     "keyboardNavHint": "← / → keys to navigate headings",
     "chapterScore": "Chapter Score",
     "tasks": "Task Status",
+    "task": "Task",
+    "progress": "Progress",
     "selectAll": "Select All",
     "selectNone": "Deselect All",
     "randomPick": "Random Pick",
@@ -99,7 +101,11 @@
     "wrongCountHint": "Number of times answered wrong",
     "exportPpt": "PPT",
     "exportPptSuccess": "PPT exported successfully",
-    "exportPptFailed": "Failed to export PPT"
+    "exportPptFailed": "Failed to export PPT",
+    "exportPdf": "PDF",
+    "exportPdfSuccess": "PDF exported successfully",
+    "exportPdfFailed": "Failed to export PDF",
+    "download": "Download"
   },
   "classSelector": {
     "selectClass": "Select Class",
@@ -151,7 +157,8 @@
     "searchTeacherPlaceholder": "Search teacher by name or username...",
     "addTeachersSuccess": "Teachers added successfully",
     "addTeachersFailed": "Failed to add teachers",
-    "noMyClasses": "You are not assigned to any classes yet"
+    "noMyClasses": "You are not assigned to any classes yet",
+    "actions": "Actions"
   },
   "userCard": {
     "courseScore": "Course Score",

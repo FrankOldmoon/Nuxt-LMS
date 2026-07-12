@@ -27,8 +27,8 @@
             <template #score-cell="{ row }">
               <span class="font-mono font-bold text-sm">{{ (row.original.score ?? 0).toFixed(1) }}</span>
             </template>
-            <!-- 任务状态列 -->
-            <template #tasks-cell="{ row }">
+            <!-- 任务列 -->
+            <template #task-cell="{ row }">
               <div class="flex items-center gap-1 flex-wrap">
                 <UTooltip
                   v-for="(item, idx) in row.original.items || []"
@@ -43,6 +43,13 @@
                   />
                 </UTooltip>
                 <span v-if="!(row.original.items || []).length" class="text-xs text-muted">-</span>
+              </div>
+            </template>
+            <!-- 进度列：已完成 heading / 总 heading -->
+            <template #progress-cell="{ row }">
+              <div class="flex items-center gap-2 w-32">
+                <UProgress :modelValue="Math.round((row.original.progress || 0) * 100)" size="xs" />
+                <span class="text-xs text-muted font-mono shrink-0">{{ Math.round((row.original.progress || 0) * 100) }}%</span>
               </div>
             </template>
           </ClassUsersTable>

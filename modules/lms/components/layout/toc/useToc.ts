@@ -9,6 +9,7 @@ export function useToc() {
     const editModalOpen = ref(false)
     const saving = ref(false)
     const exportingPpt = ref(false)
+    const exportingPdf = ref(false)
 
     const { tocLinks, chapterContent, notifyContentSaved, chapterBtnsConfig } = useLayoutState()
     const { chapterId, courseId } = useLmsContext()
@@ -180,6 +181,109 @@ export function useToc() {
         }
     }
 
+    // ── PDF 导出（浏览器打印 → 横屏 A4 PDF）──
+    // 不使用 html2pdf.js（其 html2canvas 在某些文本/伪元素上抛 "Invalid code point NaN"）
+    // 改为克隆章节内容到隐藏 iframe，复制样式表，canvas 转 img 保留 ECharts，调用浏览器打印
+    async function handleExportPdf() {
+        const source = document.querySelector('.umo-editor-render.render') as HTMLElement | null
+        if (!source) {
+            toast.add({ title: t('chapter.exportPdfFailed'), color: 'error' })
+            return
+        }
+        exportingPdf.value = true
+        try {
+            const title = tocLinks.value[0]?.text || 'Chapter'
+            const safeName = title.replace(/[\\/:*?"<>|]/g, '_')
+
+            // cloneNode 不复制 canvas 位图：将原 canvas 转为 img 写入克隆节点，保留 ECharts 等图表
+            const clone = source.cloneNode(true) as HTMLElement
+            const origCanvases = Array.from(source.querySelectorAll('canvas'))
+            const cloneCanvases = Array.from(clone.querySelectorAll('canvas'))
+            origCanvases.forEach((c, i) => {
+                const cc = cloneCanvases[i]
+                if (!cc) return
+                try {
+                    const img = document.createElement('img')
+                    img.src = c.toDataURL('image/png')
+                    img.style.maxWidth = '100%'
+                    img.style.height = 'auto'
+                    if (c.offsetWidth) img.style.width = c.offsetWidth + 'px'
+                    cc.replaceWith(img)
+                } catch {
+                    // canvas 被跨域图片污染（tainted）：跳过该图表
+                }
+            })
+
+            // 复制当前文档所有样式表，确保打印内容样式与页面一致
+            const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+                .map((n) => n.outerHTML).join('\n')
+
+            const iframe = document.createElement('iframe')
+            iframe.style.cssText = 'position:fixed;left:-99999px;top:0;width:0;height:0;border:0;'
+
+            const cleanup = () => {
+                try { document.body.removeChild(iframe) } catch { /* noop */ }
+            }
+
+            iframe.onload = () => {
+                const w = iframe.contentWindow
+                if (!w) { cleanup(); exportingPdf.value = false; return }
+                const idoc = w.document
+                idoc.open()
+                idoc.write(
+                    `<!DOCTYPE html><html><head><meta charset="utf-8">`
+                    // <base> 让克隆内容中的相对/根相对图片 URL（如 /uploads/...）按当前页面解析
+                    + `<base href="${window.location.href}">`
+                    + `<title>${safeName}</title>${styles}\n`
+                    + '<style>'
+                    + '@page { size: A4 landscape; margin: 1cm; }'
+                    + 'html, body { margin: 0; padding: 0; background: #fff; }'
+                    + '.umo-editor-render { width: 100% !important; min-height: auto !important; }'
+                    + '</style>'
+                    + `</head><body>${clone.outerHTML}</body></html>`,
+                )
+                idoc.close()
+
+                // 打印对话框关闭后清理 iframe + 复位 loading
+                const finish = () => {
+                    exportingPdf.value = false
+                    cleanup()
+                }
+                w.addEventListener('afterprint', finish, { once: true })
+
+                w.focus()
+                // 等图片/字体加载完再触发打印
+                setTimeout(() => {
+                    try {
+                        w.print()
+                        toast.add({ title: t('chapter.exportPdfSuccess'), color: 'success' })
+                    } catch (e: any) {
+                        toast.add({ title: e?.message || t('chapter.exportPdfFailed'), color: 'error' })
+                        finish()
+                    }
+                    // 兜底：部分浏览器 afterprint 不触发，1 分钟后复位 loading 并清理 iframe
+                    setTimeout(() => { exportingPdf.value = false; cleanup() }, 60000)
+                }, 600)
+            }
+
+            // 先绑定 onload 再插入 DOM，避免 about:blank load 事件竞态
+            document.body.appendChild(iframe)
+        } catch (e: any) {
+            toast.add({ title: e.message || t('chapter.exportPdfFailed'), color: 'error' })
+            exportingPdf.value = false
+        }
+    }
+
+    // 聚合 loading + 下拉菜单项
+    const downloading = computed(() => exportingPpt.value || exportingPdf.value)
+
+    const downloadItems = computed(() => [
+        [
+            { label: t('chapter.exportPpt'), icon: 'i-lucide-presentation', onSelect: handleExportPpt },
+            { label: t('chapter.exportPdf'), icon: 'i-lucide-file-text', onSelect: handleExportPdf },
+        ],
+    ])
+
     return {
         chapterBtnsConfig, chapterPageCfg, playFullscreen, togglePlay,
         exportingPpt, handleExportPpt, isLoggedIn, chapterTask,
@@ -187,5 +291,6 @@ export function useToc() {
         tocLinks, flatHeadings, currentHeadingIndex, goToHeading,
         canEditContent, editModalOpen, chapterContent, handleSave,
         lockId, ueditorRef, saving, handleSaveClick, chapterId,
+        exportingPdf, handleExportPdf, downloading, downloadItems,
     }
 }

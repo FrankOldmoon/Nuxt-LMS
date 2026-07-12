@@ -38,18 +38,14 @@ vi.mock('../../server/utils/ws/state', () => ({
   allPeers: new Set(),
 }))
 
-// Mock config.ts so getConfig reads from our controlled store
+// Mock config/reload so getConfig reads from our controlled store
+// (endpoints explicitly import getConfig/reloadConfig from config/reload;
+//  upsertConfig is auto-imported via globalThis stub → _mockConfigStore)
 let _configStore: Record<string, any> = {}
-vi.mock('../../server/utils/config', async () => {
-  const actual: any = await vi.importActual('../../server/utils/config')
-  return {
-    ...actual,
-    getConfig: async (key: string) => _configStore[key] ?? null,
-    getConfigSync: (key?: string) => (key ? (_configStore[key] ?? null) : { ..._configStore }),
-    reloadConfig: async () => ({}),
-    upsertConfig: async (key: string, value: any) => { _configStore[key] = value },
-  }
-})
+vi.mock('../../server/utils/config/reload', () => ({
+  getConfig: async (key: string) => _configStore[key] ?? null,
+  reloadConfig: async () => ({}),
+}))
 
 import {
   resetAllStubs,

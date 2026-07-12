@@ -99,4 +99,8 @@ function cleanupPeer(peer: any) {
   if (!lockId) return
   releaseLock(lockId, peer)
   removeFromRoom(lockId, peer)
+  peer._lockId = undefined
 }
+
+// 仅供测试用例清空状态使用
+export { lockRooms, lockHolders }

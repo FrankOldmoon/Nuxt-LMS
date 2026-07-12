@@ -7,10 +7,11 @@
         :label="playFullscreen ? $t('chapter.exitPlay') : $t('chapter.play')"
         :icon="playFullscreen ? 'i-lucide-minimize' : 'i-lucide-play'" :color="playFullscreen ? 'error' : 'primary'"
         variant="soft" size="sm" class="flex-1 justify-center" @click="togglePlay" />
-      <UButton :label="$t('chapter.exportPpt')" icon="i-lucide-presentation"
-        :loading="exportingPpt" variant="soft" color="neutral" size="sm"
-        :class="chapterBtnsConfig.showPlay && chapterPageCfg.enableFullscreen ? '' : 'w-full justify-center'"
-        @click="handleExportPpt" />
+      <UDropdownMenu :items="downloadItems">
+        <UButton :label="$t('chapter.download')" icon="i-lucide-download"
+          :loading="downloading" variant="soft" color="warning" size="sm"
+          :class="chapterBtnsConfig.showPlay && chapterPageCfg.enableFullscreen ? '' : 'w-full justify-center'" />
+      </UDropdownMenu>
     </div>
 
     <!-- lms 专有：章节按钮、班级卡片、学习进度 -->
@@ -72,7 +73,7 @@ import { useToc } from './useToc'
 
 const {
   chapterBtnsConfig, chapterPageCfg, playFullscreen, togglePlay,
-  exportingPpt, handleExportPpt, isLoggedIn, chapterTask,
+  downloading, downloadItems, isLoggedIn, chapterTask,
   totalHeadings, allDone, doneHeadings, progressPercent,
   tocLinks, flatHeadings, currentHeadingIndex, goToHeading,
   canEditContent, editModalOpen, chapterContent, handleSave,

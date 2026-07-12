@@ -14,7 +14,8 @@ vi.mock('@nuxthub/db', () => ({
 }))
 
 // vi.mock 会提升到 import 之前，此处可安全导入被测模块
-import { flattenTree, unflattenTree, mergeConfig, buildLmsConfigPairs } from '../../server/utils/lmsConfig'
+import { flattenTree, unflattenTree, mergeConfig } from '../../server/utils/lmsConfig/tree'
+import { buildLmsConfigPairs } from '../../server/utils/lmsConfig/migration'
 import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'
 
 beforeEach(() => {

@@ -1,4 +1,4 @@
-import { reloadConfig } from '../../utils/config'
+import { reloadConfig } from '../../utils/config/reload'
 import { broadcastToAll } from '../../utils/ws/state'
 
 /**

@@ -5,7 +5,7 @@
  */
 import { ref, computed, reactive, watch, watchEffect, onMounted, onBeforeUnmount, onUnmounted, onBeforeMount, nextTick, getCurrentInstance, toValue } from 'vue'
 import {
-  getQuery, setMockQuery,
+  getQuery, getQueryId, requireQueryId, setMockQuery,
   getCookie, setMockCookie, clearMockCookies,
   createError, readBody, setMockBody,
   sendError, setResponseStatus, setHeader, getHeader,
@@ -22,7 +22,7 @@ import {
   upsertConfig, reloadConfig,
   broadcastToAll, getWsBroadcasts, clearWsBroadcasts,
   requireCourseTeacher,
-  defineEventHandler, eventHandler, $fetch,
+  defineEventHandler, eventHandler, defineWebSocketHandler, $fetch,
   setMockFetchHandler, clearMockFetchHandler,
   useStorage,
   useState, clearUseState,
@@ -43,6 +43,10 @@ import {
   validateTable,
   useTableOverride, registerTableOverride, clearTableOverrideRegistry,
   showTable, listTablePaged, importTableRows, exportTableRows,
+  addTable, updateTable, batchTable,
+  getLmsConfigSync, reloadLmsConfig, getCourseLmsConfig, setMockLmsConfig, clearMockLmsConfig,
+  isCourseTeacher,
+  buildLmsConfigPairs, getLastLmsPairs, flattenTree, unflattenTree, mergeConfig,
   resetAllStubs,
 } from './nuxt-stubs'
 
@@ -51,7 +55,7 @@ const _exports: Record<string, any> = {
   ref, computed, reactive, watch, watchEffect,
   onMounted, onBeforeUnmount, onUnmounted, onBeforeMount, nextTick, getCurrentInstance, toValue,
   // Nuxt auto-imports
-  getQuery, setMockQuery,
+  getQuery, getQueryId, requireQueryId, setMockQuery,
   getCookie, setMockCookie, clearMockCookies,
   createError, readBody, setMockBody,
   sendError, setResponseStatus, setHeader, getHeader,
@@ -68,7 +72,7 @@ const _exports: Record<string, any> = {
   upsertConfig, reloadConfig,
   broadcastToAll, getWsBroadcasts, clearWsBroadcasts,
   requireCourseTeacher,
-  defineEventHandler, eventHandler, $fetch,
+  defineEventHandler, eventHandler, defineWebSocketHandler, $fetch,
   setMockFetchHandler, clearMockFetchHandler,
   useStorage,
   useState, clearUseState,
@@ -89,6 +93,10 @@ const _exports: Record<string, any> = {
   validateTable,
   useTableOverride, registerTableOverride, clearTableOverrideRegistry,
   showTable, listTablePaged, importTableRows, exportTableRows,
+  addTable, updateTable, batchTable,
+  getLmsConfigSync, reloadLmsConfig, getCourseLmsConfig, setMockLmsConfig, clearMockLmsConfig,
+  isCourseTeacher,
+  buildLmsConfigPairs, getLastLmsPairs, flattenTree, unflattenTree, mergeConfig,
   resetAllStubs,
 }
 

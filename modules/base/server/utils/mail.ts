@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer'
-import { getConfigByPrefix } from './config'
+import { getConfigByPrefix } from './config/reload'
 
 /**
  * 邮件发送工具

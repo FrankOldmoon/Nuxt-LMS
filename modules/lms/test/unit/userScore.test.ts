@@ -26,7 +26,8 @@ vi.mock('@nuxthub/db', () => ({
 }))
 
 import { db } from '@nuxthub/db'
-import { addChapterScore, addCourseScore, addCourseScoreMax } from '../../server/utils/userScore'
+import { addChapterScore } from '../../server/utils/userScore/chapter'
+import { addCourseScore, addCourseScoreMax } from '../../server/utils/userScore/course'
 import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'
 
 beforeEach(() => {
