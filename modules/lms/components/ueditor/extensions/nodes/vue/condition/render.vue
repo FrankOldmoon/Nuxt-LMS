@@ -7,20 +7,7 @@
         </div>
 
         <!-- 未满足：显示模糊内容 + 条件标签 -->
-        <div v-else-if="config.content" class="condition-locked">
-            <div class="condition-locked-content">
-                <ueditorRender :json="config.content" />
-            </div>
-            <div class="condition-locked-overlay">
-                <UIcon name="i-lucide-lock" class="size-5 text-gray-400" />
-                <span class="text-xs text-gray-400 mt-1">{{ t('ueditor.conditionDenied') }}</span>
-                <div v-if="config.conditions?.length" class="condition-tags">
-                    <UBadge v-for="(c, i) in config.conditions" :key="i" variant="subtle" size="sm">
-                        {{ formatCondition(c) }}
-                    </UBadge>
-                </div>
-            </div>
-        </div>
+        <ConditionLocked v-else-if="config.content" :config="config" :format-condition="formatCondition" />
 
         <!-- 检查中 -->
         <div v-else-if="checking" class="condition-checking">
@@ -37,131 +24,11 @@
 </template>
 
 <script setup>
-const props = defineProps({
-    node: Object,
-})
-const { t } = useI18n()
-const { roles } = useAuth()
-const { classIds } = useAuthLms()
+import { useConditionRender } from './useConditionRender'
+import ConditionLocked from './render/locked.vue'
 
-const config = computed(() => {
-    try {
-        const raw = props.node?.attrs?.content
-        if (raw) return JSON.parse(raw)
-    } catch (_) { /* noop */ }
-    return {}
-})
-
-const checking = ref(false)
-const checked = ref(false)
-const conditionMet = ref(false)
-
-// role 和 class 条件可从用户信息本地判断，无需 hover + API
-const LOCAL_CHECK_TYPES = new Set(['role', 'class'])
-
-// 判断是否包含需要 hover + API 检查的条件（非 role、非 class）
-const needsHoverCheck = computed(() => {
-    const conditions = config.value.conditions
-    if (!conditions || !conditions.length) return false
-    return conditions.some(c => !LOCAL_CHECK_TYPES.has(c.type))
-})
-
-// 检查 role 条件（本地判断）
-// teacher 条件 admin 也能通过
-function checkRoleConditions(conditions) {
-    const roleConds = conditions.filter(c => c.type === 'role')
-    if (roleConds.length === 0) return true
-    const userRoles = (roles.value || []).map(r => r.code)
-    const isAdmin = userRoles.includes('admin')
-    return roleConds.every(c => {
-        if (c.value === 'teacher') return userRoles.includes('teacher') || isAdmin
-        return userRoles.includes(c.value)
-    })
-}
-
-// 检查 class 条件（本地判断，用户 classIds 已包含所有所属班级）
-function checkClassConditions(conditions) {
-    const classConds = conditions.filter(c => c.type === 'class')
-    if (classConds.length === 0) return true
-    const ids = classIds.value || []
-    return classConds.every(c => ids.includes(Number(c.value)))
-}
-
-// 本地条件（role + class）即时判断
-watch(() => [config.value.conditions, roles.value, classIds.value], () => {
-    const conditions = config.value.conditions
-    if (!conditions || !conditions.length) {
-        conditionMet.value = true
-        checked.value = true
-        return
-    }
-
-    const localMet = checkRoleConditions(conditions) && checkClassConditions(conditions)
-    const hoverConditions = conditions.filter(c => !LOCAL_CHECK_TYPES.has(c.type))
-
-    // 全部是本地条件（role + class），直接判断
-    if (hoverConditions.length === 0) {
-        conditionMet.value = localMet
-        checked.value = true
-        return
-    }
-
-    // 本地条件不满足，直接 denied（不需要 hover）
-    if (!localMet) {
-        conditionMet.value = false
-        checked.value = true
-        return
-    }
-
-    // 本地条件满足但有其他条件（question/homework/comment/quiz/race），需要 hover 检查
-    conditionMet.value = false
-    checked.value = false
-}, { immediate: true })
-
-const conditionTypeLabels = {
-    role: t('ueditor.conditionRole'),
-    class: t('ueditor.conditionClass'),
-    question: t('ueditor.conditionQuestion'),
-    homework: t('ueditor.conditionHomework'),
-    comment: t('ueditor.conditionComment'),
-    quiz: t('ueditor.conditionQuiz'),
-    race: t('ueditor.conditionRace'),
-}
-
-function formatCondition(c) {
-    const label = c.label || c.value
-    return `${conditionTypeLabels[c.type] || c.type}: ${label}`
-}
-
-// hover 时检查非 role 条件（间隔 5 秒以上才允许再次 check）
-let lastCheckTime = 0
-async function checkCondition() {
-    if (conditionMet.value || checking.value) return
-    if (!needsHoverCheck.value) return
-
-    const now = Date.now()
-    if (now - lastCheckTime < 5000) return
-    lastCheckTime = now
-
-    const conditions = config.value.conditions
-    if (!conditions) return
-
-    checking.value = true
-    try {
-        const data = await cRequest('/api/condition/check', {
-            method: 'POST',
-            body: { conditions },
-        })
-        if (data) {
-            conditionMet.value = data.met
-            checked.value = true
-        }
-    } catch (e) {
-        console.error('[condition] 检查失败', e)
-    } finally {
-        checking.value = false
-    }
-}
+const props = defineProps({ node: Object })
+const { t, config, needsHoverCheck, checking, conditionMet, formatCondition, checkCondition } = useConditionRender(props)
 </script>
 
 <style scoped>
@@ -187,36 +54,6 @@ async function checkCondition() {
 .condition-checking {
     display: flex;
     align-items: center;
-    justify-content: center;
-}
-
-.condition-locked {
-    position: relative;
-}
-
-.condition-locked-content {
-    filter: blur(4px);
-    user-select: none;
-    pointer-events: none;
-}
-
-.condition-locked-overlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.6);
-    border-radius: 8px;
-    pointer-events: none;
-}
-
-.condition-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-top: 8px;
     justify-content: center;
 }
 </style>

@@ -70,116 +70,12 @@
 </template>
 
 <script setup lang="ts">
-const { user } = useAuth()
-const route = useRoute()
-const { myMedals, fetchMyMedals, checkMedals } = useMedals()
+import { useUserCardSetup } from './useUserCard'
 
-// 路由中的课程/章节 ID
-const courseId = computed(() => Number(route.params.id) || 0)
-const chapterId = computed(() => Number(route.params.cid) || 0)
+const {
+  user, myMedals, medalIconColor, hasCourse, levelInfo, hasChapter,
+  courseScoreDisplay, chapterScoreDisplay, refresh,
+} = useUserCardSetup()
 
-const hasCourse = computed(() => courseId.value > 0)
-const hasChapter = computed(() => chapterId.value > 0)
-
-/**
- * 单一数据源（useState 全局状态）
- *
- * 不使用 cRequest.use（useFetch 路径），因为它会命中 nuxtApp.payload.data 缓存，
- * 导致 refresh() 实际拿到 SSR 时的旧数据，做题/交作业后无法实时更新。
- * 这里改用命令式 cRequest + 写入 useState，每次都是真实请求。
- */
-type MyStats = {
-  courseScore: number
-  exp: number
-  chapterScore: number | null
-}
-const stats = useState<MyStats>('user-card-stats', () => ({
-  courseScore: 0,
-  exp: 0,
-  chapterScore: null,
-}))
-
-async function fetchStats() {
-  if (!courseId.value) {
-    stats.value = { courseScore: 0, exp: 0, chapterScore: null }
-    return
-  }
-  try {
-    const data = await cRequest<MyStats>('/api/courses/me', {
-      query: {
-        courseId: courseId.value,
-        chapterId: chapterId.value || undefined,
-      },
-    })
-    stats.value = data
-  } catch {
-    // 静默忽略，保持旧值
-  }
-}
-
-// 路由变化时（进入/切换课程/章节）重新拉取
-watch([courseId, chapterId], () => { fetchStats() }, { immediate: true })
-
-// 监听全局 trigger：答题 / 交作业 / 评论等加分操作后自动刷新 + 检查奖章
-const { refreshTrigger } = useUserCard()
-watch(refreshTrigger, () => {
-  fetchStats()
-  if (courseId.value) checkMedals(courseId.value)
-})
-
-// 进入课程时拉取已获奖章
-watch(courseId, () => { fetchMyMedals() }, { immediate: true })
-
-// 奖章图标颜色映射
-function medalIconColor(color) {
-  const map = {
-    bronze: 'text-amber-700',
-    silver: 'text-gray-400',
-    gold: 'text-amber-400',
-    diamond: 'text-cyan-400',
-    primary: 'text-primary',
-    success: 'text-success',
-    warning: 'text-warning',
-    error: 'text-error',
-    info: 'text-info',
-  }
-  return map[color] || 'text-primary'
-}
-
-const courseScore = computed(() => stats.value.courseScore)
-const exp = computed(() => stats.value.exp)
-const chapterScore = computed(() => stats.value.chapterScore)
-
-// 经验 → 等级换算
-// 等级 n 的累计经验阈值 = 50 * (n-1) * n
-// Lv.1: 0   Lv.2: 100   Lv.3: 300   Lv.4: 600   Lv.5: 1000 ...
-const levelInfo = computed(() => {
-  const total = Math.max(0, exp.value)
-  // 解 50*(l-1)*l = total → l = (1 + sqrt(1 + 8*total/100)) / 2
-  const raw = (1 + Math.sqrt(1 + (8 * total) / 100)) / 2
-  const level = Math.max(1, Math.floor(raw))
-  const currentThreshold = 50 * (level - 1) * level
-  const nextThreshold = 50 * level * (level + 1)
-  const span = nextThreshold - currentThreshold
-  const into = total - currentThreshold
-  const percent = span > 0 ? Math.min(100, Math.max(0, (into / span) * 100)) : 100
-  return {
-    level,
-    current: total,
-    next: nextThreshold,
-    percent: Math.round(percent),
-  }
-})
-
-// 积分显示（保留 1 位小数）
-const courseScoreDisplay = computed(() => courseScore.value.toFixed(1))
-const chapterScoreDisplay = computed(() =>
-  chapterScore.value == null ? '—' : chapterScore.value.toFixed(1),
-)
-
-/** 主动刷新入口（暴露给父组件） */
-async function refresh() {
-  await fetchStats()
-}
 defineExpose({ refresh })
 </script>

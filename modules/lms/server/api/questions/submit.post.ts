@@ -34,9 +34,10 @@ export default eventHandler(async (event) => {
     })
 
     // 计算经验值
-    // 已答对过的题目再次提交不再给经验（防止刷经验）
+    // 规则：仅首次提交（无论对错）给基础经验；首次答对额外给 correctBonusExp + firstCorrectBonusExp；
+    // 一旦该题有过提交记录（existing 存在），后续任何提交都不再发放经验，彻底防刷。
     let gainedExp = 0
-    if (!existing?.firstRight) {
+    if (!existing) {
       gainedExp = qConfig.submitExp
       if (isCorrect) {
         gainedExp += qConfig.correctBonusExp + qConfig.firstCorrectBonusExp
@@ -47,9 +48,16 @@ export default eventHandler(async (event) => {
       gainedExp = 0
     }
 
-    // 计算分数增量（只取比上次更好的分数）
-    const prevScore = existing ? Number(existing.score) || 0 : 0
-    const scoreDelta = Math.max(0, score - prevScore)
+    // 计算分数增量（仅"首次作对"那一次计分）
+    // - existing 存在 && firstRight 已为 true：再次提交不加分
+    // - existing 存在 && firstRight 为 false 且本次答对：算首次作对，加本次得分
+    // - existing 不存在 && 本次答对：首次作对，加本次得分
+    // - 本次答错：0
+    let scoreDelta = 0
+    const wasFirstRight = existing?.firstRight ? true : false
+    if (isCorrect && !wasFirstRight) {
+      scoreDelta = score
+    }
 
     if (existing) {
       // 已有记录：更新

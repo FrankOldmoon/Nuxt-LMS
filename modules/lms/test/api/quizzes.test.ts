@@ -8,6 +8,7 @@ const _mockDb = {
   query: {
     quizzes: { findFirst: vi.fn(), findMany: vi.fn() },
     userQuizzes: { findFirst: vi.fn(), findMany: vi.fn() },
+    userCourses: { findFirst: vi.fn(), findMany: vi.fn() },
   } as any,
   select: vi.fn().mockReturnThis(),
   selectDistinct: vi.fn().mockReturnThis(),
@@ -28,6 +29,7 @@ const _mockDb = {
 const _mockSchema = {
   quizzes: { courseId: 'courseId', cid: 'cid', deletedAt: 'deletedAt', submitLimit: 'submitLimit', submitCount: 'submitCount' },
   userQuizzes: { userId: 'userId', courseId: 'courseId', quizCid: 'quizCid', score: 'score', submitCount: 'submitCount', startedAt: 'startedAt', submitedAt: 'submitedAt', records: 'records' },
+  userCourses: { userId: 'userId', courseId: 'courseId', score: 'score', exp: 'exp', quizScore: 'quizScore', raceScore: 'raceScore' },
   users: { id: 'id', defaultClass: 'defaultClass' },
 }
 vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
@@ -55,6 +57,7 @@ beforeEach(() => {
   _mockDb.query = {
     quizzes: { findFirst: vi.fn(), findMany: vi.fn() },
     userQuizzes: { findFirst: vi.fn(), findMany: vi.fn() },
+    userCourses: { findFirst: vi.fn(), findMany: vi.fn() },
   }
   // LMS auto-import stubs
   ;(globalThis as any).getCourseLmsConfig = vi.fn().mockResolvedValue({
@@ -62,6 +65,7 @@ beforeEach(() => {
   })
   ;(globalThis as any).addChapterScore = vi.fn().mockResolvedValue(undefined)
   ;(globalThis as any).addCourseScore = vi.fn().mockResolvedValue(undefined)
+  ;(globalThis as any).addCourseScoreMax = vi.fn().mockResolvedValue(undefined)
   ;(globalThis as any).checkAndAwardMedals = vi.fn().mockResolvedValue(undefined)
   ;(globalThis as any).getClassUsers = vi.fn().mockResolvedValue([])
 })
@@ -200,11 +204,17 @@ describe('API: quizzes/submit', () => {
     const result = await handler(makeEvent({ body: { course_id: 1, quiz_cid: 1, records } }))
     expect(result.success).toBe(true)
     expect(result.data.score).toBe(70)
-    // 验证 update.set 中 score 是最高分 80
-    const setArg = _mockDb.set.mock.calls[0][0]
-    expect(setArg.score).toBe('80')
-    // 70 < 80 → 不给经验
-    expect(_mockDb.insert).not.toHaveBeenCalled()
+    // 验证 userQuizzes.update 中 score 是最高分 80
+    // 注：分数走 addCourseScoreMax（最高分模式），不写 userQuizzes 的 set
+    // 找到 set 调用中包含 userQuizzes 字段的那一次
+    const setCalls = _mockDb.set.mock.calls.map(c => c[0])
+    const userQuizUpdate = setCalls.find((s: any) => 'records' in s || 'submitedAt' in s)
+    expect(userQuizUpdate).toBeDefined()
+    expect(userQuizUpdate.score).toBe('80')
+    // 70 < 80 → 不给经验，gainedExp=0（已存在记录防刷）
+    expect(result.data.gainedExp).toBe(0)
+    // 走的是 addCourseScoreMax 最高分模式
+    expect((globalThis as any).addCourseScoreMax).toHaveBeenCalled()
   })
 
   it('已有记录更新：分数提高给经验', async () => {
@@ -217,22 +227,24 @@ describe('API: quizzes/submit', () => {
     const result = await handler(makeEvent({ body: { course_id: 1, quiz_cid: 1, records } }))
     expect(result.success).toBe(true)
     expect(result.data.score).toBe(90)
-    // 验证 addCourseScore 被调用（分数提高）
-    expect((globalThis as any).addCourseScore).toHaveBeenCalled()
+    // 验证 addCourseScoreMax 被调用（最高分模式）
+    expect((globalThis as any).addCourseScoreMax).toHaveBeenCalled()
+    // 50 < 60 未及格，本次 90 >= 60 及格：gainedExp = submitExp(3) + passBonusExp(10) = 13
+    expect(result.data.gainedExp).toBe(13)
   })
 
-  it('已及格的测验再次提交提高分数时不给 passBonusExp', async () => {
+  it('已及格的测验再次提交时不发放任何经验（防刷）', async () => {
     setMockAuthState({ id: 1, username: 'student', roles: ['student'], permissions: [] })
     _mockDb.query.quizzes.findFirst = vi.fn().mockResolvedValue({ courseId: 1, cid: 1, submitLimit: 3, submitCount: 1 })
     // 已有记录 score=80（已及格，80 >= 60）
     _mockDb.query.userQuizzes.findFirst = vi.fn().mockResolvedValue({ submitCount: 1, score: '80', startedAt: new Date() })
-    // 本次 score=90 > 80 → 分数提高，但已及格过，不给 passBonusExp
+    // 本次 score=90 > 80 → 分数提高，但已及格过且已有记录：gainedExp=0（防刷）
     const records = [{ questionCid: 1, rate: 0.9, point: 100, answer: 'A' }]
     const handler = (await import('../../server/api/quizzes/submit.post')).default
     const result = await handler(makeEvent({ body: { course_id: 1, quiz_cid: 1, records } }))
     expect(result.success).toBe(true)
-    // 已及格过：只有 submitExp(3)，不再给 passBonusExp(10)
-    expect(result.data.gainedExp).toBe(3)
+    // 已及格过 + 已有记录：gainedExp=0（彻底防刷，不发放 submitExp 与 passBonusExp）
+    expect(result.data.gainedExp).toBe(0)
   })
 })
 

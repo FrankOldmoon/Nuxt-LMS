@@ -1,11 +1,12 @@
 import { db, schema } from "@nuxthub/db"
 import { eq, and } from "drizzle-orm"
+// addCourseScoreMax 通过 Nuxt auto-import 从 utils/userScore 引入（无需显式 import）
 
 /**
  * 提交竞赛成绩
  * body: course_id, race_cid, records, total_score
  * records: [{ questionCid, rate, point, answer }]
- * 将成绩存入 userRaces 表，并更新 userCourses.raceScore
+ * 将成绩存入 userRaces 表，并更新 userCourses.raceScore（取最高分模式）
  */
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
@@ -51,9 +52,8 @@ export default eventHandler(async (event) => {
         eq(schema.userRaces.courseId, courseId),
         eq(schema.userRaces.raceCid, raceCid)
       ))
-      if (score > prevScore) {
-        await addCourseScore(user.id, courseId, score - prevScore, 'raceScore', 0)
-      }
+      // userCourses.raceScore 取最高分（不累加），避免重复刷分
+      await addCourseScoreMax(user.id, courseId, bestScore, 'raceScore', 0)
     } else {
       // 新记录：给参与经验
       gainedExp = participationExp
@@ -64,7 +64,7 @@ export default eventHandler(async (event) => {
         records,
         score: String(score),
       })
-      await addCourseScore(user.id, courseId, score, 'raceScore', gainedExp)
+      await addCourseScoreMax(user.id, courseId, score, 'raceScore', gainedExp)
     }
 
     return cResp({ gainedExp, score })

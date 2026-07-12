@@ -26,7 +26,7 @@ vi.mock('@nuxthub/db', () => ({
 }))
 
 import { db } from '@nuxthub/db'
-import { addChapterScore, addCourseScore } from '../../server/utils/userScore'
+import { addChapterScore, addCourseScore, addCourseScoreMax } from '../../server/utils/userScore'
 import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'
 
 beforeEach(() => {
@@ -163,5 +163,76 @@ describe('server/utils/userScore - addCourseScore', () => {
     expect(setArg.score).toBe('110')
     expect(setArg.homeworkScore).toBe('40')
     expect(setArg.questionScore).toBeUndefined()
+  })
+})
+
+describe('server/utils/userScore - addCourseScoreMax（最高分模式，用于 quiz/race）', () => {
+  it('courseId=0 提前返回', async () => {
+    await addCourseScoreMax(1, 0, 10, 'quizScore', 5)
+    expect(db.query.userCourses.findFirst).not.toHaveBeenCalled()
+  })
+
+  it('已有记录 + 新分更高 → 写入 max 分项 + 累加差额到总分 + 累加 exp', async () => {
+    vi.mocked(db.query.userCourses.findFirst).mockResolvedValue({
+      score: '100', quizScore: '50', exp: 20,
+    } as any)
+    await addCourseScoreMax(1, 3, 80, 'quizScore', 5)
+    expect(db.update).toHaveBeenCalledTimes(1)
+    const setArg = vi.mocked(db.set).mock.calls[0][0]
+    expect(setArg.quizScore).toBe('80')           // 取 max(50, 80) = 80
+    expect(setArg.score).toBe('130')               // 100 + (80-50) = 130
+    expect(setArg.exp).toBe(25)                    // 累加
+  })
+
+  it('已有记录 + 新分更低 → 不写分项 + 不动总分 + 只累加 exp', async () => {
+    vi.mocked(db.query.userCourses.findFirst).mockResolvedValue({
+      score: '100', quizScore: '80', exp: 20,
+    } as any)
+    await addCourseScoreMax(1, 3, 50, 'quizScore', 5)
+    const setArg = vi.mocked(db.set).mock.calls[0][0]
+    expect(setArg.quizScore).toBeUndefined()       // 不写
+    expect(setArg.score).toBeUndefined()           // 不动
+    expect(setArg.exp).toBe(25)
+  })
+
+  it('已有记录 + 新分相同 → 仅 exp 累加（不触发 score 写）', async () => {
+    vi.mocked(db.query.userCourses.findFirst).mockResolvedValue({
+      score: '100', quizScore: '80', exp: 20,
+    } as any)
+    await addCourseScoreMax(1, 3, 80, 'quizScore', 5)
+    const setArg = vi.mocked(db.set).mock.calls[0][0]
+    expect(setArg.quizScore).toBeUndefined()
+    expect(setArg.score).toBeUndefined()
+    expect(setArg.exp).toBe(25)
+  })
+
+  it('已有记录 + newScore=0 → 完全不调用 update（防刷入口）', async () => {
+    vi.mocked(db.query.userCourses.findFirst).mockResolvedValue({
+      score: '100', quizScore: '80', exp: 20,
+    } as any)
+    await addCourseScoreMax(1, 3, 0, 'quizScore', 0)
+    expect(db.update).not.toHaveBeenCalled()
+    expect(db.insert).not.toHaveBeenCalled()
+  })
+
+  it('无记录 → insert 含 score + scoreKey（不累加）', async () => {
+    vi.mocked(db.query.userCourses.findFirst).mockResolvedValue(undefined as any)
+    await addCourseScoreMax(1, 3, 80, 'quizScore', 5)
+    expect(db.insert).toHaveBeenCalledTimes(1)
+    const valsArg = vi.mocked(db.values).mock.calls[0][0]
+    expect(valsArg.score).toBe('80')
+    expect(valsArg.quizScore).toBe('80')
+    expect(valsArg.exp).toBe(5)
+  })
+
+  it('不同 scoreKey 取 max 互不影响（raceScore 单独算）', async () => {
+    vi.mocked(db.query.userCourses.findFirst).mockResolvedValue({
+      score: '100', quizScore: '50', raceScore: '30', exp: 20,
+    } as any)
+    await addCourseScoreMax(1, 3, 20, 'raceScore', 0)
+    // 30 > 20，不写 raceScore；总分不动；exp=0 也不写
+    // 所有增量都为 0，应直接跳过 update/insert
+    expect(db.update).not.toHaveBeenCalled()
+    expect(db.insert).not.toHaveBeenCalled()
   })
 })

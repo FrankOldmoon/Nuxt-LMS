@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import type { FlatNode } from './index.vue'
+import type { FlatNode } from '../../composables/useNavEditor'
 
 defineProps<{
   item: FlatNode

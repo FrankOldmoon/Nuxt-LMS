@@ -1,0 +1,65 @@
+<template>
+  <div>
+    <div v-if="pending" class="flex items-center justify-center py-6 text-muted">
+      <UIcon name="i-lucide-loader-2" class="animate-spin size-4 mr-2" />
+      <span class="text-xs">{{ $t('classSelector.loading') }}</span>
+    </div>
+
+    <div v-else-if="!users.length" class="text-center py-6 text-muted text-xs">
+      {{ $t('classSelector.noUsers') }}
+    </div>
+
+    <template v-else>
+      <!-- 小组模式：Tab 切换学生/小组 -->
+      <UTabs v-if="showGroup() && groupTableRows.length" v-model="activeTab" :items="tabItems" class="mb-3" />
+
+      <ClassUsersTableStudentsTable>
+        <template v-for="(_, name) in $slots" #[name]="slotData">
+          <slot :name="name" v-bind="slotData" />
+        </template>
+      </ClassUsersTableStudentsTable>
+
+      <ClassUsersTableGroups />
+    </template>
+
+    <!-- 用户编辑弹窗 -->
+    <AuthUserEditModal v-if="!hideActions()" ref="editModal" :user-id="editingUserId"
+      @saved="onEditSaved" />
+
+    <!-- 重置密码弹窗 -->
+    <ClassUsersTableResetModal />
+  </div>
+</template>
+
+<script setup lang="ts">
+const props = defineProps<{
+  classId: number | null
+  courseId?: number
+  rows?: any[]
+  extraColumns?: { id: string; header: any; sortingFn?: any }[]
+  hideActions?: boolean
+  hideTeachers?: boolean
+  hideNumber?: boolean
+  loading?: boolean
+  defaultSort?: { id: string, desc: boolean }[]
+  showChart?: boolean
+  showOnline?: boolean
+  showGroup?: boolean
+}>()
+
+const ctx = useClassUsersTable(props)
+provideClassUsersTable(ctx)
+
+const {
+  pending, users, showGroup, groupTableRows, activeTab, tabItems,
+  editModal, editingUserId, hideActions, refresh,
+} = ctx
+
+function onEditSaved() {
+  if (props.classId) {
+    refresh()
+  }
+}
+
+defineExpose({ refresh })
+</script>

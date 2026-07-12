@@ -31,143 +31,16 @@
 </template>
 
 <script setup>
+import { useConditionEdit } from './useConditionEdit'
+
 const props = defineProps({
     config: { type: Object, default: () => ({}) },
 })
 const emit = defineEmits(['update:config', 'close'])
-const { t } = useI18n()
-const { chapterId } = useLmsContext()
 
-const chapterTaskIds = ref({ questionIds: [], homeworkIds: [], commentIds: [], quizIds: [], raceIds: [] })
-
-const questionOptions = computed(() =>
-    (chapterTaskIds.value.questionIds || []).map(id => ({ label: `#${id}`, value: String(id) }))
-)
-const homeworkOptions = computed(() =>
-    (chapterTaskIds.value.homeworkIds || []).map(id => ({ label: `#${id}`, value: String(id) }))
-)
-const commentOptions = computed(() =>
-    (chapterTaskIds.value.commentIds || []).map(id => ({ label: `#${id}`, value: String(id) }))
-)
-const quizOptions = computed(() =>
-    (chapterTaskIds.value.quizIds || []).map(id => ({ label: `#${id}`, value: String(id) }))
-)
-const raceOptions = computed(() =>
-    (chapterTaskIds.value.raceIds || []).map(id => ({ label: `#${id}`, value: String(id) }))
-)
-
-/** 从 tiptap JSON content 中提取指定 vue 节点类型的 CID */
-function extractVueNodeIds(content, type) {
-    const ids = []
-    function traverse(node) {
-        if (!node || typeof node !== 'object') return
-        if (node.type === 'vue' && node.attrs?.type === type && node.attrs?.content) {
-            const numId = Number(node.attrs.content)
-            if (!isNaN(numId)) ids.push(numId)
-        }
-        if (Array.isArray(node.content)) {
-            for (const child of node.content) traverse(child)
-        } else if (node.content && typeof node.content === 'object') {
-            traverse(node.content)
-        }
-    }
-    if (Array.isArray(content)) {
-        for (const node of content) traverse(node)
-    } else if (content) {
-        traverse(content)
-    }
-    return ids
-}
-
-async function loadChapterTasks() {
-    if (!chapterId.value) return
-    try {
-        const data = await cRequest(`/api/chapters/show?id=${chapterId.value}`)
-        if (data?.chapter) {
-            // quizIds 已在 schema 中（但 extractIds 尚未提取），raceIds 无 schema 字段
-            // 两者均从 chapter content 中客户端提取
-            const content = data.chapter.content
-            chapterTaskIds.value = {
-                questionIds: data.chapter.questionIds || [],
-                homeworkIds: data.chapter.homeworkIds || [],
-                commentIds: data.chapter.commentIds || [],
-                quizIds: extractVueNodeIds(content, 'quiz'),
-                raceIds: extractVueNodeIds(content, 'race'),
-            }
-        }
-    } catch (e) {
-        console.error('[condition] 加载章节任务失败', e)
-    }
-}
-
-function updateTaskLabel(idx, val, type) {
-    const map = { question: questionOptions, homework: homeworkOptions, comment: commentOptions, quiz: quizOptions, race: raceOptions }
-    const opts = map[type].value
-    const vals = Array.isArray(val) ? val : [val]
-    const labels = vals.map(v => opts.find(o => o.value === v)?.label || v)
-    editConditions.value[idx].label = labels.join(', ')
-}
-
-const editConditions = ref([...(props.config?.conditions || [])])
-const editContent = ref(props.config?.content || '')
-
-const conditionTypes = computed(() => [
-    { label: t('ueditor.conditionRole'), value: 'role' },
-    { label: t('ueditor.conditionClass'), value: 'class' },
-    { label: t('ueditor.conditionQuestion'), value: 'question' },
-    { label: t('ueditor.conditionHomework'), value: 'homework' },
-    { label: t('ueditor.conditionComment'), value: 'comment' },
-    { label: t('ueditor.conditionQuiz'), value: 'quiz' },
-    { label: t('ueditor.conditionRace'), value: 'race' },
-])
-
-const roleOptions = [
-    { label: 'Admin', value: 'admin' },
-    { label: 'Teacher', value: 'teacher' },
-    { label: 'Student', value: 'student' },
-]
-
-const classOptions = ref([])
-
-async function loadClasses() {
-    try {
-        const resp = await $fetch('/api/classes/list')
-        if (resp.success && resp.data) {
-            classOptions.value = resp.data.map(c => ({ label: c.name, value: String(c.id) }))
-        }
-    } catch (e) {
-        console.error('[condition] 加载班级失败', e)
-    }
-}
-
-function updateClassLabel(idx, val) {
-    const opt = classOptions.value.find(o => o.value === val)
-    if (opt) editConditions.value[idx].label = opt.label
-}
-
-// 打开时加载编辑值
-onMounted(() => {
-    editConditions.value = (props.config?.conditions || []).map(c => {
-        const taskTypes = ['question', 'homework', 'comment', 'quiz', 'race']
-        if (taskTypes.includes(c.type)) {
-            return { ...c, value: Array.isArray(c.value) ? c.value : (c.value ? [c.value] : []) }
-        }
-        return { ...c }
-    })
-    editContent.value = props.config?.content || ''
-    if (classOptions.value.length === 0) loadClasses()
-    loadChapterTasks()
-})
-
-function apply() {
-    const newConfig = {
-        conditions: editConditions.value.filter(c => {
-            if (Array.isArray(c.value)) return c.value.length > 0
-            return String(c.value || '').trim()
-        }),
-        content: editContent.value,
-    }
-    emit('update:config', newConfig)
-    emit('close')
-}
+const {
+    t, editConditions, editContent, conditionTypes, roleOptions, classOptions,
+    questionOptions, homeworkOptions, commentOptions, quizOptions, raceOptions,
+    updateTaskLabel, updateClassLabel, apply,
+} = useConditionEdit(props, emit)
 </script>

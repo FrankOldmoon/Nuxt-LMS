@@ -36,7 +36,7 @@ export default defineNuxtModule({
     nuxt.hook('components:extend', (components) => {
       const overrides: Record<string, string> = {
         LayoutAside: resolve('./components/layout/aside.vue'),
-        LayoutToc: resolve('./components/layout/toc.vue'),
+        LayoutToc: resolve('./components/layout/toc/index.vue'),
         LayoutHeader: resolve('./components/layout/header/index.vue'),
         Layout: resolve('./components/layout/index.vue'),
         LayoutMain: resolve('./components/layout/main.vue'),

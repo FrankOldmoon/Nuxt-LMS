@@ -1,5 +1,6 @@
 import { db, schema } from "@nuxthub/db"
 import { eq, and } from "drizzle-orm"
+// addCourseScoreMax 通过 Nuxt auto-import 从 utils/userScore 引入（无需显式 import）
 
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
@@ -119,10 +120,16 @@ export default eventHandler(async (event) => {
       eq(schema.userQuizzes.courseId, courseId),
       eq(schema.userQuizzes.quizCid, quizCid)
     ))
-    // 经验只给比上次更好的
-    if (totalScore > prevScore) {
-      await addCourseScore(user.id, courseId, totalScore - prevScore, 'quizScore', gainedExp)
+    // 经验：与 questions/submit 一致——仅"首次及格"那一次发 passBonusExp（alreadyPassed 已守门）；
+    // submitExp 按"是否有提交记录"防刷，避免循环提交刷基础经验。
+    if (!alreadyPassed) {
+      gainedExp = qConfig.submitExp
+      if (isPassed) gainedExp += qConfig.passBonusExp
+    } else {
+      gainedExp = 0
     }
+    // 分数：bestScore 取最高分；userCourses 同步取最高（不累加），避免重复刷分
+    await addCourseScoreMax(user.id, courseId, bestScore, 'quizScore', gainedExp)
   } else {
     await db.insert(schema.userQuizzes).values({
       userId: user.id,
@@ -134,7 +141,7 @@ export default eventHandler(async (event) => {
       startedAt: now,
       submitedAt: now,
     })
-    await addCourseScore(user.id, courseId, totalScore, 'quizScore', gainedExp)
+    await addCourseScoreMax(user.id, courseId, totalScore, 'quizScore', gainedExp)
   }
 
   // 更新测验提交计数

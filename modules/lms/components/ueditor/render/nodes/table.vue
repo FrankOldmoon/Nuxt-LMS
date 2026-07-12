@@ -1,7 +1,9 @@
 <template>
   <div class="tableWrapper">
     <table class="umo-node-table">
-      <RenderNode v-for="(child, i) in content" :key="i" :node="child" />
+      <tbody>
+        <RenderNode v-for="(child, i) in content" :key="i" :node="child" />
+      </tbody>
     </table>
   </div>
 </template>

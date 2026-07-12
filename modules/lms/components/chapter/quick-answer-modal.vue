@@ -54,58 +54,18 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{ classId: number; canEdit: boolean }>()
+import type { ChapterQuickAnswerProps } from '../../composables/useChapterQuickAnswer'
+
+const props = defineProps<ChapterQuickAnswerProps>()
 const open = defineModel<boolean>('open', { default: false })
 
-const { user } = useAuth()
-const { sendQuickAnswerStart, onQuickAnswerStart, sendQuickAnswerSubmit, onQuickAnswerResult, sendQuickAnswerEnd, onQuickAnswerEnd } = useWebSocket()
-
-const userName = computed(() => user.value?.name || 'anonymous')
-const qaQuestion = ref('')
-const qaActive = ref(false)
-const qaWinner = ref<string | null>(null)
-
-function startQA() {
-  if (!props.classId) return
-  sendQuickAnswerStart(props.classId, qaQuestion.value.trim())
-  qaActive.value = true
-}
-
-function submitQA() {
-  if (!props.classId || !qaActive.value) return
-  sendQuickAnswerSubmit(props.classId, userName.value)
-}
-
-function endQA() {
-  if (!props.classId) return
-  sendQuickAnswerEnd(props.classId)
-  resetQA()
-}
-
-function resetQA() {
-  qaActive.value = false
-  qaWinner.value = null
-  qaQuestion.value = ''
-}
-
-onQuickAnswerStart((data) => {
-  qaActive.value = true
-  qaQuestion.value = data.question
-  qaWinner.value = null
-  open.value = true
-})
-
-onQuickAnswerResult((data) => {
-  qaWinner.value = data.winner
-})
-
-onQuickAnswerEnd(() => {
-  resetQA()
-})
-
-watch(open, (v) => {
-  if (!v && props.canEdit && qaActive.value) {
-    endQA()
-  }
-})
+const {
+  userName,
+  qaQuestion,
+  qaActive,
+  qaWinner,
+  startQA,
+  submitQA,
+  endQA,
+} = useChapterQuickAnswer(props, open)
 </script>

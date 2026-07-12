@@ -28,14 +28,33 @@ export default eventHandler(async (event) => {
       )
     })
 
-    // 计算经验值：首次提交 vs 重新提交
-    const gainedExp = existing ? hConfig.resubmitExp : hConfig.submitExp
+    // 计算经验值：首次提交 vs 重新提交 + 次数上限防刷
+    // 持久化重提交次数：使用 userHomeworks.record._submitCount 字段
+    // （_ 前缀表示内部使用，前端 records.get 不应依赖该字段）
+    // maxResubmitCount 默认 3（可由 homework 配置覆盖），超出后 gainedExp=0
+    const maxResubmitCount = Number(hConfig.maxResubmitCount ?? 3)
+    const recordMeta: any = (existing?.record && typeof existing.record === 'object') ? existing.record : {}
+    const prevResubmitCount = Number(recordMeta._submitCount || 0)
+    const nextResubmitCount = prevResubmitCount + 1
+    let gainedExp: number
+    if (!existing) {
+      // 首次提交
+      gainedExp = hConfig.submitExp
+    } else if (nextResubmitCount > maxResubmitCount) {
+      // 超出重提交上限，不再发经验（仍允许更新内容）
+      gainedExp = 0
+    } else {
+      // 在允许重提交次数内
+      gainedExp = hConfig.resubmitExp
+    }
 
     if (existing) {
       // 已有记录：更新
+      const newRecord = { ...recordMeta, _submitCount: nextResubmitCount }
       await db.update(schema.userHomeworks).set({
         files: files || null,
         content: content || null,
+        record: newRecord,
       }).where(and(
         eq(schema.userHomeworks.userId, user.id),
         eq(schema.userHomeworks.courseId, courseId),
@@ -43,12 +62,14 @@ export default eventHandler(async (event) => {
       ))
     } else {
       // 新记录：插入
+      const newRecord = { _submitCount: 0 }
       await db.insert(schema.userHomeworks).values({
         userId: user.id,
         courseId,
         homeworkCid: Number(homework_cid),
         files: files || null,
         content: content || null,
+        record: newRecord,
       })
     }
 
