@@ -106,7 +106,7 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
         submitMsg.value = ''
         try {
             const files = Array.isArray(submittedFiles.value) ? submittedFiles.value : [submittedFiles.value]
-            await cRequest('/api/homeworks/submit', {
+            const result: any = await cRequest('/api/homeworks/submit', {
                 method: 'POST',
                 body: {
                     course_id: effectiveCourseId.value,
@@ -120,6 +120,13 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
             submittedFileList.value = files
             submitOk.value = true
             submitMsg.value = t('homework.submitSuccess')
+            // 提交后 toast 提示：成功 + 经验
+            const gainedExp = Number(result?.gainedExp) || 0
+            toast.add({
+                title: t('homework.submitSuccess'),
+                description: gainedExp > 0 ? t('homework.submitExpGained', { exp: gainedExp }) : undefined,
+                color: 'success',
+            })
             // 上报作业完成（提交即完成）
             chapterTask?.reportNodeDone('homework', homeworkId.value, true)
             // 通知 userCard 刷新（作业提交会增加课程经验）
@@ -127,6 +134,11 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
         } catch (err: any) {
             submitOk.value = false
             submitMsg.value = err.message || t('homework.submitFailed')
+            toast.add({
+                title: t('homework.submitFailed'),
+                description: err.message,
+                color: 'error',
+            })
         } finally {
             submitting.value = false
         }

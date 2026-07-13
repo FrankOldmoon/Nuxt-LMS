@@ -38,6 +38,12 @@ export default eventHandler(async (event) => {
     // 检查并授予奖章
     await checkAndAwardMedals(user.id, course_id)
 
+    // 向班级房间广播 danmaku（fire-and-forget，不影响响应）
+    void broadcastSubmitDanmaku({
+      userId: user.id,
+      kind: 'comment',
+    })
+
     return cResp(result[0])
   } catch (error: any) {
     console.error('新增评论失败:', error)

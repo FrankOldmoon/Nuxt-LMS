@@ -30,6 +30,16 @@
       </USlideover>
     </template>
   </BaseMain>
+
+  <!--
+    班级弹幕覆盖层（仅客户端）：
+    - 监听 WebSocket { type: 'danmaku' } 消息，渲染漂浮弹幕
+    - 由 question/homework/quiz/comment 等提交后服务端广播触发
+    - position: fixed 覆盖全屏，不影响布局流
+  -->
+  <ClientOnly>
+    <ChapterDanmaku />
+  </ClientOnly>
 </template>
 
 <script setup lang="ts">

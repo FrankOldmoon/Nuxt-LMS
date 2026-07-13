@@ -9,7 +9,8 @@ import { eq, and, inArray, sql } from "drizzle-orm"
  * 客户端负责计算每个 heading 的完成状态（hover 阅读停留 3s + 互动组件提交全部答对），
  * 这里仅做 upsert 持久化；is_pass 由客户端根据全部 heading 完成情况计算。
  *
- * 当某个 heading 从未完成变为完成时，奖励 chapter.headingExp 经验 + chapter.headingCoin 金币。
+ * 当某个 heading 从未完成变为完成时，奖励 chapter.headingExp 经验 + chapter.headingCoin 金币 +
+ * chapter.headingScore 课程分（计入 userCourses.marksScore，参与总分计算）。
  * 当 is_pass 从 false 变为 true 时，触发奖章检查。
  *
  * 当 is_pass 状态发生变化时，同步更新 user_courses.records.progress
@@ -69,15 +70,17 @@ export default eventHandler(async (event) => {
       .limit(1)
     const courseId = chapter[0]?.courseId || 0
 
-    // heading 完成奖励：每个新完成的 heading 发放 headingExp + headingCoin
+    // heading 完成奖励：每个新完成的 heading 发放 headingExp + headingCoin + headingScore
     if (courseId && newHeadingIds.length > 0) {
       const config = await getCourseLmsConfig(courseId)
-      const headingExp = config?.chapter?.headingExp || 0
-      const headingCoin = config?.chapter?.headingCoin || 0
-      if (headingExp > 0 || headingCoin > 0) {
+      const headingExp = Number(config?.chapter?.headingExp) || 0
+      const headingCoin = Number(config?.chapter?.headingCoin) || 0
+      const headingScore = Number(config?.chapter?.headingScore) || 0
+      if (headingExp > 0 || headingCoin > 0 || headingScore > 0) {
         gainedExp = headingExp * newHeadingIds.length
         gainedCoin = headingCoin * newHeadingIds.length
-        await addCourseScore(user.id, courseId, 0, 'marksScore', gainedExp, gainedCoin)
+        const scoreDelta = headingScore * newHeadingIds.length
+        await addCourseScore(user.id, courseId, scoreDelta, 'marksScore', gainedExp, gainedCoin)
       }
     }
 

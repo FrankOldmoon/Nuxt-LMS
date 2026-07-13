@@ -217,7 +217,7 @@ describe('API: config/lms-public.get', () => {
       home: { showHero: true },
       course: { allowSelfEnroll: false },
       ai: { mode: 'api', model: 'gpt-4', llmApiKey: 'SECRET', llmApiUrl: 'http://secret' },
-      chapter: { passScore: 60 },
+      chapter: { headingExp: 5, headingCoin: 5, headingScore: 5 },
     })
     const handler = (await import('../../server/api/config/lms-public.get')).default
     const result = await handler(makeEvent())
@@ -227,7 +227,8 @@ describe('API: config/lms-public.get', () => {
     expect(result.data.ai).toBeDefined()
     expect(result.data.ai.mode).toBe('api')
     expect(result.data.ai.llmApiKey).toBeUndefined()
-    expect(result.data.chapter.passScore).toBe(60)
+    // chapter.headingExp/Coin/Score 属于内部积分配置，不暴露到公开端点
+    expect(result.data.chapter).toBeUndefined()
   })
 
   it('ai 对象必存在（即使配置中无 ai 段）', async () => {

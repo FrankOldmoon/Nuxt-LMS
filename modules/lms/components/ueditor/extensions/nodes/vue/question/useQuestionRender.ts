@@ -155,6 +155,11 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
             submitted.value = true
             fromRecord.value = false
             showFireworks.value = isCorrect.value
+            // 竞赛模式仅前端判定，toast 仅做提示
+            toast.add({
+                title: isCorrect.value ? t('question.submitCorrect') : t('question.submitSubmitted'),
+                color: isCorrect.value ? 'success' : 'info',
+            })
             return
         }
         const result = renderRef.value.submit()
@@ -163,6 +168,11 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
             submitted.value = true
             fromRecord.value = false
             showFireworks.value = result.isCorrect
+            // 提交后 toast 提示：答对/已提交
+            toast.add({
+                title: result.isCorrect ? t('question.submitCorrect') : t('question.submitSubmitted'),
+                color: result.isCorrect ? 'success' : 'info',
+            })
             if (!props.inQuiz) {
                 chapterTask?.reportNodeDone('question', questionId.value, isCorrect.value)
             }

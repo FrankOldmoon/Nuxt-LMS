@@ -245,6 +245,25 @@ export function useChapterTask() {
   return null
 }
 
+/** useUserCard 桩 — 全局 userCard 刷新触发器（任何操作完成后调用 refresh() 通知 userCard.vue） */
+let _mockUserCardRefreshTrigger = ref(0)
+let _mockUserCardRefreshCount = 0
+export function useUserCard() {
+  return {
+    refreshTrigger: _mockUserCardRefreshTrigger,
+    refresh: () => {
+      _mockUserCardRefreshTrigger.value++
+      _mockUserCardRefreshCount++
+    },
+  }
+}
+export function getUserCardRefreshCount() { return _mockUserCardRefreshCount }
+export function clearUserCardRefreshCount() { _mockUserCardRefreshCount = 0 }
+export function resetMockUserCardRefresh() {
+  _mockUserCardRefreshTrigger = ref(0)
+  clearUserCardRefreshCount()
+}
+
 /** useLmsContext 桩 — 返回可配置的 courseId/chapterId computed refs */
 let _mockLmsCourseId = ref(0)
 let _mockLmsChapterId = ref(0)
@@ -649,6 +668,15 @@ export function joinClassRoom(_classId: number, _peer: any) {
 export function leaveClassRoom(_classId: number, _peer: any) {
   _classRooms.get(_classId)?.delete(_peer)
 }
+
+/** broadcastSubmitDanmaku 桩（LMS 提交后班级弹幕广播） */
+let _mockSubmitDanmakuCalls: Array<{ args: any; ts: number }> = []
+export async function broadcastSubmitDanmaku(args: any) {
+  // 默认 no-op；测试可通过 _mockSubmitDanmakuCalls 追踪调用
+  _mockSubmitDanmakuCalls.push({ args, ts: Date.now() })
+}
+export function getSubmitDanmakuCalls() { return _mockSubmitDanmakuCalls }
+export function clearSubmitDanmakuCalls() { _mockSubmitDanmakuCalls = [] }
 
 /** normalizeChapterPageData 桩（lms server/utils/normalize/chapter 的默认实现） */
 export function normalizeChapterPageData(ch: any, course: any, userChapter?: any) {
@@ -1133,6 +1161,10 @@ const _stubsToExpose: Record<string, any> = {
   // LMS reading tracker auto-imports
   useReadingTracker,
   useChapterTask,
+  useUserCard,
+  getUserCardRefreshCount,
+  clearUserCardRefreshCount,
+  resetMockUserCardRefresh,
   // LMS utils auto-imports
   markdownToTiptap,
   // LMS extension context auto-imports
@@ -1188,6 +1220,9 @@ const _stubsToExpose: Record<string, any> = {
   classRooms,
   joinClassRoom,
   leaveClassRoom,
+  broadcastSubmitDanmaku,
+  getSubmitDanmakuCalls,
+  clearSubmitDanmakuCalls,
   normalizeChapterPageData,
   saveContentVersion,
   listTable, setMockListTableResult,
@@ -1274,6 +1309,8 @@ export function resetAllStubs() {
   clearWsSentToUser()
   clearMockLmsConfig()
   clearToastCalls()
+  clearSubmitDanmakuCalls()
+  clearUserCardRefreshCount()
   clearMockTableMeta()
   clearTableOverrideRegistry()
   _mockAuthState = null

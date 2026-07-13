@@ -93,5 +93,15 @@ export default eventHandler(async (event) => {
   // 8. 更新测验全局计数
   await incrementQuizSubmitCount(courseId, quizCid, quiz.submitCount)
 
+  // 9. 向班级房间广播 danmaku（fire-and-forget，不影响响应）
+  void broadcastSubmitDanmaku({
+    userId: user.id,
+    kind: 'quiz',
+    score: totalScore,
+    isPassed,
+    gainedExp,
+    gainedCoin,
+  })
+
   return cResp({ gainedExp, gainedCoin, score: totalScore, correctCount, isPassed, submitCount: newSubmitCount })
 })

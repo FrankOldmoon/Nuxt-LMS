@@ -72,5 +72,14 @@ export default withSubmitHandler('提交题目失败', async (event) => {
     coin: gainedCoin,
   })
 
+  // 4. 向班级房间广播 danmaku（fire-and-forget，不影响响应）
+  void broadcastSubmitDanmaku({
+    userId: user.id,
+    kind: 'question',
+    isCorrect,
+    gainedExp,
+    gainedCoin,
+  })
+
   return cResp({ gainedExp, gainedCoin, score, scoreDelta })
 })

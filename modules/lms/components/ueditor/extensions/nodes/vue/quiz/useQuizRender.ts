@@ -347,12 +347,29 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
             resultPassed.value = result.isPassed
             submitted.value = true
             started.value = false
+            // 提交后 toast 提示：得分 + 是否通过 + 经验
+            const gainedExp = Number(result?.gainedExp) || 0
+            const scoreVal = Math.round(Number(result?.score) || 0)
+            const titleKey = result.isPassed ? 'quiz.submitPassed' : 'quiz.submitFinished'
+            const descKey = gainedExp > 0
+                ? (result.isPassed ? 'quiz.submitScoreExpPassed' : 'quiz.submitScoreExp')
+                : 'quiz.submitScore'
+            toast.add({
+                title: t(titleKey),
+                description: t(descKey, { score: scoreVal, exp: gainedExp }),
+                color: result.isPassed ? 'success' : 'info',
+            })
             chapterTask?.reportNodeDone('quiz', quizId.value, !!result.isPassed)
             await fetchRecord()
             useUserCard().refresh()
-        } catch (err) {
+        } catch (err: any) {
             started.value = true
             submitted.value = false
+            toast.add({
+                title: t('quiz.submitFailed'),
+                description: err?.message,
+                color: 'error',
+            })
             if (remainingTime.value > 0) {
                 timerInterval = setInterval(() => {
                     remainingTime.value = Math.max(0, remainingTime.value - 1)

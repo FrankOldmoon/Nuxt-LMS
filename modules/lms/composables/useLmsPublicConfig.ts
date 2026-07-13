@@ -3,7 +3,7 @@
  *
  * 数据来源：/api/config/lms-public
  *   - 返回 home / courseList / chapterPage / course / chapterBtns / courseBtns / user
- *     / chapter.passScore / ai 公开字段
+ *     / ai 公开字段
  *   - 排除敏感 ai.llmApiKey / ai.llmApiUrl
  *
  * 单例机制（与 useSiteConfig 一致）：

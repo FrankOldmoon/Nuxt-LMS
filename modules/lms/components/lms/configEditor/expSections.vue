@@ -47,10 +47,9 @@ const sections = [
     title: 'lmsConfig.chapter',
     configKey: 'chapter',
     fields: [
-      { key: 'readExp', label: 'lmsConfig.readExp' },
-      { key: 'readTimeThreshold', label: 'lmsConfig.readTimeThreshold' },
-      { key: 'readThresholdExp', label: 'lmsConfig.readThresholdExp' },
-      { key: 'passScore', label: 'lmsConfig.passScore' },
+      { key: 'headingExp', label: 'lmsConfig.headingExp' },
+      { key: 'headingCoin', label: 'lmsConfig.headingCoin' },
+      { key: 'headingScore', label: 'lmsConfig.headingScore' },
     ],
   },
   {

@@ -63,6 +63,8 @@ export function setupChapterTask(opts: {
   const { user } = useAuth()
   const toast = useToast()
   const { t } = useI18n()
+  // 引入 useUserCard：readingBlock 完成 heading 时调用 refresh() 触发 userCard 重新拉取积分
+  const { refresh: refreshUserCard } = useUserCard()
 
   const taskMap = computed(() => {
     const map = extractChapterTasks(opts.content.value)
@@ -222,6 +224,8 @@ export function setupChapterTask(opts: {
           is_pass: isPass.value,
         },
       })
+      // heading 完成：通知 userCard 重新拉取积分（章节分/经验/金币可能因完成而变化）
+      refreshUserCard()
       // is_pass 变化时通知课程侧边栏刷新打钩
       if (isPass.value !== lastNotifiedPass) {
         lastNotifiedPass = isPass.value

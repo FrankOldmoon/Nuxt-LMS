@@ -79,5 +79,13 @@ export default withSubmitHandler('提交作业失败', async (event) => {
     coin: gainedCoin,
   })
 
+  // 5. 向班级房间广播 danmaku（fire-and-forget，不影响响应）
+  void broadcastSubmitDanmaku({
+    userId: user.id,
+    kind: 'homework',
+    gainedExp,
+    gainedCoin,
+  })
+
   return cResp({ gainedExp, gainedCoin })
 })

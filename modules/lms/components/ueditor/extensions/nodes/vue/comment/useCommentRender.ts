@@ -182,11 +182,17 @@ export function useCommentRender(props: CommentRenderProps) {
                 page.value = totalPages.value
                 // 上报评论完成（回复即完成）
                 chapterTask?.reportNodeDone('comment', commentId.value, true)
+                // 回复成功 toast
+                toast.add({ title: t('comment.replySuccess'), color: 'success' })
             }
             // 防御性通知 userCard 刷新（未来若评论也会加分，可即时反映）
             useUserCard().refresh()
-        } catch (err) {
-            // 静默
+        } catch (err: any) {
+            toast.add({
+                title: t('comment.replyFailed'),
+                description: err?.message,
+                color: 'error',
+            })
         }
     }
 

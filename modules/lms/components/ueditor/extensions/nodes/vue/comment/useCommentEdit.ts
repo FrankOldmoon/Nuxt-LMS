@@ -28,6 +28,7 @@ export function useCommentEdit(props: CommentEditProps, emit: CommentEditEmit) {
 
     const { t } = useI18n()
     const { courseId: effectiveCourseId } = useLmsContext()
+    const toast = useToast()
 
     const saving = ref(false)
     const saveMsg = ref('')
@@ -72,12 +73,16 @@ export function useCommentEdit(props: CommentEditProps, emit: CommentEditEmit) {
                     body: { id: props.commentId, course_id: effectiveCourseId.value, ...form.value },
                 })
                 emit('saved', form.value)
+                // 编辑评论：toast 成功（不广播 danmaku，由后端 update 接口按需决定）
+                toast.add({ title: t('comment.saveSuccess'), color: 'success' })
             } else {
                 const result = await cRequest('/api/comments/add', {
                     method: 'POST',
                     body: { course_id: effectiveCourseId.value, ...form.value },
                 })
                 emit('saved', { ...form.value, cid: result.cid })
+                // 新增评论：toast 成功
+                toast.add({ title: t('comment.saveSuccess'), color: 'success' })
             }
             saveOk.value = true
             saveMsg.value = t('comment.saveSuccess')
@@ -89,6 +94,11 @@ export function useCommentEdit(props: CommentEditProps, emit: CommentEditEmit) {
         } catch (err: any) {
             saveOk.value = false
             saveMsg.value = err.message || t('comment.saveFailed')
+            toast.add({
+                title: t('comment.saveFailed'),
+                description: err?.message,
+                color: 'error',
+            })
         } finally {
             saving.value = false
         }

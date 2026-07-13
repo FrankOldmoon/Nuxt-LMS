@@ -252,4 +252,30 @@ describe('composables/useChapterTask', () => {
     })
     expect(ctx.isHeadingDone('h1')).toBe(true)
   })
+
+  it('readingBlock 完成 heading 后触发 useUserCard().refresh() 通知 userCard 刷新', async () => {
+    vi.useFakeTimers()
+    const { setupChapterTask } = await import('../../composables/useChapterTask')
+    const { getUserCardRefreshCount, clearUserCardRefreshCount } = await import('../../../../test/setup/nuxt-stubs')
+    clearUserCardRefreshCount()
+    const content = ref(makeContent(
+      [{ type: 'heading', attrs: { id: 'h1', level: 2 }, content: [{ type: 'text', text: 'H1' }] }],
+      [{ type: 'paragraph', content: [{ type: 'text', text: 'only block' }] }],
+    ))
+    const ctx = setupChapterTask({
+      content,
+      chapterId: ref(1),
+      courseId: ref(1),
+    })
+    expect(getUserCardRefreshCount()).toBe(0)
+    ctx.markBlockRead('1')
+    // markBlockRead 内部 setTimeout 延迟 1s 才真正置 heading 完成
+    expect(ctx.isHeadingDone('h1')).toBe(false)
+    expect(getUserCardRefreshCount()).toBe(0)
+    vi.advanceTimersByTime(1000)
+    // heading 已完成 + refresh 已调用
+    expect(ctx.isHeadingDone('h1')).toBe(true)
+    expect(getUserCardRefreshCount()).toBe(1)
+    vi.useRealTimers()
+  })
 })
