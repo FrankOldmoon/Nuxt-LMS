@@ -100,7 +100,11 @@ export function setupChapterTask(opts: {
   const blockLayout = computed(() => {
     const byHeading: Record<string, string[]> = {}
     const blockToHeading: Record<string, string> = {}
-    const topBlocks = (opts.content.value?.content) || []
+    // 必须用 Array.isArray 校验：|| 会被 truthy 非数组值（如 {}、字符串）绕过，
+    // 导致 topBlocks.forEach 抛 TypeError。兼容 content=null/content.content={} 的脏数据。
+    const topBlocks: any[] = Array.isArray(opts.content.value?.content)
+      ? opts.content.value.content
+      : []
     // 章节标题 h1（合成）作为初始当前 heading，其下的顶层块归属它
     let curHeading = String(opts.chapterId.value)
     topBlocks.forEach((child: any, index: number) => {
