@@ -6,7 +6,7 @@
       <UPage>
         <!-- 左侧边栏：内容导航（仅章节页显示） -->
         <template v-if="showSidebar" #left>
-          <UPageAside>
+          <UPageAside style="padding-top: 0px">
             <LayoutAside />
           </UPageAside>
         </template>

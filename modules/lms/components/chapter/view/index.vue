@@ -55,7 +55,7 @@
 
     <!-- 右侧目录（chapterPage.showOutline 关闭时隐藏） -->
     <div v-if="chapterPageCfg.showOutline" class="hidden lg:block w-56 shrink-0">
-      <div class="sticky top-20"><UPageAside><LayoutToc /></UPageAside></div>
+      <div class="sticky top-20"><UPageAside style="padding-top: 0px"><LayoutToc /></UPageAside></div>
     </div>
 
     <!-- AI 章节助教 + VRM 数字人 -->

@@ -1,17 +1,18 @@
 <template>
-  <div>
-    <CourseBtns :course-id="courseId" :navigation="indexedNavigation" />
-    <div v-if="isLoggedIn" class="mb-3">
-      <UButton :label="selectedClassName || $t('classSelector.selectClass')"
-        :icon="selectedClassName ? 'i-lucide-school' : 'i-lucide-plus'" color="info" variant="outline" size="sm"
-        class="w-full justify-center" @click="classModalOpen = true" />
-    </div>
+  <div class="pt-4">
+    <div class="sticky top-0 bg-white dark:bg-[#1a1a1a] z-10">
+      <CourseBtns :course-id="courseId" :navigation="indexedNavigation" />
+      <div v-if="isLoggedIn" class="mb-3">
+        <UButton :label="selectedClassName || $t('classSelector.selectClass')"
+          :icon="selectedClassName ? 'i-lucide-school' : 'i-lucide-plus'" color="info" variant="outline" size="sm"
+          class="w-full justify-center" @click="classModalOpen = true" />
+      </div>
 
-
-    <!-- 内容管理按钮（编辑课程时显示） -->
-    <div v-if="canEditCourse" class="mb-3">
-      <UButton icon="i-lucide-database" color="neutral" variant="soft" size="xs" :label="$t('courseData.editor')"
-        class="w-full justify-center" @click="contentPickerOpen = true" />
+      <!-- 内容管理按钮（编辑课程时显示） -->
+      <div v-if="canEditCourse" class="mb-3">
+        <UButton icon="i-lucide-database" color="neutral" variant="soft" size="xs" :label="$t('courseData.editor')"
+          class="w-full justify-center" @click="contentPickerOpen = true" />
+      </div>
     </div>
 
     <!-- 导航首项与编辑入口 -->
