@@ -1,1 +1,0 @@
-ALTER TABLE "user\_courses" ADD COLUMN "coin" integer DEFAULT 0;
