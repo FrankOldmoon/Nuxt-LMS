@@ -163,7 +163,9 @@
     "export": "Export",
     "exportTitle": "Export Students",
     "exportHint": "Preview of student data. Click Download XLSX to save.",
-    "downloadXlsx": "Download XLSX"
+    "downloadXlsx": "Download XLSX",
+    "viewStudentStats": "View student learning data",
+    "studentStatsTitle": "Student Learning Data"
   },
   "userCard": {
     "courseScore": "Course Score",

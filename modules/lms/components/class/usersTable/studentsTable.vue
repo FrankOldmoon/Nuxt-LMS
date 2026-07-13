@@ -30,10 +30,12 @@
         </div>
       </template>
       <template #name-cell="{ row }">
-        <div class="flex items-center gap-2">
+        <button type="button" class="flex items-center gap-2 group"
+          :title="$t('classSelector.viewStudentStats')"
+          @click="openStats(row.original)">
           <UAvatar :src="row.original.avatarImg || undefined" :alt="row.original.name" size="2xs" :text="row.original.name?.charAt(0)" />
-          <span class="text-sm">{{ row.original.name }}</span>
-        </div>
+          <span class="text-sm text-primary group-hover:underline cursor-pointer">{{ row.original.name }}</span>
+        </button>
       </template>
       <!-- 重置密码列 -->
       <template v-if="!hideActions()" #resetPassword-cell="{ row }">
@@ -66,6 +68,12 @@
 
     <!-- 导出弹窗 -->
     <ClassUsersTableExportSheet v-model:open="exportOpen" />
+
+    <!-- 学生学习数据弹窗（点击姓名触发） -->
+    <ClassUsersTableStudentStatsModal v-model:open="statsOpen"
+      :user-id="statsUserId || 0"
+      :class-id="classId() || 0"
+      :user="statsUser" />
   </div>
 </template>
 
@@ -74,9 +82,10 @@ const { t } = useI18n()
 
 const {
   showGroup, activeTab, sorting, students, columns,
-  hideNumber, hideActions, extraColumns,
+  hideNumber, hideActions, extraColumns, classId,
   numberMap, sortableHeader,
-  onNumberBlur, autoFillNumbers, openEdit, openReset,
+  onNumberBlur, autoFillNumbers, openEdit, openReset, openStats,
+  statsOpen, statsUserId, statsUser,
 } = useClassUsersTableContext()
 
 const exportOpen = ref(false)

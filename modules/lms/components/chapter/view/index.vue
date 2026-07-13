@@ -1,8 +1,7 @@
 <template>
   <!-- 章节内容 -->
+  <ChapterWs />
   <div v-if="data" class="flex gap-8">
-    <ChapterWs />
-    
     <!-- 左侧主内容 -->
     <div class="flex-1 min-w-0 max-w-none">
       <slot name="access-bar" />
@@ -41,7 +40,8 @@
         </NuxtLink>
         <div v-else class="flex-1" />
         <NuxtLink v-if="nextChapter" :to="nextChapter.to" class="flex-1">
-          <UCard :ui="{ body: 'flex items-center gap-3 justify-end text-right' }" class="transition-all hover:ring-2 hover:ring-primary/30">
+          <UCard :ui="{ body: 'flex items-center gap-3 justify-end text-right' }"
+            class="transition-all hover:ring-2 hover:ring-primary/30">
             <div class="min-w-0">
               <p class="text-xs text-muted mb-0.5">{{ $t('chapter.next') }}</p>
               <p class="text-sm font-medium text-highlighted truncate">{{ nextChapter.label }}</p>
@@ -55,11 +55,17 @@
 
     <!-- 右侧目录（chapterPage.showOutline 关闭时隐藏） -->
     <div v-if="chapterPageCfg.showOutline" class="hidden lg:block w-56 shrink-0">
-      <div class="sticky top-20"><UPageAside style="padding-top: 0px"><LayoutToc /></UPageAside></div>
+      <div class="sticky top-20">
+        <UPageAside style="padding-top: 0px">
+          <LayoutToc />
+        </UPageAside>
+      </div>
     </div>
 
-    <!-- AI 章节助教 + VRM 数字人 -->
-    <ChapterViewAiAssistant />
+    <div class="fixed bottom-16 right-6 z-50 flex flex-col items-end gap-3">
+      <!-- AI 章节助教 + VRM 数字人 -->
+      <ChapterViewAiAssistant />
+    </div>
   </div>
 
   <!-- 章节不存在 -->

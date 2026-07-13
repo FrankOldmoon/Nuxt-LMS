@@ -1,6 +1,6 @@
 <template>
   <!-- 右下角 AI 章节助教 + VRM 数字人 -->
-  <div v-if="aiEnabled" class="fixed bottom-16 right-6 z-50 flex flex-col items-end gap-3">
+  <div v-if="aiEnabled">
     <Transition enter-active-class="transition duration-200 ease-out"
       enter-from-class="opacity-0 translate-y-4 scale-95" enter-to-class="opacity-100 translate-y-0 scale-100"
       leave-active-class="transition duration-150 ease-in"

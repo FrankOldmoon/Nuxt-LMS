@@ -382,6 +382,18 @@ export function useClassUsersTable(
     resetOpen.value = true
   }
 
+  // ====================== 学生学习数据弹窗 ======================
+  const statsUserId = ref<number | null>(null)
+  const statsUser = ref<any | null>(null)
+  const statsOpen = ref(false)
+
+  function openStats(row: any) {
+    if (!row || !row.id) return
+    statsUserId.value = Number(row.id)
+    statsUser.value = row
+    statsOpen.value = true
+  }
+
   async function doResetPassword() {
     if (!resetUserId.value || !resetPassword.value) return
     try {
@@ -492,9 +504,10 @@ export function useClassUsersTable(
     hideTeachers: () => props.hideTeachers,
     extraColumns: () => props.extraColumns,
     classId: () => props.classId,
-    openEdit, openReset, autoFillNumbers, onNumberBlur,
+    openEdit, openReset, openStats, autoFillNumbers, onNumberBlur,
     editModal, editingUserId,
     resetOpen, resetPassword, doResetPassword,
+    statsOpen, statsUserId, statsUser,
     sortableHeader,
     refresh,
   }

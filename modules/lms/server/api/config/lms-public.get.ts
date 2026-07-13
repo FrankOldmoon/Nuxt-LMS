@@ -45,10 +45,10 @@ export default defineEventHandler(() => {
 
   for (const key of PUBLIC_KEYS) {
     if (key.includes('.')) {
-      // 嵌套字段（ai.*）
+      // 嵌套字段（ai.* / chapter.passScore）
       const [section, field] = key.split('.')
-      if (!out[section]) out[section] = {}
       if (cfg[section] && cfg[section][field] !== undefined) {
+        if (!out[section]) out[section] = {}
         out[section][field] = cfg[section][field]
       }
     } else {

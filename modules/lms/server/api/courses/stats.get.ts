@@ -1,9 +1,10 @@
 /**
- * 课程学习统计：返回当前用户在该课程的各项学习行为数量
- * GET /api/courses/stats?courseId=1
+ * 课程学习统计：返回指定用户在该课程的各项学习行为数量
+ * GET /api/courses/stats?courseId=1[&userId=2]
  *
- * 面向学生端"我的学习数据"展示，任何登录用户均可查询自己的统计。
- * 不依赖 classId，仅按 (userId, courseId) 统计。
+ * - 不传 userId：返回当前登录用户自己的统计（学生端"我的学习数据"展示）
+ * - 传 userId  且当前用户是课程教师 / 管理员：返回该 userId 的统计（教师查看学生学习情况）
+ * - 传 userId  但权限不足：返回 403
  */
 import { db, schema } from '@nuxthub/db'
 import { eq, and, count } from 'drizzle-orm'
@@ -13,7 +14,16 @@ export default eventHandler(async (event) => {
   const courseId = Number(getQuery(event).courseId)
   if (!courseId) return cResp(null, '缺少 courseId', false)
 
-  const uid = user.id
+  const queryUserId = Number(getQuery(event).userId) || 0
+  let uid = user.id
+  if (queryUserId && queryUserId !== user.id) {
+    // 仅课程教师 / 管理员可查询其他用户的统计
+    const isTeacher = await isCourseTeacher(user.id, courseId)
+    if (!isTeacher && !user.roles?.includes('admin')) {
+      throw createError({ statusCode: 403, statusMessage: '无权查看该学生的统计' })
+    }
+    uid = queryUserId
+  }
 
   // 各分项完成数量（按用户+课程）
   const [q] = await db

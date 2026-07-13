@@ -40,7 +40,7 @@ watch(isOpen, async (val) => {
 async function loadLmsConfig() {
   loading.value = true
   try {
-    const data = await cRequest<any>('/api/config/get')
+    const data = await cRequest<any>('/api/config/lms-public')
     lmsConfig.value = data || {}
   } catch {
     lmsConfig.value = {}

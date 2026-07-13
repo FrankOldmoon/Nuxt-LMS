@@ -453,6 +453,32 @@ describe('API: courses/stats', () => {
     expect(r.data).toHaveProperty('raceCount')
     expect(r.data).toHaveProperty('commentCount')
   })
+
+  it('传 userId 时教师可查询任意学生统计', async () => {
+    setMockAuthState({ id: 1, username: 't', name: 't', roles: ['teacher'], permissions: [] })
+    ;(globalThis as any).isCourseTeacher = vi.fn().mockResolvedValue(true)
+    _mockDb.where = vi.fn().mockReturnValue([{ n: 5 }])
+    const handler = (await import('../../server/api/courses/stats.get')).default
+    const r = await handler(makeEvent({ query: { courseId: '1', userId: '99' } }))
+    expect(r.success).toBe(true)
+    expect(r.data).toHaveProperty('questionCount')
+  })
+
+  it('传 userId 时非教师被拒（403）', async () => {
+    setMockAuthState({ id: 1, username: 's', name: 's', roles: ['student'], permissions: [] })
+    ;(globalThis as any).isCourseTeacher = vi.fn().mockResolvedValue(false)
+    const handler = (await import('../../server/api/courses/stats.get')).default
+    await expect(handler(makeEvent({ query: { courseId: '1', userId: '99' } }))).rejects.toThrow()
+  })
+
+  it('传 userId 等于自己时不需要教师权限', async () => {
+    setMockAuthState({ id: 7, username: 's', name: 's', roles: ['student'], permissions: [] })
+    _mockDb.where = vi.fn().mockReturnValue([{ n: 3 }])
+    const handler = (await import('../../server/api/courses/stats.get')).default
+    const r = await handler(makeEvent({ query: { courseId: '1', userId: '7' } }))
+    expect(r.success).toBe(true)
+    expect(r.data.questionCount).toBe(3)
+  })
 })
 
 // ====================== delete.post.ts ======================

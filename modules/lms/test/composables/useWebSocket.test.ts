@@ -12,16 +12,16 @@ import {
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
-  // useWebSocket 需要完整的 useWsConnection（含 joinClass 等）
+  // useWebSocket 需要完整的 useWsConnection（含 joinRoom/leaveRoom 等）
   ;(globalThis as any).useWsConnection = () => ({
     ws: ref(null),
     wsConnected: ref(false),
-    joinedClassId: ref<number | null>(null),
+    joinedRooms: new Set<string>(),
     send: () => {},
     connect: () => {},
     disconnect: () => {},
-    joinClass: () => {},
-    joinedGroupIds: new Set<string>(),
+    joinRoom: () => {},
+    leaveRoom: () => {},
   })
 })
 
@@ -31,10 +31,11 @@ describe('composables/useWebSocket', () => {
     const result = useWebSocket()
     expect(result).toHaveProperty('ws')
     expect(result).toHaveProperty('wsConnected')
-    expect(result).toHaveProperty('joinedClassId')
+    expect(result).toHaveProperty('joinedRooms')
     expect(result).toHaveProperty('connect')
     expect(result).toHaveProperty('disconnect')
-    expect(result).toHaveProperty('joinClass')
+    expect(result).toHaveProperty('joinRoom')
+    expect(result).toHaveProperty('leaveRoom')
   })
 
   it('展开 class 功能方法', async () => {
