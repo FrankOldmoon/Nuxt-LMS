@@ -6,7 +6,7 @@ export interface HtmlRenderProps {
 
 export function useHtmlRender(props: HtmlRenderProps) {
     const contentBox = ref<any>(null)
-    const iframeHeight = ref(300)
+    const iframeHeight = ref(500)
     const isFullscreen = ref(false)
 
     const userHtml = computed(() => props.node?.attrs?.content || '')
