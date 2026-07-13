@@ -157,8 +157,8 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
             showFireworks.value = isCorrect.value
             // 竞赛模式仅前端判定，toast 仅做提示
             toast.add({
-                title: isCorrect.value ? t('question.submitCorrect') : t('question.submitSubmitted'),
-                color: isCorrect.value ? 'success' : 'info',
+                title: isCorrect.value ? t('question.correct') : t('question.wrong'),
+                color: isCorrect.value ? 'success' : 'error',
             })
             return
         }
@@ -170,8 +170,8 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
             showFireworks.value = result.isCorrect
             // 提交后 toast 提示：答对/已提交
             toast.add({
-                title: result.isCorrect ? t('question.submitCorrect') : t('question.submitSubmitted'),
-                color: result.isCorrect ? 'success' : 'info',
+                title: result.isCorrect ? t('question.correct') : t('question.wrong'),
+                color: result.isCorrect ? 'success' : 'error',
             })
             if (!props.inQuiz) {
                 chapterTask?.reportNodeDone('question', questionId.value, isCorrect.value)

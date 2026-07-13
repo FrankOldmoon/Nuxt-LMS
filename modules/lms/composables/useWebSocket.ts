@@ -10,12 +10,12 @@ import { useWsGroup } from './ws/group'
 
 export function useWebSocket() {
   const conn = useWsConnection()
-  const { ws, wsConnected, joinedClassId, connect, disconnect, joinClass } = conn
+  const { ws, wsConnected, joinedRooms, connect, disconnect, joinRoom, leaveRoom } = conn
   const classFeatures = useWsClass()
   const raceFeatures = useWsRace()
   const groupFeatures = useWsGroup()
   return {
-    ws, wsConnected, joinedClassId, connect, disconnect, joinClass,
+    ws, wsConnected, joinedRooms, connect, disconnect, joinRoom, leaveRoom,
     ...classFeatures,
     ...raceFeatures,
     ...groupFeatures,

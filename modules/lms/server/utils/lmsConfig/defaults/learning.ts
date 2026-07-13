@@ -46,4 +46,22 @@ export const learningDefaults = {
     passBonusExp: 10,
     passBonusCoin: 10,
   },
+  /**
+   * 提交后班级弹幕广播开关（控制 questions / homeworks / quizzes / comments 提交后
+   * 服务端向班级房间广播 danmaku 的行为）。
+   *
+   * - enableOn{Kind}：每种类型独立的总开关
+   * - questionOnlyOnCorrect：题目答错时是否也广播（默认仅在答对时广播）
+   * - onlyOnReward：仅在本次提交能获得经验时广播（gainedExp > 0）。
+   *   对 question / homework / quiz 由调用方传入 gainedExp 即可生效；
+   *   对 comment 默认不受此开关约束（评论通常都能拿到 publishExp/replyExp）。
+   */
+  danmaku: {
+    enableOnQuestion: true,
+    enableOnHomework: true,
+    enableOnQuiz: true,
+    enableOnComment: true,
+    questionOnlyOnCorrect: true,
+    onlyOnReward: true,
+  },
 }

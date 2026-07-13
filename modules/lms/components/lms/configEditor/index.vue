@@ -5,6 +5,7 @@
     <LmsConfigEditorAiSection />
     <LmsConfigEditorExpSections />
     <LmsConfigEditorSwitchSections />
+    <LmsConfigEditorDanmakuSection />
     <LmsConfigEditorGridSections />
   </div>
 </template>

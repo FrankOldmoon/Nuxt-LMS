@@ -550,7 +550,21 @@
     "showOutline": "Show outline",
     "showNote": "Show notes panel",
     "showDanmakuPanel": "Show danmaku panel",
-    "enableFullscreen": "Enable fullscreen"
+    "enableFullscreen": "Enable fullscreen",
+    "danmaku": "Submit Danmaku Broadcast",
+    "danmakuHint": "Control whether students' submissions broadcast danmaku to the class channel (server-side WS).",
+    "enableOnQuestion": "Question submission danmaku",
+    "enableOnQuestionHint": "Broadcast a danmaku to the class channel when a student submits a question.",
+    "enableOnHomework": "Homework submission danmaku",
+    "enableOnHomeworkHint": "Broadcast a danmaku to the class channel when a student submits a homework.",
+    "enableOnQuiz": "Quiz submission danmaku",
+    "enableOnQuizHint": "Broadcast a danmaku to the class channel when a student submits a quiz.",
+    "enableOnComment": "Comment submission danmaku",
+    "enableOnCommentHint": "Broadcast a danmaku to the class channel when a student publishes a comment.",
+    "questionOnlyOnCorrect": "Question danmaku only on correct answer",
+    "questionOnlyOnCorrectHint": "Skip the danmaku broadcast when the student answers a question incorrectly.",
+    "onlyOnReward": "Skip danmaku when no exp awarded",
+    "onlyOnRewardHint": "Skip the danmaku broadcast when the submission yields zero experience (over submit limit, retake a passed quiz, etc.)."
   },
   "coursePanel": {
     "progress": "Progress",

@@ -773,11 +773,19 @@ const _lmsConfigStore: Record<string, any> = {
   ai: { mode: 'api', model: 'gpt-3.5' },
   question: { submitExp: 2 },
   homework: { submitExp: 5 },
-  comment: { publishExp: 3 },
+  comment: { publishExp: 3, replyExp: 2 },
   chapter: { passScore: 60 },
   race: {},
   quiz: { passScore: 60 },
   general: {},
+  danmaku: {
+    enableOnQuestion: true,
+    enableOnHomework: true,
+    enableOnQuiz: true,
+    enableOnComment: true,
+    questionOnlyOnCorrect: true,
+    onlyOnReward: true,
+  },
 }
 export function getLmsConfigSync(): any {
   return _lmsConfigStore

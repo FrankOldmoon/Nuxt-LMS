@@ -1,6 +1,8 @@
 <template>
   <!-- 章节内容 -->
   <div v-if="data" class="flex gap-8">
+    <ChapterWs />
+    
     <!-- 左侧主内容 -->
     <div class="flex-1 min-w-0 max-w-none">
       <slot name="access-bar" />

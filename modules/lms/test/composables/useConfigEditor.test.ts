@@ -34,6 +34,14 @@ describe('composables/useConfigEditor', () => {
     expect(config.courseList).toBeDefined()
     expect(config.chapterPage).toBeDefined()
     expect(config.storage).toBeDefined()
+    // 弹幕广播配置默认值
+    expect(config.danmaku).toBeDefined()
+    expect(config.danmaku.enableOnQuestion).toBe(true)
+    expect(config.danmaku.enableOnHomework).toBe(true)
+    expect(config.danmaku.enableOnQuiz).toBe(true)
+    expect(config.danmaku.enableOnComment).toBe(true)
+    expect(config.danmaku.questionOnlyOnCorrect).toBe(true)
+    expect(config.danmaku.onlyOnReward).toBe(true)
   })
 
   it('aiModeOpts 返回 api/local/ollama 三个选项', async () => {

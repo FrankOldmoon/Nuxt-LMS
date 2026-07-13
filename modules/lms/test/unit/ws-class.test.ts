@@ -82,6 +82,48 @@ describe('ws/class: join', () => {
     expect(peer._classId).toBeUndefined()
     expect(peer.send).not.toHaveBeenCalled()
   })
+
+  // 回归测试：base 层 useWsConnection().joinRoom() 实际发送的字段叫 `room`，
+  // 修复前 handleClassJoin 只读 data.classId，导致 join 静默失败、
+  // classRooms 始终为空，所有班级广播（danmaku/online/chatroom/vote/...）落空。
+  it('【回归】join 接受 base 层的 room 字段（兼容 useWsConnection().joinRoom 协议）', () => {
+    const peer = makeMockPeer()
+    handleClassMessage(peer, { type: 'join', room: 7, userId: 100, from: 'alice' })
+    expect(peer._classId).toBe(7)
+    expect(peer._userId).toBe(100)
+    expect(peer._userName).toBe('alice')
+    expect(classRooms.get(7)?.has(peer)).toBe(true)
+    const sends = sendsOf(peer)
+    expect(sends).toContainEqual({ type: 'joined', classId: 7 })
+  })
+
+  it('【回归】room 为字符串时也正确转换为数字 classId', () => {
+    const peer = makeMockPeer()
+    handleClassMessage(peer, { type: 'join', room: '42' })
+    expect(peer._classId).toBe(42)
+    expect(classRooms.get(42)?.has(peer)).toBe(true)
+  })
+
+  it('【回归】room 与 classId 同时存在时优先使用 room', () => {
+    const peer = makeMockPeer()
+    handleClassMessage(peer, { type: 'join', room: 5, classId: 999 })
+    expect(peer._classId).toBe(5)
+    expect(classRooms.get(5)?.has(peer)).toBe(true)
+    expect(classRooms.has(999)).toBe(false)
+  })
+
+  it('【回归】join 成功后，danmaku 广播能到达该 peer', () => {
+    const peer = makeMockPeer()
+    // 模拟 base 层 joinRoom 协议
+    handleClassMessage(peer, { type: 'join', room: 10, userId: 1, from: 'alice' })
+    peer.send.mockClear()
+    // 模拟 lms 层 sendDanmaku 协议
+    handleClassMessage(makeMockPeer(), {
+      type: 'danmaku', classId: 10, text: 'hello', from: 'bob',
+    })
+    const danmaku = sendsOf(peer).find((m: any) => m.type === 'danmaku')
+    expect(danmaku).toEqual({ type: 'danmaku', text: 'hello', from: 'bob' })
+  })
 })
 
 describe('ws/class: invite / danmaku / online / chatroom', () => {

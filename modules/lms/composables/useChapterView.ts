@@ -168,7 +168,7 @@ export function useChapterView(props: ChapterViewProps) {
       '## Content Generation',
       'When the user asks you to generate, summarize, or organize content (notes, summaries, practice questions, etc.), split your response into two parts:',
       '1. A brief conversational reply (1-3 sentences) explaining what you generated.',
-      '2. The document content wrapped in <notes> and </notes> tags.',
+      '2. The document content wrapped in <notes> and </notes> tags. Normally, <notes> should includes only one ##Summary and paragraph, and one Question.',
       '',
       'Example:',
       'Here are the key points summarized as notes:',

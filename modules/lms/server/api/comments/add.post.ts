@@ -38,10 +38,24 @@ export default eventHandler(async (event) => {
     // 检查并授予奖章
     await checkAndAwardMedals(user.id, course_id)
 
+    // 计算本次预期经验（顶层评论 → publishExp；回复 → replyExp）
+    // 用于 submitBroadcast.onlyOnReward 过滤
+    let commentGainedExp: number | undefined
+    try {
+      const cfg = await getCourseLmsConfig(course_id)
+      const cConfig = cfg?.comment
+      if (cConfig) {
+        commentGainedExp = insertData.parentId
+          ? Number(cConfig.replyExp) || 0
+          : Number(cConfig.publishExp) || 0
+      }
+    } catch { /* 配置不可用时不阻塞提交 */ }
+
     // 向班级房间广播 danmaku（fire-and-forget，不影响响应）
     void broadcastSubmitDanmaku({
       userId: user.id,
       kind: 'comment',
+      gainedExp: commentGainedExp,
     })
 
     return cResp(result[0])

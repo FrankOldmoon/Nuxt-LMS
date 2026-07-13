@@ -38,6 +38,7 @@ const _globalStubs = {
   LmsConfigEditorAiSection: { template: '<div class="ai-section" />' },
   LmsConfigEditorExpSections: { template: '<div class="exp-sections" />' },
   LmsConfigEditorSwitchSections: { template: '<div class="switch-sections" />' },
+  LmsConfigEditorDanmakuSection: { template: '<div class="danmaku-section" />' },
   LmsConfigEditorGridSections: { template: '<div class="grid-sections" />' },
 }
 
@@ -76,6 +77,7 @@ describe('lms/configEditor/index.vue', () => {
     expect(wrapper.find('.ai-section').exists()).toBe(true)
     expect(wrapper.find('.exp-sections').exists()).toBe(true)
     expect(wrapper.find('.switch-sections').exists()).toBe(true)
+    expect(wrapper.find('.danmaku-section').exists()).toBe(true)
     expect(wrapper.find('.grid-sections').exists()).toBe(true)
   })
 

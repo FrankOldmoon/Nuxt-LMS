@@ -40,6 +40,15 @@ export function useConfigEditor(props: ConfigEditorProps, emit: (e: 'update:mode
     courseList: { showSearch: true, showFilter: true, showSort: true, defaultView: 'grid' },
     chapterPage: { showOutline: true, showNote: true, showDanmakuPanel: true, enableFullscreen: true },
     storage: { driveSize: 1073741824, teacherMultiplier: 1 },
+    // 提交后班级弹幕广播开关（对应 utils/ws/submitBroadcast.ts 的过滤规则）
+    danmaku: {
+      enableOnQuestion: true,
+      enableOnHomework: true,
+      enableOnQuiz: true,
+      enableOnComment: true,
+      questionOnlyOnCorrect: true,
+      onlyOnReward: true,
+    },
   }
 
   const aiModeOpts = computed(() => [
