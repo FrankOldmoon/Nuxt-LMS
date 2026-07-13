@@ -27,8 +27,9 @@ const _mockDb = {
 }
 const _mockSchema = {
   races: {
-    id: 'id', chapterId: 'chapterId', title: 'title', description: 'description',
+    id: 'id', cid: 'cid', courseId: 'courseId', chapterId: 'chapterId', title: 'title', description: 'description',
     startTime: 'startTime', endTime: 'endTime', status: 'status', maxParticipants: 'maxParticipants',
+    deletedAt: 'deletedAt',
   },
   classRaces: {
     classId: 'classId', courseId: 'courseId', raceCid: 'raceCid', status: 'status',
@@ -103,5 +104,131 @@ describe('API: races/submit.post', () => {
     setMockAuthState(null)
     const handler = (await import('../../server/api/races/submit.post')).default
     await expect(handler(makeEvent({ body: { raceId: 1, score: 100 } }))).rejects.toThrow()
+  })
+})
+
+// ====================== races/add.post ======================
+
+describe('API: races/add.post', () => {
+  beforeEach(resetChain)
+
+  it('未登录抛 401', async () => {
+    setMockAuthState(null)
+    const handler = (await import('../../server/api/races/add.post')).default
+    await expect(handler(makeEvent({ body: { course_id: 1 } }))).rejects.toThrow()
+  })
+
+  it('缺少 course_id 返回失败', async () => {
+    setMockAuthState({ id: 1, username: 'teacher', name: 'Teacher', roles: ['teacher'], permissions: [] })
+    const handler = (await import('../../server/api/races/add.post')).default
+    const result = await handler(makeEvent({ body: {} }))
+    expect(result.success).toBe(false)
+  })
+
+  it('教师成功新增竞赛（自动分配 cid）', async () => {
+    setMockAuthState({ id: 1, username: 'teacher', name: 'Teacher', roles: ['teacher'], permissions: [] })
+    // maxCid 查询返回 [{cid: 5}]
+    _mockDb.limit = vi.fn().mockResolvedValue([{ cid: 5 }])
+    _mockDb.returning = vi.fn().mockResolvedValue([{ id: 10, cid: 6, courseId: 1, title: 'Race1' }])
+    const handler = (await import('../../server/api/races/add.post')).default
+    const result = await handler(makeEvent({ body: { course_id: 1, title: 'Race1' } }))
+    expect(result.success).toBe(true)
+    expect(result.data.cid).toBe(6)
+    expect(_mockDb.insert).toHaveBeenCalled()
+  })
+
+  it('无已有 cid 时从 1 开始', async () => {
+    setMockAuthState({ id: 1, username: 'admin', name: 'Admin', roles: ['admin'], permissions: [] })
+    _mockDb.limit = vi.fn().mockResolvedValue([])
+    _mockDb.returning = vi.fn().mockResolvedValue([{ id: 1, cid: 1, courseId: 1 }])
+    const handler = (await import('../../server/api/races/add.post')).default
+    const result = await handler(makeEvent({ body: { course_id: 1, title: 'First' } }))
+    expect(result.success).toBe(true)
+    expect(result.data.cid).toBe(1)
+  })
+})
+
+// ====================== races/batch.post ======================
+
+describe('API: races/batch.post', () => {
+  beforeEach(resetChain)
+
+  it('未登录抛 401', async () => {
+    setMockAuthState(null)
+    const handler = (await import('../../server/api/races/batch.post')).default
+    await expect(handler(makeEvent({ body: { rows: [], action: 'delete' } }))).rejects.toThrow()
+  })
+
+  it('rows 为空返回失败', async () => {
+    setMockAuthState({ id: 1, username: 'admin', name: 'Admin', roles: ['admin'], permissions: [] })
+    const handler = (await import('../../server/api/races/batch.post')).default
+    const result = await handler(makeEvent({ body: { rows: [], action: 'delete' } }))
+    expect(result.success).toBe(false)
+  })
+
+  it('无效 action 返回失败', async () => {
+    setMockAuthState({ id: 1, username: 'admin', name: 'Admin', roles: ['admin'], permissions: [] })
+    const handler = (await import('../../server/api/races/batch.post')).default
+    const result = await handler(makeEvent({ body: { rows: [{ courseId: 1, cid: 1 }], action: 'invalid' } }))
+    expect(result.success).toBe(false)
+    expect(result.msg).toMatch(/action/)
+  })
+
+  it('delete 操作软删除', async () => {
+    setMockAuthState({ id: 1, username: 'admin', name: 'Admin', roles: ['admin'], permissions: [] })
+    const handler = (await import('../../server/api/races/batch.post')).default
+    const result = await handler(makeEvent({
+      body: { rows: [{ courseId: 1, cid: 1 }, { courseId: 1, cid: 2 }], action: 'delete' },
+    }))
+    expect(result.success).toBe(true)
+    expect(result.data.count).toBe(2)
+    expect(_mockDb.update).toHaveBeenCalled()
+  })
+
+  it('remove 操作物理删除', async () => {
+    setMockAuthState({ id: 1, username: 'admin', name: 'Admin', roles: ['admin'], permissions: [] })
+    const handler = (await import('../../server/api/races/batch.post')).default
+    const result = await handler(makeEvent({
+      body: { rows: [{ courseId: 1, cid: 1 }], action: 'remove' },
+    }))
+    expect(result.success).toBe(true)
+    expect(_mockDb.delete).toHaveBeenCalled()
+  })
+
+  it('restore 操作恢复', async () => {
+    setMockAuthState({ id: 1, username: 'admin', name: 'Admin', roles: ['admin'], permissions: [] })
+    const handler = (await import('../../server/api/races/batch.post')).default
+    const result = await handler(makeEvent({
+      body: { rows: [{ courseId: 1, cid: 1 }], action: 'restore' },
+    }))
+    expect(result.success).toBe(true)
+    expect(_mockDb.update).toHaveBeenCalled()
+  })
+})
+
+// ====================== races/update.post ======================
+
+describe('API: races/update.post', () => {
+  beforeEach(resetChain)
+
+  it('未登录抛 401', async () => {
+    setMockAuthState(null)
+    const handler = (await import('../../server/api/races/update.post')).default
+    await expect(handler(makeEvent({ body: { course_id: 1, id: 1 } }))).rejects.toThrow()
+  })
+
+  it('缺少参数返回失败', async () => {
+    setMockAuthState({ id: 1, username: 'teacher', name: 'Teacher', roles: ['teacher'], permissions: [] })
+    const handler = (await import('../../server/api/races/update.post')).default
+    const result = await handler(makeEvent({ body: { course_id: 1 } }))
+    expect(result.success).toBe(false)
+  })
+
+  it('教师成功更新竞赛', async () => {
+    setMockAuthState({ id: 1, username: 'teacher', name: 'Teacher', roles: ['teacher'], permissions: [] })
+    const handler = (await import('../../server/api/races/update.post')).default
+    const result = await handler(makeEvent({ body: { course_id: 1, id: 1, title: 'Updated' } }))
+    expect(result.success).toBe(true)
+    expect(_mockDb.update).toHaveBeenCalled()
   })
 })

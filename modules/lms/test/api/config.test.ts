@@ -210,3 +210,55 @@ describe('API: lms-config/update.post', () => {
     expect(hasConfigChanged).toBe(true)
   })
 })
+
+describe('API: config/lms-public.get', () => {
+  it('公开端点：返回 LMS 公开配置子集', async () => {
+    setMockLmsConfig({
+      home: { showHero: true },
+      course: { allowSelfEnroll: false },
+      ai: { mode: 'api', model: 'gpt-4', llmApiKey: 'SECRET', llmApiUrl: 'http://secret' },
+      chapter: { passScore: 60 },
+    })
+    const handler = (await import('../../server/api/config/lms-public.get')).default
+    const result = await handler(makeEvent())
+    expect(result.success).toBe(true)
+    expect(result.data.home).toBeDefined()
+    expect(result.data.course).toBeDefined()
+    expect(result.data.ai).toBeDefined()
+    expect(result.data.ai.mode).toBe('api')
+    expect(result.data.ai.llmApiKey).toBeUndefined()
+    expect(result.data.chapter.passScore).toBe(60)
+  })
+
+  it('ai 对象必存在（即使配置中无 ai 段）', async () => {
+    setMockLmsConfig({ home: { showHero: true } })
+    const handler = (await import('../../server/api/config/lms-public.get')).default
+    const result = await handler(makeEvent())
+    expect(result.success).toBe(true)
+    expect(result.data.ai).toEqual({})
+  })
+
+  it('空配置返回仅 ai 空对象', async () => {
+    setMockLmsConfig({})
+    const handler = (await import('../../server/api/config/lms-public.get')).default
+    const result = await handler(makeEvent())
+    expect(result.success).toBe(true)
+    expect(result.data.ai).toEqual({})
+  })
+})
+
+describe('API: config/reload-site.post', () => {
+  it('非管理员抛 401', async () => {
+    setMockAuthState(null)
+    const handler = (await import('../../server/api/config/reload-site.post')).default
+    await expect(handler(makeEvent())).rejects.toThrow()
+  })
+
+  it('管理员刷新成功', async () => {
+    setMockAuthState({ id: 1, username: 'admin', roles: ['admin'], permissions: [] })
+    const handler = (await import('../../server/api/config/reload-site.post')).default
+    const result = await handler(makeEvent())
+    expect(result.success).toBe(true)
+    expect(result.msg).toMatch(/site_config/)
+  })
+})

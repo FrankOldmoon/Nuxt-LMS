@@ -1,5 +1,6 @@
 import { defineConfig } from "vitest/config";
 import vue from "@vitejs/plugin-vue";
+import { fileURLToPath } from "node:url";
 
 export default defineConfig({
   define: {
@@ -37,12 +38,21 @@ export default defineConfig({
         test: {
           name: "components",
           // 组件测试：用 happy-dom + @vue/test-utils
-          include: ["modules/*/test/components/*.{test,spec}.ts"],
+          include: ["modules/*/test/components/**/*.{test,spec}.ts"],
           environment: "happy-dom",
           setupFiles: ["./test/setup/nuxt-stubs.ts"],
         },
         // 在 project 内部添加 vue plugin 以解析 .vue 文件
         plugins: [vue()],
+        resolve: {
+          alias: {
+            // pretty-bytes 是 file.vue 的直接依赖，但 pnpm 未提升到顶层 node_modules；
+            // vi.mock 无法拦截 .vue 文件内 Vite import-analysis 阶段的解析，故用 alias 桩
+            "pretty-bytes": fileURLToPath(
+              new URL("./test/setup/pretty-bytes-stub.ts", import.meta.url),
+            ),
+          },
+        },
       },
       {
         test: {

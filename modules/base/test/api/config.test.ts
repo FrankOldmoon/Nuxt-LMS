@@ -153,3 +153,53 @@ describe('API: config/reload.post', () => {
     expect(result.success).toBe(true)
   })
 })
+
+describe('API: config/update-batch.post', () => {
+  it('非管理员抛 401', async () => {
+    setMockAuthState(null)
+    const handler = (await import('../../server/api/config/update-batch.post')).default
+    await expect(handler(makeEvent({ items: [] }))).rejects.toThrow()
+  })
+
+  it('items 为空返回失败', async () => {
+    setMockAuthState({ id: 1, username: 'admin', roles: ['admin'], permissions: [] })
+    const handler = (await import('../../server/api/config/update-batch.post')).default
+    const result = await handler(makeEvent({ items: [] }))
+    expect(result.success).toBe(false)
+    expect(result.msg).toMatch(/items/)
+  })
+
+  it('无 items 字段返回失败', async () => {
+    setMockAuthState({ id: 1, username: 'admin', roles: ['admin'], permissions: [] })
+    const handler = (await import('../../server/api/config/update-batch.post')).default
+    const result = await handler(makeEvent({}))
+    expect(result.success).toBe(false)
+  })
+
+  it('批量保存 site:* 键并广播', async () => {
+    setMockAuthState({ id: 1, username: 'admin', roles: ['admin'], permissions: [] })
+    const handler = (await import('../../server/api/config/update-batch.post')).default
+    const result = await handler(makeEvent({
+      items: [
+        { key: 'site:title', value: 'New Title' },
+        { key: 'site:description', value: 'New Desc' },
+      ],
+    }))
+    expect(result.success).toBe(true)
+    expect(result.msg).toMatch(/保存成功/)
+    expect(_mockBroadcasts).toHaveLength(1)
+    expect(_mockBroadcasts[0]).toEqual({ type: 'site-config-changed' })
+  })
+
+  it('非 site: 前缀的键被跳过', async () => {
+    setMockAuthState({ id: 1, username: 'admin', roles: ['admin'], permissions: [] })
+    const handler = (await import('../../server/api/config/update-batch.post')).default
+    const result = await handler(makeEvent({
+      items: [
+        { key: 'other:key', value: 'skip' },
+        { key: 'site:title', value: 'Keep' },
+      ],
+    }))
+    expect(result.success).toBe(true)
+  })
+})

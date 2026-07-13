@@ -24,7 +24,7 @@ const _mockDb = {
   delete: vi.fn().mockReturnThis(),
 }
 const _mockSchema = {
-  tokens: { name: 'name', userId: 'userId', deletedAt: 'deletedAt' },
+  tokens: { id: 'id', name: 'name', userId: 'userId', deletedAt: 'deletedAt', createdAt: 'createdAt' },
   users: { id: 'id', username: 'username', name: 'name', password: 'password', email: 'email', avatarImg: 'avatarImg', preferName: 'preferName', englishName: 'englishName', gender: 'gender', rollNumber: 'rollNumber', classId: 'classId', telephone: 'telephone', defaultClass: 'defaultClass', defaultLocale: 'defaultLocale', loginAt: 'loginAt', loginIp: 'loginIp' },
   roles: { id: 'id', code: 'code', name: 'name', deletedAt: 'deletedAt' },
   userRoles: { userId: 'userId', roleId: 'roleId' },
@@ -42,6 +42,8 @@ import {
   clearMockCookies,
   setMockConfigValue,
   setMockConfigStore,
+  setMockAuthState,
+  setMockSendMailResult,
 } from '../../../../test/setup/nuxt-stubs'
 
 beforeEach(() => {
@@ -258,5 +260,312 @@ describe('API: auth/register.post', () => {
     expect(result.success).toBe(true)
     expect(result.data.user.username).toBe('bob')
     expect(event.cookies.auth_token).toMatch(/^[0-9a-f]{64}$/)
+  })
+})
+
+describe('API: auth/change-password.post', () => {
+  beforeEach(() => resetDbChain())
+
+  it('未登录抛 401', async () => {
+    setMockAuthState(null)
+    const handler = (await import('../../server/api/auth/change-password.post')).default
+    await expect(handler(makeEvent({ body: { oldPassword: 'a', newPassword: 'b' } }))).rejects.toThrow()
+  })
+
+  it('缺少旧密码或新密码返回失败', async () => {
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    const handler = (await import('../../server/api/auth/change-password.post')).default
+    const result = await handler(makeEvent({ body: { oldPassword: 'old' } }))
+    expect(result.success).toBe(false)
+  })
+
+  it('新密码长度不足 6 位返回失败', async () => {
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    const handler = (await import('../../server/api/auth/change-password.post')).default
+    const result = await handler(makeEvent({ body: { oldPassword: 'old123', newPassword: '123' } }))
+    expect(result.success).toBe(false)
+    expect(result.msg).toMatch(/至少6/)
+  })
+
+  it('旧密码不正确返回失败', async () => {
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    const { hashPassword } = await import('../../server/utils/auth')
+    const hashed = await hashPassword('correct-old')
+    _mockDb.limit = vi.fn().mockResolvedValue([{ id: 1, password: hashed }])
+    const handler = (await import('../../server/api/auth/change-password.post')).default
+    const result = await handler(makeEvent({ body: { oldPassword: 'wrong-old', newPassword: 'newpass123' } }))
+    expect(result.success).toBe(false)
+    expect(result.msg).toMatch(/旧密码/)
+  })
+
+  it('旧密码正确则更新成功', async () => {
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    const { hashPassword } = await import('../../server/utils/auth')
+    const hashed = await hashPassword('correct-old')
+    _mockDb.limit = vi.fn().mockResolvedValue([{ id: 1, password: hashed }])
+    const handler = (await import('../../server/api/auth/change-password.post')).default
+    const result = await handler(makeEvent({ body: { oldPassword: 'correct-old', newPassword: 'newpass123' } }))
+    expect(result.success).toBe(true)
+    expect(result.msg).toMatch(/成功/)
+    expect(_mockDb.update).toHaveBeenCalled()
+  })
+
+  it('用户不存在返回失败', async () => {
+    setMockAuthState({ id: 999, username: 'ghost', roles: ['student'], permissions: [] })
+    _mockDb.limit = vi.fn().mockResolvedValue([])
+    const handler = (await import('../../server/api/auth/change-password.post')).default
+    const result = await handler(makeEvent({ body: { oldPassword: 'old', newPassword: 'newpass123' } }))
+    expect(result.success).toBe(false)
+    expect(result.msg).toMatch(/用户不存在/)
+  })
+})
+
+describe('API: auth/forgot-password.post', () => {
+  beforeEach(() => {
+    resetDbChain()
+    setMockConfigStore({
+      'site:allowForgotPassword': true,
+      'site:mail.host': 'smtp.test',
+      'site:mail.siteUrl': 'https://test',
+    })
+  })
+
+  it('功能未开启返回失败', async () => {
+    setMockConfigValue('site:allowForgotPassword', false)
+    const handler = (await import('../../server/api/auth/forgot-password.post')).default
+    const result = await handler(makeEvent({ body: { email: 'a@b.c' } }))
+    expect(result.success).toBe(false)
+    expect(result.msg).toMatch(/disabled/i)
+  })
+
+  it('缺少邮箱返回失败', async () => {
+    const handler = (await import('../../server/api/auth/forgot-password.post')).default
+    const result = await handler(makeEvent({ body: {} }))
+    expect(result.success).toBe(false)
+  })
+
+  it('用户不存在仍返回成功（防枚举）', async () => {
+    _mockDb.limit = vi.fn().mockResolvedValue([])
+    const handler = (await import('../../server/api/auth/forgot-password.post')).default
+    const result = await handler(makeEvent({ body: { email: 'nobody@test' } }))
+    expect(result.success).toBe(true)
+  })
+
+  it('邮件服务未配置返回失败', async () => {
+    setMockConfigValue('site:mail.host', '')
+    _mockDb.limit = vi.fn().mockResolvedValue([{ id: 1, name: 'Alice', email: 'a@b.c' }])
+    const handler = (await import('../../server/api/auth/forgot-password.post')).default
+    const result = await handler(makeEvent({ body: { email: 'a@b.c' } }))
+    expect(result.success).toBe(false)
+    expect(result.msg).toMatch(/邮件服务/)
+  })
+
+  it('成功发送重置邮件', async () => {
+    _mockDb.limit = vi.fn().mockResolvedValue([{ id: 1, name: 'Alice', email: 'a@b.c' }])
+    setMockSendMailResult(true)
+    const handler = (await import('../../server/api/auth/forgot-password.post')).default
+    const result = await handler(makeEvent({ body: { email: 'a@b.c' } }))
+    expect(result.success).toBe(true)
+    expect(result.msg).toMatch(/已发送/)
+    expect(_mockDb.insert).toHaveBeenCalled()
+  })
+
+  it('邮件发送失败返回失败', async () => {
+    _mockDb.limit = vi.fn().mockResolvedValue([{ id: 1, name: 'Alice', email: 'a@b.c' }])
+    setMockSendMailResult(false)
+    const handler = (await import('../../server/api/auth/forgot-password.post')).default
+    const result = await handler(makeEvent({ body: { email: 'a@b.c' } }))
+    expect(result.success).toBe(false)
+    expect(result.msg).toMatch(/发送失败/)
+  })
+})
+
+describe('API: auth/reset-password.post', () => {
+  beforeEach(() => resetDbChain())
+
+  it('缺少 token 或新密码返回失败', async () => {
+    const handler = (await import('../../server/api/auth/reset-password.post')).default
+    const result = await handler(makeEvent({ body: { token: 'reset_x' } }))
+    expect(result.success).toBe(false)
+  })
+
+  it('新密码太短返回失败', async () => {
+    const handler = (await import('../../server/api/auth/reset-password.post')).default
+    const result = await handler(makeEvent({ body: { token: 'reset_x', newPassword: '123' } }))
+    expect(result.success).toBe(false)
+  })
+
+  it('token 不以 reset_ 开头返回失败', async () => {
+    const handler = (await import('../../server/api/auth/reset-password.post')).default
+    const result = await handler(makeEvent({ body: { token: 'bad_token', newPassword: 'newpass123' } }))
+    expect(result.success).toBe(false)
+    expect(result.msg).toMatch(/token/)
+  })
+
+  it('token 不存在返回失败', async () => {
+    _mockDb.limit = vi.fn().mockResolvedValue([])
+    const handler = (await import('../../server/api/auth/reset-password.post')).default
+    const result = await handler(makeEvent({ body: { token: 'reset_notfound', newPassword: 'newpass123' } }))
+    expect(result.success).toBe(false)
+    expect(result.msg).toMatch(/无效/)
+  })
+
+  it('token 已过期返回失败并软删除 token', async () => {
+    const expired = new Date(Date.now() - 60 * 60 * 1000) // 1 小时前
+    _mockDb.limit = vi.fn().mockResolvedValue([{ id: 1, userId: 1, createdAt: expired }])
+    const handler = (await import('../../server/api/auth/reset-password.post')).default
+    const result = await handler(makeEvent({ body: { token: 'reset_expired', newPassword: 'newpass123' } }))
+    expect(result.success).toBe(false)
+    expect(result.msg).toMatch(/过期/)
+    expect(_mockDb.update).toHaveBeenCalled()
+  })
+
+  it('token 有效则重置密码成功', async () => {
+    const recent = new Date() // 刚创建
+    _mockDb.limit = vi.fn().mockResolvedValue([{ id: 1, userId: 1, createdAt: recent }])
+    const handler = (await import('../../server/api/auth/reset-password.post')).default
+    const result = await handler(makeEvent({ body: { token: 'reset_valid', newPassword: 'newpass123' } }))
+    expect(result.success).toBe(true)
+    expect(result.msg).toMatch(/成功/)
+    expect(_mockDb.update).toHaveBeenCalledTimes(2) // update users + update tokens
+  })
+})
+
+describe('API: auth/impersonate.post', () => {
+  /** impersonate 有 3 条 db 查询：token / roles / target user
+   *  token 与 target user 走 select().from().where().limit()
+   *  roles 走 select().from().innerJoin().where()（无 limit）
+   *  用 callIndex 区分每次 select 调用 */
+  function setupImpersonateDb(opts: { tokenRows?: any[]; roleRows?: any[]; targetRows?: any[] }) {
+    let callIndex = 0
+    const tokenRows = opts.tokenRows ?? [{ userId: 1 }]
+    const roleRows = opts.roleRows ?? [{ code: 'teacher' }]
+    const targetRows = opts.targetRows ?? [{ id: 2, name: 'Student1' }]
+    _mockDb.select = vi.fn(() => {
+      const idx = callIndex++
+      return {
+        from: () => ({
+          where: () => ({
+            limit: () => Promise.resolve(
+              idx === 0 ? tokenRows : targetRows
+            ),
+          }),
+          innerJoin: () => ({
+            where: () => Promise.resolve(roleRows),
+          }),
+        }),
+      }
+    }) as any
+    _mockDb.insert = vi.fn().mockReturnThis()
+  }
+
+  it('无 token 抛 401', async () => {
+    const handler = (await import('../../server/api/auth/impersonate.post')).default
+    await expect(handler(makeEvent({ body: { userId: 2 } }))).rejects.toMatchObject({ statusCode: 401 })
+  })
+
+  it('当前 token 无效抛 401', async () => {
+    setupImpersonateDb({ tokenRows: [] })
+    const handler = (await import('../../server/api/auth/impersonate.post')).default
+    await expect(handler(makeEvent({ cookies: { auth_token: 'bad' }, body: { userId: 2 } }))).rejects.toMatchObject({ statusCode: 401 })
+  })
+
+  it('非教师/管理员抛 403', async () => {
+    setupImpersonateDb({ tokenRows: [{ userId: 1 }], roleRows: [{ code: 'student' }] })
+    const handler = (await import('../../server/api/auth/impersonate.post')).default
+    await expect(handler(makeEvent({ cookies: { auth_token: 'valid' }, body: { userId: 2 } }))).rejects.toMatchObject({ statusCode: 403 })
+  })
+
+  it('缺少 userId 返回失败', async () => {
+    setupImpersonateDb({ tokenRows: [{ userId: 1 }], roleRows: [{ code: 'teacher' }] })
+    const handler = (await import('../../server/api/auth/impersonate.post')).default
+    const result = await handler(makeEvent({ cookies: { auth_token: 'valid' }, body: {} }))
+    expect(result.success).toBe(false)
+  })
+
+  it('目标用户不存在返回失败', async () => {
+    setupImpersonateDb({ tokenRows: [{ userId: 1 }], roleRows: [{ code: 'admin' }], targetRows: [] })
+    const handler = (await import('../../server/api/auth/impersonate.post')).default
+    const result = await handler(makeEvent({ cookies: { auth_token: 'valid' }, body: { userId: 999 } }))
+    expect(result.success).toBe(false)
+    expect(result.msg).toMatch(/不存在/)
+  })
+
+  it('教师成功切换身份并设置 cookie', async () => {
+    setupImpersonateDb({ tokenRows: [{ userId: 1 }], roleRows: [{ code: 'teacher' }], targetRows: [{ id: 2, name: 'Student1' }] })
+    const handler = (await import('../../server/api/auth/impersonate.post')).default
+    const event = makeEvent({ cookies: { auth_token: 'valid' }, body: { userId: 2 } })
+    const result = await handler(event)
+    expect(result.success).toBe(true)
+    expect(result.data.userId).toBe(2)
+    expect(result.data.impersonatedBy).toBe(1)
+    expect(event.cookies.auth_token).toMatch(/^[0-9a-f]{64}$/)
+    expect(event.cookies.original_token).toBe('valid') // 保存原始 token
+    expect(_mockDb.insert).toHaveBeenCalled()
+  })
+
+  it('已有 original_token 时不覆盖（连续切换）', async () => {
+    setupImpersonateDb({ tokenRows: [{ userId: 1 }], roleRows: [{ code: 'admin' }], targetRows: [{ id: 3, name: 'Student2' }] })
+    const handler = (await import('../../server/api/auth/impersonate.post')).default
+    const event = makeEvent({ cookies: { auth_token: 'current', original_token: 'original' }, body: { userId: 3 } })
+    const result = await handler(event)
+    expect(result.success).toBe(true)
+    expect(event.cookies.original_token).toBe('original') // 不覆盖
+    expect(event.cookies.auth_token).toMatch(/^[0-9a-f]{64}$/)
+  })
+})
+
+describe('API: auth/me.put', () => {
+  it('未登录抛 401', async () => {
+    setMockAuthState(null)
+    const handler = (await import('../../server/api/auth/me.put')).default
+    await expect(handler(makeEvent({ body: { name: 'New' } }))).rejects.toThrow()
+  })
+
+  it('没有可更新字段返回失败', async () => {
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    const handler = (await import('../../server/api/auth/me.put')).default
+    const result = await handler(makeEvent({ body: { notAField: 'x' } }))
+    expect(result.success).toBe(false)
+    expect(result.msg).toMatch(/没有/)
+  })
+
+  it('成功更新白名单字段', async () => {
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    const handler = (await import('../../server/api/auth/me.put')).default
+    const result = await handler(makeEvent({ body: { name: 'NewName', email: 'new@test', telephone: '123' } }))
+    expect(result.success).toBe(true)
+  })
+
+  it('忽略非白名单字段（如 password/role）', async () => {
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    const handler = (await import('../../server/api/auth/me.put')).default
+    const result = await handler(makeEvent({ body: { password: 'hack', id: 999 } }))
+    expect(result.success).toBe(false) // 只有非白名单字段 → 没有可更新字段
+  })
+})
+
+describe('API: auth/restore.post', () => {
+  it('无 original_token 返回无需恢复', async () => {
+    const handler = (await import('../../server/api/auth/restore.post')).default
+    const result = await handler(makeEvent({ cookies: {} }))
+    expect(result.success).toBe(true)
+    expect(result.data.restored).toBe(false)
+  })
+
+  it('有 original_token + auth_token 则恢复原始身份', async () => {
+    const handler = (await import('../../server/api/auth/restore.post')).default
+    const event = makeEvent({ cookies: { auth_token: 'impersonating', original_token: 'original-token' } })
+    const result = await handler(event)
+    expect(result.success).toBe(true)
+    expect(result.data.restored).toBe(true)
+    expect(event.cookies.auth_token).toBe('original-token')
+    expect(event.cookies.original_token).toBeUndefined()
+  })
+
+  it('仅有 original_token 无 auth_token 返回无需恢复', async () => {
+    const handler = (await import('../../server/api/auth/restore.post')).default
+    const result = await handler(makeEvent({ cookies: { original_token: 'original' } }))
+    expect(result.data.restored).toBe(false)
   })
 })

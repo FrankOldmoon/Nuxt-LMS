@@ -1,5 +1,5 @@
 <template>
-  <UModal v-model:open="open" :ui="{ content: 'max-w-md' }">
+  <UModal :open="open" :ui="{ content: 'max-w-md' }" @update:open="emit('update:open', $event)">
     <template #content>
       <div v-if="item" class="p-4 space-y-3 min-w-[420px]">
         <div class="flex items-center justify-between">

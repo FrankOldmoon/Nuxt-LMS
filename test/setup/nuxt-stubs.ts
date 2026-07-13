@@ -15,7 +15,7 @@
  * setupNuxtStubs()
  * ```
  */
-import { ref, computed, reactive, watch, watchEffect, onMounted, onBeforeUnmount, onUnmounted, onBeforeMount, nextTick, getCurrentInstance, toValue } from 'vue'
+import { ref, computed, reactive, watch, watchEffect, onMounted, onBeforeUnmount, onUnmounted, onBeforeMount, nextTick, getCurrentInstance, toValue, resolveComponent } from 'vue'
 
 // ===================== 1. Nuxt auto-imports =====================
 
@@ -216,6 +216,33 @@ export function inject(key: any, defaultValue?: any) {
 }
 export function clearProvideStore() {
   _provideStore.clear()
+}
+
+/** markdownToTiptap — LMS auto-import from modules/lms/utils/markdown.ts (pure function, safe to use real impl) */
+import { markdownToTiptap } from '../../modules/lms/utils/markdown'
+
+/** useRaceEditContext — LMS auto-import from race/useRaceEdit.ts (uses Vue inject, works with global.provide) */
+import { useRaceEditContext } from '../../modules/lms/components/ueditor/extensions/nodes/vue/race/useRaceEdit'
+
+/** formatTime — base auto-import from modules/base/utils/format.ts (pure function) */
+import { formatTime } from '../../modules/base/utils/format'
+
+/** useReadingTracker 桩 — 返回默认的 hover 追踪接口（list-item / task-item / readingBlock 用） */
+export function useReadingTracker(_blockKey: string) {
+  const isHovering = ref(false)
+  return {
+    visited: ref(false),
+    headingDone: ref(false),
+    shouldHighlight: ref(false),
+    isHovering,
+    onEnter: () => { isHovering.value = true },
+    onLeave: () => { isHovering.value = false },
+  }
+}
+
+/** useChapterTask 桩 — 返回 null（useReadingTracker 内部调用，但已通过桩绕过） */
+export function useChapterTask() {
+  return null
 }
 
 /** useLmsContext 桩 — 返回可配置的 courseId/chapterId computed refs */
@@ -653,6 +680,66 @@ export async function saveContentVersion(_type: string, _entityId: number, _cont
   return { id: 1, type: _type, entityId: _entityId, content: _content, createdAt: new Date() }
 }
 
+/** listTable 桩 — 返回全表数据（无分页，courses/list 用） */
+let _mockListTableResult: any[] = []
+export async function listTable(_tableName: string): Promise<any[]> {
+  return _mockListTableResult
+}
+export function setMockListTableResult(rows: any[]) {
+  _mockListTableResult = rows
+}
+
+/** normalizeCourseDetail 桩 — 返回课程详情（含 chapters 数组） */
+export function normalizeCourseDetail(course: any): any {
+  return {
+    id: course.id,
+    title: course.name || course.title,
+    name: course.name,
+    description: course.description || '',
+    content: course.content || {},
+    categoryId: course.categoryId,
+    chapters: (course.chapters || []).map((ch: any) => ({
+      id: ch.id,
+      title: ch.name || ch.title,
+      name: ch.name,
+      isOpen: !!ch.isOpen,
+      sort: ch.sort || 0,
+    })),
+  }
+}
+
+/** getCourseMembers 桩 — 返回课程成员列表 */
+let _mockCourseMembers: any[] = []
+export async function getCourseMembers(_courseId: number): Promise<any[]> {
+  return _mockCourseMembers
+}
+export function setMockCourseMembers(members: any[]) {
+  _mockCourseMembers = members
+}
+
+/** searchUsers 桩 — 按关键字搜索用户 */
+let _mockSearchUsersResult: any[] = []
+export async function searchUsers(_keyword: string): Promise<any[]> {
+  return _mockSearchUsersResult
+}
+export function setMockSearchUsersResult(users: any[]) {
+  _mockSearchUsersResult = users
+}
+
+/** getClassUsers 桩 — 返回班级学生列表 */
+let _mockClassUsers: any[] = []
+export async function getClassUsers(_classId: number, _courseId?: number): Promise<any[]> {
+  return _mockClassUsers
+}
+export function setMockClassUsers(users: any[]) {
+  _mockClassUsers = users
+}
+
+/** reloadSiteConfig 桩 — 刷新 site config 缓存（no-op） */
+export async function reloadSiteConfig(): Promise<void> {
+  /* no-op stub */
+}
+
 /** LMS config auto-imports 桩 */
 const _lmsConfigStore: Record<string, any> = {
   ai: { mode: 'api', model: 'gpt-3.5' },
@@ -926,7 +1013,57 @@ try {
   }
 } catch { /* ignore */ }
 
-// ===================== 4b. admin 模块 utils 桩 =====================
+// ===================== 4b. base 模块额外 auto-import 桩 =====================
+
+/** getConfigByPrefix — 返回指定前缀的配置键值对（与 base/server/utils/config/reload.ts 同构） */
+export async function getConfigByPrefix(prefix: string): Promise<Record<string, any>> {
+  const result: Record<string, any> = {}
+  for (const [key, value] of Object.entries(_mockConfigStore)) {
+    if (key.startsWith(prefix)) {
+      const shortKey = key.slice(prefix.length + 1) // 去掉 "prefix:"
+      result[shortKey] = value
+    }
+  }
+  return result
+}
+
+/** sendPasswordResetEmail 桩 — 默认返回 true，测试可覆盖 */
+let _mockSendMailResult = true
+export async function sendPasswordResetEmail(_email: string, _resetUrl: string): Promise<boolean> {
+  return _mockSendMailResult
+}
+export function setMockSendMailResult(result: boolean) {
+  _mockSendMailResult = result
+}
+
+/** checkDriveSpace 桩 — 默认空间足够 */
+let _mockDriveSpace: { ok: boolean; quota: number; used: number } = { ok: true, quota: Infinity, used: 0 }
+export async function checkDriveSpace(_user: any, _size: number): Promise<{ ok: boolean; quota: number; used: number }> {
+  return _mockDriveSpace
+}
+export function setMockDriveSpace(space: { ok: boolean; quota: number; used: number }) {
+  _mockDriveSpace = space
+}
+
+/** getDriveQuota 桩 */
+let _mockDriveQuota: number = Infinity
+export async function getDriveQuota(_user: any): Promise<number> {
+  return _mockDriveQuota
+}
+export function setMockDriveQuota(quota: number) {
+  _mockDriveQuota = quota
+}
+
+/** getDriveUsed 桩 */
+let _mockDriveUsed: number = 0
+export async function getDriveUsed(_userId: number): Promise<number> {
+  return _mockDriveUsed
+}
+export function setMockDriveUsed(used: number) {
+  _mockDriveUsed = used
+}
+
+// ===================== 4c. admin 模块 utils 桩 =====================
 
 /** 表个性化覆盖注册表（与 admin/utils/tableOverride.ts 同构） */
 const _tableOverrideRegistry: Record<string, any> = {}
@@ -972,6 +1109,7 @@ const _stubsToExpose: Record<string, any> = {
   nextTick,
   getCurrentInstance,
   toValue,
+  resolveComponent,
   // Nuxt auto-imports
   useState,
   useRoute,
@@ -985,6 +1123,22 @@ const _stubsToExpose: Record<string, any> = {
   refreshNuxtData, useHead, useSeoMeta, definePageMeta, navigateTo,
   createError,
   useToast, defineNuxtRouteMiddleware, getRouterParam, useLayoutState,
+  // Vue dependency injection auto-imports（provide/inject 桩，Map-based）
+  provide,
+  inject,
+  // LMS context auto-imports
+  useLmsContext,
+  provideLmsContext,
+  provideLmsCourseId,
+  // LMS reading tracker auto-imports
+  useReadingTracker,
+  useChapterTask,
+  // LMS utils auto-imports
+  markdownToTiptap,
+  // LMS extension context auto-imports
+  useRaceEditContext,
+  // base utils auto-imports
+  formatTime,
   // Nitro auto-imports
   defineEventHandler,
   eventHandler,
@@ -1036,6 +1190,12 @@ const _stubsToExpose: Record<string, any> = {
   leaveClassRoom,
   normalizeChapterPageData,
   saveContentVersion,
+  listTable, setMockListTableResult,
+  normalizeCourseDetail,
+  getCourseMembers, setMockCourseMembers,
+  searchUsers, setMockSearchUsersResult,
+  getClassUsers, setMockClassUsers,
+  reloadSiteConfig,
   addTable,
   updateTable,
   batchTable,
@@ -1061,6 +1221,12 @@ const _stubsToExpose: Record<string, any> = {
   useTableOverride,
   registerTableOverride,
   clearTableOverrideRegistry,
+  // base module extra auto-imports
+  getConfigByPrefix,
+  sendPasswordResetEmail, setMockSendMailResult,
+  checkDriveSpace, setMockDriveSpace,
+  getDriveQuota, setMockDriveQuota,
+  getDriveUsed, setMockDriveUsed,
   // base module utils
   cRequest,
   useAuth,
@@ -1121,5 +1287,15 @@ export function resetAllStubs() {
   _mockLmsCourseId.value = 0
   _mockLmsChapterId.value = 0
   userPeers.clear()
+  // base extra auto-import mocks
+  _mockSendMailResult = true
+  _mockDriveSpace = { ok: true, quota: Infinity, used: 0 }
+  _mockDriveQuota = Infinity
+  _mockDriveUsed = 0
   allPeers.clear()
+  // lms extra auto-import mocks
+  _mockListTableResult = []
+  _mockCourseMembers = []
+  _mockSearchUsersResult = []
+  _mockClassUsers = []
 }

@@ -1,7 +1,7 @@
 <template>
-  <!-- 块级内容 hover 阅读追踪包装：停留 3s 标记已读，已读后高亮 -->
-  <!-- 已完成 heading 下的内容不再高亮，也不启动 hover 计时 -->
-  <!-- 纯文本块（段落/引用）用黄色背景；非文本组件（图片/echarts/codeBlock/表格等）用黄色边框 -->
+  <!-- 块级内容 hover 阅读追踪包装 -->
+  <!-- 视觉反馈：hover 进入 → 黄色边框；停留 3s 标记已读 → 绿色边框（持久） -->
+  <!-- 已完成 heading 下的内容不显示高亮，也不启动 hover 计时 -->
   <div :class="wrapperClass" @mouseenter="onEnter" @mouseleave="onLeave">
     <slot />
   </div>
@@ -13,27 +13,32 @@ const props = defineProps({
   blockKey: { type: String, required: true },
 })
 
-// 纯文本块用背景高亮；有自身背景/可视元素的组件用边框高亮（背景会被遮挡）
-const TEXT_TYPES = new Set(['paragraph', 'blockquote'])
-const isTextOnly = computed(() => TEXT_TYPES.has(props.node?.type))
+const { shouldHighlight, headingDone, isHovering, onEnter, onLeave } = useReadingTracker(props.blockKey)
 
-const { shouldHighlight, onEnter, onLeave } = useReadingTracker(props.blockKey)
-
-const wrapperClass = computed(() => ({
-  'reading-visited-bg': shouldHighlight.value && isTextOnly.value,
-  'reading-visited-border': shouldHighlight.value && !isTextOnly.value,
-}))
+/**
+ * 边框高亮规则（所有 node 一律用 box-shadow 边框，不再区分文字/非文字）：
+ * - 已读 + heading 未完成 → 绿色边框（持久"已读"标记）
+ * - 正在 hover + 未读 + heading 未完成 → 黄色边框（瞬时反馈）
+ * - 其余情况 → 无边框
+ */
+const wrapperClass = computed(() => {
+  if (shouldHighlight.value) return 'reading-visited-border'
+  if (isHovering.value && !headingDone.value) return 'reading-hover-border'
+  return undefined
+})
 </script>
 
 <style scoped>
-.reading-visited-bg {
-  background-color: rgba(250, 204, 21, 0.35);
-  border-radius: 4px;
-}
-
 /* 用 box-shadow 替代 border，避免高亮出现/消失时 2px 布局抖动 */
-.reading-visited-border {
+.reading-hover-border {
   box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.9);
   border-radius: 4px;
+  transition: box-shadow 0.2s ease;
+}
+
+.reading-visited-border {
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.9);
+  border-radius: 4px;
+  transition: box-shadow 0.2s ease;
 }
 </style>
