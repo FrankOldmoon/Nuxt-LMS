@@ -458,6 +458,37 @@
     "saved": "Medals saved",
     "deleted": "Medal deleted"
   },
+  "shop": {
+    "title": "Shop",
+    "tabShop": "Shop",
+    "tabBag": "Bag",
+    "coin": "Coins",
+    "buy": "Buy",
+    "sell": "Sell",
+    "buySuccess": "Purchased successfully",
+    "sellSuccess": "Sold successfully",
+    "insufficientCoin": "Insufficient coins",
+    "outOfStock": "Out of stock",
+    "emptyBag": "Your bag is empty",
+    "emptyShop": "No goods available",
+    "quantity": "x{count}",
+    "owned": "Owned"
+  },
+  "goods": {
+    "editorTitle": "Goods Management",
+    "add": "Add Good",
+    "namePlaceholder": "Good name",
+    "descPlaceholder": "Description",
+    "iconPlaceholder": "Icon name (e.g. i-lucide-package)",
+    "price": "Price",
+    "sellPrice": "Sell Price",
+    "stock": "Stock",
+    "stockUnlimited": "Unlimited",
+    "saved": "Goods saved",
+    "deleted": "Good deleted",
+    "global": "Global Goods",
+    "course": "Course Goods"
+  },
   "lmsConfig": {
     "title": "Learning Behavior Config",
     "question": "Question",

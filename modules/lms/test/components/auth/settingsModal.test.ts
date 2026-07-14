@@ -3,9 +3,9 @@
  * @see modules/lms/components/auth/settingsModal.vue
  *
  * LMS 设置弹窗包装：包裹 base AuthSettingsModal，通过 slot 注入 LmsConfigEditor。
- * open 变 true 时拉取 /api/config/get，提交时调用 /api/lms-config/update。
+ * open 变 true 时拉取 /api/config/lms-public，提交时调用 /api/lms-config/update。
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { resetAllStubs, setMockI18n, setMockFetchHandler, clearMockFetchHandler } from '../../../../../test/setup/nuxt-stubs'
 
@@ -57,10 +57,10 @@ describe('auth/settingsModal.vue', () => {
     expect(fetched).toBe(false)
   })
 
-  it('open 从 false 变 true 时拉取 /api/config/get', async () => {
+  it('open 从 false 变 true 时拉取 /api/config/lms-public', async () => {
     let configUrlCalled = false
     setMockFetchHandler(async (url: string) => {
-      if (url === '/api/config/get') {
+      if (url === '/api/config/lms-public') {
         configUrlCalled = true
         return { data: { ai: { mode: 'api' } }, success: true, msg: '' }
       }

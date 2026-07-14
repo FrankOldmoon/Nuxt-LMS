@@ -52,12 +52,17 @@
         <slot name="teachers-extra" :course="course" />
       </div>
 
-      <div v-if="firstChapterUrl || canEdit">
+      <div v-if="firstChapterUrl || canEdit" class="flex items-center gap-2 mt-2">
         <UButton :label="$t('course.startLearning')" icon="i-lucide-play" color="primary" size="lg"
-          class="mt-2" :loading="creatingChapter" @click="startLearning" />
+          :loading="creatingChapter" @click="startLearning" />
+        <UButton :label="$t('shop.title')" icon="i-lucide-shopping-bag" color="neutral" variant="outline" size="lg"
+          @click="openShop" />
       </div>
     </div>
   </div>
+
+  <!-- 商店弹窗 -->
+  <CourseShopModal v-model:open="shopOpen" :course-id="Number(courseId)" />
 </template>
 
 <script setup lang="ts">
@@ -75,6 +80,11 @@ const emit = defineEmits<{ saved: [], export: [] }>()
 const { t } = useI18n()
 const toast = useToast()
 const creatingChapter = ref(false)
+const shopOpen = ref(false)
+
+function openShop() {
+  shopOpen.value = true
+}
 
 async function startLearning() {
   if (props.firstChapterUrl) {

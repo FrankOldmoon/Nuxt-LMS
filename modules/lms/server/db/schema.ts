@@ -515,9 +515,54 @@ export const activities = pgTable(
   })
 );
 
+// ====================== 商店：商品 + 背包 ======================
+export const goods = pgTable(
+  'goods',
+  {
+    id: serial('id').primaryKey(),
+    name: varchar('name', { length: 255 }).notNull(),
+    content: jsonb('content').default('{}'),
+    courseId: integer('course_id').default(0),
+    price: integer('price').default(0),
+    sellPrice: integer('sell_price').default(0),
+    stock: integer('stock').default(-1),
+    type: varchar('type', { length: 50 }).default('item'),
+    order: integer('order').default(0),
+    ...withTimestamps,
+  },
+  (t) => ({
+    courseIdx: index('idx_goods_course_id').on(t.courseId),
+  })
+);
+
+export const bags = pgTable(
+  'bags',
+  {
+    userId: integer('user_id').notNull(),
+    goodId: integer('good_id').notNull(),
+    courseId: integer('course_id').notNull(),
+    quantity: integer('quantity').default(1),
+    ...withTimestamps,
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.goodId, t.courseId] }),
+    goodFk: foreignKey({ columns: [t.goodId], foreignColumns: [goods.id] }).onDelete('cascade'),
+    userIdx: index('idx_bags_user_id').on(t.userId),
+    goodIdx: index('idx_bags_good_id').on(t.goodId),
+  })
+);
+
 // ====================== Relations ======================
 export const classesRelations = relations(classes, ({ many }) => ({
   classChapters: many(classChapters),
   classCourses: many(classCourses),
   classRaces: many(classRaces),
+}));
+
+export const goodsRelations = relations(goods, ({ many }) => ({
+  bags: many(bags),
+}));
+
+export const bagsRelations = relations(bags, ({ one }) => ({
+  good: one(goods, { fields: [bags.goodId], references: [goods.id] }),
 }));

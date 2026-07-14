@@ -48,6 +48,12 @@
             :course-id="props.courseId"
           />
 
+          <!-- 课程专属商品管理（教师/管理员可见） -->
+          <LmsGoodsEditor v-if="canEdit" :course-id="props.courseId" />
+
+          <!-- 全局商品管理（仅管理员可见） -->
+          <LmsGoodsEditor v-if="hasRole('admin')" :course-id="0" />
+
           <!-- 底部按钮 -->
           <div class="flex justify-end gap-2 pt-4">
             <UButton :label="$t('common.cancel')" color="neutral" variant="ghost" @click="closeModal" />
