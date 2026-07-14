@@ -18,17 +18,18 @@ export function sha256Hex(buffer: Buffer): string {
 }
 
 /** 在 UPLOAD_ROOT 下按"距 2026-01-01 天数"生成目录名 */
-export function dayDirName(now: Date = new Date()): string {
+export function dayDirNameFn(now: Date = new Date()): string {
   const baseDate = new Date('2026-01-01T00:00:00Z')
   const daysSinceBase = Math.floor((now.getTime() - baseDate.getTime()) / (24 * 60 * 60 * 1000))
   return String(daysSinceBase)
 }
 
 /** 把 buffer 落盘为 hash.ext 临时文件，返回 { tempPath, tempDbPath } */
-export async function writeTempFile(buffer: Buffer, hash: string, ext: string, dayDir: string) {
+export async function writeTempFile(buffer: Buffer, hash: string, ext: string, dayDir: string, dayDirName: string) {
   const tempFileName = `${hash}${ext}`
   const tempFilePath = join(dayDir, tempFileName)
-  const tempDbPath = `/${dayDir}/${tempFileName}`
+  // DB path 只保留 UPLOAD_ROOT 之内的相对目录（serve 端会自己拼接 UPLOAD_ROOT）
+  const tempDbPath = `/${dayDirName}/${tempFileName}`
   await writeFile(tempFilePath, buffer)
   return { tempFilePath, tempDbPath }
 }
@@ -45,9 +46,10 @@ export async function persistUploadedFile(args: {
   uploadRoot: string
 }) {
   const { buffer, hash, ext, originalName, fileType, group, userId, uploadRoot } = args
-  const dayDir = join(uploadRoot, dayDirName())
+  const dayDirName = dayDirNameFn()
+  const dayDir = join(uploadRoot, dayDirName)
   await mkdir(dayDir, { recursive: true })
-  const { tempFilePath, tempDbPath } = await writeTempFile(buffer, hash, ext, dayDir)
+  const { tempFilePath, tempDbPath } = await writeTempFile(buffer, hash, ext, dayDir, dayDirName)
 
   let record: any
   try {
@@ -67,7 +69,8 @@ export async function persistUploadedFile(args: {
 
   const finalFileName = `${record.id}${ext}`
   const finalFilePath = join(dayDir, finalFileName)
-  const finalDbPath = `/${dayDir}/${finalFileName}`
+  // DB path 只保留 UPLOAD_ROOT 之内的相对路径，避免 URL 里出现 storage 前缀
+  const finalDbPath = `/${dayDirName}/${finalFileName}`
   await rename(tempFilePath, finalFilePath)
   await db.update(schema.files)
     .set({ path: finalDbPath })
