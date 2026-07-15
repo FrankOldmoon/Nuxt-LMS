@@ -1,5 +1,5 @@
 /**
- * puzzle 组件测试 (render)
+ * puzzle component test (render)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/render/puzzle.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

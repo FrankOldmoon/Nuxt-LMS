@@ -1,5 +1,5 @@
 /**
- * select/node-view 组件测试 (TipTap node-view)
+ * select/node-view component test (TipTap node-view)
  * @see modules/lms/components/ueditor/extensions/nodes/select/node-view.vue
  *
  * Native <select> with options from injected questionForm, uses NodeViewWrapper + nodeViewProps + useI18n

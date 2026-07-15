@@ -1,8 +1,8 @@
 /**
- * evaluation 编辑组件测试 (edit)
+ * evaluation edit component test (edit)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/edit/evaluation.vue
  *
- * evaluation.vue 接收 form prop，编辑评价目标(goal)和阈值(threshold)
+ * evaluation.vue receives form prop, edits evaluation goal and threshold
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

@@ -1,8 +1,8 @@
 /**
- * menu/EditorList.vue 组件测试
+ * menu/EditorList.vue component tests
  * @see modules/admin/components/menu/EditorList.vue
  *
- * 菜单编辑列表：拖拽排序 + 增删改 + 添加根级项
+ * Menu edit list: drag sorting + add/delete/modify + add root items
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -126,7 +126,7 @@ describe('menu/EditorList.vue', () => {
     })
     await flushPromises()
     expect(wrapper.findAll('.menu-editor-item').length).toBe(0)
-    // 仍有添加按钮
+    // Still has add button
     expect(wrapper.findAll('.ubutton').find(b => b.text().includes('admin.menu.addRoot'))).toBeTruthy()
   })
 

@@ -1,9 +1,9 @@
 /**
- * layout/aside.vue 组件测试
+ * layout/aside.vue component test
  * @see modules/lms/components/layout/aside.vue
  *
- * 侧边栏：CourseBtns + 班级选择按钮 + 内容管理 + 导航菜单 + ClassModal。
- * 使用 useAside()（来自 ./useAside.ts），内部依赖 useAuth/useAuthLms/useSidebarNav/useLayoutState。
+ * Sidebar: CourseBtns + class selection button + content management + nav menu + ClassModal.
+ * Uses useAside() (from ./useAside.ts), internally depends on useAuth/useAuthLms/useSidebarNav/useLayoutState.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -32,7 +32,7 @@ beforeEach(() => {
     refreshUser: vi.fn(),
   })
 
-  // stub useSidebarNav（auto-import）— 返回 useAside 需要的字段
+  // stub useSidebarNav (auto-import) — returns fields needed by useAside
   ;(globalThis as any).useSidebarNav = () => ({
     navigation: ref([
       { label: 'Home', to: '/course/1' },
@@ -45,7 +45,7 @@ beforeEach(() => {
     passedChapterIds: ref(new Set()),
   })
 
-  // 覆盖 useLayoutState stub
+  // Override useLayoutState stub
   ;(globalThis as any).useLayoutState = () => ({
     courseNavVersion: ref(0),
     showSidebar: ref(false),
@@ -99,7 +99,7 @@ describe('layout/aside.vue', () => {
   })
 
   it('用户未登录时不显示班级选择按钮', async () => {
-    // 不调用 setMockAuthUser → user 为 null
+    // Does not call setMockAuthUser → user is null
     const { default: Aside } = await import('../../../components/layout/aside.vue')
     const wrapper = mount(Aside, { global: _globalConfig })
     await flushPromises()

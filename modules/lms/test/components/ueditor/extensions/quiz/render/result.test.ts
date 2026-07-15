@@ -1,5 +1,5 @@
 /**
- * quiz render result 组件测试
+ * quiz render result component test
  * @see modules/lms/components/ueditor/extensions/nodes/vue/quiz/render/result.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

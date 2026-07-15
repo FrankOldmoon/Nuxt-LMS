@@ -10,7 +10,7 @@ export interface CourseViewProps {
   courseId: string | number
 }
 
-/** 课程详情视图：页面标题 + 教师管理弹窗状态 */
+/** Course detail view: page title + teacher management modal state */
 export function useCourseView(props: CourseViewProps, emit: (e: 'saved') => void) {
   const { siteTitle } = useSiteConfig()
 

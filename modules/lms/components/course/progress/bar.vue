@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-// 课程学习进度条：已通过章节数 / 总章节数
+// CourseLearning Progressitems：ApprovedChaptercount / totalChaptercount
 defineProps<{
   percent: number
 }>()

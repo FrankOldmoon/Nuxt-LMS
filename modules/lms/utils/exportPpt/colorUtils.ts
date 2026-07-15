@@ -1,8 +1,8 @@
 /**
- * 颜色 / 字号转换工具
+ * Color / font size conversion utilities
  */
 
-/** CSS 颜色 → pptxgenjs hex (无 #，大写) */
+/** CSS color → pptxgenjs hex (no #, uppercase) */
 export function cssColorToHex(color: string | undefined): string | undefined {
   if (!color || typeof color !== 'string') return undefined
   const c = color.trim().toLowerCase()
@@ -21,7 +21,7 @@ export function cssColorToHex(color: string | undefined): string | undefined {
       .join('')
       .toUpperCase()
   }
-  // 常见命名颜色
+  // Common named colors
   const named: Record<string, string> = {
     red: 'FF0000', green: '008000', blue: '0000FF', black: '000000',
     white: 'FFFFFF', yellow: 'FFFF00', orange: 'FFA500', purple: '800080',
@@ -33,7 +33,7 @@ export function cssColorToHex(color: string | undefined): string | undefined {
   return named[c]
 }
 
-/** CSS 字号字符串 → pt 数字 */
+/** CSS font size string → pt number */
 export function parseFontSize(size: string | undefined): number | undefined {
   if (!size) return undefined
   const m = String(size).match(/^([\d.]+)\s*(px|pt|em|rem)?$/)

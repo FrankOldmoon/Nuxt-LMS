@@ -1,9 +1,9 @@
 import { ref, reactive, onMounted } from 'vue'
 
 /**
- * 商品编辑器 composable：管理商品列表的增删改
- * - courseId=0：管理员管理全局商品
- * - courseId>0：教师/管理员管理该课程专属商品
+ * Goods editor composable: manage addition, deletion, and modification of goods list
+ * - courseId=0: admin manages global goods
+ * - courseId>0: teacher/admin manages course-specific goods
  */
 export function useGoodsEditor(courseId: Ref<number> | ComputedRef<number>) {
   const { t } = useI18n()

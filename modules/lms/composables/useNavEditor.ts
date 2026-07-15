@@ -1,6 +1,6 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
 
-/** 内部使用的扁平树节点（供子组件引用） */
+/** Internal flat tree node (for child component reference) */
 export interface FlatNode {
   _key: string
   id: string
@@ -19,7 +19,7 @@ interface NavEditorProps {
 }
 
 /**
- * 导航编辑器：扁平树解析 + 批量导入 + AI 生成 + 保存（category/course 双模式）
+ * Navigation editor: flat tree parsing + batch import + AI generation + save (category/course dual mode)
  */
 export function useNavEditor(props: NavEditorProps, emit: (e: 'saved') => void) {
   const { t } = useI18n()
@@ -29,7 +29,7 @@ export function useNavEditor(props: NavEditorProps, emit: (e: 'saved') => void) 
   const saving = ref(false)
   let keyCounter = 0
 
-  // 批量导入 + AI
+  // Batch import + AI
   const importOpen = ref(false)
   const importText = ref('')
   const aiPrompt = ref('')
@@ -201,7 +201,7 @@ Item B
         }
       }
     } catch (e: any) {
-      console.error('AI 生成失败:', e)
+      console.error('AI generation failed:', e)
       importText.value = t('navEditor.aiGenerateError') + (e.message || '')
     } finally {
       aiGenerating.value = false
@@ -223,7 +223,7 @@ Item B
     open.value = false
   }
 
-  // ==================== 保存逻辑 ====================
+  // ==================== Save logic ====================
 
   function toOrders(): { id: string; label: string; order: number; parentId?: string | null }[] {
     const result: { id: string; label: string; order: number; parentId?: string | null }[] = []
@@ -389,7 +389,7 @@ Item B
       emit('saved')
       open.value = false
     } catch (error) {
-      console.error('保存失败:', error)
+      console.error('Save failed:', error)
     } finally {
       saving.value = false
     }

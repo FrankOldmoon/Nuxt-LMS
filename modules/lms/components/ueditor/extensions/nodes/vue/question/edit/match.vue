@@ -10,20 +10,20 @@
         <div class="space-y-2">
             <div v-for="(pair, idx) in pairs" :key="idx"
                 class="flex items-center gap-2 p-2 rounded-md border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800">
-                <!-- 序号 -->
+                <!-- Number -->
                 <span
                     class="shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white text-xs flex items-center justify-center font-medium">
                     {{ idx + 1 }}
                 </span>
-                <!-- 左侧项 -->
+                <!-- Leftitems -->
                 <UInput v-model="pair.left" :placeholder="$t('question.matchLeftPlaceholder')" size="sm"
                     class="flex-1" />
-                <!-- 连接图标 -->
+                <!-- ConnectionIcon -->
                 <UIcon name="i-heroicons-arrows-right-left" class="w-4 h-4 text-gray-400 shrink-0" />
-                <!-- 右侧项 -->
+                <!-- Rightitems -->
                 <UInput v-model="pair.right" :placeholder="$t('question.matchRightPlaceholder')" size="sm"
                     class="flex-1" />
-                <!-- 删除 -->
+                <!-- Delete -->
                 <UButton variant="ghost" size="2xs" color="red" icon="i-heroicons-x-mark" class="shrink-0"
                     @click="removePair(idx)" />
             </div>
@@ -40,10 +40,10 @@ const props = defineProps({
     form: { type: Object, required: true },
 })
 
-// pairs: [{ left: '左', right: '右' }]
+// pairs: [{ left: 'Left', right: 'Right' }]
 const pairs = ref([])
 
-// form.options → pairs（初始化 + 响应外部变更，如 AI 生成）
+// form.options → pairs（Initialize + ResponseOutsideexternal change，if AI Generate）
 watch(() => props.form.options, (opts) => {
     let val
     if (Array.isArray(opts) && opts.length && typeof opts[0] === 'object' && 'left' in opts[0]) {
@@ -59,11 +59,11 @@ watch(() => props.form.options, (opts) => {
     }
 }, { immediate: true })
 
-// pairs 变化时同步到 form.options 和 form.answer
+// pairs when changesSyncto form.options and form.answer
 watch(pairs, (val) => {
     const newOpts = val.map(p => ({ left: p.left, right: p.right }))
     const curOpts = props.form.options
-    // 值相同时跳过，避免反馈环
+    // ValuerelativesamewhenSkip，avoidFeedbackcycle
     if (JSON.stringify(newOpts) === JSON.stringify(curOpts)) return
     props.form.options = newOpts
     props.form.answer = val.map((_, i) => i)

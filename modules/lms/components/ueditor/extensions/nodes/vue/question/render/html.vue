@@ -1,10 +1,10 @@
 <template>
     <div>
-        <!-- HTML 预览 iframe -->
+        <!-- HTML Preview iframe -->
         <div ref="containerRef" class="html-preview-container border border-gray-200 dark:border-gray-600 rounded overflow-hidden relative">
             <iframe ref="iframeRef" :srcdoc="htmlContent" sandbox="allow-scripts" class="w-full html-preview-iframe"
                 style="min-height: 300px; border: 0;" />
-            <!-- 全屏按钮 -->
+            <!-- FullscreenButton -->
             <UButton
                 :icon="isFullscreen ? 'i-lucide-minimize' : 'i-lucide-maximize'"
                 variant="ghost" size="2xs"
@@ -12,7 +12,7 @@
                 @click="toggleFullscreen" />
         </div>
 
-        <!-- 正确率提示（提交后显示） -->
+        <!-- Accuracy RateTip（SubmitBackShow） -->
         <div v-if="submitted && latestRate !== null" class="mt-2 text-xs text-gray-500">
             {{ $t('question.htmlCorrectRate') }}: {{ Math.round(latestRate * 100) }}%
         </div>
@@ -45,7 +45,7 @@ defineExpose({ submit, reset, hasAnswer, fillCorrectAnswer })
 </script>
 
 <style scoped>
-/* 全屏时 iframe 撑满屏幕 */
+/* Fullscreenwhen iframe supportFullscreen */
 .html-preview-container:fullscreen {
     background: #fff;
 }

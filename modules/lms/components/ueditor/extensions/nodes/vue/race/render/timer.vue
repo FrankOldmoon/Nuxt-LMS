@@ -1,5 +1,5 @@
 <template>
-    <!-- ====== 倒计时 ====== -->
+    <!-- ====== Countdown ====== -->
     <div class="mb-4 space-y-1">
         <div class="flex items-center justify-between text-xs">
             <span :class="timeRemaining <= 5 ? 'text-red-500 font-bold' : 'text-gray-500'">

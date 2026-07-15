@@ -1,11 +1,11 @@
 /**
- * node-view.vue 组件测试 (TipTap node-view 容器)
+ * node-view.vue component test (TipTap node-view container)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/node-view.vue
  *
- * node-view.vue 是所有扩展组件的容器：
- * - 使用 useNodeView 动态加载 ./<type>/index.vue
- * - provide nodeViewShowConfig / nodeViewMeta 给子组件
- * - 工具栏在 meta.title 非空时显示
+ * node-view.vue is the container for all extension components:
+ * - uses useNodeView to dynamically load ./<type>/index.vue
+ * - provide nodeViewShowConfig / nodeViewMeta to child components
+ * - toolbar shows when meta.title is non-empty
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

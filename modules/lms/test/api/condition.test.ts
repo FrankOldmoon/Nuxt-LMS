@@ -1,5 +1,5 @@
 /**
- * Condition check API 端点测试
+ * Condition check API endpoint tests
  * @see modules/lms/server/api/condition/check.post.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'

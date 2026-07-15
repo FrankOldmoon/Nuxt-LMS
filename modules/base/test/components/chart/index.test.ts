@@ -1,9 +1,9 @@
 /**
- * Chart 组件测试
+ * Chart component tests
  * @see modules/base/components/chart/index.vue
  *
- * ECharts 封装：CDN 加载 + 初始化 + 自适应 + 暴露方法
- * 依赖 useECharts() composable（auto-import），测试中通过 globalThis 注入桩
+ * ECharts wrapper: CDN loading + initialization + adaptive + exposed methods
+ * Depends on useECharts() composable (auto-import), stub injected via globalThis in tests
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -17,7 +17,7 @@ beforeEach(() => {
     t: (k: string) => k,
     d: (v: any) => String(v),
   })
-  // 桩 useECharts composable（auto-import），避免加载 ECharts CDN
+  // Stub useECharts composable (auto-import) to avoid loading ECharts CDN
   ;(globalThis as any).useECharts = (
     option: () => any,
     _theme: () => any,

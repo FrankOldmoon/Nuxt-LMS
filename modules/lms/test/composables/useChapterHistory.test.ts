@@ -1,5 +1,5 @@
 /**
- * useChapterHistory composable 测试
+ * useChapterHistory composable test
  * @see modules/lms/composables/useChapterHistory.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -18,7 +18,7 @@ beforeEach(() => {
     notifyContentSaved: vi.fn(),
     notifyCourseNavUpdate: vi.fn(),
   })
-  // 阻止 location.reload 真的执行
+  // Prevent location.reload from actually executing
   vi.stubGlobal('location', { reload: vi.fn(), ...((globalThis as any).location || {}) })
 })
 
@@ -99,13 +99,13 @@ describe('composables/useChapterHistory', () => {
     expect(r.page.value).toBe(2)
     r.nextPage()
     expect(r.page.value).toBe(3)
-    r.nextPage() // 已到末尾不再递增
+    r.nextPage() // At the end, no more increment
     expect(r.page.value).toBe(3)
     r.prevPage()
     expect(r.page.value).toBe(2)
     r.prevPage()
     expect(r.page.value).toBe(1)
-    r.prevPage() // 已到首页不再递减
+    r.prevPage() // At the first page, no more decrement
     expect(r.page.value).toBe(1)
   })
 

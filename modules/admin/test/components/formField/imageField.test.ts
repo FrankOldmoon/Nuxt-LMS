@@ -1,8 +1,8 @@
 /**
- * formField/imageField 组件测试
+ * formField/imageField component tests
  * @see modules/admin/components/table/formField/imageField.vue
  *
- * UInput v-model 绑定 form[col.jsName]（图片 URL），有值时显示 UAvatar 预览
+ * UInput v-model binds to form[col.jsName] (image URL), shows UAvatar preview when value exists
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -103,7 +103,7 @@ describe('formField/imageField.vue', () => {
     const input = wrapper.find('input')
     await input.setValue('https://example.com/new.png')
     expect(form.avatarUrl).toBe('https://example.com/new.png')
-    // UAvatar 应随之出现
+    // UAvatar should appear accordingly
     expect(wrapper.find('.avatar').exists()).toBe(true)
   })
 })

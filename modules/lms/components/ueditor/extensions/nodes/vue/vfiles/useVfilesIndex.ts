@@ -30,7 +30,7 @@ export function useVfilesIndex(props: VfilesIndexProps) {
         props.updateAttributes({ content: JSON.stringify(newConfig) })
     }
 
-    // 预览模式
+    // Previewmode
     const selectedId = ref(null)
     const selectedFile = computed(() => {
         if (!selectedId.value) return null
@@ -54,7 +54,7 @@ export function useVfilesIndex(props: VfilesIndexProps) {
                     label: item.label || t('ueditor.vfilesUnnamed'),
                     icon: item.type === 'folder' ? 'i-lucide-folder' : 'i-lucide-file',
                     _id: item.id,
-                    onSelect: () => { if (item.type === 'file') selectedId.value = item.id },
+                    on select: () => { if (item.type === 'file') selectedId.value = item.id },
                 }
                 if (item.children && item.children.length) {
                     navItem.children = build(item.children)
@@ -65,7 +65,7 @@ export function useVfilesIndex(props: VfilesIndexProps) {
         return build(config.value.items || [])
     })
 
-    // 编辑文件内容时防抖保存
+    // EditFileContentdebounce whenSave
     let saveTimer = null
     watch(() => selectedFile.value?.content, () => {
         if (saveTimer) clearTimeout(saveTimer)

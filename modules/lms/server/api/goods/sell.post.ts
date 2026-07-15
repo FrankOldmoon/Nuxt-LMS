@@ -2,12 +2,12 @@ import { db, schema } from '@nuxthub/db'
 import { eq, and } from 'drizzle-orm'
 
 /**
- * 卖出商品
+ * Sell good
  * body: { goodId, paidCourseId }
- * - goodId: 商品 ID
- * - paidCourseId: 返还 coin 的课程上下文（=当前浏览课程）
+ * - goodId: good ID
+ * - paidCourseId: course context for coin refund (= currently viewed course)
  *
- * 卖出返还 good.sellPrice 个 coin 到 paidCourseId 的 user_courses
+ * Selling refunds good.sellPrice coins to the user_courses of paidCourseId
  */
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
@@ -16,35 +16,35 @@ export default eventHandler(async (event) => {
   const paidCourseId = Number(body.paidCourseId)
 
   if (!goodId || !paidCourseId) {
-    return cResp(null, '缺少 goodId 或 paidCourseId 参数', false)
+    return cResp(null, 'Missing goodId or paidCourseId parameter', false)
   }
 
-  // 1. 查商品
+  // 1. Query good
   const goodRows = await db.select().from(schema.goods).where(eq(schema.goods.id, goodId)).limit(1)
-  if (!goodRows[0]) return cResp(null, '商品不存在', false)
+  if (!goodRows[0]) return cResp(null, 'Good does not exist', false)
   const good = goodRows[0]
 
-  // 2. 查 bag，校验拥有
+  // 2. Query bag and verify ownership
   const bagRows = await db
     .select()
     .from(schema.bags)
     .where(and(eq(schema.bags.userId, user.id), eq(schema.bags.goodId, goodId), eq(schema.bags.courseId, good.courseId)))
     .limit(1)
   if (!bagRows[0] || bagRows[0].quantity <= 0) {
-    return cResp(null, '背包中无此商品', false)
+    return cResp(null, 'Good not found in bag', false)
   }
   const bag = bagRows[0]
 
-  // 3. 查 userCourses 获取当前 coin
+  // 3. Query userCourses to get current coin
   const ucRows = await db
     .select()
     .from(schema.userCourses)
     .where(and(eq(schema.userCourses.userId, user.id), eq(schema.userCourses.courseId, paidCourseId)))
     .limit(1)
-  if (!ucRows[0]) return cResp(null, '未加入该课程', false)
+  if (!ucRows[0]) return cResp(null, 'Not enrolled in this course', false)
   const uc = ucRows[0]
 
-  // 4. 事务：加 coin + 减 bag + 加库存
+  // 4. Transaction: add coin + decrease bag + increase stock
   const newCoin = (uc.coin || 0) + good.sellPrice
   const newQuantity = bag.quantity - 1
   await db.transaction(async (tx) => {

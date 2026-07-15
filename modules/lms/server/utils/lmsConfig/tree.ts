@@ -1,11 +1,11 @@
 /**
- * 树 ↔ 拍平 互转 + 深合并工具
+ * Tree <-> flat conversion + deep merge utilities
  */
 
 /**
- * 将树形对象拍平为 "section.key.sub" 形式的键
+ * Flatten a tree-shaped object into keys of the form "section.key.sub"
  *   flattenTree('', { a: { b: 1, c: 2 } }) => { 'a.b': 1, 'a.c': 2 }
- * 非对象（Date / Array）视为叶子值。
+ * Non-object values (Date / Array) are treated as leaves.
  */
 export function flattenTree(prefix: string, obj: any, result: Record<string, any>) {
   if (obj === null || obj === undefined) return
@@ -24,7 +24,7 @@ export function flattenTree(prefix: string, obj: any, result: Record<string, any
 }
 
 /**
- * 将 "section.key" 形式的拍平键还原为嵌套树
+ * Restore flat keys of the form "section.key" into a nested tree
  *   unflattenTree({ 'a.b': 1, 'a.c': 2 }) => { a: { b: 1, c: 2 } }
  */
 export function unflattenTree(flat: Record<string, any>): any {
@@ -45,15 +45,15 @@ export function unflattenTree(flat: Record<string, any>): any {
   return result
 }
 
-/** 深克隆（简单 JSON 兼容对象） */
+/** Deep clone (simple JSON-compatible objects) */
 function deepClone<T>(v: T): T {
   return JSON.parse(JSON.stringify(v))
 }
 
 /**
- * 深度合并默认配置和数据库配置
- * - target 中存在的 key 优先于 defaults
- * - 不递归 Date / Array（视为叶子）
+ * Deep merge default config and database config
+ * - Keys present in target take priority over defaults
+ * - Date / Array values are not recursed into (treated as leaves)
  */
 export function mergeConfig(defaults: any, overrides: any): any {
   if (!overrides) return defaults

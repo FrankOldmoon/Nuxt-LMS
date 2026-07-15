@@ -2,7 +2,7 @@ export default defineEventHandler(async (event) => {
   const authUser = await requireAuth(event)
   const body = await readBody(event)
 
-  // 白名单：只允许更新安全字段
+  // Whitelist: only allow updating safe fields
   const allowedFields = [
     'name',
     'preferName',
@@ -25,9 +25,9 @@ export default defineEventHandler(async (event) => {
   }
 
   if (Object.keys(updateData).length === 0) {
-    return cResp(null, '没有需要更新的字段', false)
+    return cResp(null, 'No fields to update', false)
   }
 
   await updateTable('users', authUser.id, updateData)
-  return cResp(null, '更新成功')
+  return cResp(null, 'Updated successfully')
 })

@@ -1,5 +1,5 @@
 /**
- * useCourseConfigForm composable 测试
+ * useCourseConfigForm composable test
  * @see modules/lms/composables/useCourseConfigForm.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -15,7 +15,7 @@ beforeEach(async () => {
   resetAllStubs()
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
   setMockFetchHandler(async () => ({ data: null, success: true, msg: '' }))
-  // useCourseConfigForm 依赖 colorOptions / levelOptions（base 模块 auto-import）
+  // useCourseConfigForm depends on colorOptions / levelOptions (base module auto-import)
   const { colorOptions, levelOptions } = await import('../../../base/utils/colors')
   ;(globalThis as any).colorOptions = colorOptions
   ;(globalThis as any).levelOptions = levelOptions
@@ -75,10 +75,10 @@ describe('composables/useCourseConfigForm', () => {
     })
     const { useCourseConfigForm } = await import('../../composables/useCourseConfigForm')
     const r = useCourseConfigForm()
-    // initFromConfig 内部调用 loadGlobalLmsConfig → 全局配置的 course 字段影响 courseSwitches
+    // initFromConfig internally calls loadGlobalLmsConfig → global config's course field affects courseSwitches
     await r.initFromConfig({})
-    expect(r.courseSwitches.showDanmaku).toBe(false) // 来自全局配置
-    expect(r.courseSwitches.showProgress).toBe(true) // 来自全局配置
+    expect(r.courseSwitches.showDanmaku).toBe(false) // From global config
+    expect(r.courseSwitches.showProgress).toBe(true) // From global config
   })
 
   it('initFromConfig 从 cfg 初始化', async () => {
@@ -149,15 +149,15 @@ describe('composables/useCourseConfigForm', () => {
     })
     const { useCourseConfigForm } = await import('../../composables/useCourseConfigForm')
     const r = useCourseConfigForm()
-    // initFromConfig 内部调用 deepMerge(globalLmsConfig, cfg.lmsConfig)
-    // 全局有 course.showDanmaku=true，cfg.lmsConfig 覆盖 course.showComments=false
+    // initFromConfig internally calls deepMerge(globalLmsConfig, cfg.lmsConfig)
+    // Global has course.showDanmaku=true, cfg.lmsConfig overrides course.showComments=false
     await r.initFromConfig({
       lmsConfig: { course: { showComments: false } },
     })
-    // courseSwitches 反映合并结果：showDanmaku 来自全局，showComments 来自覆盖
-    expect(r.courseSwitches.showDanmaku).toBe(true) // 全局值保留
-    expect(r.courseSwitches.showComments).toBe(false) // 覆盖值生效
-    // buildConfig 返回的 lmsConfig 应包含合并后的数据
+    // courseSwitches reflects merge result: showDanmaku from global, showComments from override
+    expect(r.courseSwitches.showDanmaku).toBe(true) // Global value preserved
+    expect(r.courseSwitches.showComments).toBe(false) // Override value takes effect
+    // The lmsConfig returned by buildConfig should contain the merged data
     const result = r.buildConfig()
     expect(result).not.toBe(null)
     expect(result!.lmsConfig.course.showDanmaku).toBe(true)

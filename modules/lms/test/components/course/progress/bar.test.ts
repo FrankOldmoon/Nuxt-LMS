@@ -1,8 +1,8 @@
 /**
- * course/progress/bar.vue 组件测试
+ * course/progress/bar.vue component test
  * @see modules/lms/components/course/progress/bar.vue
  *
- * 课程学习进度条：percent prop 控制宽度
+ * Course learning progress bar: percent prop controls width
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -53,7 +53,7 @@ describe('course/progress/bar.vue', () => {
       props: { percent: 75 },
       global: _globalConfig,
     })
-    // 找到内层进度条 div（带 transition-all class）
+    // Find the inner progress bar div (with transition-all class)
     const innerBar = wrapper.find('.transition-all')
     expect(innerBar.exists()).toBe(true)
     expect(innerBar.attributes('style')).toContain('width: 75%')

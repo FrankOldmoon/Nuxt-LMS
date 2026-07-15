@@ -1,19 +1,19 @@
 /**
- * 客户端初始化时检查是否需要恢复原始身份
- * 模拟学生身份后刷新页面会自动调用 /api/auth/restore 恢复
+ * Check whether original identity needs to be restored on client initialization
+ * After impersonating a student identity, refreshing the page will automatically call /api/auth/restore to restore
  */
 export default defineNuxtPlugin(async () => {
   if (import.meta.client) {
-    // 检查 localStorage 标记（impersonate 时设置）
+    // Check localStorage flag (set during impersonate)
     const isImpersonating = localStorage.getItem('impersonating')
     if (isImpersonating === 'true') {
       try {
         await cRequest('/api/auth/restore', { method: 'POST' })
         localStorage.removeItem('impersonating')
-        // 刷新页面以恢复原始身份的 UI
+        // Refresh page to restore the original identity UI
         window.location.reload()
       } catch {
-        // 静默忽略
+        // Silently ignore
       }
     }
   }

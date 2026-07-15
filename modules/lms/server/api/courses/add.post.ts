@@ -1,15 +1,15 @@
 export default eventHandler(async (event) => {
-  // 仅管理员可新增课程
+  // Only admins can create courses
   await requireAdmin(event)
 
   const body = await readBody(event)
   try {
     const result = await addTable('courses', body)
-    // 通知所有客户端：首页导航已更新
+    // Notify all clients: home navigation has been updated
     broadcastToAll({ type: 'home-changed', reason: 'courses.add' })
     return cResp(result)
   } catch (error: any) {
-    console.error('新增课程失败:', error)
-    return cResp(null, error.message || '新增失败', false)
+    console.error('Failed to create course:', error)
+    return cResp(null, error.message || 'Create failed', false)
   }
 })

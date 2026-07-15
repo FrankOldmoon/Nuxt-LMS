@@ -1,8 +1,8 @@
 /**
- * 学习进度：获取当前用户在本课程所有章节的得分 + 题目/作业/评论完成状态
+ * Learning progress: get the current user's scores for all chapters in this course + question/homework/comment completion status
  * GET /api/courses/progress?courseId=1
  *
- * 返回每个 chapter 的 score 及其包含的 question/homework/comment 状态
+ * Returns each chapter's score and the status of the question/homework/comment it contains
  */
 import { db, schema } from '@nuxthub/db'
 import { eq } from 'drizzle-orm'
@@ -18,9 +18,9 @@ import { collectAllItemCids, assembleProgress } from '../../utils/courseProgress
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
   const courseId = Number(getQuery(event).courseId)
-  if (!courseId) return cResp([], '缺少 courseId', false)
+  if (!courseId) return cResp([], 'Missing courseId', false)
 
-  // 1. 拉取课程所有章节 + 收集所有 item ids
+  // 1. Fetch all chapters of the course + collect all item ids
   const chapters = await db
     .select({
       id: schema.chapters.id,
@@ -36,7 +36,7 @@ export default eventHandler(async (event) => {
   const { allQuestionCids, allHomeworkCids, allCommentCids } = collectAllItemCids(chapters)
   const chapterIds = chapters.map(ch => ch.id)
 
-  // 2. 批量查状态 / 得分（并发）
+  // 2. Batch query status / scores (concurrent)
   const [questionStatusMap, homeworkStatusMap, commentStatusMap, { scoreMap, passMap }] = await Promise.all([
     queryQuestionStatus(user.id, courseId, allQuestionCids),
     queryHomeworkStatus(user.id, courseId, allHomeworkCids),
@@ -44,10 +44,10 @@ export default eventHandler(async (event) => {
     queryUserChapterScores(user.id, chapterIds),
   ])
 
-  // 3. 可访问性
+  // 3. Accessibility
   const accessibleSet = await computeChapterAccessibility(user, courseId, chapters)
 
-  // 4. 装配
+  // 4. Assemble
   return cResp(assembleProgress(chapters, {
     questionStatusMap, homeworkStatusMap, commentStatusMap, scoreMap, passMap, accessibleSet,
   }))

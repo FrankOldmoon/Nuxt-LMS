@@ -1,5 +1,5 @@
 /**
- * aigenerator/index.vue 组件测试 (TipTap node-view)
+ * aigenerator/index.vue component test (TipTap node-view)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/aigenerator/index.vue
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'

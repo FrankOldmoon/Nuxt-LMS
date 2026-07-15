@@ -1,8 +1,8 @@
 /**
- * html 编辑组件测试 (edit)
+ * html edit component test (edit)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/edit/html.vue
  *
- * html.vue 接收 form prop，使用 Monaco 编辑 HTML，content 存储 HTML 字符串
+ * html.vue receives form prop, uses Monaco to edit HTML, content stores HTML string
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

@@ -2,7 +2,7 @@
   <div ref="msgListRef" class="flex-1 overflow-y-auto p-3 space-y-3" @scroll="onScroll">
     <AiChatboxMessageItem v-for="(msg, idx) in messages" :key="idx" :msg="msg" :idx="idx" />
 
-    <!-- 加载中 -->
+    <!-- Loading -->
     <div v-if="loading" class="flex gap-2">
       <div class="shrink-0 size-7 rounded-full flex items-center justify-center bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400">
         <UIcon name="i-lucide-bot" class="size-4" />

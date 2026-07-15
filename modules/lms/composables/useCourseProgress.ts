@@ -39,7 +39,7 @@ interface ProgressModalProps {
   navigation: NavItem[]
 }
 
-/** 需要调用方解析后传入的 UI 组件引用 */
+/** UI component references that must be resolved and passed in by the caller */
 interface ProgressUiComponents {
   UButton: any
   UTooltip: any
@@ -48,11 +48,11 @@ interface ProgressUiComponents {
 }
 
 /**
- * 课程进度弹窗：导航树构建 + 进度数据加载 + 表格列定义（h 渲染）
+ * Course progress modal: navigation tree building + progress data loading + table column definitions (h render)
  *
- * 注意：UButton/UTooltip/UIcon/NuxtLink 必须由调用方（modal.vue）解析后传入。
- * 因为 composable 在 setup 阶段执行时，resolveComponent 返回的可能是字符串，
- * 而 h() 真正渲染是在 UTable 的 cell() 里（mount 之后），不同阶段引用会失效。
+ * Note: UButton/UTooltip/UIcon/NuxtLink must be resolved and passed in by the caller (modal.vue).
+ * Because when the composable executes during the setup phase, resolveComponent may return strings,
+ * while h() actually renders inside UTable's cell() (after mount), references may become invalid at different phases.
  */
 export function useCourseProgress(
   props: ProgressModalProps,
@@ -199,7 +199,7 @@ export function useCourseProgress(
       }
       chapterData.value = map
     } catch (e) {
-      console.error('加载进度失败', e)
+      console.error('Failed to load progress', e)
     } finally {
       loading.value = false
     }

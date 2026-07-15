@@ -1,5 +1,5 @@
 /**
- * LMS Users API 端点测试
+ * LMS Users API endpoint test
  * @see modules/lms/server/api/users/*.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -21,7 +21,7 @@ const _mockSchema = {
 }
 vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
 
-// drizzle-orm operators 被 students.get.ts 显式 import
+// drizzle-orm operators are explicitly imported by students.get.ts
 vi.mock('drizzle-orm', () => ({
   eq: vi.fn((a: any, b: any) => ({ op: 'eq', field: a, value: b })),
   and: vi.fn((...args: any[]) => ({ op: 'and', args })),

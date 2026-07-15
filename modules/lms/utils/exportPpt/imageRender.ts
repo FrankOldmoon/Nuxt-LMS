@@ -1,28 +1,28 @@
 /**
- * 可视化节点（echarts / mindmap / html）图片渲染
+ * Visualization node (echarts / mindmap / html) image rendering
  *
- * - echarts：echarts.init → setOption → getDataURL → PNG（mode=1 动态 import cal-service 转换 chartConfig）
- * - mindmap：simple-mind-map 渲染 SVG → html2canvas → PNG
- * - html：离屏 div innerHTML → html2canvas → PNG
+ * - echarts: echarts.init → setOption → getDataURL → PNG (mode=1 dynamically imports cal-service to convert chartConfig)
+ * - mindmap: simple-mind-map renders SVG → html2canvas → PNG
+ * - html: off-screen div innerHTML → html2canvas → PNG
  *
- * 预渲染策略：扫描 → 并行渲染 → 缓存 → 同步渲染幻灯片
- * 失败容错：渲染失败写 null，调用方走占位回退，不阻断导出
+ * Pre-rendering strategy: scan → render in parallel → cache → render slides synchronously
+ * Failure tolerance: failed renders write null, caller falls back to placeholder, does not block export
  */
 
 import type { MathImage } from './types'
 import { loadHtml2Canvas } from './mathRender'
 
-/** 幻灯片内容区最大宽度（英寸） */
+/** Maximum width of the slide content area (inches) */
 const MAX_CONTENT_WIDTH = 12.33
 
 // ═══════════════════════════════════════
-// CDN 加载
+// CDN loading
 // ═══════════════════════════════════════
 
 const ECHARTS_CDN = 'https://unpkg.com/@umoteam/editor-external@latest/libs/echarts/echarts.min.js'
 let echartsLoadPromise: Promise<void> | null = null
 
-/** 加载 echarts（幂等） */
+/** Load echarts (idempotent) */
 export function loadEcharts(): Promise<void> {
   if (typeof window !== 'undefined' && (window as any).echarts) {
     return Promise.resolve()
@@ -56,7 +56,7 @@ const SMM_CSS = 'https://unpkg.com/simple-mind-map@0.10.2/dist/simpleMindMap.esm
 const SMM_JS = 'https://unpkg.com/simple-mind-map@0.10.2/dist/simpleMindMap.umd.min.js'
 let smmLoadPromise: Promise<void> | null = null
 
-/** 加载 simple-mind-map（幂等） */
+/** Load simple-mind-map (idempotent) */
 export function loadSimpleMindMap(): Promise<void> {
   if (typeof window !== 'undefined' && (window as any).simpleMindMap) {
     return Promise.resolve()
@@ -93,10 +93,10 @@ export function loadSimpleMindMap(): Promise<void> {
 }
 
 // ═══════════════════════════════════════
-// 尺寸换算工具
+// Dimension conversion utilities
 // ═══════════════════════════════════════
 
-/** canvas 像素 → MathImage（英寸，限制最大宽度） */
+/** canvas pixels → MathImage (inches, limited to max width) */
 function canvasToMathImage(canvas: HTMLCanvasElement): MathImage | null {
   const dataUrl = canvas.toDataURL('image/png')
   if (!dataUrl || dataUrl === 'data:,') return null
@@ -111,10 +111,10 @@ function canvasToMathImage(canvas: HTMLCanvasElement): MathImage | null {
 }
 
 // ═══════════════════════════════════════
-// ECharts 渲染
+// ECharts rendering
 // ═══════════════════════════════════════
 
-/** echarts 节点 attrs → PNG。mode=1 动态 import cal-service.js 转换 chartConfig */
+/** echarts node attrs → PNG. mode=1 dynamically imports cal-service.js to convert chartConfig */
 export async function echartsToImage(attrs: any): Promise<MathImage | null> {
   if (typeof window === 'undefined') return null
   try {
@@ -129,7 +129,7 @@ export async function echartsToImage(attrs: any): Promise<MathImage | null> {
   let finalOptions: any = null
 
   if (mode === 1 && chartConfig) {
-    // 基础模式：动态 import cal-service 转换
+    // Basic mode: dynamically import cal-service to convert
     try {
       const calModule = await import('../../components/ueditor/render/cal-service.js')
       const newData = calModule.calbaseConfigData(chartConfig.data)
@@ -146,7 +146,7 @@ export async function echartsToImage(attrs: any): Promise<MathImage | null> {
   }
 
   const heightPx = Number(attrs.height) || 200
-  const widthPx = Math.round(MAX_CONTENT_WIDTH * 96)  // 内容区全宽
+  const widthPx = Math.round(MAX_CONTENT_WIDTH * 96)  // Full width of content area
 
   const container = document.createElement('div')
   container.style.position = 'absolute'
@@ -159,10 +159,10 @@ export async function echartsToImage(attrs: any): Promise<MathImage | null> {
   let chart: any = null
   try {
     chart = echarts.init(container)
-    // 禁用动画，确保 getDataURL 时图表已完全渲染（否则柱形图等动画类型会截到高度为 0 的中间状态）
+    // Disable animation to ensure getDataURL captures the fully rendered chart (otherwise animated chart types like bar charts may capture an intermediate state with height 0)
     finalOptions.animation = false
     chart.setOption(finalOptions)
-    // 等待渲染完成（即使禁用动画，echarts 内部仍需一帧来完成布局）
+    // Wait for rendering to complete (even with animation disabled, echarts internally needs one frame to complete layout)
     await new Promise(resolve => setTimeout(resolve, 200))
     const dataUrl = chart.getDataURL({
       type: 'png',
@@ -171,7 +171,7 @@ export async function echartsToImage(attrs: any): Promise<MathImage | null> {
     })
     if (!dataUrl || dataUrl === 'data:,') return null
 
-    // getDataURL 返回 base64，需计算实际尺寸（pixelRatio=2，故像素 = 容器尺寸 * 2）
+    // getDataURL returns base64, need to calculate actual dimensions (pixelRatio=2, so pixels = container size * 2)
     const widthIn = widthPx / 96
     const heightIn = heightPx / 96
     return { dataUrl, width: widthIn, height: heightIn }
@@ -184,7 +184,7 @@ export async function echartsToImage(attrs: any): Promise<MathImage | null> {
 }
 
 // ═══════════════════════════════════════
-// Mindmap 渲染（复制自 vue/mindmap/render.vue:20-58 的 markdownToTree）
+// Mindmap rendering (copied from vue/mindmap/render.vue:20-58 markdownToTree)
 // ═══════════════════════════════════════
 
 function markdownToTree(md: string): any {
@@ -258,7 +258,7 @@ export async function mindmapToImage(markdown: string): Promise<MathImage | null
       layout: 'mindMap',
     })
 
-    // 等待 SVG 渲染完成（库有异步渲染，重试至 bbox 稳定）
+    // Wait for SVG rendering to complete (library has async rendering, retry until bbox is stable)
     await new Promise<void>((resolve) => {
       let lastW = 0
       let lastH = 0
@@ -315,10 +315,10 @@ export async function mindmapToImage(markdown: string): Promise<MathImage | null
 }
 
 // ═══════════════════════════════════════
-// HTML 渲染
+// HTML rendering
 // ═══════════════════════════════════════
 
-/** HTML 字符串 → PNG（在离屏 div 中渲染 + html2canvas） */
+/** HTML string → PNG (rendered in off-screen div + html2canvas) */
 export async function htmlToImage(html: string): Promise<MathImage | null> {
   if (typeof window === 'undefined' || !html) return null
 
@@ -328,7 +328,7 @@ export async function htmlToImage(html: string): Promise<MathImage | null> {
   container.style.top = '0'
   container.style.width = `${Math.round(MAX_CONTENT_WIDTH * 96)}px`
   container.style.background = '#ffffff'
-  // 包裹基础 body 样式（参考 vue/html/render.vue:47-72）
+  // Wrap with base body styles (refer to vue/html/render.vue:47-72)
   container.innerHTML = html
   container.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
   container.style.boxSizing = 'border-box'
@@ -355,10 +355,10 @@ export async function htmlToImage(html: string): Promise<MathImage | null> {
 }
 
 // ═══════════════════════════════════════
-// 预扫描 & 预渲染
+// Pre-scan & pre-render
 // ═══════════════════════════════════════
 
-/** 递归收集所有 echarts 节点（用节点对象引用作 key） */
+/** Recursively collect all echarts nodes (using node object reference as key) */
 export function collectEchartsNodes(nodes: any[], nodeRefs: any[]): void {
   for (const node of nodes || []) {
     if (!node) continue
@@ -371,7 +371,7 @@ export function collectEchartsNodes(nodes: any[], nodeRefs: any[]): void {
   }
 }
 
-/** 递归收集所有 vue mindmap/html 节点的 content */
+/** Recursively collect content of all vue mindmap/html nodes */
 export function collectMindmapHtml(
   nodes: any[],
   mindmapKeys: Set<string>,
@@ -394,10 +394,10 @@ export function collectMindmapHtml(
 }
 
 /**
- * 预渲染所有图片节点（并行）
- * - echarts：按节点引用渲染为 PNG，写入 echartsCache（失败写 null）
- * - mindmap：按 markdown 内容渲染为 PNG，写入 mindmapCache（失败写 null）
- * - html：按 html 内容渲染为 PNG，写入 htmlCache（失败写 null）
+ * Pre-render all image nodes (in parallel)
+ * - echarts: render to PNG by node reference, write to echartsCache (null on failure)
+ * - mindmap: render to PNG by markdown content, write to mindmapCache (null on failure)
+ * - html: render to PNG by html content, write to htmlCache (null on failure)
  */
 export async function prerenderImageNodes(
   nodes: any[],
@@ -405,7 +405,7 @@ export async function prerenderImageNodes(
   mindmapCache: Map<string, MathImage | null>,
   htmlCache: Map<string, MathImage | null>,
 ): Promise<void> {
-  // 收集
+  // Collect
   const echartsNodeRefs: any[] = []
   const mindmapKeys = new Set<string>()
   const htmlKeys = new Set<string>()
@@ -416,7 +416,7 @@ export async function prerenderImageNodes(
 
   const tasks: Promise<void>[] = []
 
-  // echarts 并行渲染
+  // echarts parallel rendering
   for (const nodeRef of echartsNodeRefs) {
     tasks.push((async () => {
       try {
@@ -428,7 +428,7 @@ export async function prerenderImageNodes(
     })())
   }
 
-  // mindmap 并行渲染
+  // mindmap parallel rendering
   for (const md of mindmapKeys) {
     tasks.push((async () => {
       try {
@@ -440,7 +440,7 @@ export async function prerenderImageNodes(
     })())
   }
 
-  // html 并行渲染
+  // html parallel rendering
   for (const html of htmlKeys) {
     tasks.push((async () => {
       try {

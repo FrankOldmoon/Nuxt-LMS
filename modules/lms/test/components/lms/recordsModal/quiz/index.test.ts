@@ -1,14 +1,14 @@
 /**
- * lms/recordsModal/quiz/index.vue 组件测试
+ * lms/recordsModal/quiz/index.vue component test
  * @see modules/lms/components/lms/recordsModal/quiz/index.vue
  *
- * 测验记录弹窗：UModal + ClassUsersTable + 每题答题状态列
+ * Quiz record modal: UModal + ClassUsersTable + per-question answer status column
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { resetAllStubs, setMockI18n } from '../../../../../../../test/setup/nuxt-stubs'
 
-// mock useQuizRecords（本地导入）
+// mock useQuizRecords (local import)
 vi.mock('../../../../../components/lms/recordsModal/quiz/useQuizRecords', () => ({
   useQuizRecords: (props: any, emit: any) => {
     const { ref, computed }: any = globalThis as any

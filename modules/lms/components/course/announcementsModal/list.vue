@@ -1,5 +1,5 @@
 <template>
-  <!-- 公告列表 -->
+  <!-- AnnouncementList -->
   <div v-if="pending" class="py-8 text-center text-muted">
     {{ $t('common.loading') }}
   </div>

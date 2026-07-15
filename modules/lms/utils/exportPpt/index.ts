@@ -1,17 +1,17 @@
 /**
- * 使用 pptxgenjs (CDN) 将 Tiptap JSON 章节内容导出为 PPT
- * 参考 modules/lms/components/ueditor/render 的渲染格式，保持内容和样式一致
+ * Export Tiptap JSON chapter content as PPT using pptxgenjs (CDN)
+ * References the rendering format of modules/lms/components/ueditor/render, keeping content and style consistent
  *
- * 分页策略：
- *  - 每个 h1/h2 开启新页（标题作为页标题）
- *  - h3-h6 作为当前页内子标题
- *  - 内容过长自动溢出到新页
- *  - pageBreak 强制分页
+ * Pagination strategy:
+ *  - Each h1/h2 starts a new slide (heading as the slide title)
+ *  - h3-h6 serve as sub-headings within the current slide
+ *  - Content that is too long automatically overflows to a new slide
+ *  - pageBreak forces a page break
  *
- * 预渲染：
- *  - vue question 节点 → 预取题目数据（API 并行请求）
- *  - blockMath 节点 → KaTeX + html2canvas 渲染为 PNG 图片
- *  - inlineMath 节点 → KaTeX 渲染为 Unicode 文本（替换段落中的 LaTeX 源码）
+ * Pre-rendering:
+ *  - vue question nodes → pre-fetch question data (parallel API requests)
+ *  - blockMath nodes → KaTeX + html2canvas rendered as PNG images
+ *  - inlineMath nodes → KaTeX rendered as Unicode text (replaces LaTeX source in paragraphs)
  */
 
 import type { SlideContext, MathImage } from './types'
@@ -23,7 +23,7 @@ import { addNodeToSlide } from './nodes'
 import { newSlide } from './slideUtils'
 
 // ═══════════════════════════════════════
-// CDN 动态加载 pptxgenjs
+// Dynamically load pptxgenjs from CDN
 // ═══════════════════════════════════════
 
 const PPTXGEN_CDN = 'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js'
@@ -50,21 +50,21 @@ function loadPptxGenJS(): Promise<any> {
 }
 
 // ═══════════════════════════════════════
-// 主导出函数
+// Main export function
 // ═══════════════════════════════════════
 
 /**
- * 将 Tiptap JSON 章节内容导出为 PPT 并下载
- * @param content Tiptap JSON 文档（doc 节点或 { json: ... } 包裹）
- * @param title 章节标题（用作第一页标题和文件名）
- * @param courseId 课程 ID（用于预取 vue question 节点的题目数据）
+ * Export Tiptap JSON chapter content as PPT and download
+ * @param content Tiptap JSON document (doc node or { json: ... } wrapper)
+ * @param title Chapter title (used as the first slide title and file name)
+ * @param courseId Course ID (used to pre-fetch question data for vue question nodes)
  */
 export async function exportChapterToPpt(content: any, title: string, courseId?: number): Promise<void> {
   if (typeof window === 'undefined') {
     throw new Error('PPT export can only be used in the browser')
   }
 
-  // 解析 Tiptap JSON（兼容 { json: ... } 包裹和裸 doc 两种形式）
+  // Parse Tiptap JSON (compatible with both { json: ... } wrapper and bare doc forms)
   const json = content?.json ?? content
   const doc = json?.type === 'doc'
     ? json
@@ -72,15 +72,15 @@ export async function exportChapterToPpt(content: any, title: string, courseId?:
   const nodes = doc.content || []
 
   // ═══════════════════════════════════════
-  // 预取阶段：quiz/homework/race → 嵌套题目 → 所有题目
+  // Pre-fetch phase: quiz/homework/race → nested questions → all questions
   // ═══════════════════════════════════════
 
-  // 1. 收集 vue question 节点的 cid（含嵌套在 quiz/race 中的）
+  // 1. Collect cids of vue question nodes (including those nested in quiz/race)
   const questionCache = new Map<number, any>()
   const questionCids: number[] = []
   collectVueQuestionCids(nodes, questionCids)
 
-  // 2. 收集 vue quiz/homework/race 节点的 cid，并行预取
+  // 2. Collect cids of vue quiz/homework/race nodes, pre-fetch in parallel
   const quizCids: number[] = []
   const homeworkCids: number[] = []
   const raceCids: number[] = []
@@ -91,7 +91,7 @@ export async function exportChapterToPpt(content: any, title: string, courseId?:
   const raceCache = new Map<number, any>()
   await fetchVueContent(courseId || 0, quizCids, homeworkCids, raceCids, quizCache, homeworkCache, raceCache)
 
-  // 3. 从已预取的 quiz/race 中提取嵌套题目 cid，合并到 questionCids
+  // 3. Extract nested question cids from pre-fetched quiz/race, merge into questionCids
   for (const quiz of quizCache.values()) {
     const qIds = extractQuizQuestionCids(quiz)
     for (const qid of qIds) {
@@ -105,7 +105,7 @@ export async function exportChapterToPpt(content: any, title: string, courseId?:
     }
   }
 
-  // 4. 并行预取所有题目（含嵌套题目）
+  // 4. Pre-fetch all questions in parallel (including nested questions)
   if (questionCids.length > 0 && courseId) {
     await Promise.all(questionCids.map(async (cid) => {
       try {
@@ -116,35 +116,35 @@ export async function exportChapterToPpt(content: any, title: string, courseId?:
           questionCache.set(cid, resp.data)
         }
       } catch {
-        // 静默忽略（题目可能已删除或无权限）
+        // Silently ignored (question may have been deleted or no permission)
       }
     }))
   }
 
   // ═══════════════════════════════════════
-  // 预渲染阶段：数学公式 + echarts/mindmap/html 图片
+  // Pre-render phase: math formulas + echarts/mindmap/html images
   // ═══════════════════════════════════════
 
-  // 预渲染数学公式（blockMath → PNG 图片，inlineMath → Unicode 文本）
-  // 传入缓存以扫描嵌套内容（题目 content/options、测验/作业 content）中的数学公式
+  // Pre-render math formulas (blockMath → PNG image, inlineMath → Unicode text)
+  // Pass in cache to scan for math formulas in nested content (question content/options, quiz/homework content)
   const blockMathCache = new Map<string, MathImage | null>()
   const inlineMathCache = new Map<string, string>()
   await prerenderMathNodes(nodes, blockMathCache, inlineMathCache, questionCache, quizCache, homeworkCache)
 
-  // 预渲染 echarts/mindmap/html（并行 → PNG 图片缓存）
+  // Pre-render echarts/mindmap/html (parallel → PNG image cache)
   const echartsCache = new Map<any, MathImage | null>()
   const mindmapCache = new Map<string, MathImage | null>()
   const htmlCache = new Map<string, MathImage | null>()
   await prerenderImageNodes(nodes, echartsCache, mindmapCache, htmlCache)
 
-  // 加载 pptxgenjs
+  // Load pptxgenjs
   const PptxGenJS = await loadPptxGenJS()
   const pres = new PptxGenJS()
   pres.layout = 'LAYOUT_WIDE'  // 13.33 × 7.5 inches
   pres.author = 'LMS'
   pres.company = 'LMS'
 
-  // 页码
+  // Page number
   pres.slideNumber = {
     x: 12.6,
     y: 7.15,
@@ -155,7 +155,7 @@ export async function exportChapterToPpt(content: any, title: string, courseId?:
     align: 'right',
   }
 
-  // 幻灯片上下文
+  // Slide context
   const ctx: SlideContext = {
     pres,
     slide: null as any,
@@ -175,15 +175,15 @@ export async function exportChapterToPpt(content: any, title: string, courseId?:
     htmlCache,
   }
 
-  // 第一页：章节标题
+  // First slide: chapter title
   newSlide(ctx, pres, title || 'Chapter')
 
-  // 遍历渲染所有节点
+  // Iterate and render all nodes
   for (const node of nodes) {
     addNodeToSlide(ctx, node, pres, 0)
   }
 
-  // 生成并下载文件
+  // Generate and download the file
   const safeName = (title || 'chapter').replace(/[\\/:*?"<>|]/g, '_')
   await pres.writeFile({ fileName: `${safeName}.pptx` })
 }

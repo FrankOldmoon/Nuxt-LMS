@@ -9,7 +9,7 @@
     />
     <p class="text-xs text-gray-400 mt-1">{{ $t('question.shortAnswerRegexHint') }}</p>
 
-    <!-- 正则测试 -->
+    <!-- regexTest -->
     <div class="mt-2 p-2 rounded-md border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800">
       <label class="text-xs text-gray-500 mb-1 block">{{ $t('question.shortAnswerTestLabel') }}</label>
       <UInput
@@ -19,7 +19,7 @@
         class="w-full"
       />
       <p class="text-xs mt-1" :class="testResult ? 'text-green-500' : 'text-red-500'">
-        {{ testResult ? $t('question.shortAnswerMatch') : $t('question.shortAnswerNoMatch') }}
+        {{ testResult ? $t('question.shortAnswerMatch') : $t('question.shortAnswerNo match') }}
       </p>
     </div>
   </div>
@@ -31,10 +31,10 @@ const props = defineProps({
 })
 const { t } = useI18n()
 
-// 正则模式字符串
+// regex patterncharactersstring
 const regexPattern = ref('')
 
-// form.answer → regexPattern（初始化 + 响应外部变更，如 AI 生成）
+// form.answer → regexPattern（Initialize + ResponseOutsideexternal change，if AI Generate）
 watch(() => props.form.answer, (ans) => {
   let val = ''
   if (Array.isArray(ans) && ans.length && typeof ans[0] === 'string') {
@@ -47,17 +47,17 @@ watch(() => props.form.answer, (ans) => {
   }
 }, { immediate: true })
 
-// regexPattern → form.answer（存储为 [regexString]）
+// regexPattern → form.answer（store [regexString]）
 watch(regexPattern, (val) => {
   const newVal = [val || '']
   const current = props.form.answer
-  // 值相同时跳过，避免与 form.answer → regexPattern 的 watch 形成反馈环
+  // ValuerelativesamewhenSkip，avoidand form.answer → regexPattern  watch ShapebecomeFeedbackcycle
   if (Array.isArray(current) && current.length === 1 && current[0] === newVal[0]) return
   props.form.answer = newVal
   props.form.options = []
 }, { immediate: true })
 
-// 正则测试
+// regexTest
 const testInput = ref('')
 
 const testResult = computed(() => {

@@ -1,18 +1,18 @@
 /**
- * userQuestions 写入逻辑（questions/submit + aichat/award 共用）
+ * userQuestions write logic (shared by questions/submit + aichat/award)
  *
- * 两者的差异：
- *  - questions/submit 跟踪 records / firstRecord / wrongCount / submitCount 增量
- *  - aichat/award 不跟踪这些（仅 score + correctRate + firstRight）
+ * Differences between the two:
+ *  - questions/submit tracks records / firstRecord / wrongCount / submitCount increments
+ *  - aichat/award does not track these (only score + correctRate + firstRight)
  *
- * 通过 `trackXxx` 标志位选择是否写入对应字段。
+ * Use `trackXxx` flags to choose whether to write the corresponding fields.
  */
 import { db, schema } from '@nuxthub/db'
 import { and, eq } from 'drizzle-orm'
 import type { QuestionUpsertInput, QuestionUpsertResult } from './types'
 
 /**
- * 写入或更新 userQuestions 行；返回 existing 状态以供调用方计算经验/分数。
+ * Insert or update a userQuestions row; returns the existing state for the caller to calculate exp/score.
  */
 export async function upsertUserQuestion(input: QuestionUpsertInput): Promise<QuestionUpsertResult> {
   const { userId, courseId, questionCid, rate, score, isCorrect, records, trackWrongCount, trackSubmitCount } = input

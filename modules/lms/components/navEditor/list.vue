@@ -9,7 +9,7 @@
     </template>
   </draggable>
 
-  <!-- 添加根级目录 -->
+  <!-- Addroot levelTable of Contents -->
   <UButton icon="i-lucide-plus" color="primary" variant="outline" size="xs" block @click="addRootItem">
     {{ $t('navEditor.addRoot') }}
   </UButton>

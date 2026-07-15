@@ -1,5 +1,5 @@
 /**
- * aichat/index.vue 组件测试 (TipTap node-view)
+ * aichat/index.vue component test (TipTap node-view)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/aichat/index.vue
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'

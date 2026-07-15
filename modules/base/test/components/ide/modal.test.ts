@@ -1,8 +1,8 @@
 /**
- * IdeModal 组件测试
+ * IdeModal component tests
  * @see modules/base/components/ide/modal.vue
  *
- * IDE 弹窗：UModal 包裹 Ide 组件，通过 v-model:open 控制显隐
+ * IDE modal: UModal wraps the Ide component, controls visibility via v-model:open
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -17,14 +17,14 @@ beforeEach(() => {
   })
 })
 
-// 桩 UModal（透传 open + 渲染 content slot）
+// Stub UModal (pass-through open + render content slot)
 const _globalStubs = {
   UModal: {
     template: '<div class="modal" :data-open="String(open)"><slot name="content" /></div>',
     props: ['open', 'ui'],
     emits: ['update:open'],
   },
-  // 桩 Ide 子组件，避免递归加载 useIde
+  // Stub Ide child component to avoid recursively loading useIde
   Ide: {
     template: '<div class="ide-stub">{{ language }}:{{ modelValue }}</div>',
     props: ['modelValue', 'language'],

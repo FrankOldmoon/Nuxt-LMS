@@ -1,5 +1,5 @@
 /**
- * useChapterSelect composable 测试
+ * useChapterSelect composable test
  * @see modules/lms/composables/useChapterSelect.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -14,7 +14,7 @@ import { ref } from 'vue'
 beforeEach(async () => {
   resetAllStubs()
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
-  // useChapterSelect 依赖 auto-import 的 useClassUsers：用真实实现（已独立测试）
+  // useChapterSelect depends on auto-imported useClassUsers: use real implementation (already tested independently)
   const { useClassUsers } = await import('../../composables/useClassUsers')
   ;(globalThis as any).useClassUsers = useClassUsers
 })
@@ -149,7 +149,7 @@ describe('composables/useChapterSelect', () => {
     const r = useChapterSelect({ courseId: 1, classId: 10 }, isOpen)
     isOpen.value = true
     await new Promise((resolve) => setTimeout(resolve, 0))
-    expect(r.loading.value).toBe(false) // loadData 完成后 loading=false
+    expect(r.loading.value).toBe(false) // After loadData completes, loading=false
   })
 
   it('isOpen 变 false 时清空选中', async () => {

@@ -1,19 +1,19 @@
 /**
- * lms 模块 LMS 配置工具测试（纯逻辑部分）
+ * lms module LMS config utility test (pure logic part)
  * @see modules/lms/server/utils/lmsConfig.ts
  *
- * 测试 flattenTree / unflattenTree / mergeConfig / buildLmsConfigPairs
- * 这些函数为纯逻辑，不触发 db 调用（但模块顶层 import @nuxthub/db 需 mock 防报错）
+ * Test flattenTree / unflattenTree / mergeConfig / buildLmsConfigPairs
+ * These functions are pure logic, do not trigger db calls (but module top-level import @nuxthub/db needs mock to prevent errors)
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-// Mock @nuxthub/db（模块顶层 import，需 mock 防止初始化报错）
+// Mock @nuxthub/db (module top-level import, needs mock to prevent initialization errors)
 vi.mock('@nuxthub/db', () => ({
   db: { select: vi.fn().mockReturnThis(), from: vi.fn().mockReturnThis(), where: vi.fn().mockReturnThis(), query: {} },
   schema: {},
 }))
 
-// vi.mock 会提升到 import 之前，此处可安全导入被测模块
+// vi.mock is hoisted before import, the module under test can be safely imported here
 import { flattenTree, unflattenTree, mergeConfig } from '../../server/utils/lmsConfig/tree'
 import { buildLmsConfigPairs } from '../../server/utils/lmsConfig/migration'
 import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'
@@ -38,7 +38,7 @@ describe('server/utils/lmsConfig - flattenTree', () => {
   it('null 作为叶子保留，undefined 跳过', () => {
     const result: Record<string, any> = {}
     flattenTree('', { a: null, b: undefined, c: 1 }, result)
-    // null 视为叶子值保留，只有 undefined 被跳过
+    // null is treated as a leaf value and preserved, only undefined is skipped
     expect(result).toEqual({ a: null, c: 1 })
   })
 
@@ -98,7 +98,7 @@ describe('server/utils/lmsConfig - unflattenTree', () => {
   })
 
   it('覆盖非对象值为对象', () => {
-    // 'a' 先设为 1，遇到 'a.b' 时发现 a 不是对象，覆盖为 {} 后写入 b
+    // 'a' is first set to 1; when 'a.b' is encountered, a is not an object, so it is overwritten with {} then b is written
     const result = unflattenTree({ 'a': 1, 'a.b': 2 })
     expect(result).toEqual({ a: { b: 2 } })
   })

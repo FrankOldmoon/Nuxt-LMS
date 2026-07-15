@@ -1,8 +1,8 @@
 /**
- * formField/fkField 组件测试
+ * formField/fkField component tests
  * @see modules/admin/components/table/formField/fkField.vue
  *
- * USelectMenu v-model 绑定到 form[col.jsName]，items 来自 fkOptions[col.jsName]
+ * USelectMenu v-model binds to form[col.jsName], items come from fkOptions[col.jsName]
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

@@ -28,7 +28,7 @@ export function useCommentRecords(props: CommentRecordsProps, emit: CommentRecor
 
     const defaultSort = [{ id: 'record', desc: true }]
 
-    // 先用缓存学生数据填充 table，再异步合并 records
+    // firstuseCacheStudentDatafill table，thenAsynccombinedand records
     function buildRows(recordsData: any[]) {
         const recordMap = new Map((recordsData || []).map(r => [r.userId, r.record]))
         rows.value = students.value.map(s => ({

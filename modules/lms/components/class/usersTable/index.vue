@@ -6,11 +6,11 @@
     </div>
 
     <div v-else-if="!users.length" class="text-center py-6 text-muted text-xs">
-      {{ $t('classSelector.noUsers') }}
+      {{ $t('classSelector.no users') }}
     </div>
 
     <template v-else>
-      <!-- 小组模式：Tab 切换学生/小组 -->
+      <!-- Groupmode：Tab SwitchStudent/Group -->
       <UTabs v-if="showGroup() && groupTableRows.length" v-model="activeTab" :items="tabItems" class="mb-3" />
 
       <ClassUsersTableStudentsTable>
@@ -22,11 +22,11 @@
       <ClassUsersTableGroups />
     </template>
 
-    <!-- 用户编辑弹窗 -->
+    <!-- UserEdit Modal -->
     <AuthUserEditModal v-if="!hideActions()" ref="editModal" :user-id="editingUserId"
       @saved="onEditSaved" />
 
-    <!-- 重置密码弹窗 -->
+    <!-- Reset PasswordModal -->
     <ClassUsersTableResetModal />
   </div>
 </template>
@@ -47,8 +47,8 @@ const props = defineProps<{
   showGroup?: boolean
 }>()
 
-// 在 setup 阶段解析 UI 组件引用，传入 composable。
-// 避免 composable 内部 resolveComponent 返回字符串导致 h() 渲染失败。
+// Resolve UI component references at setup stage and pass to composable.
+// avoid composable Inside resolveComponent Returncharactersstring causes h() Render Failed。
 const UButton = resolveComponent('UButton')
 const ctx = useClassUsersTable(props, { UButton })
 provideClassUsersTable(ctx)

@@ -1,27 +1,27 @@
 /**
- * 题目提交共享类型
+ * Question submit shared types
  */
 
-/** upsertUserQuestion 输入参数 */
+/** upsertUserQuestion input parameters */
 export interface QuestionUpsertInput {
   userId: number
   courseId: number
   questionCid: number
-  /** 0-1 正确率 */
+  /** 0-1 correct rate */
   rate: number
-  /** 本次得分（= rate * totalPoint，调用方计算后传入） */
+  /** Score for this submission (= rate * totalPoint, passed in after the caller calculates it) */
   score: number
   /** rate > 0 */
   isCorrect: boolean
-  /** 用户本次作答内容；aichat/award 可不传 */
+  /** User's answer content for this submission; aichat/award can omit this */
   records?: any
-  /** 是否累计 wrongCount（questions=true, aichat=false） */
+  /** Whether to accumulate wrongCount (questions=true, aichat=false) */
   trackWrongCount?: boolean
-  /** 是否累加 submitCount（questions=true, aichat=false；aichat 固定写 1） */
+  /** Whether to increment submitCount (questions=true, aichat=false; aichat always writes 1) */
   trackSubmitCount?: boolean
 }
 
-/** upsertUserQuestion 返回结果 */
+/** upsertUserQuestion return result */
 export interface QuestionUpsertResult {
   existing: any
   newSubmitCount: number
@@ -29,7 +29,7 @@ export interface QuestionUpsertResult {
   scoreDelta: number
 }
 
-/** 经验/分数计算输入 */
+/** Exp/score calculation input */
 export interface QuestionCalcArgs {
   qConfig: any
   isCorrect: boolean

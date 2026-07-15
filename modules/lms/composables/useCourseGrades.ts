@@ -12,9 +12,9 @@ export function useGradesContext() {
   return ctx
 }
 
-// ====================== 评分标准默认值 ======================
-// grade_criteria 为空时的初始值：每项分满分(maxScore) + 占比(percent)，百分比之和应为 100
-// 等第阈值按百分制换算：finalScore = Σ( subscore / maxScore × percent )
+// ====================== Grade criteria defaults ======================
+// Initial values when grade_criteria is empty: each item's max score (maxScore) + percentage (percent), the sum of percentages should be 100
+// Grade level thresholds are converted on a 100-point scale: finalScore = Σ( subscore / maxScore × percent )
 const DEFAULT_PERCENTS: Record<string, number> = {
   questionScore: 20,
   homeworkScore: 20,
@@ -40,7 +40,7 @@ export const DEFAULT_GRADE_CRITERIA = {
   ],
 }
 
-/** 规范化 grade_criteria：补全缺失字段，兼容历史/部分数据 */
+/** Normalize grade_criteria: fill in missing fields, compatible with historical/partial data */
 function normalizeCriteria(raw: any) {
   if (!raw || typeof raw !== 'object') return JSON.parse(JSON.stringify(DEFAULT_GRADE_CRITERIA))
   const weights = Array.isArray(raw.weights)
@@ -60,7 +60,7 @@ function normalizeCriteria(raw: any) {
   return { weights, levels }
 }
 
-/** 根据分数与等第阈值换算字母等级 */
+/** Convert a score to a letter grade based on grade level thresholds */
 function letterForScore(score: number, levels: { letter: string; min: number }[]) {
   if (!levels || levels.length === 0) return '-'
   const sorted = [...levels].sort((a, b) => b.min - a.min)
@@ -68,7 +68,7 @@ function letterForScore(score: number, levels: { letter: string; min: number }[]
 }
 
 /**
- * 课程成绩弹窗：合并学生与成绩数据、表格列定义、学生端学习统计与能力雷达图
+ * Course grades modal: merge students with grades data, table column definitions, student-side learning statistics and ability radar chart
  */
 export function useCourseGrades(
   props: { courseId: string | number; classId: string | number },
@@ -79,7 +79,7 @@ export function useCourseGrades(
   const auth = useAuth()
   const toast = useToast()
 
-  // 是否可编辑（教师或管理员）
+  // Whether editing is allowed (teacher or admin)
   const canEdit = computed(() => {
     if (auth.hasRole('admin')) return true
     return props.courseId ? auth.isCourseTeacher(Number(props.courseId)) : false
@@ -88,13 +88,13 @@ export function useCourseGrades(
   const rows = ref<any[]>([])
   const pending = ref(false)
 
-  // 评分标准：grade_criteria（null 时使用默认值）
+  // Grade criteria: grade_criteria (use default when null)
   const gradeCriteria = ref<any>(JSON.parse(JSON.stringify(DEFAULT_GRADE_CRITERIA)))
   const effectiveCriteria = computed(() => normalizeCriteria(gradeCriteria.value))
   const criteriaDirty = ref(false)
 
-  /** 根据行数据计算等第：最终分 + 字母等级
-   *  finalScore = Σ( subscore / maxScore × percent )，按百分制归一化后对照等第阈值 */
+  /** Compute the grade based on row data: final score + letter grade
+   *  finalScore = Σ( subscore / maxScore × percent ), normalized to a 100-point scale and compared against grade level thresholds */
   function computeGrade(row: any) {
     const crit = effectiveCriteria.value
     const finalScore = crit.weights.reduce((sum: number, w: any) => {
@@ -109,7 +109,7 @@ export function useCourseGrades(
     }
   }
 
-  // 额外列定义：group + grade(字母) + total(最终分) + progress(通过比) + 各项分数 + extraScore
+  // Extra column definitions: group + grade(letter) + total(final score) + progress(pass ratio) + each item score + extraScore
   const extraColumns = computed(() => [
     {
       id: 'group',
@@ -178,7 +178,7 @@ export function useCourseGrades(
 
   const defaultSort = [{ id: 'total', desc: true }]
 
-  // 先用缓存学生数据立即显示（无成绩），再异步合并成绩
+  // First use cached student data to display immediately (without grades), then asynchronously merge grades
   function buildRows(rawData: any[]) {
     const gradeMap = new Map((rawData || []).map((r) => [r.userId, r]))
     let allRows = students.value.map((s: any) => {
@@ -202,7 +202,7 @@ export function useCourseGrades(
         _hasGrade: !!g,
       }
     })
-    // 学生只能看自己的那一行
+    // Students can only see their own row
     if (!canEdit.value) {
       const uid = auth.user.value?.id
       allRows = allRows.filter((r: any) => r.id === uid)
@@ -210,14 +210,14 @@ export function useCourseGrades(
     rows.value = allRows.sort((a: any, b: any) => b.score - a.score)
   }
 
-  // 学生端：学习数据统计
+  // Student side: learning data statistics
   const stats = ref({ questionCount: 0, homeworkCount: 0, quizCount: 0, raceCount: 0, commentCount: 0 })
   async function loadStats() {
     try {
       const data = await cRequest(`/api/courses/stats?courseId=${props.courseId}`)
       if (data) stats.value = data
     } catch (e) {
-      /* 静默 */
+      /* Silent */
     }
   }
   const statCards = computed(() => [
@@ -228,7 +228,7 @@ export function useCourseGrades(
     { label: t('coursePanel.comment'), value: stats.value.commentCount },
   ])
 
-  // 学生端：能力雷达图（用各项 score 作为能力维度）
+  // Student side: ability radar chart (uses each item's score as an ability dimension)
   const radarOption = computed(() => {
     const r = rows.value[0]
     if (!r) return {}
@@ -263,11 +263,11 @@ export function useCourseGrades(
 
   async function loadData() {
     if (!props.courseId) return
-    // 先用缓存学生数据立即显示
+    // First use cached student data to display immediately
     buildRows([])
     pending.value = true
     try {
-      // 确保班级用户已加载
+      // Ensure class users are loaded
       if (props.classId) {
         await fetchUsers(Number(props.classId), Number(props.courseId))
         buildRows([])
@@ -275,25 +275,25 @@ export function useCourseGrades(
       const params = new URLSearchParams({ courseId: String(props.courseId) })
       if (props.classId) params.set('classId', String(props.classId))
       const raw = await cRequest(`/api/courses/grades?${params}`)
-      // grades API 返回 { grades, gradeCriteria }
+      // grades API returns { grades, gradeCriteria }
       const grades = Array.isArray(raw) ? raw : (raw?.grades ?? [])
       const criteria = Array.isArray(raw) ? null : raw?.gradeCriteria
       buildRows(grades)
-      // 加载评分标准
+      // Load grade criteria
       gradeCriteria.value = normalizeCriteria(criteria)
       criteriaDirty.value = false
-      // 学生端额外加载学习数据
+      // Student side additionally loads learning data
       if (!canEdit.value) {
         await loadStats()
       }
     } catch (e) {
-      console.error('加载成绩失败', e)
+      console.error('Failed to load grades', e)
     } finally {
       pending.value = false
     }
   }
 
-  // 保存评分标准到 course.grade_criteria
+  // Save grade criteria to course.grade_criteria
   async function saveCriteria() {
     if (!props.courseId) return
     try {
@@ -305,18 +305,18 @@ export function useCourseGrades(
       criteriaDirty.value = false
       toast.add({ title: t('coursePanel.criteriaSaved'), color: 'success' })
     } catch (e: any) {
-      console.error('保存评分标准失败', e)
+      console.error('Failed to save grade criteria', e)
       toast.add({ title: t('coursePanel.criteriaSaveFailed'), color: 'error' })
     }
   }
 
-  // 重置为默认评分标准
+  // Reset to default grade criteria
   function resetCriteria() {
     gradeCriteria.value = JSON.parse(JSON.stringify(DEFAULT_GRADE_CRITERIA))
     criteriaDirty.value = true
   }
 
-  // 教师保存单个学生的额外分
+  // Teacher saves an individual student's extra score
   const extraScoreSaving = ref<number | null>(null)
   async function saveExtraScore(userId: number, extraScore: number) {
     if (!props.courseId) return
@@ -326,12 +326,12 @@ export function useCourseGrades(
         method: 'POST',
         body: { course_id: Number(props.courseId), user_id: userId, extra_score: extraScore },
       })
-      // 同步更新本地行数据
+      // Sync update local row data
       const row = rows.value.find((r: any) => r.id === userId)
       if (row) row.extraScore = extraScore
       toast.add({ title: t('coursePanel.saveSuccess'), color: 'success' })
     } catch (e: any) {
-      console.error('保存额外分失败', e)
+      console.error('Failed to save extra score', e)
       toast.add({ title: t('coursePanel.saveFailed'), color: 'error' })
     } finally {
       extraScoreSaving.value = null

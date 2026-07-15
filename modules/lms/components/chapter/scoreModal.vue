@@ -5,7 +5,7 @@
         <h3 class="text-lg font-semibold">{{ $t('chapter.score') }}</h3>
 
         <div v-if="!classId" class="py-8 text-center text-muted text-sm">
-          {{ $t('chapter.noClass') }}
+          {{ $t('chapter.no class') }}
         </div>
 
         <div v-else-if="loading" class="py-8 text-center text-muted">
@@ -14,20 +14,20 @@
         </div>
 
         <div v-else-if="!students.length" class="py-8 text-center text-muted text-sm">
-          {{ $t('classSelector.noUsers') }}
+          {{ $t('classSelector.no users') }}
         </div>
 
-        <!-- 得分表 + 条形图 -->
+        <!-- Scoretable + itemsShapechart -->
         <div v-else>
           <ClassUsersTable :rows="(tableRows as any)" :class-id="classId" :course-id="courseId" :loading="loading"
             :hide-actions="true" :hide-teachers="true" :hide-number="true"
             :extra-columns="extraColumns" :default-sort="[{ id: 'score', desc: true }]"
             show-chart show-group>
-            <!-- 章节得分列 -->
+            <!-- ChapterScorecolumns -->
             <template #score-cell="{ row }">
               <span class="font-mono font-bold text-sm">{{ (row.original.score ?? 0).toFixed(1) }}</span>
             </template>
-            <!-- 任务列 -->
+            <!-- Taskcolumns -->
             <template #task-cell="{ row }">
               <div class="flex items-center gap-1 flex-wrap">
                 <UTooltip
@@ -45,7 +45,7 @@
                 <span v-if="!(row.original.items || []).length" class="text-xs text-muted">-</span>
               </div>
             </template>
-            <!-- 进度列：已完成 heading / 总 heading -->
+            <!-- Progresscolumns：Completed heading / total heading -->
             <template #progress-cell="{ row }">
               <div class="flex items-center gap-2 w-32">
                 <UProgress :modelValue="Math.round((row.original.progress || 0) * 100)" size="xs" />
@@ -58,7 +58,7 @@
     </template>
   </UModal>
 
-  <!-- 任务预览弹窗 -->
+  <!-- TaskPreviewModal -->
   <TaskModal v-model:open="taskModalOpen" :course-id="courseId" :type="taskModalItem.type" :id="taskModalItem.id"
     :status="taskModalItem.status" />
 </template>

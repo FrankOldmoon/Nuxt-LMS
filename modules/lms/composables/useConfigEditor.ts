@@ -18,7 +18,7 @@ export function useConfigEditorContext() {
 }
 
 /**
- * LMS 全局/课程配置编辑器：响应式 config + 选项列表 + 双向同步
+ * LMS global/course config editor: reactive config + option lists + two-way sync
  */
 export function useConfigEditor(props: ConfigEditorProps, emit: (e: 'update:modelValue', value: any) => void) {
   const { t } = useI18n()
@@ -40,7 +40,7 @@ export function useConfigEditor(props: ConfigEditorProps, emit: (e: 'update:mode
     courseList: { showSearch: true, showFilter: true, showSort: true, defaultView: 'grid' },
     chapterPage: { showOutline: true, showNote: true, showDanmakuPanel: true, enableFullscreen: true },
     storage: { driveSize: 1073741824, teacherMultiplier: 1 },
-    // 提交后班级弹幕广播开关（对应 utils/ws/submitBroadcast.ts 的过滤规则）
+    // Post-submit class danmaku broadcast switches (corresponds to filter rules in utils/ws/submitBroadcast.ts)
     danmaku: {
       enableOnQuestion: true,
       enableOnHomework: true,

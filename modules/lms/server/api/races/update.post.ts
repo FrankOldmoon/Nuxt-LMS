@@ -8,7 +8,7 @@ export default eventHandler(async (event) => {
   const { course_id, id } = body
 
   if (!course_id || !id) {
-    return cResp(null, '缺少 id 参数', false)
+    return cResp(null, 'Missing id parameter', false)
   }
 
   delete body.cid
@@ -22,7 +22,7 @@ export default eventHandler(async (event) => {
     ))
     return cResp(result)
   } catch (error: any) {
-    console.error('更新失败:', error)
-    return cResp(null, error.message || '更新失败', false)
+    console.error('Update failed:', error)
+    return cResp(null, error.message || 'Update failed', false)
   }
 })

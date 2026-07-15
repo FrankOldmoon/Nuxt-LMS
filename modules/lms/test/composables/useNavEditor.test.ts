@@ -1,5 +1,5 @@
 /**
- * useNavEditor composable 测试
+ * useNavEditor composable test
  * @see modules/lms/composables/useNavEditor.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -56,7 +56,7 @@ describe('composables/useNavEditor', () => {
     importText.value = 'Item A\n  Item A.1\nItem B'
     doBatchImport()
     expect(flatItems.value.length).toBeGreaterThanOrEqual(2)
-    // 新增的 item 应包含 Item A 和 Item B
+    // New items should include Item A and Item B
     const labels = flatItems.value.map(i => i.label)
     expect(labels).toContain('Item A')
     expect(labels).toContain('Item B')
@@ -99,13 +99,13 @@ describe('composables/useNavEditor', () => {
     const { save, openModal, flatItems } = useNavEditor({ mode: 'course', courseId: '1', navigation: [] }, () => { savedEmitted = true })
     openModal()
     await nextTick()
-    // 添加一个新章节
+    // Add a new chapter
     flatItems.value.push({
       _key: 'k-0', id: 'new-1', label: 'New Chapter', to: '', depth: 0, isNew: true,
     })
     await save()
     expect(savedEmitted).toBe(true)
-    // openModal 后 watch 会插入默认 course home（id='course'），新章节在 index 1
+    // After openModal, watch inserts default course home (id='course'), new chapter at index 1
     const newChapter = flatItems.value.find((i: any) => i.label === 'New Chapter')
     expect(newChapter).toBeTruthy()
     expect(newChapter!.isNew).toBe(false)
@@ -130,7 +130,7 @@ describe('composables/useNavEditor', () => {
     const { save, openModal, flatItems } = useNavEditor({ mode: 'category', navigation: [] }, () => { savedEmitted = true })
     openModal()
     await nextTick()
-    // 添加分类和课程
+    // Add category and course
     flatItems.value.push(
       { _key: 'k-0', id: 'new-1', label: 'New Cat', to: '', depth: 0, isNew: true },
       { _key: 'k-1', id: 'new-2', label: 'New Course', to: '', depth: 1, isNew: true },

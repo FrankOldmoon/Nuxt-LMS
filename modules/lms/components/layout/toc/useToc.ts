@@ -15,17 +15,17 @@ export function useToc() {
     const { chapterId, courseId } = useLmsContext()
     const { playFullscreen, togglePlay } = useChapterBtns()
 
-    // lms 公开配置：chapterPage.enableFullscreen 控制播放按钮显隐
+    // lms PublicConfiguration：chapterPage.enableFullscreen controlPlayButtonvisibility
     const { chapterPage: chapterPageCfg } = useLmsPublicConfig()
 
     const lockId = computed(() => chapterId.value ? `chapters_${chapterId.value}` : undefined)
 
-    // ── 登录状态 ──
+    // ── LoginStatus ──
     const isLoggedIn = computed(() => !!user.value)
 
-    // ── lms 章节学习进度（仅在 mode=lms 时使用） ──
-    // setup 阶段调用 useChapterTask()：inject 在 setup 中生效，
-    // 移动端 slideover 中的 TOC 不在 provide 子树内，回退到 sharedChapterTaskCtx
+    // ── lms ChapterLearning Progress（only mode=lms whenmakeuse） ──
+    // setup stageCall useChapterTask()：inject  setup MiddleEffective，
+    // mobile slideover Middle TOC no provide child treeInside，fallbackto sharedChapterTaskCtx
     const chapterTask = useChapterTask()
 
     const totalHeadings = computed(() => chapterTask?.taskMap.value.headings?.length ?? 0)
@@ -39,7 +39,7 @@ export function useToc() {
     })
     const allDone = computed(() => totalHeadings.value > 0 && doneHeadings.value === totalHeadings.value)
 
-    // ── 全屏播放模式：标题导航 ──
+    // ── Fullscreen playbackmode：TitleNavigation ──
     const flatHeadings = computed(() => {
         const result: { id: string; text: string }[] = []
         function walk(links: any[]) {
@@ -94,10 +94,10 @@ export function useToc() {
         }
     }
 
-    // 全屏播放：键盘左右方向键 = 上下导航按钮（← 上一个标题 / → 下一个标题）
+    // Fullscreen playback：KeykeyboardLeftRightsidetoKey = UpDownNavigationButton（← UponeitemsTitle / → DownoneitemsTitle）
     function onPlayKeydown(e: KeyboardEvent) {
         if (!playFullscreen.value) return
-        // 在输入框/文本域/可编辑区域内不拦截方向键，避免影响表单编辑
+        // Input Box/Text Area/canEditareaInsidenoInterceptsidetoKey，avoidShadowaffectFormEdit
         const target = e.target as HTMLElement | null
         if (target) {
             const tag = target.tagName
@@ -121,7 +121,7 @@ export function useToc() {
         }
     })
 
-    // 进入/退出全屏播放时挂载/卸载键盘监听
+    // enter/Exit FullscreenPlaywhenMount/UnmountKeykeyboard listener
     watch(playFullscreen, (v) => {
         if (!import.meta.client) return
         if (v) window.addEventListener('keydown', onPlayKeydown)
@@ -133,7 +133,7 @@ export function useToc() {
         if (import.meta.client) window.removeEventListener('keydown', onPlayKeydown)
     })
 
-    // ── 内容编辑权限 ──
+    // ── ContentEditPermissions ──
     const canEditContent = computed(() => {
         if (hasRole('admin')) return true
         return isCourseEditor(courseId.value)
@@ -151,9 +151,9 @@ export function useToc() {
     async function handleSaveClick() {
         saving.value = true
         try {
-            await handleSave(chapterContent.value)
+            await handle save(chapterContent.value)
 
-            toast.add({ title: t('layout.saveSuccess'), color: 'success' })
+            toast.add({ title: t('layout.save success'), color: 'success' })
             editModalOpen.value = false
 
             await nextTick()
@@ -165,7 +165,7 @@ export function useToc() {
         }
     }
 
-    // ── PPT 导出 ──
+    // ── PPT Export ──
     async function handleExportPpt() {
         if (!chapterContent.value) return
         exportingPpt.value = true
@@ -181,9 +181,9 @@ export function useToc() {
         }
     }
 
-    // ── PDF 导出（浏览器打印 → 横屏 A4 PDF）──
-    // 不使用 html2pdf.js（其 html2canvas 在某些文本/伪元素上抛 "Invalid code point NaN"）
-    // 改为克隆章节内容到隐藏 iframe，复制样式表，canvas 转 img 保留 ECharts，调用浏览器打印
+    // ── PDF Export（browserPrint → landscape A4 PDF）──
+    // nomakeuse html2pdf.js（its html2canvas someText/pseudo-elementUpthrow "Invalid code point NaN"）
+    // clone insteadChapter ContenttoHide iframe，CopyStyletable，canvas convert img preserve ECharts，CallbrowserPrint
     async function handleExportPdf() {
         const source = document.querySelector('.umo-editor-render.render') as HTMLElement | null
         if (!source) {
@@ -195,7 +195,7 @@ export function useToc() {
             const title = tocLinks.value[0]?.text || 'Chapter'
             const safeName = title.replace(/[\\/:*?"<>|]/g, '_')
 
-            // cloneNode 不复制 canvas 位图：将原 canvas 转为 img 写入克隆节点，保留 ECharts 等图表
+            // cloneNode noCopy canvas bitmap：willoriginal canvas convert img Writeclone nodePoint，preserve ECharts etc.Chart
             const clone = source.cloneNode(true) as HTMLElement
             const origCanvases = Array.from(source.querySelectorAll('canvas'))
             const cloneCanvases = Array.from(clone.querySelectorAll('canvas'))
@@ -210,11 +210,11 @@ export function useToc() {
                     if (c.offsetWidth) img.style.width = c.offsetWidth + 'px'
                     cc.replaceWith(img)
                 } catch {
-                    // canvas 被跨域图片污染（tainted）：跳过该图表
+                    // canvas cross-originImagetainted（tainted）：SkiptheChart
                 }
             })
 
-            // 复制当前文档所有样式表，确保打印内容样式与页面一致
+            // CopyCurrentDocumentAllStyletable，ensurePrintContentStyleandPageconsistent
             const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
                 .map((n) => n.outerHTML).join('\n')
 
@@ -232,7 +232,7 @@ export function useToc() {
                 idoc.open()
                 idoc.write(
                     `<!DOCTYPE html><html><head><meta charset="utf-8">`
-                    // <base> 让克隆内容中的相对/根相对图片 URL（如 /uploads/...）按当前页面解析
+                    // <base> letcloneContentMiddlerelativeRight/root relativeRightImage URL（if /uploads/...）by current PageSurfaceAnalysis
                     + `<base href="${window.location.href}">`
                     + `<title>${safeName}</title>${styles}\n`
                     + '<style>'
@@ -244,7 +244,7 @@ export function useToc() {
                 )
                 idoc.close()
 
-                // 打印对话框关闭后清理 iframe + 复位 loading
+                // PrintRightdialogCloseBackClean iframe + reset loading
                 const finish = () => {
                     exportingPdf.value = false
                     cleanup()
@@ -252,7 +252,7 @@ export function useToc() {
                 w.addEventListener('afterprint', finish, { once: true })
 
                 w.focus()
-                // 等图片/字体加载完再触发打印
+                // etc.Image/FontLoadcompletethenTriggerPrint
                 setTimeout(() => {
                     try {
                         w.print()
@@ -261,12 +261,12 @@ export function useToc() {
                         toast.add({ title: e?.message || t('chapter.exportPdfFailed'), color: 'error' })
                         finish()
                     }
-                    // 兜底：部分浏览器 afterprint 不触发，1 分钟后复位 loading 并清理 iframe
+                    // fallbackBottom：Partialbrowser afterprint noTrigger，1 minBackreset loading andClean iframe
                     setTimeout(() => { exportingPdf.value = false; cleanup() }, 60000)
                 }, 600)
             }
 
-            // 先绑定 onload 再插入 DOM，避免 about:blank load 事件竞态
+            // bind first on load thenInsert DOM，avoid about:blank load Eventrace condition
             document.body.appendChild(iframe)
         } catch (e: any) {
             toast.add({ title: e.message || t('chapter.exportPdfFailed'), color: 'error' })
@@ -274,13 +274,13 @@ export function useToc() {
         }
     }
 
-    // 聚合 loading + 下拉菜单项
+    // aggregate loading + DownpullMenuitems
     const downloading = computed(() => exportingPpt.value || exportingPdf.value)
 
     const downloadItems = computed(() => [
         [
-            { label: t('chapter.exportPpt'), icon: 'i-lucide-presentation', onSelect: handleExportPpt },
-            { label: t('chapter.exportPdf'), icon: 'i-lucide-file-text', onSelect: handleExportPdf },
+            { label: t('chapter.exportPpt'), icon: 'i-lucide-presentation', on select: handleExportPpt },
+            { label: t('chapter.exportPdf'), icon: 'i-lucide-file-text', on select: handleExportPdf },
         ],
     ])
 
@@ -290,7 +290,7 @@ export function useToc() {
         totalHeadings, allDone, doneHeadings, progressPercent,
         tocLinks, flatHeadings, currentHeadingIndex, goToHeading,
         canEditContent, editModalOpen, chapterContent, handleSave,
-        lockId, ueditorRef, saving, handleSaveClick, chapterId,
+        lockId, ueditorRef, saving, handle saveClick, chapterId,
         exportingPdf, handleExportPdf, downloading, downloadItems,
     }
 }

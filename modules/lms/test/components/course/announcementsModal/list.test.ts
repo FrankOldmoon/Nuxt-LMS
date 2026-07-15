@@ -1,8 +1,8 @@
 /**
- * course/announcementsModal/list.vue 组件测试
+ * course/announcementsModal/list.vue component test
  * @see modules/lms/components/course/announcementsModal/list.vue
  *
- * 公告列表：pending / empty / 列表渲染 + canCreate 控制删除按钮
+ * Announcement list: pending / empty / list rendering + canCreate controls delete button
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'

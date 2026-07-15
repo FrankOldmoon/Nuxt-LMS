@@ -1,8 +1,8 @@
 /**
- * dashboard/Charts.vue 组件测试
+ * dashboard/Charts.vue component tests
  * @see modules/admin/components/dashboard/Charts.vue
  *
- * 仪表盘图表：用户增长（折线）+ 角色分布（饼）+ 内容分布（柱）
+ * Dashboard charts: user growth (line) + role distribution (pie) + content distribution (bar)
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

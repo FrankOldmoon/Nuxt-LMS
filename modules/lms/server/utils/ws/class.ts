@@ -1,19 +1,19 @@
 /**
- * 班级 WebSocket 消息处理
+ * Class WebSocket message handling
  *
- * 处理 type: join / invite / danmaku /
+ * Handles type: join / invite / danmaku /
  *           voteStart / voteSubmit / voteEnd /
  *           quickAnswerStart / quickAnswerSubmit / quickAnswerEnd /
  *           online / chatroom
  *
- * case 体按 type 拆到 class-handlers/*.ts，本文件仅做 dispatch + cleanup。
+ * The case bodies are split into class-handlers/*.ts by type; this file only does dispatch + cleanup.
  */
 import { classRooms, broadcastToClass, leaveClassRoom } from './state'
 import { handleClassJoin, handleClassInvite, handleClassDanmaku, handleClassOnline, handleClassChatroom } from './class-handlers/join'
 import { handleClassVoteStart, handleClassVoteSubmit, handleClassVoteEnd } from './class-handlers/vote'
 import { handleClassQuickAnswerStart, handleClassQuickAnswerSubmit, handleClassQuickAnswerEnd } from './class-handlers/quickAnswer'
 
-/** 返回 true 表示消息已被处理 */
+/** Returns true to indicate the message has been handled */
 export function handleClassMessage(peer: any, data: any): boolean {
   const { type, classId } = data
   if (!classId && type !== 'join') return false
@@ -33,7 +33,7 @@ export function handleClassMessage(peer: any, data: any): boolean {
   return false
 }
 
-/** 连接关闭时清理班级房间 */
+/** Clean up class room when connection closes */
 export function cleanupClassPeer(peer: any) {
   const cid = peer._classId; if (!cid || !classRooms.has(cid)) return
   const uid = peer._userId

@@ -1,5 +1,5 @@
 <template>
-    <!-- 测验标题 + 信息 -->
+    <!-- QuizTitle + Info -->
     <div class="flex items-center gap-3 mb-3">
         <span class="px-2 py-0.5 bg-amber-50 dark:bg-amber-800 text-amber-600 dark:text-amber-300 rounded text-xs font-medium">
             {{ t('quiz.label') }}
@@ -16,7 +16,7 @@
         </div>
     </div>
 
-    <!-- 开始/结束时间提示 -->
+    <!-- Start/End TimeTip -->
     <div v-if="quiz.startAt || quiz.endAt" class="flex flex-wrap gap-3 mb-3 text-xs text-gray-500">
         <span v-if="quiz.startAt" class="flex items-center gap-1">
             <UIcon name="i-lucide-calendar-start" class="size-3" />
@@ -28,12 +28,12 @@
         </span>
     </div>
 
-    <!-- 测验内容 -->
+    <!-- QuizContent -->
     <div v-if="quiz.content" class="prose prose-sm dark:prose-invert max-w-none mb-3">
         <ueditorRender :json="quiz.content" />
     </div>
 
-    <!-- 已提交记录 -->
+    <!-- alreadySubmitRecords -->
     <div v-if="userRecord"
         class="mb-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-md">
         <div class="flex items-center gap-2 mb-1">
@@ -45,15 +45,15 @@
         <div class="text-xs text-gray-500">{{ t('quiz.submitCount', { n: userRecord.submitCount }) }}</div>
     </div>
 
-    <!-- 未开始：显示开始按钮或等待提示 -->
+    <!-- Not Started：ShowStart ButtonorAwaitTip -->
     <div v-if="!started && !userRecord" class="flex flex-col items-center gap-3 py-6">
         <UButton v-if="canStart && quizQuestions.length > 0" color="primary" size="lg" icon="i-lucide-play"
             :label="t('quiz.start')" @click="startQuiz" />
-        <p v-else-if="quizQuestions.length === 0" class="text-sm text-gray-400">{{ t('quiz.noQuestions') }}</p>
+        <p v-else-if="quizQuestions.length === 0" class="text-sm text-gray-400">{{ t('quiz.no questions') }}</p>
         <p v-else class="text-sm text-gray-400">{{ notStartedReason }}</p>
     </div>
 
-    <!-- 已提交且可重试：显示重新开始按钮 -->
+    <!-- alreadySubmitandcanRetry：ShowHeavyNewStart Button -->
     <div v-if="userRecord && canRetry && !started" class="flex justify-center py-4">
         <UButton color="primary" variant="outline" icon="i-lucide-rotate-ccw" :label="t('quiz.retry')"
             @click="startQuiz" />

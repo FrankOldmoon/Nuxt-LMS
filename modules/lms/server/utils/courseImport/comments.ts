@@ -1,11 +1,11 @@
 /**
- * 课程导入：批量插入评论
+ * Course import: batch insert comments
  *
- * 评论可能有 parentId 指向另一条评论，所以需要两遍处理：
- *   1. 插入顶层（parentId = null）
- *   2. 插入子级（parentId 来自 commentMap）
+ * Comments may have a parentId pointing to another comment, so two passes are needed:
+ *   1. Insert top-level (parentId = null)
+ *   2. Insert children (parentId comes from commentMap)
  *
- * 使用 currentUser.id 作为 userId（原用户可能不存在）。
+ * Use currentUser.id as userId (the original user may not exist).
  */
 import { db, schema } from '@nuxthub/db'
 
@@ -22,7 +22,7 @@ export async function importComments(
   const map = new Map<number, number>()
   let nextCid = 0
 
-  // 顶层
+  // Top-level
   for (const c of topLevel) {
     nextCid++
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -37,7 +37,7 @@ export async function importComments(
     if (inserted) map.set(Number(c.cid), inserted.cid)
   }
 
-  // 子级：parentId 来自 commentMap
+  // Children: parentId comes from commentMap
   for (const c of childLevel) {
     nextCid++
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

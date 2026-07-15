@@ -1,9 +1,9 @@
 /**
- * layout/index.vue 组件测试
+ * layout/index.vue component test
  * @see modules/lms/components/layout/index.vue
  *
- * 布局根：LayoutHeader + UMain/UContainer/UPage + LayoutAside + LayoutMain + LayoutFooter。
- * 使用 useLayoutState() + useChapterBtns()。
+ * Layout root: LayoutHeader + UMain/UContainer/UPage + LayoutAside + LayoutMain + LayoutFooter.
+ * Uses useLayoutState() + useChapterBtns().
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -14,7 +14,7 @@ beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
 
-  // 覆盖 useLayoutState stub（nuxt-stubs 默认只有 notifyCourseNavUpdate）
+  // Override useLayoutState stub (nuxt-stubs default only has notifyCourseNavUpdate)
   ;(globalThis as any).useLayoutState = () => ({
     showSidebar: ref(false),
     tocLinks: ref([]),
@@ -42,7 +42,7 @@ beforeEach(() => {
 })
 
 const _globalStubs = {
-  // LayoutHeader / LayoutMain / LayoutFooter / LayoutAside 是 auto-import 组件
+  // LayoutHeader / LayoutMain / LayoutFooter / LayoutAside are auto-import components
   LayoutHeader: { template: '<div class="layout-header" />' },
   LayoutMain: { template: '<div class="layout-main"><slot /></div>' },
   LayoutFooter: { template: '<div class="layout-footer" />' },

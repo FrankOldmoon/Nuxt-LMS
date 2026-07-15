@@ -2,9 +2,9 @@ import { db, schema } from '@nuxthub/db'
 import { eq, and, or } from 'drizzle-orm'
 
 /**
- * 获取当前用户背包
- * ?courseId=x 返回全局商品（courseId=0）+ 该课程专属商品的 bag 记录
- * JOIN goods 带商品信息
+ * Get the current user's bag
+ * ?courseId=x returns bag records for global goods (courseId=0) + course-specific goods
+ * JOIN goods to include good information
  */
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)

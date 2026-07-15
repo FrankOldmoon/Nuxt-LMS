@@ -1,13 +1,13 @@
 <template>
   <div class="flex-1 flex flex-col min-w-0">
     <template v-if="selectedUserId">
-      <!-- 聊天头部 -->
+      <!-- Chat header -->
       <div class="flex items-center gap-2 p-3 border-b border-default">
         <UAvatar :src="selectedUser?.avatarImg || undefined" :alt="selectedUser?.name" size="xs"
           :text="selectedUser?.name?.charAt(0)" />
         <span class="text-sm font-medium">{{ selectedUser?.name }}</span>
       </div>
-      <!-- 消息列表 -->
+      <!-- Message list -->
       <div ref="msgContainer" class="flex-1 overflow-y-auto p-3 space-y-2">
         <div v-if="msgLoading" class="flex justify-center py-4">
           <UIcon name="i-lucide-loader-2" class="size-4 animate-spin text-muted" />
@@ -26,7 +26,7 @@
           </div>
         </div>
       </div>
-      <!-- 输入框 -->
+      <!-- Input box -->
       <div class="p-3 border-t border-default flex gap-2">
         <UInput v-model="inputText" :placeholder="t('message.inputPlaceholder')" class="flex-1"
           size="sm" @keyup.enter="sendMessage" />

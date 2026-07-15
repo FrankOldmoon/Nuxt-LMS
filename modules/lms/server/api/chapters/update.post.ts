@@ -1,11 +1,11 @@
 /**
- * 更新章节：更新时自动从 content 中提取 question/homework/comment 的 ID 存入 chapter
+ * Update chapter: onUpdate, automatically extract IDs of question/homework/comment from content and store them on the chapter
  * POST /api/chapters/update
- * body: { id, content?, ...其他字段 }
+ * body: { id, content?, ...other fields }
  */
-// 需要提取的 vue 类型及其对应的 chapter 字段
+// Vue node types to extract and the corresponding chapter fields
 
-// 需要提取的 vue 类型及其对应的 chapter 字段
+// Vue node types to extract and the corresponding chapter fields
 const ID_EXTRACT_MAP = {
   question: 'questionIds',
   homework: 'homeworkIds',
@@ -13,7 +13,7 @@ const ID_EXTRACT_MAP = {
   quiz: 'quizIds',
 } as const
 
-/** 递归遍历 Tiptap JSON content，提取指定类型 vue 节点的 ID */
+/** Recursively traverse Tiptap JSON content and extract IDs of specified vue node types */
 function extractIds(content: any): Record<string, number[]> {
   const result: Record<string, number[]> = {
     questionIds: [],
@@ -24,7 +24,7 @@ function extractIds(content: any): Record<string, number[]> {
 
   function traverse(node: any) {
     if (!node || typeof node !== 'object') return
-    // 匹配 vue 类型节点
+    // Match vue type nodes
     if (node.type === 'vue' && node.attrs?.type && node.attrs?.content) {
       const fieldName = ID_EXTRACT_MAP[node.attrs.type as keyof typeof ID_EXTRACT_MAP]
       if (fieldName && result[fieldName]) {
@@ -32,7 +32,7 @@ function extractIds(content: any): Record<string, number[]> {
         if (!isNaN(numId)) result[fieldName].push(numId)
       }
     }
-    // 递归子节点（Tiptap content 是数组或单个对象）
+    // Recurse into child nodes (Tiptap content may be an array or a single object)
     if (Array.isArray(node.content)) {
       for (const child of node.content) traverse(child)
     } else if (node.content && typeof node.content === 'object') {
@@ -40,7 +40,7 @@ function extractIds(content: any): Record<string, number[]> {
     }
   }
 
-  // content 根节点可能是数组或单个节点
+  // The content root may be an array or a single node
   if (Array.isArray(content)) {
     for (const node of content) traverse(node)
   } else if (content) {
@@ -55,17 +55,17 @@ export default eventHandler(async (event) => {
   const { id, ...setData } = body
 
   if (!id) {
-    return cResp(null, '缺少 id 参数', false)
+    return cResp(null, 'Missing id parameter', false)
   }
 
   await requireChapterTeacher(event, Number(id))
 
-  // 查询章节当前数据（用于内容版本快照 + courseId 用于 WS 同步通知）
+  // Query the current chapter data (used for content version snapshot + courseId for WS sync notification)
   const current = await showTable('chapters', Number(id))
   const courseId = (current as any)?.courseId
 
   try {
-    // 若更新了 content，先将旧内容保存为版本快照，并提取 ID
+    // If content was updated, first save the old content as a version snapshot, then extract IDs
     let finalData = { ...setData }
     if (setData.content !== undefined) {
       const oldContent = (current as any)?.content
@@ -73,21 +73,21 @@ export default eventHandler(async (event) => {
         && JSON.stringify(oldContent) !== JSON.stringify(setData.content)) {
         await saveContentVersion('chapter', Number(id), oldContent)
       }
-      // 从新 content 中提取 question/homework/comment 的 ID
+      // Extract question/homework/comment IDs from the new content
       const ids = extractIds(setData.content)
       finalData = { ...finalData, ...ids }
     }
 
     const result = await updateTable('chapters', Number(id), finalData)
 
-    // 章节开放状态（isOpen）变更时，通过 WS 通知学生刷新访问权限
+    // When chapter open state (isOpen) changes, notify students via WS to refresh access
     if (setData.isOpen !== undefined && courseId) {
       const msg = JSON.stringify({
         type: 'chapterAccessUpdate',
         courseId,
         chapterId: Number(id),
       })
-      // 广播到所有活跃班级房间，客户端按 courseId 过滤后刷新
+      // Broadcast to all active class rooms; clients filter by courseId and refresh
       for (const [classId] of classRooms) {
         broadcastToClass(classId, msg)
       }
@@ -95,7 +95,7 @@ export default eventHandler(async (event) => {
 
     return cResp(result)
   } catch (error: any) {
-    console.error('更新章节失败:', error)
-    return cResp(null, error.message || '更新失败', false)
+    console.error('Failed to update chapter:', error)
+    return cResp(null, error.message || 'Update failed', false)
   }
 })

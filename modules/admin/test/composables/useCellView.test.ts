@@ -1,8 +1,8 @@
 /**
- * useCellView composable 测试
+ * useCellView composable tests
  * @see modules/admin/composables/useCellView.ts
  *
- * 单元格视图：类型判定与各类展示值的派生
+ * Cell view: type determination and derivation of various display values
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'
@@ -11,7 +11,7 @@ beforeEach(() => {
   resetAllStubs()
 })
 
-/** 构造 ColumnMeta */
+/** Build ColumnMeta */
 function col(overrides: Record<string, any> = {}) {
   return {
     name: 'col', jsName: 'col', dataType: 'string', columnType: 'PgString',

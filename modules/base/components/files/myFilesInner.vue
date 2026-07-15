@@ -18,7 +18,7 @@
     @refresh="loadFiles()"
   />
 
-  <!-- 文件列表 -->
+  <!-- File list -->
   <div class="flex-1 min-h-0 overflow-auto px-4">
     <div v-if="loading" class="flex items-center justify-center py-12 text-gray-400">
       <UIcon name="i-lucide-loader-2" class="animate-spin mr-2" />

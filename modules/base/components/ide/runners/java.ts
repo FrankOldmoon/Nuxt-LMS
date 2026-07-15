@@ -1,34 +1,34 @@
 /**
- * Java 运行器（自研 JS 树遍历解释器，覆盖 AP CS A 语法）
+ * Java runner (custom JS tree-walking interpreter, covers AP CS A syntax)
  *
- * 设计目标：
- *   - 纯前端 JS 实现，零外部依赖（不引入 JVM/WASM）
- *   - 覆盖 AP CS A 全部常见语法：基础类型、类与方法、数组/ArrayList、继承、异常、switch、三目
- *   - 错误信息贴近 Java 风格（含行列号），方便初学者调试
- *   - 与 Runner 接口（types.ts）保持一致，可直接替换原 CheerpJ 实现
+ * Design goals:
+ *   - Pure frontend JS implementation, zero external dependencies (no JVM/WASM)
+ *   - Covers all common AP CS A syntax: primitive types, classes and methods, arrays/ArrayList, inheritance, exceptions, switch, ternary
+ *   - Error messages follow Java style (with line/column numbers), easy for beginners to debug
+ *   - Consistent with Runner interface (types.ts), can directly replace the original CheerpJ implementation
  *
- * 架构：
- *   1) Lexer：源码 → Token 流（保留行列号）
- *   2) Parser：Token 流 → 简化 AST
- *   3) Interpreter：树遍历执行 AST
+ * Architecture:
+ *   1) Lexer: source code → token stream (preserves line/column numbers)
+ *   2) Parser: token stream → simplified AST
+ *   3) Interpreter: tree-walking execution of AST
  *
- * 限制（AP CS A 范围外，暂不实现）：
- *   - 泛型（仅在 ArrayList<Integer> 这种"声明形式"上做识别，不做真正的泛型检查）
- *   - Lambda / Stream / 方法引用
- *   - 注解、枚举、record
- *   - 多线程（synchronized / volatile）
- *   - 严格浮点语义（按 IEEE 754 双精度处理）
+ * Limitations (outside AP CS A scope, not implemented yet):
+ *   - Generics (only recognized in "declaration form" like ArrayList<Integer>, no real generic type checking)
+ *   - Lambda / Stream / method references
+ *   - Annotations, enums, records
+ *   - Multithreading (synchronized / volatile)
+ *   - Strict floating-point semantics (handled as IEEE 754 double precision)
  */
 import { ref } from 'vue'
 import type { Runner, RunContext } from './types'
 
 // =============================================================
-//  Lexer 词法分析器
+//  Lexer (lexical analyzer)
 // =============================================================
 
-// 关键字用字符串字面量表示（便于直接拿到字面量做 switch/case 匹配）
+// Keywords are represented as string literals (convenient for direct switch/case matching with the literal)
 type TK =
-  // 关键字
+  // Keywords
   | 'abstract' | 'assert' | 'boolean' | 'break' | 'byte' | 'case' | 'catch' | 'char'
   | 'class' | 'const' | 'continue' | 'default' | 'do' | 'double' | 'else' | 'enum'
   | 'extends' | 'final' | 'finally' | 'float' | 'for' | 'goto' | 'if' | 'implements'
@@ -37,12 +37,12 @@ type TK =
   | 'strictfp' | 'super' | 'switch' | 'synchronized' | 'this' | 'throw' | 'throws'
   | 'transient' | 'try' | 'void' | 'volatile' | 'while'
   | 'true' | 'false' | 'null'
-  // 类型标识符当关键字处理（String/Integer/Double/Boolean）
+  // Type identifiers treated as keywords (String/Integer/Double/Boolean)
   | 'String' | 'Integer' | 'Double' | 'Boolean' | 'Object' | 'Math' | 'System' | 'Scanner' | 'ArrayList' | 'List'
-  // 标点
+  // Punctuation
   | 'LPAREN' | 'RPAREN' | 'LBRACE' | 'RBRACE' | 'LBRACKET' | 'RBRACKET'
   | 'SEMI' | 'COMMA' | 'DOT' | 'COLON' | 'QUESTION' | 'AT'
-  // 运算符
+  // Operators
   | 'PLUS' | 'MINUS' | 'STAR' | 'SLASH' | 'PERCENT'
   | 'EQ' | 'PLUS_EQ' | 'MINUS_EQ' | 'STAR_EQ' | 'SLASH_EQ' | 'PERCENT_EQ'
   | 'AMP_EQ' | 'PIPE_EQ' | 'CARET_EQ' | 'LT_LT_EQ' | 'GT_GT_EQ' | 'GT_GT_GT_EQ'
@@ -51,7 +51,7 @@ type TK =
   | 'AND_AND' | 'OR_OR'
   | 'PLUSPLUS' | 'MINUSMINUS'
   | 'ELLIPSIS' | 'ARROW' | 'DBL_COLON'
-  // 字面量 / 标识符
+  // Literals / Identifiers
   | 'IDENT' | 'INT_LIT' | 'DOUBLE_LIT' | 'STRING_LIT' | 'CHAR_LIT'
   | 'EOF'
 
@@ -76,7 +76,7 @@ const KEYWORDS: Record<string, TK> = {
     synchronized: 'synchronized', this: 'this', throw: 'throw', throws: 'throws',
     transient: 'transient', try: 'try', void: 'void', volatile: 'volatile',
     while: 'while', true: 'true', false: 'false', null: 'null',
-    // 类型名也当关键字（解析时按需还原成 IDENT 也行；这里保留 TK 形式方便类型检查）
+    // Type names also treated as keywords (can be restored to IDENT during parsing if needed; kept as TK form here for convenient type checking)
     String: 'String', Integer: 'Integer', Double: 'Double', Boolean: 'Boolean',
     Object: 'Object', Math: 'Math', System: 'System', Scanner: 'Scanner',
     ArrayList: 'ArrayList', List: 'List',
@@ -110,10 +110,10 @@ function tokenize(source: string): Token[] {
     while (i < n) {
         const c = peek()
 
-        // 空白
+        // Whitespace
         if (c === ' ' || c === '\t' || c === '\r' || c === '\n') { advance(); continue }
 
-        // 注释
+        // Comments
         if (c === '/' && peek(1) === '/') {
             while (i < n && peek() !== '\n') advance()
             continue
@@ -127,7 +127,7 @@ function tokenize(source: string): Token[] {
 
         const start = loc()
 
-        // 标识符 / 关键字
+        // Identifier / Keyword
         if (isAlpha(c)) {
             let s = ''
             while (i < n && isAlphaNum(peek())) s += advance()
@@ -140,7 +140,7 @@ function tokenize(source: string): Token[] {
             continue
         }
 
-        // 数字
+        // Number
         if (isDigit(c)) {
             let s = ''
             let isDouble = false
@@ -164,7 +164,7 @@ function tokenize(source: string): Token[] {
             continue
         }
 
-        // 字符串
+        // String
         if (c === '"') {
             advance()
             let s = ''
@@ -192,7 +192,7 @@ function tokenize(source: string): Token[] {
             continue
         }
 
-        // 字符
+        // Character
         if (c === "'") {
             advance()
             let s = ''
@@ -209,7 +209,7 @@ function tokenize(source: string): Token[] {
             continue
         }
 
-        // 运算符 / 标点（三字符 > 两字符 > 单字符）
+        // Operators / Punctuation (three-char > two-char > single-char)
         const two = source.substr(i, 2)
         const three = source.substr(i, 3)
         const push = (type: TK, len: number, val?: string) => {
@@ -277,7 +277,7 @@ function tokenize(source: string): Token[] {
 }
 
 // =============================================================
-//  AST 节点定义
+//  AST node definitions
 // =============================================================
 
 interface Pos { line: number; col: number }
@@ -391,7 +391,7 @@ interface SwitchStmt {
     default: Stmt[] | null
 }
 interface SwitchCase {
-    values: Expr[]   // 多个值对应 case 1, 2: 形式
+    values: Expr[]   // Multiple values correspond to case 1, 2: form
     body: Stmt[]
 }
 interface TryStmt {
@@ -453,7 +453,7 @@ interface NewObjectExpr {
 interface NewArrayExpr {
     kind: 'NewArray'; pos: Pos
     elementType: string
-    dimensions: Expr[]  // 每个维度一个 size
+    dimensions: Expr[]  // One size per dimension
     initializer: ArrayLitExpr | null
 }
 interface MemberExpr {
@@ -475,7 +475,7 @@ interface TernaryExpr { kind: 'Ternary'; pos: Pos; cond: Expr; then: Expr; else:
 interface InstanceOfExpr { kind: 'InstanceOf'; pos: Pos; expr: Expr; checkType: string }
 
 // =============================================================
-//  Parser 语法分析器（递归下降）
+//  Parser (recursive descent)
 // =============================================================
 
 class ParseError extends Error {
@@ -499,12 +499,12 @@ class Parser {
         return this.advance()
     }
     private skipSemi() {
-        // 允许空分号
+        // Allow empty semicolons
         while (this.match('SEMI')) this.advance()
     }
 
     parse(): ProgramNode {
-        // 跳过 package / import 声明
+        // Skip package / import declarations
         while (this.match('package') || this.match('import')) {
             this.advance()
             while (!this.match('SEMI') && !this.match('EOF')) this.advance()
@@ -512,12 +512,12 @@ class Parser {
         }
         const classes: ClassNode[] = []
         while (!this.match('EOF')) {
-            // 跳过顶层修饰符 public / abstract / final
+            // Skip top-level modifiers public / abstract / final
             while (this.match('public') || this.match('abstract') || this.match('final') ||
                    this.match('private') || this.match('protected') || this.match('static')) {
                 this.advance()
             }
-            // 顶层只能是 class / interface（这里只支持 class）
+            // Top-level can only be class / interface (only class is supported here)
             if (this.match('class')) {
                 classes.push(this.parseClass())
             } else if (this.match('interface')) {
@@ -531,7 +531,7 @@ class Parser {
     }
 
     private parseInterfaceStub() {
-        // 接口：暂不实现，吞掉整个声明
+        // Interface: not implemented yet, consume the entire declaration
         this.advance()
         this.expect('IDENT', 'Expected interface name')
         while (this.peek().type !== 'LBRACE' && !this.match('EOF')) this.advance()
@@ -560,8 +560,8 @@ class Parser {
     }
 
     private parseType(): string {
-        // 支持 int[] / int[][] / String 等
-        // 处理泛型尖括号参数（保留为空）
+        // Supports int[] / int[][] / String, etc.
+        // Handle generic angle bracket parameters (kept empty)
         const t = this.peek()
         if (t.type === 'IDENT' || t.type === 'int' || t.type === 'double' ||
             t.type === 'boolean' || t.type === 'char' || t.type === 'void' ||
@@ -570,7 +570,7 @@ class Parser {
             t.type === 'ArrayList' || t.type === 'List' ||
             t.type === 'float' || t.type === 'long' || t.type === 'short' || t.type === 'byte') {
             let type = this.advance().value
-            // 泛型 <Integer> / <?>
+            // Generics <Integer> / <?>
             if (this.match('LT')) {
                 this.advance()
                 let depth = 1
@@ -599,7 +599,7 @@ class Parser {
         if (this.match('extends')) {
             this.advance()
             superClass = this.expect('IDENT', 'Expected super class name').value
-            // 也允许 extends ClassName<T>
+            // Also allows extends ClassName<T>
             if (this.match('LT')) {
                 let depth = 1
                 this.advance()
@@ -632,19 +632,19 @@ class Parser {
         const mods = this.parseMods()
         const t = this.peek()
 
-        // 构造器：名字与类名一致
+        // Constructor: name matches class name
         if (t.type === 'IDENT' && this.peek(1).type === 'LPAREN') {
             const ctor = this.parseConstructor(mods)
             return ctor
         }
 
-        // 字段 / 方法：先解析类型
+        // Field / Method: parse type first
         const retType = this.parseType()
         const nameTok = this.expect('IDENT', 'Expected member name')
         const name = nameTok.value
 
         if (this.match('LPAREN')) {
-            // 方法
+            // Method
             const m: MethodNode = {
                 kind: 'Method', pos: { line: nameTok.line, col: nameTok.col },
                 mods, returnType: retType, name, params: [], body: { kind: 'Block', pos: { line: 0, col: 0 }, stmts: [] },
@@ -652,7 +652,7 @@ class Parser {
             this.advance()
             m.params = this.parseParamList()
             this.expect('RPAREN')
-            // 吞掉可能存在的 throws
+            // Consume possible throws clause
             if (this.match('throws')) {
                 this.advance()
                 this.expect('IDENT')
@@ -661,7 +661,7 @@ class Parser {
             m.body = this.parseBlock()
             return m
         } else {
-            // 字段
+            // Field
             const init: Expr | null = this.match('EQ') ? (this.advance(), this.parseExpr()) : null
             this.skipSemi()
             return {
@@ -684,7 +684,7 @@ class Parser {
         }
         this.expect('LBRACE')
 
-        // 构造器体首条语句可能是 super(...) / this(...) —— 必须是 this( / super( 形式，避免与 this.xxx 成员访问混淆
+        // First statement in constructor body may be super(...) / this(...) — must be in this( / super( form to avoid confusion with this.xxx member access
         let superCall: SuperCallExpr | null = null
         let thisCall: ThisCallExpr | null = null
         if (this.match('super') && this.peek(1).type === 'LPAREN') {
@@ -759,18 +759,18 @@ class Parser {
     private parseStmt(): Stmt {
         const t = this.peek()
 
-        // 空语句
+        // Empty statement
         if (t.type === 'SEMI') { this.advance(); return { kind: 'Empty', pos: { line: t.line, col: t.col } } }
 
-        // 块
+        // Block
         if (t.type === 'LBRACE') return this.parseBlock()
 
-        // 变量声明
+        // Variable declaration
         if (this.isTypeDeclStart()) {
             return this.parseVarDecl()
         }
 
-        // 控制流
+        // Control flow
         if (t.type === 'if') return this.parseIf()
         if (t.type === 'while') return this.parseWhile()
         if (t.type === 'for') return this.parseFor()
@@ -790,14 +790,14 @@ class Parser {
             return { kind: 'ExprStmt', pos: { line: t.line, col: t.col }, expr: { kind: 'SuperCall', pos: { line: t.line, col: t.col }, args } }
         }
 
-        // 表达式语句
+        // Expression statement
         const e = this.parseExpr()
         this.skipSemi()
         return { kind: 'ExprStmt', pos: { line: t.line, col: t.col }, expr: e }
     }
 
     private isTypeStart(t: Token): boolean {
-        // System / Math 通常用于静态成员访问（System.out、Math.max），不能当类型名
+        // System / Math are usually used for static member access (System.out, Math.max), cannot be treated as type names
         if (t.type === 'System' || t.type === 'Math') return false
         return t.type === 'IDENT' || t.type === 'int' || t.type === 'double' ||
             t.type === 'boolean' || t.type === 'char' || t.type === 'String' ||
@@ -807,19 +807,19 @@ class Parser {
             t.type === 'short' || t.type === 'byte'
     }
 
-    // 区分"类型声明"与"方法调用起首"：Scanner sc 是声明，Scanner.println() 是调用
-    // 通过向后看 1-2 个 token 来判断：必须是 类型名 + IDENT（含泛型 ArrayList<Integer> 形式）
+    // Distinguish "type declaration" from "method call start": Scanner sc is a declaration, Scanner.println() is a call
+    // Determine by looking ahead 1-2 tokens: must be Type name + IDENT (including generic ArrayList<Integer> form)
     private isTypeDeclStart(): boolean {
         const t = this.peek()
         if (!this.isTypeStart(t)) return false
         let off = 1
-        // 跳过数组维度 [ ]
+        // Skip array dimensions [ ]
         while (this.matchAt(off, 'LBRACKET')) {
             off++
             if (this.matchAt(off, 'RBRACKET')) off++
             else return false
         }
-        // 跳过泛型参数 <Type, Type, ...>（含嵌套 <...>）
+        // Skip generic parameters <Type, Type, ...> (including nested <...>)
         if (this.matchAt(off, 'LT')) {
             off++
             let depth = 1
@@ -873,8 +873,8 @@ class Parser {
         this.expect('for')
         this.expect('LPAREN')
 
-        // for-each 检测: for (Type x : expr) ...
-        // 不消耗冒号的方式向前看：尝试解析 Type + IDENT，如果下一个是 COLON 则走 for-each
+        // for-each detection: for (Type x : expr) ...
+        // Look ahead without consuming the colon: try parsing Type + IDENT, if next is COLON then take the for-each path
         if (this.isTypeStart(this.peek())) {
             const savePos = this.pos
             try {
@@ -888,14 +888,14 @@ class Parser {
                     const body = this.parseStmt()
                     return { kind: 'ForEach', pos: { line: start.line, col: start.col }, varType, name: nameTok.value, iter, body }
                 }
-                // 不是 for-each，回退
+                // Not for-each, backtrack
                 this.pos = savePos
             } catch {
                 this.pos = savePos
             }
         }
 
-        // 普通 for
+        // Regular for
         const t3 = this.peek()
         let init: Stmt | null = null
         if (!this.match('SEMI')) {
@@ -918,7 +918,7 @@ class Parser {
         return { kind: 'For', pos: { line: start.line, col: start.col }, init, cond, update, body }
     }
 
-    // 解析变量声明但不吃分号（用于 for 头）
+    // Parse variable declaration without consuming semicolon (for for-loop header)
     private parseVarDeclNoSemi(): VarDeclStmt {
         const start = this.peek()
         const t = this.parseType()
@@ -995,7 +995,7 @@ class Parser {
         while (this.match('catch')) {
             this.advance()
             this.expect('LPAREN')
-            // 异常类型（可能带 final）
+            // Exception type (may have final)
             if (this.match('final')) this.advance()
             const exType = this.parseType()
             const exName = this.expect('IDENT', 'Expected catch variable name').value
@@ -1019,7 +1019,7 @@ class Parser {
         return { kind: 'Throw', pos: { line: start.line, col: start.col }, expr }
     }
 
-    // ---- 表达式（Pratt 风格，运算符优先级） ----
+    // ---- Expressions (Pratt style, operator precedence) ----
 
     private parseExpr(): Expr { return this.parseAssignment() }
 
@@ -1147,7 +1147,7 @@ class Parser {
             const operand = this.parseUnary()
             return { kind: 'Unary', pos: { line: t.line, col: t.col }, op: t.value, operand, prefix: true }
         }
-        // 类型转换 (Type) expr  —— 简单启发：左括号后面跟类型名
+        // Type cast (Type) expr — simple heuristic: left parenthesis followed by a type name
         if (t.type === 'LPAREN' && this.isTypeStart(this.peek(1))) {
             const save = this.pos
             let castType: string | null = null
@@ -1206,7 +1206,7 @@ class Parser {
         if (t.type === 'super') { this.advance(); return { kind: 'Super', pos: { line: t.line, col: t.col } } }
         if (t.type === 'new') return this.parseNew()
         if (t.type === 'IDENT') { this.advance(); return { kind: 'Ident', pos: { line: t.line, col: t.col }, name: t.value } }
-        // 类型名关键字（System/Math/ArrayList 等）当标识符：System.out、Math.max、ArrayList.toString
+        // Type name keywords (System/Math/ArrayList, etc.) treated as identifiers: System.out, Math.max, ArrayList.toString
         if (t.type === 'System' || t.type === 'Math' || t.type === 'ArrayList' ||
             t.type === 'Scanner' || t.type === 'List' || t.type === 'String' ||
             t.type === 'Integer' || t.type === 'Double' || t.type === 'Boolean' ||
@@ -1214,7 +1214,7 @@ class Parser {
             this.advance()
             return { kind: 'Ident', pos: { line: t.line, col: t.col }, name: t.value }
         }
-        // 数组字面量：{1, 2, 3}
+        // Array literal: {1, 2, 3}
         if (t.type === 'LBRACE') {
             const start = t
             this.advance()
@@ -1238,9 +1238,9 @@ class Parser {
     private parseNew(): Expr {
         const start = this.peek()
         this.advance()
-        // 类型名
+        // Type name
         const t = this.peek()
-        // 可能是基本类型 int[] / int[][] / 引用类型 String
+        // May be primitive type int[] / int[][] / reference type String
         if (t.type === 'int' || t.type === 'double' || t.type === 'boolean' ||
             t.type === 'char' || t.type === 'String' || t.type === 'Integer' ||
             t.type === 'Double' || t.type === 'Boolean' || t.type === 'Object' ||
@@ -1248,7 +1248,7 @@ class Parser {
             t.type === 'float' || t.type === 'long' || t.type === 'short' ||
             t.type === 'byte' || t.type === 'IDENT') {
             const typeName = this.advance().value
-            // 泛型参数跳过
+            // Skip generic parameters
             if (this.match('LT')) {
                 let depth = 1
                 this.advance()
@@ -1258,7 +1258,7 @@ class Parser {
                     else if (tt === 'GT') depth--
                 }
             }
-            // 数组形式 new int[3][4] {...}
+            // Array form new int[3][4] {...}
             if (this.match('LBRACKET')) {
                 const dims: Expr[] = []
                 while (this.match('LBRACKET')) {
@@ -1279,7 +1279,7 @@ class Parser {
                 }
                 return { kind: 'NewArray', pos: start, elementType: typeName, dimensions: dims, initializer: init }
             }
-            // 普通对象创建
+            // Regular object creation
             this.expect('LPAREN')
             const args = this.parseArgList()
             this.expect('RPAREN')
@@ -1290,16 +1290,16 @@ class Parser {
 }
 
 // =============================================================
-//  Runtime 运行时值 / 类表 / 作用域
+//  Runtime values / class table / scope
 // =============================================================
 
-// Java 的运行时值用 JS 原始值 + 包装对象
-//   - 数值: number (int 和 double 统一 number；运行时按上下文截断)
+// Java runtime values use JS primitives + wrapper objects
+//   - Numeric: number (int and double unified as number; truncated by context at runtime)
 //   - boolean: boolean
-//   - char: string (单字符)
+//   - char: string (single character)
 //   - String: string
-//   - 数组: { __array: true, elementType, elements: JValue[] }
-//   - 对象: { __class: string, fields: Map<string, JValue> }
+//   - Array: { __array: true, elementType, elements: JValue[] }
+//   - Object: { __class: string, fields: Map<string, JValue> }
 
 type JValue = number | boolean | string | null | JArray | JObject
 
@@ -1307,7 +1307,7 @@ interface JArray {
     __array: true
     elementType: string
     elements: JValue[]
-    // 1-based 长度访问，遵循 Java 习惯：arr.length（不是 length()）
+    // 1-based length access, following Java convention: arr.length (not length())
 }
 
 interface JObject {
@@ -1333,7 +1333,7 @@ interface JMethod {
     params: ParamNode[]
     body: BlockStmt
     owner: string
-    // 唯一键（用于重载解析）
+    // Unique key (used for overload resolution)
     key: string
 }
 
@@ -1342,7 +1342,7 @@ interface JClass {
     superClass: string | null
     interfaces: string[]
     staticFields: Map<string, { type: string; value: JValue }>
-    instanceFieldNames: string[]         // 继承链中所有字段
+    instanceFieldNames: string[]         // All fields in the inheritance chain
     instanceFieldTypes: Map<string, string>
     instanceFieldDefaults: Map<string, Expr | null>
     methods: Map<string, JMethod>        // key = name$arity
@@ -1377,7 +1377,7 @@ class Scope {
 }
 
 // =============================================================
-//  Interpreter 解释器
+//  Interpreter
 // =============================================================
 
 class RuntimeError extends Error {
@@ -1408,11 +1408,11 @@ class Interpreter {
     }
 
     run(program: ProgramNode) {
-        // 1) 收集所有类
+        // 1) Collect all classes
         for (const c of program.classes) this.registerClass(c)
-        // 2) 解析继承链
+        // 2) Resolve inheritance chain
         for (const c of this.classes.values()) this.resolveInheritance(c)
-        // 3) 找 main 方法所在的类
+        // 3) Find the class containing the main method
         let mainClass: JClass | null = null
         for (const c of this.classes.values()) {
             for (const m of c.methods.values()) {
@@ -1425,7 +1425,7 @@ class Interpreter {
         }
         if (!mainClass) throw new Error('No main method found (expected: public static void main(String[] args))')
 
-        // 4) 调用 main
+        // 4) Invoke main
         const main = this.findMethod(mainClass, 'main', ['String[]'])!
         this.invokeStaticMethod(mainClass, main, [makeArray('String', [])])
     }
@@ -1467,7 +1467,7 @@ class Interpreter {
         this.classes.set(c.name, c)
     }
 
-    // 静态初始化用新的临时解释器求值（简单处理：新建对象，无方法可见性）
+    // Static initialization uses a new temporary interpreter for evaluation (simplified: new object, no method visibility)
     private evalStaticInit(expr: Expr, c: JClass): JValue {
         const tmp = new StaticEval(this.classes, c)
         return tmp.eval(expr)
@@ -1484,7 +1484,7 @@ class Interpreter {
     }
 
     private resolveInheritance(c: JClass) {
-        // 继承字段
+        // Inherited fields
         if (c.superClass) {
             const sup = this.classes.get(c.superClass)
             if (!sup) throw new Error(`Unknown super class '${c.superClass}' for '${c.name}'`)
@@ -1496,7 +1496,7 @@ class Interpreter {
                     c.instanceFieldDefaults.set(f, sup.instanceFieldDefaults.get(f) ?? null)
                 }
             }
-            // 继承方法
+            // Inherited methods
             for (const m of sup.methods.values()) {
                 if (!c.methods.has(m.key)) c.methods.set(m.key, { ...m, owner: c.name })
             }
@@ -1507,7 +1507,7 @@ class Interpreter {
     }
 
     private findMethod(c: JClass, name: string, argTypes: string[]): JMethod | null {
-        // 简化：按方法名 + 参数个数匹配第一个；同名不同参数时按首个匹配的
+        // Simplified: match the first by method name + parameter count; for same name with different parameters, use the first match
         for (const m of c.methods.values()) {
             if (m.name !== name) continue
             if (m.params.length !== argTypes.length) continue
@@ -1520,7 +1520,7 @@ class Interpreter {
         for (const ct of c.constructors.values()) {
             if (ct.params.length === argCount) return ct
         }
-        // 没有匹配的构造器，且类没有显式构造器 → 生成默认无参构造器
+        // No matching constructor and class has no explicit constructor → generate default no-arg constructor
         if (c.constructors.size === 0) {
             return { params: [], body: { kind: 'Block', pos: { line: 0, col: 0 }, stmts: [] }, superCall: { kind: 'SuperCall', pos: { line: 0, col: 0 }, args: [] }, thisCall: null, key: '$ctor$0' }
         }
@@ -1532,7 +1532,7 @@ class Interpreter {
         for (let i = 0; i < m.params.length; i++) {
             scope.define(m.params[i].name, args[i], m.params[i].paramType)
         }
-        // 把所有类的静态字段放进 scope（简化处理）
+        // Put all class static fields into scope (simplified handling)
         for (const [k, v] of c.staticFields) scope.define(k, v.value, v.type)
         const saved = { returnValue: this.returnValue, shouldReturn: this.shouldReturn, broke: this.broke, continued: this.continued }
         this.shouldReturn = false; this.returnValue = null; this.broke = false; this.continued = false
@@ -1557,7 +1557,7 @@ class Interpreter {
         return ret
     }
 
-    // ---- 类型推断（粗略） ----
+    // ---- Type inference (rough) ----
     private inferType(e: Expr, scope: Scope): string {
         switch (e.kind) {
             case 'Lit': return e.litType
@@ -1593,7 +1593,7 @@ class Interpreter {
         }
     }
 
-    // ---- 求值辅助 ----
+    // ---- Evaluation helpers ----
     private toInt(v: JValue): number { return typeof v === 'number' ? Math.trunc(v) : 0 }
     private toNum(v: JValue): number { return typeof v === 'number' ? v : Number(v) || 0 }
     private toBool(v: JValue): boolean { return !!v }
@@ -1616,7 +1616,7 @@ class Interpreter {
 
     private unwrap(v: JValue): any { return v }
 
-    // ---- 执行语句 ----
+    // ---- Execute statements ----
     private execBlock(b: BlockStmt, scope: Scope): void {
         const inner = new Scope(scope)
         for (const s of b.stmts) {
@@ -1714,7 +1714,7 @@ class Interpreter {
                     this.execBlock(s.tryBlock, scope)
                 } catch (e: any) {
                     caught = true
-                    // 选匹配的 catch
+                    // Select matching catch
                     for (const cc of s.catches) {
                         if (this.isInstanceOf(e, cc.exType)) {
                             const inner = new Scope(scope)
@@ -1757,20 +1757,20 @@ class Interpreter {
         scope.define(s.name, v, s.varType)
     }
 
-    // ---- 表达式求值 ----
+    // ---- Expression evaluation ----
     private evalExpr(e: Expr, scope: Scope): JValue {
         switch (e.kind) {
             case 'Lit': return e.value
             case 'Ident': {
-                // 沿作用域链查找（包括祖父作用域），不要只看当前/父作用域
+                // Search along the scope chain (including grandparent scopes), do not just look at current/parent scope
                 const v = scope.get(e.name)
                 if (v !== undefined) return v
-                // 类名当标识符：返回 null
+                // Class name as identifier: return null
                 if (this.classes.has(e.name)) return null
                 throw new Error(`Undefined variable '${e.name}'`)
             }
             case 'This': return scope.get('this')!
-            case 'Super': return scope.get('this')!  // 简化：super 视作 this
+            case 'Super': return scope.get('this')!  // Simplified: super treated as this
             case 'Binary': return this.evalBinary(e, scope)
             case 'Unary': return this.evalUnary(e, scope)
             case 'PrePost': return this.evalPrePost(e, scope)
@@ -1868,7 +1868,7 @@ class Interpreter {
             for (let i = 0; i < a.elements.length; i++) if (!this.deepEq(a.elements[i], b.elements[i])) return false
             return true
         }
-        if (isJObject(a) && isJObject(b)) return a === b  // 对象比较按引用
+        if (isJObject(a) && isJObject(b)) return a === b  // Object comparison by reference
         return false
     }
 
@@ -1898,8 +1898,8 @@ class Interpreter {
     private evalAssign(e: AssignExpr, scope: Scope): JValue {
         const v = this.evalExpr(e.value, scope)
         if (e.op === '=') { this.assignTo(e.target, v, scope); return v }
-        // 复合赋值
-        this.evalExpr(e.target, scope) // 读出旧值（用于副作用）
+        // Compound assignment
+        this.evalExpr(e.target, scope) // Read old value (for side effects)
         const lt = this.inferType(e.target, scope)
         const isDouble = lt === 'double' || lt === 'float'
         const op = e.op.slice(0, -1)  // += → +
@@ -1931,7 +1931,7 @@ class Interpreter {
     }
 
     private evalMember(e: MemberExpr, scope: Scope): JValue {
-        // System.out / System.in 这类静态访问 → 返回一个伪对象（用普通对象模拟）
+        // Static access like System.out / System.in → return a pseudo object (simulated with a plain object)
         if (e.obj.kind === 'Ident') {
             if (e.obj.name === 'System' && e.name === 'out') {
                 return { __class: '__SystemOut__', fields: new Map() }
@@ -1942,7 +1942,7 @@ class Interpreter {
         }
         const obj = this.evalExpr(e.obj, scope)
         if (!isJObject(obj)) {
-            // 数组 .length / 字符串 .length
+            // Array .length / string .length
             if (e.name === 'length') {
                 if (isJArray(obj)) return obj.elements.length
                 if (typeof obj === 'string') return obj.length
@@ -1962,9 +1962,9 @@ class Interpreter {
     }
 
     private evalNewObject(e: NewObjectExpr, scope: Scope): JValue {
-        // 内置类的处理
+        // Built-in class handling
         if (e.className === 'Scanner') {
-            // tokens 用 JArray 存，避免与 JValue 类型冲突
+            // tokens stored as JArray to avoid conflict with JValue type
             const tokens = this.tokenizeInput().tokens
             const fields = new Map<string, JValue>()
             fields.set('tokens', makeArray('String', tokens))
@@ -1988,7 +1988,7 @@ class Interpreter {
         const c = this.classes.get(e.className)
         if (!c) throw new Error(`Unknown class '${e.className}'`)
         const obj = makeObject(c.name)
-        // 初始化实例字段默认值
+        // Initialize instance field default values
         for (const f of c.instanceFieldNames) {
             const def = c.instanceFieldDefaults.get(f)
             obj.fields.set(f, def ? this.evalStaticInit(def, c) : this.defaultValue(c.instanceFieldTypes.get(f)!))
@@ -2004,7 +2004,7 @@ class Interpreter {
         scope.define('this', thisObj, c.name)
         for (let i = 0; i < ct.params.length; i++) scope.define(ct.params[i].name, args[i], ct.params[i].paramType)
         if (ct.superCall) {
-            // 调用父类构造器
+            // Call super class constructor
             const supName = c.superClass
             if (supName) {
                 const sup = this.classes.get(supName)!
@@ -2015,7 +2015,7 @@ class Interpreter {
             }
         }
         if (ct.thisCall) {
-            // 调用本类另一个构造器
+            // Call another constructor of this class
             const otherCt = this.findConstructor(c, ct.thisCall.args.length)
             if (otherCt) {
                 this.invokeConstructor(c, otherCt, ct.thisCall.args.map((a: Expr) => this.evalExpr(a, scope)), thisObj)
@@ -2030,7 +2030,7 @@ class Interpreter {
         if (e.initializer) {
             return makeArray(e.elementType, e.initializer.elements.map(x => this.evalExpr(x, scope)))
         }
-        // 创建多维数组（递归构造）
+        // Create multi-dimensional array (recursive construction)
         const create = (dimIdx: number): JValue[] => {
             if (dimIdx === dims.length) return []
             const size = dims[dimIdx]
@@ -2047,34 +2047,34 @@ class Interpreter {
     }
 
     private evalCall(e: CallExpr, scope: Scope): JValue {
-        // 内置：Math.xxx
+        // Built-in: Math.xxx
         if (e.callee.kind === 'Member' && e.callee.obj.kind === 'Ident' && e.callee.obj.name === 'Math') {
             return this.callMath(e.callee.name, e.args.map(a => this.evalExpr(a, scope)))
         }
-        // System.out.println / print  -> 由 out 伪对象的 __class 标识
+        // System.out.println / print -> identified by the __class of the out pseudo object
         const calleeObj = e.callee.kind === 'Member' ? this.evalExpr(e.callee.obj, scope) : null
         if (e.callee.kind === 'Member' && isJObject(calleeObj) && calleeObj.__class === '__SystemOut__') {
             return this.callSystemOut(e.callee.name, e.args.map(a => this.evalExpr(a, scope)))
         }
-        // Scanner 方法（伪对象 __isScanner 标志）
+        // Scanner methods (pseudo object __isScanner flag)
         if (e.callee.kind === 'Member' && isJObject(calleeObj) && (calleeObj as any).__isScanner) {
             return this.callScanner(calleeObj, e.callee.name, e.args.map(a => this.evalExpr(a, scope)))
         }
-        // String 实例方法
+        // String instance methods
         if (e.callee.kind === 'Member' && typeof calleeObj === 'string') {
             return this.callString(calleeObj, e.callee.name, e.args.map(a => this.evalExpr(a, scope)))
         }
-        // ArrayList 实例方法
+        // ArrayList instance methods
         if (e.callee.kind === 'Member' && isJArray(calleeObj) && calleeObj.elementType === 'Object' && ARRAYLIST_METHODS.has(e.callee.name)) {
             return this.callArrayList(calleeObj, e.callee.name, e.args.map(a => this.evalExpr(a, scope)))
         }
-        // 普通方法调用
+        // Regular method call
         const methodName = e.callee.kind === 'Member' ? e.callee.name : (e.callee as any).name
         const argValues = e.args.map(a => this.evalExpr(a, scope))
         const argTypes = e.args.map(a => this.inferType(a, scope))
 
         if (calleeObj === null || calleeObj === undefined) {
-            // 静态方法 / 全局方法
+            // Static method / global method
             const thisObj = scope.get('this') as JObject | undefined
             let c: JClass | null = null
             if (thisObj) c = this.classes.get(thisObj.__class) || null
@@ -2097,7 +2097,7 @@ class Interpreter {
         throw new Error(`Cannot call '${methodName}' on non-object`)
     }
 
-    // ---- 内置类支持 ----
+    // ---- Built-in class support ----
     private callMath(name: string, args: JValue[]): JValue {
         switch (name) {
             case 'abs': return Math.abs(this.toNum(args[0]))
@@ -2134,7 +2134,7 @@ class Interpreter {
         throw new Error(`System.out.${name} not supported`)
     }
 
-    // 极简 printf：%d %s %f %n %%
+    // Minimal printf: %d %s %f %n %%
     private format(fmt: string, args: JValue[]): string {
         let i = 0
         let out = ''
@@ -2205,7 +2205,7 @@ class Interpreter {
     }
 
     private callScanner(sc: any, name: string, _args: JValue[]): JValue {
-        // tokens 字段在 JObject.fields Map 里，不是直接属性
+        // tokens field is in JObject.fields Map, not a direct property
         const tokensField = sc.fields?.get('tokens')
         const tokens: JValue[] = isJArray(tokensField) ? tokensField.elements : []
         switch (name) {
@@ -2227,7 +2227,7 @@ class Interpreter {
     private tokenizeInput(): { tokens: string[] } {
         const tokens: string[] = []
         for (const line of this.inputLines) {
-            // 按空白切分
+            // Split by whitespace
             const parts = line.trim().split(/\s+/)
             for (const p of parts) if (p) tokens.push(p)
         }
@@ -2282,7 +2282,7 @@ const ARRAYLIST_METHODS: Set<string> = new Set([
     'clear', 'remove', 'contains', 'indexOf', 'toString',
 ])
 
-// 静态初始化用：只读类字段，不支持方法
+// For static initialization: read-only class fields, no method support
 class StaticEval {
     constructor(public classes: Map<string, JClass>, public currentClass: JClass) {}
     eval(e: Expr): JValue {
@@ -2308,7 +2308,7 @@ class StaticEval {
                 if (e.op === '!') return !this.eval(e.operand)
                 return this.eval(e.operand)
             case 'Call':
-                // 静态方法调用（不常用，简化）
+                // Static method call (uncommon, simplified)
                 if (e.callee.kind === 'Member' && e.callee.obj.kind === 'Ident' && e.callee.obj.name === 'Math') {
                     const args = e.args.map(a => this.eval(a))
                     switch (e.callee.name) {
@@ -2333,11 +2333,11 @@ class StaticEval {
 }
 
 // =============================================================
-//  Runner 入口（与 types.ts 的 Runner 接口对齐）
+//  Runner entry (aligned with the Runner interface in types.ts)
 // =============================================================
 
 export function createJavaRunner(): Runner {
-    const ready = ref(true)  // 纯 JS 解释器，无需异步加载运行时
+    const ready = ref(true)  // Pure JS interpreter, no need to async load runtime
     const loadingLabel = ''
 
     async function init(): Promise<void> {

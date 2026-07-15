@@ -1,7 +1,7 @@
 import { defineComponent, computed } from 'vue'
 import { renderTextWithMarks } from './helpers'
 
-// 所有节点类型 → 渲染组件 映射（导入保持不变）
+// AllnodePointType → Render Component Map（Importkeep unchanged）
 import Paragraph from './nodes/paragraph.vue'
 import Heading from './nodes/heading.vue'
 import Blockquote from './nodes/blockquote.vue'
@@ -47,7 +47,7 @@ import InputsView from './nodes/inputs.vue'
 import SelectView from './nodes/select.vue'
 
 export const componentNodeTypes: Record<string, any> = {
-  // 基础节点
+  // basic nodePoint
   paragraph: Paragraph,
   heading: Heading,
   blockquote: Blockquote,
@@ -60,27 +60,27 @@ export const componentNodeTypes: Record<string, any> = {
   horizontalRule: HorizontalRule,
   pageBreak: PageBreak,
 
-  // 表格
+  // Table
   table: Table,
   tableRow: TableRow,
   tableCell: TableCell,
   tableHeader: TableHeader,
 
-  // 分栏
+  // column
   column: Column,
   columnContainer: ColumnContainer,
 
-  // 详情
+  // Details
   details: DetailsView,
   detailsSummary: DetailsSummary,
   detailsContent: DetailsContent,
 
-  // 脚注
+  // Footnote
   footnotes: Footnotes,
   footnote: Footnote,
   footnoteReference: FootnoteReferenceView,
 
-  // 媒体
+  // mediaBody
   image: ImageView,
   inlineImage: ImageView,
   video: VideoView,
@@ -88,20 +88,20 @@ export const componentNodeTypes: Record<string, any> = {
   file: FileView,
   iframe: IframeView,
 
-  // 行内元素
+  // linesInsideelement
   tag: TagView,
   datetime: DatetimeView,
   mention: MentionView,
   optionBox: OptionBoxView,
 
-  // 块级组件
+  // blockComponent
   toc: TocView,
   codeBlock: CodeBlockView,
   callout: CalloutView,
   textBox: TextBoxView,
   echarts: EchartsView,
 
-  // 数学公式
+  // math formula
   blockMath: MathView,
   inlineMath: MathView,
 
@@ -110,7 +110,7 @@ export const componentNodeTypes: Record<string, any> = {
   select: SelectView,
 }
 
-// 文本节点渲染组件：封装原有 renderTextWithMarks 逻辑
+// TextnodePointRender Component：encapsulate originalHas renderTextWithMarks logic
 export const TextRenderer = defineComponent({
   name: 'TextRenderer',
   props: {

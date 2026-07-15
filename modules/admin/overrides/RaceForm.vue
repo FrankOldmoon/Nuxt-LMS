@@ -1,6 +1,6 @@
 <template>
   <div class="p-4">
-    <!-- 编辑模式：直接渲染 RaceEdit 内联面板 -->
+    <!-- Edit mode: directly render RaceEdit inline panel -->
     <ClientOnly v-if="props.row">
       <RaceEdit
         :race-id="Number(props.row.cid) || 0"
@@ -11,7 +11,7 @@
       <template #fallback><div class="py-8 text-center text-muted text-sm">Loading...</div></template>
     </ClientOnly>
 
-    <!-- 新增模式：先选课程，再渲染 RaceEdit -->
+    <!-- Add mode: select course first, then render RaceEdit -->
     <template v-else>
       <div v-if="!selectedCourseId" class="space-y-3">
         <h3 class="text-base font-semibold">{{ t('admin.form.selectCourse') }}</h3>

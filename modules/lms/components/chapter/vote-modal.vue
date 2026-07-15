@@ -2,7 +2,7 @@
   <UModal v-model:open="open">
     <template #content>
       <div class="p-4 space-y-4">
-        <!-- 教师：发起投票 -->
+        <!-- Teacher：HairraiseVote -->
         <template v-if="canEdit">
           <template v-if="!activeVoteId">
             <h3 class="text-base font-semibold">{{ $t('chapter.vote') }}</h3>
@@ -15,7 +15,7 @@
             <UButton :label="$t('chapter.voteStart')" color="primary" size="sm" class="w-full" :disabled="!canStartVote" @click="startVote" />
           </template>
 
-          <!-- 教师：查看投票进度 -->
+          <!-- Teacher：ViewVoteProgress -->
           <template v-else>
             <div class="flex items-center justify-between">
               <h3 class="text-base font-semibold">{{ $t('chapter.vote') }}</h3>
@@ -35,7 +35,7 @@
           </template>
         </template>
 
-        <!-- 学生：投票 -->
+        <!-- Student：Vote -->
         <template v-else>
           <template v-if="activeVoteId && !voted">
             <h3 class="text-base font-semibold">{{ $t('chapter.vote') }}</h3>

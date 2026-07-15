@@ -1,5 +1,5 @@
 /**
- * html 组件测试 (render)
+ * html component test (render)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/render/html.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

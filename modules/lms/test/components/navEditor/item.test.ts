@@ -1,8 +1,8 @@
 /**
- * navEditor/item.vue 组件测试
+ * navEditor/item.vue component test
  * @see modules/lms/components/navEditor/item.vue
  *
- * 导航项行：折叠/展开 + 拖拽手柄 + 标签编辑 + 操作按钮
+ * Nav item row: collapse/expand + drag handle + label edit + action buttons
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -48,7 +48,7 @@ describe('navEditor/item.vue', () => {
     })
     const input = wrapper.find('.uinput')
     expect(input.exists()).toBe(true)
-    // UInput stub 渲染为原生 <input>，DOMWrapper 没有 .props()，用 element.value
+    // UInput stub renders as native <input>, DOMWrapper has no .props(), use element.value
     expect((input.element as HTMLInputElement).value).toBe('第一章')
   })
 
@@ -70,7 +70,7 @@ describe('navEditor/item.vue', () => {
       props: { item: sampleItem, index: 0, maxDepth: 2, hasChildren: true, collapsed: false },
       global: _globalConfig,
     })
-    // 折叠按钮存在
+    // Collapse button exists
     const collapseBtn = wrapper.find('button.shrink-0')
     expect(collapseBtn.exists()).toBe(true)
   })
@@ -102,7 +102,7 @@ describe('navEditor/item.vue', () => {
       props: { item: sampleItem, index: 3, maxDepth: 2 },
       global: _globalConfig,
     })
-    // 操作按钮区有 3 个按钮：addChild, addSibling, delete
+    // Action button area has 3 buttons: addChild, addSibling, delete
     const buttons = wrapper.findAll('.ubutton')
     expect(buttons.length).toBe(3)
     await buttons[0]!.trigger('click')
@@ -140,7 +140,7 @@ describe('navEditor/item.vue', () => {
       props: { item: { ...sampleItem, depth: 2 }, index: 0, maxDepth: 2 },
       global: _globalConfig,
     })
-    // depth=2, maxDepth=2 → 不渲染 addChild，只剩 addSibling + delete
+    // depth=2, maxDepth=2 → do not render addChild, only addSibling + delete remain
     const buttons = wrapper.findAll('.ubutton')
     expect(buttons.length).toBe(2)
   })

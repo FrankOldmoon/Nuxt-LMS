@@ -1,13 +1,13 @@
 /**
- * 章节倒计时弹窗逻辑
+ * Chapter countdown timer modal logic
  *
- * - setMinutes / setSeconds：用户设置的时间（仅 idle 可调）
- * - remaining：剩余秒数（运行 / 暂停 / 结束时显示）
- * - timerState：idle → running → paused / done
- * - 计时归零时播放提示音（Web Audio API 880Hz 正弦波）
+ * - setMinutes / setSeconds: user-set time (only adjustable in idle state)
+ * - remaining: remaining seconds (displayed during running / paused / done)
+ * - timerState: idle → running → paused / done
+ * - Plays a beep when timer reaches zero (Web Audio API 880Hz sine wave)
  *
- * 由 timerModal.vue 通过 v-model:open 传入 isOpen，
- * 关闭弹窗时自动 reset，组件卸载时清理定时器。
+ * isOpen is passed in from timerModal.vue via v-model:open,
+ * auto reset on modal close, clear timer on component unmount.
  */
 export function useChapterTimer(isOpen: Ref<boolean>) {
   const setMinutes = ref(1)
@@ -18,7 +18,7 @@ export function useChapterTimer(isOpen: Ref<boolean>) {
 
   const totalSeconds = computed(() => setMinutes.value * 60 + setSeconds.value)
 
-  // 空闲显示设置值，运行 / 暂停 / 结束显示剩余值
+  // Idle shows set value, running / paused / done shows remaining value
   const displayMinutes = computed(() => {
     const total = timerState.value === 'idle'
       ? setMinutes.value
@@ -33,7 +33,7 @@ export function useChapterTimer(isOpen: Ref<boolean>) {
     return String(total).padStart(2, '0')
   })
 
-  // 运行中 10 秒内红色闪烁（Tailwind animate-pulse），结束常红
+  // Red blinking within 10 seconds while running (Tailwind animate-pulse), constant red when done
   const timerTextClass = computed(() => {
     if (timerState.value === 'done') return 'text-error'
     if (timerState.value === 'running' && remaining.value <= 10) return 'text-error animate-pulse'
@@ -41,13 +41,13 @@ export function useChapterTimer(isOpen: Ref<boolean>) {
     return 'text-highlighted'
   })
 
-  // 分钟调节（范围 0~180）
+  // Minute adjustment (range 0~180)
   function adjustMinutes(delta: number) {
     const newVal = setMinutes.value + delta
     if (newVal >= 0 && newVal <= 180) setMinutes.value = newVal
   }
 
-  // 秒调节（自动进位 / 借位，范围 0~59）
+  // Second adjustment (auto carry/borrow, range 0~59)
   function adjustSeconds(delta: number) {
     let newVal = setSeconds.value + delta
     if (newVal < 0) {
@@ -117,11 +117,11 @@ export function useChapterTimer(isOpen: Ref<boolean>) {
       oscillator.start(ctx.currentTime)
       oscillator.stop(ctx.currentTime + 1)
     } catch {
-      // 忽略音频错误
+      // Ignore audio errors
     }
   }
 
-  // 关闭弹窗时重置
+  // Reset on modal close
   watch(isOpen, (val) => {
     if (!val) reset()
   })

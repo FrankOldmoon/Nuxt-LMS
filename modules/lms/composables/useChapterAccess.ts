@@ -10,10 +10,10 @@ export interface ChapterAccessProps {
 }
 
 /**
- * useChapterAccess — 章节访问控制
+ * useChapterAccess — Chapter access control
  *
- * 处理章节开放开关 + 班级多选的权限判断、状态同步与更新。
- * 从 accessBar.vue 抽离，组件仅负责 UI 渲染。
+ * Handles permission checks, state synchronization, and updates for the chapter open toggle + class multi-select.
+ * Extracted from accessBar.vue; the component is only responsible for UI rendering.
  */
 export function useChapterAccess(props: ChapterAccessProps) {
   const { t } = useI18n()
@@ -31,18 +31,18 @@ export function useChapterAccess(props: ChapterAccessProps) {
   const savingOpen = ref(false)
   const selectedClassIds = ref<number[]>([])
 
-  // 班级选项（来自全局缓存）
+  // Class options (from global cache)
   const classOptions = computed(() =>
     classes.value.map(c => ({ label: c.name, value: c.id })),
   )
 
-  // 从 props.chapterData 同步本地状态
-  // 关键修复：
-  // 1) 用 toRef 包装 props.chapterData，得到稳定的响应式引用，避免 SSR/hydration 时 getter 失效
-  // 2) 加 deep:true 确保对象内部属性变化也能被捕获（父组件 cRequest.use 的 onMounted refresh
-  //    会创建新的 chapter 对象引用，但生产压缩后浅 watch 偶有不触发的情况）
-  // 3) 去掉 `if (!data) return` 守卫，统一用可选链处理 undefined
-  // 4) onMounted 强制再同步一次，兜底 SSR/hydration 边界时序差异
+  // Sync local state from props.chapterData
+  // Key fixes:
+  // 1) Wrap props.chapterData with toRef to get a stable reactive reference, avoiding getter invalidation during SSR/hydration
+  // 2) Add deep:true to ensure internal property changes are captured (parent component's cRequest.use onMounted refresh
+  //    creates a new chapter object reference, but after production minification the shallow watch occasionally fails to trigger)
+  // 3) Remove the `if (!data) return` guard, uniformly use optional chaining to handle undefined
+  // 4) Force another sync in onMounted as a fallback for SSR/hydration boundary timing differences
   const chapterDataRef = toRef(props, 'chapterData')
 
   function syncFromChapterData(data: ChapterAccessProps['chapterData']) {
@@ -53,7 +53,7 @@ export function useChapterAccess(props: ChapterAccessProps) {
   watch(chapterDataRef, syncFromChapterData, { immediate: true, deep: true })
   onMounted(() => syncFromChapterData(props.chapterData))
 
-  // 更新章节 isOpen
+  // Update chapter isOpen
   async function updateOpen(val: boolean) {
     savingOpen.value = true
     try {
@@ -70,7 +70,7 @@ export function useChapterAccess(props: ChapterAccessProps) {
     }
   }
 
-  // 更新班级开放状态
+  // Update class open status
   async function updateClassOpen(ids: number[]) {
     try {
       const classList = classes.value.map(c => ({
@@ -87,7 +87,7 @@ export function useChapterAccess(props: ChapterAccessProps) {
     }
   }
 
-  // 首次加载班级列表（全局缓存）
+  // Load the class list for the first time (global cache)
   loadClasses()
 
   return {

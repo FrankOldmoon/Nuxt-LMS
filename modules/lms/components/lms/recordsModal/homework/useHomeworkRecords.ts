@@ -35,7 +35,7 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
 
     const scoreMap = reactive({})
 
-    // 先用缓存学生数据填充 table，再异步合并 records
+    // firstuseCacheStudentDatafill table，thenAsynccombinedand records
     function buildRows(recordsData) {
         const recordMap = new Map((recordsData || []).map(r => [r.userId, r.record]))
         rows.value = students.value.map(s => {
@@ -74,7 +74,7 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
         }
     }
 
-    // 保存打分
+    // Savescore
     async function onScoreBlur(row) {
         const val = scoreMap[row.id]
         if (val === null || val === undefined || val === '') return
@@ -102,7 +102,7 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
         if (val) fetchRecords()
     })
 
-    // 作业详情弹窗
+    // HomeworkDetailsModal
     const detailOpen = ref(false)
     const detailData = ref<any>(null)
 

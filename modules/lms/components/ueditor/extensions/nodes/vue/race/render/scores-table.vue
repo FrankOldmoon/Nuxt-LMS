@@ -1,5 +1,5 @@
 <template>
-    <!-- ====== 顶部：学生得分表 ====== -->
+    <!-- ====== Top：StudentScoretable ====== -->
     <div class="mb-4">
         <ClassUsersTable :rows="studentRows" :loading="scoresLoading"
             :hide-actions="true" :hide-teachers="true" :hide-number="true"

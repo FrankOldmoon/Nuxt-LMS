@@ -3,12 +3,12 @@ export default eventHandler(async (event) => {
   const { versionId } = body
 
   if (!versionId) {
-    return cResp(null, '缺少 versionId 参数', false)
+    return cResp(null, 'Missing versionId parameter', false)
   }
 
   const version = await getContentVersion('chapter', Number(versionId))
   if (!version) {
-    return cResp(null, '版本不存在', false)
+    return cResp(null, 'Version not found', false)
   }
 
   const chapterId = version.chapterId
@@ -18,7 +18,7 @@ export default eventHandler(async (event) => {
     await restoreContentVersion('chapter', chapterId, version.content)
     return cResp({ success: true })
   } catch (error: any) {
-    console.error('恢复章节版本失败:', error)
-    return cResp(null, error.message || '恢复失败', false)
+    console.error('Failed to restore chapter version:', error)
+    return cResp(null, error.message || 'Restore failed', false)
   }
 })

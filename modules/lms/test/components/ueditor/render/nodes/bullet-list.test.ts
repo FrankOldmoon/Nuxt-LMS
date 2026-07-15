@@ -1,5 +1,5 @@
 /**
- * ueditor/render/nodes/bullet-list.vue 组件测试
+ * ueditor/render/nodes/bullet-list.vue component test
  * @see modules/lms/components/ueditor/render/nodes/bullet-list.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

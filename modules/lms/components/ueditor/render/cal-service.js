@@ -1,8 +1,8 @@
 /*
-此服务主要作用echarts相关的一些公共处理方法 主要用于基础模式
+thisServicemainly useduseechartsrelativeOffSomepublicTotalHandleMethod mainlyuseinbasic mode
 */
 
-// 基础模式下，对界面数据进行加工处理，根据第一列为空时不作为有效数据
+// basic mode down，RightinterfaceDataenterlinesprocessHandle，based onFirstcolumnsEmptynot treat as whenValidData
 export function calbaseConfigData(data) {
   if (!data) {
     return data
@@ -18,33 +18,33 @@ export function calbaseConfigData(data) {
   }
   return data
 }
-// 计算配置 根据手工设置的配置信息和数据进行 Options 生成，此方法会逐步扩充
+// calculateConfiguration based onHandtoolSettingsConfigurationInfoandDataenterlines Options Generate，thisMethodwillgradually expand
 export function calbaseConfigOptions(data, config, options) {
-  // 声明的最终返回的options
+  // SoundshowsEndReturnoptions
   let resOption = {}
   if (!data || !config) {
     return resOption
   }
-  // 1.0 标题 title
+  // 1.0 Title title
   if (config.titleText && config.titleText !== '') {
     resOption.title = {}
     resOption.title.text = config.titleText
-    resOption.title.left = config.titleleft || 'center' // 标题位置
+    resOption.title.left = config.titleleft || 'center' // TitlePosition
   }
-  // 2.0 图例位置 legend
+  // 2.0 legendPosition legend
   let colNameList = []
   function calbaseConfigOptionsInlegend() {
     resOption.legend = {}
-    // 图例显示隐藏
+    // legendShowHide
     resOption.legend.show = config.legend ? true : false
-    // 图例纵向位置
+    // legend verticaltoPosition
     resOption.legend[config.legendlocation] = 10
-    // 图例横向位置
+    // legend horizontaltoPosition
     resOption.legend.left = config.legendleft
-    // 图例布局
+    // legend layout
     resOption.legend.orient = config.legendorient
     resOption.legend.data = []
-    // 目前只支持 26 个图例，图例名称为空时，不展示
+    // currentFrontonlysupport 26 itemslegend，legendNameEmptywhen，not display
     const alphabet = Array.from({ length: 26 }, (_, i) =>
       String.fromCharCode(i + 65),
     )
@@ -55,18 +55,18 @@ export function calbaseConfigOptions(data, config, options) {
         continue
       }
       resOption.legend.data.push(data[0][curColName])
-      colNameList.push(curColName) // 有那些列需要展示到系列中
+      colNameList.push(curColName) // HasThatsomecolumnsneed to displaytosystemcolumnsMiddle
       if (config.seriesType === 'pie' && colNameList.length === 1) {
         break
-        // 饼图只需要显示一个图例
+        // pie chartonly needShowoneitemslegend
       }
     }
   }
   calbaseConfigOptionsInlegend()
 
-  // 3.0 图例 yAxis xAxis series处理
+  // 3.0 legend yAxis xAxis seriesHandle
   function calbaseConfigOptionsInType() {
-    // y轴
+    // yaxis
     if (config.seriesType === 'bar' || config.seriesType === 'line') {
       resOption.yAxis = {
         type: 'value',
@@ -84,7 +84,7 @@ export function calbaseConfigOptions(data, config, options) {
 
     for (let i = 0; i < colNameList.length; i++) {
       const seriesdata = []
-      // 从第二行开始
+      // fromSecondlinesStart
       for (let j = 1; j < data.length; j++) {
         let _value = data[j][colNameList[i]]
         if (isNaN(Number(_value))) {
@@ -101,7 +101,7 @@ export function calbaseConfigOptions(data, config, options) {
         type: config.seriesType,
         data: seriesdata,
       })
-      // 平滑折线
+      // smooth lineLine
       if (
         config.smooth &&
         resOption.series[resOption.series.length - 1].type === 'line'
@@ -116,7 +116,7 @@ export function calbaseConfigOptions(data, config, options) {
 
   calbaseConfigOptionsInType()
 
-  // 4.0 grid 属性设置
+  // 4.0 grid PropertySettings
   resOption.grid = {
     left: '3%',
     right: '4%',
@@ -132,11 +132,11 @@ export function calbaseConfigOptions(data, config, options) {
     }
   }
 
-  // 9.0 自定义扩展，可以在外部自定义实现展示效果，扩展个性化样式
+  // 9.0 custom extension，canwithOutsidecustomactualcurrentdisplayeffect，extensionitemspersonalizeStyle
   const newOptions = options.echarts?.onCustomSettings?.(data, config)
   if (newOptions !== null && typeof newOptions === 'object') {
     resOption = newOptions
   }
-  // 10.0 返回值 必须JSON.parse(JSON.stringify( 一下，个别情况下echart不展示问题
+  // 10.0 Return Value mustmustJSON.parse(JSON.stringify( oneDown，itemsspecial caseDownechartno display issues
   return JSON.parse(JSON.stringify(resOption))
 }

@@ -1,8 +1,8 @@
 /**
- * classify 编辑组件测试 (edit)
+ * classify edit component test (edit)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/edit/classify.vue
  *
- * classify.vue 接收 form prop，编辑分类结构 [{name, items:[]}]
+ * classify.vue receives form prop, edits classification structure [{name, items:[]}]
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -41,9 +41,9 @@ describe('question/edit/classify.vue', () => {
       props: { form },
       global: { stubs: _globalStubs, mocks: _mocks },
     })
-    // 应渲染 2 个分类，每个分类有 name input
+    // Should render 2 categories, each with a name input
     const inputs = wrapper.findAll('input')
-    // 2 个 name + 2+1 个 items = 3 个 item inputs
+    // 2 names + 2+1 items = 3 item inputs
     expect(inputs.length).toBeGreaterThanOrEqual(5)
   })
 
@@ -57,7 +57,7 @@ describe('question/edit/classify.vue', () => {
       global: { stubs: _globalStubs, mocks: _mocks },
     })
     expect(form.options).toHaveLength(2)
-    // answer 应为扁平化分类索引 [0, 0, 1, 1]
+    // answer should be the flattened classification index [0, 0, 1, 1]
     expect(form.answer).toEqual([0, 0, 1, 1])
   })
 

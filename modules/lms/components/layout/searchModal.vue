@@ -1,6 +1,6 @@
 <template>
     <div class="flex flex-col max-h-[70vh]">
-        <!-- 搜索输入框 -->
+        <!-- SearchInput Box -->
         <div class="flex items-center gap-2 p-4 border-b border-default">
             <UIcon name="i-lucide-search" class="size-5 text-muted shrink-0" />
             <UInput ref="inputRef" v-model="keyword" :placeholder="$t('common.search') + '...'" variant="none"
@@ -12,7 +12,7 @@
             </span>
         </div>
 
-        <!-- 搜索结果列表 -->
+        <!-- Search ResultsList -->
         <div class="overflow-y-auto flex-1">
             <div v-if="loading" class="flex items-center justify-center py-12">
                 <UIcon name="i-lucide-loader-circle" class="size-6 text-muted animate-spin" />
@@ -25,7 +25,7 @@
 
             <div v-else-if="filteredResults.length === 0" class="px-4 py-12 text-center text-sm text-muted">
                 <UIcon name="i-lucide-search-x" class="size-10 text-muted mx-auto mb-3 opacity-40" />
-                <p>{{ $t('searchModal.noResults') }}</p>
+                <p>{{ $t('searchModal.no results') }}</p>
             </div>
 
             <div v-else class="py-2">

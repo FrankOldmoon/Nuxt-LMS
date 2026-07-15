@@ -1,9 +1,9 @@
 /**
- * base 模块 CRUD API 端点测试
+ * base module CRUD API endpoint tests
  * @see modules/base/server/api/crud/[table]/*.ts
  *
- * 测试 7 个端点：list.get / show.get / add.post / update.post / batch.post / import.post / export.get
- * 含 Bug 4 回归：复合主键表调用 show/update/batch 时底层抛 400
+ * Tests 7 endpoints: list.get / show.get / add.post / update.post / batch.post / import.post / export.get
+ * Includes Bug 4 regression: composite primary key table calls show/update/batch throw 400 at the lower level
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { resetAllStubs, setMockAuthState, setMockSchemaTables } from '../../../../test/setup/nuxt-stubs'

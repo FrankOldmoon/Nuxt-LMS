@@ -1,8 +1,8 @@
 /**
- * course/editor/membersManager.vue 组件测试
+ * course/editor/membersManager.vue component test
  * @see modules/lms/components/course/editor/membersManager.vue
  *
- * 成员管理：教师列表 + 编辑者列表 + 搜索添加
+ * Member management: teacher list + editor list + search add
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

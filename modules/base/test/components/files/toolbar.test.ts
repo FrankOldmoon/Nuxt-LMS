@@ -1,8 +1,8 @@
 /**
- * FilesToolbar 组件测试
+ * FilesToolbar component tests
  * @see modules/base/components/files/toolbar.vue
  *
- * 文件列表工具栏：搜索 + 排序 + 刷新
+ * File list toolbar: search + sort + refresh
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

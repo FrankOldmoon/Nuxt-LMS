@@ -3,7 +3,7 @@
     class="flex items-center gap-1 p-1 rounded-lg border border-transparent hover:border-gray-200 dark:hover:border-gray-700 group"
     :style="{ paddingLeft: (item.depth * 20 + 4) + 'px' }"
   >
-    <!-- 折叠/展开 -->
+    <!-- Collapse/Expand -->
     <button
       v-if="hasChildren"
       class="shrink-0 w-4 h-4 flex items-center justify-center rounded text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
@@ -13,12 +13,12 @@
     </button>
     <span v-else class="shrink-0 w-4" />
 
-    <!-- 拖拽手柄 -->
+    <!-- drag handle -->
     <div class="drag-handle cursor-grab active:cursor-grabbing shrink-0 text-gray-400 hover:text-gray-600">
       <UIcon name="i-lucide-grip-vertical" class="size-3.5" />
     </div>
 
-    <!-- 标签编辑 -->
+    <!-- Tag edit -->
     <UInput
       :model-value="item.label"
       size="xs"
@@ -27,7 +27,7 @@
       @update:model-value="(val: string) => item.label = val"
     />
 
-    <!-- 操作按钮 -->
+    <!-- Action button -->
     <div class="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
       <UButton
         v-if="item.depth < maxDepth"

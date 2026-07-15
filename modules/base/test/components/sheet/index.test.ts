@@ -1,9 +1,9 @@
 /**
- * Sheet 组件测试
+ * Sheet component tests
  * @see modules/base/components/sheet/index.vue
  *
- * Univer 在线表格封装：CDN 加载 + 初始化 + 数据读写
- * 依赖 useUniverSheet() composable（auto-import），测试中通过 globalThis 注入桩
+ * Univer online spreadsheet wrapper: CDN loading + initialization + data read/write
+ * Depends on useUniverSheet() composable (auto-import), injected via globalThis in tests
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -17,7 +17,7 @@ beforeEach(() => {
     t: (k: string) => k,
     d: (v: any) => String(v),
   })
-  // 桩 useUniverSheet composable（auto-import），避免加载 Univer CDN
+  // Stub useUniverSheet composable (auto-import) to avoid loading Univer CDN
   ;(globalThis as any).useUniverSheet = (
     _headers: () => any[],
     _colWidths: () => Record<string, number>,

@@ -15,8 +15,8 @@ interface SearchEntry {
 }
 
 /**
- * 从 tiptap JSON content 中提取搜索条目
- * @param headingsOnly - true 时只提取 heading，false 时提取 heading + 段落文本
+ * Extract search entries from tiptap JSON content
+ * @param headingsOnly - when true, only extract headings; when false, extract headings + paragraph text
  */
 function extractSearchEntries(
   content: Record<string, any> | null | undefined,
@@ -49,7 +49,7 @@ function extractSearchEntries(
         })
       }
     } else if (!headingsOnly) {
-      // 非 heading 内容仅在非 headingsOnly 模式下提取
+      // Non-heading content is only extracted in non-headingsOnly mode
       if (node.type === 'paragraph') {
         const text = extractText(node.content)
         if (text && text.trim()) {
@@ -97,7 +97,7 @@ function extractSearchEntries(
       }
     }
 
-    // 递归子节点
+    // Recurse child nodes
     if (node.content && Array.isArray(node.content)) {
       node.content.forEach(walk)
     }
@@ -135,16 +135,16 @@ function extractSearchEntries(
 export default defineTask({
   meta: {
     name: 'build-search',
-    description: '扫描所有课程和章节的 tiptap 内容，构建全局索引(search/index.json)和每课程索引(search/[courseId].json)',
+    description: 'Scan the tiptap content of all courses and chapters, build a global index (search/index.json) and a per-course index (search/[courseId].json)',
   },
   async run() {
-    console.log('[build-search] 开始构建搜索索引...')
+    console.log('[build-search] Start building search index...')
 
-    // 创建 search 子目录
+    // Create the search subdirectory
     const searchDir = resolve('./storage/search')
     await mkdir(searchDir, { recursive: true })
 
-    // ----- 查询所有未删除的课程 -----
+    // ----- Query all non-deleted courses -----
     const allCourses = await db
       .select({
         id: schema.courses.id,
@@ -154,7 +154,7 @@ export default defineTask({
       .from(schema.courses)
       .where(isNull(schema.courses.deletedAt))
 
-    // ----- 查询所有未删除的章节（关联课程名） -----
+    // ----- Query all non-deleted chapters (with course name joined) -----
     const allChapters = await db
       .select({
         id: schema.chapters.id,
@@ -167,7 +167,7 @@ export default defineTask({
       .innerJoin(schema.courses, eq(schema.chapters.courseId, schema.courses.id))
       .where(isNull(schema.chapters.deletedAt))
 
-    // 按课程分组章节
+    // Group chapters by course
     const chaptersByCourse = new Map<number, typeof allChapters>()
     for (const ch of allChapters) {
       if (!chaptersByCourse.has(ch.courseId)) {
@@ -176,7 +176,7 @@ export default defineTask({
       chaptersByCourse.get(ch.courseId)!.push(ch)
     }
 
-    // ----- 1. 生成 search/index.json（仅 heading） -----
+    // ----- 1. Generate search/index.json (headings only) -----
     const globalEntries: SearchEntry[] = []
 
     for (const course of allCourses) {
@@ -208,26 +208,26 @@ export default defineTask({
       JSON.stringify(globalEntries, null, 2),
       'utf-8',
     )
-    console.log(`[build-search] search/index.json 写入完成，共 ${globalEntries.length} 条 heading`)
+    console.log(`[build-search] search/index.json written, total ${globalEntries.length} headings`)
 
-    // ----- 2. 为每个课程生成 search/[courseId].json（heading + text） -----
+    // ----- 2. Generate search/[courseId].json (heading + text) for each course -----
     let totalPerCourseEntries = 0
 
     for (const course of allCourses) {
       const courseEntries: SearchEntry[] = []
 
-      // 课程本身的内容
+      // Content of the course itself
       const courseUrl = `/course/${course.id}`
       const ce = extractSearchEntries(
         course.content as Record<string, any> | null,
         courseUrl,
         course.name,
         'course',
-        false, // headingsOnly = false，包含 text
+        false, // headingsOnly = false, includes text
       )
       courseEntries.push(...ce)
 
-      // 该课程的所有章节内容
+      // Content of all chapters in this course
       const courseChapters = chaptersByCourse.get(course.id) || []
       for (const chapter of courseChapters) {
         const chapterUrl = `/course/${chapter.courseId}/${chapter.id}`
@@ -236,7 +236,7 @@ export default defineTask({
           chapterUrl,
           `${chapter.courseName} > ${chapter.name}`,
           'chapter',
-          false, // headingsOnly = false，包含 text
+          false, // headingsOnly = false, includes text
         )
         courseEntries.push(...che)
       }
@@ -249,10 +249,10 @@ export default defineTask({
       totalPerCourseEntries += courseEntries.length
     }
 
-    console.log(`[build-search] 每个课程的索引构建完成，共 ${totalPerCourseEntries} 条记录（${allCourses.length} 个课程文件）`)
+    console.log(`[build-search] Per-course index built, total ${totalPerCourseEntries} records (${allCourses.length} course files)`)
 
     return {
-      result: `✅ 搜索索引构建完成`,
+      result: `✅ Search index build complete`,
       global: { file: 'search/index.json', count: globalEntries.length },
       perCourse: { dir: 'search/', files: allCourses.length, totalEntries: totalPerCourseEntries },
     }

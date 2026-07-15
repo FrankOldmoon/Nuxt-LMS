@@ -1,5 +1,5 @@
 /**
- * mindmap/index.vue 组件测试 (TipTap node-view)
+ * mindmap/index.vue component test (TipTap node-view)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/mindmap/index.vue
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'

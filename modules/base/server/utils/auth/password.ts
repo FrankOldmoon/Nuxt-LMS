@@ -3,7 +3,7 @@ import { randomBytes, scrypt } from 'node:crypto'
 const SALT_LENGTH = 16
 const KEY_LENGTH = 64
 
-/** 密码哈希（与 seed.ts 保持一致：salt:derivedKey 格式） */
+/** Password hash (consistent with seed.ts: salt:derivedKey format) */
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(SALT_LENGTH).toString('hex')
   const derivedKey = await new Promise<Buffer>((resolve, reject) => {
@@ -15,7 +15,7 @@ export async function hashPassword(password: string): Promise<string> {
   return `${salt}:${derivedKey.toString('hex')}`
 }
 
-/** 验证密码 */
+/** Verify password */
 export async function verifyPassword(password: string, hashed: string): Promise<boolean> {
   const [salt, key] = hashed.split(':')
   if (!salt || !key) return false
@@ -28,7 +28,7 @@ export async function verifyPassword(password: string, hashed: string): Promise<
   return key === derivedKey.toString('hex')
 }
 
-/** 生成随机 token */
+/** Generate random token */
 export function generateToken(): string {
   return randomBytes(32).toString('hex')
 }

@@ -1,5 +1,5 @@
 /**
- * Markdown → Tiptap JSON 转换工具测试
+ * Markdown → Tiptap JSON conversion utility test
  * @see modules/lms/utils/markdown.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -73,16 +73,16 @@ describe('utils/markdown - markdownToTiptap', () => {
     const { markdownToTiptap } = await import('../../utils/markdown')
     const md = '```question\n{invalid json\n```'
     const result = markdownToTiptap(md)
-    // 无效 JSON 的 question 围栏应被跳过，不以 codeBlock 渲染残缺 JSON
+    // Invalid JSON question fence should be skipped, not rendering broken JSON as codeBlock
     expect(result.content).toHaveLength(0)
   })
 
   it('```question 围栏 JSON 不完整时跳过（流式中途不渲染 codeBlock）', async () => {
     const { markdownToTiptap } = await import('../../utils/markdown')
-    // 流式中途：JSON 尚未写完，围栏也未闭合
+    // Mid-stream: JSON not yet fully written, fence not yet closed
     const md = '口语化指导文本\n\n```question\n{"type":"single","options":["A"'
     const result = markdownToTiptap(md)
-    // 口语化段落保留，question 围栏跳过
+    // Colloquial paragraphs preserved, question fence skipped
     expect(result.content).toHaveLength(1)
     expect(result.content![0].type).toBe('paragraph')
   })
@@ -100,7 +100,7 @@ describe('utils/markdown - markdownToTiptap', () => {
 
   it('未闭合的 ```question 围栏（流式中途）也能输出', async () => {
     const { markdownToTiptap } = await import('../../utils/markdown')
-    // 流式期间围栏尚未闭合：完整 JSON 仍可解析为 vue 节点
+    // During streaming, fence not yet closed: complete JSON can still be parsed as vue node
     const md = '```question\n{"type":"judge","options":["正确","错误"],"answer":[0]}'
     const result = markdownToTiptap(md)
     expect(result.content).toHaveLength(1)
@@ -143,7 +143,7 @@ describe('utils/markdown - markdownToTiptap', () => {
     const result = markdownToTiptap(md)
     expect(result.content![0].type).toBe('paragraph')
     const inline = result.content![0].content || []
-    // 应包含一个 inlineMath 节点
+    // Should contain one inlineMath node
     const mathNode = inline.find((n: any) => n.type === 'inlineMath')
     expect(mathNode).toBeDefined()
     expect(mathNode.attrs.latex).toBe('a^2 + b^2 = c^2')
@@ -154,7 +154,7 @@ describe('utils/markdown - markdownToTiptap', () => {
     const md = '价格 $5 到 $10 之间'
     const result = markdownToTiptap(md)
     expect(result.content![0].type).toBe('paragraph')
-    // 不应产生任何 inlineMath 节点
+    // Should not produce any inlineMath node
     const inline = result.content![0].content || []
     const mathNode = inline.find((n: any) => n.type === 'inlineMath')
     expect(mathNode).toBeUndefined()
@@ -236,7 +236,7 @@ describe('utils/markdown - markdownToTiptap', () => {
     const result = markdownToTiptap('请输入 {{ 答案 }} 后继续')
     const inputs = result.content![0].content!.find((n: any) => n.type === 'inputs')
     expect(inputs).toBeDefined()
-    expect(inputs!.attrs.content).toBe('') // 占位符括号内内容被丢弃
+    expect(inputs!.attrs.content).toBe('') // Content inside placeholder brackets is discarded
   })
 
   it('行内语法：||content|| 转为 select 节点', async () => {
@@ -257,10 +257,10 @@ describe('utils/markdown - markdownToTiptap', () => {
   it('\\r\\n 统一为 \\n', async () => {
     const { markdownToTiptap } = await import('../../utils/markdown')
     const result = markdownToTiptap('行1\r\n行2')
-    // 多行连续非空行 → 一个段落，内容用空格连接
+    // Multiple consecutive non-empty lines → one paragraph, content joined with spaces
     expect(result.content).toHaveLength(1)
     expect(result.content![0].type).toBe('paragraph')
-    // 段落内含一个 text 节点
+    // Paragraph contains one text node
     expect(result.content![0].content).toBeDefined()
     expect(result.content![0].content.length).toBeGreaterThan(0)
   })
@@ -272,7 +272,7 @@ describe('utils/markdown - markdownToTiptap', () => {
     result.content!.forEach((b: any) => expect(b.type).toBe('paragraph'))
   })
 
-  // ===== 4 反引号围栏（````doc ... ````）— 修复死循环 bug 的回归测试 =====
+  // ===== 4-backtick fence (````doc ... ````) — regression test for infinite loop bug fix =====
 
   it('4 反引号 doc 围栏解析为 codeBlock（不进入死循环）', async () => {
     const { markdownToTiptap } = await import('../../utils/markdown')
@@ -295,11 +295,11 @@ describe('utils/markdown - markdownToTiptap', () => {
       '````',
     ].join('\n')
     const result = markdownToTiptap(md)
-    // 整体应为一个 codeBlock（4 反引号围栏），内部的 3 反引号不拆分
+    // The whole should be one codeBlock (4-backtick fence), inner 3-backticks not split
     expect(result.content).toHaveLength(1)
     expect(result.content![0].type).toBe('codeBlock')
     expect(result.content![0].attrs.language).toBe('doc')
-    // 内部 3 反引号 question 行应作为代码文本保留
+    // Inner 3-backtick question lines should be preserved as code text
     const codeText = result.content![0].content![0].text
     expect(codeText).toContain('question')
     expect(codeText).toContain('"type":"single"')
@@ -335,9 +335,9 @@ describe('utils/markdown - markdownToTiptap', () => {
 
   it('安全网：不支持的围栏语法不导致死循环', async () => {
     const { markdownToTiptap } = await import('../../utils/markdown')
-    // ``` foo bar — 3 反引号 + 空格 + 文字
-    // isBlockStart 返回 true（以 ``` 开头），但 fence 正则不匹配（空格不是 \w）
-    // 安全网应将其作为段落消费，避免无限循环
+    // ``` foo bar — 3 backticks + space + text
+    // isBlockStart returns true (starts with ```), but fence regex does not match (space is not \w)
+    // Safety net should consume it as a paragraph, avoiding infinite loop
     const md = '``` foo bar\n后续内容'
     const result = markdownToTiptap(md)
     expect(result.type).toBe('doc')

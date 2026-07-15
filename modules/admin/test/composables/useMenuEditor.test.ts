@@ -1,8 +1,8 @@
 /**
- * useMenuEditor composable 测试
+ * useMenuEditor composable tests
  * @see modules/admin/composables/useMenuEditor.ts
  *
- * 菜单编辑器：树↔扁平转换、单条编辑编排、保存
+ * Menu editor: tree↔flat conversion, single item edit orchestration, save
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'
@@ -10,8 +10,8 @@ import { ref, nextTick } from 'vue'
 
 beforeEach(() => {
   resetAllStubs()
-  // useMenuEditor 内部调用 useAdminMenu() 和 useTablesMeta()（admin auto-imports）
-  // 测试中注入 stub 到 globalThis
+  // useMenuEditor internally calls useAdminMenu() and useTablesMeta() (admin auto-imports)
+  // Inject stubs into globalThis for testing
   ;(globalThis as any).useAdminMenu = () => ({
     items: ref([
       { label: 'Users', table: 'users', visible: true, order: 0, children: [

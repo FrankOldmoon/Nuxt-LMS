@@ -1,11 +1,11 @@
 /**
- * 表格构建工具
+ * Table building utilities
  */
 
 import { extractPlainText } from './textUtils'
 import { cssColorToHex } from './colorUtils'
 
-/** 构建 pptxgenjs 表格行数据 */
+/** Build pptxgenjs table row data */
 export function buildTableRows(tableNode: any): { rows: any[][]; colCount: number } {
   const rows: any[][] = []
   let maxCols = 0
@@ -25,7 +25,7 @@ export function buildTableRows(tableNode: any): { rows: any[][]; colCount: numbe
         fontFace: 'Calibri',
       }
       if (isHeader) {
-        // 表头默认蓝色背景白色文字
+        // Header defaults to blue background with white text
         cellOpts.fill = { color: cssColorToHex(attrs.background) || '4472C4' }
         cellOpts.color = cssColorToHex(attrs.color) || 'FFFFFF'
       } else {

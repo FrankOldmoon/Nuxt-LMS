@@ -2,9 +2,9 @@ import { db, schema } from "@nuxthub/db"
 import { eq, and } from "drizzle-orm"
 
 /**
- * 更新班级竞赛状态（classRaces 表）
+ * Update class race state (classRaces table)
  * body: class_id, course_id, race_cid, current_index, last_question_started_at
- * 教师：控制题目进度（currentIndex）
+ * Teacher: controls question progress (currentIndex)
  */
 export default eventHandler(async (event) => {
   await requireRole(event, ['teacher', 'admin'])
@@ -13,7 +13,7 @@ export default eventHandler(async (event) => {
   const { class_id, course_id, race_cid } = body
 
   if (!class_id || !course_id || !race_cid) {
-    return cResp(null, '缺少参数', false)
+    return cResp(null, 'Missing parameters', false)
   }
 
   const classId = Number(class_id)
@@ -53,7 +53,7 @@ export default eventHandler(async (event) => {
 
     return cResp({ ...existing, ...updateData })
   } catch (error: any) {
-    console.error('更新竞赛状态失败:', error)
-    return cResp(null, error.message || '更新失败', false)
+    console.error('Failed to update race state:', error)
+    return cResp(null, error.message || 'Update failed', false)
   }
 })

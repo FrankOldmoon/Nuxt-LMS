@@ -1,5 +1,5 @@
 /**
- * CellView 组件测试
+ * CellView component tests
  * @see modules/admin/components/table/CellView.vue
  */
 import { describe, it, expect, beforeEach, mount, flushPromises, baseBeforeEach, _globalStubs, _globalConfig, makeColumn } from './_shared'

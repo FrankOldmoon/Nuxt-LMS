@@ -1,16 +1,16 @@
 /**
- * AI 出题积分奖励接口
+ * AI question score reward endpoint
  * POST /api/aichat/award
  *
- * 与 /api/questions/submit 防刷策略一致：仅"首次作对"那一次发放经验与分数。
- * 因 AI 出题没有持久化 question_cid，使用 chapter_id 负值作为虚拟 questionCid 写入
- * userQuestions 表，依赖其主键 (userId, courseId, questionCid) 唯一性天然防刷。
+ * Anti-abuse strategy is consistent with /api/questions/submit: only the "first correct" submission grants exp and score.
+ * Because AI questions do not have a persisted question_cid, the negative value of chapter_id is used as a virtual questionCid
+ * to write into the userQuestions table, relying on the natural uniqueness of its primary key (userId, courseId, questionCid) for anti-abuse.
  *
  * body: { course_id, chapter_id, correct_rate, point, ai_question_id }
- *   ai_question_id: 调用方提供的本轮 AI 题标识（同一题重做会因虚拟 cid 不同被识别为新题）
- *   强烈建议调用方使用稳定标识（如 AI 返回的题目 id 或 hash）；如不传则用 chapter_id。
+ *   ai_question_id: the AI question identifier provided by the caller for this round (redoing the same question will be recognized as a new question due to different virtual cid)
+ *   It is strongly recommended that the caller use a stable identifier (e.g. the question id or hash returned by AI); if not provided, chapter_id is used.
  *
- * 注：addChapterScore / addCourseScore / checkAndAwardMedals / getCourseLmsConfig 通过 Nuxt auto-import
+ * Note: addChapterScore / addCourseScore / checkAndAwardMedals / getCourseLmsConfig are introduced via Nuxt auto-import
  */
 import { SubmitContextError } from '../../utils/submit/context'
 import { notifyCourseProgress } from '../../utils/submit/progress'
@@ -18,12 +18,12 @@ import { withSubmitHandler } from '../../utils/submit/handler'
 import { upsertUserQuestion } from '../../utils/submit/questions/upsert'
 import { calcQuestionGainedExp, calcQuestionGainedCoin } from '../../utils/submit/questions/calc'
 
-export default withSubmitHandler('AI 出题积分奖励失败', async (event) => {
+export default withSubmitHandler('Failed to reward AI question score', async (event) => {
   const user = await requireAuth(event)
   const body = await readBody(event)
   const { course_id, chapter_id, correct_rate, point, ai_question_id } = body
 
-  if (!course_id) throw new SubmitContextError('缺少 course_id 参数')
+  if (!course_id) throw new SubmitContextError('Missing course_id parameter')
   const courseId = Number(course_id)
   const chapterId = Number(chapter_id) || 0
   const totalPoint = Number(point) || 0
@@ -31,17 +31,17 @@ export default withSubmitHandler('AI 出题积分奖励失败', async (event) =>
   const isCorrect = rate > 0
   const score = Math.round(rate * totalPoint * 100) / 100
 
-  // 虚拟 questionCid：负值 + chapter + ai_question_id 派生，避免与真实 question 冲突
+  // Virtual questionCid: derived from negative value + chapter + ai_question_id, to avoid conflict with real questions
   const aiIdNum = ai_question_id ? Number(ai_question_id) : 0
   const questionCid = aiIdNum
     ? -100000000 - Math.abs(chapterId) * 100000 - Math.abs(aiIdNum)
     : -100000000 - Math.abs(chapterId) * 100000
 
-  // 读取课程 LMS 配置
+  // Read course LMS config
   const config = await getCourseLmsConfig(courseId)
   const qConfig = config.question
 
-  // 1. 写 userQuestions（不跟踪 records / wrongCount / submitCount 增量）
+  // 1. Write userQuestions (do not track records / wrongCount / submitCount increments)
   const { existing, newSubmitCount, scoreDelta } = await upsertUserQuestion({
     userId: user.id,
     courseId,
@@ -53,7 +53,7 @@ export default withSubmitHandler('AI 出题积分奖励失败', async (event) =>
     trackSubmitCount: false,
   })
 
-  // 2. 计算经验值 + 金币（与 questions/submit 一致）
+  // 2. Calculate exp + coin (consistent with questions/submit)
   const gainedExp = calcQuestionGainedExp({
     qConfig,
     isCorrect,
@@ -67,7 +67,7 @@ export default withSubmitHandler('AI 出题积分奖励失败', async (event) =>
     newSubmitCount,
   })
 
-  // 3. 更新 userChapters.score（仅首次作对时加）+ userCourses.questionScore
+  // 3. Update userChapters.score (only added on first correct) + userCourses.questionScore
   if (scoreDelta > 0 && chapterId) {
     await addChapterScore(user.id, chapterId, scoreDelta)
   }

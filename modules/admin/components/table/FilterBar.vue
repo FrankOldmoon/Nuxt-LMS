@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-2">
-    <!-- 搜索框 -->
+    <!-- Search box -->
     <div class="flex flex-wrap items-center gap-2">
       <UInput
         :model-value="search"
@@ -12,7 +12,7 @@
       />
     </div>
 
-    <!-- 多条件筛选 -->
+    <!-- Multi-condition filtering -->
     <div v-if="filters.length > 0" class="space-y-1">
       <TableFilterRow
         v-for="(f, idx) in filters"

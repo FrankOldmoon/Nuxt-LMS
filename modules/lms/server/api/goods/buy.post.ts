@@ -2,12 +2,12 @@ import { db, schema } from '@nuxthub/db'
 import { eq, and, sql } from 'drizzle-orm'
 
 /**
- * 购买商品
+ * Buy good
  * body: { goodId, paidCourseId }
- * - goodId: 商品 ID
- * - paidCourseId: 支付 coin 的课程上下文（=当前浏览课程）
+ * - goodId: good ID
+ * - paidCourseId: course context for coin payment (= currently viewed course)
  *
- * 全局商品（courseId=0）可从任意课程购买；课程专属商品要求 paidCourseId === good.courseId
+ * Global goods (courseId=0) can be purchased from any course; course-specific goods require paidCourseId === good.courseId
  */
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
@@ -16,37 +16,37 @@ export default eventHandler(async (event) => {
   const paidCourseId = Number(body.paidCourseId)
 
   if (!goodId || !paidCourseId) {
-    return cResp(null, '缺少 goodId 或 paidCourseId 参数', false)
+    return cResp(null, 'Missing goodId or paidCourseId parameter', false)
   }
 
-  // 1. 查商品
+  // 1. Query good
   const goodRows = await db.select().from(schema.goods).where(eq(schema.goods.id, goodId)).limit(1)
-  if (!goodRows[0]) return cResp(null, '商品不存在', false)
+  if (!goodRows[0]) return cResp(null, 'Good does not exist', false)
   const good = goodRows[0]
 
-  // 2. 校验商品属于当前课程或全局
+  // 2. Verify the good belongs to the current course or is global
   if (good.courseId !== 0 && good.courseId !== paidCourseId) {
-    return cResp(null, '该商品不属于当前课程', false)
+    return cResp(null, 'Good does not belong to the current course', false)
   }
 
-  // 3. 校验库存
+  // 3. Verify stock
   if (good.stock !== -1 && good.stock <= 0) {
-    return cResp(null, '库存不足', false)
+    return cResp(null, 'Insufficient stock', false)
   }
 
-  // 4. 查 userCourses，校验 coin
+  // 4. Query userCourses and verify coin
   const ucRows = await db
     .select()
     .from(schema.userCourses)
     .where(and(eq(schema.userCourses.userId, user.id), eq(schema.userCourses.courseId, paidCourseId)))
     .limit(1)
-  if (!ucRows[0]) return cResp(null, '未加入该课程', false)
+  if (!ucRows[0]) return cResp(null, 'Not enrolled in this course', false)
   const uc = ucRows[0]
   if ((uc.coin || 0) < good.price) {
-    return cResp(null, '金币不足', false)
+    return cResp(null, 'Insufficient coins', false)
   }
 
-  // 5. 事务：扣 coin + upsert bag + 减库存
+  // 5. Transaction: deduct coin + upsert bag + decrease stock
   const newCoin = (uc.coin || 0) - good.price
   await db.transaction(async (tx) => {
     await tx.update(schema.userCourses)
@@ -67,7 +67,7 @@ export default eventHandler(async (event) => {
     }
   })
 
-  // 6. 查最新 bag 数量
+  // 6. Query the latest bag quantity
   const bagRows = await db
     .select({ quantity: schema.bags.quantity })
     .from(schema.bags)

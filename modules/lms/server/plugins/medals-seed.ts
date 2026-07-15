@@ -2,7 +2,7 @@ import { db, schema } from '@nuxthub/db'
 import { DEFAULT_MEDALS } from '../utils/medals/default-medals'
 
 /**
- * 服务启动时检查 medals 表是否为空，若空则写入默认奖章
+ * On server startup, check if the medals table is empty; if so, write the default medals
  */
 export default defineNitroPlugin(async () => {
   try {
@@ -15,8 +15,8 @@ export default defineNitroPlugin(async () => {
         content: medal.content,
       })
     }
-    console.log(`[medals] 已写入 ${DEFAULT_MEDALS.length} 个默认奖章`)
+    console.log(`[medals] Wrote ${DEFAULT_MEDALS.length} default medals`)
   } catch (e) {
-    console.error('[medals] 写入默认奖章失败:', e)
+    console.error('[medals] Failed to write default medals:', e)
   }
 })

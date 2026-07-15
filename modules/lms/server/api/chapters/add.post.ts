@@ -1,5 +1,5 @@
 /**
- * 新增章节：根据课程 lmsConfig.course.defaultChapterOpen 设置章节初始 isOpen
+ * Create chapter: set initial isOpen based on the course's lmsConfig.course.defaultChapterOpen
  * POST /api/chapters/add
  * body: { name, courseId, isOpen?, ... }
  */
@@ -9,7 +9,7 @@ import { eq } from 'drizzle-orm'
 export default eventHandler(async (event) => {
   const body = await readBody(event)
 
-  // 管理员或父课程的任课教师可新增章节
+  // Admin or any teacher of the parent course can create a chapter
   if (body.courseId) {
     await requireCourseTeacher(event, Number(body.courseId))
   } else {
@@ -17,7 +17,7 @@ export default eventHandler(async (event) => {
   }
 
   try {
-    // 读取课程 lmsConfig.course.defaultChapterOpen，若未显式传 isOpen 则用合并后的默认值
+    // Read the course's lmsConfig.course.defaultChapterOpen; if isOpen is not explicitly passed, use the merged default
     if (body.isOpen === undefined && body.courseId) {
       const course = await db
         .select({ config: schema.courses.config })
@@ -32,7 +32,7 @@ export default eventHandler(async (event) => {
     const result = await addTable('chapters', body)
     return cResp(result)
   } catch (error: any) {
-    console.error('新增章节失败:', error)
-    return cResp(null, error.message || '新增失败', false)
+    console.error('Failed to create chapter:', error)
+    return cResp(null, error.message || 'Create failed', false)
   }
 })

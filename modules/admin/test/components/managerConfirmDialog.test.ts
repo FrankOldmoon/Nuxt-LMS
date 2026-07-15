@@ -1,5 +1,5 @@
 /**
- * managerConfirmDialog 组件测试
+ * managerConfirmDialog component tests
  * @see modules/admin/components/table/managerConfirmDialog.vue
  */
 import { describe, it, expect, beforeEach, mount, baseBeforeEach, _globalConfig } from './_shared'
@@ -55,7 +55,7 @@ describe('table/managerConfirmDialog.vue', () => {
       global: _globalConfig,
     })
     const buttons = wrapper.findAll('button')
-    // cancel = 第一个按钮
+    // cancel = the first button
     await buttons[0].trigger('click')
     expect(wrapper.emitted('cancel')).toBeTruthy()
   })
@@ -67,7 +67,7 @@ describe('table/managerConfirmDialog.vue', () => {
       global: _globalConfig,
     })
     const buttons = wrapper.findAll('button')
-    // confirm/save = 第二个按钮
+    // confirm/save = the second button
     await buttons[1].trigger('click')
     expect(wrapper.emitted('confirm')).toBeTruthy()
   })

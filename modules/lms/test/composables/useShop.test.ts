@@ -1,5 +1,5 @@
 /**
- * useShop composable 测试
+ * useShop composable test
  * @see modules/lms/components/course/shopModal/useShop.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -60,7 +60,7 @@ describe('composables/useShop', () => {
     expect(coin.value).toBe(150)
     await buy(1)
     expect(buyCalled).toBe(true)
-    expect(coin.value).toBe(100) // buy 返回的新 coin
+    expect(coin.value).toBe(100) // new coin returned by buy
   })
 
   it('buy coin 不足时不调用 API', async () => {

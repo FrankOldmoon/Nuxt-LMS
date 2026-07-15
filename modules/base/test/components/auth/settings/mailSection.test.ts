@@ -1,5 +1,5 @@
 /**
- * auth/settings/mailSection.vue 组件测试
+ * auth/settings/mailSection.vue component tests
  * @see modules/base/components/auth/settings/mailSection.vue
  */
 import {

@@ -1,8 +1,8 @@
 /**
- * course/gradesModal/criteria.vue 组件测试
+ * course/gradesModal/criteria.vue component test
  * @see modules/lms/components/course/gradesModal/criteria.vue
  *
- * 评分标准配置（教师/管理员）：折叠展开 + 权重 + 等第阈值 + 保存/重置
+ * Grading criteria config (teacher/admin): collapse/expand + weights + grade thresholds + save/reset
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -49,7 +49,7 @@ function setupContext(overrides: any = {}) {
     resetCriteria: vi.fn(),
     ...overrides,
   }
-  // 如果 overrides 提供了 gradeCriteria，使用它
+  // If overrides provides gradeCriteria, use it
   if (overrides.gradeCriteria) ctx.gradeCriteria = overrides.gradeCriteria
   ;(globalThis as any).useGradesContext = () => ctx
   return ctx
@@ -67,9 +67,9 @@ describe('course/gradesModal/criteria.vue', () => {
     setupContext()
     const { default: Criteria } = await import('../../../../components/course/gradesModal/criteria.vue')
     const wrapper = mount(Criteria, { global: _globalConfig })
-    // 默认折叠
+    // Collapsed by default
     expect(wrapper.text()).not.toContain('coursePanel.weights')
-    // 点击展开
+    // Click to expand
     await wrapper.find('button').trigger('click')
     expect(wrapper.text()).toContain('coursePanel.weights')
   })
@@ -79,7 +79,7 @@ describe('course/gradesModal/criteria.vue', () => {
     const { default: Criteria } = await import('../../../../components/course/gradesModal/criteria.vue')
     const wrapper = mount(Criteria, { global: _globalConfig })
     await wrapper.find('button').trigger('click')
-    // 渲染两个权重的 label
+    // Render two weight labels
     expect(wrapper.text()).toContain('coursePanel.questionScore')
     expect(wrapper.text()).toContain('coursePanel.homeworkScore')
   })
@@ -90,7 +90,7 @@ describe('course/gradesModal/criteria.vue', () => {
     const wrapper = mount(Criteria, { global: _globalConfig })
     await wrapper.find('button').trigger('click')
     expect(wrapper.text()).toContain('coursePanel.levels')
-    // 等第字母在 UInput 中，wrapper.text() 不含 input 值
+    // Grade letter is in UInput, wrapper.text() does not include input value
     const inputs = wrapper.findAll('.uinput')
     const values = inputs.map(i => (i.element as HTMLInputElement).value)
     expect(values).toContain('A')
@@ -109,13 +109,13 @@ describe('course/gradesModal/criteria.vue', () => {
     const { default: Criteria } = await import('../../../../components/course/gradesModal/criteria.vue')
     const wrapper = mount(Criteria, { global: _globalConfig })
     await wrapper.find('button').trigger('click')
-    // 找到 addLevel 按钮（带 addLevel label）
+    // Find the addLevel button (with addLevel label)
     const buttons = wrapper.findAll('.ubutton')
     const addLevelBtn = buttons.find(b => b.text().includes('coursePanel.addLevel'))
     expect(addLevelBtn).toBeTruthy()
     await addLevelBtn!.trigger('click')
-    // levels 增加 1（从 2 到 3）
-    // 内部 gradeCriteria 由 useGradesContext 提供，验证通过 ctx
+    // levels increases by 1 (from 2 to 3)
+    // Internal gradeCriteria is provided by useGradesContext, verified via ctx
   })
 
   it('点击保存按钮调用 saveCriteria', async () => {
@@ -124,7 +124,7 @@ describe('course/gradesModal/criteria.vue', () => {
     const { default: Criteria } = await import('../../../../components/course/gradesModal/criteria.vue')
     const wrapper = mount(Criteria, { global: _globalConfig })
     await wrapper.find('button').trigger('click')
-    // 找到保存按钮
+    // Find the save button
     const buttons = wrapper.findAll('.ubutton')
     const saveBtn = buttons.find(b => b.text().includes('common.save'))
     expect(saveBtn).toBeTruthy()

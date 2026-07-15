@@ -1,8 +1,8 @@
 /**
- * NotificationModal 组件测试
+ * NotificationModal component tests
  * @see modules/base/components/layout/notificationModal.vue
  *
- * 通知弹窗：分页加载 + 列表 + 空状态
+ * Notification modal: paginated loading + list + empty state
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

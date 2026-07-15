@@ -1,10 +1,10 @@
 /**
- * 幻灯片分页工具
+ * Slide pagination utilities
  */
 
 import type { SlideContext } from './types'
 
-/** 创建新页，可选标题 */
+/** Create a new slide, with optional title */
 export function newSlide(ctx: SlideContext, pres: any, title?: string): void {
   ctx.slide = pres.addSlide()
   ctx.currentY = ctx.startY
@@ -20,7 +20,7 @@ export function newSlide(ctx: SlideContext, pres: any, title?: string): void {
       fontFace: 'Calibri',
       valign: 'middle',
     })
-    // 标题下方装饰线
+    // Decorative line below the title
     ctx.slide.addShape('line', {
       x: ctx.marginX,
       y: 1.05,

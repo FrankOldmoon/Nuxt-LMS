@@ -1,15 +1,15 @@
 import { computed, onBeforeUnmount, ref } from 'vue'
 
 /**
- * 单个可阅读块的 hover 阅读追踪逻辑（供 ReadingBlock / list-item / task-item 共用）
+ * Hover reading tracking logic for a single readable block (shared by ReadingBlock / list-item / task-item)
  *
- * 视觉反馈（由调用方根据返回的状态映射 class）：
- * - hover 进入：边框变黄（isHovering=true 且未读）
- * - hover 停留 3s：调用 markBlockRead 标记已读，边框变绿
- * - 离开 hover：未读完则黄边消失；已读完则保留绿边作为"已读"标记
- * - 所属 heading 已完成（sticky）：不再高亮、也不再启动计时
+ * Visual feedback (caller maps classes based on returned state):
+ * - hover enter: border turns yellow (isHovering=true and unread)
+ * - hover stay 3s: call markBlockRead to mark as read, border turns green
+ * - leave hover: yellow border disappears if not finished; green border retained as "read" mark if finished
+ * - Parent heading completed (sticky): no longer highlight, no longer start timer
  *
- * @param blockKey 块 key，形如 "3"（顶层块）或 "3.1"（列表项）
+ * @param blockKey block key, e.g. "3" (top-level block) or "3.1" (list item)
  */
 export function useReadingTracker(blockKey: string) {
   const tracker = useChapterTask()
@@ -17,9 +17,9 @@ export function useReadingTracker(blockKey: string) {
   const visited = computed(() => !!tracker?.isBlockRead(blockKey))
   const headingId = computed(() => tracker?.blockHeadingOf(blockKey) ?? null)
   const headingDone = computed(() => !!headingId.value && !!tracker?.isHeadingDone(headingId.value))
-  /** 是否应保持"已读"绿色高亮：已读且所属 heading 未完成 */
+  /** Whether to keep "read" green highlight: read and parent heading not completed */
   const shouldHighlight = computed(() => visited.value && !headingDone.value)
-  /** 是否当前正在 hover（用于瞬时黄色边框） */
+  /** Whether currently hovering (for instant yellow border) */
   const isHovering = ref(false)
 
   let timer: any = null

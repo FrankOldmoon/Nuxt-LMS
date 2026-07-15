@@ -6,7 +6,7 @@ export default eventHandler(async (event) => {
 
   const { course_id, cid } = getQuery(event)
   if (!course_id || !cid) {
-    return cResp(null, '缺少 id 参数', false)
+    return cResp(null, 'Missing id parameter', false)
   }
 
   const record = await db.query.userQuizzes.findFirst({

@@ -1,8 +1,8 @@
 /**
- * formField/passwordField 组件测试
+ * formField/passwordField component tests
  * @see modules/admin/components/table/formField/passwordField.vue
  *
- * UInput type="password" 绑定到 form[col.jsName]
+ * UInput type="password" binds to form[col.jsName]
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

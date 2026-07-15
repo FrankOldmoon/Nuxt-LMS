@@ -13,7 +13,7 @@ interface UserProfileForm {
 }
 
 /**
- * 个人资料弹窗：加载当前用户数据 + 保存
+ * Profile modal: load current user data + save
  */
 export function useProfileModal(isOpen: Ref<boolean>) {
   const { user, refreshUser } = useAuth()

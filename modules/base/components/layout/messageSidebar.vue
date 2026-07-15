@@ -3,7 +3,7 @@
     <div class="p-3 border-b border-default">
       <h3 class="text-sm font-semibold">{{ t('message.title') }}</h3>
     </div>
-    <!-- 搜索用户 -->
+    <!-- Search users -->
     <div class="p-2 border-b border-default">
       <UInput v-model="searchKeyword" :placeholder="t('message.searchUser')" icon="i-lucide-search"
         size="xs" class="w-full" @input="onSearchInput" />
@@ -16,7 +16,7 @@
         </button>
       </div>
     </div>
-    <!-- 会话列表 -->
+    <!-- Conversation list -->
     <div class="flex-1 overflow-y-auto">
       <button v-for="conv in conversations" :key="conv.userId"
         class="flex items-center gap-2 w-full px-3 py-2 hover:bg-muted text-left transition-colors"

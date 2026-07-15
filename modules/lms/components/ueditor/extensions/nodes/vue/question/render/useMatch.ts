@@ -2,18 +2,18 @@ import { ref, computed, inject, watch, onMounted, onBeforeUnmount } from 'vue'
 import { submitQuestion, recordAnswer, computeCorrectRate } from './shared'
 
 export function useMatch(props: any) {
-  const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')
+  const submitted = inject<import('vue').Ref<boolean>>('question submitted')
   const isCorrect = inject<import('vue').Ref<boolean>>('questionIsCorrect')
   const fromRecord = inject<import('vue').Ref<boolean>>('questionFromRecord')
   const { courseId, chapterId } = useLmsContext()
 
-  // 左侧项（原始顺序）
+  // Leftitems（originalStartOrder）
   const leftItems = computed(() => props.question.options || [])
 
-  // 右侧项（打乱顺序后的 { text, originalIndex }）
+  // Rightitems（shuffleOrderBack { text, originalIndex }）
   const rightItems = ref<any[]>([])
 
-  // connections[leftIdx] = rightIdx（右侧在 rightItems 中的位置）
+  // connections[leftIdx] = rightIdx（Right rightItems MiddlePosition）
   const connections = ref<Record<string, number>>({})
   const selectedLeft = ref<number | null>(null)
   const hoveredRight = ref<number | null>(null)
@@ -26,18 +26,18 @@ export function useMatch(props: any) {
 
   const hasAnswer = computed(() => Object.keys(connections.value).length > 0)
 
-  // 打乱右侧项
+  // shuffleRightitems
   function shuffleRight() {
     const items = (props.question.options || []).map((pair: any, i: number) => ({
       text: pair.right,
       originalIndex: i,
     }))
-    // Fisher-Yates 打乱
+    // Fisher-Yates shuffle
     for (let i = items.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1))
       ;[items[i], items[j]] = [items[j], items[i]]
     }
-    // 避免刚好和原始顺序一样
+    // avoid justGoodandoriginalStartOrdersame
     if (items.length > 1 && items.every((it, i) => it.originalIndex === i)) {
       ;[items[0], items[1]] = [items[1], items[0]]
     }
@@ -46,7 +46,7 @@ export function useMatch(props: any) {
     rightEls.value = []
   }
 
-  // 监听 question 变化初始化
+  // listen question changeInitialize
   watch(() => props.question, (q) => {
     if (q?.type === 'match' && Array.isArray(q.options) && q.options.length) {
       connections.value = {}
@@ -55,11 +55,11 @@ export function useMatch(props: any) {
     }
   }, { immediate: true })
 
-  // 监听 record 变化（fetchRecord 回填场景）
+  // listen record change（fetchRecord backfill scenario）
   watch(() => props.question?.record, (record) => {
     if (!Array.isArray(record) || record.length === 0) return
     // record[leftIdx] = rightOriginalIndex
-    // 需要转换为 connections[leftIdx] = rightItems 中的位置
+    // needConvert connections[leftIdx] = rightItems MiddlePosition
     const newConn: Record<string, number> = {}
     record.forEach((rightOriginalIdx: number, leftIdx: number) => {
       if (rightOriginalIdx < 0) return
@@ -69,7 +69,7 @@ export function useMatch(props: any) {
     connections.value = newConn
   }, { immediate: true })
 
-  // 同步到 record
+  // Syncto record
   function syncRecord() {
     const answer = props.question.answer || []
     const record = new Array(answer.length).fill(-1)
@@ -82,7 +82,7 @@ export function useMatch(props: any) {
     recordAnswer(props.question, record)
   }
 
-  // 点击左侧
+  // ClickLeft
   function onLeftClick(leftIdx: number) {
     if (submitted?.value) {
       submitted.value = false
@@ -97,7 +97,7 @@ export function useMatch(props: any) {
     }
   }
 
-  // 点击右侧
+  // ClickRight
   function onRightClick(rightIdx: number) {
     if (submitted?.value) {
       submitted.value = false
@@ -110,13 +110,13 @@ export function useMatch(props: any) {
     const leftIdx = selectedLeft.value
     const newConn = { ...connections.value }
 
-    // 如果该右侧已被其他左侧连接，断开那个连接
+    // IftheRightalreadyOtherLeftConnection，breakOnThatitemsConnection
     const existingLeft = Object.keys(newConn).find(k => newConn[k] === rightIdx)
     if (existingLeft !== undefined) {
       delete newConn[existingLeft]
     }
 
-    // 如果该左侧已连接其他右侧，替换
+    // IftheLeftConnectedOtherRight，Replace
     if (newConn[leftIdx] !== undefined) {
       delete newConn[leftIdx]
     }
@@ -131,7 +131,7 @@ export function useMatch(props: any) {
     hoveredRight.value = rightIdx
   }
 
-  // 获取坐标
+  // Getcoordinate
   function getLeftX(idx: number) {
     const el = leftEls.value[idx]
     const container = containerRef.value
@@ -168,7 +168,7 @@ export function useMatch(props: any) {
     return elRect.top + elRect.height / 2 - containerRect.top
   }
 
-  // 鼠标移动跟踪（用于临时连线）
+  // mouse movementTrack（useintemporary connectLine）
   function onMouseMove(e: MouseEvent) {
     if (selectedLeft.value === null || !containerRef.value) return
     const containerRect = containerRef.value.getBoundingClientRect()
@@ -186,7 +186,7 @@ export function useMatch(props: any) {
     window.removeEventListener('mousemove', onMouseMove)
   })
 
-  // 样式
+  // Style
   function leftItemClass(leftIdx: number) {
     if (selectedLeft.value === leftIdx) {
       return 'border-blue-400 bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-300'
@@ -194,7 +194,7 @@ export function useMatch(props: any) {
     if (!submitted?.value) {
       return 'border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 bg-white dark:bg-gray-900'
     }
-    // 提交后着色
+    // SubmitBackColor
     const rightPos = connections.value[leftIdx]
     if (rightPos === undefined) return 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900'
     const isCorrectConn = rightItems.value[rightPos]?.originalIndex === leftIdx
@@ -207,7 +207,7 @@ export function useMatch(props: any) {
     if (!submitted?.value) {
       return 'border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 bg-white dark:bg-gray-900'
     }
-    // 提交后着色
+    // SubmitBackColor
     const leftIdx = Object.keys(connections.value).find(k => connections.value[k] === rightIdx)
     if (leftIdx === undefined) return 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900'
     const isCorrectConn = rightItems.value[rightIdx]?.originalIndex === Number(leftIdx)

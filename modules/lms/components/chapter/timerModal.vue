@@ -4,7 +4,7 @@
       <div class="p-6 space-y-8">
         <h3 class="text-lg font-semibold text-center">{{ $t('chapter.timer') }}</h3>
 
-        <!-- 时间调节与显示区 -->
+        <!-- TimeadjustandShowarea -->
         <div class="flex items-center justify-center gap-4">
           <template v-for="(col, i) in timeColumns" :key="col.label">
             <div v-if="i > 0" class="text-6xl font-bold text-muted pb-10">:</div>
@@ -22,7 +22,7 @@
           </template>
         </div>
 
-        <!-- 控制按钮区 -->
+        <!-- controlButtonarea -->
         <div class="flex items-center justify-center gap-3">
           <UButton icon="i-lucide-rotate-ccw" color="neutral" variant="outline"
             :label="$t('chapter.reset')" @click="reset" />

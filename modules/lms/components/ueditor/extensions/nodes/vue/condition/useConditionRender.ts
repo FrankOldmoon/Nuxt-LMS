@@ -21,18 +21,18 @@ export function useConditionRender(props: ConditionRenderProps) {
     const checked = ref(false)
     const conditionMet = ref(false)
 
-    // role 和 class 条件可从用户信息本地判断，无需 hover + API
+    // role and class itemsconditioncanfrom User InformationlocalGroundjudge，Noneneed hover + API
     const LOCAL_CHECK_TYPES = new Set(['role', 'class'])
 
-    // 判断是否包含需要 hover + API 检查的条件（非 role、非 class）
+    // judgeYesNocontain needed hover + API checkitemscondition（non role、non class）
     const needsHoverCheck = computed(() => {
         const conditions = config.value.conditions
         if (!conditions || !conditions.length) return false
         return conditions.some((c: any) => !LOCAL_CHECK_TYPES.has(c.type))
     })
 
-    // 检查 role 条件（本地判断）
-    // teacher 条件 admin 也能通过
+    // check role itemscondition（localGroundjudge）
+    // teacher itemscondition admin also canPass
     function checkRoleConditions(conditions: any[]) {
         const roleConds = conditions.filter(c => c.type === 'role')
         if (roleConds.length === 0) return true
@@ -44,7 +44,7 @@ export function useConditionRender(props: ConditionRenderProps) {
         })
     }
 
-    // 检查 class 条件（本地判断，用户 classIds 已包含所有所属班级）
+    // check class itemscondition（localGroundjudge，User classIds alreadyincludeAllattributeClass）
     function checkClassConditions(conditions: any[]) {
         const classConds = conditions.filter(c => c.type === 'class')
         if (classConds.length === 0) return true
@@ -52,7 +52,7 @@ export function useConditionRender(props: ConditionRenderProps) {
         return classConds.every(c => ids.includes(Number(c.value)))
     }
 
-    // 本地条件（role + class）即时判断
+    // localGrounditemscondition（role + class）that isjudge when
     watch(() => [config.value.conditions, roles.value, classIds.value], () => {
         const conditions = config.value.conditions
         if (!conditions || !conditions.length) {
@@ -64,29 +64,29 @@ export function useConditionRender(props: ConditionRenderProps) {
         const localMet = checkRoleConditions(conditions) && checkClassConditions(conditions)
         const hoverConditions = conditions.filter((c: any) => !LOCAL_CHECK_TYPES.has(c.type))
 
-        // 全部是本地条件（role + class），直接判断
+        // AllYeslocalGrounditemscondition（role + class），directly judge
         if (hoverConditions.length === 0) {
             conditionMet.value = localMet
             checked.value = true
             return
         }
 
-        // 本地条件不满足，直接 denied（不需要 hover）
+        // localGroundConditions Not Met，directly denied（not need hover）
         if (!localMet) {
             conditionMet.value = false
             checked.value = true
             return
         }
 
-        // 本地条件满足但有其他条件（question/homework/comment/quiz/race），需要 hover 检查
+        // localGrounditemsconditionFullsufficientbutHasOtheritemscondition（question/homework/comment/quiz/race），need hover check
         conditionMet.value = false
         checked.value = false
     }, { immediate: true })
 
     const conditionTypeLabels: Record<string, any> = {
         role: t('ueditor.conditionRole'),
-        class: t('ueditor.conditionClass'),
-        question: t('ueditor.conditionQuestion'),
+        class: t('ueditor.condition Class'),
+        question: t('ueditor.condition Question'),
         homework: t('ueditor.conditionHomework'),
         comment: t('ueditor.conditionComment'),
         quiz: t('ueditor.conditionQuiz'),
@@ -98,7 +98,7 @@ export function useConditionRender(props: ConditionRenderProps) {
         return `${conditionTypeLabels[c.type] || c.type}: ${label}`
     }
 
-    // hover 时检查非 role 条件（间隔 5 秒以上才允许再次 check）
+    // hover check non when role itemscondition（betweeninterval 5 swithUponlyAllowthentimes check）
     let lastCheckTime = 0
     async function checkCondition() {
         if (conditionMet.value || checking.value) return
@@ -122,7 +122,7 @@ export function useConditionRender(props: ConditionRenderProps) {
                 checked.value = true
             }
         } catch (e) {
-            console.error('[condition] 检查失败', e)
+            console.error('[condition] checkFailed', e)
         } finally {
             checking.value = false
         }

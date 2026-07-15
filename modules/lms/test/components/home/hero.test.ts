@@ -1,8 +1,8 @@
 /**
- * home/hero.vue 组件测试
+ * home/hero.vue component test
  * @see modules/lms/components/home/hero.vue
  *
- * 首页 hero 区块：标题 + 副标题。纯展示组件。
+ * Home hero block: title + subtitle. Pure display component.
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

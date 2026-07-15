@@ -1,13 +1,13 @@
 /**
- * 代码语法高亮（lowlight）
- * 将代码转换为带颜色的 pptxgenjs text runs，并按行拆分用于分页渲染
+ * Code syntax highlighting (lowlight)
+ * Converts code into colored pptxgenjs text runs, and splits by line for paginated rendering
  */
 
 import { createLowlight, common } from 'lowlight'
 
 const lowlight = createLowlight(common)
 
-/** hljs class → 颜色 hex（light 主题，与 code-block.vue 一致） */
+/** hljs class → color hex (light theme, consistent with code-block.vue) */
 export const HLJS_COLORS: Record<string, string> = {
   'hljs-keyword': 'D73A49',
   'hljs-built_in': 'E36209',
@@ -44,7 +44,7 @@ export const HLJS_COLORS: Record<string, string> = {
 
 export const CODE_DEFAULT_COLOR = '1E293B'
 
-/** 语言别名映射（lowlight 注册名可能与编辑器使用的不同） */
+/** Language alias mapping (lowlight registered name may differ from what the editor uses) */
 export const LANG_ALIASES: Record<string, string> = {
   'js': 'javascript', 'py': 'python', 'python3': 'python',
   'ts': 'typescript', 'sh': 'bash', 'shell': 'bash',
@@ -52,8 +52,8 @@ export const LANG_ALIASES: Record<string, string> = {
 }
 
 /**
- * 使用 lowlight 高亮代码，返回带颜色的 pptxgenjs text runs
- * 无法高亮的语言返回单色默认 run
+ * Uses lowlight to highlight code, returns colored pptxgenjs text runs
+ * Languages that cannot be highlighted return a single-color default run
  */
 export function highlightCodeToRuns(code: string, language: string): any[] {
   const lang = (language || '').toLowerCase().trim()
@@ -70,7 +70,7 @@ export function highlightCodeToRuns(code: string, language: string): any[] {
       }
     }
   } catch {
-    // 高亮失败，降级为纯文本
+    // Highlighting failed, degrade to plain text
   }
 
   if (!tree) {
@@ -81,7 +81,7 @@ export function highlightCodeToRuns(code: string, language: string): any[] {
   function walk(node: any, classes: string[] = []) {
     if (!node) return
     if (node.type === 'text') {
-      // 从继承的 class 列表中查找颜色（最后匹配的优先）
+      // Find color from inherited class list (last match takes priority)
       let color = CODE_DEFAULT_COLOR
       for (let i = classes.length - 1; i >= 0; i--) {
         const cls = classes[i]
@@ -106,8 +106,8 @@ export function highlightCodeToRuns(code: string, language: string): any[] {
 }
 
 /**
- * 将带颜色的 text runs 按换行符拆分为行数组，用于分页渲染
- * 每行是独立的 runs 数组，可单独渲染到幻灯片
+ * Split colored text runs by newline into an array of lines, for paginated rendering
+ * Each line is an independent runs array that can be rendered to a slide separately
  */
 export function splitRunsByLines(runs: any[]): any[][] {
   const lines: any[][] = [[]]

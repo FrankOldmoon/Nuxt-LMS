@@ -1,9 +1,9 @@
 /**
- * 全局未读计数状态
+ * Global unread count state
  *
- * 数据来源：/api/notifications/unread 返回 { notifyUnread, msgUnread }
- * - cRequest.use 按 URL 自动去重，多处调用共享同一份 useFetch 缓存
- * - 弹窗关闭后：调用 refresh() 重新拉取，及时更新已读状态
+ * Data source: /api/notifications/unread returns { notifyUnread, msgUnread }
+ * - cRequest.use auto-deduplicates by URL, multiple calls share the same useFetch cache
+ * - After modal closes: call refresh() to re-fetch, timely update read status
  */
 type UnreadCounts = {
   notifyUnread: number
@@ -20,7 +20,7 @@ export function useUnreadCounts() {
     msgUnread: data.value?.msgUnread ?? 0,
   }))
 
-  /** 刷新未读数 */
+  /** Refresh unread counts */
   async function refresh() {
     await refreshData()
   }

@@ -1,27 +1,27 @@
 /**
- * 章节按钮全局状态：管理全屏播放模式
- * - playFullscreen: 是否处于全屏播放
- * - togglePlay: 切换全屏，同步控制 sidebar 显隐 + 浏览器全屏
+ * Chapter button global state: manages fullscreen playback mode
+ * - playFullscreen: Whether in fullscreen playback
+ * - togglePlay: Toggle fullscreen, synchronously control sidebar visibility + browser fullscreen
  *
- * 播放按钮 UI 已迁移至 doc/components/layout/toc.vue，
- * 本 composable 提供共享状态与切换逻辑，供 toc.vue 及页面布局使用。
+ * The play button UI has been migrated to doc/components/layout/toc.vue,
+ * this composable provides shared state and toggle logic for use by toc.vue and page layouts.
  *
- * playFullscreen 使用固定的 useState key，确保跨模块状态同步。
- * 曾位于 lms 模块，因播放功能迁入 doc 而移至此处；
- * lms 模块不再需要覆盖本 composable（实现完全一致）。
+ * playFullscreen uses a fixed useState key to ensure cross-module state synchronization.
+ * Previously located in the lms module, moved here because the playback feature was migrated to doc;
+ * the lms module no longer needs to override this composable (the implementation is identical).
  */
 export function useChapterBtns() {
   const route = useRoute()
   const playFullscreen = useState<boolean>('chapter-play-fullscreen', () => false)
 
-  /** 进入浏览器全屏 */
+  /** Enter browser fullscreen */
   function enterBrowserFullscreen() {
     if (import.meta.client) {
       document.documentElement.requestFullscreen?.().catch(() => {})
     }
   }
 
-  /** 退出浏览器全屏 */
+  /** Exit browser fullscreen */
   function exitBrowserFullscreen() {
     if (import.meta.client && document.fullscreenElement) {
       document.exitFullscreen?.().catch(() => {})
@@ -32,10 +32,10 @@ export function useChapterBtns() {
     playFullscreen.value = !playFullscreen.value
     const { setLayout } = useLayoutState()
     if (playFullscreen.value) {
-      // 进入全屏：隐藏左侧 sidebar + 浏览器全屏
+      // Enter fullscreen: hide left sidebar + browser fullscreen
       setLayout({ sidebar: false })
       enterBrowserFullscreen()
-      // 等待布局更新后滚动到第一个标题
+      // Wait for layout update then scroll to the first heading
       nextTick(() => {
         setTimeout(() => {
           const firstHeading = document.querySelector('h1, h2, h3')
@@ -45,7 +45,7 @@ export function useChapterBtns() {
         }, 150)
       })
     } else {
-      // 退出全屏：恢复默认（null = 跟随路由），滚动回最上方
+      // Exit fullscreen: restore default (null = follow route), scroll back to top
       setLayout({ sidebar: null })
       exitBrowserFullscreen()
       nextTick(() => {
@@ -56,7 +56,7 @@ export function useChapterBtns() {
     }
   }
 
-  /** 退出全屏并恢复布局 */
+  /** Exit fullscreen and restore layout */
   function exitPlay() {
     if (playFullscreen.value) {
       playFullscreen.value = false
@@ -66,7 +66,7 @@ export function useChapterBtns() {
     }
   }
 
-  // 用户通过 Esc/F11 手动退出浏览器全屏时，同步播放状态
+  // When the user manually exits browser fullscreen via Esc/F11, sync the playback state
   function onFullscreenChange() {
     if (!document.fullscreenElement && playFullscreen.value) {
       playFullscreen.value = false
@@ -75,7 +75,7 @@ export function useChapterBtns() {
     }
   }
 
-  // 路由变化时自动退出全屏
+  // Auto-exit fullscreen on route change
   watch(() => route.path, () => {
     if (playFullscreen.value) {
       playFullscreen.value = false

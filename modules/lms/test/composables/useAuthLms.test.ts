@@ -1,5 +1,5 @@
 /**
- * useAuthLms composable 测试
+ * useAuthLms composable test
  * @see modules/lms/composables/useAuthLms.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -27,8 +27,8 @@ describe('composables/useAuthLms', () => {
   })
 
   it('登录后 isLoggedIn=true, hasRole 生效', async () => {
-    // useAuthLms 复用 useAuth，LMS 扩展字段（editorCourseIds 等）通过
-    // setMockAuthUser 的第 4 个参数 extra 注入，模拟 server runOnMeEnrich
+    // useAuthLms reuses useAuth, LMS extended fields (editorCourseIds etc.) passed through
+    // setMockAuthUser's 4th parameter extra injection, simulating server runOnMeEnrich
     setMockAuthUser(
       { id: 1, username: 'alice', name: 'Alice' },
       [{ code: 'teacher', name: 'Teacher' }],
@@ -47,7 +47,7 @@ describe('composables/useAuthLms', () => {
     expect(auth.isCourseEditor(1)).toBe(true)
     expect(auth.isCourseEditor(99)).toBe(false)
     expect(auth.isCourseTeacher(3)).toBe(true)
-    expect(auth.isCourseTeacher(1)).toBe(true) // editor 包含 teacher 权限
+    expect(auth.isCourseTeacher(1)).toBe(true) // editor includes teacher permission
   })
 
   it('login 调用 /api/auth/login 并 refresh', async () => {

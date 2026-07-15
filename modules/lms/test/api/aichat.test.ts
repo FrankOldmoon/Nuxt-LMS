@@ -1,11 +1,11 @@
 /**
- * aichat API 端点测试
+ * aichat API endpoint tests
  * @see modules/lms/server/api/aichat/*.ts
  *
- * 覆盖：
- * - award.post.ts  AI 出题积分奖励（虚拟 questionCid 防刷）
- * - tts.post.ts    TTS 语音合成
- * - chat.post.ts   AI Chat 代理（SSE 流式）
+ * Coverage:
+ * - award.post.ts  AI question-generation points reward (virtual questionCid to prevent abuse)
+ * - tts.post.ts    TTS speech synthesis
+ * - chat.post.ts   AI Chat proxy (SSE streaming)
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
@@ -20,12 +20,12 @@ const _mockSchema: any = {
 }
 vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
 
-// mock submit handler — 直接执行内部函数
+// mock submit handler — directly execute the inner function
 vi.mock('../../server/utils/submit/handler', () => ({
   withSubmitHandler: (_label: string, fn: any) => fn,
 }))
 
-// mock submit/questions 工具（award.post.ts imports from upsert + calc）
+// mock submit/questions utilities (award.post.ts imports from upsert + calc)
 vi.mock('../../server/utils/submit/questions/upsert', () => ({
   upsertUserQuestion: vi.fn().mockImplementation(async ({ userId, courseId, questionCid, isCorrect, score }) => {
     if (isCorrect) {
@@ -75,7 +75,7 @@ describe('API: aichat/award', () => {
   it('缺少 course_id 抛出 SubmitContextError', async () => {
     setMockAuthState({ id: 1, username: 's', name: 's', roles: ['student'], permissions: [] })
     const handler = (await import('../../server/api/aichat/award.post')).default
-    // withSubmitHandler mock 直接执行函数，所以 SubmitContextError 会被抛出
+    // withSubmitHandler mock directly executes the function, so SubmitContextError will be thrown
     await expect(handler(makeEvent({ body: { chapter_id: 1, correct_rate: 1, point: 10 } }))).rejects.toThrow(/course_id/)
   })
 
@@ -106,7 +106,7 @@ describe('API: aichat/award', () => {
     const r = await handler(makeEvent({ body: { course_id: 1, chapter_id: 2, correct_rate: 1, point: 10, ai_question_id: 42 } }))
     expect(r.success).toBe(true)
     expect(spy).toHaveBeenCalled()
-    // 派生公式: -100000000 - 2*100000 - 42 = -100200042
+    // Derived formula: -100000000 - 2*100000 - 42 = -100200042
     const calledCid = spy.mock.calls[0][0].questionCid
     expect(calledCid).toBe(-100000000 - 2 * 100000 - 42)
   })
@@ -138,7 +138,7 @@ describe('API: aichat/tts', () => {
     setMockAuthState({ id: 1, username: 's', name: 's', roles: ['student'], permissions: [] })
     const handler = (await import('../../server/api/aichat/tts.post')).default
     const r = await handler(makeEvent({ body: { text: '你好' } }))
-    // Buffer 实例（3 字节）
+    // Buffer instance (3 bytes)
     expect(Buffer.isBuffer(r)).toBe(true)
     expect(r.length).toBe(3)
   })
@@ -154,7 +154,7 @@ describe('API: aichat/tts', () => {
 // ====================== chat.post.ts ======================
 
 describe('API: aichat/chat', () => {
-  /** 创建 mock ReadableStream 用于 fetch 返回 */
+  /** Create a mock ReadableStream for fetch return */
   function makeMockStream(chunks: string[]) {
     const encoder = new TextEncoder()
     let i = 0
@@ -215,7 +215,7 @@ describe('API: aichat/chat', () => {
     ;(globalThis as any).fetch = mockFetch
     const handler = (await import('../../server/api/aichat/chat.post')).default
     const r = await handler(makeEvent({ body: { messages: [{ role: 'user', content: 'hello' }] } }))
-    // sendStream 返回 ReadableStream
+    // sendStream returns ReadableStream
     expect(r).toBeDefined()
     expect(mockFetch).toHaveBeenCalled()
     const callArgs = mockFetch.mock.calls[0]

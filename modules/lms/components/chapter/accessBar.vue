@@ -1,6 +1,6 @@
 <template>
   <div v-if="canEdit" class="flex items-center gap-3 mb-4 p-3 bg-muted/30 rounded-lg flex-wrap">
-    <!-- 章节开放开关 -->
+    <!-- ChapterOnputon/off -->
     <div class="flex items-center gap-2">
       <UIcon name="i-lucide-unlock" class="size-4 text-muted" />
       <span class="text-sm font-medium">{{ $t('chapter.openToAll') }}</span>
@@ -9,7 +9,7 @@
 
     <USeparator orientation="vertical" class="h-6" />
 
-    <!-- 班级多选 -->
+    <!-- ClassManyoption -->
     <div class="flex items-center gap-2 min-w-[200px] max-w-[480px]">
       <UIcon name="i-lucide-school" class="size-4 text-muted" />
       <span class="text-sm font-medium whitespace-nowrap">{{ $t('chapter.openClasses') }}</span>

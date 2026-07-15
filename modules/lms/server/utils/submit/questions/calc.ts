@@ -1,13 +1,13 @@
 /**
- * 题目提交纯计算函数（无 db 依赖）
+ * Question submission pure calculation functions (no db dependency)
  */
 import type { QuestionCalcArgs } from './types'
 
 /**
- * 计算题目提交的经验值/金币（防刷规则）
- *  - 首次提交：submitExp / submitCoin
- *  - 首次提交且答对：submit + correctBonus + firstCorrectBonus
- *  - 超过 maxSubmitCount：gainedExp=0 / gainedCoin=0
+ * Calculate the exp/coin gained from question submission (anti-abuse rules)
+ *  - First submission: submitExp / submitCoin
+ *  - First submission and correct: submit + correctBonus + firstCorrectBonus
+ *  - Exceeds maxSubmitCount: gainedExp=0 / gainedCoin=0
  */
 function calcQuestionGained(args: QuestionCalcArgs, suffix: 'Exp' | 'Coin'): number {
   let gained = 0
@@ -32,10 +32,10 @@ export function calcQuestionGainedCoin(args: QuestionCalcArgs): number {
 }
 
 /**
- * 计算题目的分数增量（仅"首次作对"那一次计分）。
- *   wasFirstRight=true：scoreDelta=0
- *   wasFirstRight=false && isCorrect：scoreDelta=score
- *   isCorrect=false：scoreDelta=0
+ * Calculate the score increment of the question (only scored on the "first correct" submission).
+ *   wasFirstRight=true: scoreDelta=0
+ *   wasFirstRight=false && isCorrect: scoreDelta=score
+ *   isCorrect=false: scoreDelta=0
  */
 export function calcQuestionScoreDelta(args: {
   score: number

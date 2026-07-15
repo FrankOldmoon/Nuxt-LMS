@@ -1,5 +1,5 @@
 /**
- * aichat/edit.vue 组件测试
+ * aichat/edit.vue component test
  * @see modules/lms/components/ueditor/extensions/nodes/vue/aichat/edit.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

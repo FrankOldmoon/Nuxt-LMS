@@ -1,5 +1,5 @@
 /**
- * 目录（TOC）提取 + 纯文本提取工具测试
+ * Table of contents (TOC) extraction + plain text extraction utility test
  * @see modules/lms/utils/toc.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -24,7 +24,7 @@ describe('utils/toc - extractPlainText', () => {
   it('超过 maxChars 时尾部截断', async () => {
     const { extractPlainText } = await import('../../utils/toc')
     const result = extractPlainText('a'.repeat(100), 50)
-    expect(result.length).toBeGreaterThan(50) // 含省略提示
+    expect(result.length).toBeGreaterThan(50) // Contains ellipsis hint
     expect(result).toContain('…')
   })
 
@@ -95,7 +95,7 @@ describe('utils/toc - extractTocFromContent', () => {
       ],
     }
     const result = extractTocFromContent(content)
-    // 1级 root，2级是其子节点
+    // level 1 is root, level 2 is its child node
     expect(result).toHaveLength(1)
     expect(result[0].id).toBe('h1')
     expect(result[0].text).toBe('一级')

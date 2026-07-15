@@ -1,11 +1,11 @@
 <template>
     <div class="flex-1 overflow-y-auto p-4">
-        <!-- 加载中 -->
+        <!-- Loading -->
         <div v-if="loading" class="flex items-center justify-center py-10 text-gray-400">
             <UIcon name="i-lucide-loader-2" class="animate-spin size-5 mr-2" />
             <span class="text-sm">{{ t('common.loading') }}</span>
         </div>
-        <!-- 预览模式：单条预览 -->
+        <!-- Previewmode：singleitemsPreview -->
         <template v-else-if="previewMode">
             <div v-if="filtered.length && currentItem"
                 class="rounded-lg border-2 border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -19,7 +19,7 @@
             </div>
             <div v-else class="flex items-center justify-center h-full text-gray-400 text-sm">{{ t('courseData.empty') }}</div>
         </template>
-        <!-- 选择模式：分页列表 -->
+        <!-- Selectmode：PaginationList -->
         <template v-else>
             <div v-if="pagedItems.length" class="space-y-3">
                 <div v-for="item in pagedItems" :key="item.cid"
@@ -35,7 +35,7 @@
                             <UButton icon="i-lucide-trash" size="xs" color="neutral" variant="ghost" @click.stop />
                             <template #content>
                                 <div class="p-3 space-y-2 w-48">
-                                    <p class="text-sm text-gray-600 dark:text-gray-300">{{ t('courseData.confirmDelete') }}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-300">{{ t('courseData.confirm delete') }}</p>
                                     <div class="flex justify-end gap-2">
                                         <UButton size="xs" color="error" @click="deleteItem(item)">{{ t('common.delete') }}</UButton>
                                     </div>

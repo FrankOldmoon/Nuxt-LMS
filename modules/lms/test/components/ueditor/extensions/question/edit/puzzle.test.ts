@@ -1,9 +1,9 @@
 /**
- * puzzle 编辑组件测试 (edit)
+ * puzzle edit component test (edit)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/edit/puzzle.vue
  *
- * puzzle.vue 接收 form prop，使用 FormInputFile 上传图片，USelect 选分割数
- * 注意：config watch 有 early-return guard，当 curOpts 与 newOpts 相同时跳过 answer 同步
+ * puzzle.vue receives form prop, uses FormInputFile to upload image, USelect to select split count
+ * Note: config watch has an early-return guard, skips answer sync when curOpts equals newOpts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -35,7 +35,7 @@ describe('question/edit/puzzle.vue', () => {
       props: { form },
       global: { stubs: _globalStubs, mocks: _mocks },
     })
-    // options 为 null 时，config 初始化为默认值，answer 同步为 [0..8]
+    // When options is null, config is initialized to default values, answer is synced to [0..8]
     expect(form.options).toEqual({ url: '', split: 3 })
     expect(form.answer).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8])
   })
@@ -49,8 +49,8 @@ describe('question/edit/puzzle.vue', () => {
       props: { form },
       global: { stubs: _globalStubs, mocks: _mocks },
     })
-    // config 与 curOpts 相同时 early-return，answer 不被同步
-    // 但 config 正确读取了 form.options 的值
+    // When config equals curOpts, early-return, answer is not synced
+    // But config correctly read the value of form.options
     expect(form.options.url).toBe('http://example.com/img.png')
     expect(form.options.split).toBe(2)
   })
@@ -64,7 +64,7 @@ describe('question/edit/puzzle.vue', () => {
       props: { form },
       global: { stubs: _globalStubs, mocks: _mocks },
     })
-    // split=2 → 2x2=4 个预览块
+    // split=2 → 2x2=4 preview blocks
     const previewDivs = wrapper.findAll('[style*="background-image"]')
     expect(previewDivs).toHaveLength(4)
   })

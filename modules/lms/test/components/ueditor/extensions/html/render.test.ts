@@ -1,8 +1,8 @@
 /**
- * html/render.vue 组件测试
+ * html/render.vue component test
  * @see modules/lms/components/ueditor/extensions/nodes/vue/html/render.vue
  *
- * 使用 iframe + srcdoc + sandbox="allow-scripts" 隔离用户 HTML
+ * Uses iframe + srcdoc + sandbox="allow-scripts" to isolate user HTML
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

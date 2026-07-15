@@ -1,14 +1,14 @@
 <template>
-  <!-- import base 的 header，通过 slot 注入 doc 的导航和搜索 -->
+  <!-- import base header, inject doc navigation and search via slots -->
   <BaseHeader>
-    <!-- 中间水平导航 -->
+    <!-- Center horizontal navigation -->
     <template #nav>
       <div class="flex items-center gap-2">
         <LayoutHeaderNav orientation="horizontal" />
       </div>
     </template>
 
-    <!-- 右侧搜索按钮 -->
+    <!-- RightSearch Button -->
     <template #header-right>
       <UModal v-model:open="showSearchModal">
         <UTooltip :text="$t('common.search')" :content="{ side: 'bottom' }">
@@ -20,7 +20,7 @@
       </UModal>
     </template>
 
-    <!-- 移动端垂直导航 -->
+    <!-- mobile vertical navigation -->
     <template #nav-mobile>
       <LayoutHeaderNav orientation="vertical" class="w-full" />
     </template>

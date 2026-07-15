@@ -1,8 +1,8 @@
 /**
- * MessageModal 组件测试
+ * MessageModal component tests
  * @see modules/base/components/layout/messageModal.vue
  *
- * 消息中心弹窗：包含 sidebar + chat
+ * Message center modal: includes sidebar + chat
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

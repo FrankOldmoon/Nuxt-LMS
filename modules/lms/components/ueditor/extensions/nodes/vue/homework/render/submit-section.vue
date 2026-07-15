@@ -1,19 +1,19 @@
 <template>
-    <!-- 学生提交区域 -->
+    <!-- StudentSubmitarea -->
     <div class="space-y-3 pt-3 border-t border-gray-100 dark:border-gray-800">
-        <!-- 答题内容 -->
+        <!-- answer questionContent -->
         <div>
             <label class="text-xs text-gray-500 mb-1 block">{{ t('homework.contentLabel') }}</label>
             <richEditor v-model="submittedContent" />
         </div>
 
-        <!-- 文件上传 -->
+        <!-- File Upload -->
         <div>
             <label class="text-xs text-gray-500 mb-1 block">{{ t('homework.uploadLabel') }}</label>
             <FormInputFile v-model="submittedFiles" multiple :placeholder="t('homework.uploadHint')" />
         </div>
 
-        <!-- 提交/重置按钮 -->
+        <!-- Submit/Reset Button -->
         <div class="flex items-center gap-2">
             <span v-if="submitMsg" class="text-xs" :class="submitOk ? 'text-green-500' : 'text-red-500'">{{
                 submitMsg
@@ -30,19 +30,19 @@
             </div>
         </div>
 
-        <!-- 已提交提示 -->
+        <!-- alreadySubmit Tip -->
         <div v-if="submitted"
             class="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-md">
             <div class="flex items-center gap-2">
                 <UIcon name="i-heroicons-check-circle" class="w-5 h-5 text-green-500" />
-                <span class="text-sm text-green-700 dark:text-green-300">{{ t('homework.submitSuccess') }}</span>
+                <span class="text-sm text-green-700 dark:text-green-300">{{ t('homework.submit success') }}</span>
             </div>
-            <!-- 已提交内容 -->
+            <!-- alreadySubmitContent -->
             <div v-if="submittedContent" class="mt-2">
                 <ueditorRender v-if="isRichDoc(submittedContent)" :json="submittedContent" :course-id="effectiveCourseId" />
                 <p v-else class="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{{ submittedContent }}</p>
             </div>
-            <!-- 已提交文件列表 -->
+            <!-- alreadySubmitFile List -->
             <div v-if="submittedFileList && submittedFileList.length" class="mt-2 space-y-1">
                 <div v-for="(url, idx) in submittedFileList" :key="idx" class="flex items-center gap-2">
                     <UIcon name="i-heroicons-document" class="w-4 h-4 text-gray-400" />

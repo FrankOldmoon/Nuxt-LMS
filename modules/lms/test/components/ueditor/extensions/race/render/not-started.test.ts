@@ -1,5 +1,5 @@
 /**
- * race render not-started 组件测试
+ * race render not-started component test
  * @see modules/lms/components/ueditor/extensions/nodes/vue/race/render/not-started.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

@@ -4,7 +4,7 @@
   <UMain>
     <UContainer>
       <UPage>
-        <!-- 中间：主内容区 -->
+        <!-- Center: main content area -->
         <LayoutMain>
           <slot />
         </LayoutMain>

@@ -1,28 +1,28 @@
 /**
- * 提交 API 统一 try/catch 错误边界
+ * Submit API unified try/catch error boundary
  *
- * 用法：
- *   export default withSubmitHandler('提交题目失败', async (event) => {
+ * Usage:
+ *   export default withSubmitHandler('Failed to submit question', async (event) => {
  *     const ctx = await parseSubmitContext(event, { cidField: 'question_cid', sectionKey: 'question' })
- *     // ...业务逻辑，返回 { data, success } 形式
+ *     // ...business logic, returns { data, success } form
  *     return cResp({ gainedExp: 5 })
  *   })
  *
- * 特性：
- *  - 业务校验错误（SubmitContextError）→ 返回 cResp(null, message, false)
- *  - 认证/权限错误（statusCode 4xx）→ 重新抛出，由 Nitro 自动转为 HTTP 响应
- *  - 其它异常 → 控制台打印 + 返回 cResp(null, fallbackMessage, false)
- *  - 成功返回 → 直接透传 handler 的返回值
+ * Features:
+ *  - Business validation errors (SubmitContextError) → returns cResp(null, message, false)
+ *  - Auth/permission errors (statusCode 4xx) → re-thrown, automatically converted to HTTP response by Nitro
+ *  - Other exceptions → console log + returns cResp(null, fallbackMessage, false)
+ *  - Successful return → directly passes through the handler's return value
  */
 import { SubmitContextError } from './context'
 
 export type SubmitHandler<E = any> = (event: E) => Promise<any>
 
 /**
- * 包装一个 submit 事件 handler，添加统一 try/catch + cResp 错误返回。
+ * Wraps a submit event handler, adding unified try/catch + cResp error return.
  *
- * @param fallbackMessage 异常时返回的兜底文案，如 '提交题目失败'
- * @param handler 业务处理函数，应返回 cResp(...) 形式
+ * @param fallbackMessage Fallback message returned on exception, e.g. 'Failed to submit question'
+ * @param handler Business processing function, should return cResp(...) form
  */
 export function withSubmitHandler<E = any>(
   fallbackMessage: string,
@@ -32,15 +32,15 @@ export function withSubmitHandler<E = any>(
     try {
       return await handler(event)
     } catch (err: any) {
-      // 业务校验错误
+      // Business validation error
       if (err instanceof SubmitContextError) {
         return cResp(null, err.message, false)
       }
-      // 认证/权限错误（4xx）：重新抛出，由 Nitro 转为 HTTP 响应
+      // Auth/permission error (4xx): re-throw, converted to HTTP response by Nitro
       if (err && typeof err.statusCode === 'number' && err.statusCode >= 400 && err.statusCode < 500) {
         throw err
       }
-      // 其它异常：兜底
+      // Other exceptions: fallback
       console.error(`[${fallbackMessage}]`, err)
       return cResp(null, err?.message || fallbackMessage, false)
     }

@@ -14,7 +14,7 @@ export function useClassModalContext() {
 }
 
 /**
- * 班级选择弹窗：班级切换/新增/改名 + 成员搜索添加（学生/教师）
+ * Class selection modal: class switch/add/rename + member search and add (student/teacher)
  */
 export function useClassModal(open: Ref<boolean>) {
   const { user, refreshUser, hasRole } = useAuth()
@@ -23,7 +23,7 @@ export function useClassModal(open: Ref<boolean>) {
   const { courseId } = useLmsContext()
   const { fetchUsers } = useClassUsers()
 
-  // ==================== 班级选择 ====================
+  // ==================== Class selection ====================
   const { classes: classList, loadClasses: loadClassList } = useClasses()
   const classLoading = ref(false)
   const selectedItem = ref<number | undefined>(undefined)
@@ -45,7 +45,7 @@ export function useClassModal(open: Ref<boolean>) {
     }
   }
 
-  // ==================== 学生模式（单选班级） ====================
+  // ==================== Student mode (single class selection) ====================
   const studentMode = computed(() => !hasRole('admin') && classList.value.length === 0)
   const myClasses = ref<LmsClass[]>([])
   const myClassLoading = ref(false)
@@ -124,7 +124,7 @@ export function useClassModal(open: Ref<boolean>) {
     }
   }
 
-  // ==================== 编辑班级名称 ====================
+  // ==================== Edit class name ====================
   const editingClassName = ref(false)
   const editClassName = ref('')
   const savingClassName = ref(false)
@@ -165,7 +165,7 @@ export function useClassModal(open: Ref<boolean>) {
     }
   }
 
-  // ==================== 学生搜索与添加 ====================
+  // ==================== Student search and add ====================
   const studentSearch = ref('')
   const studentSearching = ref(false)
   const studentSearchResults = ref<LmsSearchUser[]>([])
@@ -215,7 +215,7 @@ export function useClassModal(open: Ref<boolean>) {
     } finally { addingStudents.value = false }
   }
 
-  // ==================== 教师搜索与添加 ====================
+  // ==================== Teacher search and add ====================
   const teacherSearch = ref('')
   const teacherSearching = ref(false)
   const teacherSearchResults = ref<LmsSearchUser[]>([])
@@ -265,7 +265,7 @@ export function useClassModal(open: Ref<boolean>) {
     } finally { addingTeachers.value = false }
   }
 
-  // ==================== 初始化 ====================
+  // ==================== Initialization ====================
   watch(open, async (val) => {
     if (val) {
       selectedItem.value = selectedClassId.value ?? undefined
@@ -300,10 +300,10 @@ export function useClassModal(open: Ref<boolean>) {
     selectedClassId, classUsersTableRef,
     editingClassName, editClassName, savingClassName,
     startEditClassName, cancelEditClassName, saveClassName,
-    // 学生
+    // Student
     studentSearch, studentSearching, studentSearchResults, selectedStudents, addingStudents,
     isSelectedStudent, toggleStudentSelect, removeSelectedStudent, onStudentSearchInput, addStudentsToClass,
-    // 教师
+    // Teacher
     teacherSearch, teacherSearching, teacherSearchResults, selectedTeachers, addingTeachers,
     isSelectedTeacher, toggleTeacherSelect, removeSelectedTeacher, onTeacherSearchInput, addTeachersToClass,
   }

@@ -1,7 +1,7 @@
 /**
- * useAsr — 语音识别组合式函数
+ * useAsr — Speech recognition composable
  *
- * 封装浏览器 Web Speech API 的识别启停、结果累积与错误处理。
+ * Wraps the browser Web Speech API's recognition start/stop, result accumulation, and error handling.
  */
 import { createASRService, languageMap } from '../utils/ai'
 
@@ -20,16 +20,16 @@ export function useAsr() {
 
   const getErrorMessage = (error: string): string => {
     const errorMessages: Record<string, string> = {
-      'no-speech': '未检测到语音',
-      'aborted': '识别被中止',
-      'audio-capture': '无法捕获音频',
-      'network': '网络错误',
-      'not-allowed': '麦克风权限被拒绝',
-      'service-not-allowed': '语音识别服务不可用',
-      'bad-grammar': '语法错误',
-      'language-not-supported': '不支持的语言'
+      'no-speech': 'No speech detected',
+      'aborted': 'Recognition aborted',
+      'audio-capture': 'Unable to capture audio',
+      'network': 'Network error',
+      'not-allowed': 'Microphone permission denied',
+      'service-not-allowed': 'Speech recognition service unavailable',
+      'bad-grammar': 'Grammar error',
+      'language-not-supported': 'Language not supported'
     }
-    return errorMessages[error] || `识别错误: ${error}`
+    return errorMessages[error] || `Recognition error: ${error}`
   }
 
   const handleToggle = async () => {
@@ -67,7 +67,7 @@ export function useAsr() {
 
         isListening.value = true
       } catch (e: any) {
-        error.value = e.message || '语音识别启动失败'
+        error.value = e.message || 'Failed to start speech recognition'
         isListening.value = false
       }
     }
@@ -83,9 +83,9 @@ export function useAsr() {
 
     try {
       await navigator.clipboard.writeText(finalTranscript.value)
-      // 可选：显示复制成功提示
+      // Optional: show copy success notification
     } catch (e) {
-      error.value = '复制失败'
+      error.value = 'Copy failed'
     }
   }
 

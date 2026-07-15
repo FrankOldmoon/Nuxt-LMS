@@ -1,5 +1,5 @@
 /**
- * useChapterQuickAnswer composable 测试
+ * useChapterQuickAnswer composable test
  * @see modules/lms/composables/useChapterQuickAnswer.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -9,7 +9,7 @@ import { ref } from 'vue'
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
-  // 桩 useWebSocket（auto-import）：记录 send 调用 + 暴露 on 回调以测试
+  // Stub useWebSocket (auto-import): records send calls + exposes on callbacks for testing
   const handlers: Record<string, Array<(data: any) => void>> = {}
   const sends: any[] = []
   ;(globalThis as any).useWebSocket = () => ({

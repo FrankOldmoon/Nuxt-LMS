@@ -1,5 +1,5 @@
 <template>
-  <!-- 触发按钮 -->
+  <!-- Trigger button -->
   <UButton
     icon="i-lucide-crop"
     size="sm"
@@ -8,7 +8,7 @@
     @click="openPicker"
   />
 
-  <!-- 隐藏的 file input -->
+  <!-- Hidden file input -->
   <input
     ref="fileInputRef"
     type="file"
@@ -17,7 +17,7 @@
     @change="onFileChange"
   />
 
-  <!-- 复用 base 的 FormImageCropperModal，绑定 uploaded 回调 -->
+  <!-- Reuse base's FormImageCropperModal, bind uploaded callback -->
   <FormImageCropperModal
     ref="cropperRef"
     :title="$t('admin.form.cropImage')"
@@ -32,16 +32,16 @@
 import { ref } from 'vue'
 
 /**
- * 图片裁剪触发器
- * - 点击按钮 → 弹出文件选择 → 选完后 FormImageCropperModal 自动打开
- * - 用户确认裁剪 → 上传 → emit uploaded(url)
+ * Image crop trigger
+ * - Click button → open file picker → FormImageCropperModal opens automatically after selection
+ * - User confirms crop → upload → emit uploaded(url)
  *
- * 复用 modules/base/components/form/imageCropperModal.vue，避免重复实现。
+ * Reuses modules/base/components/form/imageCropperModal.vue to avoid duplicate implementation.
  */
 const props = withDefaults(defineProps<{
-  /** 裁剪框样式 */
+  /** Crop box style */
   stencilType?: 'circle' | 'rectangle'
-  /** 固定宽高比（不传则自由比例） */
+  /** Fixed aspect ratio (free ratio if not provided) */
   aspectRatio?: number | null
 }>(), {
   stencilType: 'rectangle',
@@ -61,10 +61,10 @@ function openPicker() {
 
 function onFileChange(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
-  // 清空 value，允许重复选择同一文件
+  // Clear value to allow selecting the same file repeatedly
   ;(e.target as HTMLInputElement).value = ''
   if (!file) return
-  // 触发 FormImageCropperModal 的 setImage
+  // Trigger FormImageCropperModal's setImage
   if (cropperRef.value && typeof cropperRef.value.setImage === 'function') {
     cropperRef.value.setImage(file)
   } else {
@@ -77,6 +77,6 @@ function onUploaded(url: string) {
 }
 
 function onClose() {
-  // 由 FormImageCropperModal 内部处理 URL.revokeObjectURL
+  // URL.revokeObjectURL is handled internally by FormImageCropperModal
 }
 </script>

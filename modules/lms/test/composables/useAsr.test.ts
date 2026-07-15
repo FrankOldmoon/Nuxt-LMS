@@ -1,5 +1,5 @@
 /**
- * useAsr composable 测试
+ * useAsr composable test
  * @see modules/lms/composables/useAsr.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'

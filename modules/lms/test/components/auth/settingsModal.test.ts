@@ -1,9 +1,9 @@
 /**
- * auth/settingsModal.vue 组件测试
+ * auth/settingsModal.vue component test
  * @see modules/lms/components/auth/settingsModal.vue
  *
- * LMS 设置弹窗包装：包裹 base AuthSettingsModal，通过 slot 注入 LmsConfigEditor。
- * open 变 true 时拉取 /api/config/lms-public，提交时调用 /api/lms-config/update。
+ * LMS settings modal wrapper: wraps base AuthSettingsModal, injects LmsConfigEditor via slot.
+ * When open becomes true, fetches /api/config/lms-public, calls /api/lms-config/update on submit.
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -85,7 +85,7 @@ describe('auth/settingsModal.vue', () => {
     })
     await wrapper.setProps({ open: true })
     await flushPromises()
-    // 不报错，组件仍存在
+    // No error, component still exists
     expect(wrapper.exists()).toBe(true)
   })
 

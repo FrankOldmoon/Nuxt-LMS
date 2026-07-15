@@ -1,5 +1,5 @@
 /**
- * homework index 组件测试 (TipTap node-view)
+ * homework index component test (TipTap node-view)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/homework/index.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

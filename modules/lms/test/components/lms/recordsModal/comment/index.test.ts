@@ -1,14 +1,14 @@
 /**
- * lms/recordsModal/comment/index.vue 组件测试
+ * lms/recordsModal/comment/index.vue component test
  * @see modules/lms/components/lms/recordsModal/comment/index.vue
  *
- * 评论记录弹窗：UModal + ClassUsersTable，useCommentRecords 提供数据
+ * Comment record modal: UModal + ClassUsersTable, useCommentRecords provides data
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { resetAllStubs, setMockI18n } from '../../../../../../../test/setup/nuxt-stubs'
 
-// mock useCommentRecords（本地导入）
+// mock useCommentRecords (local import)
 vi.mock('../../../../../components/lms/recordsModal/comment/useCommentRecords', () => ({
   useCommentRecords: (props: any, emit: any) => {
     const { ref, computed }: any = globalThis as any

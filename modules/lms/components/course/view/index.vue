@@ -9,7 +9,7 @@
       <template #teachers-extra="scope"><slot name="teachers-extra" v-bind="scope" /></template>
     </CourseViewHeader>
 
-    <!-- 教师团队 -->
+    <!-- TeacherTeam -->
     <div v-if="course.teachers?.length || canManageTeachers" id="teachers">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-2xl font-semibold text-highlighted">{{ $t('course.teachingTeam') }}</h2>
@@ -29,7 +29,7 @@
       <p v-else class="text-sm text-muted text-center py-4">{{ $t('course.noTeachers') }}</p>
     </div>
 
-    <!-- 教师管理弹窗 -->
+    <!-- Teacher ManagementModal -->
     <UModal v-model:open="teachersModalOpen" :ui="{ content: 'sm:max-w-2xl' }">
       <template #content>
         <div class="p-6 max-h-[85vh] overflow-y-auto">
@@ -43,16 +43,16 @@
       </template>
     </UModal>
 
-    <!-- 课程内容 -->
+    <!-- Course Content -->
     <div v-if="hasContent">
       <h2 class="text-2xl font-semibold text-highlighted mb-6">{{ $t('course.aboutCourse') }}</h2>
       <UeditorRender :json="course.content" />
     </div>
 
-    <!-- 章节目录 -->
+    <!-- ChapterTable of Contents -->
     <div>
       <h2 id="chapters" class="text-2xl font-semibold text-highlighted mb-6 scroll-mt-20">
-        {{ $t('course.chapterList') }}
+        {{ $t('course.chapter list') }}
       </h2>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
         <template v-for="(item, index) in chapterTree" :key="item.id">
@@ -76,7 +76,7 @@
     </div>
   </div>
 
-  <!-- 课程不存在 -->
+  <!-- CourseDoes not exist -->
   <div v-else-if="!pending" class="flex flex-col items-center justify-center py-20">
     <UIcon name="i-lucide-search-x" class="size-12 text-muted mb-4" />
     <p class="text-lg text-muted mb-4">{{ $t('course.notFound') }}</p>

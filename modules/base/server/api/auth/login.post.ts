@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
     return cResp(null, 'Username and password are required', false)
   }
 
-  // 查找用户
+  // Find user
   const users = await db
     .select()
     .from(schema.users)
@@ -22,20 +22,20 @@ export default defineEventHandler(async (event) => {
 
   const user = users[0]
 
-  // 验证密码
+  // Verify password
   const valid = await verifyPassword(password, user.password)
   if (!valid) {
     return cResp(null, 'Invalid username or password', false)
   }
 
-  // 生成 token
+  // Generate token
   const tokenStr = generateToken()
   await db.insert(schema.tokens).values({
     name: tokenStr,
     userId: user.id,
   })
 
-  // 更新最后登录信息
+  // Update last login info
   await db
     .update(schema.users)
     .set({

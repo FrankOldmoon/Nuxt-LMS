@@ -1,9 +1,9 @@
 /**
- * lms 模块鉴权扩展
+ * lms module auth extensions
  *
- * 仅提供 lms 特有的课程权限检查功能。
- * 基础功能（hashPassword/verifyPassword/generateToken/getCurrentUser/requireAuth/requireRole/requirePermission/requireAdmin）
- * 由 base 模块提供，Nuxt auto-import 自动扫描，无需在此重导出。
+ * Only provides lms-specific course permission check functions.
+ * Base functions (hashPassword/verifyPassword/generateToken/getCurrentUser/requireAuth/requireRole/requirePermission/requireAdmin)
+ * are provided by the base module and auto-imported by Nuxt; no need to re-export them here.
  */
 
 import { requireAuth } from '../../../base/server/utils/auth'
@@ -11,7 +11,7 @@ import { db, schema } from '@nuxthub/db'
 import { eq, and } from 'drizzle-orm'
 
 /**
- * 检查当前用户是否是某课程的教师/编辑者（教师或编辑者均可）
+ * Check whether the current user is a teacher/editor of a course (either is acceptable)
  */
 export async function isCourseTeacher(userId: number, courseId: number): Promise<boolean> {
   if (!(schema as any).userCourses) return false
@@ -29,7 +29,7 @@ export async function isCourseTeacher(userId: number, courseId: number): Promise
 }
 
 /**
- * 检查当前用户是否是某课程的编辑者（仅编辑者，不含教师）
+ * Check whether the current user is an editor of a course (editor only, not teacher)
  */
 export async function isCourseEditor(userId: number, courseId: number): Promise<boolean> {
   if (!(schema as any).userCourses) return false
@@ -47,8 +47,8 @@ export async function isCourseEditor(userId: number, courseId: number): Promise<
 }
 
 /**
- * 要求是管理员或是目标课程的编辑者，否则抛 403
- * @param courseId - 课程 ID
+ * Require admin or editor of the target course, otherwise throw 403
+ * @param courseId - course ID
  */
 export async function requireCourseTeacher(event: any, courseId: number): Promise<ReturnType<typeof requireAuth>> {
   const user = await requireAuth(event)
@@ -56,23 +56,23 @@ export async function requireCourseTeacher(event: any, courseId: number): Promis
 
   if (await isCourseEditor(user.id, courseId)) return user
 
-  throw createError({ statusCode: 403, message: '无权限：仅管理员或课程编辑者可操作' })
+  throw createError({ statusCode: 403, message: 'No permission: only admins or course editors can perform this action' })
 }
 
 /**
- * 要求是管理员或是目标章节所属课程的编辑者
- * 自动查询章节的 courseId 再做判断
- * @param chapterId - 章节 ID
+ * Require admin or editor of the course that owns the target chapter
+ * Automatically looks up the chapter's courseId before checking
+ * @param chapterId - chapter ID
  */
 export async function requireChapterTeacher(event: any, chapterId: number): Promise<ReturnType<typeof requireAuth>> {
   const user = await requireAuth(event)
   if (user.roles.includes('admin')) return user
 
   if (!(schema as any).chapters) {
-    throw createError({ statusCode: 403, message: '无权限' })
+    throw createError({ statusCode: 403, message: 'No permission' })
   }
 
-  // 查询章节所属课程
+  // Look up the course that owns this chapter
   const rows = await db
     .select({ courseId: (schema as any).chapters.courseId })
     .from((schema as any).chapters)
@@ -80,10 +80,10 @@ export async function requireChapterTeacher(event: any, chapterId: number): Prom
     .limit(1)
 
   if (!rows[0]) {
-    throw createError({ statusCode: 404, message: '章节不存在' })
+    throw createError({ statusCode: 404, message: 'Chapter not found' })
   }
 
   if (await isCourseEditor(user.id, rows[0].courseId)) return user
 
-  throw createError({ statusCode: 403, message: '无权限：仅管理员或该课程的编辑者可操作' })
+  throw createError({ statusCode: 403, message: 'No permission: only admins or editors of the course can perform this action' })
 }

@@ -1,15 +1,15 @@
 /**
- * 测验提交：分数 + 经验值 + 金币计算
+ * Quiz submission: score + exp + coin calculation
  *
- * 经验值/金币防刷规则（与 questions/submit 一致）：
- * - 首次提交：submitExp / submitCoin
- * - 重新提交未及格：submitExp / submitCoin
- * - 重新提交已及格：不发 submitExp / submitCoin
- * - 及格额外奖：仅"首次及格"那一次发 passBonusExp / passBonusCoin
+ * Exp/coin anti-abuse rules (consistent with questions/submit):
+ * - First submission: submitExp / submitCoin
+ * - Resubmission when not passed: submitExp / submitCoin
+ * - Resubmission when already passed: no submitExp / submitCoin
+ * - Pass bonus: only grants passBonusExp / passBonusCoin on the "first pass"
  */
 export type QuizRecord = { questionCid: number; rate: number; point: number; answer?: any }
 
-/** 计算测验总分（rate * point 之和，保留 2 位小数） */
+/** Calculate quiz total score (sum of rate * point, keep 2 decimal places) */
 export function calcQuizScore(records: QuizRecord[] | undefined): {
   totalScore: number
   correctCount: number
@@ -30,26 +30,26 @@ export function calcQuizScore(records: QuizRecord[] | undefined): {
 export type QuizExpInput = {
   qConfig: { submitExp: number; passBonusExp: number; passScore?: number; [k: string]: any }
   totalScore: number
-  /** 已有记录的最高分；新提交时为 null */
+  /** The highest score of existing record; null for new submission */
   existingBestScore: number | null
 }
 
 /**
- * 计算本次提交获得的经验值或金币（防刷）。
+ * Calculate the exp or coin gained from this submission (anti-abuse).
  * @param suffix 'Exp' | 'Coin'
- * @returns 增量，直接传给 addCourseScore 用
+ * @returns The increment, to be passed directly to addCourseScore
  */
 function calcQuizGained({ qConfig, totalScore, existingBestScore }: QuizExpInput, suffix: 'Exp' | 'Coin'): number {
   const passScore = qConfig.passScore || 60
   const isPassed = totalScore >= passScore
   const alreadyPassed = existingBestScore != null && existingBestScore >= passScore
-  // 新提交：submit + (及格且未及格过 ? passBonus : 0)
+  // New submission: submit + (passed and not passed before ? passBonus : 0)
   if (existingBestScore == null) {
     let val = qConfig[`submit${suffix}`] || 0
     if (isPassed) val += qConfig[`passBonus${suffix}`] || 0
     return val
   }
-  // 已有记录：已及格过则彻底防刷；否则同"新提交"逻辑
+  // Existing record: if already passed, completely anti-abuse; otherwise same as "new submission" logic
   if (alreadyPassed) return 0
   let val = qConfig[`submit${suffix}`] || 0
   if (isPassed) val += qConfig[`passBonus${suffix}`] || 0

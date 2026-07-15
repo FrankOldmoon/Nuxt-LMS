@@ -1,5 +1,5 @@
 <template>
-  <!-- 提交后弹幕广播配置（控制 question/homework/quiz/comment 提交后是否向班级房间广播 danmaku） -->
+  <!-- Post-submit danmaku broadcast config (controls whether to broadcast danmaku to class room after question/homework/quiz/comment submission) -->
   <div class="space-y-2">
     <div>
       <p class="text-sm font-medium">{{ $t('lmsConfig.danmaku') }}</p>

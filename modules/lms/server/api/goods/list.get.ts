@@ -2,8 +2,8 @@ import { db, schema } from '@nuxthub/db'
 import { eq, or } from 'drizzle-orm'
 
 /**
- * 获取商店商品列表（学生浏览用）
- * ?courseId=x 返回全局商品（courseId=0）+ 该课程专属商品
+ * Get shop goods list (for students browsing)
+ * ?courseId=x returns global goods (courseId=0) + course-specific goods
  */
 export default eventHandler(async (event) => {
   await requireAuth(event)

@@ -1,11 +1,11 @@
 /**
- * 章节分数：addChapterScore
+ * Chapter score: addChapterScore
  */
 import { db, schema } from '@nuxthub/db'
 import { findUserChapter, updateUserChapter } from './upsert'
 
 /**
- * 更新 userChapters 的 score（加分）
+ * Update userChapters score (add points)
  */
 export async function addChapterScore(userId: number, chapterId: number, score: number) {
   if (!chapterId || score === 0) return

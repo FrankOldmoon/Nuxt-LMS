@@ -11,24 +11,24 @@
 
     <template #body>
       <div class="flex flex-col gap-4 h-[70vh] min-w-[480px]">
-        <!-- 加载中 -->
+        <!-- Loading -->
         <div v-if="pending" class="flex items-center justify-center gap-2 py-10 text-muted">
           <UIcon name="i-lucide-loader-2" class="animate-spin size-5" />
           <span class="text-sm">{{ $t('layout.historyLoading') }}</span>
         </div>
 
-        <!-- 空状态 -->
+        <!-- EmptyStatus -->
         <div v-else-if="!versions.length" class="flex items-center justify-center py-10 text-muted text-sm">
           {{ $t('layout.historyEmpty') }}
         </div>
 
         <template v-else>
-          <!-- 上方：内容预览 -->
+          <!-- Upside：ContentPreview -->
           <div class="flex-1 min-h-0 overflow-y-auto border border-default rounded-lg p-4 bg-elevated/30">
             <UeditorRender :json="currentVersion?.content" />
           </div>
 
-          <!-- 下方：分页 + 恢复 -->
+          <!-- Downside：Pagination + Resume -->
           <ChapterHistoryModalFooter
             :page="page"
             :total="versions.length"

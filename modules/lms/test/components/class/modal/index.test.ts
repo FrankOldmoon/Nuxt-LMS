@@ -1,9 +1,9 @@
 /**
- * class/modal/index.vue 组件测试
+ * class/modal/index.vue component test
  * @see modules/lms/components/class/modal/index.vue
  *
- * 班级选择弹窗容器：UModal + 加载态 + 学生模式/管理模式切换。
- * 使用 defineModel('open') + useClassModal(open) + provideClassModal(ctx)。
+ * Class selection modal container: UModal + loading state + student mode/admin mode switching.
+ * Uses defineModel('open') + useClassModal(open) + provideClassModal(ctx).
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -32,7 +32,7 @@ const _globalConfig = {
   stubs: _globalStubs,
 }
 
-/** Stub useClassModal：返回最小可用 ctx，并模拟 provideClassModal */
+/** Stub useClassModal: returns minimal usable ctx, and simulates provideClassModal */
 function setupClassModalStubs(overrides: any = {}) {
   const ctx = {
     classLoading: ref(false),

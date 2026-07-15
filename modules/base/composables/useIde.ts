@@ -4,7 +4,7 @@ import { createCppRunner } from '../components/ide/runners/cpp'
 import { createJavaRunner } from '../components/ide/runners/java'
 import { monacoLang, type LanguageId, type Runner } from '../components/ide/runners/types'
 
-// ========== 各语言默认示例代码 ==========
+// ========== Default sample code for each language ==========
 const DEFAULT_CODE: Record<LanguageId, string> = {
   python: `# Welcome to Python IDE
 import sys
@@ -72,7 +72,7 @@ const FACTORIES: Record<LanguageId, () => Runner> = {
 }
 
 /**
- * 在线 IDE：多语言代码编辑 + 运行
+ * Online IDE: multi-language code editing + execution
  */
 export function useIde(
   modelValue: () => string | undefined,
@@ -93,7 +93,7 @@ export function useIde(
   )
   const monacoLanguage = computed(() => monacoLang(currentLang.value))
 
-  // 每种语言独立保存代码，切换语言时保留各自编辑内容
+  // Save code independently for each language, preserving each language's content when switching
   const codeByLang: Record<string, string> = {}
   LANGS.forEach((l) => { codeByLang[l] = DEFAULT_CODE[l] })
   if (modelValue()) {
@@ -105,11 +105,11 @@ export function useIde(
   const output = ref('')
   const running = ref(false)
 
-  // ========== Runner 懒创建 ==========
+  // ========== Runner lazy creation ==========
   const runners: Record<string, Runner> = {}
   const runnersVersion = ref(0)
   const currentRunner = computed(() => {
-    runnersVersion.value // 依赖：runner 新增时递增触发重算
+    runnersVersion.value // Dependency: increment when runner is added to trigger recompute
     return runners[currentLang.value]
   })
   const runnerReady = computed(() => currentRunner.value?.ready.value ?? false)
@@ -117,7 +117,7 @@ export function useIde(
   function getRunner(lang: LanguageId) {
     if (!runners[lang]) {
       runners[lang] = FACTORIES[lang]()
-      runnersVersion.value++ // 触发 currentRunner 重算
+      runnersVersion.value++ // Trigger currentRunner recompute
       runners[lang].init().catch((e: any) => {
         output.value = t('ide.loadFailed', { msg: e.message })
       })
@@ -125,7 +125,7 @@ export function useIde(
     return runners[lang]
   }
 
-  // ========== v-model 同步 ==========
+  // ========== v-model sync ==========
   watch(code, (val) => {
     codeByLang[currentLang.value] = val
     onUpdate(val)
@@ -137,7 +137,7 @@ export function useIde(
     }
   })
 
-  // 切换语言：保存当前代码、载入目标代码、懒初始化 runner
+  // Switch language: save current code, load target code, lazy init runner
   watch(currentLang, (newLang, oldLang) => {
     if (oldLang) codeByLang[oldLang] = code.value
     code.value = codeByLang[newLang] ?? DEFAULT_CODE[newLang]
@@ -146,7 +146,7 @@ export function useIde(
     getRunner(newLang)
   })
 
-  // ========== 运行代码 ==========
+  // ========== Run code ==========
   async function runCode() {
     const runner = currentRunner.value
     if (!runner || !runner.ready.value || running.value) return

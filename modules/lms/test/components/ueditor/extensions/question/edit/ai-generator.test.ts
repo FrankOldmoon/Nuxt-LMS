@@ -1,9 +1,9 @@
 /**
- * ai-generator 编辑组件测试 (edit)
+ * ai-generator edit component test (edit)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/edit/ai-generator.vue
  *
- * ai-generator.vue 使用 useAiGenerator composable（fetch 流式生成）
- * 测试 mount + 初始状态（不实际触发 fetch）
+ * ai-generator.vue uses useAiGenerator composable (fetch streaming generation)
+ * Test mount + initial state (does not actually trigger fetch)
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -58,7 +58,7 @@ describe('question/edit/ai-generator.vue', () => {
       props: { type: 'single' },
       global: { stubs: _globalStubs, mocks: _mocks },
     })
-    // common.stop 只在 generating 时显示
+    // common.stop only shows when generating
     expect(wrapper.text()).not.toContain('common.stop')
   })
 })

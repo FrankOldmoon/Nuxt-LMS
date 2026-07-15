@@ -5,7 +5,7 @@
         <h3 class="text-lg font-medium">{{ $t('navEditor.batchImport') }}</h3>
         <p class="text-sm text-muted whitespace-pre-line">{{ $t('navEditor.batchImportHint') }}</p>
 
-        <!-- AI 生成 -->
+        <!-- AI Generate -->
         <div class="space-y-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
           <div class="flex gap-2">
             <UInput

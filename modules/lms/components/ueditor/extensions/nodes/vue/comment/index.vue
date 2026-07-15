@@ -1,6 +1,6 @@
 <template>
     <div class="comment-render w-full relative">
-        <!-- 内联编辑面板（在上方显示） -->
+        <!-- InsideinlineEditPanel（UpsideShow） -->
         <div v-if="showConfig" class="vue-node-config">
             <Edit :comment-id="commentId" :comment="comment" :course-id="courseId" @saved="onSaved" />
         </div>
@@ -18,13 +18,13 @@ const props = defineProps(nodeViewProps)
 
 const { courseId } = useLmsContext()
 
-// inject node-view 提供的状态
+// inject node-view provideStatus
 const showConfig = inject('nodeViewShowConfig', ref(false))
 const meta = inject('nodeViewMeta', reactive({ title: '', icon: '', hasSettings: false }))
 
-// 设置组件元信息（告知 node-view 显示设置按钮）
+// SettingsComponentelementInfo（informNode-view ShowSettingsButton）
 if (meta) {
-    meta.title = '评论'
+    meta.title = 'Comment'
     meta.icon = 'i-lucide-message-circle'
     meta.hasSettings = true
 }
@@ -33,7 +33,7 @@ const emit = defineEmits(['init'])
 
 const commentId = computed(() => Number(props.node?.attrs?.content) || 0)
 
-// 获取评论数据
+// Get CommentData
 const apiUrl = computed(() => {
     if (!commentId.value || !courseId.value) return ''
     return `/api/comments/show?course_id=${courseId.value}&cid=${commentId.value}`
@@ -51,13 +51,13 @@ const { data: comment } = cRequest.use(apiUrl, {
     },
 })
 
-// 新建评论时拿到 cid 后通知父节点更新 content 属性
+// New Commenttake whento cid BackNotificationparent nodePointUpdate content Property
 function onSaved(cm) {
     if (cm.cid && Number(cm.cid) !== commentId.value) {
         emit('init', cm.cid)
         props.updateAttributes({ content: String(cm.cid) })
     }
-    // 编辑保存后关闭配置面板
+    // EditSaveBackCloseConfigurationPanel
     if (showConfig.value) {
         showConfig.value = false
     }

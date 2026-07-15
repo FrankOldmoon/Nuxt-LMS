@@ -1,5 +1,5 @@
 /**
- * 错题本弹窗：分页加载错题列表、关键字搜索、题型筛选
+ * Wrong book modal: paginated loading of wrong question list, keyword search, question type filter
  */
 export function useWrongBook(
   props: { modelValue: boolean; courseId: number },
@@ -37,7 +37,7 @@ export function useWrongBook(
 
   const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
 
-  // 防抖搜索
+  // Debounced search
   let searchTimer: ReturnType<typeof setTimeout> | null = null
   watch(keyword, () => {
     if (searchTimer) clearTimeout(searchTimer)
@@ -55,7 +55,7 @@ export function useWrongBook(
     refetch()
   })
 
-  // 弹窗打开时重置并加载
+  // Reset and load when modal opens
   watch(
     () => props.modelValue,
     (val) => {

@@ -1,5 +1,5 @@
 /**
- * Admin Tables API 测试
+ * Admin Tables API tests
  * @see modules/admin/server/api/admin/tables.get.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -40,7 +40,7 @@ describe('API: admin/tables.get', () => {
     expect(result.data).toHaveLength(2)
     const names = result.data.map((m: any) => m.name).sort()
     expect(names).toEqual(['courses', 'users'])
-    // 每项含 hasId / compositePk / readOnly / columns / labelColumn
+    // Each item contains hasId / compositePk / readOnly / columns / labelColumn
     expect(result.data[0]).toHaveProperty('hasId')
     expect(result.data[0]).toHaveProperty('compositePk')
     expect(result.data[0]).toHaveProperty('readOnly')

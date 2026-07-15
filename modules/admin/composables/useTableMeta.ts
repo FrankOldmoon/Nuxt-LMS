@@ -1,15 +1,15 @@
 import type { TableMetaSummary, ColumnMeta, TableMeta } from '../utils/types'
 
 /**
- * 获取所有表的元数据（一次拉取，全局缓存于 useState）
- * 供菜单构建与表页初始化使用。
+ * Get metadata for all tables (fetched once, globally cached in useState)
+ * Used for menu building and table page initialization.
  */
 export function useTablesMeta() {
   const tables = useState<TableMetaSummary[]>('admin:tables', () => [])
 
   async function load() {
-    // admin 守卫为 client-only，命令式 cRequest（$fetch）在 SSR 不转发 Cookie → 401。
-    // SSR 阶段跳过，渲染空壳；客户端 hydration 重新执行 setup 时带 Cookie 拉取。
+    // Admin guard is client-only, imperative cRequest ($fetch) does not forward Cookie on SSR → 401.
+    // Skip during SSR, render empty shell; client hydration re-executes setup with Cookie to fetch.
     if (import.meta.server) return tables.value
     if (tables.value.length > 0) return tables.value
     const data = await cRequest<TableMetaSummary[]>('/api/admin/tables')
@@ -21,7 +21,7 @@ export function useTablesMeta() {
 }
 
 /**
- * 获取指定表的元数据（基于全局缓存）
+ * Get metadata for a specific table (based on global cache)
  */
 export function useTableMeta(tableName: MaybeRefOrGetter<string>) {
   const { tables, load } = useTablesMeta()
@@ -35,7 +35,7 @@ export function useTableMeta(tableName: MaybeRefOrGetter<string>) {
   const readOnly = computed(() => summary.value?.readOnly ?? false)
   const labelColumn = computed(() => summary.value?.labelColumn)
 
-  /** 初始化（确保元数据已加载） */
+  /** Initialize (ensure metadata is loaded) */
   async function ensure() {
     await load()
     return summary.value

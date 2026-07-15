@@ -34,7 +34,7 @@ defineEmits<{
     click: []
 }>()
 
-// 整体框尺寸：固定宽高 + aspect-square 保持正方形
+// Overall frame size: fixed width/height + aspect-square to maintain square shape
 const cardSizeClass = computed(() => {
     switch (props.size) {
         case 'sm': return 'w-20 h-20'

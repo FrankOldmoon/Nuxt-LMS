@@ -8,7 +8,7 @@ export default eventHandler(async (event) => {
   const { course_id, chapter_id, homework_cid, user_id, score } = body
 
   if (!course_id || !homework_cid || !user_id) {
-    return cResp(null, '缺少 course_id、homework_cid 或 user_id 参数', false)
+    return cResp(null, 'Missing course_id, homework_cid or user_id parameter', false)
   }
 
   const courseId = Number(course_id)
@@ -17,7 +17,7 @@ export default eventHandler(async (event) => {
   const newScore = score === null || score === '' ? null : Number(score)
 
   try {
-    // 查询旧分数
+    // Query old score
     const existing = await db.query.userHomeworks.findFirst({
       where: and(
         eq(schema.userHomeworks.userId, userId),
@@ -29,7 +29,7 @@ export default eventHandler(async (event) => {
     const oldScore = existing ? Number(existing.score) || 0 : 0
     const scoreDelta = newScore != null ? (newScore - oldScore) : -oldScore
 
-    // 更新 userHomeworks 分数
+    // Update userHomeworks score
     const result = await db.update(schema.userHomeworks).set({
       score: newScore != null ? String(newScore) : null,
     }).where(and(
@@ -39,20 +39,20 @@ export default eventHandler(async (event) => {
     )).returning()
 
     if (!result.length) {
-      return cResp(null, '未找到该学生的提交记录', false)
+      return cResp(null, 'No submission record found for this student', false)
     }
 
-    // 更新 userChapters.score
+    // Update userChapters.score
     if (scoreDelta !== 0) {
       await addChapterScore(userId, chapterId, scoreDelta)
     }
 
-    // 更新 userCourses：homeworkScore + score
+    // Update userCourses: homeworkScore + score
     await addCourseScore(userId, courseId, scoreDelta, 'homeworkScore', 0, 0)
 
     return cResp(result[0])
   } catch (error: any) {
-    console.error('打分失败:', error)
-    return cResp(null, error.message || '打分失败', false)
+    console.error('Failed to score:', error)
+    return cResp(null, error.message || 'Failed to score', false)
   }
 })

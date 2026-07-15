@@ -70,7 +70,7 @@ function escapeCsv(val: any): string {
 }
 
 function downloadCsv() {
-  // 优先用 sheet 当前内容（用户可能重排），否则用原始 rows
+  // Prefer sheet's current content (user may have rearranged), otherwise use original rows
   let csvRows: string[][] = []
   if (sheetRef.value) {
     const raw = sheetRef.value.getRows() as any[][]

@@ -1,8 +1,8 @@
 /**
- * Main 组件测试
+ * Main component tests
  * @see modules/base/components/layout/main.vue
  *
- * 页面主体：slot + WebSocket 连接
+ * Page body: slot + WebSocket connection
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

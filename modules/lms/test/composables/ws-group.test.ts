@@ -1,5 +1,5 @@
 /**
- * ws/group composable 测试
+ * ws/group composable test
  * @see modules/lms/composables/ws/group.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'

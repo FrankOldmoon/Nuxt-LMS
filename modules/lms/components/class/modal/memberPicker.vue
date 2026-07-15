@@ -19,7 +19,7 @@
       :loading="adding" :disabled="!selected.length" @click="emit('add')" />
   </div>
 
-  <!-- 已选标签 -->
+  <!-- SelectedTag -->
   <div v-if="selected.length" class="flex flex-wrap gap-1.5">
     <UBadge v-for="u in selected" :key="u.id" :label="u.name" :color="badgeColor" variant="subtle" size="xs">
       <template #leading>

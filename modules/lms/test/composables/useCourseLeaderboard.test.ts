@@ -1,5 +1,5 @@
 /**
- * useCourseLeaderboard composable 测试
+ * useCourseLeaderboard composable test
  * @see modules/lms/composables/useCourseLeaderboard.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -123,7 +123,7 @@ describe('composables/useCourseLeaderboard', () => {
     const byId = (id: number) => r.tableRows.value.find((row: any) => row.id === id)
     expect(byId(1).score).toBe(100)
     expect(byId(2).score).toBe(80)
-    expect(byId(3).score).toBe(0) // 不在 scoreRows 中，默认 0
+    expect(byId(3).score).toBe(0) // Not in scoreRows, defaults to 0
   })
 
   it('myRank 计算当前用户排名', async () => {

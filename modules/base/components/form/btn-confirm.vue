@@ -14,15 +14,15 @@
 </template>
 
 <script setup>
-// 透传所有 UButton 的 props/attrs（label/icon/color/variant/size 等）
+// Pass through all UButton props/attrs (label/icon/color/variant/size, etc.)
 defineOptions({ inheritAttrs: false })
 
 const props = defineProps({
-  /** 确认提示文案 */
+  /** Confirmation prompt text */
   confirmText: { type: String, default: '' },
-  /** 确认按钮颜色（默认跟随 UButton color，不传用 primary） */
+  /** Confirm button color (defaults to follow UButton color, uses primary if not provided) */
   color: { type: String, default: 'primary' },
-  /** 确认按钮 loading 状态 */
+  /** Confirm button loading state */
   loading: { type: Boolean, default: false },
 })
 
@@ -35,15 +35,15 @@ function onClick() {
 }
 
 async function onConfirm() {
-  // 若 confirm 是异步函数，loading 由父组件控制
+  // If confirm is an async function, loading is controlled by the parent component
   emit('confirm')
-  // 同步场景：关闭弹窗；异步场景由父组件设置 loading 后手动关闭
+  // Sync scenario: close popup; async scenario: parent sets loading then closes manually
   if (!props.loading) {
     open.value = false
   }
 }
 
-// loading 结束后自动关闭
+// Auto-close after loading ends
 watch(() => props.loading, (val) => {
   if (!val && open.value) {
     open.value = false

@@ -1,13 +1,13 @@
 /**
- * 作业提交
+ * Homework submission
  * POST /api/homeworks/submit
  * body: { course_id, chapter_id?, homework_cid, files?, content? }
  *
- * 防刷策略（详见 utils/submit/homework.ts）：
- *  - 首次提交：给 submitExp 经验
- *  - 重提交：在 resubmitCount 限额内给 resubmitExp，超出后 gainedExp=0
- *  - 作业分数由教师批改后通过 score API 更新（此处只更新经验）
- *  - 提交次数记录在 userHomeworks.record._submitCount 内部字段
+ * Anti-abuse strategy (see utils/submit/homework.ts for details):
+ *  - First submission: gives submitExp exp
+ *  - Resubmission: gives resubmitExp within the resubmitCount limit, gainedExp=0 after exceeding
+ *  - Homework score is updated by the teacher via the score API after grading (only exp is updated here)
+ *  - Submit count is recorded in the internal field userHomeworks.record._submitCount
  */
 import { db, schema } from '@nuxthub/db'
 import { and, eq } from 'drizzle-orm'
@@ -16,7 +16,7 @@ import { findUserSubmitRecord } from '../../utils/submit/record'
 import { notifyCourseProgress } from '../../utils/submit/progress'
 import { withSubmitHandler } from '../../utils/submit/handler'
 
-export default withSubmitHandler('提交作业失败', async (event) => {
+export default withSubmitHandler('Failed to submit homework', async (event) => {
   const ctx = await parseSubmitContext(event, {
     cidField: 'homework_cid',
     sectionKey: 'homework',
@@ -26,13 +26,13 @@ export default withSubmitHandler('提交作业失败', async (event) => {
   const { files, content } = body
   const maxResubmitCount = Number(hConfig.maxResubmitCount ?? 3)
 
-  // 1. 查找已有记录
+  // 1. Find existing record
   const existing = await findUserSubmitRecord(user.id, courseId, 'homework', homeworkCid)
   const recordMeta: any = (existing?.record && typeof existing.record === 'object') ? existing.record : {}
   const prevResubmitCount = Number(recordMeta._submitCount || 0)
   const nextResubmitCount = prevResubmitCount + 1
 
-  // 2. 计算经验值 + 金币
+  // 2. Calculate exp + coin
   let gainedExp: number
   let gainedCoin: number
   if (!existing) {
@@ -46,7 +46,7 @@ export default withSubmitHandler('提交作业失败', async (event) => {
     gainedCoin = hConfig.resubmitCoin
   }
 
-  // 3. 写 userHomeworks
+  // 3. Write userHomeworks
   if (existing) {
     const newRecord = { ...recordMeta, _submitCount: nextResubmitCount }
     await db.update(schema.userHomeworks).set({
@@ -69,7 +69,7 @@ export default withSubmitHandler('提交作业失败', async (event) => {
     })
   }
 
-  // 4. 更新 userCourses.exp + coin（作业分数 = 0，经验/金币 = gained）+ 奖章
+  // 4. Update userCourses.exp + coin (homework score = 0, exp/coin = gained) + medals
   await notifyCourseProgress({
     userId: user.id,
     courseId,
@@ -79,7 +79,7 @@ export default withSubmitHandler('提交作业失败', async (event) => {
     coin: gainedCoin,
   })
 
-  // 5. 向班级房间广播 danmaku（fire-and-forget，不影响响应）
+  // 5. Broadcast danmaku to the class room (fire-and-forget, does not affect response)
   void broadcastSubmitDanmaku({
     userId: user.id,
     kind: 'homework',

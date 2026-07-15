@@ -1,9 +1,9 @@
 /**
- * ueditor/render/nodes/math.vue 组件测试
+ * ueditor/render/nodes/math.vue component test
  * @see modules/lms/components/ueditor/render/nodes/math.vue
  *
- * KaTeX 在测试环境从 CDN 动态加载，window.katex 不可用，html 为空，
- * 组件应回退到 error class。
+ * KaTeX is dynamically loaded from CDN in test environment, window.katex is unavailable, html is empty,
+ * Component should fall back to error class.
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

@@ -1,5 +1,5 @@
 /**
- * CShow 组件测试
+ * CShow component tests
  * @see modules/admin/components/table/CShow.vue
  */
 import { describe, it, expect, beforeEach, mount, flushPromises, baseBeforeEach, _globalStubs, _globalConfig, makeColumn } from './_shared'

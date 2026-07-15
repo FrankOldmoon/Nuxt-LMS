@@ -1,5 +1,5 @@
 /**
- * useLmsPublicConfig composable 测试
+ * useLmsPublicConfig composable test
  * @see modules/lms/composables/useLmsPublicConfig.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -44,7 +44,7 @@ describe('composables/useLmsPublicConfig', () => {
   it('refresh 调用 refreshNuxtData', async () => {
     const { useLmsPublicConfig } = await import('../../composables/useLmsPublicConfig')
     const { refresh } = useLmsPublicConfig()
-    // refresh 调用 refreshNuxtData（无注册 handler 时不抛错）
+    // refresh calls refreshNuxtData (does not throw when no handler is registered)
     await expect(refresh()).resolves.toBeUndefined()
   })
 })

@@ -1,10 +1,10 @@
 /**
- * 题目（vue question 节点）支持工具
+ * Question (vue question node) support utilities
  */
 
 import { extractPlainText } from './textUtils'
 
-/** 题型 → 显示标签 */
+/** Question type → display label */
 export const QUESTION_TYPE_LABELS: Record<string, string> = {
   single: 'Single Choice', judge: 'True/False', multiple: 'Multiple Choice',
   fill: 'Fill in Blank', select: 'Dropdown', sort: 'Sort',
@@ -13,7 +13,7 @@ export const QUESTION_TYPE_LABELS: Record<string, string> = {
   video: 'Video', evaluation: 'Evaluation',
 }
 
-/** 解密 API 返回的加密答案值（与后端 encryptValue 对应） */
+/** Decrypt the encrypted answer value returned by the API (corresponds to backend encryptValue) */
 export function decryptAnswerValue(val: any): any {
   if (typeof val !== 'string' || !val.startsWith('enc:')) return val
   const encStr = val.slice(4)
@@ -32,13 +32,13 @@ export function decryptAnswerValue(val: any): any {
   }
 }
 
-/** 递归扫描 Tiptap JSON，收集所有 vue question 节点的 cid */
+/** Recursively scan Tiptap JSON, collecting cids of all vue question nodes */
 export function collectVueQuestionCids(nodes: any[], cids: number[]): void {
   for (const node of nodes || []) {
     if (!node) continue
     if (node.type === 'vue' && node.attrs?.type === 'question') {
       const c = node.attrs.content
-      // 字符串/数字类型的 content 是 cid，对象类型是内联题目（无需 API）
+      // String/number type content is a cid; object type is an inline question (no API needed)
       if (c != null && typeof c !== 'object') {
         const cid = Number(c)
         if (cid > 0 && !cids.includes(cid)) {
@@ -46,14 +46,14 @@ export function collectVueQuestionCids(nodes: any[], cids: number[]): void {
         }
       }
     }
-    // 递归扫描子节点
+    // Recursively scan child nodes
     if (Array.isArray(node.content)) {
       collectVueQuestionCids(node.content, cids)
     }
   }
 }
 
-/** 格式化答案为可读文本（自动解密加密值） */
+/** Format answer as readable text (automatically decrypts encrypted values) */
 export function formatQuestionAnswer(questionData: any): string {
   const answer = questionData.answer
   if (!Array.isArray(answer) || answer.length === 0) return ''

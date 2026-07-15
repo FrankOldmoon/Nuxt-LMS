@@ -1,5 +1,5 @@
 /**
- * composables/useHeaderMenu 测试
+ * composables/useHeaderMenu tests
  * @see modules/base/composables/useHeaderMenu.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -11,7 +11,7 @@ import {
   clearMockFetchHandler,
 } from '../../../../test/setup/nuxt-stubs'
 
-// useSiteConfig / useUnreadCounts 是 auto-import，未在 nuxt-stubs 中暴露，需手动 stub
+// useSiteConfig / useUnreadCounts are auto-imports, not exposed in nuxt-stubs, need manual stub
 function stubDeps(opts: {
   showMyFiles?: boolean
   showNotify?: boolean
@@ -67,11 +67,11 @@ describe('composables/useHeaderMenu - userMenuItems', () => {
     setMockAuthUser(null)
     const { useHeaderMenu } = await import('../../composables/useHeaderMenu')
     const { userMenuItems } = useHeaderMenu()
-    // 第 0 组有 profile（showMyFiles 默认 true，还包含 myFiles）
+    // Group 0 has profile (showMyFiles defaults to true, also includes myFiles)
     expect(userMenuItems.value[0]).toHaveLength(2)
     expect(userMenuItems.value[0][0].label).toBe('profile.title')
     expect(userMenuItems.value[0][1].label).toBe('myFiles.title')
-    // 最后一组是 logout
+    // The last group is logout
     const last = userMenuItems.value[userMenuItems.value.length - 1]
     expect(last[0].label).toBe('auth.logout')
   })
@@ -101,7 +101,7 @@ describe('composables/useHeaderMenu - userMenuItems', () => {
     )
     const { useHeaderMenu } = await import('../../composables/useHeaderMenu')
     const { userMenuItems } = useHeaderMenu()
-    // 应有 3 组：profile(+myFiles) / settings+importUsers / logout
+    // Should have 3 groups: profile(+myFiles) / settings+importUsers / logout
     expect(userMenuItems.value.length).toBeGreaterThanOrEqual(3)
     const adminGroup = userMenuItems.value.find((g: any) =>
       g.some((i: any) => i.label === 'settings.title'),
@@ -163,7 +163,7 @@ describe('composables/useHeaderMenu - userMenuItems', () => {
     const { userMenuItems } = useHeaderMenu()
     const lastGroup = userMenuItems.value[userMenuItems.value.length - 1]
     await lastGroup[0].onSelect()
-    // 不抛错即视为成功
+    // Not throwing an error is considered success
   })
 })
 

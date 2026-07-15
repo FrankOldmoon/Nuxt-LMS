@@ -1,8 +1,8 @@
 /**
- * course/editor/memberRow.vue 组件测试
+ * course/editor/memberRow.vue component test
  * @see modules/lms/components/course/editor/memberRow.vue
  *
- * 成员行：头像 + 姓名 + 删除按钮
+ * Member row: avatar + name + delete button
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

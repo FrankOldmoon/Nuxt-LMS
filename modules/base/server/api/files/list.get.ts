@@ -12,7 +12,7 @@ export default eventHandler(async (event) => {
   const keyword = String(query.keyword || '').trim()
   const group = String(query.group || '').trim()
 
-  // 构建条件：小组文件按 group 过滤（共享空间）；个人文件按 userId 过滤
+  // Build condition: group files filtered by group (shared space); personal files filtered by userId
   const ownerFilter = group
     ? eq(schema.files.group, group)
     : eq(schema.files.userId, user.id)
@@ -24,14 +24,14 @@ export default eventHandler(async (event) => {
       )
     : and(ownerFilter, isNull(schema.files.deletedAt))
 
-  // 总数
+  // Total count
   const totalRows = await db
     .select({ total: count() })
     .from(schema.files)
     .where(where)
   const total = Number(totalRows[0]?.total) || 0
 
-  // 排序
+  // Sort
   const orderCol = sort === 'size'
     ? schema.files.size
     : sort === 'name'
@@ -39,7 +39,7 @@ export default eventHandler(async (event) => {
       : schema.files.createdAt
   const orderFn = order === 'asc' ? asc : desc
 
-  // 分页查询
+  // Paginated query
   const rows = await db
     .select({
       id: schema.files.id,

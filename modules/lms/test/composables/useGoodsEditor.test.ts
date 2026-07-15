@@ -1,10 +1,10 @@
 /**
- * useGoodsEditor composable 测试
+ * useGoodsEditor composable test
  * @see modules/lms/components/lms/useGoodsEditor.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-// composable 测试无组件上下文，让 onMounted 立即执行回调以触发 loadGoods
+// composable test has no component context, let onMounted execute callback immediately to trigger loadGoods
 vi.mock('vue', async (importOriginal) => {
   const actual = await importOriginal<typeof import('vue')>()
   return {
@@ -30,7 +30,7 @@ describe('composables/useGoodsEditor', () => {
     setMockFetchHandler(async () => ({ data: [], success: true, msg: '' }))
     const { useGoodsEditor } = await import('../../components/lms/useGoodsEditor')
     const { loading } = useGoodsEditor(computed(() => 0))
-    // onMounted 会触发 loadGoods，但需要 nextTick
+    // onMounted will trigger loadGoods, but needs nextTick
     expect(loading.value).toBe(true)
   })
 
@@ -43,7 +43,7 @@ describe('composables/useGoodsEditor', () => {
     })
     const { useGoodsEditor } = await import('../../components/lms/useGoodsEditor')
     const { goods, loading } = useGoodsEditor(computed(() => 0))
-    // 等待 onMounted + loadGoods 完成
+    // wait for onMounted + loadGoods to complete
     await new Promise((r) => setTimeout(r, 10))
     expect(loading.value).toBe(false)
     expect(goods.value).toHaveLength(1)
@@ -58,7 +58,7 @@ describe('composables/useGoodsEditor', () => {
     const initialLen = goods.value.length
     addGood()
     expect(goods.value).toHaveLength(initialLen + 1)
-    expect(goods.value[goods.value.length - 1].id).toBe(0) // 新商品 id=0
+    expect(goods.value[goods.value.length - 1].id).toBe(0) // new good id=0
     expect(goods.value[goods.value.length - 1].courseId).toBe(1)
   })
 
@@ -69,7 +69,7 @@ describe('composables/useGoodsEditor', () => {
     await new Promise((r) => setTimeout(r, 10))
     addGood()
     const len = goods.value.length
-    deleteGood(0) // id=0 的未保存商品
+    deleteGood(0) // unsaved good with id=0
     expect(goods.value).toHaveLength(len - 1)
   })
 

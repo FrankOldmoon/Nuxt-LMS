@@ -1,5 +1,5 @@
 /**
- * useMedals composable 测试
+ * useMedals composable test
  * @see modules/lms/composables/useMedals.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -65,7 +65,7 @@ describe('composables/useMedals', () => {
     const { checkMedals } = useMedals()
     await checkMedals(1)
     expect(newMedalCallCount).toBe(1)
-    expect(myMedalsCallCount).toBe(1) // 触发刷新
+    expect(myMedalsCallCount).toBe(1) // Trigger refresh
   })
 
   it('checkMedals 无新奖章时不刷新', async () => {
@@ -86,6 +86,6 @@ describe('composables/useMedals', () => {
     const { checkMedals } = useMedals()
     await checkMedals(1)
     expect(newMedalCallCount).toBe(1)
-    expect(myMedalsCallCount).toBe(0) // 不刷新
+    expect(myMedalsCallCount).toBe(0) // Does not refresh
   })
 })

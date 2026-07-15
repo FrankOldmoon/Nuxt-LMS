@@ -32,7 +32,7 @@ const props = defineProps<{
 
 const { t } = useI18n()
 
-/** 文件 URL 列表：支持 JSON 数组字符串 / 数组 / 单个 URL */
+/** File URL list: supports JSON array string / array / single URL */
 const fileUrls = computed<string[]>(() => {
   const v = props.value
   if (!v) return []

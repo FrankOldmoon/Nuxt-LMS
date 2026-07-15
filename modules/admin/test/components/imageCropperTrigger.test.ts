@@ -1,5 +1,5 @@
 /**
- * ImageCropperTrigger 组件测试
+ * ImageCropperTrigger component tests
  * @see modules/admin/components/table/ImageCropperTrigger.vue
  */
 import { describe, it, expect, beforeEach, mount, baseBeforeEach, _globalStubs, _globalConfig } from './_shared'
@@ -50,7 +50,7 @@ describe('table/ImageCropperTrigger.vue', () => {
     const wrapper = mount(ImageCropperTrigger, {
       global: _config,
     })
-    // 通过 cropper-modal 子组件的 data 属性验证默认 prop 透传
+    // Verify default prop passthrough via cropper-modal child component's data attributes
     const cropper = wrapper.find('.cropper-modal')
     expect(cropper.exists()).toBe(true)
     expect(cropper.attributes('data-stencil')).toBe('rectangle')
@@ -92,7 +92,7 @@ describe('table/ImageCropperTrigger.vue', () => {
     const wrapper = mount(ImageCropperTrigger, {
       global: _config,
     })
-    // 直接在 vm 上触发（绕过子组件 stub，因为 stub 未连接 emit）
+    // Trigger directly on vm (bypassing child component stub, since stub is not connected to emit)
     wrapper.vm.$emit('uploaded', 'http://example.com/cropped.png')
     expect(wrapper.emitted('uploaded')).toBeTruthy()
     expect(wrapper.emitted('uploaded')![0]).toEqual(['http://example.com/cropped.png'])

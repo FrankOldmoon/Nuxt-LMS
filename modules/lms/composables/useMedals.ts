@@ -1,8 +1,8 @@
 /**
- * 奖章 composable：管理当前用户的已获奖章
- * - myMedals: 已获得的奖章列表
- * - fetchMyMedals: 重新拉取
- * - checkMedals: 触发服务端检查并授予（提交后调用）
+ * Medals composable: manage current user's earned medals
+ * - myMedals: list of earned medals
+ * - fetchMyMedals: re-fetch
+ * - checkMedals: trigger server-side check and grant (called after submission)
  */
 export interface MyMedal {
   medalId: number
@@ -27,11 +27,11 @@ export function useMedals() {
       const data = await cRequest<MyMedal[]>('/api/medals/my')
       myMedals.value = data || []
     } catch {
-      // 静默
+      // silent
     }
   }
 
-  /** 触发服务端检查并授予，若有新奖章则刷新列表 */
+  /** Trigger server-side check and grant; refresh list if new medals awarded */
   async function checkMedals(courseId: number) {
     if (!courseId) return
     try {
@@ -42,7 +42,7 @@ export function useMedals() {
         await fetchMyMedals()
       }
     } catch {
-      // 静默
+      // silent
     }
   }
 

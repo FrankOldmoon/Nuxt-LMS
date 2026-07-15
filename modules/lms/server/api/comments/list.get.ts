@@ -6,13 +6,13 @@ export default eventHandler(async (event) => {
 
   const { course_id, cid } = getQuery(event)
   if (!course_id || !cid) {
-    return cResp(null, '缺少 course_id 或 cid 参数', false)
+    return cResp(null, 'Missing course_id or cid parameter', false)
   }
 
   const courseId = Number(course_id)
   const commentCid = Number(cid)
 
-  // 1. 查询该评论自身（root comment）
+  // 1. Query the comment itself (root comment)
   const root = await db.query.comments.findFirst({
     where: and(
       eq(schema.comments.courseId, courseId),
@@ -22,7 +22,7 @@ export default eventHandler(async (event) => {
 
   if (!root) return cResp({ root: null, children: [] })
 
-  // 2. 查询所有 parentId 为该 cid 的子评论
+  // 2. Query all child comments with parentId equal to this cid
   const children = await db.query.comments.findMany({
     where: and(
       eq(schema.comments.courseId, courseId),
@@ -30,7 +30,7 @@ export default eventHandler(async (event) => {
     )
   })
 
-  // 3. 收集所有 userId，批量查询用户信息
+  // 3. Collect all userIds and batch query user information
   const allComments = [root, ...children]
   const userIds = [...new Set(allComments.map(c => c.userId))]
   const users = await db.query.users.findMany({
@@ -38,7 +38,7 @@ export default eventHandler(async (event) => {
   })
   const userMap = new Map(users.map(u => [u.id, u]))
 
-  // 4. 查询所有 userComments（点赞记录，用于统计每条评论的赞数 + 当前用户点赞状态）
+  // 4. Query all userComments (like records) to count the total likes for each comment + current user's like status
   const commentCids = [root.cid, ...children.map(c => c.cid)]
   const allUserComments = commentCids.length > 0
     ? await db.query.userComments.findMany({
@@ -50,19 +50,19 @@ export default eventHandler(async (event) => {
       })
     : []
 
-  // 每条评论的总赞数
+  // Total like count for each comment
   const likeCountMap = new Map()
   for (const uc of allUserComments) {
     likeCountMap.set(uc.commentCid, (likeCountMap.get(uc.commentCid) || 0) + 1)
   }
 
-  // 当前用户的点赞状态
+  // Current user's like status
   const likedMap = new Map()
   for (const uc of allUserComments) {
     if (uc.userId === user.id) likedMap.set(uc.commentCid, true)
   }
 
-  // 5. 组合：评论 + 用户信息 + 点赞状态 + 赞数
+  // 5. Combine: comment + user info + like status + like count
   const combine = (c: any) => {
     const u = userMap.get(c.userId)
     return {
@@ -74,7 +74,7 @@ export default eventHandler(async (event) => {
     }
   }
 
-  // 6. 子评论排序：先按赞数降序，再按发表时间升序
+  // 6. Sort child comments: by like count desc first, then by post time asc
   const sortedChildren = (children as any[])
     .map(combine)
     .sort((a, b) => {

@@ -8,7 +8,7 @@
         <div class="flex justify-end gap-2">
           <UButton variant="ghost" @click="close">{{ $t('common.cancel') }}</UButton>
           <UButton color="primary" :disabled="!resetPassword" @click="doResetPassword">
-            {{ $t('classSelector.confirmReset') }}
+            {{ $t('classSelector.confirm reset') }}
           </UButton>
         </div>
       </div>

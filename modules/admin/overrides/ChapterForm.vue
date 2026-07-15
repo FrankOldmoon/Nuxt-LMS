@@ -7,7 +7,7 @@
       <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" @click="$emit('cancel')" />
     </div>
 
-    <!-- 新增模式：先选课程，再进入编辑器 -->
+    <!-- Add mode: select course first, then enter editor -->
     <div v-if="!row && !selectedCourseId" class="space-y-3">
       <h4 class="text-sm font-medium">{{ t('admin.form.selectCourse') }}</h4>
       <USelectMenu
@@ -26,14 +26,14 @@
       </div>
     </div>
 
-    <!-- 编辑 / 已选课程：渲染表单字段 -->
+    <!-- Edit / course selected: render formFields -->
     <div v-else class="space-y-3 max-h-[70vh] overflow-auto pr-1">
       <!-- name -->
       <UFormField label="name" :required="true">
         <UInput v-model="form.name" size="sm" class="w-full" />
       </UFormField>
 
-      <!-- content：使用 RichEditor（ueditor），传入 courseId 让内部 question/homework 等节点能加载 -->
+      <!-- content: uses RichEditor (ueditor), passes courseId so internal nodes like question/homework can load -->
       <UFormField label="content" description="jsonb">
         <ClientOnly>
           <component
@@ -65,7 +65,7 @@
         </div>
       </UFormField>
 
-      <!-- 操作按钮 -->
+      <!-- Action buttons -->
       <div class="flex justify-end gap-2 pt-2 border-t border-default/50">
         <UButton color="neutral" variant="ghost" :label="t('admin.form.cancel')" @click="$emit('cancel')" />
         <UButton color="primary" :label="t('admin.form.save')" :loading="saving" @click="onSave" />

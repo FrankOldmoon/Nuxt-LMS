@@ -1,5 +1,5 @@
 /**
- * multiple 组件测试 (render)
+ * multiple component test (render)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/render/multiple.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

@@ -7,7 +7,7 @@ export interface TocLink {
 }
 
 /**
- * 块级节点类型：这些节点的内部 inline 文本作为一个文本块整体提取
+ * Block-level node types: the inline text within these nodes is extracted as a single text block
  */
 const BLOCK_NODE_TYPES = new Set([
   'paragraph', 'heading', 'codeBlock', 'blockquote',
@@ -15,17 +15,17 @@ const BLOCK_NODE_TYPES = new Set([
 ])
 
 /**
- * 从 TipTap doc JSON 中提取全部纯文本（块级节点以换行分隔）
- * 用于把章节内容作为 AI 知识库上下文。
+ * Extract all plain text from TipTap doc JSON (block-level nodes separated by newlines)
+ * Used to provide chapter content as AI knowledge base context.
  *
- * @param content TipTap doc JSON 对象，或字符串（直接返回）
- * @param maxChars 最大字符数，超出尾部截断并追加省略提示（默认不限制）
+ * @param content TipTap doc JSON object, or a string (returned directly)
+ * @param maxChars Maximum character count; if exceeded, the tail is truncated and an ellipsis hint is appended (default: no limit)
  */
 export function extractPlainText(content: any, maxChars = Infinity): string {
   if (!content) return ''
-  // 字符串（markdown / 纯文本）直接返回
+  // String (markdown / plain text) returned directly
   if (typeof content === 'string') {
-    return maxChars < content.length ? content.slice(0, maxChars) + '\n…(内容过长已截断)' : content
+    return maxChars < content.length ? content.slice(0, maxChars) + '\n…(Content too long, truncated)' : content
   }
   const blocks: string[] = []
 
@@ -40,7 +40,7 @@ export function extractPlainText(content: any, maxChars = Infinity): string {
 
   function walk(node: any) {
     if (!node) return
-    // 块级节点：整体收集 inline 文本，不再深入子节点
+    // Block-level node: collect inline text as a whole, do not recurse into child nodes
     if (BLOCK_NODE_TYPES.has(node.type)) {
       const text = collectInline(node).trim()
       if (text) blocks.push(text)
@@ -54,26 +54,26 @@ export function extractPlainText(content: any, maxChars = Infinity): string {
   walk(content)
   let result = blocks.join('\n')
   if (maxChars < result.length) {
-    result = result.slice(0, maxChars) + '\n…(内容过长已截断)'
+    result = result.slice(0, maxChars) + '\n…(Content too long, truncated)'
   }
   return result
 }
 
 /**
- * 从 tiptap JSON content 中提取所有 heading 节点，构建嵌套 TOC 树
+ * Extract all heading nodes from tiptap JSON content and build a nested TOC tree
  *
- * heading 节点的 attrs 包含：
- * - id → 用作锚点 id
- * - level → 标题层级 (1-6)
+ * The heading node's attrs contain:
+ * - id → used as the anchor id
+ * - level → heading level (1-6)
  *
- * 返回按层级嵌套的 TocLink 数组（支持 h1→h2→h3 三级嵌套）
+ * Returns a TocLink array nested by level (supports h1→h2→h3 three-level nesting)
  */
 export function extractTocFromContent(content: Record<string, any> | null | undefined): TocLink[] {
   if (!content) return []
 
   const flatHeadings: { id: string; text: string; level: number }[] = []
 
-  // 递归遍历找出所有 heading 节点
+  // Recursively traverse to find all heading nodes
   function walk(node: any) {
     if (!node) return
     if (node.type === 'heading') {
@@ -91,14 +91,14 @@ export function extractTocFromContent(content: Record<string, any> | null | unde
 
   walk(content)
 
-  // 用栈构建嵌套树
+  // Build nested tree using a stack
   const root: TocLink[] = []
   const levelStack: { level: number; node: TocLink }[] = []
 
   for (const heading of flatHeadings) {
     const link: TocLink = { id: heading.id, text: heading.text, children: [] }
 
-    // 弹出所有 level 不小于当前 heading 的栈帧
+    // Pop all stack frames whose level is not less than the current heading
     while (levelStack.length > 0 && levelStack[levelStack.length - 1].level >= heading.level) {
       const popped = levelStack.pop()!
       if (!popped.node.children?.length) delete popped.node.children
@@ -115,7 +115,7 @@ export function extractTocFromContent(content: Record<string, any> | null | unde
     levelStack.push({ level: heading.level, node: link })
   }
 
-  // 清理栈中剩余节点的空 children
+  // Clean up empty children of remaining nodes in the stack
   for (const item of levelStack) {
     if (!item.node.children?.length) delete item.node.children
   }

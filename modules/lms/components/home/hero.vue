@@ -10,5 +10,5 @@
 </template>
 
 <script setup lang="ts">
-// 首页 hero 区块：标题 + 副标题，由 home.showHero 开关控制显隐
+// Home hero section：Title + subtitleTitle，by home.showHero on/offcontrol visibility
 </script>

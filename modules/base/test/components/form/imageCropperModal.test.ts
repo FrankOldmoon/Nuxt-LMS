@@ -1,8 +1,8 @@
 /**
- * ImageCropperModal 组件测试
+ * ImageCropperModal component tests
  * @see modules/base/components/form/imageCropperModal.vue
  *
- * 使用 mock useImageCropper 避免 vue-advanced-cropper 依赖
+ * Use mock useImageCropper to avoid vue-advanced-cropper dependency
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -13,7 +13,7 @@ beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
 
-  // Mock useImageCropper — 返回简化桩，避免 vue-advanced-cropper 真实渲染
+  // Mock useImageCropper — return a simplified stub to avoid real rendering of vue-advanced-cropper
   const StubCropper = defineComponent({
     name: 'StubCropper',
     template: '<div class="stub-cropper" />',
@@ -127,7 +127,7 @@ describe('form/imageCropperModal.vue', () => {
     const file = new File(['dummy'], 'test.png', { type: 'image/png' })
     vm.setImage(file)
     await flushPromises()
-    // 找到确认按钮（包含 common.confirm 文案）
+    // Find the confirm button (contains common.confirm text)
     const buttons = wrapper.findAll('button')
     const confirmBtn = buttons.find((b) => b.text().includes('common.confirm'))
     expect(confirmBtn).toBeTruthy()
@@ -145,7 +145,7 @@ describe('form/imageCropperModal.vue', () => {
     vm.setImage(file)
     await flushPromises()
     const buttons = wrapper.findAll('button')
-    // 第一个按钮是 X 关闭按钮
+    // The first button is the X close button
     await buttons[0].trigger('click')
     await flushPromises()
     expect(wrapper.emitted('close')).toBeTruthy()

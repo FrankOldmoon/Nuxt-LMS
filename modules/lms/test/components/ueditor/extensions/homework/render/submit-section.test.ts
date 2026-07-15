@@ -1,5 +1,5 @@
 /**
- * homework submit-section 组件测试
+ * homework submit-section component test
  * @see modules/lms/components/ueditor/extensions/nodes/vue/homework/render/submit-section.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

@@ -1,18 +1,18 @@
 /**
- * LMS WS 班级消息处理器单元测试
+ * LMS WS Class message handler unit test
  * @see modules/lms/server/utils/ws/class.ts
  * @see modules/lms/server/utils/ws/class-handlers/*.ts
  *
- * 覆盖：
- * - handleClassMessage  dispatcher（type 路由 + 未知 type 返回 false）
- * - handleClassJoin  加入班级 + joined 推送 + onlineUpdate 广播
- * - handleClassInvite  邀请广播
- * - handleClassDanmaku  弹幕（截断 200 字符）
- * - handleClassOnline  在线状态
- * - handleClassChatroom  聊天室（截断 1000 字符 + 空文本跳过）
- * - voteStart / voteSubmit / voteEnd  投票状态机（计票 + 重复投票防刷 + 清理）
- * - quickAnswerStart / Submit / End  抢答（首人胜出 + 防重复）
- * - cleanupClassPeer  离开清理
+ * Coverage:
+ * - handleClassMessage: dispatcher (type routing + unknown type returns false)
+ * - handleClassJoin: join class + joined push + onlineUpdate broadcast
+ * - handleClassInvite: invite broadcast
+ * - handleClassDanmaku: danmaku (truncate 200 chars)
+ * - handleClassOnline: online status
+ * - handleClassChatroom: chatroom (truncate 1000 chars + skip empty text)
+ * - voteStart / voteSubmit / voteEnd: voting state machine (vote counting + duplicate vote prevention + cleanup)
+ * - quickAnswerStart / Submit / End: quick answer (first person wins + duplicate prevention)
+ * - cleanupClassPeer: cleanup on leave
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { makeMockPeer } from '../../../../test/setup/db-helpers'
@@ -25,7 +25,7 @@ beforeEach(() => {
   quickAnswers.clear()
 })
 
-/** 收集所有 peer.send 调用并解析 JSON */
+/** Collect all peer.send calls and parse JSON */
 function sendsOf(peer: any): any[] {
   return peer.send.mock.calls.map((c: any[]) => JSON.parse(c[0]))
 }
@@ -46,7 +46,7 @@ describe('ws/class: handleClassMessage dispatcher', () => {
   it('join 消息即使没有 classId 也由 handler 内部处理（返回 true）', () => {
     const peer = makeMockPeer()
     const result = handleClassMessage(peer, { type: 'join' })
-    // handleClassJoin 内部对无 classId 静默忽略，但 dispatcher 返回 true
+    // handleClassJoin internally silently ignores missing classId, but dispatcher returns true
     expect(result).toBe(true)
   })
 })
@@ -66,9 +66,9 @@ describe('ws/class: join', () => {
   it('join 时携带 userId 广播 onlineUpdate', () => {
     const peer1 = makeMockPeer({ userId: 1, userName: 'alice' })
     const peer2 = makeMockPeer({ userId: 2, userName: 'bob' })
-    // peer1 先加入（已收到 onlineUpdate 推送但广播房间为空）
+    // peer1 joins first (already received onlineUpdate push but broadcast room is empty)
     handleClassMessage(peer1, { type: 'join', classId: 1, userId: 1, from: 'alice' })
-    // peer2 加入时会触发 onlineUpdate 广播给 peer1
+    // When peer2 joins, it triggers onlineUpdate broadcast to peer1
     handleClassMessage(peer2, { type: 'join', classId: 1, userId: 2, from: 'bob' })
     const p1Sends = sendsOf(peer1)
     expect(p1Sends).toContainEqual({
@@ -83,9 +83,9 @@ describe('ws/class: join', () => {
     expect(peer.send).not.toHaveBeenCalled()
   })
 
-  // 回归测试：base 层 useWsConnection().joinRoom() 实际发送的字段叫 `room`，
-  // 修复前 handleClassJoin 只读 data.classId，导致 join 静默失败、
-  // classRooms 始终为空，所有班级广播（danmaku/online/chatroom/vote/...）落空。
+  // Regression test: base layer useWsConnection().joinRoom() actually sends the field called `room`,
+  // Before fix, handleClassJoin only read data.classId, causing join to silently fail,
+  // classRooms is always empty, all class broadcasts (danmaku/online/chatroom/vote/...) have no effect.
   it('【回归】join 接受 base 层的 room 字段（兼容 useWsConnection().joinRoom 协议）', () => {
     const peer = makeMockPeer()
     handleClassMessage(peer, { type: 'join', room: 7, userId: 100, from: 'alice' })
@@ -114,10 +114,10 @@ describe('ws/class: join', () => {
 
   it('【回归】join 成功后，danmaku 广播能到达该 peer', () => {
     const peer = makeMockPeer()
-    // 模拟 base 层 joinRoom 协议
+    // Simulate base layer joinRoom protocol
     handleClassMessage(peer, { type: 'join', room: 10, userId: 1, from: 'alice' })
     peer.send.mockClear()
-    // 模拟 lms 层 sendDanmaku 协议
+    // Simulate lms layer sendDanmaku protocol
     handleClassMessage(makeMockPeer(), {
       type: 'danmaku', classId: 10, text: 'hello', from: 'bob',
     })
@@ -129,10 +129,10 @@ describe('ws/class: join', () => {
 describe('ws/class: invite / danmaku / online / chatroom', () => {
   let listener: any
   beforeEach(() => {
-    // 预填充房间：listener 始终在房间里，可用于接收广播
+    // Prefilled room: listener is always in the room, can be used to receive broadcasts
     listener = makeMockPeer({ userId: 1, userName: 'a' })
     handleClassMessage(listener, { type: 'join', classId: 10, userId: 1, from: 'a' })
-    listener.send.mockClear() // 清掉 joined 推送
+    listener.send.mockClear() // Clear joined push
   })
 
   it('invite 广播给所有班级成员', () => {
@@ -316,7 +316,7 @@ describe('ws/class: cleanupClassPeer', () => {
   it('离开时广播 offline + 离开房间', () => {
     const peer = makeMockPeer({ userId: 5, userName: 'alice' })
     handleClassMessage(peer, { type: 'join', classId: 1, userId: 5, from: 'alice' })
-    // 加入第二个 peer 来接收 offline 广播
+    // Add a second peer to receive offline broadcast
     const peer2 = makeMockPeer({ userId: 6, userName: 'bob' })
     handleClassMessage(peer2, { type: 'join', classId: 1, userId: 6, from: 'bob' })
     peer2.send.mockClear()
@@ -336,7 +336,7 @@ describe('ws/class: cleanupClassPeer', () => {
   it('未登录用户（无 userId）只离开房间不广播', () => {
     const peer = makeMockPeer()
     handleClassMessage(peer, { type: 'join', classId: 1 })
-    // peer 没有 _userId
+    // peer has no _userId
     cleanupClassPeer(peer)
     expect(classRooms.get(1)?.has(peer)).toBeFalsy()
   })

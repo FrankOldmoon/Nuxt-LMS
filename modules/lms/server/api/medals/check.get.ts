@@ -1,9 +1,9 @@
 
 
 /**
- * 检查并授予当前用户奖章
+ * Check and award medals to the current user
  * GET /api/medals/check?courseId=1
- * 返回新授予的奖章 ID 数组
+ * Returns an array of newly awarded medal IDs
  */
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)

@@ -1,15 +1,15 @@
 /**
- * WebSocket 回调注册表与消息分发（base 连接层）
+ * WebSocket callback registry and message dispatch (base connection layer)
  *
- * 采用通用的 type → handlers 映射，各 module 通过 registerWsHandler 注册回调。
- * connection 模块收到消息后调用 dispatch(type, data) 分发。
- * 模块级 Map 确保所有组件共享同一份（单例模式）。
+ * Uses a generic type → handlers mapping, each module registers callbacks via registerWsHandler.
+ * The connection module calls dispatch(type, data) to dispatch after receiving messages.
+ * Module-level Map ensures all components share the same instance (singleton pattern).
  */
 import type { WsHandler } from './types'
 
 const handlers = new Map<string, WsHandler[]>()
 
-/** 注册某消息类型的回调（返回取消注册函数） */
+/** Register a callback for a message type (returns an unregister function) */
 export function registerWsHandler(type: string, cb: WsHandler): () => void {
   let arr = handlers.get(type)
   if (!arr) {
@@ -26,13 +26,13 @@ export function registerWsHandler(type: string, cb: WsHandler): () => void {
   }
 }
 
-/** 将收到的 WS 消息分发到对应回调 */
+/** Dispatch received WS messages to corresponding callbacks */
 export function dispatch(type: string, data: any) {
   const arr = handlers.get(type)
   if (arr) arr.forEach(cb => cb(data))
 }
 
-/** 清空所有回调（测试/断线重置用） */
+/** Clear all callbacks (for testing/disconnect reset) */
 export function clearWsHandlers() {
   handlers.clear()
 }

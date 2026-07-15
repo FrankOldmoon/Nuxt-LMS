@@ -1,19 +1,19 @@
 /**
- * LMS Chapters 端点测试
+ * LMS Chapters endpoint test
  * @see modules/lms/server/api/chapters/*.ts
  *
- * 覆盖：
- * - show.get.ts       章节详情（权限 + isOpen + isPass + classChapters）
- * - add.post.ts       新增章节（默认 isOpen 来自 lmsConfig）
- * - batch.post.ts     批量操作
- * - update.post.ts    更新（content 提取 vue IDs + 版本快照 + WS 广播）
- * - record.post.ts    保存 record（userChapters upsert）
- * - restore.post.ts   恢复版本
- * - scores.get.ts     班级章节得分
- * - task-status.post.ts task 状态 + isPass → 触发 checkAndAwardMedals
- * - versions.get.ts   版本列表
- * - classes.get.ts    班级开放状态
- * - classes.post.ts   班级开放 upsert + WS 广播
+ * Coverage:
+ * - show.get.ts       chapter details (permissions + isOpen + isPass + classChapters)
+ * - add.post.ts       add chapter (default isOpen from lmsConfig)
+ * - batch.post.ts     batch operations
+ * - update.post.ts    update (content extracts vue IDs + version snapshot + WS broadcast)
+ * - record.post.ts    save record (userChapters upsert)
+ * - restore.post.ts   restore version
+ * - scores.get.ts     class chapter scores
+ * - task-status.post.ts task status + isPass → trigger checkAndAwardMedals
+ * - versions.get.ts   version list
+ * - classes.get.ts    class open status
+ * - classes.post.ts   class open upsert + WS broadcast
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
@@ -111,7 +111,7 @@ describe('API: chapters/show', () => {
       course: { id: 10, name: 'C1', config: '{}', chapters: [] },
     })
     _mockDb.query.userChapters.findFirst = vi.fn().mockResolvedValue(null)
-    // userClasses 链：select.from.where → 返回空数组
+    // userClasses chain: select.from.where → returns empty array
     _mockDb.where = vi.fn().mockResolvedValueOnce([])
     const handler = (await import('../../server/api/chapters/show.get')).default
     await expect(handler(makeEvent({ query: { id: '1' } }))).rejects.toThrow()
@@ -125,7 +125,7 @@ describe('API: chapters/show', () => {
       course: { id: 10, name: 'C1', config: '{}', chapters: [] },
     })
     _mockDb.query.userChapters.findFirst = vi.fn().mockResolvedValue(null)
-    // 第二次 where 调用返回 classChapters 列表
+    // Second where call returns classChapters list
     let whereCall = 0
     _mockDb.where = vi.fn().mockImplementation(() => {
       whereCall++
@@ -373,7 +373,7 @@ describe('API: chapters/scores', () => {
     _mockDb.limit = vi.fn().mockResolvedValueOnce([{ id: 1, courseId: 10, questionIds: [1, 2], homeworkIds: [3], commentIds: [4] }])
     ;(globalThis as any).getClassUsers = vi.fn().mockResolvedValue([
       { id: 100, isTeacher: false },
-      { id: 200, isTeacher: true }, // 排除
+      { id: 200, isTeacher: true }, // exclude
     ])
     const { assembleChapterScores } = await import('../../server/utils/chapterScores/assemble')
     ;(assembleChapterScores as any).mockReturnValue([{ userId: 100, score: 80 }])
@@ -417,15 +417,15 @@ describe('API: chapters/task-status', () => {
     const handler = (await import('../../server/api/chapters/task-status.post')).default
     const r = await handler(makeEvent({ body: { chapter_id: 1, task_status: {}, is_pass: true } }))
     expect(r.success).toBe(true)
-    // 已是 pass，不会再触发 checkAndAwardMedals
+    // Already pass, will not trigger checkAndAwardMedals again
   })
 
   it('从未通过变为通过触发 checkAndAwardMedals', async () => {
     setMockAuthState({ id: 1, username: 's', name: 's', roles: ['student'], permissions: [] })
     _mockDb.query.userChapters.findFirst = vi.fn().mockResolvedValue({ userId: 1, chapterId: 1, isPass: false })
     _mockDb.limit = vi.fn().mockResolvedValueOnce([{ courseId: 10 }])
-    // updateCourseProgress 内部用 db.select().from().where()（无 .limit()），
-    // 使 db 对象 thenable 让这些查询 resolve 为空数组 → total=0 → 提前返回，不抛错
+    // updateCourseProgress internally uses db.select().from().where() (no .limit()),
+    // making the db object thenable so these queries resolve to empty array → total=0 → early return, no error thrown
     _mockDb.then = (resolve: any) => resolve([])
     const checkSpy = vi.fn().mockResolvedValue([100, 200])
     ;(globalThis as any).checkAndAwardMedals = checkSpy
@@ -493,9 +493,9 @@ describe('API: chapters/classes.get', () => {
 
   it('admin 返回班级开放状态', async () => {
     setMockAuthState({ id: 1, username: 'a', name: 'a', roles: ['admin'], permissions: [] })
-    // select 调用 1: chapter 查 courseId
-    // select 调用 2: 所有 classes
-    // select 调用 3: classChapters
+    // select call 1: chapter query courseId
+    // select call 2: all classes
+    // select call 3: classChapters
     let selectCount = 0
     _mockDb.select = vi.fn().mockImplementation(() => {
       selectCount++
@@ -557,8 +557,8 @@ describe('API: chapters/classes.post', () => {
 
   it('admin 成功 upsert 并广播', async () => {
     setMockAuthState({ id: 1, username: 'a', name: 'a', roles: ['admin'], permissions: [] })
-    // 第一次：查 chapter.courseId
-    // 第二次：upsert 查询（existing 数组）
+    // First: query chapter.courseId
+    // Second: upsert query (existing array)
     let limitCall = 0
     _mockDb.limit = vi.fn().mockImplementation(() => {
       limitCall++

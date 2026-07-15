@@ -1,21 +1,21 @@
 import { db, schema } from '@nuxthub/db'
 import { eq } from 'drizzle-orm'
 
-/** 菜单项结构 */
+/** Menu item structure */
 export interface MenuItem {
-  /** 叶子节点有 table；分组节点无 table */
+  /** Leaf nodes have table; group nodes have no table */
   table?: string
   label: string
   visible: boolean
   order: number
-  /** 分组节点的子项（支持多层级） */
+  /** Group node children (supports multi-level) */
   children?: MenuItem[]
 }
 
-/** 菜单配置存储 key */
+/** Menu config storage key */
 export const MENU_CONFIG_KEY = 'admin:menu'
 
-/** 将 camelCase 表名转为 Title Case 标签（如 userRoles → User Roles） */
+/** Convert camelCase table name to Title Case label (e.g. userRoles → User Roles) */
 export function humanizeTableName(name: string): string {
   return name
     .replace(/([A-Z])/g, ' $1')
@@ -23,7 +23,7 @@ export function humanizeTableName(name: string): string {
     .trim()
 }
 
-/** 根据当前 schema 生成默认菜单（全部可见，按字母序） */
+/** Generate default menu based on current schema (all visible, alphabetical order) */
 export function defaultMenu(): MenuItem[] {
   const tables = getSchemaTables()
   return tables.map((table, index) => ({
@@ -35,17 +35,17 @@ export function defaultMenu(): MenuItem[] {
 }
 
 /**
- * 递归同步菜单树与当前 schema：
- * - 移除叶子节点中已不存在的表
- * - 收集树中已出现的所有表
- * 返回同步后的树 + 已用表集合
+ * Recursively sync menu tree with current schema:
+ * - Remove tables from leaf nodes that no longer exist
+ * - Collect all tables already present in the tree
+ * Returns synced tree + used tables set
  */
 function syncTree(items: MenuItem[], tables: Set<string>): { items: MenuItem[]; used: Set<string> } {
   const used = new Set<string>()
   const result: MenuItem[] = []
   items.forEach((item, idx) => {
     if (item.children && item.children.length > 0) {
-      // 分组节点：递归同步子项
+      // Group node: recursively sync children
       const child = syncTree(item.children, tables)
       child.used.forEach((t) => used.add(t))
       result.push({
@@ -55,7 +55,7 @@ function syncTree(items: MenuItem[], tables: Set<string>): { items: MenuItem[]; 
         children: child.items.length > 0 ? child.items : undefined,
       })
     } else if (typeof item.table === 'string' && tables.has(item.table)) {
-      // 有效叶子节点
+      // Valid leaf node
       used.add(item.table)
       result.push({
         table: item.table,
@@ -64,12 +64,12 @@ function syncTree(items: MenuItem[], tables: Set<string>): { items: MenuItem[]; 
         order: idx,
       })
     }
-    // 既无 table 又无 children，或 table 已不存在 → 丢弃
+    // Neither table nor children, or table no longer exists → discard
   })
   return { items: result, used }
 }
 
-/** 读取菜单配置：configs 表无记录则返回默认菜单 */
+/** Read menu config: returns default menu if no record in configs table */
 export async function getMenuConfig(): Promise<{ items: MenuItem[] }> {
   const rows = await db
     .select()
@@ -77,12 +77,12 @@ export async function getMenuConfig(): Promise<{ items: MenuItem[] }> {
     .where(eq(schema.configs.id, MENU_CONFIG_KEY))
     .limit(1)
 
-  // jsonb 列为 unknown，统一以 any 处理（与 base config.ts 一致）
+  // jsonb column is unknown, uniformly handled as any (consistent with base config.ts)
   const stored = rows[0]?.value as any as { items?: MenuItem[] } | null
   if (stored && Array.isArray(stored.items) && stored.items.length > 0) {
     const tables = new Set<string>(getSchemaTables())
     const { items, used } = syncTree(stored.items, tables)
-    // 补充新增表为根叶子
+    // Append new tables as root leaves
     for (const t of tables) {
       if (!used.has(t)) {
         items.push({ table: t, label: humanizeTableName(t), visible: true, order: items.length })
@@ -93,7 +93,7 @@ export async function getMenuConfig(): Promise<{ items: MenuItem[] }> {
   return { items: defaultMenu() }
 }
 
-/** 保存菜单配置到 configs 表（upsert） */
+/** Save menu config to configs table (upsert) */
 export async function setMenuConfig(items: MenuItem[]): Promise<void> {
   await upsertConfig(MENU_CONFIG_KEY, { items })
 }

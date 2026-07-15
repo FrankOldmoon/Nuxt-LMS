@@ -1,5 +1,5 @@
 /**
- * composables/useMessages 测试
+ * composables/useMessages tests
  * @see modules/base/composables/useMessages.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -13,7 +13,7 @@ import {
   dispatchWsHandler,
 } from '../../../../test/setup/nuxt-stubs'
 
-// useUnreadCounts 是 auto-import，未在 nuxt-stubs 中暴露，需手动 stub
+// useUnreadCounts is an auto-import, not exposed in nuxt-stubs, needs manual stub
 function stubUnreadCounts() {
   ;(globalThis as any).useUnreadCounts = () => ({
     counts: computed(() => ({ notifyUnread: 0, msgUnread: 0 })),
@@ -58,7 +58,7 @@ describe('composables/useMessages - selectConversation / startConversation', () 
     selectConversation(2)
     expect(selectedUserId.value).toBe(2)
     await vi.waitFor(() => {
-      // messages 被 reverse()
+      // messages is reversed()
       expect(messages.value).toHaveLength(1)
     })
   })
@@ -127,7 +127,7 @@ describe('composables/useMessages - sendMessage', () => {
     await sendMessage()
     const calls = getToastCalls()
     expect(calls[0].color).toBe('error')
-    expect(inputText.value).toBe('hi') // 失败时保留输入
+    expect(inputText.value).toBe('hi') // keep input on failure
   })
 })
 
@@ -155,7 +155,7 @@ describe('composables/useMessages - onSearchInput', () => {
       const { searchKeyword, searchResults, onSearchInput } = useMessages(ref(true))
       searchKeyword.value = 'car'
       onSearchInput()
-      // 防抖 300ms
+      // Debounce 300ms
       vi.advanceTimersByTime(350)
       await vi.waitFor(() => {
         expect(searchResults.value).toHaveLength(1)

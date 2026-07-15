@@ -1,6 +1,6 @@
 /**
- * 核心节点渲染器
- * 将 Tiptap JSON 各节点类型渲染到 pptxgenjs 幻灯片
+ * Core node renderer
+ * Renders various Tiptap JSON node types to pptxgenjs slides
  */
 
 import type { SlideContext } from './types'
@@ -16,42 +16,42 @@ import { newSlide } from './slideUtils'
 import { markdownToTiptap } from '../markdown'
 
 // ═══════════════════════════════════════
-// Tiptap 内容通用渲染
+// Tiptap content generic rendering
 // ═══════════════════════════════════════
 
 /**
- * 渲染 Tiptap 内容到幻灯片
- * - 字符串 → markdownToTiptap 转 Tiptap JSON 后递归渲染（与 ueditorRender 行为一致）
- * - Tiptap doc 对象 → 递归 addNodeToSlide
- * - 单个节点（paragraph/codeBlock 等）→ 直接 addNodeToSlide
- * - 节点数组 → 逐个 addNodeToSlide
+ * Render Tiptap content to slides
+ * - string → markdownToTiptap converts to Tiptap JSON then recursively renders (consistent with ueditorRender behavior)
+ * - Tiptap doc object → recursive addNodeToSlide
+ * - single node (paragraph/codeBlock etc.) → direct addNodeToSlide
+ * - node array → addNodeToSlide one by one
  */
 function renderTiptapContent(ctx: SlideContext, content: any, pres: any, indentLevel = 0): void {
   if (!content) return
   if (typeof content === 'string') {
-    // 字符串 → markdown 转 Tiptap JSON 后递归渲染（与 ueditorRender 行为一致）
+    // string → markdown converts to Tiptap JSON then recursively renders (consistent with ueditorRender behavior)
     if (!content.trim()) return
     const tiptap = markdownToTiptap(content)
     renderTiptapContent(ctx, tiptap, pres, indentLevel)
   } else if (typeof content === 'object') {
     if (Array.isArray(content)) {
-      // 节点数组 → 逐个渲染
+      // node array → render one by one
       for (const c of content) {
         if (c && typeof c === 'object') addNodeToSlide(ctx, c, pres, indentLevel)
       }
     } else if (content.type === 'doc') {
-      // doc 对象 → 递归渲染 content 数组
+      // doc object → recursively render content array
       for (const c of content.content || []) {
         addNodeToSlide(ctx, c, pres, indentLevel)
       }
     } else if (content.type) {
-      // 单个节点（paragraph/codeBlock 等）→ 直接渲染
+      // single node (paragraph/codeBlock etc.) → render directly
       addNodeToSlide(ctx, content, pres, indentLevel)
     }
   }
 }
 
-/** 将图片（MathImage）居中渲染到幻灯片，返回是否成功 */
+/** Render image (MathImage) centered to slide, returns whether successful */
 function addCachedImage(ctx: SlideContext, img: { dataUrl: string; width: number; height: number } | null | undefined, pres: any): boolean {
   if (!img) return false
   if (ctx.currentY + img.height + 0.2 > ctx.maxY) newSlide(ctx, pres)
@@ -68,7 +68,7 @@ function addCachedImage(ctx: SlideContext, img: { dataUrl: string; width: number
   return true
 }
 
-/** 占位标签渲染（交互式/复杂类型） */
+/** Placeholder label rendering (interactive/complex types) */
 function addPlaceholderLabel(ctx: SlideContext, label: string, pres: any): void {
   if (ctx.currentY + 0.35 > ctx.maxY) newSlide(ctx, pres)
   ctx.slide.addText(label, {
@@ -79,27 +79,27 @@ function addPlaceholderLabel(ctx: SlideContext, label: string, pres: any): void 
 }
 
 // ═══════════════════════════════════════
-// 分组边框（模拟 PPT group — pptxgenjs 不支持原生 group）
+// Group border (simulates PPT group — pptxgenjs does not support native group)
 // ═══════════════════════════════════════
 
-/** 分组边框样式（匹配编辑器 question 的 border-gray-200 + rounded-lg + p-4） */
-const GROUP_BORDER_COLOR = 'D1D5DB'   // gray-300（PPT 中比 gray-200 更清晰）
+/** Group border style (matches editor question's border-gray-200 + rounded-lg + p-4) */
+const GROUP_BORDER_COLOR = 'D1D5DB'   // gray-300 (clearer than gray-200 in PPT)
 const GROUP_BORDER_WIDTH = 1          // pt
-const GROUP_BORDER_RADIUS = 0.06      // 英寸，小圆角
-const GROUP_PADDING = 0.12            // 英寸，内边距
+const GROUP_BORDER_RADIUS = 0.06      // inches, small rounded corner
+const GROUP_PADDING = 0.12            // inches, inner padding
 
 /**
- * 在已渲染内容周围绘制边框，使所有子元素视觉上组成一个 group。
+ * Draw a border around already-rendered content, making all child elements visually form a group.
  *
- * 实现要点：
- * - 边框在内容渲染**之后**添加（z-order 在上层）
- * - 使用 fill: { type: 'none' } 透明填充，不遮挡已渲染的内容，仅边框线可见
- * - 支持单页（一个 roundRect）和跨页（首页到底部 + 末页从顶部）两种情况
+ * Implementation notes:
+ * - Border is added **after** content rendering (z-order on top)
+ * - Uses fill: { type: 'none' } transparent fill, does not cover already-rendered content, only border line is visible
+ * - Supports both single-page (one roundRect) and cross-page (first page to bottom + last page from top) cases
  *
- * @param startSlide    渲染开始时的幻灯片对象
- * @param startY        渲染开始时的 Y 坐标
- * @param marginX       渲染开始时的左边距（选项缩进会临时改变 marginX，需用初始值）
- * @param contentWidth  渲染开始时的内容宽度
+ * @param startSlide    slide object when rendering started
+ * @param startY        Y coordinate when rendering started
+ * @param marginX       left margin when rendering started (option indent temporarily changes marginX, need initial value)
+ * @param contentWidth  content width when rendering started
  */
 function addGroupBorder(
   ctx: SlideContext,
@@ -114,7 +114,7 @@ function addGroupBorder(
   const bw = contentWidth + GROUP_PADDING * 2
 
   if (startSlide === endSlide) {
-    // 单页：从 startY 到 endY
+    // single page: from startY to endY
     const by = startY - GROUP_PADDING
     const bh = endY - startY + GROUP_PADDING * 2
     if (bh > 0) {
@@ -126,7 +126,7 @@ function addGroupBorder(
       })
     }
   } else {
-    // 跨页：首页从 startY 到幻灯片底部
+    // cross-page: first page from startY to slide bottom
     const firstBy = startY - GROUP_PADDING
     const firstBh = ctx.maxY - firstBy
     if (firstBh > 0) {
@@ -137,7 +137,7 @@ function addGroupBorder(
         rectRadius: GROUP_BORDER_RADIUS,
       })
     }
-    // 末页从顶部到 endY
+    // last page from top to endY
     const lastBy = ctx.startY - GROUP_PADDING
     const lastBh = endY - ctx.startY + GROUP_PADDING * 2
     if (lastBh > 0) {
@@ -152,10 +152,10 @@ function addGroupBorder(
 }
 
 // ═══════════════════════════════════════
-// Vue 扩展类型渲染（quiz/homework/race/tabs/mindmap/html）
+// Vue extension type rendering (quiz/homework/race/tabs/mindmap/html)
 // ═══════════════════════════════════════
 
-/** quiz 测验：标签 + 名称 + 时间 + content(Tiptap) + 嵌套题目 */
+/** quiz: label + name + time + content(Tiptap) + nested questions */
 function addQuizToSlide(ctx: SlideContext, cidContent: any, pres: any): void {
   const cid = Number(cidContent) || 0
   const quiz = cid > 0 ? ctx.quizCache.get(cid) : null
@@ -165,7 +165,7 @@ function addQuizToSlide(ctx: SlideContext, cidContent: any, pres: any): void {
   }
 
   newSlide(ctx, pres)
-  // 标签 + 名称
+  // label + name
   ctx.slide.addText([
     { text: '[Quiz] ', options: { bold: true, color: 'D97706', fontSize: 15 } },
     { text: quiz.name || '', options: { bold: true, color: '333333', fontSize: 15 } },
@@ -175,7 +175,7 @@ function addQuizToSlide(ctx: SlideContext, cidContent: any, pres: any): void {
   })
   ctx.currentY += 0.45
 
-  // 时间信息
+  // time info
   const timeInfo: string[] = []
   if (quiz.startAt) timeInfo.push(`Start: ${quiz.startAt}`)
   if (quiz.endAt) timeInfo.push(`End: ${quiz.endAt}`)
@@ -188,10 +188,10 @@ function addQuizToSlide(ctx: SlideContext, cidContent: any, pres: any): void {
     ctx.currentY += 0.32
   }
 
-  // 测验内容（Tiptap）
+  // quiz content (Tiptap)
   renderTiptapContent(ctx, quiz.content, pres, 0)
 
-  // 嵌套题目（复用 addQuestionToSlide）
+  // nested questions (reuse addQuestionToSlide)
   const questionCids = extractQuizQuestionCids(quiz)
   for (const qid of questionCids) {
     const qData = ctx.questionCache.get(qid)
@@ -199,7 +199,7 @@ function addQuizToSlide(ctx: SlideContext, cidContent: any, pres: any): void {
   }
 }
 
-/** homework 作业：标签 + 名称 + code + content(Tiptap) + tags + explanation */
+/** homework: label + name + code + content(Tiptap) + tags + explanation */
 function addHomeworkToSlide(ctx: SlideContext, cidContent: any, pres: any): void {
   const cid = Number(cidContent) || 0
   const hw = cid > 0 ? ctx.homeworkCache.get(cid) : null
@@ -209,7 +209,7 @@ function addHomeworkToSlide(ctx: SlideContext, cidContent: any, pres: any): void
   }
 
   newSlide(ctx, pres)
-  // 标签 + 名称 + code
+  // label + name + code
   ctx.slide.addText([
     { text: '[Homework] ', options: { bold: true, color: '7C3AED', fontSize: 15 } },
     { text: hw.name || '', options: { bold: true, color: '333333', fontSize: 15 } },
@@ -220,10 +220,10 @@ function addHomeworkToSlide(ctx: SlideContext, cidContent: any, pres: any): void
   })
   ctx.currentY += 0.45
 
-  // 作业内容（Tiptap）
+  // homework content (Tiptap)
   renderTiptapContent(ctx, hw.content, pres, 0)
 
-  // 标签
+  // tags
   if (Array.isArray(hw.tags) && hw.tags.length > 0) {
     const tagText = hw.tags.join('  |  ')
     if (ctx.currentY + 0.3 > ctx.maxY) newSlide(ctx, pres)
@@ -234,7 +234,7 @@ function addHomeworkToSlide(ctx: SlideContext, cidContent: any, pres: any): void
     ctx.currentY += 0.32
   }
 
-  // 答案解析
+  // answer explanation
   if (hw.explanation && typeof hw.explanation === 'string' && hw.explanation.trim()) {
     if (ctx.currentY + 0.4 > ctx.maxY) newSlide(ctx, pres)
     ctx.slide.addText([
@@ -248,7 +248,7 @@ function addHomeworkToSlide(ctx: SlideContext, cidContent: any, pres: any): void
   }
 }
 
-/** race 竞赛：标签 + 名称 + 嵌套题目 */
+/** race: label + name + nested questions */
 function addRaceToSlide(ctx: SlideContext, cidContent: any, pres: any): void {
   const cid = Number(cidContent) || 0
   const race = cid > 0 ? ctx.raceCache.get(cid) : null
@@ -258,7 +258,7 @@ function addRaceToSlide(ctx: SlideContext, cidContent: any, pres: any): void {
   }
 
   newSlide(ctx, pres)
-  // 标签 + 名称
+  // label + name
   ctx.slide.addText([
     { text: '[Race] ', options: { bold: true, color: 'DC2626', fontSize: 15 } },
     { text: race.name || '', options: { bold: true, color: '333333', fontSize: 15 } },
@@ -268,7 +268,7 @@ function addRaceToSlide(ctx: SlideContext, cidContent: any, pres: any): void {
   })
   ctx.currentY += 0.45
 
-  // 嵌套题目
+  // nested questions
   const questionCids = extractRaceQuestionCids(race)
   for (const qid of questionCids) {
     const qData = ctx.questionCache.get(qid)
@@ -276,7 +276,7 @@ function addRaceToSlide(ctx: SlideContext, cidContent: any, pres: any): void {
   }
 }
 
-/** tabs 标签页：每个 tab 新页，标签 + content(Tiptap) */
+/** tabs: each tab on a new page, label + content(Tiptap) */
 function addTabsToSlide(ctx: SlideContext, content: any, pres: any): void {
   let config: any = null
   try {
@@ -290,7 +290,7 @@ function addTabsToSlide(ctx: SlideContext, content: any, pres: any): void {
 
   for (const tab of tabs) {
     newSlide(ctx, pres)
-    // tab 标签
+    // tab label
     ctx.slide.addText([
       { text: '[Tab] ', options: { bold: true, color: '2B579A', fontSize: 15 } },
       { text: tab.label || '', options: { bold: true, color: '333333', fontSize: 15 } },
@@ -299,12 +299,12 @@ function addTabsToSlide(ctx: SlideContext, content: any, pres: any): void {
       fontFace: 'Calibri', valign: 'top',
     })
     ctx.currentY += 0.45
-    // tab 内容（Tiptap）
+    // tab content (Tiptap)
     renderTiptapContent(ctx, tab.content, pres, 0)
   }
 }
 
-/** mindmap 思维导图：使用预渲染的 mindmapCache 图片 */
+/** mindmap: uses pre-rendered mindmapCache image */
 function addMindmapToSlide(ctx: SlideContext, markdown: any, pres: any): void {
   if (typeof markdown !== 'string' || !markdown) {
     addPlaceholderLabel(ctx, '[Mindmap]', pres)
@@ -312,7 +312,7 @@ function addMindmapToSlide(ctx: SlideContext, markdown: any, pres: any): void {
   }
   const img = ctx.mindmapCache.get(markdown)
   if (addCachedImage(ctx, img, pres)) return
-  // 回退：markdown 源码文本
+  // fallback: markdown source text
   if (ctx.currentY + 0.4 > ctx.maxY) newSlide(ctx, pres)
   ctx.slide.addText(`[Mindmap]\n${markdown.substring(0, 200)}`, {
     x: ctx.marginX, y: ctx.currentY, w: ctx.contentWidth, h: 0.35,
@@ -321,7 +321,7 @@ function addMindmapToSlide(ctx: SlideContext, markdown: any, pres: any): void {
   ctx.currentY += 0.4
 }
 
-/** html 块：使用预渲染的 htmlCache 图片 */
+/** html block: uses pre-rendered htmlCache image */
 function addHtmlToSlide(ctx: SlideContext, html: any, pres: any): void {
   if (typeof html !== 'string' || !html) {
     addPlaceholderLabel(ctx, '[HTML Block]', pres)
@@ -329,15 +329,15 @@ function addHtmlToSlide(ctx: SlideContext, html: any, pres: any): void {
   }
   const img = ctx.htmlCache.get(html)
   if (addCachedImage(ctx, img, pres)) return
-  // 回退：占位
+  // fallback: placeholder
   addPlaceholderLabel(ctx, '[HTML Block]', pres)
 }
 
 // ═══════════════════════════════════════
-// 题目渲染（vue question 节点）
+// Question rendering (vue question node)
 // ═══════════════════════════════════════
 
-/** 将一道题目渲染到幻灯片（题目标签+名称、内容、选项、答案、解析） */
+/** Render a question to slide (question label+name, content, options, answer, explanation) */
 export function addQuestionToSlide(ctx: SlideContext, questionData: any, pres: any): void {
   if (!questionData) return
 
@@ -345,18 +345,18 @@ export function addQuestionToSlide(ctx: SlideContext, questionData: any, pres: a
   const name = questionData.name || ''
   const typeLabel = QUESTION_TYPE_LABELS[type] || type
 
-  // 题目在新页渲染（保持独立性）
+  // render question on new page (maintain independence)
   if (ctx.currentY > ctx.startY + 0.1) {
     newSlide(ctx, pres)
   }
 
-  // 记录起始位置（用于绘制 group 边框 — question 在编辑器中有 border，PPT 中也保留）
+  // record start position (for drawing group border — question has border in editor, also preserved in PPT)
   const groupStartSlide = ctx.slide
   const groupStartY = ctx.currentY
   const groupMarginX = ctx.marginX
   const groupContentWidth = ctx.contentWidth
 
-  // ── 题目标签 + 名称 ──
+  // ── question label + name ──
   ctx.slide.addText([
     { text: `[${typeLabel}] `, options: { bold: true, color: '2B579A', fontSize: 15 } },
     { text: name, options: { bold: true, color: '333333', fontSize: 15 } },
@@ -370,10 +370,10 @@ export function addQuestionToSlide(ctx: SlideContext, questionData: any, pres: a
   })
   ctx.currentY += 0.45
 
-  // ── 题目内容（Tiptap JSON 或 markdown 字符串 → 递归渲染） ──
+  // ── question content (Tiptap JSON or markdown string → recursive render) ──
   renderTiptapContent(ctx, questionData.content, pres, 0)
 
-  // ── 选项（选择题/排序题/分类题/连线题） ──
+  // ── options (choice/sort/classify/match questions) ──
   const options = questionData.options
   if (Array.isArray(options) && options.length > 0) {
     if (type === 'single' || type === 'multiple' || type === 'select' || type === 'sort') {
@@ -381,7 +381,7 @@ export function addQuestionToSlide(ctx: SlideContext, questionData: any, pres: a
         const opt = options[i]
         const prefix = `${String.fromCharCode(65 + i)}. `
 
-        // 解析选项为 Tiptap 节点数组（字符串 → markdownToTiptap，Tiptap JSON → 直接取 content）
+        // parse option to Tiptap node array (string → markdownToTiptap, Tiptap JSON → take content directly)
         let optNodes: any[] = []
         if (typeof opt === 'string') {
           if (opt.trim()) optNodes = markdownToTiptap(opt).content || []
@@ -393,15 +393,15 @@ export function addQuestionToSlide(ctx: SlideContext, questionData: any, pres: a
           optNodes = [opt]
         }
 
-        // 判断是否为简单内容（仅 paragraph/text/hardBreak，无 block 级元素如 codeBlock/image/blockMath）
+        // determine if simple content (only paragraph/text/hardBreak, no block-level elements like codeBlock/image/blockMath)
         const isInlineOnly = optNodes.every((n: any) =>
           n.type === 'paragraph' || n.type === 'text' || n.type === 'hardBreak',
         )
 
         if (isInlineOnly) {
-          // 简单内容：字母前缀 + 内容合并到同一个文本框（用户要求 ABCD 字母和内容在一起）
+          // simple content: letter prefix + content merged into same text box (user requires ABCD letters and content together)
           if (ctx.currentY + 0.3 > ctx.maxY) newSlide(ctx, pres)
-          // 收集所有 paragraph 的 inline 子节点
+          // collect all paragraph inline child nodes
           const inlineNodes: any[] = []
           for (const n of optNodes) {
             if (n.type === 'paragraph' && Array.isArray(n.content)) {
@@ -411,7 +411,7 @@ export function addQuestionToSlide(ctx: SlideContext, questionData: any, pres: a
             }
           }
           const runs = extractTextRuns(inlineNodes, ctx.inlineMathCache)
-          // 前缀作为第一个 run（粗体）
+          // prefix as first run (bold)
           runs.unshift({ text: prefix, options: { bold: true, fontSize: BODY_FONT_SIZE, fontFace: 'Calibri' } })
           const plainText = runs.map((r: any) => r.text).join('')
           const height = estimateTextHeight(plainText, ctx.contentWidth - 0.3, BODY_FONT_SIZE, BODY_LINE_HEIGHT)
@@ -421,7 +421,7 @@ export function addQuestionToSlide(ctx: SlideContext, questionData: any, pres: a
           })
           ctx.currentY += Math.max(0.3, height) + 0.05
         } else {
-          // 复杂内容（含 codeBlock/image/blockMath 等 block 级元素）：前缀独立标签 + 递归渲染内容
+          // complex content (contains block-level elements like codeBlock/image/blockMath): prefix as independent label + recursive render content
           if (ctx.currentY + 0.3 > ctx.maxY) newSlide(ctx, pres)
           ctx.slide.addText(prefix, {
             x: ctx.marginX + 0.3, y: ctx.currentY, w: 0.5, h: 0.3,
@@ -459,10 +459,10 @@ export function addQuestionToSlide(ctx: SlideContext, questionData: any, pres: a
         ctx.currentY += 0.32
       }
     }
-    // fill/judge/short-answer/html/puzzle/video/evaluation/composite 无需渲染选项列表
+    // fill/judge/short-answer/html/puzzle/video/evaluation/composite do not need to render option list
   }
 
-  // ── 正确答案 ──
+  // ── correct answer ──
   const answerText = formatQuestionAnswer(questionData)
   if (answerText) {
     if (ctx.currentY + 0.35 > ctx.maxY) newSlide(ctx, pres)
@@ -476,7 +476,7 @@ export function addQuestionToSlide(ctx: SlideContext, questionData: any, pres: a
     ctx.currentY += 0.35
   }
 
-  // ── 答案解析 ──
+  // ── answer explanation ──
   const explanation = questionData.explanation
   if (explanation && typeof explanation === 'string' && explanation.trim()) {
     const height = estimateTextHeight(explanation, ctx.contentWidth - 0.3, BODY_FONT_SIZE - 1, BODY_LINE_HEIGHT)
@@ -493,12 +493,12 @@ export function addQuestionToSlide(ctx: SlideContext, questionData: any, pres: a
 
   ctx.currentY += 0.15
 
-  // 绘制 group 边框：所有子元素（标签/内容/选项/答案/解析）视觉上组成一个整体
+  // draw group border: all child elements (label/content/options/answer/explanation) visually form a whole
   addGroupBorder(ctx, groupStartSlide, groupStartY, groupMarginX, groupContentWidth)
 }
 
 // ═══════════════════════════════════════
-// 节点渲染（核心）
+// Node rendering (core)
 // ═══════════════════════════════════════
 
 export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLevel = 0): void {
@@ -506,17 +506,17 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
   const { type, attrs = {}, content = [] } = node
 
   switch (type) {
-    // ── 标题 ──
+    // ── heading ──
     case 'heading': {
       const level = attrs.level || 1
       const text = extractPlainText(node)
       if (!text) break
 
       if (level <= 2) {
-        // h1/h2 → 新页，标题作为页标题
+        // h1/h2 → new page, heading as page title
         newSlide(ctx, pres, text)
       } else {
-        // h3-h6 → 当前页内子标题
+        // h3-h6 → in-page subheading
         const fontSize = HEADING_FONT_SIZES[level] || 14
         const height = 0.45
         if (ctx.currentY + height + 0.1 > ctx.maxY) {
@@ -540,7 +540,7 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
       break
     }
 
-    // ── 段落 ──
+    // ── paragraph ──
     case 'paragraph': {
       const runs = extractTextRuns(content, ctx.inlineMathCache)
       const text = extractPlainText(node)
@@ -576,13 +576,13 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
       break
     }
 
-    // ── 代码块（语法高亮 + 自动分页） ──
+    // ── code block (syntax highlighting + auto pagination) ──
     case 'codeBlock': {
       const code = extractPlainText(node)
       if (!code) break
       const language = attrs.language || 'plaintext'
 
-      // 获取高亮 runs（带颜色），再按行拆分用于分页
+      // get highlighted runs (with colors), then split by lines for pagination
       const highlightedRuns = highlightCodeToRuns(code, language)
       const allLines = splitRunsByLines(highlightedRuns)
 
@@ -593,7 +593,7 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
       const remaining = [...allLines]
       while (remaining.length > 0) {
         const availH = ctx.maxY - ctx.currentY
-        // 当前页放不下至少 2 行 → 换新页
+        // current page cannot fit at least 2 lines → new page
         if (availH < lineHeightIn * 2 + padding * 2) {
           newSlide(ctx, pres)
           continue
@@ -602,13 +602,13 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
         const chunkLines = remaining.splice(0, maxLines)
         const h = chunkLines.length * lineHeightIn + padding * 2
 
-        // 将行 runs 展平为 pptxgenjs text runs，每行末尾加 breakLine
+        // flatten line runs to pptxgenjs text runs, add breakLine at end of each line
         const runs: any[] = []
         for (let li = 0; li < chunkLines.length; li++) {
           const lineRuns = chunkLines[li] || []
           const isLastLine = li === chunkLines.length - 1
           if (lineRuns.length === 0) {
-            // 空行
+            // empty line
             runs.push({
               text: ' ',
               options: { breakLine: !isLastLine, fontSize: CODE_FONT_SIZE, fontFace: 'Courier New', color: CODE_DEFAULT_COLOR },
@@ -646,7 +646,7 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
       break
     }
 
-    // ── 图片 ──
+    // ── image ──
     case 'image':
     case 'inlineImage': {
       const src = attrs.src
@@ -676,7 +676,7 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
         ctx.slide.addImage(imgOpts)
         ctx.currentY += h + 0.15
       } catch {
-        // 图片加载失败 → 占位文本
+        // image load failed → placeholder text
         ctx.slide.addText(`[Image: ${src.substring(0, 50)}...]`, {
           x: ctx.marginX,
           y: ctx.currentY,
@@ -692,7 +692,7 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
       break
     }
 
-    // ── 无序/有序列表 ──
+    // ── unordered/ordered list ──
     case 'bulletList':
     case 'orderedList': {
       const listType = type === 'orderedList' ? 'ordered' : 'bullet'
@@ -701,14 +701,14 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
       break
     }
 
-    // ── 任务列表 ──
+    // ── task list ──
     case 'taskList': {
       const items = flattenTaskItems(node, indentLevel, ctx.inlineMathCache)
       addListItems(ctx, items, pres)
       break
     }
 
-    // ── 表格 ──
+    // ── table ──
     case 'table': {
       const { rows, colCount } = buildTableRows(node)
       if (rows.length === 0 || colCount === 0) break
@@ -735,7 +735,7 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
       break
     }
 
-    // ── 引用块 ──
+    // ── blockquote ──
     case 'blockquote': {
       const indent = 0.4 + indentLevel * 0.3
       const width = ctx.contentWidth - indent
@@ -752,7 +752,7 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
         newSlide(ctx, pres)
       }
 
-      // 左侧竖线
+      // left vertical line
       ctx.slide.addShape('rect', {
         x: ctx.marginX + indentLevel * 0.3,
         y: ctx.currentY,
@@ -777,7 +777,7 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
       break
     }
 
-    // ── 提示框 ──
+    // ── callout ──
     case 'callout': {
       const bgColor = cssColorToHex(attrs.backgroundColor) || 'FFF3CD'
       const fontColor = cssColorToHex(attrs.fontColor) || '856404'
@@ -819,7 +819,7 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
       break
     }
 
-    // ── 分隔线 ──
+    // ── horizontal rule ──
     case 'horizontalRule': {
       if (ctx.currentY + 0.2 > ctx.maxY) {
         newSlide(ctx, pres)
@@ -836,19 +836,19 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
       break
     }
 
-    // ── 分页符 ──
+    // ── page break ──
     case 'pageBreak': {
       newSlide(ctx, pres)
       break
     }
 
-    // ── 数学公式（块级 → KaTeX 预渲染图片，失败回退 LaTeX 源码） ──
+    // ── math formula (block-level → KaTeX pre-rendered image, fallback to LaTeX source on failure) ──
     case 'blockMath': {
       const latex = attrs.latex || ''
       if (!latex) break
       const mathImg = ctx.blockMathCache.get(latex)
       if (mathImg) {
-        // 渲染为居中图片
+        // render as centered image
         if (ctx.currentY + mathImg.height + 0.2 > ctx.maxY) {
           newSlide(ctx, pres)
         }
@@ -863,7 +863,7 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
         })
         ctx.currentY += mathImg.height + 0.2
       } else {
-        // 回退：直接显示 LaTeX 源码（KaTeX textContent 提取会丢失上标/下标格式，不如源码可读）
+        // fallback: directly display LaTeX source (KaTeX textContent extraction loses super/subscript format, source is more readable)
         if (ctx.currentY + 0.6 > ctx.maxY) {
           newSlide(ctx, pres)
         }
@@ -883,11 +883,11 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
       break
     }
 
-    // inlineMath 在段落中已被 extractTextRuns 处理（替换为 Unicode 文本），不单独处理
+    // inlineMath is already processed by extractTextRuns in paragraph (replaced with Unicode text), not handled separately
     case 'inlineMath':
       break
 
-    // ── 视频/音频/文件/iframe → 占位文本 ──
+    // ── video/audio/file/iframe → placeholder text ──
     case 'video':
     case 'audio':
     case 'file':
@@ -910,16 +910,16 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
       break
     }
 
-    // ── ECharts 图表 → 预渲染图片（回退占位文本） ──
+    // ── ECharts chart → pre-rendered image (fallback placeholder text) ──
     case 'echarts': {
       const img = ctx.echartsCache.get(node)
       if (addCachedImage(ctx, img, pres)) break
-      // 回退：占位文本
+      // fallback: placeholder text
       addPlaceholderLabel(ctx, '[Chart]', pres)
       break
     }
 
-    // ── 日期时间 → 渲染文本 ──
+    // ── datetime → render text ──
     case 'datetime': {
       const text = attrs.text || ''
       if (!text) break
@@ -932,7 +932,7 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
       break
     }
 
-    // ── @提及 → 渲染 @label ──
+    // ── @mention → render @label ──
     case 'mention': {
       const label = attrs.label || ''
       if (!label) break
@@ -945,7 +945,7 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
       break
     }
 
-    // ── 标签 → 带颜色渲染文本 ──
+    // ── tag → render text with color ──
     case 'tag': {
       const text = attrs.text || ''
       if (!text) break
@@ -961,7 +961,7 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
       break
     }
 
-    // ── 折叠面板 → 渲染摘要 + 内容 ──
+    // ── collapsible panel → render summary + content ──
     case 'details': {
       for (const c of content) {
         if (c.type === 'detailsSummary') {
@@ -989,7 +989,7 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
       break
     }
 
-    // ── 文本框 → 带边框文本 ──
+    // ── text box → text with border ──
     case 'textBox': {
       const runs = extractTextRuns(content, ctx.inlineMathCache)
       const text = extractPlainText(node)
@@ -1019,7 +1019,7 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
       break
     }
 
-    // ── 列容器 → 顺序渲染子节点 ──
+    // ── column container → render child nodes sequentially ──
     case 'columnContainer':
     case 'column': {
       for (const c of content) {
@@ -1028,7 +1028,7 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
       break
     }
 
-    // ── 脚注 → 渲染为小字文本 ──
+    // ── footnotes → render as small text ──
     case 'footnotes': {
       for (const c of content) {
         addNodeToSlide(ctx, c, pres, indentLevel)
@@ -1053,7 +1053,7 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
       break
     }
 
-    // ── Vue 自定义节点（question / quiz / homework / race / tabs / mindmap / html 等） ──
+    // ── Vue custom nodes (question / quiz / homework / race / tabs / mindmap / html etc.) ──
     case 'vue': {
       const vueType = attrs.type
       switch (vueType) {
@@ -1061,10 +1061,10 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
           const c = attrs.content
           let questionData: any = null
           if (c != null && typeof c === 'object' && !Array.isArray(c)) {
-            // 内联题目对象（AI 生成的未保存题目）
+            // inline question object (AI-generated unsaved question)
             questionData = c
           } else {
-            // cid 字符串/数字 → 从预取缓存获取
+            // cid string/number → get from pre-fetched cache
             const cid = Number(c) || 0
             if (cid > 0) {
               questionData = ctx.questionCache.get(cid)
@@ -1073,7 +1073,7 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
           if (questionData) {
             addQuestionToSlide(ctx, questionData, pres)
           } else {
-            // 题目数据未获取到（cid 无效或 API 失败）→ 占位
+            // question data not retrieved (cid invalid or API failed) → placeholder
             addPlaceholderLabel(ctx, `[Question: ${attrs.content}]`, pres)
           }
           break
@@ -1097,21 +1097,21 @@ export function addNodeToSlide(ctx: SlideContext, node: any, pres: any, indentLe
           addHtmlToSlide(ctx, attrs.content, pres)
           break
         default:
-          // sheet/aichat/aigenerator/chatroom/comment/condition/counter/timer/vfiles/office/pdf → 占位
+          // sheet/aichat/aigenerator/chatroom/comment/condition/counter/timer/vfiles/office/pdf → placeholder
           addPlaceholderLabel(ctx, `[${vueType || 'vue'}]`, pres)
           break
       }
       break
     }
 
-    // ── 交互式组件 → 跳过 ──
+    // ── interactive components → skip ──
     case 'toc':
     case 'inputs':
     case 'select':
     case 'optionBox':
       break
 
-    // ── 其他类型 → 尝试渲染子节点 ──
+    // ── other types → try rendering child nodes ──
     default: {
       if (content && content.length > 0) {
         for (const c of content) {

@@ -1,8 +1,8 @@
 /**
- * navEditor/index.vue 组件测试
+ * navEditor/index.vue component test
  * @see modules/lms/components/navEditor/index.vue
  *
- * 导航编辑器：弹窗 + 列表 + 批量导入
+ * Nav editor: modal + list + batch import
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

@@ -1,5 +1,5 @@
 /**
- * Univer 在线表格：CDN 加载 + 初始化 + 数据读写
+ * Univer online spreadsheet: CDN loading + initialization + data read/write
  */
 export function useUniverSheet(
   headers: () => any[],
@@ -18,7 +18,7 @@ export function useUniverSheet(
   let univerAPI: any = null
   let univerDispose: any = null
 
-  // ========== CDN 加载 ==========
+  // ========== CDN loading ==========
   function loadCss(url: string): Promise<boolean> {
     return new Promise((resolve) => {
       if (document.querySelector(`link[href="${url}"]`)) { resolve(true); return }
@@ -42,7 +42,7 @@ export function useUniverSheet(
     })
   }
 
-  // Univer CDN 资源
+  // Univer CDN resources
   const UNIVER_CDN = {
     css: 'https://unpkg.com/@univerjs/preset-sheets-core/lib/index.css',
     scripts: [
@@ -56,7 +56,7 @@ export function useUniverSheet(
     locale: 'https://unpkg.com/@univerjs/preset-sheets-core/lib/umd/locales/zh-CN.js',
   }
 
-  // ========== 销毁 Univer 实例 ==========
+  // ========== Destroy Univer instance ==========
   function destroyUniver() {
     if (univerDispose) {
       try { univerDispose() } catch (_) { /* noop */ }
@@ -65,13 +65,13 @@ export function useUniverSheet(
     }
   }
 
-  // ========== 初始化 Univer ==========
+  // ========== Initialize Univer ==========
   async function initSheet() {
     if (!sheetContainer.value) return
 
     await loadCss(UNIVER_CDN.css)
 
-    // 按顺序加载必需脚本（存在依赖关系）
+    // Load required scripts in order (dependencies exist)
     for (const url of UNIVER_CDN.scripts) {
       const ok = await loadScript(url)
       if (!ok) {
@@ -80,7 +80,7 @@ export function useUniverSheet(
       }
     }
 
-    // 尝试加载中文语言包（失败不阻塞初始化）
+    // Try to load Chinese language pack (failure does not block initialization)
     await loadScript(UNIVER_CDN.locale)
 
     const { createUniver } = (window as any).UniverPresets
@@ -94,7 +94,7 @@ export function useUniverSheet(
 
     destroyUniver()
 
-    // 构建 cellData：第 0 行始终放表头，第 1 行起放数据
+    // Build cellData: row 0 always holds headers, data starts from row 1
     const cellData: Record<number, any> = {}
     const hdrs = headers()
     if (hdrs.length) {
@@ -102,7 +102,7 @@ export function useUniverSheet(
       hdrs.forEach((text, c) => { headerRow[c] = { v: text } })
       cellData[0] = headerRow
     }
-    // 填入初始数据行（有表头时跳过第 0 行，无表头时从第 0 行开始）
+    // Fill in initial data rows (skip row 0 if headers exist, otherwise start from row 0)
     const init = initialData()
     if (init) {
       for (const rowKey in init) {
@@ -112,13 +112,13 @@ export function useUniverSheet(
       }
     }
 
-    // 构建列宽数据
+    // Build column width data
     const columnData: Record<number, any> = {}
     Object.entries(colWidths()).forEach(([k, w]) => {
       columnData[Number(k)] = { w }
     })
 
-    // 合并中文语言包
+    // Merge Chinese language pack
     const zhCN = (window as any).UniverPresetSheetsCoreZhCN
     const locales = zhCN
       ? { [LocaleType.ZH_CN]: mergeLocales(zhCN) }
@@ -140,7 +140,7 @@ export function useUniverSheet(
     univerAPI = api
     univerDispose = dispose
 
-    // 创建工作簿（表头行 + 初始数据）
+    // Create workbook (header row + initial data)
     univerAPI.createWorkbook({
       id: 'univer-sheet',
       name: 'Sheet',
@@ -156,10 +156,10 @@ export function useUniverSheet(
       },
     })
 
-    // 监听单元格数据变化
-    // Univer SDK 没有 WorkbookValueChanged 事件，使用 CommandExecuted 替代
-    // CommandExecuted 在所有命令执行后触发（包括单元格编辑、格式修改等）
-    // 配合外层 500ms 防抖，不会频繁保存
+    // Listen for cell data changes
+    // Univer SDK does not have a WorkbookValueChanged event, use CommandExecuted instead
+    // CommandExecuted fires after all command executions (including cell editing, format changes, etc.)
+    // Combined with outer 500ms debounce, will not save too frequently
     try {
       const EventEnum = univerAPI.Event
       if (EventEnum?.CommandExecuted) {
@@ -168,7 +168,7 @@ export function useUniverSheet(
     } catch (_) { /* noop */ }
   }
 
-  // ========== 读取所有数据行（跳过表头） ==========
+  // ========== Read all data rows (skip header) ==========
   function getRows(): string[][] {
     if (!univerAPI) return []
     const fWorkbook = univerAPI.getActiveWorkbook()
@@ -195,7 +195,7 @@ export function useUniverSheet(
     return rows
   }
 
-  // ========== 导出当前 cellData ==========
+  // ========== Export current cellData ==========
   function getCellData(): Record<number, any> | null {
     if (!univerAPI) return null
     const fWorkbook = univerAPI.getActiveWorkbook()
@@ -213,12 +213,12 @@ export function useUniverSheet(
     return result
   }
 
-  // ========== 重置（重新初始化空表格） ==========
+  // ========== Reset (reinitialize empty spreadsheet) ==========
   async function reset() {
     await initSheet()
   }
 
-  // ========== 用排序/筛选后的行数据覆盖 sheet 数据行 ==========
+  // ========== Overwrite sheet data rows with sorted/filtered row data ==========
   function setSortedRows(rows: (string | undefined | null)[][]) {
     if (!univerAPI) return
     const fWorkbook = univerAPI.getActiveWorkbook()
@@ -231,7 +231,7 @@ export function useUniverSheet(
     const headerRow = oldCellData[0] || {}
     const columnData = snapshot.columnData || {}
 
-    // 构建新的 cellData（保留第 0 行表头 + 排序后的数据行）
+    // Build new cellData (keep row 0 header + sorted data rows)
     const newCellData: Record<number, any> = { 0: headerRow }
     rows.forEach((row, idx) => {
       const r = idx + 1
@@ -265,7 +265,7 @@ export function useUniverSheet(
     })
   }
 
-  // ========== 生命周期 ==========
+  // ========== Lifecycle ==========
   watch(active, (val) => {
     if (val) {
       nextTick(() => initSheet())
@@ -274,7 +274,7 @@ export function useUniverSheet(
     }
   }, { immediate: true })
 
-  // 渲染端：initialData 变化时重新初始化
+  // Render side: reinitialize when initialData changes
   watch(initialData, (val, oldVal) => {
     if (val && JSON.stringify(val) !== JSON.stringify(oldVal)) {
       nextTick(() => initSheet())

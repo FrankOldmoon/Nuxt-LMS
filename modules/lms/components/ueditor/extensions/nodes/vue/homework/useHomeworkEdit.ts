@@ -18,10 +18,10 @@ export function useHomeworkEditContext() {
 }
 
 export function useHomeworkEdit(props: HomeworkEditProps, emit: HomeworkEditEmit) {
-    // 判断是否为 Modal 模式（有 modelValue prop）
+    // judgeYesNo Modal mode（Has modelValue prop）
     const isModal = computed(() => props.modelValue !== undefined)
 
-    // Modal 模式的 open 状态
+    // Modal mode open Status
     const open = computed({
         get: () => props.modelValue,
         set: (v: any) => emit('update:modelValue', v),
@@ -36,7 +36,7 @@ export function useHomeworkEdit(props: HomeworkEditProps, emit: HomeworkEditEmit
         return ctxCourseId.value
     })
 
-    // provide 给子树（替代旧的 setEditableMeta 临时设置/还原）
+    // provide tochild tree（replaceOld setEditableMeta temporarySettings/alsooriginal）
     provideLmsCourseId(effectiveCourseId)
 
     const saving = ref(false)
@@ -45,7 +45,7 @@ export function useHomeworkEdit(props: HomeworkEditProps, emit: HomeworkEditEmit
     const form = ref<any>(null)
     let originalData: any = null
 
-    // 从 props.homework 深拷贝初始化 form
+    // from props.homework deep cloneInitialize form
     function initForm() {
         if (!props.homework) {
             form.value = {
@@ -82,14 +82,14 @@ export function useHomeworkEdit(props: HomeworkEditProps, emit: HomeworkEditEmit
         saveMsg.value = ''
         try {
             if (props.homeworkId) {
-                // 已有作业：更新
+                // alreadyHasHomework：Update
                 await cRequest('/api/homeworks/update', {
                     method: 'POST',
                     body: { id: props.homeworkId, course_id: effectiveCourseId.value, ...form.value },
                 })
                 emit('saved', form.value)
             } else {
-                // 新作业：新增并拿回 cid
+                // NewHomework：Addandtake back cid
                 const result = await cRequest('/api/homeworks/add', {
                     method: 'POST',
                     body: { course_id: effectiveCourseId.value, ...form.value },
@@ -97,9 +97,9 @@ export function useHomeworkEdit(props: HomeworkEditProps, emit: HomeworkEditEmit
                 emit('saved', { ...form.value, cid: result.cid })
             }
             saveOk.value = true
-            saveMsg.value = t('homework.saveSuccess')
+            saveMsg.value = t('homework.save success')
             originalData = JSON.parse(JSON.stringify(form.value))
-            // Modal 模式：关闭弹窗
+            // Modal mode：CloseModal
             if (isModal.value) {
                 open.value = false
             }
@@ -111,7 +111,7 @@ export function useHomeworkEdit(props: HomeworkEditProps, emit: HomeworkEditEmit
         }
     }
 
-    // ── JSON 原始数据编辑器（高级） ──
+    // ── JSON originalStartDataEditeditor（Highlevel） ──
     const showJsonEditor = ref(false)
     const jsonText = ref('')
     const jsonError = ref('')
@@ -160,7 +160,7 @@ export function useHomeworkEdit(props: HomeworkEditProps, emit: HomeworkEditEmit
         }
     })
 
-    // Modal 模式：弹窗打开时初始化 form
+    // Modal mode：ModalOpenwhenInitialize form
     watch(open, (val) => {
         if (val) initForm()
         else {
@@ -169,7 +169,7 @@ export function useHomeworkEdit(props: HomeworkEditProps, emit: HomeworkEditEmit
         }
     }, { immediate: true })
 
-    // 内联模式：组件加载时初始化 form
+    // Insideinline mode：ComponentLoadwhenInitialize form
     watch(() => props.homework, () => {
         if (!isModal.value) initForm()
     }, { immediate: true })

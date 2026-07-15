@@ -2,44 +2,44 @@ import { db, schema } from "@nuxthub/db"
 import { eq, desc } from "drizzle-orm"
 
 export default eventHandler(async (event) => {
-  // 仅教师/管理员可新增
+  // Only teachers/admins can add
   await requireRole(event, ['teacher', 'admin'])
 
   const body = await readBody(event)
   const { course_id } = body
 
   if (!course_id) {
-    return cResp(null, '缺少 course_id 参数', false)
+    return cResp(null, 'Missing course_id parameter', false)
   }
 
   try {
-    // 查询该课程中最大的 cid
+    // Query the maximum cid in this course
     const maxCidResult = await db.select({ cid: schema.questions.cid })
       .from(schema.questions)
       .where(eq(schema.questions.courseId, course_id))
       .orderBy(desc(schema.questions.cid))
       .limit(1)
 
-    // 生成新的 cid（如果不存在则默认为 1）
+    // Generate a new cid (defaults to 1 if not exists)
     const maxCid = maxCidResult[0]?.cid ?? 0
     const newCid = maxCid + 1
 
-    // 准备插入的数据
+    // Prepare data to insert
     const insertData = {
       ...body,
       courseId: course_id,
       cid: newCid,
     }
 
-    // 删除不需要的字段
+    // Remove unnecessary fields
     delete insertData.course_id
 
-    // 插入新记录
+    // Insert new record
     const result = await db.insert(schema.questions).values(insertData).returning()
-    // 返回新插入的记录（包含 cid）
+    // Return the new inserted record (including cid)
     return cResp(result[0])
   } catch (error: any) {
-    console.error('新增题目失败:', error)
-    return cResp(null, error.message || '新增失败', false)
+    console.error('Failed to add question:', error)
+    return cResp(null, error.message || 'Add failed', false)
   }
 })

@@ -6,13 +6,13 @@ export default eventHandler(async (event) => {
 
   const { course_id, cid } = getQuery(event)
   if (!course_id || !cid) {
-    return cResp(null, '缺少 course_id 或 cid 参数', false)
+    return cResp(null, 'Missing course_id or cid parameter', false)
   }
 
   const courseId = Number(course_id)
   const commentCid = Number(cid)
 
-  // 1. 获取当前用户的 defaultClass，确定查询范围
+  // 1. Get the current user's defaultClass to determine the query scope
   const userRow = await db.select({ defaultClass: schema.users.defaultClass })
     .from(schema.users)
     .where(eq(schema.users.id, user.id))
@@ -23,7 +23,7 @@ export default eventHandler(async (event) => {
     return cResp([])
   }
 
-  // 2. 获取该班级学生 userIds（仅用于确定查询范围）
+  // 2. Get student userIds in this class (only used to determine the query scope)
   const classUsers = await getClassUsers(classId)
   const studentIds = classUsers.filter(u => !u.isTeacher).map(u => u.id)
 
@@ -31,7 +31,7 @@ export default eventHandler(async (event) => {
     return cResp([])
   }
 
-  // 3. 查询该 root comment + 所有子评论
+  // 3. Query this root comment + all child comments
   const allComments = await db.query.comments.findMany({
     where: and(
       eq(schema.comments.courseId, courseId),
@@ -39,7 +39,7 @@ export default eventHandler(async (event) => {
     )
   })
 
-  // 4. 查询所有 userComments（点赞记录）
+  // 4. Query all userComments (like records)
   const commentCids = allComments.map(c => c.cid)
   const allUserComments = commentCids.length > 0
     ? await db.query.userComments.findMany({
@@ -51,7 +51,7 @@ export default eventHandler(async (event) => {
       })
     : []
 
-  // 按用户分组：每个用户发了哪些评论、被赞了多少
+  // Group by user: which comments each user posted and how many likes received
   const userCommentMap = new Map()
   for (const c of allComments) {
     if (!userCommentMap.has(c.userId)) {
@@ -60,7 +60,7 @@ export default eventHandler(async (event) => {
     userCommentMap.get(c.userId).comments.push(c)
   }
 
-  // 统计每个用户收到的总赞数
+  // Count the total likes received by each user
   for (const uc of allUserComments) {
     const comment = allComments.find(c => c.cid === uc.commentCid)
     if (comment && userCommentMap.has(comment.userId)) {
@@ -68,7 +68,7 @@ export default eventHandler(async (event) => {
     }
   }
 
-  // 5. 只返回本班学生中有评论的 { userId, record } 列表
+  // 5. Only return the { userId, record } list for class students who have comments
   const result = studentIds
     .filter(id => userCommentMap.has(id))
     .map(id => {

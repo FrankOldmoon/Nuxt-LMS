@@ -1,5 +1,5 @@
 /**
- * homework render 组件测试
+ * homework render component test
  * @see modules/lms/components/ueditor/extensions/nodes/vue/homework/render.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

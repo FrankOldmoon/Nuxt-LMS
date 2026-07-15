@@ -79,9 +79,9 @@ export function useMindmapRender(props: MindmapRenderProps) {
     let mindMap: any = null
 
     /**
-     * 渲染完成后，根据 SVG 实际内容的 boundingBox 调整容器和 SVG 尺寸，
-     * 确保所有节点都完整呈现。
-     * mindMap 布局以 root 为中心向左右展开，bbox.x 可能为负数。
+     * RenderCompleteBack，based on SVG actualContent boundingBox Adjustcontainerand SVG size，
+     * ensureAllnodePointallfully render。
+     * mindMap layoutwith root MiddleHearttoLeftRightExpand，bbox.x cancannegative。
      */
     function fitToContent() {
         if (!mindmapRef.value || !mindMap) return
@@ -106,7 +106,7 @@ export function useMindmapRender(props: MindmapRenderProps) {
             dynamicWidth.value = vbW + 'px'
             dynamicHeight.value = Math.max(300, vbH)
         } catch (e) {
-            // getBBox 在 SVG 未完全渲染时可能失败，保持默认尺寸
+            // getBBox  SVG not fullyRenderwhencancanFailed，keepDefaultsize
         }
     }
 

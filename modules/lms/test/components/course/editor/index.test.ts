@@ -1,9 +1,9 @@
 /**
- * course/editor/index.vue 组件测试
+ * course/editor/index.vue component test
  * @see modules/lms/components/course/editor/index.vue
  *
- * 课程编辑器弹窗：UModal + 内容编辑 + 基础信息 + 配置 + 成员管理
- * 重点测试：能否挂载、能否接收 props
+ * Course editor modal: UModal + content edit + basic info + config + member management
+ * Key test: can mount, can receive props
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -103,7 +103,7 @@ describe('course/editor/index.vue', () => {
 
   it('admin 用户渲染成员管理组件', async () => {
     setMockAuthUser({ id: 1, name: 'admin' }, [{ code: 'admin' }], [])
-    // 让 modal 打开
+    // Make modal open
     ;(globalThis as any).useCourseEditor = (_props: any, _emit: any) => ({
       open: ref(true), loading: ref(false), saving: ref(false),
       canEdit: ref(true), lockId: ref(''), form: ref({ name: '', code: '', tags: [] }),

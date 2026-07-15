@@ -1,21 +1,21 @@
 /**
- * LMS Courses 端点测试（除已覆盖的 show / list / add / update / grades / leaderboard / me / number 之外）
+ * LMS Courses endpoint test (excluding already covered show / list / add / update / grades / leaderboard / me / number)
  * @see modules/lms/server/api/courses/*.ts
  *
- * 覆盖：
- * - content.get.ts     课程内容列表（按 type 筛选 5 个表）
- * - members.get.ts     课程成员列表
- * - members.post.ts    课程成员添加/移除
- * - groups.get.ts      课程分组信息
- * - groups.post.ts     课程分组更新
- * - marks.post.ts      课程加减分
- * - progress.get.ts    课程学习进度
- * - restore.post.ts    课程版本恢复
- * - versions.get.ts    课程版本列表
- * - stats.get.ts       课程学习统计
- * - delete.post.ts     课程内容删除
- * - export.get.ts      课程导出
- * - import.post.ts     课程导入
+ * Coverage:
+ * - content.get.ts     course content list (filter 5 tables by type)
+ * - members.get.ts     course member list
+ * - members.post.ts    course member add/remove
+ * - groups.get.ts      course group info
+ * - groups.post.ts     course group update
+ * - marks.post.ts      course add/deduct points
+ * - progress.get.ts    course learning progress
+ * - restore.post.ts    course version restore
+ * - versions.get.ts    course version list
+ * - stats.get.ts       course learning stats
+ * - delete.post.ts     course content delete
+ * - export.get.ts      course export
+ * - import.post.ts     course import
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
@@ -83,7 +83,7 @@ beforeEach(() => {
   resetAllStubs()
   resetDb(_mockDb)
   installLmsAutoImports()
-  // 默认可访问的 db 事务：直接执行回调
+  // Default accessible db transaction: directly execute callback
   _mockDb.transaction = vi.fn().mockImplementation(async (fn: any) => fn(_mockDb))
 })
 
@@ -125,7 +125,7 @@ describe('API: courses/content', () => {
     const r = await handler(makeEvent({ query: { course_id: '1' } }))
     expect(r.success).toBe(true)
     expect(r.data.length).toBe(2)
-    // 排序：comment(0) < homework(0) < question(0) < quiz(0) < race(0)；同 type 按 cid
+    // Sort order: comment(0) < homework(0) < question(0) < quiz(0) < race(0); same type by cid
     expect(r.data[0].type).toBe('homework')
     expect(r.data[1].type).toBe('question')
   })
@@ -330,7 +330,7 @@ describe('API: courses/marks', () => {
     setMockAuthState({ id: 1, username: 't', name: 't', roles: ['teacher'], permissions: [] })
     _mockDb.select = vi.fn().mockReturnThis()
     _mockDb.from = vi.fn().mockReturnThis()
-    _mockDb.where = vi.fn().mockResolvedValue([]) // 没有 existing → 走 insert 路径
+    _mockDb.where = vi.fn().mockResolvedValue([]) // no existing → take insert path
     const handler = (await import('../../server/api/courses/marks.post')).default
     const r = await handler(makeEvent({ body: { course_id: 1, user_ids: [2, 3], delta: 5 } }))
     expect(r.success).toBe(true)
@@ -355,7 +355,7 @@ describe('API: courses/progress', () => {
 
   it('已登录时调用 assembleProgress', async () => {
     setMockAuthState({ id: 1, username: 's', name: 's', roles: ['student'], permissions: [] })
-    _mockDb.where = vi.fn().mockResolvedValue([]) // 章节列表
+    _mockDb.where = vi.fn().mockResolvedValue([]) // chapter list
     const { assembleProgress } = await import('../../server/utils/courseProgress/assemble')
     ;(assembleProgress as any).mockReturnValue([{ chapterId: 1, score: 80 }])
     const handler = (await import('../../server/api/courses/progress.get')).default
@@ -543,12 +543,12 @@ describe('API: courses/export', () => {
       id: 1, name: 'C1', code: 'C1', categoryId: 1, content: '{}', orders: [],
       gradeCriteria: '{}', tags: [], config: '{}',
     })
-    // 第一处 where 是 chapters.where().orderBy() 链；第二处是 race 查询
+    // First where is chapters.where().orderBy() chain; second is race query
     let whereCall = 0
     _mockDb.where = vi.fn().mockImplementation(() => {
       whereCall++
       if (whereCall === 1) {
-        // chapters 链：where 后还接 orderBy，然后 resolve
+        // chapters chain: where is followed by orderBy, then resolve
         const chain: any = { orderBy: vi.fn().mockResolvedValue([]) }
         return chain
       }

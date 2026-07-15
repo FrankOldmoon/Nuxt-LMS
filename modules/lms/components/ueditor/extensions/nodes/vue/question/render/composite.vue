@@ -1,8 +1,8 @@
 <template>
   <div class="space-y-2">
-    <!-- 子题列表 -->
-    <SubQuestionRenderer
-      v-for="(sub, idx) in subQuestions"
+    <!-- child question list -->
+    <Sub-questionRenderer
+      v-for="(sub, idx) in sub-questions"
       :key="idx"
       ref="subRefs"
       :sub-question="sub"
@@ -11,15 +11,15 @@
       @answer-change="(record) => onAnswerChange(idx, record)"
     />
 
-    <!-- 无子题提示 -->
-    <div v-if="!subQuestions.length" class="text-center py-4 text-gray-400 text-sm">
+    <!-- Nonechild questionTip -->
+    <div v-if="!sub-questions.length" class="text-center py-4 text-gray-400 text-sm">
       {{ $t('question.compositeNoSub') }}
     </div>
   </div>
 </template>
 
 <script setup>
-import SubQuestionRenderer from './sub-question.vue'
+import Sub-questionRenderer from './subQuestion.vue'
 import { useCompositeRender } from './useCompositeRender'
 
 const props = defineProps({
@@ -28,7 +28,7 @@ const props = defineProps({
 })
 
 const {
-  subQuestions,
+  sub-questions,
   subRefs,
   showAnswer,
   hasAnswer,

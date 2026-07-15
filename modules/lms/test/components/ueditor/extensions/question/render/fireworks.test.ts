@@ -1,5 +1,5 @@
 /**
- * fireworks 组件测试 (render)
+ * fireworks component test (render)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/render/fireworks.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

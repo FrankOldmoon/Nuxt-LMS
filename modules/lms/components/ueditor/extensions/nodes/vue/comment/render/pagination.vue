@@ -1,5 +1,5 @@
 <template>
-    <!-- 分页控件 -->
+    <!-- Paginationcontrol -->
     <div v-if="children.length > pageSize" class="flex items-center justify-between pt-2">
         <span class="text-xs text-gray-400">
             {{ (page - 1) * pageSize + 1 }}-{{ Math.min(page * pageSize, children.length) }} / {{ children.length }}

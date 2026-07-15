@@ -1,24 +1,24 @@
 /**
- * 通用请求工具 — 自动解包服务端 { data, success, msg } 响应
+ * Generic request utility — automatically unwraps server { data, success, msg } responses
  *
- * 自动从路由注入 course_id（route.params.id）和 chapter_id（route.params.cid）：
- * - GET 请求：注入到 URL query string
- * - POST 请求：注入到 body
- * - 已有值时跳过，不覆盖调用方手动传入的参数
+ * Automatically injects course_id (route.params.id) and chapter_id (route.params.cid) from the route:
+ * - GET requests: injected into URL query string
+ * - POST requests: injected into body
+ * - Skipped when value already exists, does not override caller-supplied parameters
  *
- * 日期字段由服务端中间件统一转换（server/middleware/convert-dates.ts），
- * 前端直接传字符串即可，无需手动转 Date
+ * Date fields are converted uniformly by server middleware (server/middleware/convert-dates.ts),
+ * the frontend can pass strings directly without manually converting to Date
  *
  * @example
- * // 命令式调用（login、事件处理器等场景）
+ * // Imperative call (login, event handlers, etc.)
  * const result = await cRequest<LoginResult>('/api/login', { method: 'POST', body: { username, password } })
  *
- * // composable 调用（SSR 友好）
+ * // Composable call (SSR friendly)
  * const { data, pending, refresh } = cRequest.use<CourseDetail>('/api/courses/show?id=1')
  */
 
 /**
- * 从当前路由读取 course_id 和 chapter_id
+ * Read course_id and chapter_id from the current route
  * route.params.id → course_id
  * route.params.cid → chapter_id
  */
@@ -35,7 +35,7 @@ function getRouteIds() {
 }
 
 /**
- * 将 course_id 和 chapter_id 注入到 URL query string（已有则跳过）
+ * Inject course_id and chapter_id into URL query string (skip if already present)
  */
 export function injectToUrl(url: string, courseId: number, chapterId: number): string {
   let result = url
@@ -49,7 +49,7 @@ export function injectToUrl(url: string, courseId: number, chapterId: number): s
 }
 
 /**
- * 将 course_id 和 chapter_id 注入到 body（已有则跳过）
+ * Inject course_id and chapter_id into body (skip if already present)
  */
 export function injectToBody(body: any, courseId: number, chapterId: number): any {
   if (!body || typeof body !== 'object') return body
@@ -65,19 +65,19 @@ async function cRequest<T = any>(url: string, options: Record<string, any> = {})
   let finalUrl = url
   let finalOptions = { ...options }
 
-  // 无 body（GET 等）：注入到 URL query string
+  // No body (GET etc.): inject into URL query string
   if (!options.body) {
     finalUrl = injectToUrl(url, courseId, chapterId)
   }
 
-  // 有 body（POST 等）：注入到 body
+  // Has body (POST etc.): inject into body
   if (options.body && typeof options.body === 'object') {
     finalOptions.body = injectToBody(options.body, courseId, chapterId)
   }
 
   const resp = await $fetch<{ data: T; success: boolean; msg: string }>(finalUrl, finalOptions)
   if (!resp.success) {
-    throw new Error(resp.msg || '请求失败')
+    throw new Error(resp.msg || 'Request failed')
   }
   return resp.data
 }
@@ -85,17 +85,17 @@ async function cRequest<T = any>(url: string, options: Record<string, any> = {})
 cRequest.use = <T = any>(url: string | (() => string) | Ref<string>, options: Record<string, any> = {}) => {
   const { transform: customTransform, ...rest } = options
 
-  // 解析 url 为 getter 函数，支持 string / function / Ref 三种类型
+  // Resolve url as a getter function, supporting string / function / Ref types
   const urlGetter = () => {
     if (typeof url === 'function') return (url as () => string)()
     if (url && typeof url === 'object' && 'value' in url) return (url as Ref<string>).value
     return url as string
   }
 
-  // 用 URL 字符串作为稳定 key，确保客户端导航时能命中缓存
+  // Use URL string as a stable key to ensure cache hits during client-side navigation
   const resolvedKey = urlGetter()
 
-  // 自动注入 course_id 和 chapter_id 到 URL（响应式，路由变化时重新计算）
+  // Automatically inject course_id and chapter_id into URL (reactive, recomputed on route change)
   const wrappedUrl = computed(() => {
     const rawUrl = urlGetter()
     if (!rawUrl) return ''
@@ -103,8 +103,8 @@ cRequest.use = <T = any>(url: string | (() => string) | Ref<string>, options: Re
     return injectToUrl(rawUrl, courseId, chapterId)
   })
 
-  // 教师以上角色（admin / teacher / editor）需要在客户端获取最新数据
-  // 避免 SSR payload 缓存导致教师看到旧数据（如章节开放状态变更后不刷新）
+  // Teacher and above roles (admin / teacher / editor) need to fetch the latest data on the client
+  // Avoid SSR payload cache causing teachers to see stale data (e.g. chapter open state not refreshing after change)
   const { hasRole } = useAuth()
   const isTeacherPlus = () => hasRole('admin') || hasRole('teacher')
 
@@ -112,10 +112,10 @@ cRequest.use = <T = any>(url: string | (() => string) | Ref<string>, options: Re
     ...rest,
     key: resolvedKey,
     getCachedData(key: string) {
-      // 始终返回 SSR payload 数据作为 hydration 初始值
-      // 若返回 undefined，Nuxt 会用 default()（通常为 null）初始化 data，
-      // 且因 null !== undefined 触发 "hydration success" 分支，跳过重新请求，
-      // 导致教师客户端 data 永久为 null、页面内容消失
+      // Always return SSR payload data as the hydration initial value
+      // If undefined is returned, Nuxt will initialize data with default() (usually null),
+      // and since null !== undefined triggers the "hydration success" branch, skipping re-fetch,
+      // causing the teacher's client-side data to be permanently null and page content to disappear
       const nuxtApp = useNuxtApp()
       return nuxtApp.payload.data[key] ?? nuxtApp.static.data[key]
     },
@@ -127,8 +127,8 @@ cRequest.use = <T = any>(url: string | (() => string) | Ref<string>, options: Re
     },
   } as any)
 
-  // 教师以上角色：客户端 hydration 完成后后台刷新，确保看到最新数据
-  // （如章节开放状态变更），但不阻塞渲染（data 初始值来自 SSR payload）
+  // Teacher and above roles: refresh in background after client hydration completes to ensure latest data
+  // (e.g. chapter open state changes), but without blocking rendering (data initial value comes from SSR payload)
   if (import.meta.client) {
     const instance = getCurrentInstance()
     if (instance) {

@@ -1,9 +1,9 @@
 /**
- * LMS userScore 工具测试
+ * LMS userScore utility test
  * @see modules/lms/server/utils/userScore.ts
  *
- * 测试 addChapterScore / addCourseScore
- * 使用内联 mock 工厂（不引用外部变量）避免 vi.mock 提升导致的 TDZ
+ * Test addChapterScore / addCourseScore
+ * Uses inline mock factory (no external variable references) to avoid TDZ caused by vi.mock hoisting
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
@@ -32,7 +32,7 @@ import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'
 
 beforeEach(() => {
   resetAllStubs()
-  // clearAllMocks 清除调用记录但不重置 mockReturnThis 实现
+  // clearAllMocks clears call records but does not reset mockReturnThis implementation
   vi.clearAllMocks()
 })
 
@@ -180,9 +180,9 @@ describe('server/utils/userScore - addCourseScoreMax（最高分模式，用于 
     await addCourseScoreMax(1, 3, 80, 'quizScore', 5)
     expect(db.update).toHaveBeenCalledTimes(1)
     const setArg = vi.mocked(db.set).mock.calls[0][0]
-    expect(setArg.quizScore).toBe('80')           // 取 max(50, 80) = 80
+    expect(setArg.quizScore).toBe('80')           // Take max(50, 80) = 80
     expect(setArg.score).toBe('130')               // 100 + (80-50) = 130
-    expect(setArg.exp).toBe(25)                    // 累加
+    expect(setArg.exp).toBe(25)                    // Accumulate
   })
 
   it('已有记录 + 新分更低 → 不写分项 + 不动总分 + 只累加 exp', async () => {
@@ -191,8 +191,8 @@ describe('server/utils/userScore - addCourseScoreMax（最高分模式，用于 
     } as any)
     await addCourseScoreMax(1, 3, 50, 'quizScore', 5)
     const setArg = vi.mocked(db.set).mock.calls[0][0]
-    expect(setArg.quizScore).toBeUndefined()       // 不写
-    expect(setArg.score).toBeUndefined()           // 不动
+    expect(setArg.quizScore).toBeUndefined()       // Does not write
+    expect(setArg.score).toBeUndefined()           // Does not change
     expect(setArg.exp).toBe(25)
   })
 
@@ -231,8 +231,8 @@ describe('server/utils/userScore - addCourseScoreMax（最高分模式，用于 
       score: '100', quizScore: '50', raceScore: '30', exp: 20,
     } as any)
     await addCourseScoreMax(1, 3, 20, 'raceScore', 0)
-    // 30 > 20，不写 raceScore；总分不动；exp=0 也不写
-    // 所有增量都为 0，应直接跳过 update/insert
+    // 30 > 20, do not write raceScore; total score unchanged; exp=0 so do not write either
+    // All increments are 0, should directly skip update/insert
     expect(db.update).not.toHaveBeenCalled()
     expect(db.insert).not.toHaveBeenCalled()
   })

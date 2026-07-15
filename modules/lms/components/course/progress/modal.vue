@@ -47,8 +47,8 @@ interface ProgressModalProps {
 const props = defineProps<ProgressModalProps>()
 const isOpen = defineModel<boolean>('open', { default: false })
 
-// 在 setup 阶段解析 UI 组件引用，传入 composable。
-// 避免 composable 内部 resolveComponent 返回的字符串在 h() 渲染时 lookup 失败。
+// Resolve UI component references at setup stage and pass to composable.
+// Avoid the string returned by resolveComponent inside the composable failing to lookup in h() render.
 const UButton = resolveComponent('UButton')
 const UTooltip = resolveComponent('UTooltip')
 const UIcon = resolveComponent('UIcon')

@@ -1,8 +1,8 @@
 /**
- * menu/editorItemModal.vue 组件测试
+ * menu/editorItemModal.vue component tests
  * @see modules/admin/components/menu/editorItemModal.vue
  *
- * 单条菜单项编辑弹窗：label/icon/to/table/visible 编辑
+ * Single menu item edit modal: label/icon/to/table/visible editing
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -19,7 +19,7 @@ beforeEach(() => {
     const toDraft = ref('')
     const tableDraft = ref<string | undefined>(undefined)
     const visibleDraft = ref(true)
-    // 模拟 open watcher：open=true 时从 item 初始化
+    // Simulate open watcher: initialize from item when open=true
     const openVal = _open()
     const itemVal = _item()
     if (openVal && itemVal) {
@@ -133,7 +133,7 @@ describe('menu/editorItemModal.vue', () => {
       global: _globalConfig,
     })
     await flushPromises()
-    // item=null 时 v-if="item" 为 false，不渲染内容 div
+    // When item=null, v-if="item" is false, content div not rendered
     expect(wrapper.find('.uform-field').exists()).toBe(false)
   })
 

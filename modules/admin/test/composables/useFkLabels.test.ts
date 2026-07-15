@@ -1,8 +1,8 @@
 /**
- * useFkLabels composable 测试
+ * useFkLabels composable tests
  * @see modules/admin/composables/useFkLabels.ts
  *
- * 外键标签解析：扫描 FK 列，拉取 /api/admin/fk-options，生成映射
+ * FK label resolution: scan FK columns, fetch /api/admin/fk-options, generate mapping
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { resetAllStubs, setMockFetchHandler } from '../../../../test/setup/nuxt-stubs'

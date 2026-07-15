@@ -1,5 +1,5 @@
 /**
- * race edit form-content 组件测试
+ * race edit form-content component test
  * @see modules/lms/components/ueditor/extensions/nodes/vue/race/edit/form-content.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

@@ -29,7 +29,7 @@
 <script setup lang="ts">
 const props = defineProps<{
     title?: string
-    aspectRatio?: number | null // null= 自由比例，number=固定比例
+    aspectRatio?: number | null // null= free ratio, number= fixed ratio
     stencilType?: 'circle' | 'rectangle'
 }>()
 

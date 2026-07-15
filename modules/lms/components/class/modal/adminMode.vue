@@ -1,11 +1,11 @@
 <template>
-  <!-- 班级选择行 -->
+  <!-- ClassSelectlines -->
   <div class="flex items-center gap-2">
     <UInputMenu v-if="classOptions.length && !editingClassName" v-model="selectedItem" :items="classOptions"
       value-key="value" label-key="label" :placeholder="$t('classSelector.searchPlaceholder')"
-      :loading="classLoading" icon="i-lucide-search" class="flex-1" @change="onClassChange" />
+      :loading="classLoading" icon="i-lucide-search" class="flex-1" @change="on ClassChange" />
 
-    <!-- 编辑班级名称 -->
+    <!-- EditClass Name -->
     <UInput v-if="selectedClassId && editingClassName" v-model="editClassName" size="sm" class="flex-1"
       @keyup.enter="saveClassName" />
     <UButton v-if="selectedClassId && editingClassName" icon="i-lucide-check" size="sm" color="primary"
@@ -17,7 +17,7 @@
       variant="ghost" :aria-label="$t('classSelector.editClassName')" @click="startEditClassName" />
   </div>
 
-  <!-- 新增班级 -->
+  <!-- AddClass -->
   <div v-if="hasRole('admin')" class="flex items-center gap-2 mt-3">
     <UInput v-model="newClassName" :placeholder="$t('classSelector.newClassNamePlaceholder')" class="flex-1"
       size="sm" @keyup.enter="addClass" />
@@ -25,16 +25,16 @@
       :loading="adding" @click="addClass" />
   </div>
 
-  <!-- 班级用户表格 -->
+  <!-- ClassUserTable -->
   <div v-if="selectedClassId" class="mt-4">
     <ClassUsersTable ref="classUsersTableRef" :class-id="selectedClassId" show-online />
   </div>
 
-  <!-- 添加学生/教师到班级 -->
+  <!-- AddStudent/Teacherto Class -->
   <div v-if="selectedClassId" class="mt-4 space-y-3">
     <div class="text-sm font-medium text-muted">{{ $t('classSelector.addMembers') }}</div>
 
-    <!-- 学生 -->
+    <!-- Student -->
     <ClassModalMemberPicker
       v-model:search="studentSearch"
       :searching="studentSearching"
@@ -52,7 +52,7 @@
       @add="addStudentsToClass"
     />
 
-    <!-- 教师 -->
+    <!-- Teacher -->
     <ClassModalMemberPicker
       v-model:search="teacherSearch"
       :searching="teacherSearching"
@@ -74,7 +74,7 @@
 
 <script setup lang="ts">
 const {
-  hasRole, classOptions, selectedItem, classLoading, onClassChange,
+  hasRole, classOptions, selectedItem, classLoading, on ClassChange,
   editingClassName, editClassName, savingClassName, saveClassName, cancelEditClassName, startEditClassName,
   newClassName, adding, addClass,
   selectedClassId, classUsersTableRef,

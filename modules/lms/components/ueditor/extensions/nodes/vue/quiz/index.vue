@@ -1,6 +1,6 @@
 <template>
     <div class="quiz-render w-full relative">
-        <!-- 内联编辑面板（在上方显示） -->
+        <!-- InsideinlineEditPanel（UpsideShow） -->
         <div v-if="showConfig" class="vue-node-config">
             <Edit :quiz-id="quizId" :quiz="quiz" :course-id="courseId" @saved="onSaved" />
         </div>
@@ -19,13 +19,13 @@ const props = defineProps(nodeViewProps)
 
 const { courseId } = useLmsContext()
 
-// inject node-view 提供的状态
+// inject node-view provideStatus
 const showConfig = inject('nodeViewShowConfig', ref(false))
 const meta = inject('nodeViewMeta', reactive({ title: '', icon: '', hasSettings: false }))
 
-// 设置组件元信息（告知 node-view 显示设置按钮）
+// SettingsComponentelementInfo（informNode-view ShowSettingsButton）
 if (meta) {
-    meta.title = '测验'
+    meta.title = 'Quiz'
     meta.icon = 'i-lucide-clipboard-check'
     meta.hasSettings = true
 }
@@ -36,27 +36,27 @@ const quizId = computed(() => Number(props.node?.attrs?.content) || 0)
 const quiz = ref(null)
 const renderRef = ref(null)
 
-// 从 render.vue 获取 quiz 数据
+// from render.vue Get quiz Data
 watch([renderRef, () => renderRef.value?.data], () => {
     if (renderRef.value?.data) {
         quiz.value = renderRef.value.data
     }
 }, { immediate: true, deep: true })
 
-// 新建测验时拿到 cid 后通知父节点更新 content 属性
+// NewQuiztake whento cid BackNotificationparent nodePointUpdate content Property
 function onSaved(qz) {
-    // 更新本地 quiz 数据
+    // UpdatelocalGround quiz Data
     if (quiz.value) {
         Object.assign(quiz.value, qz)
     } else {
         quiz.value = qz
     }
-    // 新建测验：拿到新增 cid 后通知父节点更新 content 属性
+    // NewQuiz：taketoAdd cid BackNotificationparent nodePointUpdate content Property
     if (qz.cid && Number(qz.cid) !== quizId.value) {
         emit('init', qz.cid)
         props.updateAttributes({ content: String(qz.cid) })
     }
-    // 编辑保存后关闭配置面板
+    // EditSaveBackCloseConfigurationPanel
     if (showConfig.value) {
         showConfig.value = false
     }

@@ -1,10 +1,10 @@
 /**
- * ai/llm/index.client.vue 组件测试
+ * ai/llm/index.client.vue component test
  * @see modules/lms/components/ai/llm/index.client.vue
  *
- * LLM AI 助手容器：设置面板 + 本地模型加载进度 + 聊天界面。
- * 逻辑由 useLlm() composable 提供，测试中导入真实 composable + useAiConfig。
- * focus：能 mount、接受 props、暴露 refreshMessages/getMessages。
+ * LLM AI assistant container: settings panel + local model loading progress + chat interface.
+ * Logic provided by useLlm() composable, imports real composable + useAiConfig in tests.
+ * focus: can mount, accept props, expose refreshMessages/getMessages.
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -51,7 +51,7 @@ describe('ai/llm/index.client.vue', () => {
       global: _globalConfig,
     })
     expect(wrapper.find('.settings-panel').exists()).toBe(false)
-    // 聊天界面仍然渲染
+    // Chat interface still renders
     expect(wrapper.find('.chatbox').exists()).toBe(true)
   })
 

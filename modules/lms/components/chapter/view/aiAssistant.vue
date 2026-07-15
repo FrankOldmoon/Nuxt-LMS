@@ -1,5 +1,5 @@
 <template>
-  <!-- 右下角 AI 章节助教 + VRM 数字人 -->
+  <!-- Bottom-right AI chapter assistant + VRM digital human -->
   <div v-if="aiEnabled">
     <Transition enter-active-class="transition duration-200 ease-out"
       enter-from-class="opacity-0 translate-y-4 scale-95" enter-to-class="opacity-100 translate-y-0 scale-100"

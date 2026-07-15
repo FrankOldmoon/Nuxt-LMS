@@ -2,59 +2,59 @@ import { shallowRef, type Ref } from 'vue'
 import type { ChapterTaskMap } from '../utils/chapterTask'
 
 /**
- * 章节任务完成状态上下文
+ * Chapter task completion status context
  *
- * 完成标准（所有 heading 通用）：
- * 1. 该 heading 下方所有可提交互动组件（question/homework/comment/quiz/race）全部 submit 答对
- * 2. 该 heading 下方所有块级图文内容（段落/图片/codeBlock/列表/表格/callout 等）都被鼠标 hover 停留 3s
+ * Completion criteria (common for all headings):
+ * 1. All submittable interactive components under the heading (question/homework/comment/quiz/race) must be correctly submitted
+ * 2. All block-level text/image content under the heading (paragraphs/images/codeBlock/lists/tables/callouts, etc.) must be hovered by the mouse for 3s
  *
- * - hover 已读状态不持久化，刷新页面后重新开始
- * - heading 完成状态（taskStatus）持久化，且为"sticky"——一旦完成不再回退
- * - 已完成的 heading 下的内容不再显示 hover 黄色高亮
- * - 未登录时不记录、不高亮（trackReading 由页面层根据登录态 gating）
- * - 最后一个 block 标黄后延迟 1s 再记录 heading 完成，并弹出 toast 提示
+ * - Hover read state is not persisted, restarts after page refresh
+ * - Heading completion state (taskStatus) is persisted and is "sticky" — once completed it does not regress
+ * - Content under completed headings no longer shows hover yellow highlight
+ * - When not logged in, does not record or highlight (trackReading is gated by the page layer based on login state)
+ * - After the last block is highlighted, delays 1s before recording heading completion and shows a toast prompt
  */
 export interface ChapterTaskContext {
   taskMap: Ref<ChapterTaskMap>
   taskStatus: Ref<Record<string, boolean>>
   nodeStatus: Ref<Record<string, boolean>>
   isPass: Ref<boolean>
-  /** 互动组件提交后上报 */
+  /** Report after interactive component submission */
   reportNodeDone: (type: string, cid: number, done: boolean) => void
-  /** 某个可阅读块所属 heading id；无则 null。key 形如 "3" 或 "3.1"（列表项） */
+  /** The heading id that a readable block belongs to; null if none. The key is like "3" or "3.1" (for list items) */
   blockHeadingOf: (key: string) => string | null
-  /** 该块是否已被 hover 阅读过 */
+  /** Whether the block has already been hover-read */
   isBlockRead: (key: string) => boolean
-  /** 标记某块为已读（hover 停留 3s 后调用） */
+  /** Mark a block as read (called after hover stays for 3s) */
   markBlockRead: (key: string) => void
-  /** 某个 heading 是否已完成（sticky） */
+  /** Whether a heading is completed (sticky) */
   isHeadingDone: (headingId: string) => boolean
 }
 
 const CHAPTER_TASK_KEY = 'chapter-task-context'
 
 /**
- * 模块级共享 ref：允许不在 provide/inject 子树内的组件访问当前章节任务上下文。
- * 典型场景：移动端 TOC 在 USlideover（layout 层，是页面的父组件）中渲染，
- * 无法通过 inject 获取页面内 setupChapterTask 提供的上下文。
- * setupChapterTask 设置此 ref，onBeforeUnmount 清除。
+ * Module-level shared ref: allows components outside the provide/inject subtree to access the current chapter task context.
+ * Typical scenario: mobile TOC is rendered in USlideover (layout layer, is the page's parent component),
+ * and cannot get the context provided by setupChapterTask within the page via inject.
+ * setupChapterTask sets this ref, onBeforeUnmount clears it.
  */
 const sharedChapterTaskCtx = shallowRef<ChapterTaskContext | null>(null)
 
-/** 子组件注入上下文（无上下文时返回 null，如课程页或移动端 slideover 回退） */
+/** Child component injects the context (returns null when there is no context, e.g. course page or mobile slideover fallback) */
 export function useChapterTask(): ChapterTaskContext | null {
   const injected = inject<ChapterTaskContext | null>(CHAPTER_TASK_KEY, null)
   return injected || sharedChapterTaskCtx.value
 }
 
 /**
- * 在章节页初始化任务上下文：provide 给子组件，并设置 hover 阅读追踪与持久化
+ * Initialize the task context on the chapter page: provide to child components, and set up hover reading tracking and persistence
  */
 export function setupChapterTask(opts: {
   content: Ref<Record<string, any> | null | undefined>
   chapterId: Ref<number | string>
   courseId: Ref<number | string>
-  /** 章节标题（h1），作为第一个 heading 加入进度统计；id 取 chapterId */
+  /** Chapter title (h1), added as the first heading in progress statistics; id is chapterId */
   chapterTitle?: Ref<string>
   initialTaskStatus?: Record<string, boolean>
   initialIsPass?: boolean
@@ -63,13 +63,13 @@ export function setupChapterTask(opts: {
   const { user } = useAuth()
   const toast = useToast()
   const { t } = useI18n()
-  // 引入 useUserCard：readingBlock 完成 heading 时调用 refresh() 触发 userCard 重新拉取积分
+  // Import useUserCard: when readingBlock completes a heading, call refresh() to trigger userCard to re-fetch points
   const { refresh: refreshUserCard } = useUserCard()
 
   const taskMap = computed(() => {
     const map = extractChapterTasks(opts.content.value)
-    // 将章节标题（h1）作为第一个 heading 加入任务列表，id 为 chapterId
-    // 这样 TOC 进度汇总和 isPass 计算都会包含章节标题
+    // Add the chapter title (h1) as the first heading in the task list, with id as chapterId
+    // This way TOC progress aggregation and isPass calculation will include the chapter title
     if (opts.chapterTitle?.value) {
       const chId = String(opts.chapterId.value)
       map.headings.unshift({ id: chId, level: 1, text: opts.chapterTitle.value })
@@ -81,12 +81,12 @@ export function setupChapterTask(opts: {
   const nodeStatus = ref<Record<string, boolean>>({})
   const isPass = ref(!!opts.initialIsPass)
 
-  // ===== 顶层块布局：建立 blockKey → headingId 的映射 =====
-  // 仅追踪需要 hover 阅读的块级内容（排除 heading 自身与 vue 互动节点）
-  // vue 互动节点（question/homework/...）走 submit 上报路径，不计入阅读要求
-  // 列表节点（bulletList/orderedList/taskList）按 listItem/taskItem 拆分，
-  // 每个 <li> 单独作为一个可阅读块（逐行标黄），key 形如 "${topIndex}.${itemIndex}"
-  // 空段落（无文字、仅有 hardBreak/空白）不纳入追踪，否则用户无法 hover 导致卡住
+  // ===== Top-level block layout: build blockKey → headingId mapping =====
+  // Only tracks block-level content that needs hover reading (excluding headings themselves and vue interactive nodes)
+  // Vue interactive nodes (question/homework/...) go through the submit reporting path and are not counted in reading requirements
+  // List nodes (bulletList/orderedList/taskList) are split by listItem/taskItem,
+  // each <li> is a separate readable block (highlighted line by line), with key like "${topIndex}.${itemIndex}"
+  // Empty paragraphs (no text, only hardBreak/whitespace) are not tracked, otherwise users cannot hover and get stuck
   const LIST_TYPES = new Set(['bulletList', 'orderedList', 'taskList'])
   function isEmptyParagraph(node: any): boolean {
     if (node.type !== 'paragraph') return false
@@ -100,12 +100,12 @@ export function setupChapterTask(opts: {
   const blockLayout = computed(() => {
     const byHeading: Record<string, string[]> = {}
     const blockToHeading: Record<string, string> = {}
-    // 必须用 Array.isArray 校验：|| 会被 truthy 非数组值（如 {}、字符串）绕过，
-    // 导致 topBlocks.forEach 抛 TypeError。兼容 content=null/content.content={} 的脏数据。
+    // Must use Array.isArray check: || would be bypassed by truthy non-array values (e.g. {}, string),
+    // causing topBlocks.forEach to throw TypeError. Compatible with dirty data like content=null/content.content={}.
     const topBlocks: any[] = Array.isArray(opts.content.value?.content)
       ? opts.content.value.content
       : []
-    // 章节标题 h1（合成）作为初始当前 heading，其下的顶层块归属它
+    // Chapter title h1 (synthesized) as the initial current heading, top-level blocks under it belong to it
     let curHeading = String(opts.chapterId.value)
     topBlocks.forEach((child: any, index: number) => {
       if (!child) return
@@ -114,9 +114,9 @@ export function setupChapterTask(opts: {
         if (id) curHeading = String(id)
         return
       }
-      if (child.type === 'vue') return // 互动组件走 submit 路径
-      if (isEmptyParagraph(child)) return // 空行不纳入 hover 追踪
-      // 列表：每个 listItem/taskItem 单独作为一个可阅读块
+      if (child.type === 'vue') return // Interactive components go through the submit path
+      if (isEmptyParagraph(child)) return // Empty lines are not included in hover tracking
+      // List: each listItem/taskItem is a separate readable block
       if (LIST_TYPES.has(child.type) && Array.isArray(child.content)) {
         child.content.forEach((_item: any, j: number) => {
           const key = `${index}.${j}`
@@ -125,7 +125,7 @@ export function setupChapterTask(opts: {
         })
         return
       }
-      // 其它块级内容（段落/图片/codeBlock/表格/callout 等）整体作为一个可阅读块
+      // Other block-level content (paragraphs/images/codeBlock/tables/callouts, etc.) as a whole readable block
       const key = String(index)
       blockToHeading[key] = curHeading
       ;(byHeading[curHeading] ||= []).push(key)
@@ -133,10 +133,10 @@ export function setupChapterTask(opts: {
     return { byHeading, blockToHeading }
   })
 
-  // hover 已读块集合（不持久化，刷新重置）
+  // Hover read block set (not persisted, reset on refresh)
   const readBlocks = ref<Set<string>>(new Set())
 
-  // 延迟完成的 heading 定时器（最后一个 block 标黄后 1s 再记录完成）
+  // Delayed completion heading timers (records completion 1s after the last block is highlighted)
   const pendingCompletion = new Map<string, ReturnType<typeof setTimeout>>()
 
   function isBlockRead(key: string): boolean {
@@ -151,7 +151,7 @@ export function setupChapterTask(opts: {
     return !!taskStatus.value[headingId]
   }
 
-  // 反向索引：nodeKey → headingId，便于上报时定位所属 heading
+  // Reverse index: nodeKey → headingId, convenient for locating the parent heading during reporting
   const nodeToHeading = computed<Record<string, string>>(() => {
     const m: Record<string, string> = {}
     for (const [hid, tasks] of Object.entries(taskMap.value.tasksByHeading)) {
@@ -160,7 +160,7 @@ export function setupChapterTask(opts: {
     return m
   })
 
-  /** 检查 heading 是否满足完成条件（不实际标记，用于判断是否需要延迟） */
+  /** Check whether a heading meets the completion conditions (does not actually mark, used to determine whether to delay) */
   function wouldCompleteHeading(headingId: string): boolean {
     if (taskStatus.value[headingId]) return false
     const tasks = taskMap.value.tasksByHeading[headingId] || []
@@ -172,14 +172,14 @@ export function setupChapterTask(opts: {
   }
 
   /**
-   * 重算某个 heading 的完成状态。
-   * sticky：已完成的 heading 不再回退（避免刷新后未 hover 导致已完成任务回退）。
-   * 完成条件：所有 submit 任务答对 AND 所有可阅读块已 hover。
-   * @returns 是否刚把该 heading 置为完成
+   * Recompute the completion status of a heading.
+   * Sticky: completed headings do not regress (avoids completed tasks regressing after refresh due to no hover).
+   * Completion conditions: all submit tasks answered correctly AND all readable blocks have been hovered.
+   * @returns Whether the heading was just set to completed
    */
   function recomputeHeading(headingId: string): boolean {
     if (taskStatus.value[headingId]) return false // sticky
-    if (pendingCompletion.has(headingId)) return false // 正在延迟中，等待定时器触发
+    if (pendingCompletion.has(headingId)) return false // Currently delaying, waiting for the timer to trigger
     const tasks = taskMap.value.tasksByHeading[headingId] || []
     const tasksDone = tasks.length === 0 || tasks.every(t => nodeStatus.value[t.key])
     if (!tasksDone) return false
@@ -190,7 +190,7 @@ export function setupChapterTask(opts: {
     return true
   }
 
-  /** recomputeHeading 的包装：若状态翻转则重算 isPass 并安排持久化 */
+  /** Wrapper for recomputeHeading: if the state flips, recompute isPass and schedule persistence */
   function checkHeading(headingId: string) {
     if (recomputeHeading(headingId)) {
       recomputePass()
@@ -203,7 +203,7 @@ export function setupChapterTask(opts: {
     isPass.value = hs.length > 0 && hs.every(h => taskStatus.value[h.id])
   }
 
-  // ===== 持久化（防抖，仅客户端） =====
+  // ===== Persistence (debounced, client-side only) =====
   let persistTimer: any = null
   let lastNotifiedPass = isPass.value
 
@@ -214,7 +214,7 @@ export function setupChapterTask(opts: {
   }
 
   async function doPersist() {
-    // 未登录时不记录学习进度
+    // Do not record learning progress when not logged in
     if (!user.value) return
 
     const chId = Number(opts.chapterId.value)
@@ -228,19 +228,19 @@ export function setupChapterTask(opts: {
           is_pass: isPass.value,
         },
       })
-      // heading 完成：通知 userCard 重新拉取积分（章节分/经验/金币可能因完成而变化）
+      // Heading completed: notify userCard to re-fetch points (chapter score/experience/coins may change due to completion)
       refreshUserCard()
-      // is_pass 变化时通知课程侧边栏刷新打钩
+      // When is_pass changes, notify the course sidebar to refresh the checkmark
       if (isPass.value !== lastNotifiedPass) {
         lastNotifiedPass = isPass.value
         notifyCourseNavUpdate()
       }
     } catch {
-      // 静默（网络错误）
+      // Silent (network error)
     }
   }
 
-  // ===== 上报接口 =====
+  // ===== Reporting interface =====
   function reportNodeDone(type: string, cid: number, done: boolean) {
     const key = `${type}:${cid}`
     nodeStatus.value = { ...nodeStatus.value, [key]: done }
@@ -248,16 +248,16 @@ export function setupChapterTask(opts: {
     if (hid) checkHeading(hid)
   }
 
-  /** hover 停留 3s 后标记块已读 */
+  /** Mark a block as read after hover stays for 3s */
   function markBlockRead(key: string) {
     if (!user.value) return
     if (readBlocks.value.has(key)) return
-    // 重新赋值以稳定触发响应式
+    // Reassign to stably trigger reactivity
     readBlocks.value = new Set([...readBlocks.value, key])
     const hid = blockLayout.value.blockToHeading[key]
     if (!hid) return
 
-    // 最后一个 block 标黄后，延迟 1s 再记录完成（让用户看到黄色高亮 + toast 提示）
+    // After the last block is highlighted, delay 1s before recording completion (let the user see the yellow highlight + toast prompt)
     if (wouldCompleteHeading(hid) && !pendingCompletion.has(hid)) {
       const timer = setTimeout(() => {
         pendingCompletion.delete(hid)
@@ -290,16 +290,16 @@ export function setupChapterTask(opts: {
   }
 
   provide(CHAPTER_TASK_KEY, ctx)
-  // 同时通过模块级 ref 共享，供不在 provide 子树内的组件访问（如移动端 slideover 中的 TOC）
+  // Also share via module-level ref, for components outside the provide subtree to access (e.g. TOC in mobile slideover)
   sharedChapterTaskCtx.value = ctx
 
-  // ===== 客户端：内容/布局变化时重算所有 heading =====
+  // ===== Client side: recompute all headings when content/layout changes =====
   if (import.meta.client) {
-    // 内容加载后重算所有 heading 完成状态（sticky，已完成的不会回退）。
-    // 覆盖时序问题：question 可能在 content 完全加载前就已答对上报，
-    // 此时 nodeToHeading 尚未建立 → reportNodeDone 内的 checkHeading 未命中；
-    // 此 watcher 在 taskMap 就绪后统一补救，让已答对的任务正确触发完成。
-    // 同时覆盖空 heading（无任务且无可阅读块）自动完成的原始需求。
+    // Recompute all heading completion states after content is loaded (sticky, completed ones do not regress).
+    // Covers timing issues: question may have been answered and reported before content is fully loaded,
+    // at which point nodeToHeading is not yet established → checkHeading inside reportNodeDone misses;
+    // this watcher remedies this after taskMap is ready, letting correctly answered tasks trigger completion.
+    // Also covers the original requirement of auto-completing empty headings (no tasks and no readable blocks).
     watch(
       [taskMap, blockLayout],
       () => {
@@ -313,12 +313,12 @@ export function setupChapterTask(opts: {
 
     onBeforeUnmount(() => {
       if (persistTimer) clearTimeout(persistTimer)
-      // 清除延迟完成定时器，避免离开页面后触发 toast
+      // Clear delayed completion timers to avoid triggering toast after leaving the page
       for (const timer of pendingCompletion.values()) clearTimeout(timer)
       pendingCompletion.clear()
-      // 离开页面时立即持久化一次
+      // Persist once immediately when leaving the page
       doPersist()
-      // 清除模块级共享 ref，防止下一个页面读到旧的上下文
+      // Clear the module-level shared ref to prevent the next page from reading the stale context
       sharedChapterTaskCtx.value = null
     })
   }

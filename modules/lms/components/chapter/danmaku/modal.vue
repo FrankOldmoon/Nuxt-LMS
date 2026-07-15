@@ -4,7 +4,7 @@
       <div class="p-4">
         <h3 class="text-base font-semibold mb-3">{{ $t('chapter.danmaku') }}</h3>
 
-        <!-- 教师：弹幕开关 -->
+        <!-- Teacher：Danmakuon/off -->
         <div v-if="canEdit" class="flex items-center justify-between mb-3 pb-3 border-b border-default">
           <div>
             <p class="text-sm font-medium">{{ $t('chapter.danmakuToggle') }}</p>
@@ -13,7 +13,7 @@
           <USwitch v-model="danmakuEnabled" @update:model-value="toggleDanmaku" />
         </div>
 
-        <!-- 发送弹幕 -->
+        <!-- Send danmaku -->
         <div v-if="canEdit || danmakuEnabled" class="flex gap-2">
           <UInput
             v-model="danmakuText"

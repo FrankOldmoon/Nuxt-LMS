@@ -1,5 +1,5 @@
 /**
- * auth/loginForm.vue 组件测试
+ * auth/loginForm.vue component tests
  * @see modules/base/components/auth/loginForm.vue
  */
 import {

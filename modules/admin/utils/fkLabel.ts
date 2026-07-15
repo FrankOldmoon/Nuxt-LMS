@@ -1,8 +1,8 @@
 import type { ColumnMeta } from './types'
 
 /**
- * FK 标签列覆盖表（与服务端 FK_LABEL_OVERRIDES 保持一致）
- * 用于前端展示时确定哪一列作为外键的显示标签。
+ * FK label column override table (kept consistent with server-side FK_LABEL_OVERRIDES)
+ * Used to determine which column to use as the display label for foreign keys in frontend rendering.
  */
 const FK_LABEL_OVERRIDES: Record<string, string> = {
   users: 'name',
@@ -17,12 +17,12 @@ const FK_LABEL_OVERRIDES: Record<string, string> = {
   medals: 'name',
 }
 
-/** 获取指定外表的标签列名 */
+/** Get the label column name for a specified foreign table */
 export function fkLabelColumn(table: string): string {
   return FK_LABEL_OVERRIDES[table] || 'name'
 }
 
-/** 从列定义提取 FK 列映射 { [jsName]: { table, labelColumn } } */
+/** Extract FK column mapping from column definitions { [jsName]: { table, labelColumn } } */
 export function extractFkMap(columns: ColumnMeta[]): Record<string, { table: string; labelColumn: string }> {
   const map: Record<string, { table: string; labelColumn: string }> = {}
   for (const col of columns) {

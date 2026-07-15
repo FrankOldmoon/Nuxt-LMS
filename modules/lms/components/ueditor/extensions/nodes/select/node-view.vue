@@ -13,7 +13,7 @@ import { NodeViewWrapper, nodeViewProps } from '@tiptap/vue-3'
 const props = defineProps(nodeViewProps)
 const { t } = useI18n()
 
-// 从 question 编辑上下文注入 form，获取 options
+// from question EditUpDowncontext inject form，Get options
 const questionForm = inject('questionForm', null)
 const options = computed(() => questionForm?.value?.options || [])
 const placeholder = computed(() => options.value.length ? t('common.selectPlaceholder') : (props.node?.attrs?.content || t('selectNode.dropdown')))

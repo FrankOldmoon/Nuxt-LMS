@@ -1,5 +1,5 @@
 /**
- * useAiConfig composable 测试
+ * useAiConfig composable test
  * @see modules/lms/composables/useAiConfig.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -24,7 +24,7 @@ describe('composables/useAiConfig', () => {
   it('isLoading 初始为 true（fetch 进行中）', async () => {
     const { useAiConfig } = await import('../../composables/useAiConfig')
     const { isLoading } = useAiConfig()
-    // fetch 立即执行，可能 sync 完成
+    // fetch executes immediately, may complete synchronously
     expect(typeof isLoading.value).toBe('boolean')
   })
 

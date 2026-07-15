@@ -1,8 +1,8 @@
 /**
- * MyFilesModal 组件测试
+ * MyFilesModal component tests
  * @see modules/base/components/files/myFilesModal.vue
  *
- * 文件选择弹窗：inline 模式 + modal 模式
+ * File selection modal: inline mode + modal mode
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

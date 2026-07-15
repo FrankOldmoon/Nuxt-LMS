@@ -1,5 +1,5 @@
 /**
- * race render podium 组件测试
+ * race render podium component test
  * @see modules/lms/components/ueditor/extensions/nodes/vue/race/render/podium.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

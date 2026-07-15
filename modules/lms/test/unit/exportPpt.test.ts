@@ -1,19 +1,19 @@
 /**
- * exportPpt 全节点类型测试
+ * exportPpt full node type test
  *
- * 测试范围：
- * 1. markdownToTiptap：所有 markdown 语法 → Tiptap JSON 转换验证
- * 2. addNodeToSlide：所有 Tiptap 节点类型 → PPT 渲染验证（含编辑器专属类型）
- * 3. 全流程：markdown → Tiptap JSON → PPT 渲染
+ * Test scope:
+ * 1. markdownToTiptap: all markdown syntax → Tiptap JSON conversion verification
+ * 2. addNodeToSlide: all Tiptap node types → PPT render verification (including editor-specific types)
+ * 3. full flow: markdown → Tiptap JSON → PPT rendering
  *
- * 覆盖的 Tiptap 节点类型（对照 components/ueditor/render/nodes/）：
- * - markdown 支持的：paragraph, heading, codeBlock, vue(question), blockMath, inlineMath,
+ * Covered Tiptap node types (cf. components/ueditor/render/nodes/):
+ * - markdown supported: paragraph, heading, codeBlock, vue(question), blockMath, inlineMath,
  *   blockquote, bulletList, orderedList, horizontalRule, image, hardBreak, inputs, select,
  *   text(+marks: bold, italic, strike, code, link)
- * - 编辑器专属的：callout, details, textBox, tag, mention, datetime, echarts,
+ * - editor-specific: callout, details, textBox, tag, mention, datetime, echarts,
  *   footnotes, footnote, taskList, table, columnContainer, column, pageBreak,
  *   audio, video, file, iframe, footnoteReference, optionBox, toc
- * - vue 子类型：question, quiz, homework, race, tabs, mindmap, html, other
+ * - vue subtypes: question, quiz, homework, race, tabs, mindmap, html, other
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'
@@ -23,10 +23,10 @@ beforeEach(() => {
 })
 
 // ═══════════════════════════════════════
-// Mock 工具：构造 pptxgenjs 幻灯片上下文
+// Mock utilities: construct pptxgenjs slide context
 // ═══════════════════════════════════════
 
-/** 创建 mock slide（模拟 pptxgenjs slide 对象） */
+/** Create mock slide (simulating pptxgenjs slide object) */
 function createMockSlide() {
   return {
     addText: vi.fn(),
@@ -37,10 +37,10 @@ function createMockSlide() {
 }
 
 /**
- * 创建 mock SlideContext
- * - pres.addSlide() 返回新 mock slide 并更新 ctx.slide
- * - allSlides 追踪所有创建过的 slide（跨页断言用）
- * - 渲染后通过 ctx.slide 检查最后一次使用的 slide 方法调用
+ * Create mock SlideContext
+ * - pres.addSlide() returns a new mock slide and updates ctx.slide
+ * - allSlides tracks all created slides (for cross-page assertions)
+ * - after rendering, check the last slide method call via ctx.slide
  */
 function createMockCtx(overrides: Record<string, any> = {}) {
   const slide = createMockSlide()
@@ -74,7 +74,7 @@ function createMockCtx(overrides: Record<string, any> = {}) {
   } as any
 }
 
-/** 从 addText 调用中提取所有文本内容 */
+/** Extract all text content from addText calls */
 function getAddTextTexts(slide: any): string[] {
   return slide.addText.mock.calls.map((call: any[]) => {
     const arg = call[0]
@@ -84,7 +84,7 @@ function getAddTextTexts(slide: any): string[] {
   })
 }
 
-/** 从所有幻灯片（含跨页）收集 addText 文本 */
+/** Collect addText text from all slides (including cross-page) */
 function getAllAddTextTexts(ctx: any): string[] {
   const slides = ctx.allSlides || [ctx.slide]
   const texts: string[] = []
@@ -100,13 +100,13 @@ function getAllAddTextTexts(ctx: any): string[] {
   return texts
 }
 
-/** 检查 addText 调用中是否包含指定文本 */
+/** Check whether addText calls contain the specified text */
 function addTextContains(slide: any, substr: string): boolean {
   return getAddTextTexts(slide).some(t => t.includes(substr))
 }
 
 // ═══════════════════════════════════════
-// Part 1: markdownToTiptap — markdown 语法转 Tiptap JSON
+// Part 1: markdownToTiptap — markdown syntax to Tiptap JSON
 // ═══════════════════════════════════════
 
 describe('markdownToTiptap — markdown 语法转 Tiptap JSON', () => {
@@ -285,12 +285,12 @@ describe('markdownToTiptap — markdown 语法转 Tiptap JSON', () => {
 })
 
 // ═══════════════════════════════════════
-// Part 2: addNodeToSlide — 所有 Tiptap 类型渲染到 PPT
+// Part 2: addNodeToSlide — all Tiptap types rendered to PPT
 // ═══════════════════════════════════════
 
 describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
 
-  // ── 基础块级类型 ──
+  // ── Basic block types ──
 
   describe('基础块级类型', () => {
     it('paragraph → addText', async () => {
@@ -322,7 +322,7 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
       const ctx = createMockCtx()
       addNodeToSlide(ctx, { type: 'heading', attrs: { level: 3 }, content: [{ type: 'text', text: '子标题' }] }, ctx.pres, 0)
       expect(ctx.slide.addText).toHaveBeenCalled()
-      // h3 不创建新页（除非溢出）
+      // h3 does not create a new page (unless overflow)
       const opts = ctx.slide.addText.mock.calls[0][1]
       expect(opts.bold).toBe(true)
     })
@@ -336,7 +336,7 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
       }, ctx.pres, 0)
       expect(ctx.slide.addText).toHaveBeenCalled()
       const opts = ctx.slide.addText.mock.calls[0][1]
-      expect(opts.fill).toBeDefined()  // 有背景色
+      expect(opts.fill).toBeDefined()  // Has background color
     })
 
     it('blockquote → addShape（竖线）+ addText', async () => {
@@ -365,7 +365,7 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
     })
   })
 
-  // ── 列表类型 ──
+  // ── List types ──
 
   describe('列表类型', () => {
     it('bulletList → 每项 addText', async () => {
@@ -412,7 +412,7 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
     })
   })
 
-  // ── 表格类型 ──
+  // ── Table types ──
 
   describe('表格类型', () => {
     it('table → addTable', async () => {
@@ -438,7 +438,7 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
     })
   })
 
-  // ── 数学公式 ──
+  // ── Math formulas ──
 
   describe('数学公式', () => {
     it('blockMath（缓存命中）→ addImage', async () => {
@@ -463,16 +463,16 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
       const ctx = createMockCtx()
       addNodeToSlide(ctx, { type: 'blockMath', attrs: { latex: 'e = m^c' } }, ctx.pres, 0)
       expect(ctx.slide.addText).toHaveBeenCalled()
-      // 直接显示 LaTeX 源码（保留 ^），不用 KaTeX textContent（会丢失 ^ 变成 e=mc）
+      // Directly display LaTeX source (preserves ^), does not use KaTeX textContent (would lose ^ becoming e=mc)
       expect(addTextContains(ctx.slide, 'e = m^c')).toBe(true)
     })
 
     it('inlineMath → 段落内由 extractTextRuns 处理（不单独渲染）', async () => {
       const { addNodeToSlide } = await import('../../utils/exportPpt/nodes')
       const inlineMathCache = new Map()
-      inlineMathCache.set('a+b', 'a+b')  // Unicode 文本
+      inlineMathCache.set('a+b', 'a+b')  // Unicode text
       const ctx = createMockCtx({ inlineMathCache })
-      // inlineMath 在段落中被 extractTextRuns 替换为 Unicode 文本
+      // inlineMath is replaced by Unicode text via extractTextRuns in the paragraph
       addNodeToSlide(ctx, {
         type: 'paragraph',
         content: [
@@ -483,18 +483,18 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
       expect(ctx.slide.addText).toHaveBeenCalled()
     })
 
-    // ── latexToText 单元测试（mock window.katex + document，验证 .katex-html 选择器修复） ──
+    // ── latexToText unit test (mock window.katex + document, verify .katex-html selector fix) ──
 
     it('latexToText → 只提取 .katex-html 文本（跳过 MathML annotation 避免三重重复）', async () => {
       const { latexToText } = await import('../../utils/exportPpt/mathRender')
-      // KaTeX renderToString 输出含 katex-mathml（含 <annotation> 原始 LaTeX 源码）
-      // 和 katex-html（视觉渲染）两部分
+      // KaTeX renderToString output contains katex-mathml (with <annotation> original LaTeX source)
+      // And katex-html (visual rendering) two parts
       const katexOutput = '<span class="katex"><span class="katex-mathml"><annotation encoding="application/x-tex">e=m^c</annotation></span><span class="katex-html"><span class="base"><span class="strut"></span><span class="mord mathnormal">e</span><span class="mrel">=</span><span class="mord mathnormal">m</span><span class="mord"><span class="mord mathnormal">c</span></span></span></span></span>'
       const querySelectorMock = vi.fn((selector: string) => {
         if (selector === '.katex-html') return { textContent: 'e=mc' }
         return null
       })
-      // 备份原始全局（node 环境下 window/document 可能不存在）
+      // Backup original globals (window/document may not exist in node environment)
       const origWindow = (globalThis as any).window
       const origDocument = (globalThis as any).document
       ;(globalThis as any).window = { katex: { renderToString: vi.fn(() => katexOutput) } }
@@ -502,7 +502,7 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
         createElement: vi.fn(() => ({
           innerHTML: '',
           querySelector: querySelectorMock,
-          // 整个 span.textContent 会提取 MathML + annotation + HTML = e=mce=m^ce=mc（bug 场景）
+          // The entire span.textContent will extract MathML + annotation + HTML = e=mce=m^ce=mc (bug scenario)
           get textContent() { return 'e=mce=m^ce=mc' },
         })),
       }
@@ -513,7 +513,7 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
         expect(result).not.toContain('^')
         expect(result).not.toBe('e=mce=m^ce=mc')
       } finally {
-        // 恢复全局，避免污染后续测试
+        // Restore globals, avoid polluting subsequent tests
         if (origWindow === undefined) delete (globalThis as any).window
         else (globalThis as any).window = origWindow
         if (origDocument === undefined) delete (globalThis as any).document
@@ -524,7 +524,7 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
     it('latexToText → katex 未加载时回退原始 LaTeX', async () => {
       const { latexToText } = await import('../../utils/exportPpt/mathRender')
       const origWindow = (globalThis as any).window
-      ;(globalThis as any).window = {}  // 无 katex
+      ;(globalThis as any).window = {}  // No katex
       try {
         const result = latexToText('x^2')
         expect(result).toBe('x^2')
@@ -548,7 +548,7 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
     })
   })
 
-  // ── 媒体类型 ──
+  // ── Media types ──
 
   describe('媒体类型', () => {
     it('image → addImage', async () => {
@@ -612,7 +612,7 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
     })
   })
 
-  // ── 内联标记类型 ──
+  // ── Inline mark types ──
 
   describe('内联标记类型', () => {
     it('datetime → addText', async () => {
@@ -640,7 +640,7 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
     })
   })
 
-  // ── 容器类型 ──
+  // ── Container types ──
 
   describe('容器类型', () => {
     it('callout → addShape（圆角矩形）+ addText', async () => {
@@ -703,7 +703,7 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
     })
   })
 
-  // ── 脚注类型 ──
+  // ── Footnote types ──
 
   describe('脚注类型', () => {
     it('footnotes → 子节点渲染', async () => {
@@ -727,11 +727,11 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
       }, ctx.pres, 0)
       expect(ctx.slide.addText).toHaveBeenCalled()
       const opts = ctx.slide.addText.mock.calls[0][1]
-      expect(opts.fontSize).toBe(10)  // 脚注为小字
+      expect(opts.fontSize).toBe(10)  // Footnotes are small text
     })
   })
 
-  // ── Vue 扩展类型 ──
+  // ── Vue extension types ──
 
   describe('Vue 扩展类型', () => {
     it('vue/question（缓存命中）→ addText（题型标签 + 名称）', async () => {
@@ -761,7 +761,7 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
         answer: [0],
       })
       const ctx = createMockCtx({ questionCache })
-      // 不应抛出异常；字符串选项经 markdownToTiptap 转换后渲染
+      // Should not throw exception; string options rendered after markdownToTiptap conversion
       expect(() => addNodeToSlide(ctx, { type: 'vue', attrs: { type: 'question', content: '102' } }, ctx.pres, 0)).not.toThrow()
       expect(ctx.slide.addText).toHaveBeenCalled()
     })
@@ -797,19 +797,19 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
       })
       const ctx = createMockCtx({ questionCache })
       addNodeToSlide(ctx, { type: 'vue', attrs: { type: 'question', content: '1' } }, ctx.pres, 0)
-      // 应调用 addShape 绘制 group 边框
+      // Should call addShape to draw group border
       expect(ctx.slide.addShape).toHaveBeenCalled()
-      // 找到 roundRect + 透明填充的边框调用
+      // Find the roundRect + transparent fill border call
       const borderCall = ctx.slide.addShape.mock.calls.find((c: any[]) =>
         c[0] === 'roundRect' && c[1]?.fill?.type === 'none',
       )
       expect(borderCall).toBeDefined()
-      // 边框有 line（颜色 + 宽度）
+      // Border has line (color + width)
       const opts = borderCall![1]
       expect(opts.line).toBeDefined()
       expect(opts.line.color).toBeTruthy()
       expect(opts.line.width).toBeGreaterThan(0)
-      // 边框尺寸：宽 = contentWidth + padding*2，高 > 0
+      // Border dimensions: width = contentWidth + padding*2, height > 0
       expect(opts.w).toBeGreaterThan(ctx.contentWidth)
       expect(opts.h).toBeGreaterThan(0)
     })
@@ -818,14 +818,14 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
       const { addNodeToSlide } = await import('../../utils/exportPpt/nodes')
       const ctx = createMockCtx()
       addNodeToSlide(ctx, { type: 'vue', attrs: { type: 'question', content: '999' } }, ctx.pres, 0)
-      // 题目未找到 → 占位标签，不应有 group 边框
+      // Question not found → placeholder label, should not have group border
       const borderCall = ctx.slide.addShape.mock.calls.find((c: any[]) =>
         c[0] === 'roundRect' && c[1]?.fill?.type === 'none',
       )
       expect(borderCall).toBeUndefined()
     })
 
-    // ── 诊断测试：公式渲染次数 & 选项文本框合并 ──
+    // ── Diagnostic test: formula render count & option text box merge ──
 
     it('question 内容含 blockMath（缓存未命中）→ 公式文本只出现一次（无重复）', async () => {
       const { addNodeToSlide } = await import('../../utils/exportPpt/nodes')
@@ -835,10 +835,10 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
         content: '$$e = m^c$$',
         options: ['选项A', '选项B'], answer: [0],
       })
-      const ctx = createMockCtx({ questionCache })  // blockMathCache 为空 → 缓存未命中
+      const ctx = createMockCtx({ questionCache })  // blockMathCache is empty → cache miss
       addNodeToSlide(ctx, { type: 'vue', attrs: { type: 'question', content: '1' } }, ctx.pres, 0)
       const allTexts = getAllAddTextTexts(ctx)
-      // 公式源码 e = m^c 应只出现一次
+      // Formula source e = m^c should appear only once
       const formulaCount = allTexts.filter(t => t.includes('e = m^c')).length
       expect(formulaCount).toBe(1)
     })
@@ -853,7 +853,7 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
       })
       const ctx = createMockCtx({ questionCache })
       addNodeToSlide(ctx, { type: 'vue', attrs: { type: 'question', content: '1' } }, ctx.pres, 0)
-      // 找到包含 "A. 北京" 的 addText 调用（前缀和内容在同一个 runs 数组里）
+      // Find the addText call containing "A. Beijing" (prefix and content in the same runs array)
       const texts = getAddTextTexts(ctx.slide)
       const optionA = texts.find(t => t.includes('A.') && t.includes('北京'))
       const optionB = texts.find(t => t.includes('B.') && t.includes('上海'))
@@ -935,7 +935,7 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
           },
         },
       }, ctx.pres, 0)
-      // 至少 2 个新页（每个 tab 一个）
+      // At least 2 new pages (one per tab)
       expect(ctx.pres.addSlide.mock.calls.length).toBeGreaterThanOrEqual(2)
       expect(ctx.slide.addText).toHaveBeenCalled()
     })
@@ -981,7 +981,7 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
     })
   })
 
-  // ── 跳过类型（交互式组件） ──
+  // ── Skip types (interactive components) ──
 
   describe('跳过类型（交互式组件不渲染）', () => {
     it('toc → 不调用任何 slide 方法', async () => {
@@ -1014,14 +1014,14 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
     })
   })
 
-  // ── 默认/边界类型 ──
+  // ── Default/boundary types ──
 
   describe('默认/边界类型', () => {
     it('footnoteReference → 无内容不渲染', async () => {
       const { addNodeToSlide } = await import('../../utils/exportPpt/nodes')
       const ctx = createMockCtx()
       addNodeToSlide(ctx, { type: 'footnoteReference', attrs: { id: 'fn1' } }, ctx.pres, 0)
-      // footnoteReference 无 content，落入 default 但不渲染子节点
+      // footnoteReference has no content, falls into default but does not render child nodes
       expect(ctx.slide.addText).not.toHaveBeenCalled()
     })
 
@@ -1047,11 +1047,11 @@ describe('addNodeToSlide — 所有 Tiptap 类型渲染到 PPT', () => {
 })
 
 // ═══════════════════════════════════════
-// Part 3: 题目类型全覆盖（single/multiple/judge/fill/sort/classify/match）
+// Part 3: full coverage of question types (single/multiple/judge/fill/sort/classify/match)
 // ═══════════════════════════════════════
 
 describe('addNodeToSlide — 题目类型全覆盖', () => {
-  /** 辅助：通过 vue/question 节点渲染题目，返回 ctx */
+  /** Helper: render question via vue/question node, returns ctx */
   async function renderQuestion(questionData: any) {
     const { addNodeToSlide } = await import('../../utils/exportPpt/nodes')
     const questionCache = new Map()
@@ -1151,7 +1151,7 @@ describe('addNodeToSlide — 题目类型全覆盖', () => {
 })
 
 // ═══════════════════════════════════════
-// Part 4: 全流程 — markdown → Tiptap → PPT
+// Part 4: full flow — markdown → Tiptap → PPT
 // ═══════════════════════════════════════
 
 describe('全流程：markdown → Tiptap JSON → PPT 渲染', () => {
@@ -1195,15 +1195,15 @@ describe('全流程：markdown → Tiptap JSON → PPT 渲染', () => {
     // Step 1: markdown → Tiptap JSON
     const doc = markdownToTiptap(md)
     expect(doc.type).toBe('doc')
-    expect(doc.content!.length).toBeGreaterThan(5)  // 应产生多个块级节点
+    expect(doc.content!.length).toBeGreaterThan(5)  // Should produce multiple block nodes
 
-    // Step 2: Tiptap JSON → PPT 渲染（每个节点不抛异常）
+    // Step 2: Tiptap JSON → PPT rendering (no node throws exception)
     const ctx = createMockCtx()
     for (const node of doc.content!) {
       expect(() => addNodeToSlide(ctx, node, ctx.pres, 0)).not.toThrow()
     }
 
-    // h1/h2 会创建新页 → pres.addSlide 应被调用
+    // h1/h2 create new pages → pres.addSlide should be called
     expect(ctx.pres.addSlide).toHaveBeenCalled()
   })
 
@@ -1216,7 +1216,7 @@ describe('全流程：markdown → Tiptap JSON → PPT 渲染', () => {
     expect(doc.content![0].type).toBe('vue')
     expect(doc.content![0].attrs!.type).toBe('question')
 
-    // 内联题目对象 → addQuestionToSlide 直接渲染（无需缓存）
+    // Inline question object → addQuestionToSlide renders directly (no caching needed)
     const ctx = createMockCtx()
     expect(() => addNodeToSlide(ctx, doc.content![0], ctx.pres, 0)).not.toThrow()
     expect(ctx.slide.addText).toHaveBeenCalled()
@@ -1227,28 +1227,28 @@ describe('全流程：markdown → Tiptap JSON → PPT 渲染', () => {
     const { markdownToTiptap } = await import('../../utils/markdown')
     const { addNodeToSlide } = await import('../../utils/exportPpt/nodes')
 
-    // 模拟题目选项为 markdown 字符串（含代码块）
+    // Simulate question options as markdown strings (containing code blocks)
     const optionMd = '```python\nprint("hello")\n```'
     const optionTiptap = markdownToTiptap(optionMd)
     expect(optionTiptap.content![0].type).toBe('codeBlock')
 
-    // 渲染含字符串选项的题目
+    // Render question with string options
     const questionCache = new Map()
     questionCache.set(1, {
       type: 'single', name: '代码选项题',
       content: '哪个输出 hello？',
-      options: [optionMd, 'print("world")'],  // 字符串选项
+      options: [optionMd, 'print("world")'],  // String options
       answer: [0],
     })
     const ctx = createMockCtx({ questionCache })
     expect(() => addNodeToSlide(ctx, { type: 'vue', attrs: { type: 'question', content: '1' } }, ctx.pres, 0)).not.toThrow()
-    // 应渲染了 codeBlock（有背景色的 addText）
+    // Should have rendered codeBlock (addText with background color)
     const allTextCalls = ctx.slide.addText.mock.calls
     expect(allTextCalls.length).toBeGreaterThan(0)
-    // 检查是否有带 fill（背景色）的 addText 调用（codeBlock 特征）
+    // Check whether there is an addText call with fill (background color) (codeBlock feature)
     const hasCodeBlockCall = allTextCalls.some((call: any) => {
       const opts = call[1]
-      return opts?.fill?.color  // codeBlock 有背景色
+      return opts?.fill?.color  // codeBlock has background color
     })
     expect(hasCodeBlockCall).toBe(true)
   })
@@ -1257,27 +1257,27 @@ describe('全流程：markdown → Tiptap JSON → PPT 渲染', () => {
     const { markdownToTiptap } = await import('../../utils/markdown')
     const { addNodeToSlide } = await import('../../utils/exportPpt/nodes')
 
-    // 题目内容为含公式的 markdown 字符串
+    // Question content is a markdown string containing formulas
     const contentMd = '求以下公式的值：\n\n$$x^2 + y^2 = r^2$$'
     const contentTiptap = markdownToTiptap(contentMd)
-    // 应包含 blockMath 节点
+    // Should contain blockMath node
     const hasBlockMath = contentTiptap.content!.some((n: any) => n.type === 'blockMath')
     expect(hasBlockMath).toBe(true)
 
-    // 预渲染 blockMath（模拟 prerenderMathNodes）
+    // Pre-render blockMath (simulating prerenderMathNodes)
     const blockMathCache = new Map()
     blockMathCache.set('x^2 + y^2 = r^2', { dataUrl: 'data:image/png;base64,xxx', width: 4, height: 1 })
 
-    // 渲染题目（内容为字符串 → renderTiptapContent → markdownToTiptap → blockMath → addImage）
+    // Render question (content is string → renderTiptapContent → markdownToTiptap → blockMath → addImage)
     const questionCache = new Map()
     questionCache.set(1, {
       type: 'fill', name: '公式题',
-      content: contentMd,  // 字符串内容
+      content: contentMd,  // String content
       options: [], answer: ['r'],
     })
     const ctx = createMockCtx({ questionCache, blockMathCache })
     expect(() => addNodeToSlide(ctx, { type: 'vue', attrs: { type: 'question', content: '1' } }, ctx.pres, 0)).not.toThrow()
-    // blockMath 缓存命中 → addImage
+    // blockMath cache hit → addImage
     expect(ctx.slide.addImage).toHaveBeenCalled()
   })
 })

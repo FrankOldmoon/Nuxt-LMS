@@ -1,5 +1,5 @@
 /**
- * useClasses composable 测试
+ * useClasses composable tests
  * @see modules/base/composables/useClasses.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'

@@ -1,5 +1,5 @@
 /**
- * vfiles/index.vue 组件测试 (TipTap node-view)
+ * vfiles/index.vue component test (TipTap node-view)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/vfiles/index.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

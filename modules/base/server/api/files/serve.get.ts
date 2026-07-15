@@ -3,8 +3,8 @@ import { createReadStream, access } from 'node:fs'
 import { sendStream, setResponseHeader, createError } from 'h3'
 
 /**
- * 按 pathname 流式返回上传文件（替代原 /api/file）
- * path-traversal 守卫 + 按扩展名设 Content-Type + 强缓存
+ * Stream uploaded file by pathname (replaces the original /api/file)
+ * Path-traversal guard + set Content-Type by extension + strong caching
  */
 const UPLOAD_ROOT = resolve('./storage')
 
@@ -25,30 +25,30 @@ export default eventHandler(async (event) => {
 
   const pathname = getQuery(event).pathname as string
   if (!pathname) {
-    throw createError({ statusCode: 400, message: '缺少 pathname 参数' })
+    throw createError({ statusCode: 400, message: 'Missing pathname parameter' })
   }
 
-  // 安全校验：去除前导 / 避免 resolve 当作绝对路径，拼接后必须以 UPLOAD_ROOT 开头
+  // Safety check: strip leading / to avoid resolve treating it as absolute path, concatenated path must start with UPLOAD_ROOT
   const safePathname = pathname.replace(/^\/+/, '')
   const absolutePath = resolve(UPLOAD_ROOT, safePathname)
   if (!absolutePath.startsWith(UPLOAD_ROOT + '/') && absolutePath !== UPLOAD_ROOT) {
-    throw createError({ statusCode: 403, message: '禁止的路径访问' })
+    throw createError({ statusCode: 403, message: 'Forbidden path access' })
   }
 
-  // 检查文件是否存在
+  // Check if file exists
   try {
     await new Promise<void>((resolve, reject) => {
       access(absolutePath, (err) => err ? reject(err) : resolve())
     })
   } catch {
-    throw createError({ statusCode: 404, message: '文件不存在' })
+    throw createError({ statusCode: 404, message: 'File does not exist' })
   }
 
   const ext = extname(safePathname).toLowerCase()
   const fileName = basename(safePathname)
   const contentType = MIME_TYPES[ext] || 'application/octet-stream'
   setResponseHeader(event, 'Content-Type', contentType)
-  // 上传文件内容不变，缓存一年
+  // Uploaded file content is immutable, cache for one year
   setResponseHeader(event, 'Cache-Control', 'public, max-age=31536000, immutable')
   setResponseHeader(
     event,

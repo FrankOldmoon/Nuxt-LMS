@@ -1,8 +1,8 @@
 /**
- * chapter/danmaku/index.vue 组件测试
+ * chapter/danmaku/index.vue component test
  * @see modules/lms/components/chapter/danmaku/index.vue
  *
- * 弹幕浮层：监听 useWebSocket().onDanmaku，收到弹幕后渲染飞行文字 8 秒后移除。
+ * Danmaku overlay: listens to useWebSocket().onDanmaku, renders flying text for 8 seconds after receiving danmaku then removes.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -19,7 +19,7 @@ describe('chapter/danmaku/index.vue', () => {
     const { default: Danmaku } = await import('../../../../components/chapter/danmaku/index.vue')
     const wrapper = mount(Danmaku, { global: { mocks: { $t: (k: string) => k } } })
     expect(wrapper.exists()).toBe(true)
-    // 容器 fixed inset-0
+    // Container fixed inset-0
     expect(wrapper.find('.fixed').exists()).toBe(true)
   })
 

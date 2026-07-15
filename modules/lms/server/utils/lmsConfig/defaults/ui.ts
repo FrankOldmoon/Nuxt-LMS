@@ -1,5 +1,5 @@
 /**
- * LMS UI 显隐开关（首页/课程/章节/列表）
+ * LMS UI visibility toggles (home / course / chapter / list)
  */
 export const uiDefaults = {
   home: {

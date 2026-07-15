@@ -1,5 +1,5 @@
 /**
- * single 组件测试 (render)
+ * single component test (render)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/render/single.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

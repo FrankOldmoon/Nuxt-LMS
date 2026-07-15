@@ -1,14 +1,14 @@
 /**
- * WebSocket 小组功能方法
+ * WebSocket group feature methods
  *
- * 小组聊天室（纯内存转发，不持久化）
+ * Group chat room (pure in-memory forwarding, no persistence)
  *
- * 连接层与回调注册表由 base 提供（useWsConnection / registerWsHandler）。
+ * Connection layer and callback registry provided by base (useWsConnection / registerWsHandler).
  */
 export function useWsGroup() {
   const { send, joinedGroupIds } = useWsConnection()
 
-  // ====================== 小组聊天室 ======================
+  // ====================== Group chat room ======================
   function joinGroup(groupId: string, userId?: number, from?: string) {
     joinedGroupIds.add(groupId)
     send({ type: 'joinGroup', groupId, userId, from })

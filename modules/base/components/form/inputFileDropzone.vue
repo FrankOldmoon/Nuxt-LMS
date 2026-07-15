@@ -34,7 +34,7 @@
       />
     </div>
 
-    <!-- URL 输入 -->
+    <!-- URL input -->
     <div class="mt-3 flex items-center gap-2" @click.stop>
       <UInput
         v-model="urlInput"

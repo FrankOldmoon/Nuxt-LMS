@@ -1,5 +1,5 @@
 /**
- * homework edit 组件测试
+ * homework edit component test
  * @see modules/lms/components/ueditor/extensions/nodes/vue/homework/edit.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

@@ -2,37 +2,37 @@ import { ref, computed, inject, provide, nextTick, onMounted } from 'vue'
 import { submitQuestion, recordAnswer } from './shared'
 
 export function useEvaluation(props: any) {
-  const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')
+  const submitted = inject<import('vue').Ref<boolean>>('question submitted')
   const isCorrect = inject<import('vue').Ref<boolean>>('questionIsCorrect')
   const fromRecord = inject<import('vue').Ref<boolean>>('questionFromRecord')
   const { courseId, chapterId } = useLmsContext()
   const { t } = useI18n()
 
-  // ── 评价配置 ──
+  // ── ReviewConfiguration ──
   const goal = computed(() => props.question?.options?.goal || '')
   const threshold = computed(() => {
     const v = props.question?.options?.threshold
     return (typeof v === 'number' && v > 0 && v <= 1) ? v : 0.8
   })
 
-  // ── 进度模型：每答对一题增加 STEP 进度，5 题即 100% ──
+  // ── ProgressModel：each answerRightone question increase STEP Progress，5 questionthat is 100% ──
   const STEP = 0.2
 
-  // ── 状态 ──
+  // ── Status ──
   const chatboxRef = ref<any>(null)
-  const correctCount = ref(0)   // 答对题数
-  const answeredCount = ref(0)  // 已答题数（含答错）
-  const answeredQuestions = ref<Set<string>>(new Set())  // 已答题名集合（防重复计数）
+  const correctCount = ref(0)   // answerRightquestion count
+  const answeredCount = ref(0)  // alreadyanswer count（include answerWrong）
+  const answeredQuestions = ref<Set<string>>(new Set())  // alreadyanswer nameSet（preventHeavyduplicate count）
 
-  // 进度由本地答对题数计算，不由 AI 控制
+  // ProgressbylocalGroundanswerRightquestion count calculation，noby AI control
   const progress = computed(() => Math.min(1, correctCount.value * STEP))
   const passed = computed(() => progress.value >= threshold.value)
 
-  // ── hasAnswer：已答过至少一题即可提交 ──
+  // ── hasAnswer：alreadyanswerAt leastone questionthat iscanSubmit ──
   const hasAnswer = computed(() => answeredCount.value > 0)
 
-  // ── provide：供 ueditorRender 内联渲染的 QuestionRender 回传答题结果 ──
-  // provide/inject 穿透 AiChatbox → ueditorRender → render/nodes/vue.vue → QuestionRender
+  // ── provide：for ueditorRender InsideinlineRender QuestionRender callbackAnswer Result ──
+  // provide/inject pass through AiChatbox → ueditorRender → render/nodes/vue.vue → QuestionRender
   function onEvaluationAnswered({ isCorrect: correct, question: q }: { isCorrect: boolean, question: any }) {
     const qKey = q?.name || ''
     if (answeredQuestions.value.has(qKey)) return
@@ -41,15 +41,15 @@ export function useEvaluation(props: any) {
     answeredCount.value++
     if (correct) correctCount.value++
 
-    // 发送答题结果给 LLM，LLM 据此决定后续对话
+    // SendAnswer Resultto LLM，LLM datathisdecideBackcontinueRightdialog
     const feedback = `[Question Result] Type: ${q?.type || ''} | Name: "${qKey}" | Correct: ${correct}`
     chatboxRef.value?.send(feedback)
-    // 仅在答题时保存完整聊天记录并提交后端
+    // only when answeringSavecompleteChatRecordsandSubmitBackserver
     saveAndSubmit()
   }
   provide('onEvaluationAnswered', onEvaluationAnswered)
 
-  // ── 系统提示词 ──
+  // ── System Hintword ──
   const systemPrompt = computed(() => `You are an AI evaluation tutor. The evaluation goal is: "${goal.value}"
 
 Your task is to assess the user's mastery of this goal through conversation and interactive questions.
@@ -95,12 +95,12 @@ Supported question types and their formats:
 - Do NOT repeat the question JSON in your conversational text - the question block will be rendered as an interactive component inline
 - Keep your conversational text concise when generating a question`)
 
-  // ── 开场消息 ──
+  // ── OnfieldMessage ──
   const openingMessage = computed(() =>
     t('question.evaluationOpening', { goal: goal.value })
   )
 
-  // ── 保存并提交：仅在答题时调用，保存完整聊天记录到 question.record 并提交后端 ──
+  // ── SaveandSubmit：only when answeringCall，SavecompleteChatRecordsto question.record andSubmitBackserver ──
   function saveAndSubmit() {
     if (!import.meta.client) return
     const messages = chatboxRef.value?.getMessages() || []
@@ -116,9 +116,9 @@ Supported question types and their formats:
         reasoning: m.reasoning || '',
       })),
     }
-    // 保存到 props.question.record（供 computeCorrectRate 等使用）
+    // Saveto props.question.record（for computeCorrectRate etc.makeuse）
     recordAnswer(props.question, [recordData] as any)
-    // 提交到后端（持久化，之后可从远程恢复）
+    // SubmittoBackserver（persist，BackcanfromremoteResume）
     submitQuestion({
       questionId: props.questionId,
       userAnswer: [recordData] as any,
@@ -130,7 +130,7 @@ Supported question types and their formats:
     })
   }
 
-  // ── 从 record 恢复状态 ──
+  // ── from record ResumeStatus ──
   function restoreFromRecord() {
     const record = Array.isArray(props.question?.record) && props.question.record.length > 0
       ? props.question.record[0]
@@ -141,7 +141,7 @@ Supported question types and their formats:
     answeredCount.value = Math.max(0, Number(record.answeredCount) || 0)
     answeredQuestions.value = new Set(Array.isArray(record.answeredQuestions) ? record.answeredQuestions : [])
 
-    // 恢复聊天记录（题目由 ueditorRender 直接渲染，无需恢复 _question 等字段）
+    // ResumeChatRecords（Questionby ueditorRender directlyRender，NoneneedResume _question etc.Field）
     if (Array.isArray(record.messages) && record.messages.length > 0 && chatboxRef.value) {
       chatboxRef.value.clearMessages()
       record.messages.forEach((m: any) => {
@@ -154,7 +154,7 @@ Supported question types and their formats:
     }
   }
 
-  // ── 从远程获取 record 并恢复 ──
+  // ── fromremoteGet record andResume ──
   async function fetchAndRestore() {
     const cid = courseId.value
     const qid = props.questionId
@@ -166,7 +166,7 @@ Supported question types and their formats:
         restoreFromRecord()
       }
     } catch {
-      // 静默忽略（未登录或无记录）
+      // silentIgnore（Not Logged InorNoneRecords）
     }
   }
 
@@ -176,13 +176,13 @@ Supported question types and their formats:
     }
   })
 
-  // ── 暴露给父组件的方法 ──
+  // ── exposetoParent ComponentMethod ──
   function submit() {
     const correct = passed.value
     if (submitted) submitted.value = true
     if (isCorrect) isCorrect.value = correct
     if (fromRecord) fromRecord.value = false
-    // 保存完整聊天记录并提交后端（含 progress/passed）
+    // SavecompleteChatRecordsandSubmitBackserver（include progress/passed）
     saveAndSubmit()
 
     return { isCorrect: correct }
@@ -194,7 +194,7 @@ Supported question types and their formats:
     answeredQuestions.value = new Set()
     chatboxRef.value?.clearMessages()
     if (props.question) props.question.record = []
-    // 重新添加开场消息
+    // HeavyNewAddOnfieldMessage
     nextTick(() => {
       if (chatboxRef.value && openingMessage.value) {
         chatboxRef.value.addMessage({ role: 'assistant', content: openingMessage.value })
@@ -203,7 +203,7 @@ Supported question types and their formats:
   }
 
   function fillCorrectAnswer() {
-    // 教师查看答案：将进度填到刚好通过阈值
+    // TeacherView Answer：willProgressfilltojustGoodPassthresholdValue
     correctCount.value = Math.ceil(threshold.value / STEP)
   }
 

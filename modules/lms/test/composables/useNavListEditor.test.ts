@@ -1,5 +1,5 @@
 /**
- * useNavListEditor composable 测试
+ * useNavListEditor composable test
  * @see modules/lms/composables/useNavListEditor.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -41,7 +41,7 @@ describe('composables/useNavListEditor', () => {
     expect(visibleItems.value).toHaveLength(2)
     toggleCollapse('k0')
     expect(collapsedKeys.value.has('k0')).toBe(true)
-    // 折叠后子项隐藏
+    // Child items hidden after collapse
     expect(visibleItems.value).toHaveLength(1)
     expect(visibleItems.value[0]._key).toBe('k0')
     toggleCollapse('k0')
@@ -99,7 +99,7 @@ describe('composables/useNavListEditor', () => {
     let emitted: any[] = []
     const { deleteItem } = useNavListEditor({ modelValue: items.value, maxDepth: 2, genKey: () => 0 }, (e, val) => { emitted = val })
     deleteItem(0)
-    // 删除 k0 及其子节点 k1
+    // Delete k0 and its child node k1
     expect(emitted).toHaveLength(1)
     expect(emitted[0]._key).toBe('k2')
   })

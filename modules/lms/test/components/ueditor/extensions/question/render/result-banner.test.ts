@@ -1,5 +1,5 @@
 /**
- * result-banner 组件测试
+ * result-banner component test
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/render/result-banner.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

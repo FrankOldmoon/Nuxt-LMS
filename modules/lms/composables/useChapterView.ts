@@ -10,7 +10,7 @@ export interface ChapterViewProps {
   nextChapter: any
   chapterId: string | number
   courseId: string | number
-  /** 额外的"未开放"条件（lms 通过 403 判断），触发 #locked slot 渲染 */
+  /** Extra "not unlocked" condition (lms determines via 403), triggers #locked slot rendering */
   extraCondition?: boolean
 }
 
@@ -18,7 +18,7 @@ type ChapterViewCtx = ReturnType<typeof useChapterView>
 
 const ChapterViewKey: InjectionKey<ChapterViewCtx> = Symbol('ChapterView')
 
-/** 章节详情视图：页面标题 + AI 章节助教（流式聊天 + VRM + AI Notes 自动保存） */
+/** Chapter detail view: page title + AI chapter assistant (streaming chat + VRM + AI Notes auto-save) */
 export function useChapterView(props: ChapterViewProps) {
   const { siteTitle } = useSiteConfig()
   const { chapterPage: chapterPageCfg } = useLmsPublicConfig()
@@ -27,7 +27,7 @@ export function useChapterView(props: ChapterViewProps) {
     title: props.data?.chapter?.title ? `${props.data.chapter.title} - ${siteTitle.value}` : siteTitle.value,
   })))
 
-  // ===================== AI 章节助教 =====================
+  // ===================== AI chapter assistant =====================
   const assistantOpen = ref(false)
   const vrmVisible = ref(false)
   const aiLlmRef = ref<any>(null)

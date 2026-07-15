@@ -1,5 +1,5 @@
 /**
- * utils/cRequest 单元测试
+ * utils/cRequest unit tests
  * @see modules/base/utils/cRequest.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -127,7 +127,7 @@ describe('utils/cRequest - cRequest.use', () => {
     setMockFetchHandler(async () => ({ data: { id: 1, name: 'alice' }, success: true, msg: '' }))
     const { cRequest } = await import('../../utils/cRequest')
     const result = cRequest.use('/api/users/show')
-    // useFetch 默认 lazy=false，会立即触发 refresh（异步）
+    // useFetch defaults to lazy=false, will trigger refresh immediately (async)
     expect(result.data).toBeDefined()
     expect(result.pending).toBeDefined()
     expect(result.refresh).toBeDefined()

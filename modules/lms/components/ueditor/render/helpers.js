@@ -1,11 +1,11 @@
-// 共享工具函数
+// Totalshared utilityFunction
 
 export const DEFAULT_LINE_HEIGHT = 1.75
 export const DEFAULT_TEXT_ALIGN = 'start'
 export const DEFAULT_INDENT_SIZE = 2
 export const DEFAULT_INDENT_UNIT = 'em'
 
-// margin 属性 → CSS style 对象
+// margin Property → CSS style Object
 export const computeMarginStyle = (margin) => {
   if (!margin || typeof margin !== 'object') return {}
   const styles = {}
@@ -14,18 +14,18 @@ export const computeMarginStyle = (margin) => {
   return styles
 }
 
-// nodeAlign 属性 → CSS style 对象
+// nodeAlign Property → CSS style Object
 export const computeNodeAlignStyle = (nodeAlign) => {
   return nodeAlign ? { justifyContent: nodeAlign } : {}
 }
 
-// 合并 margin + nodeAlign（原子节点常用）
+// combinedand margin + nodeAlign（originalchild nodePointcommonuse）
 export const computeAtomNodeStyle = (attrs) => ({
   ...computeNodeAlignStyle(attrs.nodeAlign),
   ...computeMarginStyle(attrs.margin),
 })
 
-// 段落/标题等节点的全局属性 → HTML attributes
+// paragraph/Titleetc.nodePointGlobalProperty → HTML attributes
 export const computeNodeStyle = (node) => {
   const { attrs = {}, type } = node
   const styles = []
@@ -81,7 +81,7 @@ export const computeNodeStyle = (node) => {
   return result
 }
 
-// 表格单元格属性 → HTML attributes
+// TablecellProperty → HTML attributes
 export const computeTableCellAttrs = (attrs) => {
   const result = {}
   if (attrs.align) result.align = attrs.align
@@ -94,7 +94,7 @@ export const computeTableCellAttrs = (attrs) => {
   return result
 }
 
-// 文本 + marks 渲染（返回 VNode 或字符串）
+// Text + marks Render（Return VNode orcharactersstring）
 import { h } from 'vue'
 
 export const renderTextWithMarks = (text, marks) => {
@@ -109,7 +109,7 @@ export const renderTextWithMarks = (text, marks) => {
       if (attrs.color) tsStyles.push(`color: ${attrs.color}`)
       if (attrs.fontSize) tsStyles.push(`font-size: ${attrs.fontSize}`)
       if (attrs.fontFamily) tsStyles.push(`font-family: ${attrs.fontFamily}`)
-      if (attrs.backgroundColor) tsStyles.push(`background-color: ${attrs.backgroundColor}`)
+      if (attrs.background color) tsStyles.push(`background-color: ${attrs.background color}`)
     } else if (type === 'letterSpacing' && attrs.spacing) {
       tsStyles.push(`letter-spacing: ${attrs.spacing}`)
     } else {

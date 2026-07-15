@@ -1,12 +1,12 @@
 <template>
   <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-900">
-    <!-- 标题 -->
+    <!-- Title -->
     <div v-if="title" class="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 font-medium text-sm">
       <UIcon name="i-lucide-bot" class="text-blue-500 size-4" />
       <span>{{ title }}</span>
     </div>
 
-    <!-- 聊天界面 -->
+    <!-- Chatinterface -->
     <div class="flex flex-col" :class="heightClass">
       <AiChatboxMessageList />
       <AiChatboxInputBar

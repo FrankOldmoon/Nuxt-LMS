@@ -1,9 +1,9 @@
 /**
- * 小组管理：更新学生分组
+ * Group management: update student groups
  * POST /api/courses/groups
  * body: { courseId, groups: { "group1": [{userId}, ...], ... } }
  *
- * 只有组长（index 0）的 group 字段带 c_ 前缀，用于标识组长身份
+ * Only the group leader (index 0) has the c_ prefix on the group field, used to mark leader identity
  */
 import { db, schema } from '@nuxthub/db'
 import { eq, and } from 'drizzle-orm'
@@ -13,16 +13,16 @@ export default eventHandler(async (event) => {
   const body = await readBody(event)
   const { courseId, groups } = body
 
-  if (!courseId) return cResp(null, '缺少 courseId', false)
-  if (!groups || typeof groups !== 'object') return cResp(null, '缺少 groups', false)
+  if (!courseId) return cResp(null, 'Missing courseId', false)
+  if (!groups || typeof groups !== 'object') return cResp(null, 'Missing groups', false)
 
-  // 只有教师或管理员可以修改分组
+  // Only teachers or admins can modify groups
   const isTeacher = await isCourseTeacher(user.id, Number(courseId))
   if (!isTeacher && !user.roles.includes('admin')) {
-    return cResp(null, '无权限', false)
+    return cResp(null, 'No permission', false)
   }
 
-  // 1. 先清除本课程所有学生的 group（设为 null）
+  // 1. First clear the group of all students in this course (set to null)
   await db.update(schema.userCourses)
     .set({ group: null })
     .where(and(
@@ -30,12 +30,12 @@ export default eventHandler(async (event) => {
       eq(schema.userCourses.isTeacher, false),
     ))
 
-  // 2. 批量 upsert：没有 user_courses 记录的自动插入
+  // 2. Batch upsert: automatically insert for user_courses records that don't exist
   for (const [groupName, members] of Object.entries(groups)) {
     const cleanName = groupName.startsWith('c_') ? groupName.slice(2) : groupName
     for (let i = 0; i < (members as any[]).length; i++) {
       const member = (members as any[])[i]
-      // 组长（第一个）加 c_ 前缀，其他成员不加
+      // Group leader (first) gets c_ prefix; other members don't
       const groupValue = i === 0 ? `c_${cleanName}` : cleanName
       await db.insert(schema.userCourses)
         .values({
@@ -51,5 +51,5 @@ export default eventHandler(async (event) => {
     }
   }
 
-  return cResp(null, '分组更新成功')
+  return cResp(null, 'Groups updated successfully')
 })

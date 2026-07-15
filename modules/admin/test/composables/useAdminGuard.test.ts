@@ -1,5 +1,5 @@
 /**
- * useAdminGuard composable 测试
+ * useAdminGuard composable tests
  * @see modules/admin/composables/useAdminGuard.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -59,12 +59,12 @@ describe('composables/useAdminGuard', () => {
     const mod = await import('../../composables/useAdminGuard')
     const navigateCalls: any[] = []
     ;(globalThis as any).navigateTo = (to: any) => { navigateCalls.push(to); return Promise.resolve() }
-    // 未登录 → 跳转
+    // Not logged in → redirect
     mod.adminMiddleware({} as any, {} as any)
     expect(navigateCalls).toHaveLength(1)
     expect(navigateCalls[0]).toBe('/')
 
-    // 管理员 → 不跳转
+    // Admin → no redirect
     navigateCalls.length = 0
     setMockAuthUser(
       { id: 1, username: 'admin', name: 'Admin' },

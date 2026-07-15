@@ -1,8 +1,8 @@
 /**
- * menu/Navigation.vue 组件测试
+ * menu/Navigation.vue component tests
  * @see modules/admin/components/menu/Navigation.vue
  *
- * 后台左侧导航：概览链接 + 菜单树 + 移动端抽屉 + 编辑器入口
+ * Backend left navigation: overview link + menu tree + mobile drawer + editor entry
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

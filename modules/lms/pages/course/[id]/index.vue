@@ -12,17 +12,17 @@
     @saved="handleSaved"
     @export="exportCourse"
   >
-    <!-- lms 扩展：学习进度条 -->
+    <!-- lms extension: learning progress bar -->
     <template #header-extra>
       <CourseProgressBar v-if="progressPercent !== null" :percent="progressPercent" />
     </template>
 
-    <!-- lms 扩展：学生人数 -->
+    <!-- lms extension: student count -->
     <template #teachers-extra="{ course }">
       <CourseStudentCount :count="course.studentCount" />
     </template>
 
-    <!-- lms 扩展：章节卡片含锁/通过图标 + 不可访问禁用 -->
+    <!-- lms extension: chapter card with lock/passed icon + inaccessible disabled -->
     <template #chapter-item="{ item, index }">
       <CourseChapterCard :item="item" :index="index" />
     </template>
@@ -34,7 +34,7 @@ const route = useRoute()
 const courseId = computed(() => route.params.id as string)
 const apiUrl = computed(() => `/api/courses/show?id=${courseId.value}`)
 
-// 为子树（含弹窗内组件）提供 course 上下文
+// Provide course context to subtree (including modal components)
 provideLmsContext(courseId)
 
 const {
@@ -43,7 +43,7 @@ const {
   exporting, exportCourse, handleSaved, canManageTeachers,
 } = useLmsCourseDetail(courseId, apiUrl)
 
-// lms 按钮开关配置：course.config.lmsConfig > 全局 lms_config > 默认
+// lms button toggle config: course.config.lmsConfig > global lms_config > default
 const btnsSource = computed(() => (resp.value as any)?.config?.lmsConfig || null)
 useLmsBtnsConfig(btnsSource)
 </script>

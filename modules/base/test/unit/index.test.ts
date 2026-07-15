@@ -1,5 +1,5 @@
 /**
- * utils/index 单元测试
+ * utils/index unit tests
  * @see modules/base/utils/index.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'

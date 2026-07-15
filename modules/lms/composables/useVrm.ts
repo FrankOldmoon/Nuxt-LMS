@@ -1,20 +1,20 @@
 import { subscribeVrmSpeech, consumeVrmAudioChars } from '../utils/vrm'
 
 export interface VrmProps {
-  /** VRM 模型 URL，默认 three-vrm 官方示例模型 */
+  /** VRM model URL, defaults to the three-vrm official sample model */
   modelUrl?: string
 }
 
 /**
- * VRM 3D 数字人组件逻辑
+ * VRM 3D digital human component logic
  *
- * CDN 加载 three + three-vrm，待机动画 + 文本驱动口型同步
+ * Loads three + three-vrm via CDN, idle animation + text-driven lip sync
  *
- * 关键行为（用户需求，不可变更）：
- * - 手臂/手部动作已禁用，仅保留自然 rest pose
- * - 不说话时面部保持微笑（happy=0.4），说话时减弱（0.12）让位口型 viseme
- * - 口型同步仅跟随 TTS 音频（speechState.audioSpeaking），不跟随 LLM 文本流
- * - HMR 竞态保护：cancelled flag 阻止 onMounted 异步流程；不清空 THREE/VRM/GLTFLoader
+ * Key behaviors (user requirements, do not change):
+ * - Arm/hand movements are disabled, only natural rest pose is retained
+ * - When not speaking, the face keeps a smile (happy=0.4), weakens when speaking (0.12) to yield to viseme lip sync
+ * - Lip sync only follows TTS audio (speechState.audioSpeaking), does not follow LLM text stream
+ * - HMR race protection: cancelled flag stops the onMounted async flow; does not clear THREE/VRM/GLTFLoader
  */
 export function useVrm(props: VrmProps, emit: (event: string, ...args: any[]) => void) {
   const { t } = useI18n()
@@ -28,8 +28,8 @@ export function useVrm(props: VrmProps, emit: (event: string, ...args: any[]) =>
     emit('close')
   }
 
-  // ===================== CDN 加载 three + three-vrm =====================
-  // 双 CDN 回退：esm.sh（主）→ esm.run（jsdelivr 的 ESM CDN，备）
+  // ===================== CDN loading three + three-vrm =====================
+  // Dual CDN fallback: esm.sh (primary) → esm.run (jsdelivr's ESM CDN, backup)
   const THREE_CDN_PRIMARY = 'https://esm.sh/three@0.169.0'
   const THREE_CDN_FALLBACK = 'https://esm.run/three@0.169.0'
   const GLTF_CDN_PRIMARY = 'https://esm.sh/three@0.169.0/examples/jsm/loaders/GLTFLoader.js'
@@ -45,12 +45,12 @@ export function useVrm(props: VrmProps, emit: (event: string, ...args: any[]) =>
     }
   }
 
-  // three-vrm 模块实例（不进入响应式）
+  // three-vrm module instances (do not enter reactivity)
   let THREE: any = null
   let VRM: any = null
   let GLTFLoader: any = null
 
-  // ===================== Three.js 场景对象 =====================
+  // ===================== Three.js scene objects =====================
   let renderer: any = null
   let scene: any = null
   let camera: any = null
@@ -58,39 +58,39 @@ export function useVrm(props: VrmProps, emit: (event: string, ...args: any[]) =>
   let vrm: any = null
   let animationId: number | null = null
 
-  // HMR 竞态保护：onBeforeUnmount 设为 true，阻止 onMounted 异步流程继续执行
+  // HMR race protection: set to true in onBeforeUnmount, stops the onMounted async flow from continuing
   let cancelled = false
 
-  // ===================== VRM 语音状态订阅 =====================
+  // ===================== VRM speech state subscription =====================
   let speechState = { isSpeaking: false, pendingText: '', audioSpeaking: false, audioText: '' }
   const unsubscribeVrmSpeech = subscribeVrmSpeech((s) => {
     speechState = s
   })
 
-  // ===================== 口型同步状态 =====================
+  // ===================== Lip sync state =====================
   const MOUTH_VISEMES = ['aa', 'ih', 'ou', 'ee', 'oh'] as const
-  const CONSUME_RATE = 14 // 字符/秒
+  const CONSUME_RATE = 14 // chars per second
   let charAccumulator = 0
   let targetViseme: string | null = null
   let targetValue = 0
 
-  // 字符 → viseme 映射（英文元音 + 常见中文拼音韵母对应字）
+  // char → viseme mapping (English vowels + common Chinese pinyin finals)
   const VISEME_MAP: Record<string, string> = {
-    // 英文元音
+    // English vowels
     a: 'aa', A: 'aa',
     e: 'ee', E: 'ee',
     i: 'ih', I: 'ih',
     o: 'oh', O: 'oh',
     u: 'ou', U: 'ou',
-    // 常见中文开口音字
+    // Common Chinese open-mouth sounds
     '啊': 'aa', '阿': 'aa', '呀': 'aa', '哇': 'aa', '哈': 'aa', '妈': 'aa', '大': 'aa',
-    // 常见中文齐齿音字
+    // Common Chinese level-mouth sounds
     '衣': 'ih', '期': 'ih', '里': 'ih', '你': 'ih', '一': 'ih', '七': 'ih',
-    // 常见中文合口音字
+    // Common Chinese rounded-mouth sounds
     '乌': 'ou', '书': 'ou', '出': 'ou', '如': 'ou', '无': 'ou', '五': 'ou',
-    // 常见中文齐齿音字（e 类）
+    // Common Chinese level-mouth sounds (e category)
     '鹅': 'ee', '客': 'ee', '的': 'ee', '和': 'ee',
-    // 常见中文圆唇音字
+    // Common Chinese rounded-lip sounds
     '哦': 'oh', '波': 'oh', '多': 'oh', '罗': 'oh', '我': 'oh',
   }
 
@@ -98,12 +98,12 @@ export function useVrm(props: VrmProps, emit: (event: string, ...args: any[]) =>
     return VISEME_MAP[char] || null
   }
 
-  // ===================== 待机动画状态 =====================
+  // ===================== Idle animation state =====================
   let nextBlinkTime = 3 + Math.random() * 2
   let blinkPhase: 'idle' | 'closing' | 'opening' = 'idle'
   let blinkStartTime = 0
 
-  // ===================== CDN 模块加载（不依赖 canvas） =====================
+  // ===================== CDN module loading (does not depend on canvas) =====================
   async function loadCDNModules() {
     loadingLabel.value = t('ai.vrmLoading')
 
@@ -111,7 +111,7 @@ export function useVrm(props: VrmProps, emit: (event: string, ...args: any[]) =>
     THREE = await dynamicImportWithFallback<any>(THREE_CDN_PRIMARY, THREE_CDN_FALLBACK)
     if (!THREE.Scene) throw new Error('THREE module invalid: missing Scene')
 
-    // 2. GLTFLoader — 尝试多种提取路径
+    // 2. GLTFLoader — try multiple extraction paths
     const gltfModule = await dynamicImportWithFallback<any>(GLTF_CDN_PRIMARY, GLTF_CDN_FALLBACK)
     GLTFLoader =
       gltfModule.GLTFLoader ||
@@ -133,13 +133,13 @@ export function useVrm(props: VrmProps, emit: (event: string, ...args: any[]) =>
     }
   }
 
-  // ===================== Three.js 场景初始化（依赖 canvas + CDN 模块） =====================
+  // ===================== Three.js scene initialization (depends on canvas + CDN modules) =====================
   async function initScene() {
     const canvas = canvasRef.value
     if (!canvas) throw new Error('Canvas element not available')
     if (!THREE) throw new Error('THREE not loaded')
 
-    // 检测 WebGL 支持
+    // Detect WebGL support
     const testCanvas = document.createElement('canvas')
     const testGl = testCanvas.getContext('webgl2') || testCanvas.getContext('webgl')
     if (!testGl) throw new Error(t('ai.vrmWebglNotSupported'))
@@ -159,7 +159,7 @@ export function useVrm(props: VrmProps, emit: (event: string, ...args: any[]) =>
     camera.position.set(0, 1.35, 1.5)
     camera.lookAt(0, 1.35, 0)
 
-    // Lights — 多光源保证 VRM MToon 材质充分受光
+    // Lights — multiple light sources to ensure the VRM MToon material is fully lit
     const ambient = new THREE.AmbientLight(0xffffff, 1.2)
     scene.add(ambient)
 
@@ -167,12 +167,12 @@ export function useVrm(props: VrmProps, emit: (event: string, ...args: any[]) =>
     hemiLight.position.set(0, 1, 0)
     scene.add(hemiLight)
 
-    // 正面主光（直射面部）
+    // Front main light (directly illuminating the face)
     const dirLight = new THREE.DirectionalLight(0xffffff, 3.0)
     dirLight.position.set(0, 1.4, 3)
     scene.add(dirLight)
 
-    // 侧面补光
+    // Side fill light
     const dirLight2 = new THREE.DirectionalLight(0xffffff, 1.5)
     dirLight2.position.set(2, 1.5, 1)
     scene.add(dirLight2)
@@ -185,9 +185,9 @@ export function useVrm(props: VrmProps, emit: (event: string, ...args: any[]) =>
     clock = new THREE.Clock()
   }
 
-  // ===================== VRM 模型加载 =====================
+  // ===================== VRM model loading =====================
   async function loadVRMModel() {
-    // 安全网：如果 GLTFLoader 为空（HMR 竞态等），重新从 CDN 加载
+    // Safety net: if GLTFLoader is null (HMR race, etc.), reload from CDN
     if (!GLTFLoader || typeof GLTFLoader !== 'function') {
       const m = await dynamicImportWithFallback<any>(GLTF_CDN_PRIMARY, GLTF_CDN_FALLBACK)
       GLTFLoader = m.GLTFLoader || m.default?.GLTFLoader || m.default || (typeof m === 'function' ? m : null)
@@ -196,7 +196,7 @@ export function useVrm(props: VrmProps, emit: (event: string, ...args: any[]) =>
       throw new Error(`GLTFLoader is not a constructor (type: ${typeof GLTFLoader})`)
     }
 
-    // 安全网：如果 VRM 为空，重新从 CDN 加载
+    // Safety net: if VRM is null, reload from CDN
     if (!VRM || !VRM.VRMLoaderPlugin) {
       VRM = await dynamicImportWithFallback<any>(VRM_CDN_PRIMARY, VRM_CDN_FALLBACK)
       if (!VRM.VRMLoaderPlugin && VRM.default?.VRMLoaderPlugin) VRM = VRM.default
@@ -211,16 +211,16 @@ export function useVrm(props: VrmProps, emit: (event: string, ...args: any[]) =>
     vrm = gltf.userData.vrm
     if (!vrm) throw new Error('Invalid VRM model: no vrm in userData')
 
-    // 优化（VRMUtils 内部可能 traverse 场景图，包裹 try-catch 避免偶发失败）
+    // Optimization (VRMUtils may internally traverse the scene graph, wrap with try-catch to avoid occasional failures)
     try {
       VRM.VRMUtils?.removeUnnecessaryVertices?.(gltf.scene)
       VRM.VRMUtils?.combineSkeletons?.(vrm)
-    } catch { /* HMR 后偶发 traverse 失败，忽略 */ }
+    } catch { /* Occasional traverse failure after HMR, ignored */ }
 
-    // VRM 模型面向相机
+    // VRM model facing the camera
     scene.add(vrm.scene)
 
-    // 手臂自然下垂（VRM 默认 T-pose，旋转大臂+小臂到放松位置）
+    // Arms naturally lowered (VRM defaults to T-pose, rotate upper/lower arms to a relaxed position)
     const leftUpperArm = vrm.humanoid?.getNormalizedBoneNode?.('leftUpperArm')
     const rightUpperArm = vrm.humanoid?.getNormalizedBoneNode?.('rightUpperArm')
     const leftLowerArm = vrm.humanoid?.getNormalizedBoneNode?.('leftLowerArm')
@@ -230,25 +230,25 @@ export function useVrm(props: VrmProps, emit: (event: string, ...args: any[]) =>
     if (leftLowerArm) leftLowerArm.rotation.y = -0.3
     if (rightLowerArm) rightLowerArm.rotation.y = 0.3
 
-    // 提亮 MToon 材质阴影色（减少面部暗部对比）
+    // Brighten MToon material shadow color (reduce dark contrast on the face)
     vrm.scene.traverse((obj: any) => {
       const mat = obj.material
       if (mat && mat.isMToonMaterial) {
-        // shadeColorFactor 控制阴影区域颜色，提亮到 0.7 让暗部不再死黑
+        // shadeColorFactor controls the shadow area color, brighten to 0.7 so dark areas aren't pitch black
         if (mat.shadeColorFactor) {
           mat.shadeColorFactor.set(0.7, 0.65, 0.65)
         }
-        // 增加环境光贡献（parametricRimLightingMixFactor / shadeMultiplier）
+        // Increase ambient light contribution (parametricRimLightingMixFactor / shadeMultiplier)
         if (mat.shadeMultiplier !== undefined) mat.shadeMultiplier = 0.8
       }
     })
 
-    // 初始微笑表情（静默时更明显，说话时由 applySmile 动态调整）
+    // Initial smile expression (more pronounced when silent, dynamically adjusted by applySmile when speaking)
     vrm.expressionManager?.setValue('happy', 0.4)
     vrm.expressionManager?.setValue('relaxed', 0.1)
   }
 
-  // ===================== 动画循环 =====================
+  // ===================== Animation loop =====================
   function animate() {
     if (cancelled || !clock) return
     animationId = requestAnimationFrame(animate)
@@ -263,45 +263,45 @@ export function useVrm(props: VrmProps, emit: (event: string, ...args: any[]) =>
 
     try {
       vrm.update(delta)
-    } catch { /* HMR 后偶发失败 */ }
+    } catch { /* Occasional failure after HMR */ }
 
     try {
       renderer.render(scene, camera)
-    } catch { /* HMR 后偶发失败 */ }
+    } catch { /* Occasional failure after HMR */ }
   }
 
-  // ===================== 待机动画 =====================
-  // 微笑强度（平滑过渡：静默时明显，说话时减弱让位口型 viseme）
+  // ===================== Idle animation =====================
+  // Smile intensity (smooth transition: pronounced when silent, weakens when speaking to yield to viseme lip sync)
   let smileIntensity = 0.4
 
   function applyIdleAnimations(time: number) {
     if (!vrm) return
 
-    // 呼吸：spine 轻微前倾
+    // Breathing: spine tilts forward slightly
     const spine = vrm.humanoid?.getNormalizedBoneNode?.('spine')
     if (spine) {
       spine.rotation.x = Math.sin(time * 0.8) * 0.02
     }
 
-    // 头部摆动
+    // Head sway
     const head = vrm.humanoid?.getNormalizedBoneNode?.('head')
     if (head) {
       head.rotation.y = Math.sin(time * 0.3) * 0.05
       head.rotation.x = Math.sin(time * 0.2) * 0.03
     }
 
-    // 微笑：面部保持微笑（不涉及手部动作）
+    // Smile: face keeps a smile (no hand movements involved)
     applySmile()
 
     applyBlink(time)
   }
 
-  // ===================== 微笑 =====================
-  // 静默时保持明显微笑，说话时减弱以避免与口型 viseme 冲突
+  // ===================== Smile =====================
+  // Keep a pronounced smile when silent, weaken when speaking to avoid conflict with viseme lip sync
   function applySmile() {
     const em = vrm?.expressionManager
     if (!em) return
-    // 说话时（TTS 音频播放中）减弱微笑，让口型 viseme 主导
+    // When speaking (TTS audio playing), weaken the smile to let viseme lip sync dominate
     const target = (speechState.audioSpeaking || speechState.audioText) ? 0.12 : 0.4
     smileIntensity += (target - smileIntensity) * 0.08
     em.setValue('happy', smileIntensity)
@@ -334,12 +334,12 @@ export function useVrm(props: VrmProps, emit: (event: string, ...args: any[]) =>
     }
   }
 
-  // ===================== 口型同步（仅跟随 TTS 音频） =====================
+  // ===================== Lip sync (only follows TTS audio) =====================
   function applyLipSync(delta: number) {
     const em = vrm?.expressionManager
     if (!em) return
 
-    // 口型只跟随真实播放的语音，不跟随 LLM 文本流
+    // Lip sync only follows the actually playing speech, not the LLM text stream
     if (speechState.audioSpeaking || speechState.audioText) {
       charAccumulator += delta * CONSUME_RATE
       const n = Math.floor(charAccumulator)
@@ -372,22 +372,22 @@ export function useVrm(props: VrmProps, emit: (event: string, ...args: any[]) =>
     }
   }
 
-  // ===================== 生命周期 =====================
+  // ===================== Lifecycle =====================
   onMounted(async () => {
     try {
       loadState.value = 'loading'
       loadingLabel.value = t('ai.vrmLoading')
 
-      // 1. 加载 CDN 模块（不依赖 canvas）
+      // 1. Load CDN modules (does not depend on canvas)
       await loadCDNModules()
       if (cancelled) return
 
-      // 2. 初始化 Three.js 场景（依赖 canvas + CDN 模块）
+      // 2. Initialize Three.js scene (depends on canvas + CDN modules)
       await nextTick()
       await initScene()
       if (cancelled) return
 
-      // 3. 加载 VRM 模型
+      // 3. Load VRM model
       await loadVRMModel()
       if (cancelled) return
 
@@ -420,7 +420,7 @@ export function useVrm(props: VrmProps, emit: (event: string, ...args: any[]) =>
       renderer = null
     }
 
-    // 清理场景（traverse 内部递归调用子节点 traverse，HMR 后子节点可能失效）
+    // Clean up the scene (traverse internally recursively calls children's traverse, children may be invalid after HMR)
     if (scene && typeof scene.traverse === 'function') {
       try {
         scene.traverse((obj: any) => {
@@ -433,14 +433,14 @@ export function useVrm(props: VrmProps, emit: (event: string, ...args: any[]) =>
             }
           }
         })
-      } catch { /* HMR/卸载时序问题，忽略 */ }
+      } catch { /* HMR/unmount timing issue, ignored */ }
     }
     scene = null
     vrm = null
     clock = null
 
-    // ⚠️ 不清空 THREE / VRM / GLTFLoader：
-    // 清空会导致 HMR 时 onMounted 异步流程读到 null（竞态条件）
+    // ⚠️ Do not clear THREE / VRM / GLTFLoader:
+    // Clearing would cause the onMounted async flow to read null during HMR (race condition)
   })
 
   return { canvasRef, loadState, loadingLabel, errorMsg, t, close }

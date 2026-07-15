@@ -1,5 +1,5 @@
 /**
- * useUnreadCounts composable 测试
+ * useUnreadCounts composable tests
  * @see modules/base/composables/useUnreadCounts.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'

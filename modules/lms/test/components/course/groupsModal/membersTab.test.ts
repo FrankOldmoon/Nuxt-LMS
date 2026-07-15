@@ -1,8 +1,8 @@
 /**
- * course/groupsModal/membersTab.vue 组件测试
+ * course/groupsModal/membersTab.vue component test
  * @see modules/lms/components/course/groupsModal/membersTab.vue
  *
- * 分组成员 Tab：学生视角只读 + 教师视角拖拽编辑
+ * Group members tab: student view read-only + teacher view drag edit
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -100,9 +100,9 @@ describe('course/groupsModal/membersTab.vue', () => {
     const { default: MembersTab } = await import('../../../../components/course/groupsModal/membersTab.vue')
     const wrapper = mount(MembersTab, { global: _globalConfig })
     await flushPromises()
-    // 教师视图有未分组区域
+    // Teacher view has ungrouped area
     expect(wrapper.text()).toContain('coursePanel.ungrouped')
-    // 渲染未分组学生卡片
+    // Render ungrouped student cards
     expect(wrapper.findAll('.auth-user-card').length).toBeGreaterThanOrEqual(1)
   })
 
@@ -119,7 +119,7 @@ describe('course/groupsModal/membersTab.vue', () => {
     const { default: MembersTab } = await import('../../../../components/course/groupsModal/membersTab.vue')
     const wrapper = mount(MembersTab, { global: _globalConfig })
     await flushPromises()
-    // 分组名渲染在原生 <input v-model="groupNames[key]"> 中，wrapper.text() 不含 input 值
+    // Group name is rendered in native <input v-model="groupNames[key]">, wrapper.text() does not include input value
     const inputs = wrapper.findAll('input')
     const values = inputs.map(i => (i.element as HTMLInputElement).value)
     expect(values).toContain('groupA')

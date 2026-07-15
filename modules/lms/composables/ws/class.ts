@@ -1,15 +1,15 @@
 /**
- * WebSocket 班级功能方法
+ * WebSocket class feature methods
  *
- * 邀请跳转 / 弹幕 / 投票 / 抢答 / 在线状态 / 私信监听
+ * Invite redirect / danmaku / vote / quick answer / online status / private message listening
  *
- * 连接层与回调注册表由 base 提供（useWsConnection / registerWsHandler），
- * 此处仅封装 lms 班级相关的 send / on 方法。
+ * The connection layer and callback registry are provided by base (useWsConnection / registerWsHandler),
+ * here only wraps lms class-related send / on methods.
  */
 export function useWsClass() {
   const { send } = useWsConnection()
 
-  // ====================== 邀请 ======================
+  // ====================== Invite ======================
   function sendInvite(classId: number, courseId: number, chapterId: number, from: string = 'teacher') {
     send({ type: 'invite', classId, courseId, chapterId, from })
   }
@@ -17,7 +17,7 @@ export function useWsClass() {
     return registerWsHandler('invite', callback)
   }
 
-  // ====================== 弹幕 ======================
+  // ====================== Danmaku ======================
   function sendDanmaku(classId: number, text: string, from: string = 'anonymous') {
     send({ type: 'danmaku', classId, text: text.slice(0, 200), from })
   }
@@ -25,7 +25,7 @@ export function useWsClass() {
     return registerWsHandler('danmaku', callback)
   }
 
-  // ====================== 投票 ======================
+  // ====================== Vote ======================
   function sendVoteStart(classId: number, voteId: string, question: string, options: string[]) {
     send({ type: 'voteStart', classId, voteId, question, options })
   }
@@ -45,7 +45,7 @@ export function useWsClass() {
     return registerWsHandler('voteEnd', callback)
   }
 
-  // ====================== 抢答 ======================
+  // ====================== Quick answer ======================
   function sendQuickAnswerStart(classId: number, question: string) {
     send({ type: 'quickAnswerStart', classId, question })
   }
@@ -65,7 +65,7 @@ export function useWsClass() {
     return registerWsHandler('quickAnswerEnd', callback as (data: any) => void)
   }
 
-  // ====================== 在线状态 ======================
+  // ====================== Online status ======================
   function sendOnline(classId: number, userId: number, from: string, online: boolean) {
     send({ type: 'online', classId, userId, from, online })
   }
@@ -73,12 +73,12 @@ export function useWsClass() {
     return registerWsHandler('onlineUpdate', callback)
   }
 
-  // ====================== 私信推送 ======================
+  // ====================== Private message push ======================
   function onMessage(callback: (data: any) => void) {
     return registerWsHandler('message', callback)
   }
 
-  // ====================== 班级聊天室 ======================
+  // ====================== Class chatroom ======================
   function sendChatroom(classId: number, userId: number, from: string, avatarImg: string | null, text: string) {
     send({ type: 'chatroom', classId, userId, from, avatarImg, text })
   }
@@ -86,8 +86,8 @@ export function useWsClass() {
     return registerWsHandler('chatroom', callback)
   }
 
-  // ====================== 章节访问权限同步 ======================
-  /** 服务端在章节 isOpen / class_chapter.open 变更后广播，客户端收到后刷新侧边栏导航 */
+  // ====================== Chapter access sync ======================
+  /** Server broadcasts after chapter isOpen / class_chapter.open changes, client refreshes sidebar navigation upon receipt */
   function onChapterAccessUpdate(callback: (data: any) => void) {
     return registerWsHandler('chapterAccessUpdate', callback)
   }

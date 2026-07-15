@@ -1,5 +1,5 @@
 /**
- * classify 组件测试 (render)
+ * classify component test (render)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/render/classify.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

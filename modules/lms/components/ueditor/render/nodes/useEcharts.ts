@@ -6,7 +6,7 @@ const CDN_URL = 'https://unpkg.com/@umoteam/editor-external@latest'
 const shortId = (length = 8) =>
   Math.random().toString(36).substring(2, length + 2)
 
-// ---- CDN 资源加载 ----
+// ---- CDN resourceLoad ----
 const loadScript = (url: string, id: string) =>
   new Promise<void>((resolve) => {
     if (document.getElementById(id)) return resolve()
@@ -27,7 +27,7 @@ export function useEcharts(props: any) {
   let chart: any = null
   const chartOption = ref<any>(null)
 
-  // 生成唯一 id，避免多个图表冲突
+  // Generateunique id，avoidManyitemsChartconflict
   const chartId = `chart-${attrs.value.id || shortId(6)}`
 
   const chartHeight = computed(() => Number(attrs.value.height) || 200)
@@ -104,7 +104,7 @@ export function useEcharts(props: any) {
 
     if (finalOptions && Object.keys(finalOptions).length > 0) {
       chart = echartsGlobal.init(chartRef.value)
-      chart.setOption(finalOptions)
+      chart.set option(finalOptions)
       chartOption.value = finalOptions
     }
   }

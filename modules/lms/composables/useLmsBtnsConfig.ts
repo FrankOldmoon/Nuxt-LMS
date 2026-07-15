@@ -1,21 +1,21 @@
 import type { Ref } from 'vue'
 
 /**
- * LMS 章节按钮 / 课程按钮开关配置合并
+ * LMS chapter button / course button toggle config merging
  *
- * 合并优先级（高 → 低）：
- *   课程级 lmsConfig.{chapterBtns|courseBtns}  >  全局 lms_config（useLmsPublicConfig）  >  硬编码默认
+ * Merge priority (high → low):
+ *   Course-level lmsConfig.{chapterBtns|courseBtns}  >  Global lms_config (useLmsPublicConfig)  >  Hardcoded defaults
  *
- * 抽出本 composable 是为了消除 pages/course/[id]/index.vue 与 [cid].vue 之间重复的
- * 合并 watch。两个 page 仅"数据源"不同：
- *   - index.vue 从 detail.config.lmsConfig 取
- *   - [cid].vue  从 chapter course 对象的 courseBtns/chapterBtns/showDanmaku 取（API 已合并）
+ * This composable is extracted to eliminate the duplicated merge watch between
+ * pages/course/[id]/index.vue and [cid].vue. The two pages only differ in "data source":
+ *   - index.vue reads from detail.config.lmsConfig
+ *   - [cid].vue  reads from chapter course object's courseBtns/chapterBtns/showDanmaku (API already merged)
  *
- * 调用方传入 source（Ref），composable 负责 watch + 合并写入 useLayoutState 的
- * courseBtnsConfig / chapterBtnsConfig / showDanmaku。
+ * Caller passes in source (Ref), composable handles watch + merge writing to useLayoutState's
+ * courseBtnsConfig / chapterBtnsConfig / showDanmaku.
  *
- * @param source 配置源；为 null 时跳过（数据未就绪）
- * @param options.flush watch flush 时机，[cid].vue 需要 'sync' 保证 SSR Suspense 恢复时同步执行
+ * @param source config source; skip when null (data not ready)
+ * @param options.flush watch flush timing, [cid].vue needs 'sync' to ensure SSR Suspense restore executes synchronously
  */
 export function useLmsBtnsConfig(
   source: Ref<{

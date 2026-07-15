@@ -1,18 +1,18 @@
 /**
- * LMS WS 竞赛（Race）消息处理器单元测试
+ * LMS WS Race message handler unit test
  * @see modules/lms/server/utils/ws/race.ts
  * @see modules/lms/server/utils/ws/race-handlers/*.ts
  *
- * 覆盖：
- * - handleRaceMessage  dispatcher（type 路由 + 未知 type 返回 false）
- * - handleRaceJoin  加入 race 房间 + raceJoined 推送 + 在线用户广播
- * - handleRaceOnline  在线状态广播
- * - handleRaceStart  初始化 raceStates + raceStart 广播
- * - handleRaceQuestion  设置当前题 + raceQuestion 广播
- * - handleRaceAnswer  计分（重复防刷） + raceAnswerUpdate / raceScores 广播
- * - handleRaceQuestionEnd  推 top3 + results
- * - handleRaceEnd  leaderboard 广播 + 清理 raceStates
- * - cleanupRacePeer  离开清理
+ * Coverage:
+ * - handleRaceMessage: dispatcher (type routing + unknown type returns false)
+ * - handleRaceJoin: join race room + raceJoined push + online users broadcast
+ * - handleRaceOnline: online status broadcast
+ * - handleRaceStart: initialize raceStates + raceStart broadcast
+ * - handleRaceQuestion: set current question + raceQuestion broadcast
+ * - handleRaceAnswer: scoring (duplicate prevention) + raceAnswerUpdate / raceScores broadcast
+ * - handleRaceQuestionEnd: push top3 + results
+ * - handleRaceEnd: leaderboard broadcast + cleanup raceStates
+ * - cleanupRacePeer: cleanup on leave
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { makeMockPeer } from '../../../../test/setup/db-helpers'
@@ -76,14 +76,14 @@ describe('ws/race: join / online', () => {
   })
 
   it('raceJoin 时若 race 已进行中，同步 raceStart/Question/Scores', () => {
-    // 先 start
+    // Start first
     handleRaceMessage(makeMockPeer(), {
       type: 'raceStart', pin: 'p1', raceCid: 100, courseId: 1, totalQuestions: 5, timeLimit: 30,
     })
     handleRaceMessage(makeMockPeer(), {
       type: 'raceQuestion', pin: 'p1', questionCid: 50, questionIndex: 0, timeLimit: 30,
     })
-    // 新 peer 加入
+    // New peer joins
     const peer = makeMockPeer()
     handleRaceMessage(peer, { type: 'raceJoin', pin: 'p1' })
     const sends = sendsOf(peer)
@@ -184,7 +184,7 @@ describe('ws/race: start / question / answer', () => {
     handleRaceMessage(makeMockPeer(), {
       type: 'raceAnswer', pin: 'p1', userId: 1, from: 'a', answer: 'Y', rate: 0, correct: false,
     })
-    // 第二次 answer 不应该产生 raceAnswerUpdate 推送
+    // The second answer should not produce a raceAnswerUpdate push
     const sends = sendsOf(peer1)
     const updates = sends.filter((m: any) => m.type === 'raceAnswerUpdate')
     expect(updates).toHaveLength(0)
@@ -194,7 +194,7 @@ describe('ws/race: start / question / answer', () => {
     handleRaceMessage(makeMockPeer(), {
       type: 'raceStart', pin: 'p1', raceCid: 100, courseId: 1, totalQuestions: 5, timeLimit: 30,
     })
-    // 没设 activeQuestionCid
+    // No activeQuestionCid set
     peer1.send.mockClear()
     handleRaceMessage(makeMockPeer(), {
       type: 'raceAnswer', pin: 'p1', userId: 1, from: 'a', answer: 'X', rate: 1, correct: true,
@@ -233,7 +233,7 @@ describe('ws/race: questionEnd / end', () => {
     expect(end).toBeDefined()
     expect(end.results).toHaveLength(3)
     expect(end.top3).toHaveLength(3)
-    // top3 第一位是答对的 user1 或 user3
+    // The first of top3 is the correct user1 or user3
     expect(end.top3[0].correct).toBe(true)
   })
 

@@ -1,5 +1,5 @@
 /**
- * stepper/render.vue 组件测试
+ * stepper/render.vue component test
  * @see modules/lms/components/ueditor/extensions/nodes/vue/stepper/render.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

@@ -1,5 +1,5 @@
 /**
- * Admin Menu API + utils 测试
+ * Admin Menu API + utils tests
  * @see modules/admin/server/api/admin/menu.get.ts, menu.put.ts
  * @see modules/admin/server/utils/menu.ts
  */
@@ -73,7 +73,7 @@ describe('utils/menu - getMenuConfig', () => {
 
   it('configs 表有记录时同步 schema（移除已删除表，补充新表）', async () => {
     setMockSchemaTables(['users', 'courses', 'chapters'])
-    // 存储的菜单包含已不存在的表 'oldTable'，缺少 'chapters'
+    // Stored menu contains non-existent table 'oldTable', missing 'chapters'
     const stored = { items: [{ table: 'users', label: 'Users', visible: true, order: 0 }, { table: 'oldTable', label: 'Old', visible: true, order: 1 }] }
     _mockDb.limit = vi.fn().mockResolvedValue([{ value: stored }]) as any
     const { getMenuConfig } = await import('../../server/utils/menu')
@@ -81,8 +81,8 @@ describe('utils/menu - getMenuConfig', () => {
     const tables = result.items.map((i: any) => i.table)
     expect(tables).toContain('users')
     expect(tables).toContain('courses')
-    expect(tables).toContain('chapters') // 新表被补充
-    expect(tables).not.toContain('oldTable') // 已删除表被移除
+    expect(tables).toContain('chapters') // New table added
+    expect(tables).not.toContain('oldTable') // Deleted table removed
   })
 
   it('分组节点保留 children 并递归同步', async () => {
@@ -112,7 +112,7 @@ describe('API: admin/menu.get', () => {
     setMockAuthState(null)
     setMockSchemaTables(['users'])
     _mockDb.limit = vi.fn().mockResolvedValue([]) as any
-    // 暴露 getMenuConfig 到 globalThis 供端点 auto-import
+    // Expose getMenuConfig to globalThis for endpoint auto-import
     const menuUtil = await import('../../server/utils/menu')
     ;(globalThis as any).getMenuConfig = menuUtil.getMenuConfig
     const handler = (await import('../../server/api/admin/menu.get')).default
@@ -143,9 +143,9 @@ describe('API: admin/menu.put', () => {
     const body = {
       items: [
         { table: 'users', label: '用户', visible: true },
-        { table: 'nonExistent', label: '不存在' }, // 丢弃
+        { table: 'nonExistent', label: '不存在' }, // Discarded
         { label: '分组', children: [{ table: 'courses' }] },
-        null, // 丢弃
+        null, // Discarded
       ],
     }
     const result = await handler(makeEvent({ body }))

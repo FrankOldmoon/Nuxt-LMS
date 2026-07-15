@@ -7,7 +7,7 @@
                 <monaco v-model="inputText" :placeholder="$t('ueditor.markdown.placeholder')"/>
                 <div class="flex justify-end gap-2">
                     <UButton type="primary" @click="insertContent">{{ $t('ueditor.markdown.insert') }}</UButton>
-                    <!-- 关闭按钮可选，Nuxt UI 的 Modal 默认可通过点击遮罩层或 ESC 关闭 -->
+                    <!-- Close Buttoncanoption，Nuxt UI  Modal DefaultcanPassClick mask layeror ESC Close -->
                 </div>
             </div>
         </template>
@@ -35,8 +35,8 @@ const insertContent = () => {
     console.log({ json })
     props.editor.insertContent(json)
 
-    // 清空输入，Modal 会在操作后自动关闭（如果点击了插入按钮会触发 close）
-    // 若需要强制关闭，可通过 ref 调用 Modal 实例的方法，但通常点击操作后 Modal 会关闭
+    // ClearInput，Modal willOperationBackAutoClose（IfClickInsertButtonwillTrigger close）
+    // ifneed to forceClose，canPass ref Call Modal InstanceMethod，butusuallyClickOperationBack Modal willClose
     inputText.value = ''
 }
 </script>

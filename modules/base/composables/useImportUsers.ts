@@ -4,7 +4,7 @@ const HEADERS = ['username', 'email', 'name', 'prefer_name', 'english_name', 'pa
 const COL_WIDTHS = { 0: 110, 1: 180, 2: 100, 3: 110, 4: 120, 5: 120, 6: 100 }
 
 /**
- * 批量导入用户：读取表格 + 导入
+ * Batch import users: read spreadsheet + import
  */
 export function useImportUsers(isOpen: Ref<boolean>) {
   const { t } = useI18n()

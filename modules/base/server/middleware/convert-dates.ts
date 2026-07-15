@@ -1,17 +1,17 @@
 /**
- * 日期字段自动转换中间件
+ * Date field auto-conversion middleware
  *
- * 前端通过 JSON 传来的日期字段是字符串（ISO 格式或 datetime-local），
- * 但 Drizzle 的 timestamp 列要求 Date 对象，否则报 `value.toISOString is not a function`。
+ * Date fields sent from the frontend via JSON are strings (ISO format or datetime-local),
+ * but Drizzle's timestamp column requires Date objects, otherwise it throws `value.toISOString is not a function`.
  *
- * 此中间件在所有 /api/** 写请求（POST/PUT/PATCH/DELETE）中，
- * 递归扫描 body，将日期字段名的字符串值转为 Date 对象，
- * 并写回 h3 的 body 缓存，使后续 readBody 拿到转换后的值。
+ * This middleware runs in all /api/** write requests (POST/PUT/PATCH/DELETE),
+ * recursively scans the body, converts string values of date field names to Date objects,
+ * and writes back to h3's body cache so subsequent readBody calls get the converted values.
  *
- * 日期字段识别规则：
- * - 字段名以 "At" 结尾（startAt, endAt, createdAt, updatedAt, deletedAt, loginAt, readAt...）
- * - 字段名以 "Date" 结尾
- * - 字段名为 "birthday"
+ * Date field identification rules:
+ * - Field name ends with "At" (startAt, endAt, createdAt, updatedAt, deletedAt, loginAt, readAt...)
+ * - Field name ends with "Date"
+ * - Field name is "birthday"
  */
 
 const ParsedBodySymbol = Symbol.for('h3ParsedBody')
@@ -26,7 +26,7 @@ function isDateField(key: string): boolean {
   return DATE_SNAKE_SUFFIXES.some((s) => key.endsWith(s))
 }
 
-/** 递归转换：将匹配日期字段名的字符串值转为 Date */
+/** Recursive conversion: convert string values matching date field names to Date */
 function convertDateFields(obj: any): any {
   if (obj === null || obj === undefined) return obj
   if (Array.isArray(obj)) return obj.map(convertDateFields)
@@ -53,23 +53,23 @@ export default defineEventHandler(async (event) => {
   const method = getMethod(event)
   const path = getRequestPath(event)
 
-  // 仅处理 /api/ 下的写请求
+  // Only process write requests under /api/
   if (!path.startsWith('/api/')) return
   if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) return
 
-  // 仅处理 JSON 请求
+  // Only process JSON requests
   const contentType = getRequestHeader(event, 'content-type') || ''
   if (!contentType.includes('application/json')) return
 
   try {
-    // 读取 body（h3 会缓存到 request[ParsedBodySymbol]）
+    // Read body (h3 caches to request[ParsedBodySymbol])
     const body = await readBody(event)
     if (body === null || body === undefined || typeof body !== 'object') return
 
-    // 转换日期字段并写回缓存，使后续 readBody 调用拿到转换后的值
+    // Convert date fields and write back to cache so subsequent readBody calls get the converted values
     const converted = convertDateFields(body)
     event.node.req[ParsedBodySymbol] = converted
   } catch {
-    // body 解析失败时静默（交由 handler 处理错误）
+    // Silent on body parse failure (let the handler handle the error)
   }
 })

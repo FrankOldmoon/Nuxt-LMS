@@ -1,9 +1,9 @@
 /**
- * 服务启动时：
- *   1. 加载 lms 配置到内存缓存（reloadLmsConfig 内部自动迁移旧 lms_config 单行）
- *   2. 首次启动时初始化 1 个 test 班级 + 30 个 test 学生账号
- *      - 标记位使用拍平存储：configs(id='lms:_system.testAccountsSeeded', value=true)
- *      - 不再写入 lms_config 单行 json
+ * On server startup:
+ *   1. Load lms configuration into in-memory cache (reloadLmsConfig internally auto-migrates the legacy single-row lms_config)
+ *   2. On first startup, initialize 1 test class + 30 test student accounts
+ *      - Flag uses flattened storage: configs(id='lms:_system.testAccountsSeeded', value=true)
+ *      - No longer writes to the legacy single-row lms_config json
  */
 import { db, schema } from "@nuxthub/db"
 import { eq } from "drizzle-orm"
@@ -12,15 +12,15 @@ const TEST_COUNT = 30
 const TEST_CLASS_NAME = 'test'
 const TEST_CLASS_CODE = 'test'
 
-/** 拍平存储的系统标记位（lms: 前缀，_system 命名空间避免与业务配置冲突） */
+/** Flattened system flag (lms: prefix, _system namespace to avoid conflicts with business configs) */
 const SEED_FLAG_KEY = 'lms:_system.testAccountsSeeded'
 
 export default defineNitroPlugin(async () => {
   await reloadLmsConfig()
 
-  // 首次启动时初始化 test 班级 + 30 个 test 账号（仅一次）
+  // On first startup, initialize test class + 30 test accounts (only once)
   try {
-    // 直接读拍平行，避免启动期 reload 时序问题
+    // Read the flattened row directly to avoid timing issues with reload during startup
     const flagRow = await db.query.configs.findFirst({
       where: eq(schema.configs.id, SEED_FLAG_KEY),
     })
@@ -28,7 +28,7 @@ export default defineNitroPlugin(async () => {
       return
     }
 
-    // 1. 查询 student 角色（admin 启动插件会先创建）
+    // 1. Query the student role (created first by the admin startup plugin)
     const studentRoleRows = await db
       .select({ id: schema.roles.id })
       .from(schema.roles)
@@ -36,28 +36,28 @@ export default defineNitroPlugin(async () => {
       .limit(1)
 
     if (studentRoleRows.length === 0) {
-      console.warn('[lms-config-startup] student 角色不存在，跳过 test 账号初始化（admin 启动插件会创建）')
+      console.warn('[lms-config-startup] student role does not exist, skipping test account initialization (admin startup plugin will create it)')
       return
     }
     const studentRoleId = studentRoleRows[0].id
 
-    // 2. 处理 test 班级：若 classes 表为空则创建一个 id=1 的班级
+    // 2. Handle test class: if the classes table is empty, create a class with id=1
     const existingClasses = await db
       .select({ id: schema.classes.id })
       .from(schema.classes)
       .limit(1)
 
     if (existingClasses.length === 0) {
-      // 让数据库自增 id=1（首次插入 serial 主键必为 1）
+      // Let the database auto-increment id=1 (first insert of a serial primary key is always 1)
       await db
         .insert(schema.classes)
         .values({ name: TEST_CLASS_NAME, code: TEST_CLASS_CODE })
-      console.log(`[lms-config-startup] 已创建 test 班级（id=1）`)
+      console.log(`[lms-config-startup] Created test class (id=1)`)
     } else {
-      console.log(`[lms-config-startup] classes 表已存在 ${existingClasses[0].id} 等班级，跳过创建`)
+      console.log(`[lms-config-startup] classes table already has class ${existingClasses[0].id}, skipping creation`)
     }
 
-    // 3. 创建 30 个 test 学生账号（直接设置 users.classId=1）
+    // 3. Create 30 test student accounts (directly set users.classId=1)
     const hashedPwd = await hashPassword(TEST_PASSWORD)
     const now = new Date()
     const userInserts: any[] = []
@@ -84,14 +84,14 @@ export default defineNitroPlugin(async () => {
       })
     }
 
-    // 批量插入用户
+    // Batch insert users
     const insertedUsers = await db
       .insert(schema.users)
       .values(userInserts)
       .onConflictDoNothing()
       .returning({ id: schema.users.id, username: schema.users.username })
 
-    // 为成功插入的用户关联 student 角色
+    // Associate the student role to successfully inserted users
     for (const u of insertedUsers) {
       roleInserts.push({ userId: u.id, roleId: studentRoleId })
     }
@@ -99,7 +99,7 @@ export default defineNitroPlugin(async () => {
       await db.insert(schema.userRoles).values(roleInserts).onConflictDoNothing()
     }
 
-    // 4. 写入标记位（拍平存储，独立 lms:_system.testAccountsSeeded 行）
+    // 4. Write the flag (flattened storage, independent lms:_system.testAccountsSeeded row)
     await db
       .insert(schema.configs)
       .values({ id: SEED_FLAG_KEY, value: true })
@@ -108,12 +108,12 @@ export default defineNitroPlugin(async () => {
         set: { value: true },
       })
 
-    console.log(`[lms-config-startup] 已初始化 ${insertedUsers.length}/${TEST_COUNT} 个 test 账号（密码: ${TEST_PASSWORD}，全部归属 class_id=1）`)
+    console.log(`[lms-config-startup] Initialized ${insertedUsers.length}/${TEST_COUNT} test accounts (password: ${TEST_PASSWORD}, all assigned to class_id=1)`)
   } catch (e) {
-    console.error('[lms-config-startup] test 账号初始化失败', e)
+    console.error('[lms-config-startup] test account initialization failed', e)
   }
 
-  // 首次启动时播种初始全局商品（仅一次）
+  // On first startup, seed initial global goods (only once)
   try {
     const GOODS_SEED_FLAG = 'lms:_system.goodsSeeded'
     const goodsFlag = await db.query.configs.findFirst({
@@ -147,8 +147,8 @@ export default defineNitroPlugin(async () => {
     await db.insert(schema.configs).values({ id: GOODS_SEED_FLAG, value: true })
       .onConflictDoUpdate({ target: schema.configs.id, set: { value: true } })
 
-    console.log(`[lms-config-startup] 已播种 ${initialGoods.length} 个全局商品`)
+    console.log(`[lms-config-startup] Seeded ${initialGoods.length} global goods`)
   } catch (e) {
-    console.error('[lms-config-startup] 商品播种失败', e)
+    console.error('[lms-config-startup] Goods seeding failed', e)
   }
 })

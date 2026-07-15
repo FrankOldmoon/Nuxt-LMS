@@ -3,19 +3,19 @@ import { eq, or } from 'drizzle-orm'
 import { canManageGoods } from '../../utils/goods/perms'
 
 /**
- * 获取可管理的商品列表（admin/教师用）
- * - admin：?courseId=x 时返回全局+该课程；不传 courseId 返回全部
- * - 教师：?courseId=x 返回全局+该课程（仅自己课程）
+ * Get list of manageable goods (for admin/teacher)
+ * - admin: when ?courseId=x returns global + that course; if courseId is not provided, returns all
+ * - teacher: ?courseId=x returns global + that course (only own courses)
  */
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
   const courseId = Number(getQuery(event).courseId) || 0
 
   if (courseId === 0 && !user.roles.includes('admin')) {
-    return cResp(null, '无权限：仅管理员可查看全部商品', false)
+    return cResp(null, 'No permission: only admin can view all goods', false)
   }
   if (courseId > 0 && !(await canManageGoods(user, courseId))) {
-    return cResp(null, '无权限：仅管理员或课程教师可操作', false)
+    return cResp(null, 'No permission: only admin or course teacher can perform this action', false)
   }
 
   let rows: any[]

@@ -1,6 +1,6 @@
 <template>
   <div class="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-    <!-- 监听状态 / 语音错误 -->
+    <!-- listenStatus / VoiceError -->
     <div v-if="isListening || interimText || voiceError" class="px-3 pt-2 flex items-center gap-2 text-xs flex-wrap">
       <span v-if="isListening" class="flex items-center gap-1 text-red-500">
         <span class="size-2 rounded-full bg-red-500 animate-pulse" />
@@ -19,7 +19,7 @@
         :disabled="loading || disabled"
         @keydown.enter="handleSend"
       />
-      <!-- 语音输入 -->
+      <!-- Voice Input -->
       <UButton
         v-if="enableVoiceInput && asrSupported"
         :icon="isListening ? 'i-lucide-square' : 'i-lucide-mic'"
@@ -29,7 +29,7 @@
         :title="isListening ? t('ai.stopListening') : t('ai.startListening')"
         @click="toggleVoiceInput"
       />
-      <!-- 语音输出开关 -->
+      <!-- Voice Outputon/off -->
       <UButton
         v-if="enableVoiceOutput && ttsSupported"
         :icon="voiceOutputEnabled ? 'i-lucide-volume-2' : 'i-lucide-volume-x'"

@@ -2,13 +2,13 @@ import { db, schema } from "@nuxthub/db"
 import { and, eq, gt, sql, desc } from "drizzle-orm"
 
 /**
- * 错题本列表（分页）
- * 读取当前用户答错过的题目（user_questions.wrongCount > 0），
- * 联表 questions 返回完整题目数据。
+ * Wrong questions list (paginated)
+ * Reads questions the current user answered wrong (user_questions.wrongCount > 0),
+ * joined with the questions table to return full question data.
  *
  * Query: course_id, page?, pageSize?
- * - 不传 course_id：返回该用户所有课程的错题
- * - 传 course_id：仅返回该课程错题
+ * - No course_id: returns wrong questions from all of the user's courses
+ * - With course_id: returns wrong questions from that course only
  */
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
@@ -20,7 +20,7 @@ export default eventHandler(async (event) => {
   const offset = (pageNum - 1) * size
 
   try {
-    // 构造基础查询条件
+    // Build base query conditions
     const conditions: any[] = [
       eq(schema.userQuestions.userId, user.id),
       gt(schema.userQuestions.wrongCount, 0),
@@ -31,14 +31,14 @@ export default eventHandler(async (event) => {
 
     const whereClause = and(...conditions)
 
-    // 1. 统计总数
+    // 1. Count total
     const totalResult = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(schema.userQuestions)
       .where(whereClause)
     const total = totalResult[0]?.count || 0
 
-    // 2. 拉取 user_questions 中错题记录（按最近答错时间倒序）
+    // 2. Fetch wrong question records from user_questions (ordered by most recent wrong answer desc)
     const wrongRows = await db
       .select({
         courseId: schema.userQuestions.courseId,
@@ -58,11 +58,11 @@ export default eventHandler(async (event) => {
       return cResp({ items: [], total: 0, page: pageNum, pageSize: size })
     }
 
-    // 3. 联表 questions 一次性取题目详情
+    // 3. Join with questions to fetch full question details in one go
     const courseIds = [...new Set(wrongRows.map(r => r.courseId))]
     const questionCids = [...new Set(wrongRows.map(r => r.questionCid))]
 
-    // drizzle 不支持复合 inArray，先按 courseId 查再在内存过滤
+    // drizzle doesn't support composite inArray, query by courseId first and filter in memory
     const questionRows = await db.query.questions.findMany({
       where: (q, { inArray, and: andOp, eq: eqOp }) => andOp(
         inArray(q.courseId, courseIds),
@@ -70,7 +70,7 @@ export default eventHandler(async (event) => {
       ),
     })
 
-    // 4. 合并 + 关键词/题型过滤
+    // 4. Merge + filter by keyword/question type
     const questionMap = new Map(
       questionRows.map(q => [`${q.courseId}-${q.cid}`, q])
     )
@@ -102,7 +102,7 @@ export default eventHandler(async (event) => {
 
     return cResp({ items, total, page: pageNum, pageSize: size })
   } catch (error: any) {
-    console.error('错题本查询失败:', error)
-    return cResp(null, error.message || '查询错题失败', false)
+    console.error('Failed to query wrong questions:', error)
+    return cResp(null, error.message || 'Failed to query wrong questions', false)
   }
 })

@@ -1,9 +1,9 @@
 /**
- * chapter/danmaku/modal.vue 组件测试
+ * chapter/danmaku/modal.vue component test
  * @see modules/lms/components/chapter/danmaku/modal.vue
  *
- * 弹窗：教师可切换弹幕开关、发送弹幕；学生仅可在弹幕开启时发送。
- * 依赖 useAuth/useWebSocket/useLayoutState，测试中 stub。
+ * Modal: teacher can toggle danmaku switch, send danmaku; students can only send when danmaku is enabled.
+ * Depends on useAuth/useWebSocket/useLayoutState, stubbed in tests.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -76,7 +76,7 @@ describe('chapter/danmaku/modal.vue', () => {
       global: _globalConfig,
     })
     expect(wrapper.find('.uswitch').exists()).toBe(false)
-    // 发送区仍渲染
+    // Send area still renders
     expect(wrapper.find('button').exists()).toBe(true)
   })
 
@@ -101,7 +101,7 @@ describe('chapter/danmaku/modal.vue', () => {
     await input.setValue('你好弹幕')
     await wrapper.find('button').trigger('click')
     expect(sendDanmaku).toHaveBeenCalledWith(5, '你好弹幕', 'student')
-    // 发送后 open 变 false
+    // After sending, open becomes false
     expect(wrapper.emitted('update:open')).toBeTruthy()
     expect(wrapper.emitted('update:open')![0]).toEqual([false])
   })

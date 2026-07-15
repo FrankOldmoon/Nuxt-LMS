@@ -1,8 +1,8 @@
 /**
- * InputIcon 组件测试
+ * InputIcon component tests
  * @see modules/base/components/form/input-icon.vue
  *
- * 图标选择器：popover + 搜索 + 分页 + 选择
+ * Icon picker: popover + search + pagination + selection
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

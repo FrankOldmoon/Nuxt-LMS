@@ -15,7 +15,7 @@ export function useChatroom(props: ChatroomProps) {
     const userName = computed(() => user.value?.name || 'anonymous')
     const avatarImg = computed(() => user.value?.avatarImg || null)
 
-    // lms 未启用或未加入班级时不显示
+    // lms notEnableornotJoin Classnot whenShow
     const canShow = computed(() => !!moduleLms && !!classId.value)
     const placeholderText = computed(() => {
         if (!moduleLms) return t('chatroom.needLms')
@@ -23,7 +23,7 @@ export function useChatroom(props: ChatroomProps) {
         return ''
     })
 
-    // 是否可聊天：已登录 + 有班级 + ws 已连接
+    // YesNocanChat：alreadyLogin + HasClass + ws Connected
     const canChat = computed(() => !!userId.value && !!classId.value && wsConnected.value)
     const cannotChatReason = computed(() => {
         if (!userId.value) return t('chatroom.needLogin')
@@ -32,15 +32,15 @@ export function useChatroom(props: ChatroomProps) {
         return ''
     })
 
-    // 消息列表（仅内存，不持久化）
+    // Message List（onlyInsidestore，not persistent）
     const messages = ref<any[]>([])
     const inputText = ref('')
     const msgListRef = ref<any>(null)
     const onlineCount = ref(0)
 
-    // 监听聊天室消息
+    // listenChatroomMessage
     onChatroom((data: any) => {
-        // 仅显示本班级消息（服务端已按 classId 房间广播，二次校验更稳妥）
+        // onlyShowlocalClassMessage（Serviceserveralreadyby classId roombetweenbroadcast，twotimesCheckmore robust）
         if (data.classId !== classId.value) return
         messages.value.push({
             userId: data.userId,
@@ -49,7 +49,7 @@ export function useChatroom(props: ChatroomProps) {
             text: data.text,
             ts: data.ts,
         })
-        // 限制消息数量（保留最近 200 条）
+        // limitMessagecount（keep most recent 200 items）
         if (messages.value.length > 200) {
             messages.value = messages.value.slice(-200)
         }
@@ -75,7 +75,7 @@ export function useChatroom(props: ChatroomProps) {
         return `${pad(d.getHours())}:${pad(d.getMinutes())}`
     }
 
-    // 确保 ws 连接并加入班级房间（ws.vue 已自动处理，这里做兜底）
+    // ensure ws ConnectionandJoin Classroombetween（ws.vue alreadyAutoHandle，ThisInsideas fallbackBottom）
     onMounted(() => {
         if (!canShow.value) return
         if (classId.value && !wsConnected.value) {

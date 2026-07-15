@@ -16,7 +16,7 @@ interface NotificationList {
 }
 
 /**
- * 通知弹窗：分页加载 + 刷新
+ * Notification modal: paginated loading + refresh
  */
 export function useNotifications(isOpen: Ref<boolean>) {
   const { t } = useI18n()

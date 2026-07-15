@@ -1,8 +1,8 @@
 /**
- * auth/importUsersModal.vue 组件测试
+ * auth/importUsersModal.vue component tests
  * @see modules/base/components/auth/importUsersModal.vue
  *
- * importUsersModal 通过 useImportUsers 管理批量导入逻辑，内部使用 sheet 组件。
+ * importUsersModal manages batch import logic via useImportUsers, internally uses the sheet component.
  */
 import {
   describe, it, expect, beforeEach,
@@ -16,7 +16,7 @@ beforeEach(() => {
 
 const _stubs = {
   ..._globalStubs,
-  // sheet 组件（modules/base/components/sheet/index.vue）stub 为透传 div
+  // sheet component (modules/base/components/sheet/index.vue) stubbed as a passthrough div
   Sheet: {
     template: '<div class="stub-sheet" />',
     props: ['headers', 'colWidths', 'active', 'showTools', 'showFooter'],

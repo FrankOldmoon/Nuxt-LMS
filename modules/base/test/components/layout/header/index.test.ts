@@ -1,8 +1,8 @@
 /**
- * Header 组件测试
+ * Header component tests
  * @see modules/base/components/layout/header/index.vue
  *
- * 顶部导航：logo + 导航 + 通知/消息按钮 + 用户菜单
+ * Top navigation: logo + navigation + notification/message buttons + user menu
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -11,7 +11,7 @@ import { useHeaderMenu } from '../../../../composables/useHeaderMenu'
 import { useSiteConfig } from '../../../../composables/useSiteConfig'
 import { useUnreadCounts } from '../../../../composables/useUnreadCounts'
 
-// 暴露 composables 到 globalThis
+// Expose composables to globalThis
 ;(globalThis as any).useHeaderMenu = useHeaderMenu
 ;(globalThis as any).useSiteConfig = useSiteConfig
 ;(globalThis as any).useUnreadCounts = useUnreadCounts
@@ -41,7 +41,7 @@ const _globalStubs = {
   UAvatar: { template: '<div class="avatar" />', props: ['src', 'alt', 'text', 'size'] },
   UDropdownMenu: { template: '<div class="dropdown"><slot /></div>', props: ['items'] },
   UIcon: { template: '<span class="icon" />', props: ['name'] },
-  // 子组件桩
+  // Child component stubs
   AuthLoginModal: { template: '<div class="login-modal" />', props: ['open'] },
   AuthProfileModal: { template: '<div class="profile-modal" />', props: ['open'] },
   AuthSettingsModal: { template: '<div class="settings-modal" />', props: ['open'] },

@@ -4,15 +4,15 @@
       <div class="p-6 w-full">
         <h3 class="text-lg font-semibold mb-4">{{ $t('classSelector.selectClass') }}</h3>
 
-        <!-- 加载中 -->
+        <!-- Loading -->
         <div v-if="classLoading || myClassLoading" class="py-8 text-center text-muted text-sm">
           <UIcon name="i-lucide-loader-circle" class="animate-spin size-5 inline-block" />
         </div>
 
-        <!-- 学生模式：单选班级 -->
+        <!-- Studentmode：singleClass -->
         <ClassModalStudentMode v-else-if="studentMode" />
 
-        <!-- 管理模式（admin/teacher） -->
+        <!-- management mode（admin/teacher） -->
         <ClassModalAdminMode v-else />
       </div>
 

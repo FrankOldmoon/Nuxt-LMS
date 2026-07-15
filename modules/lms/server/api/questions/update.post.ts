@@ -1,15 +1,15 @@
 import { db, schema } from "@nuxthub/db"
-import { eq, and } from "drizzle-orm"  // 仅需导入 eq 和 and
+import { eq, and } from "drizzle-orm"  // Only need to import eq and and
 
 export default eventHandler(async (event) => {
-  // 仅教师/管理员可更新
+  // Only teachers/admins can update
   await requireRole(event, ['teacher', 'admin'])
 
   const body = await readBody(event)
   const { course_id, id } = body
 
   if (!course_id || !id) {
-    return cResp(null, '缺少 id 参数', false)
+    return cResp(null, 'Missing id parameter', false)
   }
 
   delete body.cid
@@ -23,7 +23,7 @@ export default eventHandler(async (event) => {
     ))
     return cResp(result)
   } catch (error: any) {
-    console.error('更新失败:', error)
-    return cResp(null, error.message || '更新失败', false)
+    console.error('Update failed:', error)
+    return cResp(null, error.message || 'Update failed', false)
   }
 })

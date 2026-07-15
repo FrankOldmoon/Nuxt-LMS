@@ -1,9 +1,9 @@
 /**
- * class/usersTable/studentsTable.vue 组件测试
+ * class/usersTable/studentsTable.vue component test
  * @see modules/lms/components/class/usersTable/studentsTable.vue
  *
- * 学生表格 + 导出按钮 + 编号管理 + 重置密码列。
- * 依赖 useClassUsersTableContext()（inject），测试中 stub 到 globalThis。
+ * Student table + export button + numbering management + reset password column.
+ * Depends on useClassUsersTableContext() (inject), stubbed to globalThis in tests.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -96,7 +96,7 @@ describe('class/usersTable/studentsTable.vue', () => {
     })
     const { default: StudentsTable } = await import('../../../../components/class/usersTable/studentsTable.vue')
     const wrapper = mount(StudentsTable, { global: _globalConfig })
-    // v-show 不移除 DOM，只隐藏
+    // v-show does not remove DOM, only hides
     expect(wrapper.find('.utable').exists()).toBe(true)
   })
 
@@ -107,7 +107,7 @@ describe('class/usersTable/studentsTable.vue', () => {
       students: ref([student]),
       openStats,
     })
-    // 简化 UTable stub：直接渲染 name-cell 插槽
+    // Simplified UTable stub: directly renders name-cell slot
     const richStubs = {
       ..._globalStubs,
       UTable: {

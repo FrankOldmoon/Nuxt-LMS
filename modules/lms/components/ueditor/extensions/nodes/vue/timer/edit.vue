@@ -19,7 +19,7 @@ const emit = defineEmits(['update:config', 'close'])
 const cfgMinutes = ref(props.config?.minutes ?? 1)
 const cfgSeconds = ref(props.config?.seconds ?? 0)
 
-// 分秒变化时立即通知父组件持久化（实时预览）
+// scoresimmediately when changesthat isNotificationParent Componentpersist（real-time preview）
 watch([cfgMinutes, cfgSeconds], () => {
     const m = Math.max(0, Math.min(180, Number(cfgMinutes.value) || 0))
     const s = Math.max(0, Math.min(59, Number(cfgSeconds.value) || 0))

@@ -1,5 +1,5 @@
 /**
- * homework edit formBody 组件测试
+ * homework edit formBody component test
  * @see modules/lms/components/ueditor/extensions/nodes/vue/homework/edit/formBody.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

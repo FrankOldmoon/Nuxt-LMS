@@ -6,7 +6,7 @@
 
                 <ClassUsersTable :rows="rows" :loading="pending" :extra-columns="extraColumns"
                     :hide-actions="true" :hide-teachers="true" :default-sort="defaultSort">
-                    <!-- record 列：显示评论数 + 总赞数 -->
+                    <!-- record columns：ShowComment Count + total likes -->
                     <template #record-cell="{ row }">
                         <div class="flex items-center gap-2">
                             <template v-if="row.original.record">

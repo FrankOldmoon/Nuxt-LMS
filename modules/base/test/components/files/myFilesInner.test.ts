@@ -1,15 +1,15 @@
 /**
- * MyFilesInner 组件测试
+ * MyFilesInner component tests
  * @see modules/base/components/files/myFilesInner.vue
  *
- * 我的文件内层：header + toolbar + 文件列表 + footer
+ * My files inner: header + toolbar + file list + footer
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { resetAllStubs, setMockI18n, setMockFetchHandler } from '../../../../../test/setup/nuxt-stubs'
 import { useMyFiles } from '../../../composables/useMyFiles'
 
-// 暴露 composable 到 globalThis
+// Expose composable to globalThis
 ;(globalThis as any).useMyFiles = useMyFiles
 
 beforeEach(() => {
@@ -48,7 +48,7 @@ describe('files/myFilesInner.vue', () => {
   it('加载中时显示 loading 状态', async () => {
     const { default: MyFilesInner } = await import('../../../components/files/myFilesInner.vue')
     const wrapper = mount(MyFilesInner, { global: _globalConfig })
-    // 初始 mount 时 useMyFiles 会触发 loadFiles，loading 为 true
+    // On initial mount, useMyFiles will trigger loadFiles, loading is true
     await flushPromises()
     expect(wrapper.exists()).toBe(true)
   })

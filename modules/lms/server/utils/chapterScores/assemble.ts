@@ -1,9 +1,9 @@
 /**
- * 章节得分：装配每学生的 score + items（纯函数，可独立 unit test）
+ * Chapter scores: assemble each student's score + items (pure function, can be independently unit tested)
  */
 import type { ItemStatus } from '../courseProgress/query'
 
-/** 根据 qIds/hIds/cIds + 状态 map 组装每个学生的 items */
+/** Assemble each student's items based on qIds/hIds/cIds + status maps */
 export function assembleChapterItems(
   uid: number,
   qIds: number[],
@@ -20,7 +20,7 @@ export function assembleChapterItems(
   ]
 }
 
-/** 批量装配所有学生的 { userId, score, taskStatus, items } */
+/** Batch assemble all students' { userId, score, taskStatus, items } */
 export function assembleChapterScores(
   studentIds: number[],
   qIds: number[],

@@ -8,7 +8,7 @@ export default eventHandler(async (event) => {
   const { course_id, comment_cid, like } = body
 
   if (!course_id || !comment_cid) {
-    return cResp(null, '缺少参数', false)
+    return cResp(null, 'Missing parameters', false)
   }
 
   const courseId = Number(course_id)
@@ -24,7 +24,7 @@ export default eventHandler(async (event) => {
     })
 
     if (existing) {
-      // 更新点赞状态
+      // Update the like status
       const result = await db.update(schema.userComments).set({
         like: like,
       }).where(and(
@@ -34,7 +34,7 @@ export default eventHandler(async (event) => {
       )).returning()
       return cResp(result[0])
     } else {
-      // 新建记录
+      // Create a new record
       const result = await db.insert(schema.userComments).values({
         userId: user.id,
         courseId,
@@ -44,7 +44,7 @@ export default eventHandler(async (event) => {
       return cResp(result[0])
     }
   } catch (error: any) {
-    console.error('点赞失败:', error)
-    return cResp(null, error.message || '操作失败', false)
+    console.error('Like failed:', error)
+    return cResp(null, error.message || 'Operation failed', false)
   }
 })

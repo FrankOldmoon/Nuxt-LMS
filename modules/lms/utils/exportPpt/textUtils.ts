@@ -1,11 +1,11 @@
 /**
- * Tiptap 文本提取工具
+ * Tiptap text extraction utilities
  */
 
 import { BODY_FONT_SIZE, BODY_LINE_HEIGHT } from './constants'
 import { cssColorToHex, parseFontSize } from './colorUtils'
 
-/** 递归提取纯文本 */
+/** Recursively extract plain text */
 export function extractPlainText(node: any): string {
   if (!node) return ''
   if (typeof node === 'string') return node
@@ -17,7 +17,7 @@ export function extractPlainText(node: any): string {
   return ''
 }
 
-/** 将 Tiptap mark 应用到 pptxgenjs text run options */
+/** Apply Tiptap mark to pptxgenjs text run options */
 export function applyMark(mark: any, opts: any): void {
   const { type, attrs = {} } = mark
   switch (type) {
@@ -54,9 +54,9 @@ export function applyMark(mark: any, opts: any): void {
 }
 
 /**
- * 从 Tiptap content 数组提取 text runs（带格式信息）
- * @param inlineMathCache 可选，行内公式预渲染缓存（latex → Unicode 文本）
- *        传入后 inlineMath 节点会被替换为对应的 Unicode 文本 run
+ * Extract text runs (with formatting info) from a Tiptap content array
+ * @param inlineMathCache Optional, inline formula pre-rendering cache (latex → Unicode text)
+ *        When provided, inlineMath nodes are replaced with the corresponding Unicode text run
  */
 export function extractTextRuns(content: any[], inlineMathCache?: Map<string, string>): any[] {
   const runs: any[] = []
@@ -71,7 +71,7 @@ export function extractTextRuns(content: any[], inlineMathCache?: Map<string, st
       } else if (node.type === 'hardBreak') {
         runs.push({ text: '\n', options: { breakLine: true } })
       } else if (node.type === 'inlineMath') {
-        // 行内公式 → 替换为 Unicode 文本（来自 KaTeX 预渲染）
+        // inline formula → replace with Unicode text (from KaTeX pre-rendering)
         const latex = node.attrs?.latex || ''
         if (latex && inlineMathCache) {
           const text = inlineMathCache.get(latex)
@@ -88,7 +88,7 @@ export function extractTextRuns(content: any[], inlineMathCache?: Map<string, st
   return runs
 }
 
-/** 估算文本在指定宽度下的高度（英寸） */
+/** Estimate text height at a given width (inches) */
 export function estimateTextHeight(
   text: string,
   widthInches: number,
@@ -96,7 +96,7 @@ export function estimateTextHeight(
   lineHeight = BODY_LINE_HEIGHT,
 ): number {
   if (!text) return 0
-  // 平均字符宽度 ≈ fontSize * 0.55 pt
+  // Average character width ≈ fontSize * 0.55 pt
   const charsPerLine = Math.floor((widthInches * 72) / (fontSize * 0.55))
   const lines = Math.max(1, Math.ceil(text.length / Math.max(1, charsPerLine)))
   return (lines * fontSize * lineHeight) / 72

@@ -1,8 +1,8 @@
 /**
- * auth/profileModal.vue 组件测试
+ * auth/profileModal.vue component tests
  * @see modules/base/components/auth/profileModal.vue
  *
- * profileModal 通过 useProfileModal 管理状态，内部渲染 AuthUserProfileForm。
+ * profileModal manages state via useProfileModal, internally renders AuthUserProfileForm.
  */
 import {
   describe, it, expect, beforeEach,
@@ -17,7 +17,7 @@ beforeEach(() => {
 
 const _stubs = {
   ..._globalStubs,
-  // AuthUserProfileForm 作为子组件 stub 为透传容器
+  // AuthUserProfileForm as child component stubbed as pass-through container
   AuthUserProfileForm: {
     template: '<div class="stub-user-profile-form"><slot /></div>',
     props: ['modelValue'],
@@ -75,10 +75,10 @@ describe('auth/profileModal.vue', () => {
       props: { open: false },
       global: { ..._globalConfig, stubs: _stubs },
     })
-    // 切换 open 为 true，触发 watch 加载用户数据
+    // Switch open to true, triggering watch to load user data
     await wrapper.setProps({ open: true })
     await flushPromises()
-    // AuthUserProfileForm 的 modelValue 应包含用户名
+    // The modelValue of AuthUserProfileForm should contain the username
     const stub = wrapper.findComponent({ name: 'AuthUserProfileForm' })
     if (stub.exists()) {
       const modelValue = stub.props('modelValue')

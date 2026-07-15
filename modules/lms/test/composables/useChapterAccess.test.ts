@@ -1,5 +1,5 @@
 /**
- * useChapterAccess composable 测试
+ * useChapterAccess composable test
  * @see modules/lms/composables/useChapterAccess.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -15,16 +15,16 @@ import { ref, computed } from 'vue'
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
-  // 桩 useClasses（auto-import from base）
+  // Stub useClasses (auto-import from base)
   const classesRef = ref<any[]>([])
   ;(globalThis as any).useClasses = () => ({
     classes: classesRef,
     classOptions: computed(() => classesRef.value.map((c: any) => ({ label: c.name, value: c.id }))),
     loadClasses: vi.fn(),
   })
-  // 桩 useAuthLms（auto-import from lms）
+  // Stub useAuthLms (auto-import from lms)
   ;(globalThis as any).useAuthLms = () => ({
-    isCourseTeacher: (cid: number) => cid === 5, // 仅 course 5 算 teacher
+    isCourseTeacher: (cid: number) => cid === 5, // only course 5 counts as teacher
     isCourseEditor: (cid: number) => cid === 5,
   })
   ;(globalThis as any).__classesRef = classesRef
@@ -129,8 +129,8 @@ describe('composables/useChapterAccess', () => {
     const { useChapterAccess } = await import('../../composables/useChapterAccess')
     const r = useChapterAccess({ chapterId: 1, courseId: 1 })
     r.isOpen.value = false
-    await r.updateOpen(true) // 试图改为 true，但失败
-    expect(r.isOpen.value).toBe(false) // 回滚
+    await r.updateOpen(true) // Attempted to change to true, but failed
+    expect(r.isOpen.value).toBe(false) // Rollback
     const toasts = getToastCalls()
     expect(toasts.some((t) => t.color === 'error')).toBe(true)
   })

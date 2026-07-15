@@ -1,5 +1,5 @@
 <template>
-  <!-- 用户（全局控制用户端功能可用性；admin/teacher 不受限制） -->
+  <!-- User（GlobalcontrolUserserver functioncanAvailableproperty；admin/teacher not restricted） -->
   <div class="space-y-2">
     <p class="text-sm font-medium">{{ $t('lmsConfig.user') }}</p>
     <div class="space-y-2">

@@ -1,5 +1,5 @@
 /**
- * composables/useImageCropper 测试
+ * composables/useImageCropper tests
  * @see modules/base/composables/useImageCropper.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -13,8 +13,8 @@ import {
 beforeEach(() => {
   resetAllStubs()
   clearMockFetchHandler()
-  // happy-dom 提供了真实的 URL.createObjectURL（返回 blob:nodedata:...），
-  // 需要始终覆盖为 mock 才能断言固定值
+  // happy-dom provides a real URL.createObjectURL (returns blob:nodedata:...),
+  // needs to always be overridden with a mock to assert fixed values
   ;(globalThis as any).URL.createObjectURL = vi.fn(() => 'blob:mock')
   ;(globalThis as any).URL.revokeObjectURL = vi.fn()
 })
@@ -118,7 +118,7 @@ describe('composables/useImageCropper - handleCrop', () => {
     const { setImage, handleCrop, cropperRef, internalOpen, uploading } = useImageCropper(...Object.values(args) as any)
     const file = new File(['img'], 'pic.png', { type: 'image/png' })
     setImage(file)
-    // 模拟 cropper 的 getResult
+    // Simulate the cropper's getResult
     cropperRef.value = {
       getResult: () => ({
         canvas: {

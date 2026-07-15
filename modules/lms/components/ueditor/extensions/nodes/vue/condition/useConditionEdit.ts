@@ -34,7 +34,7 @@ export function useConditionEdit(props: ConditionEditProps, emit: ConditionEditE
         (chapterTaskIds.value.raceIds || []).map(id => ({ label: `#${id}`, value: String(id) }))
     )
 
-    /** 从 tiptap JSON content 中提取指定 vue 节点类型的 CID */
+    /** from tiptap JSON content Middleextract specified vue nodePointType CID */
     function extractVueNodeIds(content: any, type: string) {
         const ids: number[] = []
         function traverse(node: any) {
@@ -72,7 +72,7 @@ export function useConditionEdit(props: ConditionEditProps, emit: ConditionEditE
                 }
             }
         } catch (e) {
-            console.error('[condition] 加载章节任务失败', e)
+            console.error('[condition] LoadChapterTaskFailed', e)
         }
     }
 
@@ -89,8 +89,8 @@ export function useConditionEdit(props: ConditionEditProps, emit: ConditionEditE
 
     const conditionTypes = computed(() => [
         { label: t('ueditor.conditionRole'), value: 'role' },
-        { label: t('ueditor.conditionClass'), value: 'class' },
-        { label: t('ueditor.conditionQuestion'), value: 'question' },
+        { label: t('ueditor.condition Class'), value: 'class' },
+        { label: t('ueditor.condition Question'), value: 'question' },
         { label: t('ueditor.conditionHomework'), value: 'homework' },
         { label: t('ueditor.conditionComment'), value: 'comment' },
         { label: t('ueditor.conditionQuiz'), value: 'quiz' },
@@ -112,7 +112,7 @@ export function useConditionEdit(props: ConditionEditProps, emit: ConditionEditE
                 classOptions.value = resp.data.map((c: any) => ({ label: c.name, value: String(c.id) }))
             }
         } catch (e) {
-            console.error('[condition] 加载班级失败', e)
+            console.error('[condition] LoadClassFailed', e)
         }
     }
 

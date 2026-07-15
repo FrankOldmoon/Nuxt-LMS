@@ -1,18 +1,18 @@
 /**
- * 提交 API 通用上下文解析
+ * Submit API common context parsing
  *
- * 提取所有 submit/award API 共有：
+ * Extracts what all submit/award APIs have in common:
  *  - requireAuth
  *  - readBody
- *  - course_id 必填校验 + Number() 转换
- *  - 指定 cid 字段必填校验 + Number() 转换
- *  - getCourseLmsConfig + 取 xxxConfig 子段
+ *  - course_id required validation + Number() conversion
+ *  - Specified cid field required validation + Number() conversion
+ *  - getCourseLmsConfig + get xxxConfig sub-section
  *
- * 调用方只需指定 cid 字段名（question_cid / homework_cid / quiz_cid / race_cid），
- * 返回的 ctx.cid 即为标准化后的数字 cid，可直接用于 findFirst / insert / update。
+ * The caller only needs to specify the cid field name (question_cid / homework_cid / quiz_cid / race_cid),
+ * the returned ctx.cid is the standardized numeric cid, which can be directly used for findFirst / insert / update.
  *
- * 注：getCourseLmsConfig 通过 Nuxt auto-import 引入（不显式 import），
- *     这样在测试环境中可以被 globalThis 注入的 mock 覆盖。
+ * Note: getCourseLmsConfig is introduced via Nuxt auto-import (not explicitly imported),
+ *     so in the test environment it can be overridden by a mock injected via globalThis.
  */
 
 export interface SubmitContext {
@@ -20,35 +20,35 @@ export interface SubmitContext {
   courseId: number
   cid: number
   config: any
-  /** 课程 LMS 配置的子段（config.question / config.homework / config.quiz / config.race） */
+  /** Sub-section of the course LMS config (config.question / config.homework / config.quiz / config.race) */
   section: any
   body: any
 }
 
 export interface SubmitContextOptions {
-  /** body 中 cid 字段名，如 'question_cid' / 'homework_cid' / 'quiz_cid' / 'race_cid' */
+  /** cid field name in body, e.g. 'question_cid' / 'homework_cid' / 'quiz_cid' / 'race_cid' */
   cidField: string
-  /** LMS config 子段名，如 'question' / 'homework' / 'quiz' / 'race' */
+  /** LMS config sub-section name, e.g. 'question' / 'homework' / 'quiz' / 'race' */
   sectionKey: string
-  /** 缺 cid 时返回的提示文案 */
+  /** Prompt message returned when cid is missing */
   cidMissingMessage?: string
 }
 
 /**
- * 从 event 解析出提交上下文。
- * 缺 course_id 或 cid 时直接抛错，由 withSubmitHandler 统一捕获并返回 cResp。
+ * Parse the submit context from the event.
+ * Throws directly when course_id or cid is missing, uniformly caught and returned as cResp by withSubmitHandler.
  */
 export async function parseSubmitContext(
   event: any,
   options: SubmitContextOptions,
 ): Promise<SubmitContext> {
-  const cidMissingMessage = options.cidMissingMessage || `缺少 ${options.cidField} 参数`
+  const cidMissingMessage = options.cidMissingMessage || `Missing ${options.cidField} parameter`
 
   const user = await requireAuth(event)
   const body = await readBody(event)
   const { course_id } = body
   if (!course_id) {
-    throw new SubmitContextError('缺少 course_id 参数')
+    throw new SubmitContextError('Missing course_id parameter')
   }
   const cidRaw = body[options.cidField]
   if (cidRaw === undefined || cidRaw === null || cidRaw === '') {
@@ -57,17 +57,17 @@ export async function parseSubmitContext(
 
   const courseId = Number(course_id)
   const cid = Number(cidRaw)
-  if (!courseId) throw new SubmitContextError('course_id 无效')
-  if (!cid) throw new SubmitContextError(`${options.cidField} 无效`)
+  if (!courseId) throw new SubmitContextError('Invalid course_id')
+  if (!cid) throw new SubmitContextError(`Invalid ${options.cidField}`)
 
-  // getCourseLmsConfig 由 Nuxt auto-import 引入，测试可通过 globalThis mock
+  // getCourseLmsConfig is introduced via Nuxt auto-import, can be mocked via globalThis in tests
   const config = await getCourseLmsConfig(courseId)
   const section = config?.[options.sectionKey] || {}
 
   return { user, courseId, cid, config, section, body }
 }
 
-/** 带 code 字段的 Error 子类，用于 handler 区分业务校验错误 */
+/** Error subclass with a code field, used by the handler to distinguish business validation errors */
 export class SubmitContextError extends Error {
   code: string
   constructor(message: string, code: string = 'invalid') {

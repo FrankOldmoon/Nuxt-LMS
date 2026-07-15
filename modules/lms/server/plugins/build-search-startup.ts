@@ -1,15 +1,15 @@
 /**
- * 服务启动时自动构建搜索索引
- * 延迟执行确保数据库连接已就绪
+ * Automatically build the search index on server startup
+ * Delayed execution ensures the database connection is ready
  */
 export default defineNitroPlugin(() => {
   setTimeout(async () => {
     try {
       const task = await import('../tasks/build-search')
       await task.default.run({ payload: {}, context: {} } as any)
-      console.log('[startup] 搜索索引初始化完成')
+      console.log('[startup] Search index initialization complete')
     } catch (e) {
-      console.error('[startup] 搜索索引初始化失败:', e)
+      console.error('[startup] Search index initialization failed:', e)
     }
   }, 5000)
 })

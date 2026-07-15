@@ -1,5 +1,5 @@
 /**
- * comment render 组件测试
+ * comment render component test
  * @see modules/lms/components/ueditor/extensions/nodes/vue/comment/render.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

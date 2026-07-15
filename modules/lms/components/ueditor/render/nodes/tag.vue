@@ -2,7 +2,7 @@
   <span class="umo-node-tag" data-node-view-wrapper="">
     <span
       class="umo-node-tag-text"
-      :style="{ color: attrs.color, backgroundColor: attrs.backgroundColor }"
+      :style="{ color: attrs.color, background color: attrs.background color }"
     >{{ attrs.text || '' }}</span>
   </span>
 </template>

@@ -1,8 +1,8 @@
 /**
- * FileRow 组件测试
+ * FileRow component tests
  * @see modules/base/components/files/fileRow.vue
  *
- * 文件行：图标 + 名称 + 大小 + 时间 + 操作按钮
+ * File row: icon + name + size + time + action buttons
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -84,7 +84,7 @@ describe('files/fileRow.vue', () => {
       global: _globalConfig,
     })
     const buttons = wrapper.findAll('button')
-    // 编辑、预览、下载、删除 = 4 个按钮
+    // Edit, preview, download, delete = 4 buttons
     expect(buttons.length).toBe(4)
   })
 
@@ -148,11 +148,11 @@ describe('files/fileRow.vue', () => {
       },
       global: _globalConfig,
     })
-    // 最后一个按钮是删除
+    // The last button is delete
     const buttons = wrapper.findAll('button')
     await buttons[buttons.length - 1].trigger('click')
-    // remove 是 prop 函数，验证它被调用需要 spy
-    // 由于直接传入 prop 函数，我们只验证按钮可点击
+    // remove is a prop function, verifying it is called requires a spy
+    // Since we pass the prop function directly, we only verify the button is clickable
     expect(wrapper.exists()).toBe(true)
   })
 })

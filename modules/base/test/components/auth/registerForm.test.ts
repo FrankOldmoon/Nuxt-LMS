@@ -1,5 +1,5 @@
 /**
- * auth/registerForm.vue 组件测试
+ * auth/registerForm.vue component tests
  * @see modules/base/components/auth/registerForm.vue
  */
 import {

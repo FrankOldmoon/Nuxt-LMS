@@ -2,7 +2,7 @@ import type { ColumnMeta } from '../utils/types'
 import { cellTypeFor, isImageColumn, isFileColumn, isIconColumn } from '../utils/widgetMap'
 
 /**
- * 单元格视图：类型判定与各类展示值的派生
+ * Cell view: type determination and derivation of various display values
  */
 export function useCellView(column: () => ColumnMeta, cellValue: () => any) {
   const type = computed(() => {

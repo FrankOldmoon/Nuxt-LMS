@@ -113,7 +113,7 @@ export function useAiFloat(props: AiFloatProps) {
         if (saved > 0) editor.view.dispatch(tr)
         if (saved > 0 || failed > 0) {
             toast.add({
-                title: failed > 0 ? t('ueditor.aiFloat.questionSavedSome', { saved, failed }) : t('ueditor.aiFloat.questionSaved', { saved }),
+                title: failed > 0 ? t('ueditor.aiFloat.question savedSome', { saved, failed }) : t('ueditor.aiFloat.question saved', { saved }),
                 color: failed > 0 ? 'warning' : 'success',
             })
         }
@@ -152,8 +152,8 @@ export function useAiFloat(props: AiFloatProps) {
                 signal: abortController.signal,
             })
 
-            const contentType = resp.headers.get('Content-Type') || ''
-            if (!contentType.includes('text/event-stream')) {
+            const content type = resp.headers.get('Content-Type') || ''
+            if (!content type.includes('text/event-stream')) {
                 let msg = t('ueditor.aiFloat.failed')
                 try { const data = await resp.json(); msg = data.msg || msg } catch { /* noop */ }
                 throw new Error(msg)

@@ -1,5 +1,5 @@
 /**
- * AI 服务工具测试（TTS / ASR / LLM 状态机）
+ * AI service utility test (TTS / ASR / LLM state machine)
  * @see modules/lms/utils/ai.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -7,8 +7,8 @@ import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'
 
 beforeEach(() => {
   resetAllStubs()
-  // vitest 的 define 把 import.meta.client 替换为 "true"，但生产代码用属性访问，
-  // 此处用 defineProperty 覆盖一次，确保 ai.ts 的 import.meta.client 检测为真
+  // vitest's define replaces import.meta.client with "true", but production code uses property access,
+  // Here use defineProperty to override once, ensuring ai.ts's import.meta.client detection is true
   try {
     Object.defineProperty(import.meta, 'client', { value: true, configurable: true, writable: true })
     Object.defineProperty(import.meta, 'server', { value: false, configurable: true, writable: true })
@@ -18,7 +18,7 @@ beforeEach(() => {
 describe('utils/ai - languageMap', () => {
   it('包含常见语言映射', async () => {
     const { languageMap } = await import('../../utils/ai')
-    // 数量不固定，主要验证 zh / en / ja 等关键映射
+    // Quantity is not fixed, mainly verify key mappings like zh / en / ja
     expect(Object.keys(languageMap).length).toBeGreaterThan(0)
     expect(languageMap['zh-CN']).toBe('中文（简体）')
     expect(languageMap['en-US']).toBe('英语（美国）')
@@ -67,7 +67,7 @@ describe('utils/ai - LLM state subscribers', () => {
     const unsubscribe = ai.subscribeLLMState(listener)
     expect(listener).toHaveBeenCalledTimes(1)
     unsubscribe()
-    expect(listener).toHaveBeenCalledTimes(1) // 没有再次触发
+    expect(listener).toHaveBeenCalledTimes(1) // Not triggered again
   })
 
   it('getLLMState 返回状态快照', async () => {
@@ -81,7 +81,7 @@ describe('utils/ai - LLM state subscribers', () => {
 describe('utils/ai - checkWebGPU', () => {
   it('无 navigator.gpu 时返回 false', async () => {
     const ai = await import('../../utils/ai')
-    // 我们的 nuxt-stubs 已定义 navigator.gpu = undefined
+    // Our nuxt-stubs already defines navigator.gpu = undefined
     const result = await ai.checkWebGPU()
     expect(result).toBe(false)
   })
@@ -100,7 +100,7 @@ describe('utils/ai - TTS service (unit env, API-based)', () => {
     const voices = svc.getVoices()
     expect(Array.isArray(voices)).toBe(true)
     expect(voices.length).toBeGreaterThan(0)
-    // 每个语音都有 name / lang / voiceURI
+    // Each voice has name / lang / voiceURI
     voices.forEach(v => {
       expect(v).toHaveProperty('name')
       expect(v).toHaveProperty('lang')
@@ -134,7 +134,7 @@ describe('utils/ai - TTS service (unit env, API-based)', () => {
   it('speak 在 API 不可用时 rejects', async () => {
     const { createTTSService } = await import('../../utils/ai')
     const svc = createTTSService()
-    // node 环境无服务端 → fetch 失败
+    // node environment has no server → fetch fails
     await expect(svc.speak({ text: 'hello' })).rejects.toThrow()
   })
 
@@ -159,7 +159,7 @@ describe('utils/ai - ASR service', () => {
   it('isSupported 在无 SpeechRecognition 时返回 false', async () => {
     const { createASRService } = await import('../../utils/ai')
     const svc = createASRService()
-    expect(svc.isSupported()).toBe(false) // happy-dom 没 SpeechRecognition
+    expect(svc.isSupported()).toBe(false) // happy-dom has no SpeechRecognition
   })
 
   it('start 在不支持时抛错', async () => {

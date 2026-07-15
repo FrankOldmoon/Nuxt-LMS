@@ -1,11 +1,11 @@
 /**
- * base 模块 hooks 测试
+ * base module hooks tests
  * @see modules/base/server/utils/hooks.ts
  *
- * 测试 registerOnMeEnrich / runOnMeEnrich / registerOnUserImported / runOnUserImported
- * 纯逻辑，无 db 依赖。重点测试错误隔离和结果合并。
+ * Tests registerOnMeEnrich / runOnMeEnrich / registerOnUserImported / runOnUserImported
+ * Pure logic, no db dependency. Focus on error isolation and result merging.
  *
- * 注意：hooks.ts 使用模块级单例数组，需 vi.resetModules() 隔离每个测试。
+ * Note: hooks.ts uses module-level singleton arrays, need vi.resetModules() to isolate each test.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'

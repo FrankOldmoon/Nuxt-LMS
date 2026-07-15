@@ -1,16 +1,16 @@
 import { db, schema } from '@nuxthub/db'
 import { canManageGoods } from '../../utils/goods/perms'
 
-/** 新增商品（admin/教师） */
+/** Add good (admin/teacher) */
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
   const body = await readBody(event)
   const { name, content, courseId, price, sellPrice, stock, type, order } = body
 
-  if (!name) return cResp(null, '缺少 name 参数', false)
+  if (!name) return cResp(null, 'Missing name parameter', false)
   const targetCourseId = Number(courseId) || 0
   if (!(await canManageGoods(user, targetCourseId))) {
-    return cResp(null, '无权限：仅管理员可创建全局商品，教师仅可创建本课程商品', false)
+    return cResp(null, 'No permission: only admin can create global goods, teachers can only create goods for their own courses', false)
   }
 
   const result = await db.insert(schema.goods).values({

@@ -1,8 +1,8 @@
 import type { FlatMenuItem } from '../components/menu/EditorItem.vue'
 
 /**
- * 菜单列表编辑：管理扁平列表的折叠状态、拖拽排序、增删改
- * 全部基于「扁平数组 + depth」模型，通过 update 回调通知父级
+ * Menu list editing: manages collapse state, drag sorting, add/delete/modify of flat list
+ * All based on "flat array + depth" model, notifies parent via update callback
  */
 export function useMenuListEditor(
   modelValue: () => FlatMenuItem[],
@@ -12,7 +12,7 @@ export function useMenuListEditor(
 ) {
   const items = computed(modelValue)
 
-  // ==================== 折叠状态 ====================
+  // ==================== Collapse state ====================
   const collapsedKeys = ref<Set<number>>(new Set())
 
   function hasChildren(key: number): boolean {
@@ -28,7 +28,7 @@ export function useMenuListEditor(
     collapsedKeys.value = next
   }
 
-  /** 过滤掉被折叠父节点的子项 */
+  /** Filter out child items of collapsed parent nodes */
   const visibleItems = computed(() => {
     const result: FlatMenuItem[] = []
     for (const item of items.value) {
@@ -45,14 +45,14 @@ export function useMenuListEditor(
     return result
   })
 
-  /** 可见列表索引 → 原始列表索引 */
+  /** Visible list index → original list index */
   function originalIndex(visibleIdx: number): number {
     const visible = visibleItems.value
     if (visibleIdx >= visible.length) return -1
     return items.value.findIndex((i) => i._key === visible[visibleIdx]?._key)
   }
 
-  // ==================== 辅助：子树结束下标（exclusive） ====================
+  // ==================== Helper: subtree end index (exclusive) ====================
   function getBlockEnd(startIdx: number): number {
     const depth = items.value[startIdx]!.depth
     let end = startIdx
@@ -63,7 +63,7 @@ export function useMenuListEditor(
     return end
   }
 
-  // ==================== 拖拽排序（仅同层级；end 时把子节点跟随父节点重排） ====================
+  // ==================== Drag sorting (same level only; rearrange children to follow parent on end) ====================
   function checkMove(evt: any): boolean {
     const dragged = evt.draggedContext.element as FlatMenuItem
     const related = evt.relatedContext.element as FlatMenuItem
@@ -119,7 +119,7 @@ export function useMenuListEditor(
     dragTargetKey = null
   }
 
-  // ==================== 增删 / 修改 ====================
+  // ==================== Add/delete / modify ====================
   function createNewNode(depth: number): FlatMenuItem {
     return {
       _key: genKey(),

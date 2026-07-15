@@ -1,30 +1,30 @@
 import { ref, computed, type Ref } from 'vue'
 
 export function useRichEditor(props: any, model: Ref<string | Record<string, any>>) {
-    // 判断当前值是否为 JSON 对象（非数组、非 null、非字符串）
+    // Check whether the current value is a JSON object (not an array, not null, not a string)
     const isJson = computed(
         () => typeof model.value === 'object' && model.value !== null && !Array.isArray(model.value)
     )
 
-    // 弹窗控制
+    // Modal control
     const isModalOpen = ref(false)
 
-    // 编辑器内临时 JSON 数据
+    // Temporary JSON data inside the editor
     const editJson = ref<any>(null)
 
-    /** 打开编辑器：将当前 model 转换为 JSON 赋给 editJson */
+    /** Open the editor: convert the current model to JSON and assign it to editJson */
     function openEditor() {
         editJson.value = model.value
         isModalOpen.value = true
     }
 
-    /** 保存编辑器内容：写回 model，自动切换至 JSON 渲染视图 */
+    /** Save editor content: write back to model, automatically switch to the JSON render view */
     function saveJson() {
         model.value = editJson.value || { type: 'doc', content: [] }
         isModalOpen.value = false
     }
 
-    /** 从 JSON 模式切换回纯文本，提取文本写入 model */
+    /** Switch from JSON mode back to plain text, extract the text and write it into model */
     function switchToTextMode() {
         if (isJson.value) {
             const text = jsonToText(model.value as Record<string, any>)
@@ -32,8 +32,8 @@ export function useRichEditor(props: any, model: Ref<string | Record<string, any
         }
     }
 
-    // ============== Tiptap JSON 与纯文本互转 ==============
-    /** 从 Tiptap JSON 提取纯文本 */
+    // ============== Tiptap JSON <-> Plain Text conversion ==============
+    /** Extract plain text from Tiptap JSON */
     function jsonToText(doc: Record<string, any>): string {
         if (!doc || !doc.content) return ''
         return extractText(doc)

@@ -1,5 +1,5 @@
 /**
- * 列表展开与渲染工具
+ * List expansion and rendering utilities
  */
 
 import type { ListItem, SlideContext } from './types'
@@ -7,8 +7,8 @@ import { BODY_FONT_SIZE, BODY_LINE_HEIGHT } from './constants'
 import { extractTextRuns, estimateTextHeight } from './textUtils'
 import { newSlide } from './slideUtils'
 
-/** 展开无序/有序列表为扁平的 ListItem 数组（支持嵌套）
- *  @param inlineMathCache 透传给 extractTextRuns，用于行内公式文本替换
+/** Flatten unordered/ordered list into a flat ListItem array (supports nesting)
+ *  @param inlineMathCache Passed through to extractTextRuns for inline formula text replacement
  */
 export function flattenListItems(
   listNode: any,
@@ -22,7 +22,7 @@ export function flattenListItems(
   for (const child of listNode.content || []) {
     if (child.type !== 'listItem') continue
 
-    // 提取 listItem 内段落文本（排除嵌套列表）
+    // Extract paragraph text within listItem (excluding nested lists)
     const runs: any[] = []
     const nestedLists: any[] = []
     for (const c of child.content || []) {
@@ -35,7 +35,7 @@ export function flattenListItems(
       }
     }
 
-    // 生成前缀
+    // Generate prefix
     let bulletPrefix: string
     if (listType === 'ordered') {
       bulletPrefix = `${numberIndex}. `
@@ -47,7 +47,7 @@ export function flattenListItems(
 
     if (listType === 'ordered') numberIndex++
 
-    // 递归处理嵌套列表
+    // Recursively process nested lists
     for (const nested of nestedLists) {
       const nestedType = nested.type === 'orderedList' ? 'ordered' : 'bullet'
       items.push(...flattenListItems(nested, indentLevel + 1, nestedType, inlineMathCache))
@@ -56,8 +56,8 @@ export function flattenListItems(
   return items
 }
 
-/** 展开任务列表
- *  @param inlineMathCache 透传给 extractTextRuns
+/** Flatten task list
+ *  @param inlineMathCache Passed through to extractTextRuns
  */
 export function flattenTaskItems(
   taskListNode: any,
@@ -82,7 +82,7 @@ export function flattenTaskItems(
   return items
 }
 
-/** 渲染列表项到幻灯片 */
+/** Render list items to slide */
 export function addListItems(ctx: SlideContext, items: ListItem[], pres: any): void {
   for (const item of items) {
     const text = item.runs.map(r => r.text).join('') || ' '
@@ -90,12 +90,12 @@ export function addListItems(ctx: SlideContext, items: ListItem[], pres: any): v
     const width = ctx.contentWidth - indent
     const height = estimateTextHeight(text, width, BODY_FONT_SIZE, BODY_LINE_HEIGHT)
 
-    // 溢出 → 新空白页
+    // Overflow → new blank page
     if (ctx.currentY + height + 0.05 > ctx.maxY) {
       newSlide(ctx, pres)
     }
 
-    // 构建 runs，将 bullet/number 前缀合并到第一个 run
+    // Build runs, merging the bullet/number prefix into the first run
     const runs = [...item.runs]
     if (runs.length > 0) {
       runs[0] = {

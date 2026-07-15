@@ -1,5 +1,5 @@
 /**
- * Admin Columns API + utils 测试
+ * Admin Columns API + utils tests
  * @see modules/admin/server/api/admin/columns/[table].get.ts, [table].put.ts
  * @see modules/admin/server/utils/columns.ts
  */

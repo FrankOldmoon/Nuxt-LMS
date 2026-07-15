@@ -24,12 +24,12 @@ export interface QuestionRenderProps {
 
 export type QuestionRenderEmit = (event: 'init' | 'submitted', ...args: any[]) => void
 
-/** provide/inject 上下文（供 footer 等子组件使用） */
+/** provide/inject context (for child components like footer) */
 type QuestionRenderCtx = ReturnType<typeof useQuestionRender>
 export const QuestionRenderKey: InjectionKey<QuestionRenderCtx> = Symbol('QuestionRender')
 export function useQuestionRenderContext() {
     const ctx = inject(QuestionRenderKey)
-    if (!ctx) throw new Error('useQuestionRenderContext must be used within Question render.vue')
+    if (!ctx) throw new Error('useQuestionRenderContext must be used withinQuestion render.vue')
     return ctx
 }
 
@@ -43,14 +43,14 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
     const chapterTask = useChapterTask()
     const toast = useToast()
 
-    // race 模式：显示提交按钮但不向后端提交 question 记录
+    // race mode: show submit button but do not submit question record to backend
     const inRace = inject('inRace', false)
-    // evaluation 评估对话内联题目答题回调
+    // evaluation: inline question answer callback within evaluation dialog
     const onEvaluationAnswered = inject('onEvaluationAnswered', null)
 
     const isLoggedIn = computed(() => !!user.value)
 
-    // content 可能是 cid 字符串（DB 题目）或内联 JSON 对象（AI 生成的未保存题目）
+    // content may be a cid string (DB question) or an inline JSON object (AI-generated unsaved question)
     const inlineQuestion = computed(() => {
         const c = props.node?.attrs?.content
         return (c != null && typeof c === 'object' && !Array.isArray(c)) ? c : null
@@ -68,7 +68,7 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
         composite: t('question.typeComposite'), video: t('question.typeVideo'), evaluation: t('question.typeEvaluation'),
     }))
 
-    // 题型 → 渲染组件
+    // Question type → render component
     const componentMap: Record<string, any> = {
         single: SingleRender, judge: JudgeRender, multiple: MultipleRender, fill: FillRender,
         select: SelectRender, sort: SortRender, classify: ClassifyRender, puzzle: PuzzleRender,
@@ -78,7 +78,7 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
     const renderComponent = computed(() => componentMap[question.value?.type] || null)
     const renderRef = ref<any>(null)
 
-    // 公共状态
+    // Common state
     const submitted = ref(false)
     const isCorrect = ref(false)
     const showAnswer = ref(false)
@@ -91,15 +91,15 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
         return 'border-gray-200 dark:border-gray-700'
     })
 
-    // provide 给子组件
-    provide('questionSubmitted', submitted)
+    // provide to child components
+    provide('question submitted', submitted)
     provide('questionIsCorrect', isCorrect)
     provide('questionFromRecord', fromRecord)
 
     const hasAnswer = computed(() => renderRef.value?.hasAnswer ?? false)
     const isTeacher = computed(() => hasRole('teacher') || hasRole('admin'))
 
-    // 格式化答案（根据题型不同显示方式不同）
+    // Format answers (display differs by question type)
     const formattedAnswers = computed(() => {
         if (!question.value?.answer) return []
         const answer = question.value.answer
@@ -155,7 +155,7 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
             submitted.value = true
             fromRecord.value = false
             showFireworks.value = isCorrect.value
-            // 竞赛模式仅前端判定，toast 仅做提示
+            // Race mode only judges on frontend, toast is just a hint
             toast.add({
                 title: isCorrect.value ? t('question.correct') : t('question.wrong'),
                 color: isCorrect.value ? 'success' : 'error',
@@ -168,7 +168,7 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
             submitted.value = true
             fromRecord.value = false
             showFireworks.value = result.isCorrect
-            // 提交后 toast 提示：答对/已提交
+            // Post-submit toast hint: correct/submitted
             toast.add({
                 title: result.isCorrect ? t('question.correct') : t('question.wrong'),
                 color: result.isCorrect ? 'success' : 'error',
@@ -199,11 +199,11 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
         if (showAnswer.value && renderRef.value) {
             renderRef.value.fillCorrectAnswer()
         } else {
-            onReset()
+            on reset()
         }
     }
 
-    // 默认单选题
+    // Default single-choice question
     const defaultQuestion = reactive({
         name: '', content: '', options: ['', '', '', ''], type: 'single',
         point: 1, answer: [0], explanation: '', tags: [], record: [], correct_rate: 0,
@@ -307,7 +307,7 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
                 chapterTask?.reportNodeDone('question', questionId.value, isCorrect.value)
                 emit('submitted', { isCorrect: isCorrect.value, questionId: questionId.value })
             }
-        } catch (err) { /* 静默忽略 */ }
+        } catch (err) { /* silently ignored */ }
     }
 
     const ctx = {

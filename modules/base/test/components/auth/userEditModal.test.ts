@@ -1,8 +1,8 @@
 /**
- * auth/userEditModal.vue 组件测试
+ * auth/userEditModal.vue component tests
  * @see modules/base/components/auth/userEditModal.vue
  *
- * userEditModal 通过 useUserEditModal 管理状态，接受 userId prop，expose show() 方法。
+ * userEditModal manages state via useUserEditModal, accepts userId prop, exposes show() method.
  */
 import {
   describe, it, expect, beforeEach,

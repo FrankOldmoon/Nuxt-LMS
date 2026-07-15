@@ -1,30 +1,30 @@
 /**
- * KaTeX 数学公式预渲染
+ * KaTeX math formula pre-rendering
  *
- * - blockMath：KaTeX → HTML → html2canvas → PNG，作为图片插入幻灯片（保留原视觉效果）
- * - inlineMath：KaTeX → HTML → DOM textContent，提取 Unicode 文本替换段落中的 LaTeX 源码
+ * - blockMath: KaTeX → HTML → html2canvas → PNG, inserted into slide as image (preserves original visual effect)
+ * - inlineMath: KaTeX → HTML → DOM textContent, extracts Unicode text to replace LaTeX source in paragraphs
  *
- * 预渲染策略：扫描 → 并行渲染 → 缓存 → 同步渲染幻灯片（与题目预取一致）
- * 失败容错：KaTeX/html2canvas 加载失败时，blockMath 回退 null（调用方走 LaTeX 源码文本），inlineMath 不写入缓存（调用方跳过）
+ * Pre-rendering strategy: scan → render in parallel → cache → render slides synchronously (consistent with question pre-fetching)
+ * Failure tolerance: when KaTeX/html2canvas fails to load, blockMath falls back to null (caller uses LaTeX source text), inlineMath is not written to cache (caller skips)
  */
 
 import type { MathImage } from './types'
 import { markdownToTiptap } from '../markdown'
 
-// CDN 基址（与 math.vue 一致，共享浏览器缓存）
+// CDN base (consistent with math.vue, shares browser cache)
 const KATEX_CDN_BASE = 'https://unpkg.com/@umoteam/editor-external@latest/libs/katex'
 const HTML2CANVAS_CDN = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'
 
-/** 幻灯片内容区最大宽度（英寸，LAYOUT_WIDE = 13.33"，左右各 0.5" 边距） */
+/** Maximum width of the slide content area (inches, LAYOUT_WIDE = 13.33", 0.5" margin on each side) */
 const MAX_CONTENT_WIDTH = 12.33
 
 // ═══════════════════════════════════════
-// CDN 动态加载
+// CDN dynamic loading
 // ═══════════════════════════════════════
 
 let katexLoadPromise: Promise<void> | null = null
 
-/** 加载 KaTeX JS + CSS（幂等，已加载则直接 resolve） */
+/** Load KaTeX JS + CSS (idempotent, resolves immediately if already loaded) */
 export function loadKatex(): Promise<void> {
   if (typeof window !== 'undefined' && (window as any).katex) {
     return Promise.resolve()
@@ -32,7 +32,7 @@ export function loadKatex(): Promise<void> {
   if (katexLoadPromise) return katexLoadPromise
 
   katexLoadPromise = (async () => {
-    // 并行加载 JS 和 CSS
+    // Load JS and CSS in parallel
     const cssPromise = new Promise<void>((resolve) => {
       if (document.getElementById('pptx-export-katex-css')) return resolve()
       const link = document.createElement('link')
@@ -40,13 +40,13 @@ export function loadKatex(): Promise<void> {
       link.href = `${KATEX_CDN_BASE}/katex.min.css`
       link.id = 'pptx-export-katex-css'
       link.onload = () => resolve()
-      link.onerror = () => resolve() // CSS 失败不阻断（公式仍可渲染，只是无样式）
+      link.onerror = () => resolve() // CSS failure does not block (formulas can still render, just without styles)
       document.head.appendChild(link)
     })
 
     const jsPromise = new Promise<void>((resolve, reject) => {
       if (document.getElementById('pptx-export-katex-js')) {
-        // script 标签已存在但可能尚未加载完成
+        // script tag already exists but may not have finished loading
         const existing = document.getElementById('pptx-export-katex-js') as HTMLScriptElement
         if ((window as any).katex) return resolve()
         existing.addEventListener('load', () => resolve())
@@ -73,7 +73,7 @@ export function loadKatex(): Promise<void> {
 
 let html2canvasLoadPromise: Promise<void> | null = null
 
-/** 加载 html2canvas（幂等） */
+/** Load html2canvas (idempotent) */
 export function loadHtml2Canvas(): Promise<void> {
   if (typeof window !== 'undefined' && (window as any).html2canvas) {
     return Promise.resolve()
@@ -104,12 +104,12 @@ export function loadHtml2Canvas(): Promise<void> {
 }
 
 // ═══════════════════════════════════════
-// 公式渲染
+// Formula rendering
 // ═══════════════════════════════════════
 
 /**
- * 将 LaTeX 渲染为 PNG 图片（用于 blockMath）
- * @returns MathImage 或 null（渲染失败）
+ * Render LaTeX to PNG image (for blockMath)
+ * @returns MathImage or null (render failed)
  */
 export async function latexToImage(latex: string, displayMode = true): Promise<MathImage | null> {
   if (typeof window === 'undefined') return null
@@ -124,7 +124,7 @@ export async function latexToImage(latex: string, displayMode = true): Promise<M
   }
   if (!html) return null
 
-  // 创建离屏容器，应用 KaTeX 样式
+  // Create off-screen container, apply KaTeX styles
   const container = document.createElement('div')
   container.style.position = 'absolute'
   container.style.left = '-9999px'
@@ -132,7 +132,7 @@ export async function latexToImage(latex: string, displayMode = true): Promise<M
   container.style.background = '#ffffff'
   container.style.padding = '12px 16px'
   container.style.display = 'inline-block'
-  container.style.fontSize = '28px'  // 高分辨率渲染
+  container.style.fontSize = '28px'  // High-resolution rendering
   container.style.color = '#333333'
   container.innerHTML = html
   document.body.appendChild(container)
@@ -141,11 +141,11 @@ export async function latexToImage(latex: string, displayMode = true): Promise<M
     const html2canvas = (window as any).html2canvas
     if (!html2canvas) return null
 
-    // 等待 KaTeX 字体加载完成（@font-face 字体按需加载，需显式触发）
-    // 否则 html2canvas 会截到使用 fallback 字体的公式，导致符号错位或重复
+    // Wait for KaTeX fonts to finish loading (@font-face fonts load on demand, need explicit triggering)
+    // Otherwise html2canvas will capture formulas using fallback fonts, causing symbols to be misplaced or duplicated
     if (document.fonts) {
       try {
-        // 显式请求加载 KaTeX 字体族（触发 @font-face 下载）
+        // Explicitly request loading KaTeX font families (triggers @font-face download)
         await Promise.all([
           document.fonts.load('28px KaTeX_Main'),
           document.fonts.load('italic 28px KaTeX_Math'),
@@ -154,9 +154,9 @@ export async function latexToImage(latex: string, displayMode = true): Promise<M
           document.fonts.load('28px KaTeX_Caligraphic'),
         ])
         await document.fonts.ready
-      } catch { /* 字体加载失败不阻断 */ }
+      } catch { /* Font loading failure does not block */ }
     }
-    // 额外等待一帧确保浏览器完成布局
+    // Wait an extra frame to ensure the browser completes layout
     await new Promise(resolve => setTimeout(resolve, 100))
 
     const canvas = await html2canvas(container, {
@@ -169,7 +169,7 @@ export async function latexToImage(latex: string, displayMode = true): Promise<M
     const dataUrl = canvas.toDataURL('image/png')
     if (!dataUrl || dataUrl === 'data:,') return null
 
-    // 像素 → 英寸（96 DPI），限制最大宽度
+    // Pixels → inches (96 DPI), limit max width
     let widthIn = canvas.width / 96
     let heightIn = canvas.height / 96
     if (widthIn > MAX_CONTENT_WIDTH) {
@@ -187,15 +187,15 @@ export async function latexToImage(latex: string, displayMode = true): Promise<M
 }
 
 /**
- * 将 LaTeX 渲染为 Unicode 文本（用于 inlineMath）
- * KaTeX 输出的 HTML 含 Unicode 数学字符，textContent 可提取可读文本
+ * Render LaTeX to Unicode text (for inlineMath)
+ * KaTeX output HTML contains Unicode math characters, textContent can extract readable text
  *
- * 注意：KaTeX renderToString 输出含 katex-mathml（含 <annotation> 原始 LaTeX 源码）
- * 和 katex-html（视觉渲染）两部分。若用整个 span.textContent 提取，会得到
- * e=mc(MathML) + e=m^c(annotation) + e=mc(HTML) = e=mce=m^ce=mc（三重重复）。
- * 因此只提取 katex-html 部分的文本。
+ * Note: KaTeX renderToString output contains katex-mathml (contains <annotation> original LaTeX source)
+ * and katex-html (visual rendering) parts. If you extract using the entire span.textContent, you get
+ * e=mc(MathML) + e=m^c(annotation) + e=mc(HTML) = e=mce=m^ce=mc (triple duplication).
+ * Therefore only extract the text from the katex-html part.
  *
- * @returns Unicode 文本或 latex 原文（渲染失败时回退）
+ * @returns Unicode text or latex original (fallback when rendering fails)
  */
 export function latexToText(latex: string): string {
   if (typeof window === 'undefined') return latex
@@ -207,7 +207,7 @@ export function latexToText(latex: string): string {
     if (!html) return latex
     const span = document.createElement('span')
     span.innerHTML = html
-    // 只提取 katex-html（视觉渲染）的文本，跳过 katex-mathml（含 annotation 原始 LaTeX）
+    // Only extract text from katex-html (visual rendering), skip katex-mathml (contains annotation with original LaTeX)
     const htmlPart = span.querySelector('.katex-html')
     const text = (htmlPart || span).textContent || ''
     return text.trim() || latex
@@ -217,13 +217,13 @@ export function latexToText(latex: string): string {
 }
 
 // ═══════════════════════════════════════
-// 预扫描 & 预渲染
+// Pre-scan & pre-render
 // ═══════════════════════════════════════
 
 /**
- * 辅助：将任意内容（字符串/markdown/Tiptap JSON）转为节点数组并收集数学公式
- * 字符串内容先经 markdownToTiptap 转换（与 ueditorRender 行为一致），
- * 确保 $$...$$ / $...$ 语法能被解析为 blockMath/inlineMath 节点。
+ * Helper: convert any content (string/markdown/Tiptap JSON) to node array and collect math formulas
+ * String content is first converted via markdownToTiptap (consistent with ueditorRender behavior),
+ * ensuring $$...$$ / $...$ syntax can be parsed as blockMath/inlineMath nodes.
  */
 function collectMathFromAnyContent(
   content: any,
@@ -248,7 +248,7 @@ function collectMathFromAnyContent(
   }
 }
 
-/** 递归扫描收集所有 blockMath/inlineMath 的 latex 字符串（去重） */
+/** Recursively scan and collect all blockMath/inlineMath latex strings (deduplicated) */
 export function collectMathLatex(
   nodes: any[],
   blockLatex: Set<string>,
@@ -263,11 +263,11 @@ export function collectMathLatex(
       const latex = node.attrs?.latex || ''
       if (latex) inlineLatex.add(latex)
     }
-    // 递归扫描子节点
+    // Recursively scan child nodes
     if (Array.isArray(node.content)) {
       collectMathLatex(node.content, blockLatex, inlineLatex)
     }
-    // vue tabs 节点：扫描各 tab 的内容（可能含数学公式）
+    // vue tabs node: scan content of each tab (may contain math formulas)
     if (node.type === 'vue' && node.attrs?.type === 'tabs') {
       let config: any = node.attrs.content
       if (typeof config === 'string') {
@@ -282,12 +282,12 @@ export function collectMathLatex(
 }
 
 /**
- * 从章节节点和预取缓存中收集所有数学公式
- * - 章节节点：collectMathLatex 递归扫描（含 vue tabs 内嵌内容）
- * - 题目缓存：content + options（字符串先经 markdownToTiptap 转换）
- * - 测验/作业缓存：content
+ * Collect all math formulas from chapter nodes and pre-fetched caches
+ * - Chapter nodes: collectMathLatex recursive scan (including vue tabs embedded content)
+ * - Question cache: content + options (strings first converted via markdownToTiptap)
+ * - Quiz/homework cache: content
  *
- * 确保嵌套内容中的数学公式在渲染前被预渲染，避免渲染时缓存未命中。
+ * Ensures math formulas in nested content are pre-rendered before rendering, avoiding cache misses during rendering.
  */
 export function collectAllMathLatex(
   nodes: any[],
@@ -297,10 +297,10 @@ export function collectAllMathLatex(
   blockLatex: Set<string>,
   inlineLatex: Set<string>,
 ): void {
-  // 1. 扫描章节节点（包括 vue tabs 内嵌内容）
+  // 1. Scan chapter nodes (including vue tabs embedded content)
   collectMathLatex(nodes, blockLatex, inlineLatex)
 
-  // 2. 扫描题目缓存（content + options）
+  // 2. Scan question cache (content + options)
   for (const q of questionCache.values()) {
     collectMathFromAnyContent(q.content, blockLatex, inlineLatex)
     if (Array.isArray(q.options)) {
@@ -310,7 +310,7 @@ export function collectAllMathLatex(
     }
   }
 
-  // 3. 扫描测验/作业缓存
+  // 3. Scan quiz/homework cache
   for (const quiz of quizCache.values()) {
     collectMathFromAnyContent(quiz.content, blockLatex, inlineLatex)
   }
@@ -320,14 +320,14 @@ export function collectAllMathLatex(
 }
 
 /**
- * 预渲染所有数学公式（并行）
- * - inlineMath：同步 latexToText，写入 inlineMathCache
- * - blockMath：并行 latexToImage，写入 blockMathCache（失败写 null）
+ * Pre-render all math formulas (in parallel)
+ * - inlineMath: synchronous latexToText, write to inlineMathCache
+ * - blockMath: parallel latexToImage, write to blockMathCache (null on failure)
  *
- * 传入 questionCache/quizCache/homeworkCache 时，会额外扫描嵌套内容
- * （题目 content/options、测验/作业 content）中的数学公式，确保渲染时缓存命中。
+ * When questionCache/quizCache/homeworkCache is passed, additionally scans nested content
+ * (question content/options, quiz/homework content) for math formulas, ensuring cache hits during rendering.
  *
- * KaTeX 加载失败时静默跳过（调用方走回退逻辑）。
+ * Silently skips when KaTeX fails to load (caller uses fallback logic).
  */
 export async function prerenderMathNodes(
   nodes: any[],
@@ -352,22 +352,22 @@ export async function prerenderMathNodes(
     collectMathLatex(nodes, blockLatexSet, inlineLatexSet)
   }
 
-  // 无公式则跳过
+  // Skip if no formulas
   if (blockLatexSet.size === 0 && inlineLatexSet.size === 0) return
 
-  // inlineMath：直接用 LaTeX 源码作为文本（不依赖 KaTeX）
-  // 不使用 latexToText：KaTeX 的 .katex-html 用 CSS 定位上标/下标，
-  // textContent 提取后会丢失 ^ _ 等格式信息（如 e=m^c → e=mc），不如直接显示源码
+  // inlineMath: use LaTeX source directly as text (does not depend on KaTeX)
+  // Does not use latexToText: KaTeX's .katex-html uses CSS to position super/subscripts,
+  // textContent extraction loses ^ _ and other format info (e.g. e=m^c → e=mc), better to display source directly
   for (const latex of inlineLatexSet) {
     inlineMathCache.set(latex, latex)
   }
 
-  // blockMath：并行渲染为图片（需 KaTeX + html2canvas）
+  // blockMath: render to image in parallel (requires KaTeX + html2canvas)
   if (blockLatexSet.size > 0) {
     try {
       await loadKatex()
     } catch {
-      // KaTeX 加载失败 → blockMath 走文本回退（LaTeX 源码）
+      // KaTeX load failed → blockMath uses text fallback (LaTeX source)
       for (const latex of blockLatexSet) {
         blockMathCache.set(latex, null)
       }
@@ -377,7 +377,7 @@ export async function prerenderMathNodes(
     try {
       await loadHtml2Canvas()
     } catch {
-      // html2canvas 加载失败 → blockMath 走文本回退（LaTeX 源码）
+      // html2canvas load failed → blockMath uses text fallback (LaTeX source)
       for (const latex of blockLatexSet) {
         blockMathCache.set(latex, null)
       }

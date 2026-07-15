@@ -1,5 +1,5 @@
 /**
- * UserCard 组件测试
+ * UserCard component tests
  * @see modules/base/components/auth/userCard.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

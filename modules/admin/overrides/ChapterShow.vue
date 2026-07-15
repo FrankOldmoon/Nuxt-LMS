@@ -5,7 +5,7 @@
       <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" @click="$emit('close')" />
     </div>
 
-    <!-- 章节元信息 -->
+    <!-- Chapter metadata -->
     <div class="space-y-1 mb-4 text-xs text-muted">
       <div v-if="props.row?.courseId">
         <span class="font-medium">courseId:</span> {{ props.row.courseId }}
@@ -15,7 +15,7 @@
       </div>
     </div>
 
-    <!-- content 富文本预览（使用 ueditorRender，传入 course-id 让内部 question 等节点可加载） -->
+    <!-- content rich text preview (uses ueditorRender, passes course-id so internal nodes like question can load) -->
     <div v-if="contentJson" class="border border-default rounded-md p-3 bg-default/30">
       <ClientOnly>
         <ueditorRender :json="contentJson" :course-id="effectiveCourseId" />
@@ -26,7 +26,7 @@
     </div>
     <div v-else class="text-xs text-muted py-4 text-center">No content</div>
 
-    <!-- 其他字段（除 content 之外） -->
+    <!-- Other fields (excluding content) -->
     <div v-if="otherEntries.length" class="mt-4 space-y-1">
       <div
         v-for="[key, val] in otherEntries"
@@ -52,7 +52,7 @@ defineEmits<{
   close: []
 }>()
 
-// 解析 content：可能是对象（jsonb）或字符串（markdown/纯文本）
+// Parse content: may be an object (jsonb) or a string (markdown/plain text)
 const contentJson = computed(() => {
   const v: any = props.row?.content
   if (!v) return null
@@ -60,17 +60,17 @@ const contentJson = computed(() => {
   if (typeof v === 'string') {
     const s = v.trim()
     if (!s) return null
-    // 尝试解析为 JSON（jsonb 序列化的对象）
+    // Try to parse as JSON (jsonb serialized object)
     if (s.startsWith('{') || s.startsWith('[')) {
       try { return JSON.parse(s) } catch { /* fall through */ }
     }
-    // 纯文本/markdown
+    // Plain text/markdown
     return { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: s }] }] }
   }
   return null
 })
 
-// 推导 courseId：优先 courseId，其次 course_id
+// Derive courseId: prefer courseId, then course_id
 const effectiveCourseId = computed(() => {
   const r: any = props.row
   if (!r) return undefined
@@ -79,7 +79,7 @@ const effectiveCourseId = computed(() => {
   return Number(v) || undefined
 })
 
-// 其他字段（排除 content、name、title、id）
+// Other fields (excluding content, name, title, id)
 const otherEntries = computed(() => {
   const r: any = props.row || {}
   return Object.entries(r).filter(([k]) => !['content', 'name', 'title', 'id'].includes(k))

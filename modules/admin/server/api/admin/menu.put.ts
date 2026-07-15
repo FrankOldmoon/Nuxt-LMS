@@ -3,7 +3,7 @@ export default eventHandler(async (event) => {
   const body = await readBody(event)
   const raw = Array.isArray(body?.items) ? body.items : []
 
-  // 规范化（递归）：叶子校验 table，分组保留 children，重排 order
+  // Normalize (recursive): leaf validates table, group keeps children, reorder order
   const tables = new Set(getSchemaTables())
 
   function normalize(items: any[]): any[] {
@@ -11,7 +11,7 @@ export default eventHandler(async (event) => {
     items.forEach((item, idx) => {
       if (!item || typeof item !== 'object') return
       if (Array.isArray(item.children) && item.children.length > 0) {
-        // 分组节点
+        // Group node
         const children = normalize(item.children)
         result.push({
           label: typeof item.label === 'string' && item.label ? item.label : 'Group',
@@ -20,7 +20,7 @@ export default eventHandler(async (event) => {
           children,
         })
       } else if (typeof item.table === 'string' && tables.has(item.table)) {
-        // 叶子节点
+        // Leaf node
         result.push({
           table: item.table,
           label: typeof item.label === 'string' && item.label ? item.label : humanizeTableName(item.table),
@@ -28,7 +28,7 @@ export default eventHandler(async (event) => {
           order: idx,
         })
       }
-      // 既无有效 table 又无 children → 丢弃
+      // Neither valid table nor children → discard
     })
     return result
   }

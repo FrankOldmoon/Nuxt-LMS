@@ -6,7 +6,7 @@
 
                 <ClassUsersTable :rows="rows" :loading="pending" :extra-columns="extraColumns"
                     :hide-actions="true" :hide-teachers="true" :default-sort="defaultSort">
-                    <!-- record 列：查看详情按钮 -->
+                    <!-- record columns：ViewDetails Button -->
                     <template #record-cell="{ row }">
                         <div class="flex items-center gap-2">
                             <UButton v-if="row.original.record" size="xs" variant="soft"
@@ -17,7 +17,7 @@
                         </div>
                     </template>
 
-                    <!-- score 列：打分输入 -->
+                    <!-- score columns：scoreInput -->
                     <template #score-cell="{ row }">
                         <UInput v-if="row.original.record" v-model.number="scoreMap[row.original.id]" type="number"
                             size="xs" class="w-20" :max="maxScore" :placeholder="'/' + maxScore"
@@ -29,13 +29,13 @@
         </template>
     </UModal>
 
-    <!-- 作业详情弹窗 -->
+    <!-- HomeworkDetailsModal -->
     <UModal v-model:open="detailOpen" scrollable>
         <template #content>
             <div v-if="detailData" class="p-6 space-y-4 min-w-[500px]">
                 <h2 class="text-lg font-semibold">{{ $t('record.homeworkDetail') }}</h2>
 
-                <!-- 作答内容 -->
+                <!-- answerContent -->
                 <div v-if="detailData.content">
                     <label class="text-xs text-gray-500 mb-1 block">{{ $t('homework.contentLabel') }}</label>
                     <div class="prose prose-sm dark:prose-invert max-w-none border rounded-md p-3">
@@ -44,7 +44,7 @@
                     </div>
                 </div>
 
-                <!-- 提交文件 -->
+                <!-- SubmitFile -->
                 <div v-if="detailData.files && detailData.files.length">
                     <label class="text-xs text-gray-500 mb-1 block">{{ $t('homework.uploadLabel') }}</label>
                     <div class="space-y-1">
@@ -55,7 +55,7 @@
                     </div>
                 </div>
 
-                <!-- 得分 -->
+                <!-- Score -->
                 <div v-if="detailData.score !== null && detailData.score !== undefined">
                     <label class="text-xs text-gray-500">{{ $t('record.score') }}: </label>
                     <span class="text-sm font-medium">{{ detailData.score }}</span>

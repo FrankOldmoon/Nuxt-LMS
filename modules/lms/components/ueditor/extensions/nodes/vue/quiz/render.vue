@@ -1,12 +1,12 @@
 <template>
     <div class="quiz-render w-full p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 relative"
         @mouseenter.once="onHover">
-        <!-- 加载中 -->
+        <!-- Loading -->
         <div v-if="pending" class="flex items-center justify-center py-6 text-gray-400">
             <span>{{ t('quiz.loading') }}</span>
         </div>
 
-        <!-- 测验未找到 -->
+        <!-- QuizNot Found -->
         <div v-else-if="!quiz" class="text-center py-6 text-gray-400">
             {{ t('quiz.notFound') }} (cid: {{ quizId }})
         </div>
@@ -17,12 +17,12 @@
             <QuizRenderResult v-if="submitted && resultScore !== null" />
         </template>
 
-        <!-- 记录弹窗（仅教师） -->
+        <!-- RecordsModal（onlyTeacher） -->
         <LmsRecordsModalQuiz v-if="isTeacher" v-model="recordsOpen"
             :course-id="courseId" :cid="quizId"
             :quiz-point="quiz.point || 100" :questions="quizQuestions" />
 
-        <!-- 编辑弹窗 -->
+        <!-- Edit Modal -->
         <Edit v-model="editOpen" :quiz-id="quizId" :quiz="quiz" @saved="onSaved" />
     </div>
 </template>

@@ -1,8 +1,8 @@
 /**
- * InputFileList 组件测试
+ * InputFileList component tests
  * @see modules/base/components/form/inputFileList.vue
  *
- * 文件列表展示：图标 + 名称 + 大小 + 状态 + 删除
+ * File list display: icon + name + size + status + delete
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -69,7 +69,7 @@ describe('form/inputFileList.vue', () => {
       global: _globalConfig,
     })
     const icons = wrapper.findAll('.icon')
-    // uploading 状态会渲染一个 spin 图标
+    // uploading status will render a spin icon
     expect(icons.length).toBeGreaterThanOrEqual(1)
   })
 

@@ -1,5 +1,5 @@
 /**
- * quiz edit 组件测试
+ * quiz edit component test
  * @see modules/lms/components/ueditor/extensions/nodes/vue/quiz/edit.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

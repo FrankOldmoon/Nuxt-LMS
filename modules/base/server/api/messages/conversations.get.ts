@@ -2,13 +2,13 @@ import { db, schema } from "@nuxthub/db"
 import { eq, and, or, desc, isNull } from "drizzle-orm"
 
 /**
- * 获取当前用户的消息会话列表（最近聊过的人）
- * 返回 [{ userId, name, avatarImg, lastMessage, lastTime, unreadCount }]
+ * Get current user's message conversation list (recently chatted users)
+ * Returns [{ userId, name, avatarImg, lastMessage, lastTime, unreadCount }]
  */
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
 
-  // 查询当前用户相关的所有消息
+  // Query all messages related to the current user
   const msgs = await db
     .select({
       id: schema.messages.id,
@@ -31,7 +31,7 @@ export default eventHandler(async (event) => {
     )
     .orderBy(desc(schema.messages.createdAt))
 
-  // 按对话对象分组
+  // Group by conversation counterpart
   const conversations = new Map<number, { userId: number, name: string, avatarImg: string | null, lastMessage: any, lastTime: string, unreadCount: number }>()
   for (const m of msgs) {
     const otherUserId = m.senderUserId === user.id ? m.receiverUserId : m.senderUserId
@@ -46,13 +46,13 @@ export default eventHandler(async (event) => {
       })
     }
     const conv = conversations.get(otherUserId)!
-    // 未读计数（收到的且未读）
+    // Unread count (received and unread)
     if (m.receiverUserId === user.id && !m.readAt) {
       conv.unreadCount++
     }
   }
 
-  // 查询用户信息
+  // Query user info
   const userIds = [...conversations.keys()]
   if (userIds.length > 0) {
     const users = await db

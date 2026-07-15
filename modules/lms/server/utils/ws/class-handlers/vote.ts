@@ -1,9 +1,9 @@
 /**
- * 班级消息：voteStart / voteSubmit / voteEnd
+ * Class messages: voteStart / voteSubmit / voteEnd
  */
 import { votes, broadcastToClass } from '../state'
 
-/** voteStart: 启动一次投票 */
+/** voteStart: start a vote */
 export function handleClassVoteStart(_peer: any, data: any) {
   const cid = Number(data.classId); if (!cid) return
   const voteId = String(data.voteId || Date.now())
@@ -15,7 +15,7 @@ export function handleClassVoteStart(_peer: any, data: any) {
   broadcastToClass(cid, JSON.stringify({ type: 'voteStart', voteId, question: data.question || '', options }))
 }
 
-/** voteSubmit: 提交投票选项 */
+/** voteSubmit: submit a vote option */
 export function handleClassVoteSubmit(_peer: any, data: any) {
   const cid = Number(data.classId); if (!cid) return
   const voteId = String(data.voteId)
@@ -29,7 +29,7 @@ export function handleClassVoteSubmit(_peer: any, data: any) {
   broadcastToClass(cid, JSON.stringify({ type: 'voteUpdate', voteId, results: v.results, total: v.votedUsers.size }))
 }
 
-/** voteEnd: 结束投票 + 清理状态 */
+/** voteEnd: end the vote + clear state */
 export function handleClassVoteEnd(_peer: any, data: any) {
   const cid = Number(data.classId); if (!cid) return
   const voteId = String(data.voteId)

@@ -1,9 +1,9 @@
 /**
- * class/usersTable/index.vue 组件测试
+ * class/usersTable/index.vue component test
  * @see modules/lms/components/class/usersTable/index.vue
  *
- * 班级用户表格容器：加载态 + 空 + Tab切换 + 子表格 + 编辑/重置弹窗。
- * 使用 useClassUsersTable(props, { UButton }) + provideClassUsersTable(ctx)。
+ * Class user table container: loading state + empty + tab switching + sub-tables + edit/reset modal.
+ * Uses useClassUsersTable(props, { UButton }) + provideClassUsersTable(ctx).
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -31,7 +31,7 @@ beforeEach(() => {
     clearUsers: vi.fn(),
   })
 
-  // stub useWebSocket（auto-import）— 需返回 onOnlineUpdate / onRaceOnlineUpdate
+  // stub useWebSocket (auto-import) — needs to return onOnlineUpdate / onRaceOnlineUpdate
   ;(globalThis as any).useWebSocket = () => ({
     ws: ref(null),
     wsConnected: ref(false),
@@ -93,7 +93,7 @@ describe('class/usersTable/index.vue', () => {
       global: _globalConfig,
     })
     await flushPromises()
-    // 有数据时不显示 loading/noUsers
+    // When there is data, loading/noUsers is not shown
     expect(wrapper.text()).not.toContain('classSelector.noUsers')
   })
 

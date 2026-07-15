@@ -1,5 +1,5 @@
 /**
- * Homework API 端点测试
+ * Homework API endpoint tests
  * @see modules/lms/server/api/homeworks/*.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -87,7 +87,7 @@ describe('API: homeworks/score.post', () => {
   it('非教师不能评分', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
     const handler = (await import('../../server/api/homeworks/score.post')).default
-    // 可能返回 403 或 401
+    // may return 403 or 401
     await expect(handler(makeEvent({ body: { recordId: 1, score: 90 } }))).rejects.toThrow()
   })
 })

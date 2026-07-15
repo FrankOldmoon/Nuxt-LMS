@@ -1,5 +1,5 @@
 /**
- * useChapterVote composable 测试
+ * useChapterVote composable test
  * @see modules/lms/composables/useChapterVote.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -59,7 +59,7 @@ describe('composables/useChapterVote', () => {
     const r = useChapterVote({ classId: 10, canEdit: true }, open)
     expect(r.canStartVote.value).toBe(false)
     r.question.value = 'Q1'
-    expect(r.canStartVote.value).toBe(false) // options 还都是空字符串
+    expect(r.canStartVote.value).toBe(false) // options are still all empty strings
     r.options.value = ['A', 'B']
     expect(r.canStartVote.value).toBe(true)
     r.options.value = ['A', '']
@@ -108,7 +108,7 @@ describe('composables/useChapterVote', () => {
     const open = ref(false)
     const { useChapterVote } = await import('../../composables/useChapterVote')
     const r = useChapterVote({ classId: 10, canEdit: true }, open)
-    r.question.value = '' // 缺关键字
+    r.question.value = '' // Missing keyword
     r.options.value = ['A', 'B']
     r.startVote()
     expect((globalThis as any).__voteSends).toHaveLength(0)
@@ -125,7 +125,7 @@ describe('composables/useChapterVote', () => {
     expect(sends).toHaveLength(1)
     expect(sends[0].type).toBe('voteStart')
     expect(sends[0].question).toBe('Q1')
-    expect(sends[0].options).toEqual(['A', 'B', 'C']) // 已 trim
+    expect(sends[0].options).toEqual(['A', 'B', 'C']) // Already trimmed
     expect(r.activeVoteId.value).toBeTruthy()
     expect(r.voteQuestion.value).toBe('Q1')
     expect(r.voteOptions.value).toEqual(['A', 'B', 'C'])
@@ -203,7 +203,7 @@ describe('composables/useChapterVote', () => {
     r.voteTotal.value = 10
     expect(r.barWidth(0)).toBe('30.0%')
     expect(r.barWidth(1)).toBe('70.0%')
-    expect(r.barWidth(2)).toBe('0.0%') // 越界返回 0
+    expect(r.barWidth(2)).toBe('0.0%') // Out of bounds returns 0
   })
 
   it('收到 voteStart 事件时初始化并打开弹窗', async () => {

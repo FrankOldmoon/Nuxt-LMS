@@ -1,12 +1,12 @@
 /**
- * LMS Goods 买卖交易 API 端点测试
+ * LMS Goods buy/sell transaction API endpoint tests
  * @see modules/lms/server/api/goods/buy.post.ts
  * @see modules/lms/server/api/goods/sell.post.ts
  *
- * 覆盖：
- * - 买入：扣 coin + 加 bag + 减库存
- * - 卖出：加 coin + 减 bag + 加库存
- * - 边界：商品不存在、coin 不足、库存不足、课程不匹配、未加入课程、背包为空
+ * Coverage:
+ * - Buy: deduct coin + add bag + decrement stock
+ * - Sell: add coin + deduct bag + increment stock
+ * - Edge cases: goods not found, insufficient coins, insufficient stock, course mismatch, not joined course, empty bag
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
@@ -27,7 +27,7 @@ import { resetAllStubs, setMockAuthState } from '../../../../test/setup/nuxt-stu
 beforeEach(() => {
   resetAllStubs()
   resetDb(_mockDb)
-  // mock transaction: 直接执行回调，传入 mock db
+  // mock transaction: directly execute the callback, passing in the mock db
   _mockDb.transaction = vi.fn().mockImplementation(async (fn: any) => fn(_mockDb))
   vi.clearAllMocks()
 })
@@ -51,7 +51,7 @@ describe('API: goods/buy.post', () => {
 
   it('商品不存在返回失败', async () => {
     setMockAuthState({ id: 1, username: 'stu', name: 'Stu', roles: ['student'], permissions: [] })
-    _mockDb.limit = vi.fn().mockResolvedValueOnce([]) // goods 查询返回空
+    _mockDb.limit = vi.fn().mockResolvedValueOnce([]) // goods query returns empty
     const handler = (await import('../../server/api/goods/buy.post')).default
     const result = await handler(makeEvent({ body: { goodId: 999, paidCourseId: 1 } }))
     expect(result.success).toBe(false)
@@ -80,7 +80,7 @@ describe('API: goods/buy.post', () => {
     setMockAuthState({ id: 1, username: 'stu', name: 'Stu', roles: ['student'], permissions: [] })
     _mockDb.limit = vi.fn()
       .mockResolvedValueOnce([{ id: 1, name: 'G1', courseId: 0, price: 30, sellPrice: 15, stock: -1 }]) // goods
-      .mockResolvedValueOnce([]) // userCourses 为空
+      .mockResolvedValueOnce([]) // userCourses is empty
     const handler = (await import('../../server/api/goods/buy.post')).default
     const result = await handler(makeEvent({ body: { goodId: 1, paidCourseId: 1 } }))
     expect(result.success).toBe(false)
@@ -103,7 +103,7 @@ describe('API: goods/buy.post', () => {
     _mockDb.limit = vi.fn()
       .mockResolvedValueOnce([{ id: 1, name: 'Homework Pass', courseId: 0, price: 50, sellPrice: 25, stock: -1 }]) // goods
       .mockResolvedValueOnce([{ userId: 1, courseId: 1, coin: 100 }]) // userCourses
-      .mockResolvedValueOnce([{ quantity: 1 }]) // bags 查询
+      .mockResolvedValueOnce([{ quantity: 1 }]) // bags query
     const handler = (await import('../../server/api/goods/buy.post')).default
     const result = await handler(makeEvent({ body: { goodId: 1, paidCourseId: 1 } }))
     expect(result.success).toBe(true)
@@ -133,7 +133,7 @@ describe('API: goods/buy.post', () => {
     const handler = (await import('../../server/api/goods/buy.post')).default
     const result = await handler(makeEvent({ body: { goodId: 3, paidCourseId: 1 } }))
     expect(result.success).toBe(true)
-    // 事务内应调用 update(goods) 减库存
+    // Within transaction, should call update(goods) to decrement stock
     expect(_mockDb.update).toHaveBeenCalled()
   })
 })
@@ -157,7 +157,7 @@ describe('API: goods/sell.post', () => {
 
   it('商品不存在返回失败', async () => {
     setMockAuthState({ id: 1, username: 'stu', name: 'Stu', roles: ['student'], permissions: [] })
-    _mockDb.limit = vi.fn().mockResolvedValueOnce([]) // goods 不存在
+    _mockDb.limit = vi.fn().mockResolvedValueOnce([]) // goods not found
     const handler = (await import('../../server/api/goods/sell.post')).default
     const result = await handler(makeEvent({ body: { goodId: 999, paidCourseId: 1 } }))
     expect(result.success).toBe(false)
@@ -168,7 +168,7 @@ describe('API: goods/sell.post', () => {
     setMockAuthState({ id: 1, username: 'stu', name: 'Stu', roles: ['student'], permissions: [] })
     _mockDb.limit = vi.fn()
       .mockResolvedValueOnce([{ id: 1, name: 'G1', courseId: 0, price: 50, sellPrice: 25, stock: -1 }]) // goods
-      .mockResolvedValueOnce([]) // bags 为空
+      .mockResolvedValueOnce([]) // bags is empty
     const handler = (await import('../../server/api/goods/sell.post')).default
     const result = await handler(makeEvent({ body: { goodId: 1, paidCourseId: 1 } }))
     expect(result.success).toBe(false)
@@ -180,7 +180,7 @@ describe('API: goods/sell.post', () => {
     _mockDb.limit = vi.fn()
       .mockResolvedValueOnce([{ id: 1, name: 'G1', courseId: 0, price: 50, sellPrice: 25, stock: -1 }]) // goods
       .mockResolvedValueOnce([{ userId: 1, goodId: 1, courseId: 0, quantity: 2 }]) // bags
-      .mockResolvedValueOnce([]) // userCourses 为空
+      .mockResolvedValueOnce([]) // userCourses is empty
     const handler = (await import('../../server/api/goods/sell.post')).default
     const result = await handler(makeEvent({ body: { goodId: 1, paidCourseId: 1 } }))
     expect(result.success).toBe(false)
@@ -199,7 +199,7 @@ describe('API: goods/sell.post', () => {
     expect(result.data.coin).toBe(35) // 10 + 25
     expect(result.data.quantity).toBe(2) // 3 - 1
     expect(_mockDb.transaction).toHaveBeenCalled()
-    // quantity > 1 应调用 update(bags) 而非 delete(bags)
+    // quantity > 1 should call update(bags) instead of delete(bags)
     expect(_mockDb.update).toHaveBeenCalled()
     expect(_mockDb.delete).not.toHaveBeenCalled()
   })
@@ -215,7 +215,7 @@ describe('API: goods/sell.post', () => {
     expect(result.success).toBe(true)
     expect(result.data.coin).toBe(35) // 10 + 25
     expect(result.data.quantity).toBe(0)
-    // quantity = 1 应调用 delete(bags)
+    // quantity = 1 should call delete(bags)
     expect(_mockDb.delete).toHaveBeenCalled()
   })
 })

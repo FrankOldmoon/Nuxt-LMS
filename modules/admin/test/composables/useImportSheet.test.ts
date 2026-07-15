@@ -1,8 +1,8 @@
 /**
- * useImportSheet composable 测试
+ * useImportSheet composable tests
  * @see modules/admin/composables/useImportSheet.ts
  *
- * 导入弹窗逻辑：表头/初始数据生成、行提取、模板下载、结果状态
+ * Import modal logic: header/initial data generation, row extraction, template download, result state
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { resetAllStubs, getToastCalls, setMockI18n } from '../../../../test/setup/nuxt-stubs'

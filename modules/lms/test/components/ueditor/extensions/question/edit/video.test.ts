@@ -1,8 +1,8 @@
 /**
- * video 编辑组件测试 (edit)
+ * video edit component test (edit)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/edit/video.vue
  *
- * video.vue 接收 form prop，使用 FormInputFile/UFormField/UeditorContentPicker
+ * video.vue receives form prop, uses FormInputFile/UFormField/UeditorContentPicker
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

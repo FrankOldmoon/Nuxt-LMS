@@ -22,7 +22,7 @@ meta.title = t('ueditor.mindmap')
 meta.icon = 'i-lucide-network'
 meta.hasSettings = true
 
-// mindmap 的 content 是 markdown 字符串（非 JSON）
+// mindmap  content Yes markdown charactersstring（non JSON）
 const nodeContent = computed(() => props.node.attrs.content || '')
 
 function onConfigChange(newContent) {

@@ -1,5 +1,5 @@
 export default eventHandler(async (event) => {
-  // 仅管理员可批量操作章节
+  // Only admins can perform batch operations on chapters
   await requireAdmin(event)
 
   const body = await readBody(event)
@@ -9,7 +9,7 @@ export default eventHandler(async (event) => {
     const result = await batchTable('chapters', ids, action as any)
     return cResp(result)
   } catch (error: any) {
-    console.error(`批量[${action}]操作章节失败:`, error)
-    return cResp(null, error.message || '批量操作失败', false)
+    console.error(`Batch [${action}] operation on chapters failed:`, error)
+    return cResp(null, error.message || 'Batch operation failed', false)
   }
 })

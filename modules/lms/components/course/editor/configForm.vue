@@ -2,7 +2,7 @@
   <div class="space-y-4">
     <USeparator :label="$t('courseEditor.configSection')" class="my-4" />
 
-    <!-- 封面图片 -->
+    <!-- Cover Imageimage -->
     <UFormField :label="$t('courseEditor.coverImage')" class="w-full">
       <div class="flex items-center gap-3">
         <div v-if="coverImg" class="relative group">
@@ -43,7 +43,7 @@
       <USelect v-model="config.level" :items="levelOpts" class="w-full" />
     </UFormField>
 
-    <!-- config 开关项（数据驱动：v-for 渲染 courseSwitchList） -->
+    <!-- config on/offitems（Datadriven：v-for Render courseSwitchList） -->
     <div class="space-y-3">
       <div v-for="sw in courseSwitchList" :key="sw.key" class="flex items-center justify-between">
         <div>
@@ -54,7 +54,7 @@
       </div>
     </div>
 
-    <!-- 自定义 config 参数（JSON） -->
+    <!-- custom config Parameter（JSON） -->
     <UFormField :label="$t('courseEditor.extraConfig')" class="w-full">
       <UTextarea
         v-model="extraConfigText"
@@ -65,7 +65,7 @@
       <p v-if="extraConfigError" class="text-xs text-error mt-1">{{ extraConfigError }}</p>
     </UFormField>
 
-    <!-- 课程级 lmsConfig 覆盖（hide-course：course 分组开关由上方单独管理） -->
+    <!-- Courselevel lmsConfig overlay（hide-course：course Groupon/offbyUpmanaged separately by above） -->
     <LmsConfigEditor
       ref="lmsConfigRef"
       v-model="lmsConfig"

@@ -1,7 +1,7 @@
 export default eventHandler(async (event) => {
   const id = requireQueryId(event)
   if (!id) {
-    return cResp(null, '缺少 id 参数', false)
+    return cResp(null, 'Missing id parameter', false)
   }
 
   await requireChapterTeacher(event, id)

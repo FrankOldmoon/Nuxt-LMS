@@ -1,5 +1,5 @@
 /**
- * Admin Stats API + utils 测试
+ * Admin Stats API + utils tests
  * @see modules/admin/server/api/admin/stats.get.ts
  * @see modules/admin/server/utils/stats.ts
  */
@@ -47,7 +47,7 @@ function makeEvent() {
 }
 
 /**
- * 构造 mock select 链：根据 select 参数的 key 区分不同查询
+ * Build mock select chain: distinguish different queries by the key of select parameter
  * - {count} → countTable / r7 / r30：from().where() → [{count:N}]
  * - {date,count} → growthRows：from().where().groupBy().orderBy() → [{date,count}]
  * - {name,count} → roleRows：from().innerJoin().where().groupBy() → [{name,count}]

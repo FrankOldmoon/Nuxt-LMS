@@ -1,5 +1,5 @@
 /**
- * composables/useUniverSheet 测试
+ * composables/useUniverSheet tests
  * @see modules/base/composables/useUniverSheet.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -59,7 +59,7 @@ describe('composables/useUniverSheet - active watch', () => {
     const activeRef = ref(false)
     const args = makeArgs({ active: () => activeRef.value })
     const { sheetContainer } = useUniverSheet(...Object.values(args) as any)
-    // sheetContainer 仍为 null，initSheet 应安全返回
+    // sheetContainer is still null, initSheet should return safely
     activeRef.value = true
     expect(sheetContainer.value).toBeNull()
   })

@@ -1,29 +1,29 @@
 import { ref } from "vue";
 import type { Runner, RunContext } from "./types";
 
-// 官方 JSCPP CDN 列表（按优先级尝试）
-// 1) felixhao28.github.io —— 官方仓库 Pages（最权威）
-// 2) cdn.jsdelivr.net/npm/JSCPP —— 主流 CDN，network 受限时通常仍可达
-// 该 URL 同时承担两个职责：
-//   1) 以 <script> 标签加载，暴露全局 JSCPP.WebWorkerHelper 类
-//   2) 作为参数传入 WebWorkerHelper 构造器，用于派生真正的 Worker
+// Official JSCPP CDN list (tried in priority order)
+// 1) felixhao28.github.io — Official repo Pages (most authoritative)
+// 2) cdn.jsdelivr.net/npm/JSCPP — Mainstream CDN, usually reachable even under network restrictions
+// This URL serves two purposes:
+//   1) Loaded via <script> tag, exposes the global JSCPP.WebWorkerHelper class
+//   2) Passed as parameter to WebWorkerHelper constructor to derive the actual Worker
 const JSCPP_CDN_CANDIDATES = ["/JSCPP.es5.min.js"];
 
-let jscppUrl: string | null = null; // 实际加载成功的 URL（同时用于 Worker 派生）
+let jscppUrl: string | null = null; // The URL that actually loaded successfully (also used for Worker derivation)
 
 /**
- * 通过 <script> 标签按优先级顺序加载 JSCPP，遇到失败自动 fallback
- * 失败原因通常是：CDN 被网络代理拦截、ad-blocker、DNS 污染等
+ * Load JSCPP via <script> tag in priority order, with automatic fallback on failure
+ * Common failure reasons: CDN blocked by network proxy, ad-blocker, DNS pollution, etc.
  */
 async function loadJSCPP(): Promise<string> {
   if (jscppUrl) return jscppUrl;
   if (typeof document === "undefined") {
-    // SSR 环境跳过加载
+    // Skip loading in SSR environment
     throw new Error("JSCPP can only be loaded in a browser environment");
   }
   const errors: string[] = [];
   for (const url of JSCPP_CDN_CANDIDATES) {
-    // 已经注入过就直接复用
+    // Reuse if already injected
     if (document.querySelector(`script[src="${url}"]`)) {
       jscppUrl = url;
       return url;
@@ -33,7 +33,7 @@ async function loadJSCPP(): Promise<string> {
         const script = document.createElement("script");
         script.src = url;
         script.async = true;
-        script.crossOrigin = "anonymous"; // 显式声明 CORS，避免浏览器静默吞错
+        script.crossOrigin = "anonymous"; // Explicitly declare CORS to avoid browser silently swallowing errors
         const timeout = setTimeout(
           () => reject(new Error(`Timeout loading ${url}`)),
           30000,
@@ -80,8 +80,8 @@ export function createCppRunner(): Runner {
       return;
     }
 
-    // 必须用与 <script> 加载时完全一致的 URL，
-    // 这样 Worker 才能 fetch 到同一份脚本（CORS 头一致）
+    // Must use the exact same URL as the <script> tag loading,
+    // so the Worker can fetch the same script (consistent CORS headers)
     const workerScriptUrl = jscppUrl || JSCPP_CDN_CANDIDATES[0];
     const helper = new JSCPP.WebWorkerHelper(workerScriptUrl);
 
@@ -100,7 +100,7 @@ export function createCppRunner(): Runner {
           } else {
             ctx.onOutput(`\nProgram exited with code ${returnCode}\n`);
           }
-          // 终止 Worker，释放资源（官方示例：helper.worker.terminate()）
+          // Terminate Worker to release resources (official example: helper.worker.terminate())
           if (helper.worker) {
             helper.worker.terminate();
           }
@@ -111,7 +111,7 @@ export function createCppRunner(): Runner {
   }
 
   function cleanup() {
-    // 无持久 Worker，无需额外清理
+    // No persistent Worker, no additional cleanup needed
   }
 
   return { name: "cpp", ready, loadingLabel, init, run, cleanup };

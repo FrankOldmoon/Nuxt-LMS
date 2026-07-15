@@ -15,7 +15,7 @@ Structure:
 - explanation: string, explanation shown after submission. Supports markdown syntax.
 
 Generation prompt:
-Generate a matching question, output as a standard JSON object. The question text is [PAIRING INSTRUCTION] (you may use markdown). The left side has 4 concepts, and the right side has 4 corresponding descriptions in a shuffled order. options is written in the format [{left, right}, ...] — both left and right values may contain inline markdown. The answer is a number array where the i-th value represents the right-side index matching the i-th left-side item. The type is fixed as "match" and the output must include all common fields.
+Generate a match ing question, output as a standard JSON object. The question text is [PAIRING INSTRUCTION] (you may use markdown). The left side has 4 concepts, and the right side has 4 corresponding descriptions in a shuffled order. options is written in the format [{left, right}, ...] — both left and right values may contain inline markdown. The answer is a number array where the i-th value represents the right-side index match ing the i-th left-side item. The type is fixed as "match" and the output must include all common fields.
 
 Output format (STRICT):
 - Return ONLY a single JSON code block wrapped in \`\`\`json ... \`\`\` fences.

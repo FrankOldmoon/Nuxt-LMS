@@ -1,5 +1,5 @@
 /**
- * FilterBar 组件测试
+ * FilterBar component tests
  * @see modules/admin/components/table/FilterBar.vue
  */
 import { describe, it, expect, beforeEach, mount, baseBeforeEach, _globalStubs, _globalConfig, makeColumn } from './_shared'
@@ -54,9 +54,9 @@ describe('table/FilterBar.vue', () => {
       props: { columns, filters: [], search: '' },
       global: _config,
     })
-    // 找到 add 按钮（label 为 admin.table.filterAdd）
+    // Find the add button (label is admin.table.filterAdd)
     const buttons = wrapper.findAll('button')
-    // 第一个按钮是 add
+    // The first button is add
     await buttons[0].trigger('click')
     expect(wrapper.emitted('update:filters')).toBeTruthy()
     const emitted = wrapper.emitted('update:filters')![0] as any[]
@@ -71,9 +71,9 @@ describe('table/FilterBar.vue', () => {
       props: { columns, filters: [{ column: 'name', op: 'eq', value: 'x' }], search: '' },
       global: _config,
     })
-    // 渲染了 filterRow
+    // filterRow rendered
     expect(wrapper.findAll('.filter-row').length).toBe(1)
-    // clear 按钮（label admin.table.filterClear）
+    // clear button (label admin.table.filterClear)
     const buttons = wrapper.findAll('button')
     // add=0, clear=1
     await buttons[1].trigger('click')
@@ -114,7 +114,7 @@ describe('table/FilterBar.vue', () => {
     await buttons[0].trigger('click')
     expect(wrapper.emitted('update:filters')).toBeTruthy()
     const emitted = wrapper.emitted('update:filters')![0] as any[]
-    // columns[0]?.jsName 为 undefined → 用 'id' 兜底
+    // columns[0]?.jsName is undefined → fallback to 'id'
     expect(emitted[0][0].column).toBe('id')
   })
 })

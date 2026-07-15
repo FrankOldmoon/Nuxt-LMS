@@ -8,13 +8,13 @@ export default eventHandler(async (event) => {
   const { course_id, cid } = body
 
   if (!course_id || !cid) {
-    return cResp(null, '缺少参数', false)
+    return cResp(null, 'Missing parameters', false)
   }
 
   const courseId = Number(course_id)
   const commentCid = Number(cid)
 
-  // 查询评论，确认存在
+  // Look up the comment and confirm it exists
   const existing = await db.query.comments.findFirst({
     where: and(
       eq(schema.comments.courseId, courseId),
@@ -23,14 +23,14 @@ export default eventHandler(async (event) => {
   })
 
   if (!existing) {
-    return cResp(null, '评论不存在', false)
+    return cResp(null, 'Comment not found', false)
   }
 
-  // 权限：作者本人 或 教师/管理员
+  // Permission: the author themselves, or a teacher/admin
   const isOwner = existing.userId === user.id
   const isTeacher = user.roles?.some(r => ['teacher', 'admin'].includes(r))
   if (!isOwner && !isTeacher) {
-    return cResp(null, '无权删除此评论', false)
+    return cResp(null, 'No permission to delete this comment', false)
   }
 
   try {
@@ -40,7 +40,7 @@ export default eventHandler(async (event) => {
     ))
     return cResp({ deleted: true })
   } catch (error: any) {
-    console.error('删除评论失败:', error)
-    return cResp(null, error.message || '删除失败', false)
+    console.error('Failed to delete comment:', error)
+    return cResp(null, error.message || 'Delete failed', false)
   }
 })

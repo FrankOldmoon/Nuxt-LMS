@@ -1,5 +1,5 @@
 /**
- * auth/settings/generalSection.vue 组件测试
+ * auth/settings/generalSection.vue component tests
  * @see modules/base/components/auth/settings/generalSection.vue
  */
 import {

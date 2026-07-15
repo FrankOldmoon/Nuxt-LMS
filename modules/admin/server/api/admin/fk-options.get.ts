@@ -7,17 +7,17 @@ export default eventHandler(async (event) => {
   const tableName = typeof query.table === 'string' ? query.table : ''
 
   if (!tableName || !(tableName in schema)) {
-    return cResp([], '无效的表名', false)
+    return cResp([], 'Invalid table name', false)
   }
 
   const meta = getTableMeta(tableName)
-  // 复合主键表无 id 列，无法提供 id 选项 → 返回空
+  // Composite primary key tables have no id column, cannot provide id options → return empty
   if (!meta.hasId) {
     return cResp([])
   }
   const labelCol = (typeof query.label === 'string' && query.label) || meta.labelColumn || 'id'
 
-  // 校验标签列存在，否则回退到 id
+  // Validate label column exists, otherwise fall back to id
   const labelJsName = meta.columns.some((c) => c.jsName === labelCol) ? labelCol : 'id'
   const table = (schema as any)[tableName]
 

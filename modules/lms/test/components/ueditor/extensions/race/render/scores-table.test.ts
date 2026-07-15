@@ -1,5 +1,5 @@
 /**
- * race render scores-table 组件测试
+ * race render scores-table component test
  * @see modules/lms/components/ueditor/extensions/nodes/vue/race/render/scores-table.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

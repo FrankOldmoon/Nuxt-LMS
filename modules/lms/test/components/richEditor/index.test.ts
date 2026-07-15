@@ -1,14 +1,14 @@
 /**
- * richEditor/index.vue 组件测试
+ * richEditor/index.vue component test
  * @see modules/lms/components/richEditor/index.vue
  *
- * 富文本编辑器：字符串模式（UTextarea）+ JSON 模式（ueditorRender）+ 编辑弹窗
+ * Rich text editor: string mode (UTextarea) + JSON mode (ueditorRender) + edit modal
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { resetAllStubs, setMockI18n } from '../../../../../test/setup/nuxt-stubs'
 
-// mock useRichEditor（本地导入）
+// mock useRichEditor (local import)
 vi.mock('../../../components/richEditor/useRichEditor', () => ({
   useRichEditor: (props: any, model: any) => {
     const { ref, computed }: any = globalThis as any
@@ -69,7 +69,7 @@ describe('richEditor/index.vue', () => {
     })
     await flushPromises()
     const buttons = wrapper.findAll('.ubutton')
-    // 字符串模式有一个打开编辑器按钮
+    // String mode has an open editor button
     expect(buttons.length).toBeGreaterThanOrEqual(1)
   })
 
@@ -81,7 +81,7 @@ describe('richEditor/index.vue', () => {
     })
     await flushPromises()
     expect(wrapper.find('.ueditor-render').exists()).toBe(true)
-    // 字符串模式的 textarea 不显示
+    // Textarea in string mode is not shown
     expect(wrapper.find('.utextarea').exists()).toBe(false)
   })
 
@@ -103,7 +103,7 @@ describe('richEditor/index.vue', () => {
       global: _globalConfig,
     })
     await flushPromises()
-    // JSON 模式有 2 个按钮：编辑按钮 + 切换到文本按钮
+    // JSON mode has 2 buttons: edit button + switch to text button
     const buttons = wrapper.findAll('.ubutton')
     expect(buttons.length).toBe(2)
   })
@@ -115,7 +115,7 @@ describe('richEditor/index.vue', () => {
       global: _globalConfig,
     })
     await flushPromises()
-    // 只有编辑按钮，没有切换到文本按钮
+    // Only edit button, no switch to text button
     const buttons = wrapper.findAll('.ubutton')
     expect(buttons.length).toBe(1)
   })

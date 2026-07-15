@@ -1,5 +1,5 @@
 /**
- * useNavigation composable 测试（useHome / useHeaderNav / useFooterNav / useSidebarNav / useLayoutState / indexNavItems）
+ * useNavigation composable test (useHome / useHeaderNav / useFooterNav / useSidebarNav / useLayoutState / indexNavItems)
  * @see modules/lms/composables/useNavigation.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -115,7 +115,7 @@ describe('composables/useNavigation - useSidebarNav', () => {
     const { useSidebarNav } = await import('../../composables/useNavigation')
     const { navigation, courseId, accessibleChapterIds, passedChapterIds } = useSidebarNav()
     expect(courseId.value).toBe('42')
-    // 等待 cRequest.use 的异步 fetch 完成
+    // Wait for the async fetch of cRequest.use to complete
     await vi.waitFor(() => {
       expect(navigation.value.length).toBeGreaterThanOrEqual(1)
     })

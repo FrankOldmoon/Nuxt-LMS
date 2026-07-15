@@ -2,18 +2,18 @@ import { db, schema } from '@nuxthub/db'
 import { eq, and, inArray, isNull, or, not, sql } from 'drizzle-orm'
 
 /**
- * 课程详情 API（lms 增强版）
+ * Course detail API (lms enhanced)
  *
- * 在 doc 的基础课程详情上增加：
- * - 教师列表（teachers）
- * - 学生人数（studentCount）
- * - 章节可访问性（accessible）：管理员/教师全部可访问；普通用户按 is_open + class_chapter.open
- * - 章节完成状态（isPass）：当前用户在 user_chapters 表中的 is_pass
+ * On top of doc's base course detail, adds:
+ * - Teachers list (teachers)
+ * - Student count (studentCount)
+ * - Chapter accessibility (accessible): admins/teachers can access all; normal users by is_open + class_chapter.open
+ * - Chapter completion (isPass): current user's is_pass from user_chapters
  */
 export default eventHandler(async (event) => {
   const id = requireQueryId(event)
   if (!id) {
-    return cResp(null, '课程 ID 无效', false)
+    return cResp(null, 'Invalid course ID', false)
   }
 
   const course = await db.query.courses.findFirst({
@@ -22,13 +22,13 @@ export default eventHandler(async (event) => {
   })
 
   if (!course) {
-    return cResp(null, '课程不存在', false)
+    return cResp(null, 'Course not found', false)
   }
 
-  // 归一化课程详情（doc 提供的基础结构）
+  // Normalize course detail (base structure provided by doc)
   const result = normalizeCourseDetail(course)
 
-  // 查询教师/编辑者列表
+  // Query teacher/editor list
   const teachers = await getCourseMembers(id)
   result.teachers = teachers.map(t => ({
     userId: t.userId,
@@ -39,7 +39,7 @@ export default eventHandler(async (event) => {
     isEditor: !!t.isEditor,
   }))
 
-  // 查询学生人数（非教师/编辑者的有效选课记录）
+  // Query student count (active enrollments that are not teacher/editor)
   const studentRows = await db
     .select({ count: sql<number>`count(*)` })
     .from(schema.userCourses)
@@ -55,25 +55,25 @@ export default eventHandler(async (event) => {
     )
   result.studentCount = Number(studentRows[0]?.count ?? 0)
 
-  // 计算每个章节对当前用户的开放状态（SSR 友好）
+  // Compute accessibility of each chapter for the current user (SSR-friendly)
   const user = await getCurrentUser(event)
   const isAdmin = user?.roles?.includes('admin')
   const isTeacher = user ? await isCourseTeacher(user.id, id) : false
   const canEditAll = isAdmin || isTeacher
 
   if (canEditAll) {
-    // 教师/管理员：所有章节都可访问
+    // Teachers/admins: all chapters are accessible
     result.chapters = result.chapters.map(ch => ({ ...ch, accessible: true }))
   } else {
-    // 普通用户：is_open=true 或其班级 class_chapter.open=true
+    // Normal users: is_open=true OR their class has class_chapter.open=true
     const accessibleIds = new Set<number>()
 
-    // 1. is_open=true 的章节
+    // 1. Chapters with is_open=true
     for (const ch of course.chapters || []) {
       if (ch.isOpen) accessibleIds.add(ch.id)
     }
 
-    // 2. 用户班级 open 的章节
+    // 2. Chapters open in the user's classes
     if (user) {
       const userClassRows = await db
         .select({ classId: schema.userClasses.classId })
@@ -100,7 +100,7 @@ export default eventHandler(async (event) => {
     result.chapters = result.chapters.map(ch => ({ ...ch, accessible: accessibleIds.has(ch.id) }))
   }
 
-  // 附带当前用户每个章节的完成状态（is_pass），供侧边栏打钩
+  // Include the current user's completion (is_pass) for each chapter, for the sidebar checkmarks
   if (user) {
     const allChapterIds = (course.chapters || []).map(c => c.id)
     if (allChapterIds.length > 0) {

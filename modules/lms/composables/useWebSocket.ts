@@ -1,8 +1,8 @@
 /**
- * lms WebSocket 聚合入口
+ * lms WebSocket aggregation entry
  *
- * 组合 base 连接层（useWsConnection）+ lms 班级/竞赛/小组功能。
- * lms 启用时覆盖 base 的 useWebSocket 自动导入，供组件调用统一 API。
+ * Combines base connection layer (useWsConnection) + lms class/race/group features.
+ * When lms is enabled, overrides base's useWebSocket auto-import, providing unified API for component calls.
  */
 import { useWsClass } from './ws/class'
 import { useWsRace } from './ws/race'

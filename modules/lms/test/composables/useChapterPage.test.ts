@@ -1,5 +1,5 @@
 /**
- * useChapterPage composable 测试
+ * useChapterPage composable test
  * @see modules/lms/composables/useChapterPage.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -22,7 +22,7 @@ beforeEach(async () => {
     contentVersion: ref(0),
     notifyCourseNavUpdate: vi.fn(),
   })
-  // useChapterPage 依赖 useSidebarNav + extractTocFromContent + indexNavItems
+  // useChapterPage depends on useSidebarNav + extractTocFromContent + indexNavItems
   const { useSidebarNav, indexNavItems } = await import('../../composables/useNavigation')
   ;(globalThis as any).useSidebarNav = () => ({
     navigation: ref([
@@ -86,7 +86,7 @@ describe('composables/useChapterPage', () => {
     const { useChapterPage } = await import('../../composables/useChapterPage')
     const r = useChapterPage(computed(() => ''), computed(() => '1'))
     await new Promise((resolve) => setTimeout(resolve, 0))
-    // url 为空时 data 保持 null
+    // When url is empty, data stays null
     expect(r.data.value).toBe(null)
   })
 
@@ -130,8 +130,8 @@ describe('composables/useChapterPage', () => {
     setMockFetchHandler(async () => ({ data: null, success: true, msg: '' }))
     const { useChapterPage } = await import('../../composables/useChapterPage')
     const r = useChapterPage(computed(() => '1'), computed(() => '1'))
-    // /course/1 是 Home (索引 0)，匹配的 to 是 /course/1 → 不在章节列表（chapterId='1' 但实际 route 是 /course/1/1）
-    // flatNav 索引 0 是 Home (/course/1)，chapterId=1 → to=/course/1/1 不在 flatNav
+    // /course/1 is Home (index 0), matching to is /course/1 → not in chapter list (chapterId='1' but actual route is /course/1/1)
+    // flatNav index 0 is Home (/course/1), chapterId=1 → to=/course/1/1 not in flatNav
     expect(r.currentNavIndex.value).toBe(-1)
     expect(r.prevChapter.value).toBe(null)
   })

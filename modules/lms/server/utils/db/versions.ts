@@ -1,5 +1,5 @@
 /**
- * 内容版本快照 / 查询 / 恢复
+ * Content version snapshot / query / restore
  *
  * saveContentVersion / listContentVersions / getContentVersion / restoreContentVersion
  */
@@ -8,8 +8,8 @@ import { db, schema } from "@nuxthub/db"
 import { eq, inArray, desc } from "drizzle-orm"
 
 /**
- * 保存内容版本快照，并只保留最新的 maxKeep 条
- * 在更新 courses/chapters 的 content 之前调用，记录旧内容以便恢复
+ * Save a content version snapshot, keeping only the latest maxKeep entries
+ * Called before updating the content of courses/chapters to record the old content for restoration
  */
 export async function saveContentVersion(
   type: 'course' | 'chapter',
@@ -20,14 +20,14 @@ export async function saveContentVersion(
   const table = type === 'course' ? schema.courseVersions : schema.chapterVersions
   const fk = type === 'course' ? schema.courseVersions.courseId : schema.chapterVersions.chapterId
 
-  // 插入旧内容快照
+  // Insert old content snapshot
   if (type === 'course') {
     await db.insert(schema.courseVersions).values({ courseId: id, content })
   } else {
     await db.insert(schema.chapterVersions).values({ chapterId: id, content })
   }
 
-  // 按 id 倒序保留最新 maxKeep 条，删除更早的版本
+  // Keep the latest maxKeep entries by id descending order, delete earlier versions
   const all = await db
     .select({ id: table.id })
     .from(table)
@@ -41,7 +41,7 @@ export async function saveContentVersion(
 }
 
 /**
- * 获取内容的历史版本列表（按 id 倒序）
+ * Get the list of historical versions of the content (by id descending order)
  */
 export async function listContentVersions(type: 'course' | 'chapter', id: number) {
   const table = type === 'course' ? schema.courseVersions : schema.chapterVersions
@@ -59,7 +59,7 @@ export async function listContentVersions(type: 'course' | 'chapter', id: number
 }
 
 /**
- * 按 versionId 获取单个版本记录
+ * Get a single version record by versionId
  */
 export async function getContentVersion(type: 'course' | 'chapter', versionId: number) {
   const table = type === 'course' ? schema.courseVersions : schema.chapterVersions
@@ -72,8 +72,8 @@ export async function getContentVersion(type: 'course' | 'chapter', versionId: n
 }
 
 /**
- * 恢复内容到指定版本
- * 先将当前内容保存为版本快照，再写回历史版本内容
+ * Restore content to a specified version
+ * First saves the current content as a version snapshot, then writes back the historical version content
  */
 export async function restoreContentVersion(type: 'course' | 'chapter', id: number, content: any) {
   const tableName = type === 'course' ? 'courses' : 'chapters'

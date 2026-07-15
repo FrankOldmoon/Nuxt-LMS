@@ -1,5 +1,5 @@
 /**
- * ueditor/render/nodes/ordered-list.vue 组件测试
+ * ueditor/render/nodes/ordered-list.vue component test
  * @see modules/lms/components/ueditor/render/nodes/ordered-list.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

@@ -20,21 +20,21 @@ defineEmits(['click'])
 
 const { t } = useI18n()
 
-// 类型图标
+// TypeIcon
 const iconMap = {
     question: 'i-lucide-help-circle',
     homework: 'i-lucide-file-text',
     comment: 'i-lucide-message-circle',
 }
 const icon = computed(() => iconMap[props.type] || '')
-// 类型名称
+// TypeName
 const typeName = computed(() =>
     props.type === 'question' ? t('coursePanel.question') :
     props.type === 'homework' ? t('coursePanel.homework') :
     t('coursePanel.comment')
 )
 
-// 状态颜色
+// StatusColor
 const dotClass = computed(() => {
     switch (props.status) {
         case 'done':
@@ -46,7 +46,7 @@ const dotClass = computed(() => {
     }
 })
 
-// tooltip 文本
+// tooltip Text
 const statusText = computed(() => {
     switch (props.status) {
         case 'done': return t('coursePanel.done')

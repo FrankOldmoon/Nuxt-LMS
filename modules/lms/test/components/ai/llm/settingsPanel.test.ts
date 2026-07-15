@@ -1,9 +1,9 @@
 /**
- * ai/llm/settingsPanel.vue 组件测试
+ * ai/llm/settingsPanel.vue component test
  * @see modules/lms/components/ai/llm/settingsPanel.vue
  *
- * LLM 设置面板：模式选择 + 本地模型/API/Ollama 配置 + 通用参数。
- * 依赖 useLlmContext() 注入上下文，测试中 stub 该 composable 返回 mock 对象。
+ * LLM settings panel: mode selection + local model/API/Ollama config + general parameters.
+ * Depends on useLlmContext() to inject context, stubs the composable to return mock object in tests.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -15,7 +15,7 @@ beforeEach(() => {
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
 })
 
-/** mock useLlmContext 返回的对象（与 useLlm 返回结构一致） */
+/** The object returned by mock useLlmContext (consistent with useLlm return structure) */
 function mockLlmContext(overrides: any = {}) {
   return {
     t: (k: string) => k,
@@ -82,7 +82,7 @@ describe('ai/llm/settingsPanel.vue', () => {
     const { default: Panel } = await import('../../../../components/ai/llm/settingsPanel.vue')
     const wrapper = mount(Panel, { global: _globalConfig })
     expect(wrapper.exists()).toBe(true)
-    // 模式 select 一定存在
+    // Mode select always exists
     expect(wrapper.find('select.uselect').exists()).toBe(true)
   })
 
@@ -90,13 +90,13 @@ describe('ai/llm/settingsPanel.vue', () => {
     ;(globalThis as any).useLlmContext = () => mockLlmContext({ cfgMode: ref('local') })
     const { default: Panel } = await import('../../../../components/ai/llm/settingsPanel.vue')
     const wrapper = mount(Panel, { global: _globalConfig })
-    // local 模式：显示"加载模型"按钮（state.ready=false, loading=false）
+    // local mode: shows "Load Model" button (state.ready=false, loading=false)
     expect(wrapper.text()).toContain('ai.loadModel')
   })
 
   it('cfgMode=ollama 时渲染 Ollama URL / Model 输入', async () => {
     ;(globalThis as any).useLlmContext = () => mockLlmContext({ cfgOllamaUrl: ref('http://localhost:11434') })
-    // 切到 ollama：通过 mock 直接返回 ollama 模式
+    // Switch to ollama: directly returns ollama mode via mock
     ;(globalThis as any).useLlmContext = () => mockLlmContext({ cfgMode: ref('ollama') })
     const { default: Panel } = await import('../../../../components/ai/llm/settingsPanel.vue')
     const wrapper = mount(Panel, { global: _globalConfig })
@@ -126,7 +126,7 @@ describe('ai/llm/settingsPanel.vue', () => {
     ;(globalThis as any).useLlmContext = () => ctx
     const { default: Panel } = await import('../../../../components/ai/llm/settingsPanel.vue')
     const wrapper = mount(Panel, { global: _globalConfig })
-    // 找到 "ai.loadModel" 对应的按钮（label prop）
+    // Find the button corresponding to "ai.loadModel" (label prop)
     const loadBtn = wrapper.findAll('button').find(b => b.text().includes('ai.loadModel'))
     expect(loadBtn).toBeTruthy()
     await loadBtn!.trigger('click')

@@ -1,18 +1,18 @@
 <template>
     <div class="space-y-4">
-        <!-- 视频上传 -->
+        <!-- Video Upload -->
         <UFormField :label="t('question.videoFile')" size="sm">
             <FormInputFile v-model="form.src" :multiple="false" :placeholder="t('question.videoSelectHint')" />
         </UFormField>
 
-        <!-- 视频预览（可拖动到目标时间点后点击「使用当前时间」捕获时间戳） -->
+        <!-- VideoPreview（candragtotargetTimePointBackClick「makeuseCurrent Time」CaptureTimeclick） -->
         <div v-if="form.src">
             <label class="text-xs text-gray-500 mb-1 block">{{ t('question.videoPreview') }}</label>
             <video ref="previewVideo" :src="form.src" controls preload="metadata"
                 class="w-full rounded border border-gray-200 dark:border-gray-700" style="max-height: 240px;" />
         </div>
 
-        <!-- 弹题列表 -->
+        <!-- popup question list -->
         <div>
             <div class="flex items-center justify-between mb-2">
                 <label class="text-sm font-medium">{{ t('question.videoQuestions') }} ({{ form.questions.length }})</label>
@@ -33,15 +33,15 @@
                         @click="form.questions.splice(idx, 1)" />
                 </div>
             </div>
-            <p v-else class="text-sm text-gray-400">{{ t('question.videoNoQuestions') }}</p>
+            <p v-else class="text-sm text-gray-400">{{ t('question.videoNo questions') }}</p>
         </div>
 
-        <!-- 说明 -->
+        <!-- Description -->
         <div class="text-xs text-gray-500 bg-gray-50 dark:bg-gray-800 p-3 rounded">
             {{ t('question.videoEditHint') }}
         </div>
 
-        <!-- 题目选择器 -->
+        <!-- Question selecteditor -->
         <UeditorContentPicker v-model="pickerOpen" type="questions" @confirm="onPickQuestions" />
     </div>
 </template>
@@ -55,8 +55,8 @@ const { t } = useI18n()
 const previewVideo = ref(null)
 const pickerOpen = ref(false)
 
-// form.options 必须是对象：{ src, questions: [{cid, at}] }
-// 在父组件 onTypeChange 中初始化为对象，这里直接读写
+// form.options mustmustYesObject：{ src, questions: [{cid, at}] }
+// Parent Component onTypeChange MiddleInitializeObject，ThisInsidedirectlyRead-write
 function ensureOptions() {
     if (!props.form.options || typeof props.form.options !== 'object' || Array.isArray(props.form.options)) {
         props.form.options = { src: '', questions: [] }
@@ -70,7 +70,7 @@ function ensureOptions() {
 }
 ensureOptions()
 
-const form = props.form.options  // 简化模板引用
+const form = props.form.options  // simplifyTemplateReference
 
 function onPickQuestions(cids) {
     for (const cid of cids) {
@@ -80,7 +80,7 @@ function onPickQuestions(cids) {
     }
 }
 
-// 捕获预览视频当前时间作为题目弹出时间点
+// CapturePreviewVideoCurrent TimeasQuestionpopupTimePoint
 function captureTime(idx) {
     const v = previewVideo.value
     if (!v) return

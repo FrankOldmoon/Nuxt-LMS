@@ -7,13 +7,13 @@ export default eventHandler(async (event) => {
   const { id, ...setData } = body
 
   if (!id) {
-    return cResp(null, '缺少 id 参数', false)
+    return cResp(null, 'Missing id parameter', false)
   }
 
   await requireCourseTeacher(event, Number(id))
 
   try {
-    // 若更新了 content，先将旧内容保存为版本快照
+    // If content was updated, first save the old content as a version snapshot
     if (setData.content !== undefined) {
       const current = await showTable('courses', Number(id))
       const oldContent = (current as any)?.content
@@ -23,7 +23,7 @@ export default eventHandler(async (event) => {
       }
     }
 
-    // 若更新了 orders，同步更新 chapter 的 name
+    // If orders was updated, sync chapter name
     if (setData.orders !== undefined && Array.isArray(setData.orders)) {
       const chapterUpdates = (setData.orders as any[])
         .filter(o => o.id && !o.id.startsWith('custom-') && o.id !== 'course' && !isNaN(Number(o.id)))
@@ -39,11 +39,11 @@ export default eventHandler(async (event) => {
     }
 
     const result = await updateTable('courses', Number(id), setData)
-    // 课程信息（标题/分类/状态等）变化会影响首页导航
+    // Course info (title/category/status etc.) changes affect the home navigation
     broadcastToAll({ type: 'home-changed', reason: 'courses.update' })
     return cResp(result)
   } catch (error: any) {
-    console.error('更新课程失败:', error)
-    return cResp(null, error.message || '更新失败', false)
+    console.error('Failed to update course:', error)
+    return cResp(null, error.message || 'Update failed', false)
   }
 })

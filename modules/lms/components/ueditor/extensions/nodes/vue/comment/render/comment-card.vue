@@ -1,18 +1,18 @@
 <template>
     <div class="flex items-start gap-3 p-3 rounded-lg"
         :class="isRoot ? 'bg-gray-50 dark:bg-gray-800' : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700'">
-        <!-- 用户卡片 -->
+        <!-- User Card -->
         <div class="w-20 flex-shrink-0">
             <AuthUserCard :user="userObj" />
         </div>
 
         <div class="flex-1 min-w-0">
-            <!-- 时间 + 操作按钮 -->
+            <!-- Time + Action button -->
             <div class="flex items-center gap-2 mb-1">
                 <span v-if="comment.createdAt" class="text-xs text-gray-400">{{ formatTime(comment.createdAt) }}</span>
-                <!-- 操作按钮靠右 -->
+                <!-- Action buttonbyRight -->
                 <div class="flex items-center gap-2 ml-auto">
-                    <!-- 点赞 -->
+                    <!-- Like -->
                     <button class="flex items-center gap-1 text-xs transition-colors"
                         :class="comment.liked ? 'text-red-500' : 'text-gray-400 hover:text-gray-600'"
                         @click="$emit('toggle-like', comment)">
@@ -20,7 +20,7 @@
                             class="w-3.5 h-3.5" />
                         <span>{{ comment.likeCount || 0 }}</span>
                     </button>
-                    <!-- 删除（带确认） -->
+                    <!-- Delete（withConfirm） -->
                     <UPopover v-if="canDelete" :modal="true">
                         <button
                             class="flex items-center gap-1 text-xs text-gray-400 hover:text-red-500 transition-colors">
@@ -29,10 +29,10 @@
                         </button>
                         <template #content>
                             <div class="p-3 space-y-2 w-48">
-                                <p class="text-sm text-gray-600 dark:text-gray-300">{{ $t('comment.confirmDelete') }}
+                                <p class="text-sm text-gray-600 dark:text-gray-300">{{ $t('comment.confirm delete') }}
                                 </p>
                                 <div class="flex justify-end gap-2">
-                                    <UButton size="xs" color="error" @click="confirmDelete">
+                                    <UButton size="xs" color="error" @click="confirm delete">
                                         {{ $t('common.delete') }}
                                     </UButton>
                                 </div>
@@ -42,7 +42,7 @@
                 </div>
             </div>
 
-            <!-- 内容 -->
+            <!-- Content -->
             <div class="prose prose-sm dark:prose-invert max-w-none">
                 <ueditorRender :json="comment.content" />
             </div>
@@ -61,7 +61,7 @@ const emit = defineEmits(['toggle-like', 'delete'])
 
 const { hasRole } = useAuth()
 
-// 构造 user 对象供 AuthUserCard 使用
+// construct user Objectfor AuthUserCard makeuse
 const userObj = computed(() => ({
     id: props.comment.userId,
     name: props.comment.name || props.comment.userName || 'U',
@@ -70,13 +70,13 @@ const userObj = computed(() => ({
     rollNumber: null,
 }))
 
-// 是否可删除：作者本人或教师/管理员
+// YesNocanDelete：AuthorlocalPersonorTeacher/Admin
 const canDelete = computed(() => {
     if (hasRole('teacher') || hasRole('admin')) return true
     return props.comment.userId === props.currentUserId
 })
 
-// 确认删除
+// Confirm Delete
 function confirmDelete() {
     emit('delete', props.comment)
     const el = document.querySelector('[data-state="open"][role="dialog"]')

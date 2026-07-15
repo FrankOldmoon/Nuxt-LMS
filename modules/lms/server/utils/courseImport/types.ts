@@ -1,5 +1,5 @@
 /**
- * 课程导入 / 导出共享类型
+ * Course import / export shared types
  */
 export type ExportedCourse = {
   name: string
@@ -39,7 +39,7 @@ export type ExportedData = {
   races: any[]
 }
 
-/** 各类型 oldCid → newCid 映射 */
+/** oldCid → newCid mapping for each type */
 export type IdMaps = {
   question: Map<number, number>
   homework: Map<number, number>
@@ -47,5 +47,5 @@ export type IdMaps = {
   quiz: Map<number, number>
 }
 
-/** 章节 ID 映射：oldChapterId → newChapterId（用于回填 course.orders） */
+/** Chapter ID mapping: oldChapterId → newChapterId (used to backfill course.orders) */
 export type ChapterIdMap = Map<number, number>

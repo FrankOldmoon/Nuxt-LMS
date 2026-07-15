@@ -16,9 +16,9 @@
       v-if="hasRole('admin')"
       mode="category"
       :navigation="links.slice(1)"
-      @saved="handleSaved"
+      @saved="handle saved"
     />
-    <!-- 课程导入（仅管理员） -->
+    <!-- CourseImport（onlyAdmin） -->
     <UTooltip v-if="hasRole('admin')" :text="$t('navEditor.importCourse')">
       <UButton
         icon="i-lucide-upload"
@@ -51,6 +51,6 @@ withDefaults(defineProps<{
 })
 
 const {
-  hasRole, links, handleSaved, importing, triggerFilePicker, fileInputRef, onFileSelected,
+  hasRole, links, handle saved, importing, triggerFilePicker, fileInputRef, onFileSelected,
 } = useNav()
 </script>

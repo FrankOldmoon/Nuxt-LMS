@@ -1,8 +1,8 @@
 /**
- * course/editor/memberSearchRow.vue 组件测试
+ * course/editor/memberSearchRow.vue component test
  * @see modules/lms/components/course/editor/memberSearchRow.vue
  *
- * 搜索结果行：头像 + 姓名 + 添加为教师/编辑按钮
+ * Search result row: avatar + name + add as teacher/editor button
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -54,7 +54,7 @@ describe('course/editor/memberSearchRow.vue', () => {
       global: _globalConfig,
     })
     const buttons = wrapper.findAll('.ubutton')
-    // 第一个按钮是教师按钮
+    // The first button is the teacher button
     await buttons[0]!.trigger('click')
     const addEvents = wrapper.emitted('add')
     expect(addEvents).toBeTruthy()
@@ -68,7 +68,7 @@ describe('course/editor/memberSearchRow.vue', () => {
       global: _globalConfig,
     })
     const buttons = wrapper.findAll('.ubutton')
-    // 第二个按钮是编辑按钮
+    // The second button is the edit button
     await buttons[1]!.trigger('click')
     const addEvents = wrapper.emitted('add')
     expect(addEvents).toBeTruthy()

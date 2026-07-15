@@ -1,9 +1,9 @@
 /**
- * LMS Questions API 端点测试
+ * LMS Questions API endpoint test
  * @see modules/lms/server/api/questions/*.ts
  *
- * 包含 Bug 6 回归（update.post.ts 缺少 delete body.id）
- * 包含 Bug 7 回归（submit.post.ts 缺少 firstRight 更新）
+ * Includes Bug 6 regression (update.post.ts missing delete body.id)
+ * Includes Bug 7 regression (submit.post.ts missing firstRight update)
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
@@ -40,7 +40,7 @@ import { resetAllStubs, setMockAuthState } from '../../../../test/setup/nuxt-stu
 beforeEach(() => {
   resetAllStubs()
   vi.clearAllMocks()
-  // 默认链式调用重置
+  // Default chain call reset
   _mockDb.select = vi.fn().mockReturnThis()
   _mockDb.selectDistinct = vi.fn().mockReturnThis()
   _mockDb.from = vi.fn().mockReturnThis()
@@ -60,7 +60,7 @@ beforeEach(() => {
     userQuestions: { findFirst: vi.fn(), findMany: vi.fn() },
     questions: { findFirst: vi.fn(), findMany: vi.fn() },
   }
-  // LMS auto-import stubs（unit-shared.ts 未提供）
+  // LMS auto-import stubs (not provided by unit-shared.ts)
   ;(globalThis as any).getCourseLmsConfig = vi.fn().mockResolvedValue({
     question: { submitExp: 2, correctBonusExp: 5, firstCorrectBonusExp: 10, maxSubmitCount: 999 },
     quiz: { submitExp: 3, passScore: 60, passBonusExp: 10 },
@@ -76,10 +76,10 @@ function makeEvent(opts: { query?: Record<string, any>; body?: any; cookies?: Re
 }
 
 /**
- * 创建 thenable 链式 mock：await chain 可直接获得 result，
- * 同时 chain 上的 orderBy/limit/offset/where 等方法返回 chain 自身（支持继续链式调用）。
- * 用于 wrong-list.get.ts 中 `db.select().from().where()` (where 终端) 和
- * `db.select().from().where().orderBy().limit().offset()` (offset 终端) 共享 where 的场景。
+ * Create thenable chain mock: await chain can directly get result,
+ * while methods on chain like orderBy/limit/offset/where return chain itself (supports continued chaining).
+ * Used in wrong-list.get.ts for `db.select().from().where()` (where terminal) and
+ * `db.select().from().where().orderBy().limit().offset()` (offset terminal) sharing where scenario.
  */
 function chainThenable(result: any) {
   const chain: any = {
@@ -164,10 +164,10 @@ describe('API: questions/submit', () => {
     const handler = (await import('../../server/api/questions/submit.post')).default
     const result = await handler(makeEvent({ body: { course_id: 1, question_cid: 1, chapter_id: 1, correct_rate: 1, point: 10, user_answer: ['A'] } }))
     expect(result.success).toBe(true)
-    // 答对：submitExp(2) + correctBonusExp(5) + firstCorrectBonusExp(10) = 17
+    // Correct: submitExp(2) + correctBonusExp(5) + firstCorrectBonusExp(10) = 17
     expect(result.data.gainedExp).toBe(17)
     expect(result.data.score).toBe(10)
-    // 验证 insert 被调用
+    // Verify insert was called
     expect(_mockDb.insert).toHaveBeenCalled()
   })
 
@@ -178,9 +178,9 @@ describe('API: questions/submit', () => {
     const handler = (await import('../../server/api/questions/submit.post')).default
     const result = await handler(makeEvent({ body: { course_id: 1, question_cid: 1, correct_rate: 1, point: 10, user_answer: ['A'] } }))
     expect(result.success).toBe(true)
-    // 已 firstRight=true，再次答对不再给任何经验
+    // Already firstRight=true, answering correctly again gives no exp
     expect(result.data.gainedExp).toBe(0)
-    // 验证 update 被调用，insert 未被调用
+    // Verify update was called, insert was not called
     expect(_mockDb.update).toHaveBeenCalled()
     expect(_mockDb.insert).not.toHaveBeenCalled()
   })
@@ -191,7 +191,7 @@ describe('API: questions/submit', () => {
     _mockDb.returning = vi.fn().mockResolvedValue([])
     const handler = (await import('../../server/api/questions/submit.post')).default
     await handler(makeEvent({ body: { course_id: 1, question_cid: 1, correct_rate: 1, point: 10, user_answer: ['A'] } }))
-    // 验证 update.set 包含 firstRight
+    // Verify update.set includes firstRight
     const setArg = _mockDb.set.mock.calls[0][0]
     expect(setArg).toHaveProperty('firstRight')
     expect(setArg.firstRight).toBe(true) // existing.firstRight(false) || isCorrect(true) = true
@@ -204,7 +204,7 @@ describe('API: questions/submit', () => {
     const handler = (await import('../../server/api/questions/submit.post')).default
     const result = await handler(makeEvent({ body: { course_id: 1, question_cid: 1, correct_rate: 0, point: 10, user_answer: ['B'] } }))
     expect(result.success).toBe(true)
-    // 答错：只有 submitExp(2)
+    // Wrong answer: only submitExp(2)
     expect(result.data.gainedExp).toBe(2)
     expect(result.data.score).toBe(0)
   })
@@ -230,7 +230,7 @@ describe('API: questions/submit', () => {
     const handler = (await import('../../server/api/questions/submit.post')).default
     const result = await handler(makeEvent({ body: { course_id: 1, question_cid: 1, correct_rate: 0.5, point: 10, user_answer: ['A'] } }))
     expect(result.success).toBe(true)
-    // 本次 score=5 < prevScore=8 → scoreDelta=0
+    // This time score=5 < prevScore=8 → scoreDelta=0
     expect(result.data.scoreDelta).toBe(0)
     expect(result.data.score).toBe(5)
   })
@@ -259,7 +259,7 @@ describe('API: questions/add', () => {
     const result = await handler(makeEvent({ body: { course_id: 1, name: 'New Q' } }))
     expect(result.success).toBe(true)
     expect(result.data.cid).toBe(6)
-    // 验证 insert.values 被调用时包含 cid: 6
+    // Verify insert.values was called with cid: 6
     const valuesArg = _mockDb.values.mock.calls[0][0]
     expect(valuesArg.cid).toBe(6)
     expect(valuesArg.courseId).toBe(1)
@@ -303,7 +303,7 @@ describe('API: questions/update', () => {
     _mockDb.where = vi.fn().mockResolvedValue({ rowCount: 1 })
     const handler = (await import('../../server/api/questions/update.post')).default
     await handler(makeEvent({ body: { course_id: 1, id: 1, cid: 1, title: 'updated', name: 'New Name' } }))
-    // 验证 set 被调用时参数不含 id/course_id/cid
+    // Verify set was called without id/course_id/cid in args
     const setArg = _mockDb.set.mock.calls[0][0]
     expect(setArg).not.toHaveProperty('id')
     expect(setArg).not.toHaveProperty('course_id')
@@ -351,7 +351,7 @@ describe('API: questions/batch', () => {
     const result = await handler(makeEvent({ body: { rows: [{ courseId: 1, cid: 1 }, { courseId: 1, cid: 2 }], action: 'delete' } }))
     expect(result.success).toBe(true)
     expect(result.data.count).toBe(2)
-    // 验证 update.set 被调用且 deletedAt 是 Date
+    // Verify update.set was called and deletedAt is a Date
     const setArg = _mockDb.set.mock.calls[0][0]
     expect(setArg.deletedAt).toBeInstanceOf(Date)
   })
@@ -362,7 +362,7 @@ describe('API: questions/batch', () => {
     const handler = (await import('../../server/api/questions/batch.post')).default
     const result = await handler(makeEvent({ body: { rows: [{ courseId: 1, cid: 1 }], action: 'remove' } }))
     expect(result.success).toBe(true)
-    // 验证 delete 被调用
+    // Verify delete was called
     expect(_mockDb.delete).toHaveBeenCalled()
   })
 
@@ -372,7 +372,7 @@ describe('API: questions/batch', () => {
     const handler = (await import('../../server/api/questions/batch.post')).default
     const result = await handler(makeEvent({ body: { rows: [{ courseId: 1, cid: 1 }], action: 'restore' } }))
     expect(result.success).toBe(true)
-    // 验证 update.set 被调用且 deletedAt 是 null
+    // Verify update.set was called and deletedAt is null
     const setArg = _mockDb.set.mock.calls[0][0]
     expect(setArg.deletedAt).toBeNull()
   })
@@ -470,8 +470,8 @@ describe('API: questions/wrong-list', () => {
 
   it('无错题返回空列表', async () => {
     setMockAuthState({ id: 1, username: 'student', roles: ['student'], permissions: [] })
-    // count 查询：db.select().from().where() → where 终端，返回 thenable 解析为 [{count:0}]
-    // wrongRows 查询：db.select().from().where().orderBy().limit().offset() → offset 终端，返回 thenable 解析为 []
+    // count query: db.select().from().where() → where terminal, returns thenable resolving to [{count:0}]
+    // wrongRows query: db.select().from().where().orderBy().limit().offset() → offset terminal, returns thenable resolving to []
     _mockDb.select = vi.fn()
       .mockReturnValueOnce(chainThenable([{ count: 0 }]))
       .mockReturnValueOnce(chainThenable([]))
@@ -487,11 +487,11 @@ describe('API: questions/wrong-list', () => {
     const wrongRows = [
       { courseId: 1, questionCid: 1, wrongCount: 2, submitCount: 3, firstRight: false, updatedAt: new Date() },
     ]
-    // 第一次 select → count 查询（where 终端）
+    // First select → count query (where terminal)
     _mockDb.select = vi.fn()
       .mockReturnValueOnce(chainThenable([{ count: 1 }]))
       .mockReturnValueOnce(chainThenable(wrongRows))
-    // query.questions.findMany 返回题目详情
+    // query.questions.findMany returns question details
     _mockDb.query.questions.findMany = vi.fn().mockResolvedValue([
       { courseId: 1, cid: 1, name: 'Q1', type: 'choice' },
     ])

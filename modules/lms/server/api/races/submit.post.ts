@@ -1,12 +1,12 @@
 /**
- * 提交竞赛成绩
+ * Submit race score
  * POST /api/races/submit
  * body: { course_id, race_cid, records, total_score }
  * records: [{ questionCid, rate, point, answer }]
  *
- * 防刷策略（详见 utils/submit/race.ts）：
- *  - 已有记录：取最高分（不累加），不再给经验
- *  - 首次提交：给参与经验（participateExp）
+ * Anti-abuse strategy (see utils/submit/race.ts for details):
+ *  - Existing record: take the highest score (no accumulation), no more exp
+ *  - First submission: give participation exp (participateExp)
  */
 import { db, schema } from '@nuxthub/db'
 import { and, eq } from 'drizzle-orm'
@@ -15,7 +15,7 @@ import { findUserSubmitRecord } from '../../utils/submit/record'
 import { notifyCourseProgressMax } from '../../utils/submit/progress'
 import { withSubmitHandler } from '../../utils/submit/handler'
 
-export default withSubmitHandler('提交竞赛成绩失败', async (event) => {
+export default withSubmitHandler('Failed to submit race score', async (event) => {
   const ctx = await parseSubmitContext(event, {
     cidField: 'race_cid',
     sectionKey: 'race',
@@ -27,7 +27,7 @@ export default withSubmitHandler('提交竞赛成绩失败', async (event) => {
   const participationExp = rConfig.participateExp || rConfig.participationExp || 0
   const participationCoin = rConfig.participateCoin || rConfig.participationCoin || 0
 
-  // 1. 查找已有记录
+  // 1. Find existing record
   const existing = await findUserSubmitRecord(user.id, courseId, 'race', raceCid)
   const prevScore = Number(existing?.score) || 0
   const bestScore = Math.max(prevScore, score)
@@ -35,7 +35,7 @@ export default withSubmitHandler('提交竞赛成绩失败', async (event) => {
   const gainedExp = isFirstSubmit ? participationExp : 0
   const gainedCoin = isFirstSubmit ? participationCoin : 0
 
-  // 2. 写 userRaces（取最高分）
+  // 2. Write userRaces (take the highest score)
   if (existing) {
     await db.update(schema.userRaces).set({
       records,
@@ -55,7 +55,7 @@ export default withSubmitHandler('提交竞赛成绩失败', async (event) => {
     })
   }
 
-  // 3. 更新 userCourses.raceScore（最高分模式 + 参与经验）
+  // 3. Update userCourses.raceScore (highest score mode + participation exp)
   await notifyCourseProgressMax({
     userId: user.id,
     courseId,

@@ -1,5 +1,5 @@
 /**
- * quiz index 组件测试 (TipTap node-view)
+ * quiz index component test (TipTap node-view)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/quiz/index.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

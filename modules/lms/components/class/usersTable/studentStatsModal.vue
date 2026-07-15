@@ -19,13 +19,13 @@
 
 <script setup lang="ts">
 const props = defineProps({
-  /** 当前选中学生 id（数字或字符串） */
+  /** Current selected student id (number or string) */
   userId: { type: [Number, String], default: 0 },
-  /** 课程 id */
+  /** Course id */
   courseId: { type: [Number, String], default: 0 },
-  /** 班级 id（用于按班级取学生列表） */
+  /** Class id (used to fetch student list by class) */
   classId: { type: [Number, String], default: 0 },
-  /** 学生信息（用于在标题处显示头像/姓名，可选） */
+  /** Student info (used to display avatar/name in title, optional) */
   user: { type: Object, default: () => null },
 })
 
@@ -39,11 +39,11 @@ const ctx = useStudentGrades({
 }, isOpen)
 const { pending } = ctx
 provideStudentGrades(ctx)
-// 同时用 useGradesContext 形状暴露，让 studentStats.vue 内部可一致访问
+// Also expose via useGradesContext shape so studentStats.vue can access consistently
 provideGrades({
   ...ctx,
-  // studentStats.vue 仅读取 statCards / radarOption，已在 ctx 中提供
-  // 兜底：补齐 gradesModal 才用到的字段，避免未来误用时报错
+  // studentStats.vue only reads statCards / radarOption, already provided in ctx
+  // Fallback: fill in fields only used by gradesModal to avoid errors on future misuse
   rows: ref([]),
   extraColumns: ref([]),
   defaultSort: [{ id: 'total', desc: true }],

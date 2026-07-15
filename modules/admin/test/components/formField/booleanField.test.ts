@@ -1,8 +1,8 @@
 /**
- * formField/booleanField 组件测试
+ * formField/booleanField component tests
  * @see modules/admin/components/table/formField/booleanField.vue
  *
- * USwitch 绑定到 form[col.jsName]
+ * USwitch binds to form[col.jsName]
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

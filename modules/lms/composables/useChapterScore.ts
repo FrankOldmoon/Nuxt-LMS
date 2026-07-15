@@ -14,26 +14,26 @@ type ScoreRow = {
 }
 
 /**
- * 章节得分弹窗逻辑
- * - 拉取班级学生 + 章节得分数据（含每学生 taskStatus）
- * - 用当前章节 headings（来自 useChapterTask）计算每学生 progress
- * - 合并构建表格行（students + scoreData）
- * - 额外列：章节得分 + 任务 + 进度（score / progress 可排序）
- * - 任务预览弹窗状态
+ * Chapter score modal logic
+ * - Fetch class students + chapter score data (includes per-student taskStatus)
+ * - Calculate each student's progress using current chapter headings (from useChapterTask)
+ * - Merge and build table rows (students + scoreData)
+ * - Extra columns: chapter score + task + progress (score / progress are sortable)
+ * - Task preview modal state
  */
 export function useChapterScore(props: { courseId: number; chapterId: number; classId: number }, isOpen: Ref<boolean>) {
   const { t } = useI18n()
   const { students, fetchUsers } = useClassUsers()
 
-  // 当前章节所有 heading：作为 progress 分母。
-  // scoreModal 在章节页打开，useChapterTask() 可拿到（inject 或 sharedChapterTaskCtx）。
+  // All headings of the current chapter: used as the denominator for progress.
+  // scoreModal opens on the chapter page, useChapterTask() can retrieve them (inject or sharedChapterTaskCtx).
   const chapterTask = useChapterTask()
   const headings = computed(() => chapterTask?.taskMap.value.headings ?? [])
 
   const loading = ref(false)
   const scoreData = ref<ScoreRow[]>([])
 
-  // ---- 任务弹窗状态 ----
+  // ---- Task modal state ----
   const taskModalOpen = ref(false)
   const taskModalItem = reactive<TaskItem>({ type: 'question', id: 0, status: 'todo' })
 
@@ -44,7 +44,7 @@ export function useChapterScore(props: { courseId: number; chapterId: number; cl
 
   const scoreMap = computed(() => new Map(scoreData.value.map(r => [r.userId, r])))
 
-  // ClassUsersTable 的行数据：合并 students 和 scoreData，并用章节 headings 计算 progress
+  // ClassUsersTable row data: merge students and scoreData, and calculate progress using chapter headings
   const tableRows = computed(() => {
     const hs = headings.value
     const total = hs.length
@@ -66,8 +66,8 @@ export function useChapterScore(props: { courseId: number; chapterId: number; cl
     })
   })
 
-  // 额外列：章节得分 + 任务 + 进度
-  // canSort: true → useClassUsersTable 自动补 accessorKey + sortableHeader，排序按数据类型自动选择
+  // Extra columns: chapter score + task + progress
+  // canSort: true → useClassUsersTable auto-fills accessorKey + sortableHeader, sorting is automatically selected by data type
   const extraColumns = computed(() => [
     { id: 'score', canSort: true, header: t('chapter.chapterScore') },
     { id: 'task', header: t('chapter.task') },
@@ -78,13 +78,13 @@ export function useChapterScore(props: { courseId: number; chapterId: number; cl
     if (!props.chapterId || !props.classId || !props.courseId) return
     loading.value = true
     try {
-      // 确保班级用户已加载
+      // Ensure class users are loaded
       await fetchUsers(props.classId, props.courseId)
-      // 获取章节得分（含每学生 taskStatus）
+      // Fetch chapter scores (includes per-student taskStatus)
       const data = await cRequest(`/api/chapters/scores?chapterId=${props.chapterId}&classId=${props.classId}&courseId=${props.courseId}`)
       scoreData.value = data || []
     } catch (e) {
-      console.error('加载章节得分失败', e)
+      console.error('Failed to load chapter scores', e)
     } finally {
       loading.value = false
     }

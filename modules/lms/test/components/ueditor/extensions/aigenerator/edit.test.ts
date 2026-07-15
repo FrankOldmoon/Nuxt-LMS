@@ -1,5 +1,5 @@
 /**
- * aigenerator/edit.vue 组件测试
+ * aigenerator/edit.vue component test
  * @see modules/lms/components/ueditor/extensions/nodes/vue/aigenerator/edit.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

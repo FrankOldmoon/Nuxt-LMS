@@ -1,16 +1,16 @@
 /**
- * 颜色与难度级别映射工具测试
+ * Color and difficulty level mapping utility tests
  * @see modules/base/utils/colors.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 
-// 必须在 import colors 前 stub useI18n（colors.ts 内部调用）
+// Must stub useI18n before importing colors (colors.ts calls it internally)
 import {
   setMockI18n,
   resetAllStubs,
 } from '../../../../test/setup/nuxt-stubs'
 
-// 提供 i18n stub
+// Provide i18n stub
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({

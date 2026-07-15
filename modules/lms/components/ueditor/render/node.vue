@@ -19,10 +19,10 @@
     </template>
   </template>
 
-  <!-- 匹配到注册类型的节点：动态组件渲染（按需透传 blockKeyPrefix / blockKey） -->
+  <!-- Matched registered node type: dynamic component rendering (pass-through blockKeyPrefix / blockKey as needed) -->
   <component v-else-if="currentComponent" :is="currentComponent" v-bind="componentProps" />
 
-  <!-- 未知节点类型：div 包裹降级渲染 -->
+  <!-- Unknown node type: div-wrapped fallback rendering -->
   <div v-else>
     <RenderNode v-for="(child, index) in node.content" :key="index" :node="child" :course-id="courseId" />
   </div>
@@ -37,11 +37,11 @@ defineOptions({ name: 'RenderNode' })
 const props = defineProps({
   node: { type: Object, required: true },
   courseId: { type: [Number, String], default: undefined },
-  // 是否追踪 hover 阅读进度（仅章节主内容区开启，嵌套 ueditorRender 不开启）
+  // Whether to track hover reading progress (only enabled in chapter main content area, not in nested ueditorRender)
   trackReading: { type: Boolean, default: false },
-  // 列表节点专用：顶层块 index（字符串），列表组件据此为每个 <li> 生成 blockKey
+  // List node only: top-level block index (string), list component generates blockKey for each <li> based on this
   blockKeyPrefix: { type: String, default: undefined },
-  // 列表项专用：由列表组件传入，list-item/task-item 据此在 <li> 上做 hover 追踪
+  // List item only: passed in by list component, list-item/task-item use this for hover tracking on <li>
   blockKey: { type: String, default: undefined },
 })
 
@@ -52,7 +52,7 @@ function isListType(type) {
   return LIST_TYPES.has(type)
 }
 
-// 仅在显式传入时透传 blockKeyPrefix / blockKey，避免非列表组件的属性穿透
+// Only pass through blockKeyPrefix / blockKey when explicitly provided, to avoid prop leakage to non-list components
 const componentProps = computed(() => {
   const p = { node: props.node, courseId: props.courseId }
   if (props.blockKeyPrefix) p.blockKeyPrefix = props.blockKeyPrefix

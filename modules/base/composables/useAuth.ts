@@ -1,4 +1,4 @@
-// ====================== 类型定义 ======================
+// ====================== Type definitions ======================
 
 interface User {
   id: number
@@ -33,31 +33,31 @@ interface AuthData {
   [key: string]: any
 }
 
-// ====================== SSR 兼容的状态管理 ======================
+// ====================== SSR-compatible state management ======================
 
 /**
- * useAuth — 基于 useFetch 的 SSR 兼容认证组合式函数
+ * useAuth — SSR-compatible auth composable based on useFetch
  *
- * 核心原理：
- * - 使用 useFetch 在 SSR 阶段发起内部请求（cookie 自动转发）
- * - 返回数据被序列化到页面 payload 中，客户端 hydration 时直接还原
- * - 多个组件调用 useAuth() 共享同一份 useAsyncData 缓存
+ * Core principle:
+ * - Uses useFetch to make internal requests during SSR (cookies auto-forwarded)
+ * - Returned data is serialized into page payload, restored directly on client hydration
+ * - Multiple components calling useAuth() share the same useAsyncData cache
  *
- * base 仅返回 user/roles/permissions；后续模块（如 lms）可通过
- * server 端 runOnMeEnrich 钩子向 /api/auth/me 注入额外字段，
- * 这些字段会通过 [key: string]: any 透传到 authData 上。
+ * base only returns user/roles/permissions; subsequent modules (e.g. lms) can inject
+ * additional fields into /api/auth/me via the server-side runOnMeEnrich hook,
+ * these fields are passed through to authData via [key: string]: any.
  */
 export function useAuth() {
-  // 使用 useFetch（底层 useAsyncData）实现 SSR 兼容
-  // 服务端请求时会自动转发浏览器 cookie，客户端会从 payload 还原数据
+  // Use useFetch (underlying useAsyncData) for SSR compatibility
+  // Server requests auto-forward browser cookies, client restores data from payload
   const { data: authData, refresh: refreshUser, status } = useFetch('/api/auth/me', {
-    // 显式 key，供 getAuthUserSync 从 payload 缓存读取
+    // Explicit key, for getAuthUserSync to read from payload cache
     key: 'auth:me',
-    // 服务端也请求（SSR），确保首屏就有用户数据
+    // Server also requests (SSR), ensure user data is available on first screen
     server: true,
-    // 懒加载关闭，setup 阶段即发起请求
+    // Lazy loading disabled, request initiated during setup phase
     lazy: false,
-    // 解析 { data, success, msg } 包裹格式
+    // Parse { data, success, msg } wrapper format
     transform: (raw: any) => {
       if (raw && raw.success && raw.data) {
         return raw.data as AuthData
@@ -66,7 +66,7 @@ export function useAuth() {
     },
   })
 
-  // ====================== 派生状态 ======================
+  // ====================== Derived state ======================
 
   const user = computed(() => authData.value?.user ?? null)
   const roles = computed<Role[]>(() => authData.value?.roles ?? [])
@@ -74,26 +74,26 @@ export function useAuth() {
   const isLoggedIn = computed(() => !!user.value)
   const isLoading = computed(() => status.value === 'pending')
 
-  // ====================== 权限检查方法 ======================
+  // ====================== Permission check methods ======================
 
-  /** 检查当前用户是否拥有指定角色 */
+  /** Check if current user has the specified role */
   function hasRole(code: string): boolean {
     return roles.value.some((r) => r.code === code)
   }
 
-  /** 检查当前用户是否拥有任一角色 */
+  /** Check if current user has any of the specified roles */
   function hasAnyRole(codes: string[]): boolean {
     return codes.some((code) => hasRole(code))
   }
 
-  /** 检查当前用户是否拥有指定权限 */
+  /** Check if current user has the specified permission */
   function hasPermission(code: string): boolean {
     return permissions.value.some((p) => p.code === code)
   }
 
-  // ====================== 变更方法（仅客户端调用） ======================
+  // ====================== Mutation methods (client-side only) ======================
 
-  /** 登录 */
+  /** Login */
   async function login(username: string, password: string) {
     const result = await cRequest<{ user: User; token: string }>('/api/auth/login', {
       method: 'POST',
@@ -103,7 +103,7 @@ export function useAuth() {
     return result
   }
 
-  /** 注册 */
+  /** Register */
   async function register(username: string, password: string, name: string, email?: string) {
     const result = await cRequest<{ user: User; token: string }>('/api/auth/register', {
       method: 'POST',
@@ -113,7 +113,7 @@ export function useAuth() {
     return result
   }
 
-  /** 登出 */
+  /** Logout */
   async function logout() {
     await cRequest('/api/auth/logout', { method: 'POST' })
     await refreshUser()
@@ -132,15 +132,15 @@ export function useAuth() {
     register,
     logout,
     refreshUser,
-    // 暴露原始 useFetch 数据，供后续模块（如 lms useAuthLms）读取扩展字段
-    // （editorCourseIds / teacherCourseIds / classIds 等由 server runOnMeEnrich 注入）
+    // Expose raw useFetch data for subsequent modules (e.g. lms useAuthLms) to read extended fields
+    // (editorCourseIds / teacherCourseIds / classIds etc. injected by server runOnMeEnrich)
     authData,
   }
 }
 
 /**
- * 同步读取当前认证用户（从 payload 缓存，不触发 useFetch）
- * 适用于不能调用 useAuth() 的非 setup 上下文（如 WebSocket 回调、watch 回调）
+ * Synchronously read current authenticated user (from payload cache, does not trigger useFetch)
+ * Suitable for non-setup contexts where useAuth() cannot be called (e.g. WebSocket callbacks, watch callbacks)
  */
 export function getAuthUserSync(): User | null {
   const nuxtApp = useNuxtApp()

@@ -1,5 +1,5 @@
 <template>
-    <!-- 学生视角：只显示自己所在的组 -->
+    <!-- Student view: only show the group they belong to -->
     <div v-if="!canEdit" class="space-y-4 max-w-md mx-auto">
         <div v-if="myGroupMembers.length > 0">
             <div class="text-sm font-medium mb-2">{{ myGroupName }}</div>
@@ -16,9 +16,9 @@
         <div v-else class="text-center py-6 text-gray-400 text-sm">{{ $t('coursePanel.ungrouped') }}</div>
     </div>
 
-    <!-- 教师视角：完整编辑界面 -->
+    <!-- Teacher view: full edit interface -->
     <div v-else class="flex gap-4">
-        <!-- 未分组学生 -->
+        <!-- Ungrouped student -->
         <div class="w-56 flex-shrink-0">
             <div class="text-xs font-medium text-gray-400 mb-2">
                 {{ $t('coursePanel.ungrouped') }} ({{ ungrouped.length }})
@@ -34,7 +34,7 @@
             </div>
         </div>
 
-        <!-- 分组列表 -->
+        <!-- Group List -->
         <div class="flex-1 flex flex-wrap gap-3">
             <div v-for="(members, groupName) in groupData" :key="groupName" class="w-64 flex-shrink-0"
                 @dragover.prevent="onGroupDragOver($event, groupName as string)" @drop="onDrop($event, groupName as string)">

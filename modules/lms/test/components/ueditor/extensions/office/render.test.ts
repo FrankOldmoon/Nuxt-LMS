@@ -1,8 +1,8 @@
 /**
- * office/render.vue 组件测试
+ * office/render.vue component test
  * @see modules/lms/components/ueditor/extensions/nodes/vue/office/render.vue
  *
- * 使用 iframe 嵌入 Office Online viewer
+ * Uses iframe to embed Office Online viewer
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

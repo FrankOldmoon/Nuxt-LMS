@@ -1,5 +1,5 @@
 /**
- * tableOverride 工具测试
+ * tableOverride utility tests
  * @see modules/admin/utils/tableOverride.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -19,7 +19,7 @@ describe('utils/tableOverride - 注册与查询', () => {
     registerTableOverride('questions', { form: FakeForm })
 
     const { override } = useTableOverride(() => 'questions')
-    // 两次注册合并：show 和 form 都保留
+    // Two registrations merge: both show and form are kept
     expect(override.value.show).toBe(FakeShow)
     expect(override.value.form).toBe(FakeForm)
   })
@@ -47,7 +47,7 @@ describe('utils/tableOverride - 注册与查询', () => {
   it('响应式：tableName 变化时 override 重新计算', async () => {
     const { registerTableOverride, useTableOverride } = await import('../../utils/tableOverride')
     const FakeShow = { name: 'FakeShow' } as any
-    // 使用未被其他用例注册的表名，避免 REGISTRY 单例污染
+    // Use a table name not registered by other test cases to avoid REGISTRY singleton pollution
     registerTableOverride('races', { show: FakeShow })
 
     const { ref } = await import('vue')

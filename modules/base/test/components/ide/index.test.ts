@@ -1,9 +1,9 @@
 /**
- * Ide 组件测试
+ * Ide component tests
  * @see modules/base/components/ide/index.vue
  *
- * 在线 IDE 主容器：工具栏 + Monaco 编辑器 + 输入面板 + 输出面板
- * 依赖 useIde() composable（Nuxt auto-import），测试中通过 globalThis 注入桩
+ * Online IDE main container: toolbar + Monaco editor + input panel + output panel
+ * Depends on useIde() composable (Nuxt auto-import), injected via globalThis in tests
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -17,7 +17,7 @@ beforeEach(() => {
     t: (k: string) => k,
     d: (v: any) => String(v),
   })
-  // 桩 useIde composable（auto-import），避免加载 Pyodide/Worker 等重依赖
+  // Stub useIde composable (auto-import) to avoid loading heavy dependencies like Pyodide/Worker
   ;(globalThis as any).useIde = (
     _modelValue: () => string,
     _language: () => string,
@@ -45,7 +45,7 @@ afterEach(() => {
   delete (globalThis as any).useIde
 })
 
-// 桩子组件，避免递归加载 Monaco / 重依赖
+// Stub child components to avoid recursively loading Monaco / heavy dependencies
 const _globalStubs = {
   IdeToolbar: {
     name: 'IdeToolbar',

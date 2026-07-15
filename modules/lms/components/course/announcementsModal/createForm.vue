@@ -1,12 +1,12 @@
 <template>
-  <!-- 新建表单入口（仅教师） -->
+  <!-- New form entry (teacher only) -->
   <div v-if="canCreate" class="flex justify-end">
     <UButton :icon="showCreateForm ? 'i-lucide-x' : 'i-lucide-plus'"
       :label="showCreateForm ? $t('common.cancel') : $t('announcement.new')" color="primary"
       variant="soft" size="sm" @click="toggleCreateForm" />
   </div>
 
-  <!-- 新建表单 -->
+  <!-- NewForm -->
   <div v-if="showCreateForm && canCreate"
     class="p-4 border border-default rounded-lg space-y-3 bg-elevated/30">
     <UFormField :label="$t('announcement.name')" required>
@@ -24,7 +24,7 @@
           :model-value="form.classIds.includes(cls.id)" :label="cls.name"
           @update:model-value="(v) => toggleClass(cls.id, v)" />
         <span v-if="!classes.length" class="text-xs text-muted">
-          {{ $t('announcement.noClasses') }}
+          {{ $t('announcement.no classes') }}
         </span>
       </div>
       <p class="text-xs text-muted mt-1.5">

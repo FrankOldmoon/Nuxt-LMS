@@ -1,11 +1,11 @@
 /**
- * site 配置默认值（拍平存储）
+ * Site config default values (flattened storage)
  *
- * 每个 key 独立存为 configs 表一行（id = 带点 key，value = 标量 jsonb）。
- * 由 settingsModal 读写，启动插件播种默认值。
+ * Each key is stored independently as a row in the configs table (id = dotted key, value = scalar jsonb).
+ * Read/written by settingsModal, seeded with default values by the startup plugin.
  */
 export const DEFAULT_SITE_CONFIG: Record<string, any> = {
-  // 站点基础
+  // Site basics
   'site:title': 'AI LMS',
   'site:description': '',
   'site:keywords': '',
@@ -18,7 +18,7 @@ export const DEFAULT_SITE_CONFIG: Record<string, any> = {
   'site:maxFileSize': 50,
   'site:allowedFileTypes': '',
   'site:maintenanceMode': false,
-  // 账号安全
+  // Account security
   'site:allowRegistration': false,
   'site:allowForgotPassword': true,
   'site:defaultUserRole': 'student',
@@ -26,10 +26,10 @@ export const DEFAULT_SITE_CONFIG: Record<string, any> = {
   'site:sessionMaxAge': 604800,
   'site:loginMaxAttempts': 0,
   'site:loginLockoutMinutes': 15,
-  // 网盘配额
+  // Drive quota
   'site:driveQuota': 1073741824,
   'site:teacherDriveMultiplier': 1,
-  // 邮件
+  // Mail
   'site:mail.host': '',
   'site:mail.port': 465,
   'site:mail.secure': true,
@@ -37,7 +37,7 @@ export const DEFAULT_SITE_CONFIG: Record<string, any> = {
   'site:mail.pass': '',
   'site:mail.from': '',
   'site:mail.siteUrl': '',
-  // 前端页面显示控制（拍平）
+  // Frontend page display control (flattened)
   'site:showNotify': true,
   'site:showMsg': true,
   'site:showMyFiles': true,

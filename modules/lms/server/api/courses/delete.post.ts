@@ -8,7 +8,7 @@ export default eventHandler(async (event) => {
   const { course_id, cid, type } = body
 
   if (!course_id || !cid || !type) {
-    return cResp(null, '缺少参数', false)
+    return cResp(null, 'Missing parameters', false)
   }
 
   const courseId = Number(course_id)
@@ -41,11 +41,11 @@ export default eventHandler(async (event) => {
         eq(schema.races.cid, itemCid)
       ))
     } else {
-      return cResp(null, '未知类型', false)
+      return cResp(null, 'Unknown type', false)
     }
     return cResp({ deleted: true })
   } catch (error: any) {
-    console.error('删除失败:', error)
-    return cResp(null, error.message || '删除失败', false)
+    console.error('Delete failed:', error)
+    return cResp(null, error.message || 'Delete failed', false)
   }
 })

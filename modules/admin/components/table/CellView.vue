@@ -1,38 +1,38 @@
 <template>
   <div class="admin-cell-view inline-flex items-center min-w-0">
-    <!-- 空值 -->
+    <!-- Empty value -->
     <span v-if="isEmpty" class="text-muted text-xs">-</span>
 
-    <!-- 图标（lucide / iconify 名称） -->
+    <!-- Icon (lucide / iconify name) -->
     <UIcon
       v-else-if="type === 'icon'"
       :name="fullIconName(String(value))"
       class="size-4"
     />
 
-    <!-- 图片 -->
+    <!-- Image -->
     <TableCellImage
       v-else-if="type === 'image' && String(value)"
       :value="value"
     />
 
-    <!-- 文件列表（每行一个链接） -->
+    <!-- File list (one link per line) -->
     <TableCellFile
       v-else-if="type === 'file'"
       :value="value"
     />
 
-    <!-- 日期 / 时间戳 -->
+    <!-- Date / timestamp -->
     <span v-else-if="type === 'date'" class="text-xs whitespace-nowrap" :title="rawString">
       {{ dateLabel }}
     </span>
 
-    <!-- 布尔 -->
+    <!-- Boolean -->
     <UBadge v-else-if="type === 'boolean'" :color="value ? 'success' : 'neutral'" variant="subtle" size="sm">
       {{ value ? t('admin.cell.true') : t('admin.cell.false') }}
     </UBadge>
 
-    <!-- 枚举 -->
+    <!-- Enum -->
     <UBadge v-else-if="type === 'enum'" color="info" variant="subtle" size="sm">
       {{ String(value) }}
     </UBadge>
@@ -45,22 +45,22 @@
       </template>
     </UPopover>
 
-    <!-- 外键 -->
+    <!-- Foreign key -->
     <span v-else-if="type === 'fk'" class="text-xs">
       <span v-if="fkLabel" :title="`#${value}`">{{ fkLabel }}</span>
       <span v-else class="text-muted">#{{ value }}</span>
     </span>
 
-    <!-- 数字 -->
+    <!-- Number -->
     <span v-else-if="type === 'number'" class="text-xs tabular-nums">{{ Number(value).toLocaleString() }}</span>
 
-    <!-- 主键 id -->
+    <!-- Primary key id -->
     <UBadge v-else-if="type === 'id'" color="neutral" variant="soft" size="sm" class="font-mono">{{ value }}</UBadge>
 
-    <!-- 密码脱敏 -->
+    <!-- Password masked -->
     <span v-else-if="type === 'password'" class="text-muted text-xs">••••••</span>
 
-    <!-- 文本 -->
+    <!-- Text -->
     <span v-else class="text-sm truncate" :title="rawString">{{ textLabel }}</span>
   </div>
 </template>
@@ -71,7 +71,7 @@ import type { ColumnMeta } from '../../utils/types'
 const props = defineProps<{
   column: ColumnMeta
   value: any
-  /** 外键已解析的标签（由父组件查询并传入） */
+  /** Foreign key resolved label (queried and passed in by parent component) */
   fkLabel?: string
 }>()
 

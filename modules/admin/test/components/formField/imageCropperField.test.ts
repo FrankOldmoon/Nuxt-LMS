@@ -1,8 +1,8 @@
 /**
- * formField/imageCropperField 组件测试
+ * formField/imageCropperField component tests
  * @see modules/admin/components/table/formField/imageCropperField.vue
  *
- * UInput + UAvatar 预览 + TableImageCropperTrigger 触发器 + UModal 预览弹窗
+ * UInput + UAvatar preview + TableImageCropperTrigger trigger + UModal preview modal
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -17,7 +17,7 @@ beforeEach(() => {
   })
 })
 
-// 桩 TableImageCropperTrigger 子组件（Nuxt 自动导入的组件名）
+// Stub TableImageCropperTrigger child component (Nuxt auto-imported component name)
 const _globalStubs = {
   UInput: {
     template: '<input :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',

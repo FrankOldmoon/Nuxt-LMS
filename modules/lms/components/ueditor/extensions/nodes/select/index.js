@@ -2,7 +2,7 @@ import { Node, InputRule, PasteRule, mergeAttributes } from '@tiptap/core'
 import { VueNodeViewRenderer } from '@tiptap/vue-3'
 import VueNodeView from './node-view.vue'
 
-// ||answer|| → select 节点
+// ||answer|| → select nodePoint
 const SELECT_REGEX = /\|\|(.*?)\|\|/
 
 const handleMatch = ({ state, range, match, commands }) => {

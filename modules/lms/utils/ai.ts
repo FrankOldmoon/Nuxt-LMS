@@ -1,11 +1,11 @@
 /**
- * TTS (Text-to-Speech) 工具函数
- * 通过服务端 edge-tts API 合成语音，客户端用 HTMLAudioElement 播放
+ * TTS (Text-to-Speech) utility functions
+ * Synthesize speech via the server-side edge-tts API, play on the client with HTMLAudioElement
  *
- * 数据流：speak(text) → POST /api/aichat/tts → MP3 blob → Audio.play()
+ * Data flow: speak(text) → POST /api/aichat/tts → MP3 blob → Audio.play()
  */
 
-/** 语音对象（与浏览器 SpeechSynthesisVoice 接口形状兼容，voiceURI 存储 edge-tts 语音名） */
+/** Voice object (compatible with the browser SpeechSynthesisVoice interface shape; voiceURI stores the edge-tts voice name) */
 export interface TTSVoice {
   name: string
   lang: string
@@ -13,7 +13,7 @@ export interface TTSVoice {
   default?: boolean
 }
 
-/** 兼容旧导入：tts.vue 中 import type { SpeechSynthesisVoice } from ai */
+/** Backward-compatible import: tts.vue uses import type { SpeechSynthesisVoice } from ai */
 export type SpeechSynthesisVoice = TTSVoice
 
 export interface TTSOptions {
@@ -23,11 +23,11 @@ export interface TTSOptions {
   pitch?: number
   volume?: number
   voice?: TTSVoice
-  /** 语音性别筛选（仅当未传 voice 时生效） */
+  /** Voice gender filter (only effective when voice is not provided) */
   gender?: 'female' | 'male'
-  /** 语音开始播放时触发（用于驱动口型同步等） */
+  /** Triggered when voice playback starts (used to drive lip-sync, etc.) */
   onStart?: () => void
-  /** 语音播放结束时触发（正常结束或被取消/出错） */
+  /** Triggered when voice playback ends (normal end or cancelled/error) */
   onEnd?: () => void
 }
 
@@ -44,60 +44,60 @@ export interface TTSService {
 }
 
 /**
- * edge-tts 常用语音列表（按语言分组，含男女声）
- * voiceURI 即 edge-tts 语音名，发送到 /api/aichat/tts 的 voice 参数
+ * Common edge-tts voice list (grouped by language, including male and female voices)
+ * voiceURI is the edge-tts voice name, sent as the voice parameter to /api/aichat/tts
  */
 const EDGE_TTS_VOICES: TTSVoice[] = [
-  // 中文
-  { name: '晓晓 (女声)', lang: 'zh-CN', voiceURI: 'zh-CN-XiaoxiaoNeural' },
-  { name: '云希 (男声)', lang: 'zh-CN', voiceURI: 'zh-CN-YunxiNeural' },
-  { name: '晓伊 (女声)', lang: 'zh-CN', voiceURI: 'zh-CN-XiaoyiNeural' },
-  { name: '云扬 (男声)', lang: 'zh-CN', voiceURI: 'zh-CN-YunyangNeural' },
-  { name: '曉臻 (女声)', lang: 'zh-TW', voiceURI: 'zh-TW-HsiaoChenNeural' },
-  { name: '雲瑞 (男声)', lang: 'zh-TW', voiceURI: 'zh-TW-YunJuiNeural' },
-  // 英语
+  // Chinese
+  { name: 'Xiaoxiao (Female)', lang: 'zh-CN', voiceURI: 'zh-CN-XiaoxiaoNeural' },
+  { name: 'Yunxi (Male)', lang: 'zh-CN', voiceURI: 'zh-CN-YunxiNeural' },
+  { name: 'Xiaoyi (Female)', lang: 'zh-CN', voiceURI: 'zh-CN-XiaoyiNeural' },
+  { name: 'Yunyang (Male)', lang: 'zh-CN', voiceURI: 'zh-CN-YunyangNeural' },
+  { name: 'HsiaoChen (Female)', lang: 'zh-TW', voiceURI: 'zh-TW-HsiaoChenNeural' },
+  { name: 'YunJui (Male)', lang: 'zh-TW', voiceURI: 'zh-TW-YunJuiNeural' },
+  // English
   { name: 'Emma (Female)', lang: 'en-US', voiceURI: 'en-US-EmmaMultilingualNeural' },
   { name: 'Jenny (Female)', lang: 'en-US', voiceURI: 'en-US-JennyNeural' },
   { name: 'Guy (Male)', lang: 'en-US', voiceURI: 'en-US-GuyNeural' },
   { name: 'Davis (Male)', lang: 'en-US', voiceURI: 'en-US-DavisNeural' },
   { name: 'Sonia (Female)', lang: 'en-GB', voiceURI: 'en-GB-SoniaNeural' },
   { name: 'Ryan (Male)', lang: 'en-GB', voiceURI: 'en-GB-RyanNeural' },
-  // 日语
-  { name: '七海 (女声)', lang: 'ja-JP', voiceURI: 'ja-JP-NanamiNeural' },
-  { name: '圭太 (男声)', lang: 'ja-JP', voiceURI: 'ja-JP-KeitaNeural' },
-  // 韩语
-  { name: '선히 (Female)', lang: 'ko-KR', voiceURI: 'ko-KR-SunHiNeural' },
-  { name: '인준 (Male)', lang: 'ko-KR', voiceURI: 'ko-KR-InJoonNeural' },
-  // 法语
+  // Japanese
+  { name: 'Nanami (Female)', lang: 'ja-JP', voiceURI: 'ja-JP-NanamiNeural' },
+  { name: 'Keita (Male)', lang: 'ja-JP', voiceURI: 'ja-JP-KeitaNeural' },
+  // Korean
+  { name: 'SunHi (Female)', lang: 'ko-KR', voiceURI: 'ko-KR-SunHiNeural' },
+  { name: 'InJoon (Male)', lang: 'ko-KR', voiceURI: 'ko-KR-InJoonNeural' },
+  // French
   { name: 'Denise (Female)', lang: 'fr-FR', voiceURI: 'fr-FR-DeniseNeural' },
   { name: 'Henri (Male)', lang: 'fr-FR', voiceURI: 'fr-FR-HenriNeural' },
-  // 德语
+  // German
   { name: 'Katja (Female)', lang: 'de-DE', voiceURI: 'de-DE-KatjaNeural' },
   { name: 'Conrad (Male)', lang: 'de-DE', voiceURI: 'de-DE-ConradNeural' },
-  // 西班牙语
+  // Spanish
   { name: 'Elvira (Female)', lang: 'es-ES', voiceURI: 'es-ES-ElviraNeural' },
   { name: 'Alvaro (Male)', lang: 'es-ES', voiceURI: 'es-ES-AlvaroNeural' },
-  // 意大利语
+  // Italian
   { name: 'Elsa (Female)', lang: 'it-IT', voiceURI: 'it-IT-ElsaNeural' },
   { name: 'Diego (Male)', lang: 'it-IT', voiceURI: 'it-IT-DiegoNeural' },
-  // 俄语
+  // Russian
   { name: 'Svetlana (Female)', lang: 'ru-RU', voiceURI: 'ru-RU-SvetlanaNeural' },
   { name: 'Dmitry (Male)', lang: 'ru-RU', voiceURI: 'ru-RU-DmitryNeural' },
-  // 葡萄牙语
+  // Portuguese
   { name: 'Francisca (Female)', lang: 'pt-BR', voiceURI: 'pt-BR-FranciscaNeural' },
   { name: 'Antonio (Male)', lang: 'pt-BR', voiceURI: 'pt-BR-AntonioNeural' },
 ]
 
-/** 从语音名称推断性别 */
+/** Infer gender from voice name */
 function detectVoiceGender(voice: TTSVoice): 'female' | 'male' | null {
-  if (/(女声|女|Female)/i.test(voice.name)) return 'female'
-  if (/(男声|男|Male)/i.test(voice.name)) return 'male'
+  if (/(\u5973\u58f0|\u5973|Female)/i.test(voice.name)) return 'female'
+  if (/(\u7537\u58f0|\u7537|Male)/i.test(voice.name)) return 'male'
   return null
 }
 
 /**
- * 创建 TTS 服务实例
- * 通过 /api/aichat/tts（edge-tts）合成语音，客户端用 HTMLAudioElement 播放
+ * Create a TTS service instance
+ * Synthesize speech via /api/aichat/tts (edge-tts), play on the client with HTMLAudioElement
  */
 export function createTTSService(): TTSService {
   let audio: HTMLAudioElement | null = null
@@ -107,7 +107,7 @@ export function createTTSService(): TTSService {
   let currentResolve: (() => void) | null = null
   let speaking = false
 
-  /** 释放音频资源（不触发 onEnd，不 resolve Promise） */
+  /** Release audio resources (does not trigger onEnd, does not resolve Promise) */
   function cleanup(): void {
     if (abortController) {
       abortController.abort()
@@ -127,7 +127,7 @@ export function createTTSService(): TTSService {
     speaking = false
   }
 
-  /** 停止当前播放：释放资源 + 触发 onEnd + resolve speak() 的 Promise */
+  /** Stop current playback: release resources + trigger onEnd + resolve speak()'s Promise */
   function stopCurrent(): void {
     const onEnd = currentOnEnd
     const resolve = currentResolve
@@ -140,11 +140,11 @@ export function createTTSService(): TTSService {
 
   return {
     /**
-     * 播放语音
+     * Play speech
      * POST /api/aichat/tts → MP3 blob → Audio.play()
      */
     speak: async (options: TTSOptions): Promise<void> => {
-      // 停止当前播放（若有）
+      // Stop current playback (if any)
       stopCurrent()
 
       speaking = true
@@ -162,7 +162,7 @@ export function createTTSService(): TTSService {
             pitch: options.pitch,
             volume: options.volume,
             lang: options.lang,
-            // 显式选了 voice 时不传 gender（让 voice 优先）
+            // When voice is explicitly selected, do not send gender (let voice take priority)
             gender: options.voice ? undefined : options.gender,
           }),
           signal: abortController.signal,
@@ -170,12 +170,12 @@ export function createTTSService(): TTSService {
 
         if (!resp.ok) {
           const err = await resp.json().catch(() => ({}))
-          throw new Error(err.msg || `TTS 请求失败: ${resp.status}`)
+          throw new Error(err.msg || `TTS request failed: ${resp.status}`)
         }
 
         const blob = await resp.blob()
 
-        // stop() 在 fetch 期间被调用 → abortController 已被 cleanup 置空，静默返回
+        // stop() was called during fetch → abortController has been cleared by cleanup, return silently
         if (!abortController) return
 
         objectUrl = URL.createObjectURL(blob)
@@ -197,7 +197,7 @@ export function createTTSService(): TTSService {
             currentResolve = null
             cleanup()
             options.onEnd?.()
-            reject(new Error('音频播放失败'))
+            reject(new Error('Audio playback failed'))
           }
           audio!.play().catch((e) => {
             currentOnEnd = null
@@ -208,7 +208,7 @@ export function createTTSService(): TTSService {
           })
         })
       } catch (e: any) {
-        // stop() 导致的 AbortError → 已由 stopCurrent 处理，静默返回
+        // AbortError caused by stop() → already handled by stopCurrent, return silently
         if (e.name === 'AbortError' || !abortController) return
         currentOnEnd = null
         currentResolve = null
@@ -219,14 +219,14 @@ export function createTTSService(): TTSService {
     },
 
     /**
-     * 停止播放
+     * Stop playback
      */
     stop: () => {
       stopCurrent()
     },
 
     /**
-     * 暂停播放
+     * Pause playback
      */
     pause: () => {
       if (audio && !audio.paused) {
@@ -235,7 +235,7 @@ export function createTTSService(): TTSService {
     },
 
     /**
-     * 恢复播放
+     * Resume playback
      */
     resume: () => {
       if (audio && audio.paused) {
@@ -244,14 +244,14 @@ export function createTTSService(): TTSService {
     },
 
     /**
-     * 获取所有可用的语音
+     * Get all available voices
      */
     getVoices: (): TTSVoice[] => {
       return EDGE_TTS_VOICES
     },
 
     /**
-     * 根据语言获取语音列表（可选按性别筛选，无匹配时回退到未筛选列表）
+     * Get voice list by language (optionally filter by gender; falls back to unfiltered list if no match)
      */
     getVoicesByLanguage: (lang: string, gender?: 'female' | 'male'): TTSVoice[] => {
       const langVoices = EDGE_TTS_VOICES.filter(voice =>
@@ -263,21 +263,21 @@ export function createTTSService(): TTSService {
     },
 
     /**
-     * 检测是否支持 TTS（需要浏览器 Audio 构造器播放服务端合成的 MP3）
+     * Check whether TTS is supported (requires browser Audio constructor to play server-synthesized MP3)
      */
     isSupported: (): boolean => {
       return typeof window !== 'undefined' && typeof window.Audio !== 'undefined'
     },
 
     /**
-     * 检查是否正在播放
+     * Check whether currently playing
      */
     isSpeaking: (): boolean => {
       return speaking
     },
 
     /**
-     * 检查是否暂停
+     * Check whether paused
      */
     isPaused: (): boolean => {
       return !!audio && audio.paused && speaking
@@ -286,33 +286,33 @@ export function createTTSService(): TTSService {
 }
 
 /**
- * 语言代码映射表
+ * Language code mapping table
  */
 export const languageMap: Record<string, string> = {
-  'zh-CN': '中文（简体）',
-  'zh-TW': '中文（繁体）',
-  'en-US': '英语（美国）',
-  'en-GB': '英语（英国）',
-  'ja-JP': '日语',
-  'ko-KR': '韩语',
-  'fr-FR': '法语',
-  'de-DE': '德语',
-  'es-ES': '西班牙语',
-  'it-IT': '意大利语',
-  'ru-RU': '俄语',
-  'pt-BR': '葡萄牙语（巴西）',
-  'ar-SA': '阿拉伯语',
-  'hi-IN': '印地语',
-  'th-TH': '泰语',
-  'vi-VN': '越南语',
-  'nl-NL': '荷兰语',
-  'pl-PL': '波兰语',
-  'tr-TR': '土耳其语'
+  'zh-CN': 'Chinese (Simplified)',
+  'zh-TW': 'Chinese (Traditional)',
+  'en-US': 'English (US)',
+  'en-GB': 'English (UK)',
+  'ja-JP': 'Japanese',
+  'ko-KR': 'Korean',
+  'fr-FR': 'French',
+  'de-DE': 'German',
+  'es-ES': 'Spanish',
+  'it-IT': 'Italian',
+  'ru-RU': 'Russian',
+  'pt-BR': 'Portuguese (Brazil)',
+  'ar-SA': 'Arabic',
+  'hi-IN': 'Hindi',
+  'th-TH': 'Thai',
+  'vi-VN': 'Vietnamese',
+  'nl-NL': 'Dutch',
+  'pl-PL': 'Polish',
+  'tr-TR': 'Turkish'
 }
 
 /**
- * ASR (Automatic Speech Recognition) 工具函数
- * 使用浏览器 Web Speech API 实现
+ * ASR (Automatic Speech Recognition) utility functions
+ * Implemented using the browser Web Speech API
  */
 
 export interface ASROptions {
@@ -334,13 +334,13 @@ export interface ASRService {
 }
 
 /**
- * 创建 ASR 服务实例
+ * Create an ASR service instance
  */
 export function createASRService(): ASRService {
   let recognition: any = null
   let isListeningFlag = false
 
-  // 获取 SpeechRecognition 构造函数（兼容不同浏览器前缀）
+  // Get the SpeechRecognition constructor (compatible with different browser prefixes)
   const getSpeechRecognition = (): any | null => {
     if (!import.meta.client) return null
 
@@ -351,24 +351,24 @@ export function createASRService(): ASRService {
 
   return {
     /**
-     * 开始语音识别
+     * Start speech recognition
      */
     start: async (options: ASROptions = {}): Promise<void> => {
       return new Promise((resolve, reject) => {
         const SpeechRecognitionClass = getSpeechRecognition()
         if (!SpeechRecognitionClass) {
-          reject(new Error('当前浏览器不支持语音识别'))
+          reject(new Error('Current browser does not support speech recognition'))
           return
         }
 
-        // 停止之前的识别
+        // Stop previous recognition
         if (recognition) {
           recognition.abort()
         }
 
         recognition = new SpeechRecognitionClass()
 
-        // 设置识别参数
+        // Set recognition parameters
         if (options.lang) recognition.lang = options.lang
         if (options.continuous !== undefined) recognition.continuous = options.continuous
         if (options.interimResults !== undefined) recognition.interimResults = options.interimResults
@@ -405,7 +405,7 @@ export function createASRService(): ASRService {
           if (options.onError) {
             options.onError(event.error)
           }
-          reject(new Error(`语音识别错误: ${event.error}`))
+          reject(new Error(`Speech recognition error: ${event.error}`))
         }
 
         recognition.onend = () => {
@@ -420,7 +420,7 @@ export function createASRService(): ASRService {
     },
 
     /**
-     * 停止语音识别（等待当前识别完成）
+     * Stop speech recognition (wait for current recognition to complete)
      */
     stop: () => {
       if (recognition) {
@@ -430,7 +430,7 @@ export function createASRService(): ASRService {
     },
 
     /**
-     * 中止语音识别（立即停止）
+     * Abort speech recognition (stop immediately)
      */
     abort: () => {
       if (recognition) {
@@ -440,14 +440,14 @@ export function createASRService(): ASRService {
     },
 
     /**
-     * 检查是否支持 ASR
+     * Check whether ASR is supported
      */
     isSupported: (): boolean => {
       return getSpeechRecognition() !== null
     },
 
     /**
-     * 检查是否正在识别
+     * Check whether currently listening
      */
     isListening: (): boolean => {
       return isListeningFlag
@@ -456,12 +456,12 @@ export function createASRService(): ASRService {
 }
 
 /**
- * LLM (Large Language Model) 服务
- * 基于 WebLLM 在浏览器内通过 WebGPU 运行，无需后端
+ * LLM (Large Language Model) service
+ * Runs in-browser via WebLLM using WebGPU, no backend required
  *
- * 设计要点：
- * - engine 实例刻意保留为模块级普通变量，绝不进入 Vue 响应式代理
- * - 通过 subscribeLLMState 让组件订阅状态变化，保持 UI 与引擎解耦
+ * Design notes:
+ * - The engine instance is deliberately kept as a module-level plain variable, never entering the Vue reactive proxy
+ * - Components subscribe to state changes via subscribeLLMState, keeping UI decoupled from the engine
  */
 
 export interface LLMMessage {
@@ -481,7 +481,7 @@ export interface LLMState {
 
 type LLMStateListener = (state: LLMState) => void
 
-// ✅ 模块级单例：引擎与模块均不进入响应式系统
+// ✅ Module-level singleton: engine and module do not enter the reactive system
 let webllmModule: any = null
 let engine: any = null
 
@@ -502,25 +502,25 @@ function setLLMState(updates: Partial<LLMState>): void {
   llmStateListeners.forEach((l) => l(llmState))
 }
 
-/** 订阅 LLM 状态变化，立即触发一次当前状态。返回取消订阅函数。 */
+/** Subscribe to LLM state changes, immediately triggers once with the current state. Returns an unsubscribe function. */
 export function subscribeLLMState(listener: LLMStateListener): () => void {
   llmStateListeners.add(listener)
   listener(llmState)
   return () => { llmStateListeners.delete(listener) }
 }
 
-/** 获取当前 LLM 状态快照 */
+/** Get the current LLM state snapshot */
 export function getLLMState(): LLMState {
   return llmState
 }
 
-/** 默认模型（体积小、加载快，适合演示） */
+/** Default model (small size, fast loading, suitable for demo) */
 export const DEFAULT_LLM_MODEL = "Qwen2.5-0.5B-Instruct-q4f32_1-MLC";
 
-/** 默认模式：api（服务端 API） / local（浏览器本地 WebLLM） */
+/** Default mode: api (server-side API) / local (browser-side WebLLM) */
 export const DEFAULT_LLM_MODE = 'api' as const;
 
-/** 可用的本地模型列表（供 UI 选择，llm.client.vue 与 aichat/edit.vue 共用） */
+/** Available local model list (for UI selection, shared by llm.client.vue and aichat/edit.vue) */
 export const LOCAL_LLM_MODELS: Array<{ label: string; value: string }> = [
   {
     label: "Qwen2.5-0.5B (~300MB)",
@@ -540,16 +540,16 @@ function formatBytesLLM(bytes: number): string {
 }
 
 /**
- * 加载 WebLLM 库（CDN 动态 import）。
+ * Load the WebLLM library (CDN dynamic import).
  *
- * 不走 npm 包 import('@mlc-ai/web-llm')，因为该包体积 6MB+，
- * Vite 依赖优化器会触发 "Maximum call stack size exceeded"。
- * 用 CDN URL 配合 vite-ignore 注释让 Vite 完全跳过解析，
- * 浏览器运行时直接从 CDN 加载 JS+WASM 推理引擎。
+ * Does not use the npm package import('@mlc-ai/web-llm'), because that package is 6MB+,
+ * and Vite's dependency optimizer triggers "Maximum call stack size exceeded".
+ * Uses a CDN URL with the vite-ignore comment to make Vite completely skip parsing;
+ * the browser loads the JS+WASM inference engine directly from the CDN at runtime.
  *
- * 模型权重走云端 HuggingFace（WebLLM 默认 prebuiltAppConfig）。
+ * Model weights are served from HuggingFace cloud (WebLLM's default prebuiltAppConfig).
  *
- * 仅在客户端调用；SSR 不会触发此函数。
+ * Only called on the client; SSR does not trigger this function.
  */
 const WEBLLM_CDN_PRIMARY = 'https://esm.sh/@mlc-ai/web-llm@0.2.84'
 const WEBLLM_CDN_FALLBACK = 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.84/+esm'
@@ -564,7 +564,7 @@ async function loadWebLLMModule(): Promise<any> {
   return webllmModule
 }
 
-/** 检测 WebGPU 是否可用，结果写入 state.supported */
+/** Check whether WebGPU is available, write the result to state.supported */
 export async function checkWebGPU(): Promise<boolean> {
   if (!import.meta.client || !(navigator as any).gpu) {
     setLLMState({ supported: false })
@@ -581,7 +581,7 @@ export async function checkWebGPU(): Promise<boolean> {
   }
 }
 
-// 进度回调节流（按帧合并，避免高频更新卡顿）
+// Progress callback throttling (merged per frame, to avoid lag from high-frequency updates)
 let progressRafId: number | null = null
 let pendingProgress: any = null
 
@@ -602,8 +602,8 @@ function updateProgress(progress: any): void {
 }
 
 /**
- * 加载模型（若已加载则跳过）。仅在客户端执行。
- * @param model 模型 ID，默认 DEFAULT_LLM_MODEL
+ * Load the model (skipped if already loaded). Only executes on the client.
+ * @param model Model ID, defaults to DEFAULT_LLM_MODEL
  */
 export async function loadLLM(model: string = DEFAULT_LLM_MODEL): Promise<void> {
   if (llmState.loading || llmState.ready) return
@@ -632,7 +632,7 @@ export async function loadLLM(model: string = DEFAULT_LLM_MODEL): Promise<void> 
   }
 }
 
-/** 卸载模型，释放显存 */
+/** Unload the model, release GPU memory */
 export async function unloadLLM(): Promise<void> {
   if (progressRafId !== null) {
     if (import.meta.client) cancelAnimationFrame(progressRafId)
@@ -648,11 +648,11 @@ export async function unloadLLM(): Promise<void> {
 }
 
 /**
- * 流式对话：传入消息列表，通过回调推送增量文本，返回完整响应。
+ * Streaming chat: pass in a message list, push incremental text via callback, return the full response.
  *
- * @param messages 对话消息（含 system / user / assistant）
- * @param onChunk  每收到一段文本时触发
- * @returns 完整响应文本
+ * @param messages Conversation messages (including system / user / assistant)
+ * @param onChunk  Triggered each time a chunk of text is received
+ * @returns Full response text
  */
 export async function chatLLM(
   messages: LLMMessage[],
@@ -662,7 +662,7 @@ export async function chatLLM(
     throw new Error('Engine not loaded. Call loadLLM() first.')
   }
 
-  // ✅ map 产生全新普通对象（字段为字符串基本量），已脱离响应式代理
+  // ✅ map produces brand-new plain objects (with string primitive fields), detached from the reactive proxy
   const rawMessages = messages.map((m) => ({ role: m.role, content: m.content }))
 
   const completion = await engine.chat.completions.create({
@@ -681,7 +681,7 @@ export async function chatLLM(
   return full
 }
 
-/** 清理资源（组件卸载时调用） */
+/** Clean up resources (called when the component is unmounted) */
 export function disposeLLM(): void {
   if (progressRafId !== null) {
     if (import.meta.client) cancelAnimationFrame(progressRafId)

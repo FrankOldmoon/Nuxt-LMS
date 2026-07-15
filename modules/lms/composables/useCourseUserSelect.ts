@@ -4,7 +4,7 @@ type CourseUserSelectEmit = {
 }
 
 /**
- * 课程用户切换（教师/管理员以学生身份查看）
+ * Course user switching (teacher/admin view as a student)
  */
 export function useCourseUserSelect(
   props: { courseId: number },
@@ -15,7 +15,7 @@ export function useCourseUserSelect(
   const { hasRole, refreshUser, user } = useAuth()
   const { students, fetchUsers } = useClassUsers()
 
-  // 记录原始角色（教师或管理员），切换学生后仍保留显示
+  // Record original role (teacher or admin), retained after switching to student
   const originalIsAdmin = computed(() => hasRole('admin'))
   const isAdmin = ref(false)
 
@@ -25,7 +25,7 @@ export function useCourseUserSelect(
   const impersonating = ref(false)
   const allStudents = ref<any[]>([])
 
-  // 管理员：全部学生；教师：当前班级学生
+  // Admin: all students; Teacher: current class students
   const userOptions = computed(() => {
     const list = isAdmin.value ? allStudents.value : students.value
     return list.map(s => ({
@@ -34,11 +34,11 @@ export function useCourseUserSelect(
     }))
   })
 
-  // 加载学生列表
+  // Load student list
   async function loadStudents() {
     loading.value = true
     try {
-      // 记录初始角色（加载时仍是教师/管理员）
+      // Record initial role (still teacher/admin when loading)
       isAdmin.value = originalIsAdmin.value
       if (isAdmin.value) {
         const data = await cRequest<any[]>('/api/users/students')
@@ -50,13 +50,13 @@ export function useCourseUserSelect(
         }
       }
     } catch (e) {
-      console.error('[userSelect] 加载学生失败', e)
+      console.error('[userSelect] Failed to load students', e)
     } finally {
       loading.value = false
     }
   }
 
-  // 选择学生 → 切换身份
+  // Select student → switch identity
   async function onSelect(userId: number) {
     if (!userId) return
     try {
@@ -64,15 +64,15 @@ export function useCourseUserSelect(
         method: 'POST',
         body: { userId },
       })
-      // 设置 localStorage 标记，刷新页面时自动恢复
+      // Set localStorage flag for auto-restore on page refresh
       if (import.meta.client) {
         localStorage.setItem('impersonating', 'true')
       }
       impersonating.value = true
-      // 刷新用户状态
+      // Refresh user state
       await refreshUser()
       toast.add({ title: t('coursePanel.impersonateSuccess'), color: 'success' })
-      // 通知父组件重新加载数据
+      // Notify parent component to reload data
       emit('impersonated', userId)
     } catch (e: any) {
       toast.add({ title: e.message || t('coursePanel.impersonateFailed'), color: 'error' })
@@ -80,7 +80,7 @@ export function useCourseUserSelect(
     }
   }
 
-  // 恢复原始身份
+  // Restore original identity
   async function restore() {
     restoring.value = true
     try {

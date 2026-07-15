@@ -22,14 +22,14 @@
     </div>
     <p class="text-xs text-gray-400 mt-1">{{ $t('question.fillRegexHint') }}</p>
 
-    <!-- 正则测试 -->
+    <!-- regexTest -->
     <div v-if="hasRegex" class="mt-2 p-2 rounded-md border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 space-y-2">
       <div v-for="(ans, idx) in parsedAnswers" :key="'test-'+idx">
         <div v-if="regexFlags[idx]" class="space-y-1">
           <label class="text-xs text-gray-500 block">#{{ idx + 1 }} {{ $t('question.shortAnswerTestLabel') }}</label>
           <UInput v-model="testInputs[idx]" :placeholder="$t('question.shortAnswerTestPlaceholder')" size="xs" class="w-full" />
           <p class="text-xs" :class="testResults[idx] ? 'text-green-500' : 'text-red-500'">
-            {{ testResults[idx] ? $t('question.fillRegexMatch') : $t('question.fillRegexNoMatch') }}
+            {{ testResults[idx] ? $t('question.fillRegexMatch') : $t('question.fillRegexNo match') }}
           </p>
         </div>
       </div>

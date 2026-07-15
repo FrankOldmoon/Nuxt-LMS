@@ -8,7 +8,7 @@
 
         <UeditorWs v-if="lockId" :lock-id="lockId" @update:readonly="onLockUpdate" />
 
-        <!-- teacher 可见的 AI 生成悬浮按钮（右下角） -->
+        <!-- teacher Visible AI GeneratehoverButton（Bottom-rightAngle） -->
         <AiFloat :editor="editorRef" :readonly="isReadonly" :can-insert-question="canInsert" />
     </client-only>
 </template>
@@ -38,7 +38,7 @@ const props = defineProps({
         type: Boolean,
         default: true,
     },
-    // 课程 ID：admin 后台复用时传入，覆盖 route.params.id
+    // Course ID：admin BackreplayTime Usedpass in，overlay route.params.id
     courseId: {
         type: [Number, String],
         default: undefined,
@@ -56,7 +56,7 @@ const {
     onCreated,
     onPaste,
     onLockUpdate,
-    onChanged,
+    on changed,
     saveDocument,
 } = useUeditorIndex(props, json)
 

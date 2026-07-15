@@ -1,9 +1,9 @@
 /**
- * chapter/view/aiAssistant.vue 组件测试
+ * chapter/view/aiAssistant.vue component test
  * @see modules/lms/components/chapter/view/aiAssistant.vue
  *
- * 右下角 AI 章节助教按钮 + VRM 数字人 + LLM 聊天面板。
- * 依赖 useChapterViewContext()，测试中 stub 该 composable。
+ * Bottom-right AI chapter assistant button + VRM digital human + LLM chat panel.
+ * Depends on useChapterViewContext(), stubs the composable in tests.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

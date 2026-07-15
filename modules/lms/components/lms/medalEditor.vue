@@ -7,7 +7,7 @@
     </div>
 
     <div v-else class="space-y-3">
-      <!-- 已有奖章列表 -->
+      <!-- alreadyHasmedalList -->
       <div v-for="(medal, idx) in medals" :key="medal.id || `new_${idx}`"
         class="border border-default rounded-lg p-3 space-y-2 bg-elevated/30">
         <div class="flex items-center gap-2">
@@ -19,12 +19,12 @@
         </div>
         <div class="flex items-center gap-2">
           <USelect v-model="medal.content.color" :items="colorOpts" size="xs" class="w-28" />
-          <!-- 图标选择器（Popover 弹窗），图标带当前颜色 -->
+          <!-- Icon Picker（Popover Modal），IconwithCurrentColor -->
           <FormInputIcon v-model="medal.content.icon" :icon-color="iconColorClass(medal.content.color)" />
         </div>
         <UInput v-model="medal.content.description" size="xs" class="w-full"
           :placeholder="$t('medal.descPlaceholder')" />
-        <!-- 条件编辑 -->
+        <!-- itemsconditionEdit -->
         <div class="space-y-1">
           <div class="flex items-center justify-between">
             <span class="text-xs text-muted">{{ $t('medal.conditions') }}</span>
@@ -44,11 +44,11 @@
         </div>
       </div>
 
-      <!-- 新增按钮 -->
+      <!-- Add Button -->
       <UButton :label="$t('medal.add')" icon="i-lucide-plus" color="primary" variant="outline" size="sm"
         block @click="addMedal" />
 
-      <!-- 保存按钮 -->
+      <!-- Save Button -->
       <div class="flex justify-end pt-2">
         <UButton :label="$t('common.save')" color="primary" size="sm" :loading="saving" @click="saveAll" />
       </div>

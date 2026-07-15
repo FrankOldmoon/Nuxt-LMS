@@ -1,59 +1,59 @@
 import type { ColumnMeta } from './types'
 
-/** 图片列名匹配（含 img/avatar/logo/cover/banner/photo/head） */
+/** Image column name matching (includes img/avatar/logo/cover/banner/photo/head) */
 const IMAGE_RE = /(img|image|avatar|logo|cover|banner|photo|head(er)?|thumb(nail)?)$/i
-/** URL 结尾的列名（应作为纯 URL 字符串处理） */
+/** URL-ending column names (should be treated as pure URL strings) */
 const URL_END_RE = /url|link|href$/i
-/** 图标列名匹配（icon）—— 兼容 icon / menuIcon / menu_icon / MenuIcon */
+/** Icon column name matching (icon) — compatible with icon / menuIcon / menu_icon / MenuIcon */
 const ICON_RE = /(?:^|[A-Z_-])icon$/i
-/** 文件列名匹配（files/fileUrls/attachment/attachments） */
+/** File column name matching (files/fileUrls/attachment/attachments) */
 const FILE_RE = /(files|fileUrls|attachments?)$/i
 
 /**
- * 为 cform 选择表单控件类型
+ * Select form control type for cform
  */
 export function widgetFor(column: ColumnMeta): string {
-  // 只读列：自增主键 / 时间戳
+  // Readonly columns: auto-increment primary key / timestamps
   if (column.isAutoIncrement) return 'readonly'
   if (column.jsName === 'createdAt' || column.jsName === 'updatedAt' || column.jsName === 'deletedAt') return 'readonly'
   if (column.jsName === 'password') return 'password'
 
-  // 外键
+  // Foreign key
   if (column.fkTable) return 'fk'
 
-  // 枚举
+  // Enum
   if (column.enumValues && column.enumValues.length > 0) return 'select'
 
-  // 布尔
+  // Boolean
   if (column.dataType === 'boolean') return 'boolean'
 
-  // 日期 / 时间戳
+  // Date / timestamp
   if (column.isTimestamp) return 'date'
 
-  // JSON（Tiptap doc 内容用 RichEditor，其他 json/array 用文本域）
-  // richEditor 覆盖：chapters / chapterVersions / courses / courseVersions / homeworks /
+  // JSON (Tiptap doc content uses RichEditor, other json/array uses textarea)
+  // richEditor override: chapters / chapterVersions / courses / courseVersions / homeworks /
   //   quizzes / races / comments / questions / announcements / medals
-  // （questions 走 form 覆盖，不经过本函数）
+  // (questions goes through form override, does not pass through this function)
   if (column.dataType === 'json' || column.dataType === 'array' || column.columnType === 'PgJSONB') {
     if (column.jsName === 'content') return 'richEditor'
     return 'json'
   }
 
-  // 数字
+  // Number
   if (column.dataType === 'number') return 'number'
 
-  // 字符串特殊类型（仅在 string 时匹配）
+  // String special types (only matched when string)
   if (column.dataType === 'string') {
-    // 文件字段（FormInputFile）—— 优先于 URL/Image，因为 files 也可能包含 URL
+    // File field (FormInputFile) — takes priority over URL/Image, because files may also contain URL
     if (FILE_RE.test(column.jsName)) return 'file'
 
-    // 图标字段（FormInputIcon）
+    // Icon field (FormInputIcon)
     if (ICON_RE.test(column.jsName)) return 'icon'
 
-    // URL 结尾 → 纯 URL 字符串
+    // URL ending → pure URL string
     if (URL_END_RE.test(column.jsName)) return 'image'
 
-    // 图片字段（FormInputFile + FormImageCropperModal）
+    // Image field (FormInputFile + FormImageCropperModal)
     if (IMAGE_RE.test(column.jsName)) return 'imageCropper'
   }
 
@@ -61,54 +61,54 @@ export function widgetFor(column: ColumnMeta): string {
 }
 
 /**
- * 为 cellView 选择展示类型
+ * Select display type for cellView
  */
 export function cellTypeFor(column: ColumnMeta): string {
-  // 自增 id / 主键 → id 标签
+  // Auto-increment id / primary key → id label
   if (column.isAutoIncrement || (column.isPrimaryKey && column.jsName === 'id')) return 'id'
 
-  // 时间戳 → 日期本地化
+  // Timestamp → date localization
   if (column.isTimestamp) return 'date'
 
-  // 布尔
+  // Boolean
   if (column.dataType === 'boolean') return 'boolean'
 
   // JSON
   if (column.dataType === 'json' || column.dataType === 'array' || column.columnType === 'PgJSONB') return 'json'
 
-  // 枚举
+  // Enum
   if (column.enumValues && column.enumValues.length > 0) return 'enum'
 
-  // 外键
+  // Foreign key
   if (column.fkTable) return 'fk'
 
-  // 字符串特殊类型
+  // String special types
   if (column.dataType === 'string') {
     if (FILE_RE.test(column.jsName)) return 'file'
     if (ICON_RE.test(column.jsName)) return 'icon'
     if (IMAGE_RE.test(column.jsName) || URL_END_RE.test(column.jsName)) return 'image'
   }
 
-  // 数字
+  // Number
   if (column.dataType === 'number') return 'number'
 
-  // 密码 → 脱敏
+  // Password → masked
   if (column.jsName === 'password') return 'password'
 
   return 'text'
 }
 
-/** 图片列名判定（供 cellView 额外判断） */
+/** Image column name check (for cellView extra checks) */
 export function isImageColumn(column: ColumnMeta): boolean {
   return column.dataType === 'string' && (IMAGE_RE.test(column.jsName) || URL_END_RE.test(column.jsName))
 }
 
-/** 图标列名判定（供 cellView 额外判断） */
+/** Icon column name check (for cellView extra checks) */
 export function isIconColumn(column: ColumnMeta): boolean {
   return ICON_RE.test(column.jsName) && column.dataType === 'string'
 }
 
-/** 文件列名判定（供 cellView 额外判断） */
+/** File column name check (for cellView extra checks) */
 export function isFileColumn(column: ColumnMeta): boolean {
   return FILE_RE.test(column.jsName) && column.dataType === 'string'
 }

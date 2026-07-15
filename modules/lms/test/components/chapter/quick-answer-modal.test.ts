@@ -1,9 +1,9 @@
 /**
- * chapter/quick-answer-modal.vue 组件测试
+ * chapter/quick-answer-modal.vue component test
  * @see modules/lms/components/chapter/quick-answer-modal.vue
  *
- * 抢答弹窗：教师发起/结束/查看胜者；学生提交抢答。
- * 依赖 useChapterQuickAnswer()，测试中 stub 该 composable 返回 mock 对象。
+ * Quick answer modal: teacher starts/ends/views winner; students submit quick answer.
+ * Depends on useChapterQuickAnswer(), stubs the composable to return mock object in tests.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

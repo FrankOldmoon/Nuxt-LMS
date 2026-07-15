@@ -1,9 +1,9 @@
 /**
- * index 核心组件测试
+ * index core component test
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/index.vue
  *
- * index.vue 包装 Render + Edit，使用 inject 从 'vue' 获取 nodeView 状态
- * 测试 mount + basic props + exposed methods
+ * index.vue wraps Render + Edit, uses inject from 'vue' to get nodeView state
+ * Test mount + basic props + exposed methods
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -13,7 +13,7 @@ import { resetAllStubs, setMockI18n } from '../../../../../../../test/setup/nuxt
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
-  // useChapterTask 不在 nuxt-stubs 的 globalThis 暴露中，需手动添加
+  // useChapterTask is not in nuxt-stubs globalThis exposure, needs manual addition
   ;(globalThis as any).useChapterTask = () => null
 })
 
@@ -85,7 +85,7 @@ describe('question/index.vue', () => {
         return h(Provider, () => h(Index, { node: { attrs: { content: 123 } } }))
       },
     }, { global: { stubs: _globalStubs, mocks: _mocks } })
-    // showConfig=true 时应显示 Edit 面板
+    // When showConfig=true, should show Edit panel
     expect(wrapper.find('.edit-stub').exists()).toBe(true)
   })
 
@@ -99,7 +99,7 @@ describe('question/index.vue', () => {
         return h(Provider, () => h(Index, { node: { attrs: { content: 123 } } }))
       },
     }, { global: { stubs: _globalStubs, mocks: _mocks } })
-    // index.vue 在 setup 中设置 meta.title/icon/hasSettings
+    // index.vue sets meta.title/icon/hasSettings in setup
     expect(meta.title).toBe('题目')
     expect(meta.icon).toBe('i-lucide-circle-help')
     expect(meta.hasSettings).toBe(true)

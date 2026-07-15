@@ -1,8 +1,8 @@
 /**
- * select 组件测试 (render)
+ * select component test (render)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/render/select.vue
  *
- * select 渲染组件无模板内容（内容由父组件渲染），只暴露 submit/reset/fillCorrectAnswer 方法
+ * select render component has no template content (content rendered by parent), only exposes submit/reset/fillCorrectAnswer methods
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

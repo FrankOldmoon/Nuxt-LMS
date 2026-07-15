@@ -30,7 +30,7 @@ const parseConfig = () => {
 }
 const config = ref(parseConfig())
 
-// 标题显示在 toolbar
+// TitleShow toolbar
 meta.title = config.value.title || t('ueditor.aichat')
 watch(() => config.value.title, (val) => {
     meta.title = val || t('ueditor.aichat')

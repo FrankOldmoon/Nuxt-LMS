@@ -15,7 +15,7 @@ Structure:
 - explanation: string, explanation shown after submission. Supports markdown syntax.
 
 Generation prompt:
-Generate an HTML interactive question, output as a standard JSON object. content is a complete runnable HTML code string that implements [SPECIFIC INTERACTIVE FUNCTIONALITY, e.g. card matching, drag-and-drop, etc.]. Inside, use parent.postMessage({ type: 'correct_rate', rate: SCORE }, '*') to send the score back. options is an empty array, answer is [1]. The type is fixed as "html" and the output must include all common fields.
+Generate an HTML interactive question, output as a standard JSON object. content is a complete runnable HTML code string that implements [SPECIFIC INTERACTIVE FUNCTIONALITY, e.g. card match ing, drag-and-drop, etc.]. Inside, use parent.postMessage({ type: 'correct_rate', rate: SCORE }, '*') to send the score back. options is an empty array, answer is [1]. The type is fixed as "html" and the output must include all common fields.
 
 Output format (STRICT):
 - Return ONLY a single JSON code block wrapped in \`\`\`json ... \`\`\` fences.

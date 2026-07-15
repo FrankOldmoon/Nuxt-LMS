@@ -1,8 +1,8 @@
 /**
- * judge 编辑组件测试 (edit)
+ * judge edit component test (edit)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/edit/judge.vue
  *
- * judge.vue 接收 form prop，固定 options 为 [correct, wrong]，answer 默认 [0]
+ * judge.vue receives form prop, fixed options as [correct, wrong], answer defaults to [0]
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -25,7 +25,7 @@ describe('question/edit/judge.vue', () => {
       props: { form },
       global: { mocks: _mocks },
     })
-    // judge 固定 options = [t('question.correct'), t('question.wrong')]
+    // judge fixed options = [t('question.correct'), t('question.wrong')]
     expect(form.options).toHaveLength(2)
     expect(form.answer).toEqual([0])
   })
@@ -39,7 +39,7 @@ describe('question/edit/judge.vue', () => {
       props: { form },
       global: { mocks: _mocks },
     })
-    // judge 有 1 个 header label + 2 个选项 label = 3 个
+    // judge has 1 header label + 2 option labels = 3
     const labels = wrapper.findAll('label')
     expect(labels).toHaveLength(3)
   })
@@ -53,7 +53,7 @@ describe('question/edit/judge.vue', () => {
       props: { form },
       global: { mocks: _mocks },
     })
-    // answer 已有值时不覆盖
+    // Do not overwrite when answer already has a value
     expect(form.answer).toEqual([1])
   })
 })

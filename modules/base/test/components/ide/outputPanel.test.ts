@@ -1,8 +1,8 @@
 /**
- * IdeOutputPanel 组件测试
+ * IdeOutputPanel component tests
  * @see modules/base/components/ide/outputPanel.vue
  *
- * 输出面板：展示代码运行输出文本
+ * Output panel: displays code execution output text
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

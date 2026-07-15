@@ -1,5 +1,5 @@
 /**
- * useCourseGrades composable 测试
+ * useCourseGrades composable test
  * @see modules/lms/composables/useCourseGrades.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -18,7 +18,7 @@ beforeEach(async () => {
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
   setMockFetchHandler(async () => ({ data: null, success: true, msg: '' }))
   clearToastCalls()
-  // 覆盖 useAuth 桩以包含 isCourseTeacher（源码 destructure 自动获得）
+  // Override useAuth stub to include isCourseTeacher (source destructure automatically obtains)
   const baseUseAuth = (globalThis as any).useAuth
   ;(globalThis as any).useAuth = () => {
     const base = baseUseAuth()
@@ -27,7 +27,7 @@ beforeEach(async () => {
       isCourseTeacher: (cid: number) => cid === 5,
     }
   }
-  // 桩 useClassUsers（auto-import from lms）
+  // Stub useClassUsers (auto-import from lms)
   const studentsRef = ref<any[]>([])
   ;(globalThis as any).useClassUsers = () => ({
     students: studentsRef,
@@ -86,7 +86,7 @@ describe('composables/useCourseGrades', () => {
     setMockAuthUser({ id: 3, name: 's' }, [{ code: 'student', name: 'Student' }])
     const isOpen = ref(false)
     const { useCourseGrades } = await import('../../composables/useCourseGrades')
-    // courseId=99 不是教师课程（stub 中仅 cid===5 算 teacher）
+    // courseId=99 is not a teacher course (in stub only cid===5 counts as teacher)
     const r = useCourseGrades({ courseId: 99, classId: 1 }, isOpen)
     expect(r.canEdit.value).toBe(false)
   })
@@ -118,8 +118,8 @@ describe('composables/useCourseGrades', () => {
     const isOpen = ref(false)
     const { useCourseGrades } = await import('../../composables/useCourseGrades')
     const r = useCourseGrades({ courseId: 1, classId: 1 }, isOpen)
-    // 默认权重：questionScore 20%(满分100) → 20, homeworkScore 20% → 20, ...
-    // 全部满分 → finalScore = 20+20+20+10+10+20+0 = 100 → A
+    // Default weights: questionScore 20% (full score 100) → 20, homeworkScore 20% → 20, ...
+    // All full scores → finalScore = 20+20+20+10+10+20+0 = 100 → A
     const row = {
       questionScore: 100, homeworkScore: 100, quizScore: 100,
       raceScore: 100, commentScore: 100, marksScore: 100, extraScore: 0,
@@ -140,7 +140,7 @@ describe('composables/useCourseGrades', () => {
     }
     const g = r.computeGrade(row)
     expect(g.finalScore).toBe(0)
-    // 0 < 60 (D 阈值) → 最后一个 level 的 letter
+    // 0 < 60 (D threshold) → last level's letter
     expect(g.letter).toBe('D')
   })
 
@@ -158,7 +158,7 @@ describe('composables/useCourseGrades', () => {
       { userId: 1, score: 50, questionScore: 50 },
       { userId: 2, score: 90, questionScore: 90 },
     ])
-    // 按 score 降序：b(90) 在前
+    // Sort by score descending: b(90) first
     expect(r.rows.value[0].id).toBe(2)
     expect(r.rows.value[1].id).toBe(1)
     expect(r.rows.value[0].score).toBe(90)
@@ -184,7 +184,7 @@ describe('composables/useCourseGrades', () => {
     setMockAuthUser({ id: 2, name: 's' }, [{ code: 'student', name: 'Student' }])
     const isOpen = ref(false)
     const { useCourseGrades } = await import('../../composables/useCourseGrades')
-    // courseId=99 不是教师课程，学生 canEdit=false 触发过滤
+    // courseId=99 is not a teacher course, student canEdit=false triggers filtering
     const r = useCourseGrades({ courseId: 99, classId: 1 }, isOpen)
     const studentsRef = (globalThis as any).__studentsRef
     studentsRef.value = [

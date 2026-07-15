@@ -1,5 +1,5 @@
 /**
- * composables/useMonacoEditor 测试
+ * composables/useMonacoEditor tests
  * @see modules/base/composables/useMonacoEditor.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -56,11 +56,11 @@ describe('composables/useMonacoEditor - formatCode', () => {
 
 describe('composables/useMonacoEditor - CDN_BASE 常量', () => {
   it('使用 jsdelivr CDN（通过 loadScript 行为间接验证）', async () => {
-    // 通过 initEditor 流程间接验证：未设置 window.monaco 时会尝试加载 loader.js
+    // Indirectly verified via initEditor flow: when window.monaco is not set, it tries to load loader.js
     ;(globalThis as any).document.head.appendChild = () => {}
     const { useMonacoEditor } = await import('../../composables/useMonacoEditor')
     const { getMonaco } = useMonacoEditor(...Object.values(makeArgs()) as any)
-    // 没有触发 init（onMounted 不会在无组件时执行），monaco 仍为 null
+    // init not triggered (onMounted won't run without a component), monaco remains null
     expect(getMonaco()).toBeNull()
   })
 })

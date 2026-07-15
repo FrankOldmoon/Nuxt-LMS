@@ -1,7 +1,7 @@
 /**
- * LMS 竞赛参数
+ * LMS race parameters
  *
- * 每种行为同时配置 exp（经验值）和 coin（金币）。
+ * Each activity configures both exp (experience) and coin.
  */
 export const raceDefaults = {
   participateExp: 10,

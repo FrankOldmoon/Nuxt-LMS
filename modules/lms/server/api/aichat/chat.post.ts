@@ -1,12 +1,14 @@
 /**
- * AI Chat 代理接口
+ * AI Chat proxy endpoint
  * POST /api/aichat/chat
  *
  * body: { messages, model?, thinking? }
  *
- * API Key / API URL 从 lms_config.ai 读取（env AI_API_KEY / AI_API_URL / AI_MODEL 可覆盖），
- * 前端不再传递敏感信息；model 可由前端覆盖，默认取 lms_config.ai.model 或 glm-4.5-air
- * 返回 SSE 流式响应（逐块透传，不缓冲），并在流结束前附加 model 与 usage 元数据
+ * API Key / API URL are read from lms_config.ai (env AI_API_KEY / AI_API_URL / AI_MODEL can override);
+ * the frontend no longer carries sensitive info. model can be overridden by the frontend; defaults
+ * to lms_config.ai.model or glm-4.5-air.
+ * Returns a streaming SSE response (raw passthrough, not buffered) and appends model and usage
+ * metadata before the stream ends.
  */
 export default eventHandler(async (event) => {
     const user = await requireAuth(event)
@@ -14,37 +16,37 @@ export default eventHandler(async (event) => {
     const body = await readBody(event)
     const { messages, model, thinking } = body
 
-    // 从 lms_config.ai 读取敏感配置（reloadLmsConfig 中已应用 env 覆盖）
+    // Read sensitive config from lms_config.ai (env overrides are already applied in reloadLmsConfig)
     const aiConfig = getLmsConfigSync().ai || {}
     const apiKey = aiConfig.llmApiKey
     const apiUrl = aiConfig.llmApiUrl
 
     if (!apiKey) {
-        return cResp(null, '服务器未配置 AI API Key（请在系统设置或 .env AI_API_KEY 中配置）', false)
+        return cResp(null, 'AI API Key is not configured on the server (please configure it in system settings or via .env AI_API_KEY)', false)
     }
     if (!apiUrl) {
-        return cResp(null, '服务器未配置 AI API URL（请在系统设置或 .env AI_API_URL 中配置）', false)
+        return cResp(null, 'AI API URL is not configured on the server (please configure it in system settings or via .env AI_API_URL)', false)
     }
     if (!Array.isArray(messages) || !messages.length) {
-        return cResp(null, 'messages 不能为空', false)
+        return cResp(null, 'messages cannot be empty', false)
     }
 
     const url = apiUrl.replace(/\/$/, '') + '/chat/completions'
     const defaultModel = model || aiConfig.model || "glm-4.5-air";
 
-    // 构建请求体
+    // Build request body
     const requestBody: Record<string, any> = {
         model: defaultModel,
         messages,
         stream: true,
-        // 让上游在最后一个 chunk 中附带 usage（prompt_tokens / completion_tokens / total_tokens）
+        // Ask upstream to include usage in the last chunk (prompt_tokens / completion_tokens / total_tokens)
         stream_options: { include_usage: true },
     }
 
-    // 开启思考模式（GLM 等模型支持）
+    // Enable thinking mode (supported by GLM and similar models)
     requestBody.thinking = { type: thinking ? 'enabled' : 'disabled' }
 
-    // 转发到 OpenAI 兼容接口，请求流式响应
+    // Forward to the OpenAI-compatible endpoint and request a streaming response
     const upstream = await fetch(url, {
         method: 'POST',
         headers: {
@@ -56,21 +58,22 @@ export default eventHandler(async (event) => {
 
     if (!upstream.ok) {
         const errText = await upstream.text()
-        return cResp({ status: upstream.status, error: errText }, `AI 接口请求失败: ${upstream.status}`, false)
+        return cResp({ status: upstream.status, error: errText }, `AI request failed: ${upstream.status}`, false)
     }
 
-    // 设置 SSE 响应头
+    // Set SSE response headers
     setResponseHeader(event, 'Content-Type', 'text/event-stream')
     setResponseHeader(event, 'Cache-Control', 'no-cache, no-transform')
     setResponseHeader(event, 'Connection', 'keep-alive')
     setResponseHeader(event, 'X-Accel-Buffering', 'no')
 
-    // 自定义透传：读取上游 SSE 字节流，逐行解析 data: 事件。
-    // 找到包含 usage 的最后一个 chunk 后，把它原样转发给客户端（model 与 usage 已在该 chunk 中）。
-    // 这样前端只需在流结束时读取最后一条 data 事件即可拿到 model + token 用量，无需解析第二遍。
+    // Custom passthrough: read upstream SSE byte stream and parse data: events line by line.
+    // After finding the last chunk that contains usage, forward it as-is to the client (model and
+    // usage are already in that chunk). The frontend only needs to read the last data event at
+    // the end of the stream to get model + token usage, without parsing twice.
     const reader = upstream.body!.getReader()
     const decoder = new TextDecoder()
-    // 记录最近一次的 model 名称（最后一个 chunk 通常 choices 为空但带 model，若上游漏发则回退到 defaultModel）
+    // Track the most recent model name (the last chunk usually has empty choices but includes model; fall back to defaultModel if upstream omits it)
     let lastModel = defaultModel
 
     const stream = new ReadableStream({
@@ -80,9 +83,9 @@ export default eventHandler(async (event) => {
                 while (true) {
                     const { done, value } = await reader.read()
                     if (done) break
-                    // 透传原始字节给客户端（不修改上游的 SSE 帧，确保 model / usage 完整保留）
+                    // Pass raw bytes through to the client (do not modify upstream SSE frames, to keep model/usage intact)
                     controller.enqueue(value)
-                    // 仅在本地按行解析：用于检测 [DONE]、提取 model / usage（不修改透传给客户端的字节）
+                    // Only parse locally by line: used to detect [DONE] and extract model/usage (does not modify the bytes passed to the client)
                     buffer += decoder.decode(value, { stream: true })
                     const lines = buffer.split('\n')
                     buffer = lines.pop() || ''
@@ -93,16 +96,16 @@ export default eventHandler(async (event) => {
                         if (data === '[DONE]') continue
                         try {
                             const parsed = JSON.parse(data)
-                            // 持续追踪最近的 model 名（最后一个 chunk 通常 choices 为空但带 model）
+                            // Keep tracking the most recent model name (the last chunk usually has empty choices but includes model)
                             if (parsed.model) lastModel = parsed.model
-                            // 含 usage 的 chunk 为流结束块：服务端 console.log 记录用量
+                            // The chunk containing usage is the stream end block: server console.log records the usage
                             if (parsed.usage) {
                                 //console.log('[aichat/chat] model:', lastModel, 'usage:', parsed.usage)
                             }
                         } catch { /* skip malformed chunk */ }
                     }
                 }
-                // 上游未显式发 [DONE] 也能正常收尾
+                // Upstream did not send [DONE] explicitly; finish normally
                 controller.close()
             } catch (err) {
                 controller.error(err)

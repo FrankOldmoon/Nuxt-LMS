@@ -1,5 +1,5 @@
 /**
- * Classes API 端点测试
+ * Classes API endpoint tests
  * @see modules/lms/server/api/classes/*.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -40,7 +40,7 @@ import {
 beforeEach(() => {
   resetAllStubs()
   vi.clearAllMocks()
-  // 链式调用终结
+  // Chainable call termination
   _mockDb.select = vi.fn().mockReturnThis()
   _mockDb.from = vi.fn().mockReturnThis()
   _mockDb.where = vi.fn().mockReturnThis()
@@ -101,9 +101,9 @@ describe('API: classes/users.get', () => {
   })
 
   it('有效 classId 调用 getClassUsers 并返回结果', async () => {
-    // mock 整个 users.get.ts 的依赖无法做到；改为检查抛错被正常处理
-    // 因为 getClassUsers 是真实函数（依赖 db），不做 mock 不会执行成功路径
-    // 这里只验证路径可被 require
+    // Mocking all users.get.ts dependencies is not feasible; instead check that thrown errors are handled normally
+    // Because getClassUsers is a real function (depends on db), not mocking it means the success path won't run
+    // Here we only verify the path can be required
     const handler = (await import('../../server/api/classes/users.get')).default
     expect(typeof handler).toBe('function')
   })
@@ -117,12 +117,12 @@ describe('API: classes/mine', () => {
 
   it('学生：返回主班级 + 关联班级（主班级不在关联中时单独查询）', async () => {
     setMockAuthState({ id: 100, username: 'student', roles: ['student'], permissions: [] })
-    // 链 A: users.classId 查询 → limit
-    // 链 B: userClasses 关联查询 → orderBy
-    // 链 C: 主班级单独查询 → limit（因主班级 id=1 不在 associated 中）
+    // Chain A: users.classId query → limit
+    // Chain B: userClasses association query → orderBy
+    // Chain C: main class single query → limit (because main class id=1 is not in associated)
     _mockDb.limit = vi.fn()
-      .mockResolvedValueOnce([{ classId: 1 }])                       // A: users 查询
-      .mockResolvedValueOnce([{ id: 1, name: 'Main', code: 'M' }])   // C: 主班级查询
+      .mockResolvedValueOnce([{ classId: 1 }])                       // A: users query
+      .mockResolvedValueOnce([{ id: 1, name: 'Main', code: 'M' }])   // C: main class query
     _mockDb.orderBy = vi.fn().mockResolvedValue([
       { id: 2, name: 'Associated', code: 'A' },
     ])
@@ -130,7 +130,7 @@ describe('API: classes/mine', () => {
     const result = await handler(makeEvent())
     expect(result.success).toBe(true)
     expect(result.data).toHaveLength(2)
-    // 主班级在前，关联在后
+    // Main class first, associated after
     expect(result.data[0].id).toBe(1)
     expect(result.data[1].id).toBe(2)
   })
@@ -139,7 +139,7 @@ describe('API: classes/mine', () => {
     setMockAuthState({ id: 100, username: 'student', roles: ['student'], permissions: [] })
     // A: users.classId = 1
     _mockDb.limit = vi.fn().mockResolvedValueOnce([{ classId: 1 }])
-    // B: associated 已包含 class1
+    // B: associated already includes class1
     _mockDb.orderBy = vi.fn().mockResolvedValue([
       { id: 1, name: 'Main', code: 'M' },
       { id: 2, name: 'Other', code: 'O' },
@@ -148,7 +148,7 @@ describe('API: classes/mine', () => {
     const result = await handler(makeEvent())
     expect(result.success).toBe(true)
     expect(result.data).toHaveLength(2)
-    // 不应触发主班级单独查询（第二次 limit 调用）
+    // Should not trigger main class single query (second limit call)
     expect(_mockDb.limit).toHaveBeenCalledTimes(1)
   })
 
@@ -164,7 +164,7 @@ describe('API: classes/mine', () => {
 
   it('学生：关联班级含重复时去重', async () => {
     setMockAuthState({ id: 100, username: 'student', roles: ['student'], permissions: [] })
-    // 主班级 classId=2，已在 associated 中 → 不会触发第二次 limit
+    // Main class classId=2, already in associated → second limit will not be triggered
     _mockDb.limit = vi.fn().mockResolvedValueOnce([{ classId: 2 }])
     _mockDb.orderBy = vi.fn().mockResolvedValue([
       { id: 2, name: 'Main', code: 'M' },

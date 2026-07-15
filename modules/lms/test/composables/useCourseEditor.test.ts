@@ -1,5 +1,5 @@
 /**
- * useCourseEditor composable 测试
+ * useCourseEditor composable test
  * @see modules/lms/composables/useCourseEditor.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -15,7 +15,7 @@ import { ref } from 'vue'
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
-  // 覆盖 useAuth 桩以包含 isCourseEditor
+  // Override useAuth stub to include isCourseEditor
   const baseUseAuth = (globalThis as any).useAuth
   ;(globalThis as any).useAuth = () => {
     const base = baseUseAuth()
@@ -97,7 +97,7 @@ describe('composables/useCourseEditor', () => {
     const { useCourseEditor } = await import('../../composables/useCourseEditor')
     const emit = vi.fn()
     const r = useCourseEditor({ courseId: 1 }, emit)
-    // 注入 configFormRef / membersRef 模拟组件挂载后的赋值
+    // Inject configFormRef / membersRef to simulate assignment after component mount
     r.configFormRef.value = {
       initFromConfig: vi.fn(),
       buildConfig: vi.fn(() => ({ icon: 'star' })),
@@ -185,7 +185,7 @@ describe('composables/useCourseEditor', () => {
       buildConfig: vi.fn(() => ({ icon: 'star' })),
     }
     await r.save()
-    expect(r.open.value).toBe(true) // 不关闭
+    expect(r.open.value).toBe(true) // Does not close
     expect(emit).not.toHaveBeenCalledWith('saved')
     const toasts = getToastCalls()
     expect(toasts.some((t) => t.color === 'error')).toBe(true)

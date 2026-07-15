@@ -1,9 +1,9 @@
 /**
- * exportPpt 模块补充单元测试
+ * exportPpt module supplementary unit test
  *
- * 覆盖 exportPpt.test.ts 未测试的工具文件：
+ * Covers utility files not tested in exportPpt.test.ts:
  * - colorUtils.ts：cssColorToHex / parseFontSize
- * - constants.ts：常量值
+ * - constants.ts: constant values
  * - textUtils.ts：extractPlainText / applyMark / extractTextRuns / estimateTextHeight
  * - tableUtils.ts：buildTableRows
  * - slideUtils.ts：newSlide
@@ -11,9 +11,9 @@
  * - questionUtils.ts：QUESTION_TYPE_LABELS / decryptAnswerValue / collectVueQuestionCids / formatQuestionAnswer
  * - vueDataFetch.ts：collectVueContentCids / extractQuizQuestionCids / extractRaceQuestionCids / fetchVueContent
  * - imageRender.ts：loadEcharts / loadSimpleMindMap / echartsToImage / mindmapToImage / htmlToImage / collectEchartsNodes / collectMindmapHtml / prerenderImageNodes
- * - index.ts：exportChapterToPpt（主流程）
+ * - index.ts: exportChapterToPpt (main flow)
  *
- * 注意：mathRender.ts 和 nodes.ts 已在 exportPpt.test.ts 中测试，此处不重复。
+ * Note: mathRender.ts and nodes.ts are already tested in exportPpt.test.ts, not repeated here.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { resetAllStubs, setMockFetchHandler } from '../../../../test/setup/nuxt-stubs'
@@ -21,7 +21,7 @@ import { resetAllStubs, setMockFetchHandler } from '../../../../test/setup/nuxt-
 beforeEach(() => { resetAllStubs() })
 
 // ═══════════════════════════════════════
-// Mock 工具
+// Mock utilities
 // ═══════════════════════════════════════
 
 function createMockSlide() {
@@ -715,14 +715,14 @@ describe('utils/exportPpt/slideUtils', () => {
     expect(ctx.pres.addSlide).toHaveBeenCalledTimes(1)
     expect(ctx.slide.addText).toHaveBeenCalledTimes(1)
     expect(ctx.slide.addShape).toHaveBeenCalledTimes(1)
-    // 标题文本
+    // Title text
     expect(ctx.slide.addText.mock.calls[0][0]).toBe('章节标题')
-    // 标题选项
+    // Title options
     const textOpts = ctx.slide.addText.mock.calls[0][1]
     expect(textOpts.fontSize).toBe(28)
     expect(textOpts.bold).toBe(true)
     expect(textOpts.color).toBe('2B579A')
-    // currentY 被重置为 1.25（标题占位后）
+    // currentY is reset to 1.25 (after title placeholder)
     expect(ctx.currentY).toBe(1.25)
   })
 
@@ -1038,7 +1038,7 @@ describe('utils/exportPpt/questionUtils', () => {
 
     it('加密数字 → 解密为 number', async () => {
       const { decryptAnswerValue } = await import('../../utils/exportPpt/questionUtils')
-      // 构造加密值：plain '0' XOR key → base64
+      // Construct encrypted value: plain '0' XOR key → base64
       const encVal = encryptForTest('0')
       const result = decryptAnswerValue(encVal)
       expect(result).toBe(0)
@@ -1481,13 +1481,13 @@ describe('utils/exportPpt/imageRender', () => {
   describe('loadEcharts', () => {
     it('window.echarts 已存在 → 直接 resolve', async () => {
       const { loadEcharts } = await import('../../utils/exportPpt/imageRender')
-      // 保存原始值
+      // Save original values
       const origEcharts = (globalThis as any).echarts
       ;(globalThis as any).echarts = { init: vi.fn() }
       try {
         await expect(loadEcharts()).resolves.toBeUndefined()
       } finally {
-        // 恢复
+        // Restore
         if (origEcharts === undefined) delete (globalThis as any).echarts
         else (globalThis as any).echarts = origEcharts
       }
@@ -1524,7 +1524,7 @@ describe('utils/exportPpt/imageRender', () => {
 
     it('loadEcharts 失败 → null', async () => {
       const { echartsToImage } = await import('../../utils/exportPpt/imageRender')
-      // window 存在但 document 不存在 → loadEcharts 会 reject → catch → null
+      // window exists but document does not → loadEcharts will reject → catch → null
       const result = await echartsToImage({})
       expect(result).toBeNull()
     })
@@ -1579,7 +1579,7 @@ describe('utils/exportPpt/imageRender', () => {
 
     it('非空 html + 无 document → rejects（document.createElement 在 try/catch 外）', async () => {
       const { htmlToImage } = await import('../../utils/exportPpt/imageRender')
-      // document 在 node 环境不存在，htmlToImage 直接调用 document.createElement → 抛出
+      // document does not exist in node environment, htmlToImage directly calls document.createElement → throws
       await expect(htmlToImage('<p>test</p>')).rejects.toThrow()
     })
   })
@@ -1812,7 +1812,7 @@ describe('utils/exportPpt/index', () => {
         await exportChapterToPpt(
           { type: 'doc', content: [] },
           'Test Chapter',
-          0,  // courseId = 0 → 跳过 $fetch
+          0,  // courseId = 0 → skip $fetch
         )
         expect(MockPptxGenJS).toHaveBeenCalled()
         expect(mockPres.addSlide).toHaveBeenCalled()
@@ -1842,7 +1842,7 @@ describe('utils/exportPpt/index', () => {
           0,
         )
         const fileName = mockPres.writeFile.mock.calls[0][0].fileName
-        // 所有特殊字符 \ / : * ? " < > | 替换为 _
+        // All special characters \ / : * ? " < > | are replaced with _
         expect(fileName).not.toContain('/')
         expect(fileName).not.toContain(':')
         expect(fileName).not.toContain('*')
@@ -1888,7 +1888,7 @@ describe('utils/exportPpt/index', () => {
       const origPptx = (globalThis as any).PptxGenJS
       ;(globalThis as any).PptxGenJS = MockPptxGenJS
       try {
-        // 传裸数组（非 doc 对象）
+        // Pass bare array (not doc object)
         await exportChapterToPpt([], 'Bare', 0)
         expect(mockPres.writeFile).toHaveBeenCalledWith({ fileName: 'Bare.pptx' })
       } finally {
@@ -1946,12 +1946,12 @@ describe('utils/exportPpt/index', () => {
 })
 
 // ═══════════════════════════════════════
-// 辅助函数
+// Helper functions
 // ═══════════════════════════════════════
 
 /**
- * 测试用加密函数（与 questionUtils.decryptAnswerValue 对应的加密逻辑）
- * 用 Buffer 代替 btoa/unescape 以确保 Node 环境兼容
+ * Encryption function for testing (corresponding to questionUtils.decryptAnswerValue encryption logic)
+ * Use Buffer instead of btoa/unescape to ensure Node environment compatibility
  */
 function encryptForTest(plain: string): string {
   const ENC_KEY = 'lms_q_a_2026'
@@ -1959,8 +1959,8 @@ function encryptForTest(plain: string): string {
   for (let i = 0; i < plain.length; i++) {
     xored += String.fromCharCode(plain.charCodeAt(i) ^ ENC_KEY.charCodeAt(i % ENC_KEY.length))
   }
-  // 反向操作 of: decoded = decodeURIComponent(escape(binary))
-  // 即: binary = unescape(encodeURIComponent(decoded)) → 但用 Buffer 更可靠
+  // Reverse operation of: decoded = decodeURIComponent(escape(binary))
+  // i.e.: binary = unescape(encodeURIComponent(decoded)) → but Buffer is more reliable
   const buf = Buffer.from(xored, 'utf8')
   let binary = ''
   for (let i = 0; i < buf.length; i++) binary += String.fromCharCode(buf[i])

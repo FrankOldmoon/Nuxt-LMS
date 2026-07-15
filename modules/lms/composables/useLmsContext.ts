@@ -1,30 +1,30 @@
 import type { InjectionKey, Ref } from 'vue'
 
 /**
- * 课程/章节上下文（替代旧的 editableCourseId / editableCourseId 全局 useState）
+ * Course/chapter context (replaces the old editableCourseId / editableCourseId global useState)
  *
- * 设计：
- * - 页面级 provide：章节页 provide course+chapter id，课程页只 provide course id
- * - 子组件 useLmsContext() 注入，回退到 route.params.id / route.params.cid
- * - provide/inject 沿组件实例树解析，可穿透 <Teleport>（UModal 弹窗内组件仍能注入）
- * - 带 props.courseId 覆盖的组件（如 admin 复用）用 provideLmsCourseId 把 effectiveCourseId
- *   重新 provide 给子树，替代旧的 setEditableMeta 临时设置/还原机制
+ * Design:
+ * - Page-level provide: chapter page provides course+chapter id, course page only provides course id
+ * - Child components use useLmsContext() to inject, fallback to route.params.id / route.params.cid
+ * - provide/inject resolves along the component instance tree, can pass through <Teleport> (components inside UModal modal can still inject)
+ * - Components with props.courseId override (e.g. admin reuse) use provideLmsCourseId to re-provide
+ *   effectiveCourseId to the subtree, replacing the old setEditableMeta temporary set/restore mechanism
  */
 export const LMS_COURSE_ID: InjectionKey<Ref<number>> = Symbol('lms-course-id')
 export const LMS_CHAPTER_ID: InjectionKey<Ref<number>> = Symbol('lms-chapter-id')
 
-/** 页面级 provide：章节页传 chapterId，课程页省略 */
+/** Page-level provide: chapter page passes chapterId, course page omits */
 export function provideLmsContext(courseId: Ref<string | number>, chapterId?: Ref<string | number>) {
   provide(LMS_COURSE_ID, computed(() => Number(courseId.value) || 0))
   if (chapterId) provide(LMS_CHAPTER_ID, computed(() => Number(chapterId.value) || 0))
 }
 
-/** 单独 provide course id（带 props.courseId 覆盖的组件用，覆盖子树） */
+/** Separately provide course id (for components with props.courseId override, overrides subtree) */
 export function provideLmsCourseId(courseId: Ref<number>) {
   provide(LMS_COURSE_ID, courseId)
 }
 
-/** 注入上下文，无 provider 时回退到 route 参数 */
+/** Inject context, fallback to route params when no provider */
 export function useLmsContext() {
   const route = useRoute()
   const injCourse = inject(LMS_COURSE_ID, null)

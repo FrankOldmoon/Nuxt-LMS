@@ -102,5 +102,5 @@ function cleanupPeer(peer: any) {
   peer._lockId = undefined
 }
 
-// 仅供测试用例清空状态使用
+// For test cases to clear state only
 export { lockRooms, lockHolders }

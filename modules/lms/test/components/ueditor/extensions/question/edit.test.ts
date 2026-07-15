@@ -1,9 +1,9 @@
 /**
- * edit 核心组件测试
+ * edit core component test
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/edit.vue
  *
- * edit.vue 使用 useQuestionEdit composable，内联模式（无 modelValue）直接渲染 formBody
- * 测试 mount + form 初始化 + emit 'saved'
+ * edit.vue uses useQuestionEdit composable, inline mode (no modelValue) renders formBody directly
+ * Test mount + form initialization + emit 'saved'
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -12,7 +12,7 @@ import { resetAllStubs, setMockI18n, setMockFetchHandler } from '../../../../../
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
-  // useChapterTask 不在 nuxt-stubs 的 globalThis 暴露中，需手动添加
+  // useChapterTask is not in nuxt-stubs globalThis exposure, needs manual addition
   ;(globalThis as any).useChapterTask = () => null
 })
 
@@ -47,7 +47,7 @@ describe('question/edit.vue', () => {
       props: { questionId: 0, question },
       global: { stubs: _globalStubs, mocks: _mocks },
     })
-    // 内联模式应渲染 formBody
+    // Inline mode should render formBody
     expect(wrapper.find('.form-body').exists()).toBe(true)
   })
 
@@ -70,7 +70,7 @@ describe('question/edit.vue', () => {
       props: { modelValue: true, questionId: 1, question },
       global: { stubs: _globalStubs, mocks: _mocks },
     })
-    // Modal 模式且 open=true 时应渲染 UModal + formBody
+    // When in Modal mode and open=true, should render UModal + formBody
     expect(wrapper.find('.u-modal').exists()).toBe(true)
     expect(wrapper.find('.form-body').exists()).toBe(true)
   })
@@ -101,14 +101,14 @@ describe('question/edit.vue', () => {
       props: { questionId: 1, question },
       global: { stubs: _globalStubs, mocks: _mocks },
     })
-    // 直接调用 useQuestionEdit 的 saveQuestion（通过 vm 访问内部状态）
-    // edit.vue 暴露了 form，但 saveQuestion 在 useQuestionEdit 内部
-    // 我们可以通过找到组件实例来触发 saveQuestion
+    // Directly call useQuestionEdit's saveQuestion (access internal state via vm)
+    // edit.vue exposes form, but saveQuestion is inside useQuestionEdit
+    // We can trigger saveQuestion by finding the component instance
     const vm = wrapper.vm as any
-    // useQuestionEdit 的 ctx 挂在组件实例上，但未通过 defineExpose 暴露
-    // 所以我们测试 emit saved 通过触发 saveQuestion
-    // 由于 formBody 被 stub 了，无法通过 UI 触发 saveQuestion
-    // 改为验证组件能正确 mount 和初始化 form
+    // useQuestionEdit's ctx is attached to the component instance, but not exposed via defineExpose
+    // So we test emit saved by triggering saveQuestion
+    // Since formBody is stubbed, saveQuestion cannot be triggered via UI
+    // Changed to verify the component can correctly mount and initialize form
     expect(wrapper.find('.form-body').exists()).toBe(true)
   })
 })

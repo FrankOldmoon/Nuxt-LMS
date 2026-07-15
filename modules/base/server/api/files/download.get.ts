@@ -20,17 +20,17 @@ export default eventHandler(async (event) => {
   const user = await requireAuth(event)
 
   const id = Number(getQuery(event).id)
-  if (!id) throw createError({ statusCode: 400, message: '缺少 id 参数' })
+  if (!id) throw createError({ statusCode: 400, message: 'Missing id parameter' })
 
-  // 仅允许下载自己的文件
+  // Only allow downloading own files
   const file = await db.query.files.findFirst({
     where: and(eq(schema.files.id, id), eq(schema.files.userId, user.id), isNull(schema.files.deletedAt)),
   })
-  if (!file) throw createError({ statusCode: 404, message: '文件不存在或无权限' })
+  if (!file) throw createError({ statusCode: 404, message: 'File does not exist or no permission' })
 
   const absolutePath = resolve(UPLOAD_ROOT, file.path.replace(/^\/+/, ''))
   if (!absolutePath.startsWith(UPLOAD_ROOT + '/')) {
-    throw createError({ statusCode: 403, message: '禁止的路径访问' })
+    throw createError({ statusCode: 403, message: 'Forbidden path access' })
   }
 
   try {
@@ -38,13 +38,13 @@ export default eventHandler(async (event) => {
       access(absolutePath, (err) => err ? reject(err) : resolve())
     })
   } catch {
-    throw createError({ statusCode: 404, message: '文件不存在' })
+    throw createError({ statusCode: 404, message: 'File does not exist' })
   }
 
   const ext = extname(file.path).toLowerCase()
   const contentType = MIME_TYPES[ext] || 'application/octet-stream'
   setResponseHeader(event, 'Content-Type', contentType)
-  // attachment 触发下载，使用原文件名
+  // attachment triggers download, uses original filename
   setResponseHeader(
     event,
     'Content-Disposition',

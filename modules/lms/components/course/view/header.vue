@@ -1,7 +1,7 @@
 <template>
-  <!-- 课程头部：左图 + 右信息 -->
+  <!-- Course header: left image + right info -->
   <div class="flex flex-col sm:flex-row gap-6 relative">
-    <!-- 右上角编辑工具栏 -->
+    <!-- Top-right edit toolbar -->
     <div v-if="canEdit" class="absolute top-0 right-0 z-10 flex items-center gap-1">
       <CourseEditor :course-id="Number(courseId)" @saved="emit('saved')" />
       <UTooltip :text="$t('coursePanel.export')">
@@ -10,7 +10,7 @@
       </UTooltip>
     </div>
 
-    <!-- 左侧：课程封面 -->
+    <!-- Left：CourseCover -->
     <div class="w-full sm:w-80 shrink-0">
       <div class="aspect-16/10 rounded-2xl overflow-hidden bg-elevated">
         <img v-if="course.coverImg" :src="course.coverImg" :alt="course.title" class="w-full h-full object-cover" />
@@ -19,7 +19,7 @@
       </div>
     </div>
 
-    <!-- 右侧：课程信息 -->
+    <!-- Right: course info -->
     <div class="flex-1 min-w-0 flex flex-col gap-4">
       <div>
         <div class="flex items-center gap-2 mb-2">
@@ -61,7 +61,7 @@
     </div>
   </div>
 
-  <!-- 商店弹窗 -->
+  <!-- Shop modal -->
   <CourseShopModal v-model:open="shopOpen" :course-id="Number(courseId)" />
 </template>
 

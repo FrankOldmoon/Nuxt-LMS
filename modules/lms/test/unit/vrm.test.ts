@@ -1,21 +1,21 @@
 /**
- * VRM 数字人语音状态单例测试
+ * VRM digital human voice state singleton test
  * @see modules/lms/utils/vrm.ts
  *
- * 注意：vrm.ts 是模块级单例，每次测试需要 vi.resetModules() 重置
+ * Note: vrm.ts is a module-level singleton, each test needs vi.resetModules() to reset
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'
 
 beforeEach(async () => {
   resetAllStubs()
-  vi.resetModules() // 重置 vrm.ts 单例状态
+  vi.resetModules() // Reset vrm.ts singleton state
 })
 
 describe('utils/vrm - text channel (feedVrmText / consumeVrmChars / clearVrmSpeech)', () => {
   it('feedVrmText 启动说话并设置 isSpeaking=true', async () => {
     const vrm = await import('../../utils/vrm')
-    vrm.clearVrmSpeech() // 清理
+    vrm.clearVrmSpeech() // Cleanup
     vrm.feedVrmText('你好')
     const state = vrm.getVrmSpeechState()
     expect(state.isSpeaking).toBe(true)
@@ -33,7 +33,7 @@ describe('utils/vrm - text channel (feedVrmText / consumeVrmChars / clearVrmSpee
   it('feedVrmText 在未说话时重置文本（清空旧文本）', async () => {
     const vrm = await import('../../utils/vrm')
     vrm.feedVrmText('旧')
-    vrm.consumeVrmChars(100) // 消费完 → isSpeaking=false
+    vrm.consumeVrmChars(100) // After consumption → isSpeaking=false
     vrm.feedVrmText('新文本')
     expect(vrm.getVrmSpeechState().pendingText).toBe('新文本')
   })
@@ -42,7 +42,7 @@ describe('utils/vrm - text channel (feedVrmText / consumeVrmChars / clearVrmSpee
     const vrm = await import('../../utils/vrm')
     vrm.clearVrmSpeech()
     vrm.feedVrmText('hello')
-    vrm.feedVrmText('') // 空字符串
+    vrm.feedVrmText('') // Empty string
     expect(vrm.getVrmSpeechState().pendingText).toBe('hello')
   })
 
@@ -87,12 +87,12 @@ describe('utils/vrm - text channel (feedVrmText / consumeVrmChars / clearVrmSpee
     vrm.clearVrmSpeech()
     const listener = vi.fn()
     const unsubscribe = vrm.subscribeVrmSpeech(listener)
-    expect(listener).toHaveBeenCalledTimes(1) // 立即触发
+    expect(listener).toHaveBeenCalledTimes(1) // Triggered immediately
     vrm.feedVrmText('x')
     expect(listener).toHaveBeenCalledTimes(2)
     unsubscribe()
     vrm.feedVrmText('y')
-    expect(listener).toHaveBeenCalledTimes(2) // 已退订
+    expect(listener).toHaveBeenCalledTimes(2) // Unsubscribed
   })
 })
 
@@ -121,7 +121,7 @@ describe('utils/vrm - audio channel (feedVrmAudio / consumeVrmAudioChars / clear
     const consumed = vrm.consumeVrmAudioChars(5)
     expect(consumed).toBe('hello')
     expect(vrm.getVrmSpeechState().audioText).toBe(' world')
-    // 音频通道不改变 audioSpeaking（除非 clear）
+    // Audio channel does not change audioSpeaking (unless clear)
     expect(vrm.getVrmSpeechState().audioSpeaking).toBe(true)
   })
 
@@ -149,11 +149,11 @@ describe('utils/vrm - channels isolation', () => {
     vrm.clearVrmSpeech()
     vrm.clearVrmAudio()
     vrm.feedVrmText('text-channel')
-    // feedVrmText 不影响 audioText
+    // feedVrmText does not affect audioText
     expect(vrm.getVrmSpeechState().audioText).toBe('')
     expect(vrm.getVrmSpeechState().pendingText).toBe('text-channel')
     vrm.feedVrmAudio('audio-channel')
-    // feedVrmAudio 不影响 pendingText（两个通道独立）
+    // feedVrmAudio does not affect pendingText (two channels are independent)
     expect(vrm.getVrmSpeechState().pendingText).toBe('text-channel')
     expect(vrm.getVrmSpeechState().audioText).toBe('audio-channel')
   })

@@ -1,9 +1,9 @@
 /**
- * render 核心组件测试
+ * render core component test
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/render.vue
  *
- * render.vue 使用 useQuestionRender composable，需 stub 大量子组件 + 暴露 useChapterTask
- * 传入 question prop 直接渲染（避免 API 调用）
+ * render.vue uses useQuestionRender composable, needs to stub many child components + expose useChapterTask
+ * Pass question prop directly for rendering (avoid API call)
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -13,7 +13,7 @@ beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
   setMockAuthUser({ id: 1, username: 'teacher', name: 'Teacher' }, [{ code: 'teacher' }], [])
-  // useChapterTask 不在 nuxt-stubs 的 globalThis 暴露中，需手动添加
+  // useChapterTask is not in nuxt-stubs globalThis exposure, needs manual addition
   ;(globalThis as any).useChapterTask = () => ({
     reportNodeDone: () => {},
     reportBlockRead: () => {},
@@ -66,9 +66,9 @@ describe('question/render.vue', () => {
       props: { question: null, node: { attrs: { content: 999 } } },
       global: { stubs: _globalStubs, mocks: _mocks },
     })
-    // question 为 null 时（且 questionId=0），显示默认题目
-    // 实际上 question=null 时 useQuestionRender 用 defaultQuestion
-    // 所以这里测试 question 有值的情况
+    // When question is null (and questionId=0), shows default question
+    // Actually when question=null, useQuestionRender uses defaultQuestion
+    // So here we test the case where question has a value
     expect(wrapper.exists()).toBe(true)
   })
 
@@ -91,7 +91,7 @@ describe('question/render.vue', () => {
       props: { question, node: { attrs: { content: 0 } } },
       global: { stubs: _globalStubs, mocks: _mocks },
     })
-    // getQuestionData 应返回 question 对象
+    // getQuestionData should return the question object
     const data = (wrapper.vm as any).getQuestionData()
     expect(data).toBeTruthy()
     expect(data.name).toBe('Exposed Test')

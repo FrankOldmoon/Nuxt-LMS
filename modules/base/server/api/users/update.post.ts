@@ -1,5 +1,5 @@
 export default eventHandler(async (event) => {
-  // 仅教师/管理员可更新
+  // Only teacher/admin can update
   await requireRole(event, ['teacher', 'admin'])
 
   const table = 'users'
@@ -7,14 +7,14 @@ export default eventHandler(async (event) => {
   const { id, ...setData } = body
 
   if (!id) {
-    return cResp(null, '缺少 id 参数', false)
+    return cResp(null, 'Missing id parameter', false)
   }
 
   try {
     const result = await updateTable(table, Number(id), setData)
     return cResp(result)
   } catch (error: any) {
-    console.error('更新失败:', error)
-    return cResp(null, error.message || '更新失败', false)
+    console.error('Update failed:', error)
+    return cResp(null, error.message || 'Update failed', false)
   }
 })

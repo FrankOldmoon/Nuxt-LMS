@@ -1,12 +1,12 @@
 <template>
   <div>
-    <!-- 选项列表 -->
+    <!-- optionitemsList -->
     <div class="space-y-2">
       <label
         v-for="(opt, idx) in question.options"
         :key="idx"
         class="flex items-start gap-3 p-3 rounded-md border cursor-pointer transition-colors"
-        :class="optionClass(idx)"
+        :class="option Class(idx)"
         @click="toggle(idx)"
       >
         <span class="shrink-0 w-5 h-5 rounded border-2 mt-0.5 flex items-center justify-center transition-colors"
@@ -30,7 +30,7 @@ const props = defineProps({
   questionId: { type: Number, default: 0 },
 })
 
-const { selected, hasAnswer, toggle, optionClass, checkClass, submit, reset, fillCorrectAnswer } = useMultiple(props)
+const { selected, hasAnswer, toggle, option Class, checkClass, submit, reset, fillCorrectAnswer } = useMultiple(props)
 
 defineExpose({ submit, reset, hasAnswer, fillCorrectAnswer })
 </script>

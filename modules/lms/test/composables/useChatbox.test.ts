@@ -1,5 +1,5 @@
 /**
- * useChatbox composable 测试
+ * useChatbox composable test
  * @see modules/lms/composables/useChatbox.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -15,7 +15,7 @@ import { ref } from 'vue'
 beforeEach(async () => {
   resetAllStubs()
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
-  // useChatbox 依赖 createASRService / createTTSService / feedVrmAudio / clearVrmAudio
+  // useChatbox depends on createASRService / createTTSService / feedVrmAudio / clearVrmAudio
   const { createASRService, createTTSService } = await import('../../utils/ai')
   ;(globalThis as any).createASRService = createASRService
   ;(globalThis as any).createTTSService = createTTSService
@@ -49,7 +49,7 @@ describe('composables/useChatbox', () => {
     expect(r.inputText.value).toBe('')
     expect(r.loading.value).toBe(false)
     expect(r.messages.value).toEqual([])
-    expect(r.asrSupported.value).toBe(false) // onMounted 未执行
+    expect(r.asrSupported.value).toBe(false) // onMounted not executed
     expect(r.ttsSupported.value).toBe(false)
   })
 
@@ -164,8 +164,8 @@ describe('composables/useChatbox', () => {
     setMockI18n({ locale: ref('zh-CN'), t: (k: string) => k, d: (v: any) => String(v) })
     const { useChatbox } = await import('../../composables/useChatbox')
     const r = useChatbox(makeProps(), () => {})
-    // effectiveVoiceLang 是内部 computed，不直接暴露
-    // 通过 toggleVoiceInput 间接验证不抛错
+    // effectiveVoiceLang is an internal computed, not directly exposed
+    // Indirectly verify no error via toggleVoiceInput
     expect(() => r.toggleVoiceInput()).not.toThrow()
   })
 
@@ -173,7 +173,7 @@ describe('composables/useChatbox', () => {
     setMockAuthUser({ id: 1, name: 'u' })
     const { useChatbox } = await import('../../composables/useChatbox')
     const r = useChatbox(makeProps({ enableVoiceOutput: true }), () => {})
-    // ttsSupported=false（onMounted 未执行），canSpeak 应返回 false
+    // ttsSupported=false (onMounted not executed), canSpeak should return false
     expect(r.canSpeak({ role: 'assistant', content: 'hello' })).toBe(false)
   })
 

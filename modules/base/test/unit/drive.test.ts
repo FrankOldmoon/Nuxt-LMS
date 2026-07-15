@@ -1,8 +1,8 @@
 /**
- * base 模块 drive（网盘配额）工具测试
+ * base module drive (disk quota) utility tests
  * @see modules/base/server/utils/drive.ts
  *
- * 测试 getDriveQuota / getDriveUsed / checkDriveSpace
+ * Tests getDriveQuota / getDriveUsed / checkDriveSpace
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
@@ -29,7 +29,7 @@ beforeEach(() => {
   resetAllStubs()
   vi.clearAllMocks()
   _configValues = {}
-  // 重置 db 链
+  // Reset db chain
   _mockDb.select = vi.fn().mockReturnThis()
   _mockDb.from = vi.fn().mockReturnThis()
   _mockDb.where = vi.fn()
@@ -53,7 +53,7 @@ describe('server/utils/drive - getDriveQuota', () => {
   it('普通用户返回 driveQuota（默认 1GB）', async () => {
     const { getDriveQuota } = await import('../../server/utils/drive')
     const quota = await getDriveQuota({ id: 1, roles: ['student'] })
-    expect(quota).toBe(1073741824) // 默认 1GB
+    expect(quota).toBe(1073741824) // default 1GB
   })
 
   it('配置值为 NaN 时回退默认 1073741824', async () => {
@@ -115,7 +115,7 @@ describe('server/utils/drive - checkDriveSpace', () => {
   })
 
   it('普通用户超限返回 ok:false', async () => {
-    _mockDb.where.mockResolvedValueOnce([{ total: '1073741824' }]) // 1GB used (满)
+    _mockDb.where.mockResolvedValueOnce([{ total: '1073741824' }]) // 1GB used (full)
     const { checkDriveSpace } = await import('../../server/utils/drive')
     const result = await checkDriveSpace({ id: 1, roles: ['student'] }, 1) // +1 byte
     expect(result.ok).toBe(false)
@@ -123,7 +123,7 @@ describe('server/utils/drive - checkDriveSpace', () => {
   })
 
   it('刚好等于配额时 ok:true（<= 判断）', async () => {
-    _mockDb.where.mockResolvedValueOnce([{ total: '1073741820' }]) // 差 4 bytes
+    _mockDb.where.mockResolvedValueOnce([{ total: '1073741820' }]) // 4 bytes short
     const { checkDriveSpace } = await import('../../server/utils/drive')
     const result = await checkDriveSpace({ id: 1, roles: ['student'] }, 4)
     expect(result.ok).toBe(true)

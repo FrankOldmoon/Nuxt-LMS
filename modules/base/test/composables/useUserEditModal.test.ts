@@ -1,5 +1,5 @@
 /**
- * composables/useUserEditModal 测试
+ * composables/useUserEditModal tests
  * @see modules/base/composables/useUserEditModal.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'

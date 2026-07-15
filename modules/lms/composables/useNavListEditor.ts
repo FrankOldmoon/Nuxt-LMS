@@ -7,7 +7,7 @@ interface NavListEditorProps {
 }
 
 /**
- * 导航列表编辑器：扁平树拖拽排序 + 折叠 + 增删节点
+ * Navigation list editor: flat tree drag-and-drop sorting + collapse + add/delete nodes
  */
 export function useNavListEditor(props: NavListEditorProps, emit: (e: 'update:modelValue', items: FlatNode[]) => void) {
   const items = computed({

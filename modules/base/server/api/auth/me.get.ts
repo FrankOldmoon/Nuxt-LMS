@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
     return cResp(null, 'Not authenticated', false)
   }
 
-  // 查找有效的 token
+  // Find valid token
   const tokens = await db
     .select()
     .from(schema.tokens)
@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
     return cResp(null, 'Invalid token', false)
   }
 
-  // 查找用户
+  // Find user
   const users = await db
     .select({
       id: schema.users.id,
@@ -52,7 +52,7 @@ export default defineEventHandler(async (event) => {
 
   const userId = userRecord.id
 
-  // 查询用户角色
+  // Query user roles
   const roleRows = await db
     .select({
       code: schema.roles.code,
@@ -62,7 +62,7 @@ export default defineEventHandler(async (event) => {
     .innerJoin(schema.roles, eq(schema.userRoles.roleId, schema.roles.id))
     .where(eq(schema.userRoles.userId, userId))
 
-  // 查询用户权限（通过角色关联）
+  // Query user permissions (via role association)
   const permRows = await db
     .selectDistinct({
       code: schema.permissions.code,
@@ -73,7 +73,7 @@ export default defineEventHandler(async (event) => {
     .innerJoin(schema.permissions, eq(schema.rolePermissions.permissionId, schema.permissions.id))
     .where(eq(schema.userRoles.userId, userId))
 
-  // 跨模块字段扩展钩子（如 lms 注入 editorCourseIds/teacherCourseIds/classIds）
+  // Cross-module field extension hook (e.g. lms injects editorCourseIds/teacherCourseIds/classIds)
   const extra = await runOnMeEnrich(userRecord)
 
   return cResp({

@@ -1,13 +1,13 @@
 /**
- * 创建公告
+ * Create an announcement
  * POST /api/announcements/add
  * body: { courseId, name, content?, classIds?: number[] }
  *
- * 权限：课程教师 / 管理员
+ * Permission: course teacher / admin
  *
- * 行为：
- * - classIds 留空 / 空数组  → 创建 1 条 classId = null（面向全员）
- * - classIds 有 N 个        → 创建 N 条，每条对应一个班级
+ * Behavior:
+ * - classIds empty / empty array -> create 1 record with classId = null (for everyone)
+ * - classIds has N entries       -> create N records, one for each class
  */
 import { db, schema } from '@nuxthub/db'
 import { inArray } from 'drizzle-orm'
@@ -22,18 +22,18 @@ export default eventHandler(async (event) => {
     ? body.classIds.map((n: any) => Number(n)).filter((n: number) => Number.isFinite(n) && n > 0)
     : []
 
-  if (!courseId) return cResp(null, '缺少 courseId', false)
-  if (!name) return cResp(null, '缺少 name', false)
+  if (!courseId) return cResp(null, 'Missing courseId', false)
+  if (!name) return cResp(null, 'Missing name', false)
 
-  // 权限：管理员 / 系统教师 / 本课程教师（含编辑者）
+  // Permission: admin / system teacher / course teacher (including editors)
   const allowed = user.roles.includes('admin')
     || user.roles.includes('teacher')
     || (await isCourseTeacher(user.id, courseId))
   if (!allowed) {
-    return cResp(null, '仅教师及以上可创建公告', false)
+    return cResp(null, 'Only teachers and above can create announcements', false)
   }
 
-  // 拉取班级名（用于返回时直接展示）
+  // Fetch class names (for direct display in the response)
   let classNames: Array<{ id: number; name: string }> = []
   if (classIds.length) {
     const rows = await db
@@ -43,7 +43,7 @@ export default eventHandler(async (event) => {
     classNames = rows
   }
 
-  // 准备插入值
+  // Prepare insert values
   const insertValues = classIds.length
     ? classIds.map((cid) => ({
         courseId,

@@ -8,7 +8,7 @@ export function useChapterForm(props: ChapterFormProps, emit: (e: 'saved' | 'can
   const { t } = useI18n()
   const toast = useToast()
 
-  /** RichEditor 组件（LMS 提供） */
+  /** RichEditor component (provided by LMS) */
   const richEditorComp = computed(() => {
     if (!useRuntimeConfig().public.moduleLms) return null
     try {
@@ -25,12 +25,12 @@ export function useChapterForm(props: ChapterFormProps, emit: (e: 'saved' | 'can
     content: null,
   })
 
-  // 新增模式下，强制先选择课程
+  // In add mode, force course selection first
   const selectedCourseId = ref<number | undefined>(undefined)
   const courseOptions = ref<{ id: number; label: string }[]>([])
   const courseLoading = ref(false)
 
-  // 推导 courseId：编辑模式 → 行的 courseId；新增模式 → 用户选择的 selectedCourseId
+  // Derive courseId: edit mode → row's courseId; add mode → user-selected selectedCourseId
   const effectiveCourseId = computed(() => {
     if (isEdit.value) {
       const v = props.row?.courseId ?? props.row?.course_id
@@ -41,7 +41,7 @@ export function useChapterForm(props: ChapterFormProps, emit: (e: 'saved' | 'can
 
   const saving = ref(false)
 
-  // 初始化 form
+  // Initialize form
   watch(
     () => props.row,
     (r) => {
@@ -72,7 +72,7 @@ export function useChapterForm(props: ChapterFormProps, emit: (e: 'saved' | 'can
     }
   })
 
-  // JSON 字符串（fallback）
+  // JSON string (fallback)
   const contentJsonString = ref('')
   const contentError = ref(false)
   watch(

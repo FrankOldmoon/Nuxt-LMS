@@ -1,5 +1,5 @@
 <template>
-    <!-- 基本配置 -->
+    <!-- basicConfiguration -->
     <div class="grid grid-cols-2 gap-3">
         <UFormField :label="t('race.namePlaceholder')" size="sm">
             <UInput v-model="form.name" :placeholder="t('race.namePlaceholder')" size="sm" class="w-full" />
@@ -12,7 +12,7 @@
         </UFormField>
     </div>
 
-    <!-- 题目选择 -->
+    <!-- Question select -->
     <div>
         <div class="flex items-center justify-between mb-2">
             <label class="text-sm font-medium">{{ t('race.questionsLabel') }} ({{ form.questionIds.length }})</label>
@@ -25,10 +25,10 @@
                 <UButton icon="i-lucide-x" color="error" variant="ghost" size="2xs" @click="form.questionIds.splice(idx, 1)" />
             </div>
         </div>
-        <p v-else class="text-sm text-gray-400">{{ t('race.noQuestions') }}</p>
+        <p v-else class="text-sm text-gray-400">{{ t('race.no questions') }}</p>
     </div>
 
-    <!-- ========== JSON 原始数据编辑器（高级） ========== -->
+    <!-- ========== JSON originalStartDataEditeditor（Highlevel） ========== -->
     <div class="border-t border-gray-100 dark:border-gray-800 pt-3">
         <div class="flex items-center justify-between mb-2">
             <div class="flex items-center gap-2">

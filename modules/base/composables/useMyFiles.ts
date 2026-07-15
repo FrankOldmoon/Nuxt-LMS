@@ -2,7 +2,7 @@ import type { Ref } from 'vue'
 import { buildFileData } from '../utils/fileUtils'
 
 /**
- * 我的文件 / 小组文件：状态管理 + 数据加载/上传/重命名/删除/选择器
+ * My files / group files: state management + data loading/upload/rename/delete/selector
  */
 export function useMyFiles(group: () => string | undefined, open?: Ref<boolean | undefined>, onConfirm?: (files: any[]) => void) {
   const { t } = useI18n()
@@ -43,7 +43,7 @@ export function useMyFiles(group: () => string | undefined, open?: Ref<boolean |
     loadFiles(1)
   }
 
-  // ========== 数据加载 ==========
+  // ========== Data loading ==========
   async function loadFiles(targetPage?: number) {
     if (targetPage) page.value = targetPage
     loading.value = true
@@ -76,7 +76,7 @@ export function useMyFiles(group: () => string | undefined, open?: Ref<boolean |
     } catch { /* noop */ }
   }
 
-  // ========== 上传 ==========
+  // ========== Upload ==========
   async function uploadFile(file: File) {
     uploading.value = true
     try {
@@ -100,7 +100,7 @@ export function useMyFiles(group: () => string | undefined, open?: Ref<boolean |
     }
   }
 
-  // ========== 重命名 ==========
+  // ========== Rename ==========
   function startRename(f: any) {
     renamingId.value = f.id
     renameValue.value = f.name
@@ -131,7 +131,7 @@ export function useMyFiles(group: () => string | undefined, open?: Ref<boolean |
     cancelRename()
   }
 
-  // ========== 删除 ==========
+  // ========== Delete ==========
   async function remove(f: any) {
     if (!confirm(t('myFiles.confirmDelete', { name: f.name }))) return
     try {
@@ -151,7 +151,7 @@ export function useMyFiles(group: () => string | undefined, open?: Ref<boolean |
     }
   }
 
-  // ========== 下载 / 预览 ==========
+  // ========== Download / preview ==========
   function download(f: any) {
     const a = document.createElement('a')
     a.href = `/api/files/download?id=${f.id}`
@@ -162,7 +162,7 @@ export function useMyFiles(group: () => string | undefined, open?: Ref<boolean |
     window.open(`/api/files/serve?pathname=${encodeURIComponent(f.path.replace(/^\/+/, ''))}`, '_blank')
   }
 
-  // ========== 选择器模式 ==========
+  // ========== Selector mode ==========
   function pickFile(f: any) {
     onConfirm?.([buildFileData(f)])
   }
@@ -178,7 +178,7 @@ export function useMyFiles(group: () => string | undefined, open?: Ref<boolean |
     if (selected.length) onConfirm?.(selected)
   }
 
-  // ========== 初始化 ==========
+  // ========== Initialization ==========
   onMounted(() => {
     loadFiles(1)
     if (!group()) loadUsage()

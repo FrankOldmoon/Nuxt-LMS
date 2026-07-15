@@ -1,9 +1,9 @@
 /**
- * ai/tts.vue 组件测试
+ * ai/tts.vue component test
  * @see modules/lms/components/ai/tts.vue
  *
- * 文本转语音组件：文本输入、语言/语音/性别选择、语速/音调/音量滑块、播放/暂停/停止按钮。
- * 逻辑由 useTts() composable 提供，测试中导入真实 composable 暴露到 globalThis。
+ * Text-to-speech component: text input, language/voice/gender selection, rate/pitch/volume sliders, play/pause/stop buttons.
+ * Logic provided by useTts() composable, imports real composable and exposes to globalThis in tests.
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -27,13 +27,13 @@ describe('ai/tts.vue', () => {
     const { default: Tts } = await import('../../../components/ai/tts.vue')
     const wrapper = mount(Tts, { global: _globalConfig })
     expect(wrapper.exists()).toBe(true)
-    // 文本输入 textarea
+    // Text input textarea
     expect(wrapper.find('textarea').exists()).toBe(true)
-    // 3 个 select（语言 / 语音 / 性别）
+    // 3 selects (language / voice / gender)
     expect(wrapper.findAll('select').length).toBe(3)
-    // 3 个 range 滑块（语速 / 音调 / 音量）
+    // 3 range sliders (rate / pitch / volume)
     expect(wrapper.findAll('input[type="range"]').length).toBe(3)
-    // 播放按钮
+    // Play button
     expect(wrapper.find('button').exists()).toBe(true)
   })
 
@@ -62,7 +62,7 @@ describe('ai/tts.vue', () => {
   it('性别下拉包含女声/男声选项', async () => {
     const { default: Tts } = await import('../../../components/ai/tts.vue')
     const wrapper = mount(Tts, { global: _globalConfig })
-    // 第 3 个 select 是性别
+    // The 3rd select is gender
     const selects = wrapper.findAll('select')
     const genderSelect = selects[2]
     const opts = genderSelect.findAll('option')

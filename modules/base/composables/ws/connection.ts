@@ -1,18 +1,18 @@
 /**
- * WebSocket 连接管理（通用）
+ * WebSocket connection management (generic)
  *
- * 提供 ws 实例、连接状态、send / connect / disconnect / joinRoom / leaveRoom 方法。
- * connect() 内部使用 dispatch 分发收到的消息。
+ * Provides ws instance, connection state, send / connect / disconnect / joinRoom / leaveRoom methods.
+ * connect() internally uses dispatch to distribute received messages.
  *
- * base 只提供通用房间机制；class/group 等业务房间由后续模块
- * 通过 registerWsHandler（composables/ws/callbacks）+ 服务端
- * registerWsServerHandler 自行处理。
+ * base only provides the generic room mechanism; class/group and other business rooms are handled by subsequent modules
+ * via registerWsHandler (composables/ws/callbacks) + server-side
+ * registerWsServerHandler on their own.
  */
 import { dispatch } from './callbacks'
 
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null
 
-/** 已加入的房间 ID 集合（客户端单例，断线重连时自动重新加入） */
+/** Set of joined room IDs (client-side singleton, auto re-joins on reconnect) */
 const joinedRooms = new Set<string>()
 
 export function useWsConnection() {
@@ -25,13 +25,13 @@ export function useWsConnection() {
     }
   }
 
-  /** 加入指定房间（断线重连自动重新加入） */
+  /** Join a specified room (auto re-joins on reconnect) */
   function joinRoom(room: string) {
     joinedRooms.add(room)
     send({ type: 'join', room })
   }
 
-  /** 离开房间 */
+  /** Leave a room */
   function leaveRoom(room: string) {
     joinedRooms.delete(room)
     send({ type: 'leave', room })
@@ -50,13 +50,13 @@ export function useWsConnection() {
 
       socket.onopen = () => {
         wsConnected.value = true
-        // 注册用户级连接（用于私信推送）
-        // 使用 getAuthUserSync 从 payload 缓存读取，避免在回调中调用 useFetch
+        // Register user-level connection (for direct message push)
+        // Use getAuthUserSync to read from payload cache, avoid calling useFetch in callback
         const user = getAuthUserSync()
         if (user?.id) {
           send({ type: 'registerUser', userId: user.id, from: user.name })
         }
-        // 重新加入所有房间
+        // Re-join all rooms
         for (const room of joinedRooms) {
           send({ type: 'join', room })
         }
@@ -67,7 +67,7 @@ export function useWsConnection() {
           const data = JSON.parse(event.data)
           dispatch(data.type, data)
         } catch {
-          // 忽略解析错误
+          // Ignore parse errors
         }
       }
 
@@ -79,7 +79,7 @@ export function useWsConnection() {
       }
 
       socket.onerror = () => {
-        // onclose 会处理
+        // onclose will handle it
       }
     } catch {
       if (reconnectTimer) clearTimeout(reconnectTimer)

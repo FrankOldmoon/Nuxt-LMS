@@ -1,11 +1,11 @@
 <template>
     <div class="space-y-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-        <!-- 模式选择：本地 WebLLM / 服务端 API -->
+        <!-- mode select: local WebLLM / server API -->
         <UFormField :label="t('ai.mode')" size="sm">
             <USelect v-model="cfgMode" :items="modeOptions" size="sm" class="w-full" />
         </UFormField>
 
-        <!-- 本地模型设置 -->
+        <!-- local model settings -->
         <template v-if="cfgMode === 'local'">
             <UFormField :label="t('ai.localModel')" size="sm">
                 <USelect v-model="selectedLocalModel" :items="LOCAL_LLM_MODELS" size="sm" class="w-full"
@@ -26,7 +26,7 @@
             </div>
         </template>
 
-        <!-- API 设置 -->
+        <!-- API Settings -->
         <template v-else-if="cfgMode === 'api'">
             <UFormField :label="t('ueditor.aichatModel')" size="sm" :hint="t('ueditor.aichatThinkingHint')">
                 <UInput v-model="cfgApiModel" :placeholder="t('ueditor.aichatModelPlaceholder')" size="sm"
@@ -37,7 +37,7 @@
             </UFormField>
         </template>
 
-        <!-- Ollama 设置（浏览器直连本地 Ollama） -->
+        <!-- Ollama Settings (browser direct connection to local Ollama) -->
         <template v-else-if="cfgMode === 'ollama'">
             <UFormField :label="t('ai.ollamaUrl')" size="sm" :hint="t('ai.ollamaUrlHint')">
                 <UInput v-model="cfgOllamaUrl" placeholder="http://localhost:11434" size="sm" class="w-full" />
@@ -47,7 +47,7 @@
             </UFormField>
         </template>
 
-        <!-- 通用参数 -->
+        <!-- common parameters -->
         <UFormField :label="t('ueditor.aichatTitle')" size="sm">
             <UInput v-model="cfgTitle" :placeholder="t('ueditor.aichatTitlePlaceholder')" size="sm" class="w-full" />
         </UFormField>

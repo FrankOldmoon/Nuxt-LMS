@@ -1,5 +1,5 @@
 /**
- * useChapterView composable 测试
+ * useChapterView composable test
  * @see modules/lms/composables/useChapterView.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -16,7 +16,7 @@ beforeEach(async () => {
   resetAllStubs()
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
   setMockFetchHandler(async () => ({ data: null, success: true, msg: '' }))
-  // useChapterView 依赖 useSiteConfig（base 模块 auto-import）
+  // useChapterView depends on useSiteConfig (base module auto-import)
   const { useSiteConfig } = await import('../../../base/composables/useSiteConfig')
   ;(globalThis as any).useSiteConfig = () => ({
     siteTitle: ref('TestSite'),
@@ -31,7 +31,7 @@ beforeEach(async () => {
     home: ref({}),
     course: ref({}),
   })
-  // 依赖 vrm.ts 与 markdown.ts 与 prompts.js
+  // Depends on vrm.ts and markdown.ts and prompts.js
   const { feedVrmText, clearVrmSpeech } = await import('../../utils/vrm')
   ;(globalThis as any).feedVrmText = feedVrmText
   ;(globalThis as any).clearVrmSpeech = clearVrmSpeech
@@ -89,7 +89,7 @@ describe('composables/useChapterView', () => {
     const r = useChapterView(makeProps())
     r.toggleAssistant()
     expect(r.assistantOpen.value).toBe(true)
-    // 开启时 vrmVisible 重置为 false
+    // When opened, vrmVisible is reset to false
     expect(r.vrmVisible.value).toBe(false)
     r.toggleAssistant()
     expect(r.assistantOpen.value).toBe(false)
@@ -119,16 +119,16 @@ describe('composables/useChapterView', () => {
   })
 
   it('splitNotesContent 解析 closed notes 标签', async () => {
-    // 通过 onAssistantChunk 间接测试 splitNotesContent
+    // Indirectly test splitNotesContent via onAssistantChunk
     const { useChapterView } = await import('../../composables/useChapterView')
     const r = useChapterView(makeProps())
-    // 模拟 chatbox ref
+    // Simulate chatbox ref
     const msgs = ref([{ role: 'assistant', content: '' }])
     ;(r as any).aiLlmRef.value = {
       getMessages: () => msgs.value,
       refreshMessages: () => { msgs.value = [...msgs.value] },
     }
-    // chunk 不含 notes → 不修改 aiRecord
+    // chunk does not contain notes → do not modify aiRecord
     const before = r.aiRecord.value
     r.onAssistantChunk('hello')
     expect(r.aiRecord.value).toBe(before)
@@ -156,7 +156,7 @@ describe('composables/useChapterView', () => {
     }
     r.onAssistantChunk('some text')
     r.onAssistantUserMessage()
-    // 调用后流式状态清空（再次 chunk 不会拼接旧内容）
+    // After call, streaming state is cleared (subsequent chunks will not concatenate old content)
     r.onAssistantChunk('new text')
     expect(msgs.value[0].content).toContain('new text')
   })
@@ -193,7 +193,7 @@ describe('composables/useChapterView', () => {
   it('saveRecord 不在 chapterId=0 时调用', async () => {
     const { useChapterView } = await import('../../composables/useChapterView')
     const r = useChapterView(makeProps({ chapterId: 0 }))
-    // saveRecord 内部检查 chapterId，不应抛错
+    // saveRecord internally checks chapterId, should not throw
     expect(() => r.saveRecord()).not.toThrow()
   })
 })

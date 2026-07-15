@@ -1,8 +1,8 @@
 /**
- * evaluation 组件测试 (render)
+ * evaluation component test (render)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/render/evaluation.vue
  *
- * evaluation.vue 使用 AiChatbox 全局组件，需 stub
+ * evaluation.vue uses AiChatbox global component, needs stub
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

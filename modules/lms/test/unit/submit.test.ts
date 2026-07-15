@@ -1,12 +1,12 @@
 /**
- * submit 工具模块单元测试
+ * submit utility module unit test
  * @see modules/lms/server/utils/submit/
  *
- * 覆盖纯计算函数 + 通用 record 查找（mocked）
+ * Covers pure computation functions + generic record lookup (mocked)
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-// 使用 vi.hoisted 让 mock 对象在 vi.mock 提升时可访问
+// Uses vi.hoisted to make mock object accessible during vi.mock hoisting
 const mocks = vi.hoisted(() => ({
   db: {
     query: {
@@ -33,7 +33,7 @@ import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'
 beforeEach(() => {
   resetAllStubs()
   vi.clearAllMocks()
-  // 重置 mock 状态
+  // Reset mock state
   mocks.db.query.userQuestions.findFirst.mockReset()
   mocks.db.query.userHomeworks.findFirst.mockReset()
   mocks.db.query.userQuizzes.findFirst.mockReset()

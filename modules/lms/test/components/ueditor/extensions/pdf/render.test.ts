@@ -1,8 +1,8 @@
 /**
- * pdf/render.vue 组件测试
+ * pdf/render.vue component test
  * @see modules/lms/components/ueditor/extensions/nodes/vue/pdf/render.vue
  *
- * PDF 渲染使用 pdf.js (canvas-based)，测试中仅验证容器结构
+ * PDF rendering uses pdf.js (canvas-based), tests only verify container structure
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

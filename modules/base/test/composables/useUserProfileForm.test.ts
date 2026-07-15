@@ -1,12 +1,12 @@
 /**
- * composables/useUserProfileForm 测试
+ * composables/useUserProfileForm tests
  * @see modules/base/composables/useUserProfileForm.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ref, computed } from 'vue'
 import { resetAllStubs, setMockAuthUser } from '../../../../test/setup/nuxt-stubs'
 
-// useClasses / useUserProfileConfig 是 auto-import，未在 nuxt-stubs 中暴露，需手动 stub
+// useClasses / useUserProfileConfig are auto-imports, not exposed in nuxt-stubs, need manual stub
 function stubDeps(opts: {
   classes?: any[]
   allowSelfAvatarUpload?: boolean
@@ -110,7 +110,7 @@ describe('composables/useUserProfileForm - classOptions', () => {
     setMockAuthUser(null)
     const { useUserProfileForm } = await import('../../composables/useUserProfileForm')
     const { classOptions } = useUserProfileForm(makeForm({ classId: null }))
-    // 第 1 个是空选项
+    // The 1st is the empty option
     expect(classOptions.value[0]).toEqual({ label: '', value: null })
     expect(classOptions.value).toHaveLength(3)
     expect(classOptions.value[1].label).toBe('Class A')
@@ -121,7 +121,7 @@ describe('composables/useUserProfileForm - classOptions', () => {
     setMockAuthUser(null)
     const { useUserProfileForm } = await import('../../composables/useUserProfileForm')
     const { classOptions } = useUserProfileForm(makeForm({ classId: 99 }))
-    // 空 + 占位(99) + Class A
+    // Empty + placeholder(99) + Class A
     expect(classOptions.value).toHaveLength(3)
     expect(classOptions.value[1].value).toBe(99)
   })

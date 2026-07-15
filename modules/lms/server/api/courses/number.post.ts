@@ -8,14 +8,14 @@ export default eventHandler(async (event) => {
   const { course_id, user_id, number, group } = body
 
   if (!course_id || !user_id) {
-    return cResp(null, '缺少 course_id 或 user_id 参数', false)
+    return cResp(null, 'Missing course_id or user_id parameter', false)
   }
 
   const courseId = Number(course_id)
   const userId = Number(user_id)
 
   try {
-    // 查询是否已有记录
+    // Check whether a record already exists
     const existing = await db.query.userCourses.findFirst({
       where: and(
         eq(schema.userCourses.userId, userId),
@@ -24,7 +24,7 @@ export default eventHandler(async (event) => {
     })
 
     if (existing) {
-      // 已有记录：更新
+      // Existing record: update
       const updateData: any = {}
       if (number !== undefined) updateData.number = number || null
       if (group !== undefined) updateData.group = group || null
@@ -35,7 +35,7 @@ export default eventHandler(async (event) => {
       )).returning()
       return cResp(result[0] || null)
     } else {
-      // 无记录：插入
+      // No record: insert
       const insertData: any = {
         userId,
         courseId,
@@ -47,7 +47,7 @@ export default eventHandler(async (event) => {
       return cResp(result[0] || null)
     }
   } catch (error: any) {
-    console.error('更新编号失败:', error)
-    return cResp(null, error.message || '更新失败', false)
+    console.error('Failed to update number:', error)
+    return cResp(null, error.message || 'Update failed', false)
   }
 })

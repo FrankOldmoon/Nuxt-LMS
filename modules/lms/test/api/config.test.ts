@@ -1,5 +1,5 @@
 /**
- * LMS Config API 端点测试
+ * LMS Config API endpoint tests
  * @see modules/lms/server/api/config/*.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -153,13 +153,13 @@ describe('API: lms-config/update.post', () => {
   it('教师：拍平存储 body 为 lms:section.field 行（验证 buildLmsConfigPairs 调用）', async () => {
     setMockAuthState({ id: 1, username: 'admin', roles: ['admin'], permissions: [] })
     const { db } = await import('@nuxthub/db')
-    // 模拟 lms:* 拍平行已存在（跳过自动迁移）
+    // Simulate lms:* flattened rows already exist (skip auto-migration)
     vi.mocked(db.select).mockReturnValue({
       from: vi.fn().mockReturnThis(),
       where: vi.fn().mockReturnThis(),
       limit: vi.fn().mockResolvedValue([{ id: 'lms:ai.mode' }]),
     } as any)
-    // 跟踪 db.insert 调用，验证每行 key 是 lms:section.field 格式
+    // Track db.insert calls, verify each row's key is in lms:section.field format
     const insertCalls: any[] = []
     vi.mocked(db.insert).mockImplementation(((..._args: any[]) => ({
       values: (v: any) => {
@@ -175,16 +175,16 @@ describe('API: lms-config/update.post', () => {
       body: { ai: { mode: 'ollama', model: 'llama3.2' }, user: { allowChangePassword: false } },
     }))
     expect(result.success).toBe(true)
-    // 拍平后应该有 3 行：lms:ai.mode, lms:ai.model, lms:user.allowChangePassword
+    // After flattening, there should be 3 rows: lms:ai.mode, lms:ai.model, lms:user.allowChangePassword
     expect(insertCalls.length).toBeGreaterThanOrEqual(3)
     const ids = insertCalls.map(c => c.id).sort()
     expect(ids).toContain('lms:ai.mode')
     expect(ids).toContain('lms:ai.model')
     expect(ids).toContain('lms:user.allowChangePassword')
-    // 验证值正确
+    // Verify the values are correct
     const modeRow = insertCalls.find(c => c.id === 'lms:ai.mode')
     expect(modeRow.value).toBe('ollama')
-    // 验证 buildLmsConfigPairs 自身行为
+    // Verify the behavior of buildLmsConfigPairs itself
     const pairs = buildLmsConfigPairs({ ai: { mode: 'api' }, x: 1 })
     expect(pairs.find(p => p.key === 'lms:ai.mode')?.value).toBe('api')
     expect(pairs.find(p => p.key === 'lms:x')?.value).toBe(1)
@@ -227,7 +227,7 @@ describe('API: config/lms-public.get', () => {
     expect(result.data.ai).toBeDefined()
     expect(result.data.ai.mode).toBe('api')
     expect(result.data.ai.llmApiKey).toBeUndefined()
-    // chapter.headingExp/Coin/Score 属于内部积分配置，不暴露到公开端点
+    // chapter.headingExp/Coin/Score are internal points config, not exposed in public endpoint
     expect(result.data.chapter).toBeUndefined()
   })
 

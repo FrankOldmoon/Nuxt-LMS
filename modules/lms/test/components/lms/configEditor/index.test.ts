@@ -1,8 +1,8 @@
 /**
- * lms/configEditor/index.vue 组件测试
+ * lms/configEditor/index.vue component test
  * @see modules/lms/components/lms/configEditor/index.vue
  *
- * 配置编辑器入口：调用 useConfigEditor + provideConfigEditor，渲染子组件
+ * Config editor entry: calls useConfigEditor + provideConfigEditor, renders child components
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'

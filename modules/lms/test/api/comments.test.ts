@@ -1,5 +1,5 @@
 /**
- * Comments API 端点测试
+ * Comments API endpoint test
  * @see modules/lms/server/api/comments/*.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -86,7 +86,7 @@ describe('API: comments/list.get', () => {
 
   it('登录后获取评论树', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
-    // list.get 使用 db.query.* 关系查询 API（findFirst/findMany），返回 { root, children }
+    // list.get uses db.query.* relational query API (findFirst/findMany), returns { root, children }
     const { db } = await import('@nuxthub/db')
     vi.mocked(db.query.comments.findFirst).mockResolvedValue({
       id: 1, userId: 1, courseId: 1, cid: 1, content: 'Root', parentId: null,

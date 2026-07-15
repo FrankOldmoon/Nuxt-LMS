@@ -1,9 +1,9 @@
 /**
- * raceQuestionEnd / raceEnd：题结束/竞赛结束
+ * raceQuestionEnd / raceEnd: question end / race end
  */
 import { raceStates, broadcastToRace, computeRaceScores } from '../state'
 
-/** raceQuestionEnd: 计算 top3 + 广播 raceQuestionEnd */
+/** raceQuestionEnd: compute top3 + broadcast raceQuestionEnd */
 export function handleRaceQuestionEnd(_peer: any, data: any) {
   const pin = String(data.pin || '')
   const race = raceStates.get(pin); if (!race || !race.activeQuestionCid) return
@@ -25,7 +25,7 @@ export function handleRaceQuestionEnd(_peer: any, data: any) {
   race.activeQuestionCid = null
 }
 
-/** raceEnd: 计算总分 + 广播 raceEnd + 清理 raceStates */
+/** raceEnd: compute total scores + broadcast raceEnd + clear raceStates */
 export function handleRaceEnd(_peer: any, data: any) {
   const pin = String(data.pin || '')
   const race = raceStates.get(pin); if (!race) return

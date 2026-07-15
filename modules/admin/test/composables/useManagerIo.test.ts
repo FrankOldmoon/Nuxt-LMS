@@ -1,8 +1,8 @@
 /**
- * useManagerIo composable 测试
+ * useManagerIo composable tests
  * @see modules/admin/composables/useManagerIo.ts
  *
- * Manager 导入/导出弹窗编排
+ * Manager import/export modal orchestration
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { resetAllStubs, getToastCalls, setMockI18n } from '../../../../test/setup/nuxt-stubs'
@@ -31,7 +31,7 @@ describe('composables/useManagerIo', () => {
     await onImport([{ name: 'A' }])
     expect(importRows).toHaveBeenCalledWith([{ name: 'A' }])
     expect(importOpen.value).toBe(false)
-    // 成功 toast
+    // Success toast
     expect(getToastCalls()).toHaveLength(1)
     expect(getToastCalls()[0].color).toBe('success')
   })

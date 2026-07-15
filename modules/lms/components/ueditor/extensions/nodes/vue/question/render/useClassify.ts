@@ -2,12 +2,12 @@ import { ref, computed, inject, watch, nextTick } from 'vue'
 import { submitQuestion, recordAnswer, computeCorrectRate } from './shared'
 
 export function useClassify(props: any) {
-  const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')!
+  const submitted = inject<import('vue').Ref<boolean>>('question submitted')!
   const isCorrect = inject<import('vue').Ref<boolean>>('questionIsCorrect')!
   const fromRecord = inject<import('vue').Ref<boolean>>('questionFromRecord')!
   const { courseId, chapterId } = useLmsContext()
 
-  // 扁平化所有选项：[{ text, flatIndex, correctCat }]
+  // flattenAlloptionitems：[{ text, flatIndex, correctCat }]
   const flatItems = computed(() => {
     const result: any[] = []
     const options = props.question.options || []
@@ -19,22 +19,22 @@ export function useClassify(props: any) {
     return result
   })
 
-  // 分类名称列表
+  // CategoryNameList
   const categories = computed(() => props.question.options || [])
 
-  // 池子（未分类的项）和各分类桶
+  // poolSon（notCategoryitems）andeachCategorybucket
   const pool = ref<any[]>([])
   const catBuckets = ref<any[]>([])
 
-  // 防止 record ↔ 拖拽 互相触发的循环
+  // prevent record ↔ drag mutualTriggerloop
   let restoring = false
 
-  // 初始化：所有项打乱后放入池子
+  // Initialize：AllitemsshuffleBackput in poolSon
   function initBuckets() {
     const options = props.question.options || []
     catBuckets.value = options.map(() => [])
     const items = flatItems.value.map(item => ({ ...item }))
-    // Fisher-Yates 打乱
+    // Fisher-Yates shuffle
     for (let i = items.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1))
       ;[items[i], items[j]] = [items[j], items[i]]
@@ -43,12 +43,12 @@ export function useClassify(props: any) {
     doSyncRecord()
   }
 
-  // 从当前 pool/catBuckets 构建 record 数组
+  // fromCurrent pool/catBuckets Build record Array
   function buildRecord() {
     const answer = props.question.answer || []
     const record = new Array(answer.length).fill(-1)
-    // 池子中的项：-1（默认值，无需显式设置）
-    // 分类桶中的项：对应的分类索引
+    // poolSonMiddleitems：-1（Default Value，Noneneed to explicitlySettings）
+    // CategorybucketMiddleitems：RightshouldCategoryIndex
     catBuckets.value.forEach((bucket, ci) => {
       bucket?.forEach((item: any) => {
         record[item.flatIndex] = ci
@@ -57,31 +57,31 @@ export function useClassify(props: any) {
     return record
   }
 
-  // 同步到 question.record（带循环保护）
+  // Syncto question.record（with cycle protection）
   function doSyncRecord() {
     if (restoring) return
     const record = buildRecord()
-    // 检查是否与当前 record 一致，避免不必要的更新
+    // checkYesNoandCurrent record consistent，avoid unmustneedUpdate
     const current = props.question.record
     if (Array.isArray(current) && current.length === record.length &&
         record.every((v: any, i: number) => v === current[i])) return
     recordAnswer(props.question, record)
   }
 
-  // 监听 question 变化初始化
+  // listen question changeInitialize
   watch(() => props.question, (q: any) => {
     if (q?.type === 'classify' && Array.isArray(q.options) && q.options.length) {
       initBuckets()
     }
   }, { immediate: true })
 
-  // 监听 record 变化（fetchRecord 回填场景）
+  // listen record change（fetchRecord backfill scenario）
   watch(() => props.question?.record, (record: any) => {
     if (!Array.isArray(record) || record.length === 0) return
-    // 检查是否与当前状态一致，避免循环
+    // checkYesNoandCurrentStatusconsistent，avoid loop
     const current = buildRecord()
     if (current.length === record.length && record.every((v: any, i: number) => v === current[i])) return
-    // 从 record 恢复状态
+    // from record ResumeStatus
     restoring = true
     const items = flatItems.value.map(item => ({ ...item }))
     const options = props.question.options || []
@@ -100,7 +100,7 @@ export function useClassify(props: any) {
     nextTick(() => { restoring = false })
   }, { immediate: true })
 
-  // 拖拽时更新 record
+  // when draggingUpdate record
   watch([pool, catBuckets], () => {
     if (submitted.value) {
       submitted.value = false
@@ -152,7 +152,7 @@ export function useClassify(props: any) {
     initBuckets()
   }
 
-  // 填充正确答案：将每项放入正确的分类
+  // fillCorrectAnswer：willeachitemsputCorrectCategory
   function fillCorrectAnswer() {
     const answer = props.question.answer || []
     if (!answer.length) return

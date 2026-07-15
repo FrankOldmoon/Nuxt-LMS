@@ -1,5 +1,5 @@
 /**
- * auth/forgotPasswordForm.vue 组件测试
+ * auth/forgotPasswordForm.vue component tests
  * @see modules/base/components/auth/forgotPasswordForm.vue
  */
 import {

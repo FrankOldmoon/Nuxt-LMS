@@ -1,5 +1,5 @@
 /**
- * Messages API 端点测试
+ * Messages API endpoint tests
  * @see modules/base/server/api/messages/*.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'

@@ -1,5 +1,5 @@
 /**
- * useLmsBtnsConfig composable 测试
+ * useLmsBtnsConfig composable test
  * @see modules/lms/composables/useLmsBtnsConfig.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -47,12 +47,12 @@ describe('composables/useLmsBtnsConfig', () => {
       showDanmaku: false,
     })
     useLmsBtnsConfig(source)
-    // courseBtns 合并：默认 + public + source
-    expect(courseBtnsConfig.value.showProgress).toBe(false) // source 覆盖
-    expect(courseBtnsConfig.value.showLeaderboard).toBe(true) // 默认
-    // chapterBtns 合并
-    expect(chapterBtnsConfig.value.showPlay).toBe(false) // source 覆盖
-    expect(chapterBtnsConfig.value.showScore).toBe(true) // 默认
+    // courseBtns merge: default + public + source
+    expect(courseBtnsConfig.value.showProgress).toBe(false) // source overrides
+    expect(courseBtnsConfig.value.showLeaderboard).toBe(true) // Default
+    // chapterBtns merge
+    expect(chapterBtnsConfig.value.showPlay).toBe(false) // source overrides
+    expect(chapterBtnsConfig.value.showScore).toBe(true) // Default
     expect(showDanmaku.value).toBe(false)
   })
 
@@ -68,13 +68,13 @@ describe('composables/useLmsBtnsConfig', () => {
     })
     const { useLmsBtnsConfig } = await import('../../composables/useLmsBtnsConfig')
     const source = ref({
-      courseBtns: { showProgress: true }, // source 覆盖 public
+      courseBtns: { showProgress: true }, // source overrides public
       chapterBtns: {},
     })
     useLmsBtnsConfig(source)
     expect(courseBtnsConfig.value.showProgress).toBe(true) // source > public
-    expect(courseBtnsConfig.value.showGroups).toBe(false) // public 未被 source 覆盖
-    expect(courseBtnsConfig.value.showLeaderboard).toBe(true) // 默认
+    expect(courseBtnsConfig.value.showGroups).toBe(false) // public is not overridden by source
+    expect(courseBtnsConfig.value.showLeaderboard).toBe(true) // Default
     expect(chapterBtnsConfig.value.showPlay).toBe(false) // public
   })
 
@@ -89,10 +89,10 @@ describe('composables/useLmsBtnsConfig', () => {
     useLmsBtnsConfig(source)
     expect(showDanmaku.value).toBe(true)
     source.value = { showDanmaku: false, courseBtns: {}, chapterBtns: {} }
-    // watch flush:'pre' 需要 nextTick 触发回调
+    // watch flush:'pre' needs nextTick to trigger callback
     await vi.waitFor(() => {
       expect(showDanmaku.value).toBe(false)
     })
-    expect(courseBtnsConfig.value.showProgress).toBe(true) // 默认
+    expect(courseBtnsConfig.value.showProgress).toBe(true) // Default
   })
 })

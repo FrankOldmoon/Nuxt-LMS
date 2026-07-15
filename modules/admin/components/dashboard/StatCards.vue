@@ -1,10 +1,10 @@
 <template>
-  <!-- 骨架（stats 未就绪） -->
+  <!-- Skeleton (stats not ready) -->
   <div v-if="!stats" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
     <USkeleton v-for="n in 8" :key="n" class="h-20" />
   </div>
 
-  <!-- 统计卡片 -->
+  <!-- Statistics cards -->
   <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
     <div
       v-for="card in cards"

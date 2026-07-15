@@ -1,5 +1,5 @@
 /**
- * 课程导入：orders 重新映射 + 回写 course
+ * Course import: orders remapping + write back to course
  */
 import { db, schema } from '@nuxthub/db'
 import { eq } from 'drizzle-orm'

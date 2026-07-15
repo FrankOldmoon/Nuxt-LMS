@@ -2,15 +2,15 @@ import type { ColumnMeta } from '../utils/types'
 import { widgetFor } from '../utils/widgetMap'
 
 /**
- * CForm 表单状态与提交逻辑
+ * CForm formState and submit logic
  *
- * 管理 form / jsonStrings / jsonErrors / fkOptions / fkLoading / saving 状态，
- * 封装 initForm（初始化 + 加载 FK 选项）、validateJson、onSubmit（校验 + 组装数据）。
+ * Manages form / jsonStrings / jsonErrors / fkOptions / fkLoading / saving state,
+ * encapsulates initForm (initialize + load FK options), validateJson, onSubmit (validate + assemble data).
  *
- * 提取自 CForm.vue，让组件只负责渲染。
+ * Extracted from CForm.vue, so the component only handles rendering.
  *
- * @param editableColumns 可编辑列（已排除 readonly）
- * @param row 编辑行（新增时为 null）
+ * @param editableColumns Editable columns (readonly excluded)
+ * @param row Edit row (null when adding new)
  */
 export function useCForm(
   editableColumns: ComputedRef<ColumnMeta[]>,
@@ -28,7 +28,7 @@ export function useCForm(
   const fkLoading = reactive<Record<string, boolean>>({})
   const saving = ref(false)
 
-  /** 初始化表单数据 + 加载 FK 选项 */
+  /** Initialize formData + load FK options */
   async function initForm() {
     Object.keys(form).forEach((k) => delete form[k])
     Object.keys(jsonStrings).forEach((k) => delete jsonStrings[k])

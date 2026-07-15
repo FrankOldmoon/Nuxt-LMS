@@ -29,7 +29,8 @@
     "selectPlaceholder": "Select...",
     "operationFailed": "Operation failed",
     "copied": "Copied to clipboard",
-    "copyFailed": "Copy failed"
+    "copyFailed": "Copy failed",
+    "fullscreen": "Fullscreen"
   },
   "layout": {
     "menu": "Menu",

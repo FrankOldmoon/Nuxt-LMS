@@ -1,6 +1,6 @@
 <template>
     <div class="race-wrapper w-full relative">
-        <!-- 内联编辑面板（在上方显示） -->
+        <!-- InsideinlineEditPanel（UpsideShow） -->
         <div v-if="showConfig" class="vue-node-config">
             <Edit :race-id="raceId" :race="race" :course-id="courseId" @saved="onSaved" />
         </div>
@@ -19,13 +19,13 @@ const props = defineProps(nodeViewProps)
 
 const { courseId } = useLmsContext()
 
-// inject node-view 提供的状态
+// inject node-view provideStatus
 const showConfig = inject('nodeViewShowConfig', ref(false))
 const meta = inject('nodeViewMeta', reactive({ title: '', icon: '', hasSettings: false }))
 
-// 设置组件元信息（告知 node-view 显示设置按钮）
+// SettingsComponentelementInfo（informNode-view ShowSettingsButton）
 if (meta) {
-    meta.title = '竞赛'
+    meta.title = 'Competition'
     meta.icon = 'i-lucide-trophy'
     meta.hasSettings = true
 }
@@ -34,7 +34,7 @@ const emit = defineEmits(['init'])
 
 const raceId = computed(() => Number(props.node?.attrs?.content) || 0)
 
-// 默认竞赛
+// DefaultCompetition
 const defaultRace = reactive({
     name: '',
     gapTime: 30,
@@ -59,7 +59,7 @@ const { data: fetchedRace } = cRequest.use(apiUrl, {
     },
 })
 
-// raceId 为空时使用默认竞赛；否则使用接口数据
+// raceId EmptywhenmakeuseDefaultCompetition；ElsemakeuseAPIData
 const race = ref(defaultRace)
 watch([fetchedRace, raceId], () => {
     if (!raceId.value) {
@@ -70,16 +70,16 @@ watch([fetchedRace, raceId], () => {
 }, { immediate: true, flush: 'sync' })
 
 function onSaved(rc) {
-    // 新建竞赛：拿到新增 cid 后通知父节点更新 content 属性
+    // NewCompetition：taketoAdd cid BackNotificationparent nodePointUpdate content Property
     if (rc.cid && Number(rc.cid) !== raceId.value) {
         emit('init', rc.cid)
         props.updateAttributes?.({ content: String(rc.cid) })
     }
-    // 更新本地 race 数据
+    // UpdatelocalGround race Data
     if (race.value) {
         Object.assign(race.value, rc)
     }
-    // 编辑保存后关闭配置面板
+    // EditSaveBackCloseConfigurationPanel
     if (showConfig.value) {
         showConfig.value = false
     }

@@ -1,6 +1,6 @@
 <template>
   <div class="p-4">
-    <!-- 编辑模式：直接渲染 QuizEdit 内联面板 -->
+    <!-- Edit mode: directly render QuizEdit inline panel -->
     <ClientOnly v-if="props.row">
       <QuizEdit
         :quiz-id="Number(props.row.cid) || 0"
@@ -11,7 +11,7 @@
       <template #fallback><div class="py-8 text-center text-muted text-sm">Loading...</div></template>
     </ClientOnly>
 
-    <!-- 新增模式：先选课程，再渲染 QuizEdit -->
+    <!-- Add mode: select course first, then render QuizEdit -->
     <template v-else>
       <div v-if="!selectedCourseId" class="space-y-3">
         <h3 class="text-base font-semibold">{{ t('admin.form.selectCourse') }}</h3>

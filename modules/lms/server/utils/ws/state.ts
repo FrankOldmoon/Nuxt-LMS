@@ -1,20 +1,20 @@
 /**
- * LMS WebSocket 共享状态与房间广播工具
+ * LMS WebSocket shared state and room broadcast utilities
  *
- * 修复 race.ts/class.ts/group.ts 中隐式全局未定义的 bug：
+ * Fixes the bug of implicitly undefined globals in race.ts/class.ts/group.ts:
  *   classRooms / raceRooms / groupRooms / votes / quickAnswers / raceStates
- *   及其对应的 broadcast* / compute* 函数统一在此显式 export。
+ *   and their corresponding broadcast* / compute* functions are explicitly exported here.
  *
- * base/ws/state.ts 仅提供 userPeers 与通用 rooms（系统级广播）。
- * 业务级 class/race/group 状态由本文件 + lms 自身维护。
+ * base/ws/state.ts only provides userPeers and generic rooms (system-level broadcast).
+ * Business-level class/race/group state is maintained by this file + lms itself.
  */
 
-// ==================== 房间表（classId/pin/groupId → 在线连接集合） ====================
+// ==================== Room tables (classId/pin/groupId -> online connection set) ====================
 export const classRooms = new Map<number, Set<any>>()
 export const raceRooms  = new Map<string, Set<any>>()
 export const groupRooms = new Map<string, Set<any>>()
 
-// ==================== 业务状态 ====================
+// ==================== Business state ====================
 export type VoteRecord = {
   classId: number; question: string; options: string[]
   results: number[]; votedUsers: Set<string>
@@ -35,8 +35,8 @@ export const votes        = new Map<string, VoteRecord>()
 export const quickAnswers = new Map<number, QuickAnswerRecord>()
 export const raceStates   = new Map<string, RaceState>()
 
-// ==================== 广播工具 ====================
-function safeSend(peer: any, msg: string) { try { peer.send(msg) } catch { /* 断开 */ } }
+// ==================== Broadcast utilities ====================
+function safeSend(peer: any, msg: string) { try { peer.send(msg) } catch { /* disconnected */ } }
 
 export function broadcastToClass(classId: number, msg: string) {
   const room = classRooms.get(classId); if (!room) return
@@ -51,7 +51,7 @@ export function broadcastToGroup(groupId: string, msg: string) {
   for (const p of room) safeSend(p, msg)
 }
 
-// ==================== 房间 join/leave ====================
+// ==================== Room join/leave ====================
 function addRoom(map: Map<any, Set<any>>, key: any, peer: any) {
   if (!map.has(key)) map.set(key, new Set())
   map.get(key)!.add(peer)
@@ -79,7 +79,7 @@ export function leaveGroupRoom(groupId: string, peer: any) {
   if (peer._groupIds) peer._groupIds.delete(groupId)
 }
 
-// ==================== 竞赛计算 ====================
+// ==================== Race computation ====================
 export function getRaceOnlineUsers(pin: string) {
   const room = raceRooms.get(pin); if (!room) return []
   const out: Array<{ userId: number; from: string }> = []

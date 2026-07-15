@@ -1,9 +1,9 @@
 /**
- * LMS medals 工具测试
+ * LMS medals utility test
  * @see modules/lms/server/utils/medals.ts
  *
- * 测试 shouldAwardMedal（纯逻辑）/ collectUserMetrics / checkAndAwardMedals
- * Bug 5 回归：验证 isNull 导入后 checkAndAwardMedals 不抛 ReferenceError
+ * Test shouldAwardMedal (pure logic) / collectUserMetrics / checkAndAwardMedals
+ * Bug 5 regression: verify checkAndAwardMedal does not throw ReferenceError after isNull import
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
@@ -36,7 +36,7 @@ import { DEFAULT_MEDALS } from '../../server/utils/medals/default-medals'
 import type { MedalContent, UserMetrics } from '../../server/utils/medals/types'
 import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'
 
-/** 创建 thenable 链式 mock：await chain 可直接获得 result */
+/** Create thenable chain mock: await chain directly obtains result */
 function chainReturning(result: any = []) {
   const chain: any = {
     from: vi.fn().mockReturnThis(),
@@ -55,7 +55,7 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-// ====================== shouldAwardMedal（纯逻辑） ======================
+// ====================== shouldAwardMedal (pure logic) ======================
 
 describe('server/utils/medals - shouldAwardMedal', () => {
   const baseMetrics: UserMetrics = {
@@ -201,11 +201,11 @@ describe('server/utils/medals - collectUserMetrics', () => {
 
   it('无 userCourses 行 → 全零 + level=1', async () => {
     vi.mocked(db.select)
-      .mockReturnValueOnce(chainReturning([]))   // userCourses 空行
+      .mockReturnValueOnce(chainReturning([]))   // userCourses empty row
       .mockReturnValueOnce(chainReturning([{ c: 0 }]))
       .mockReturnValueOnce(chainReturning([{ c: 0 }]))
       .mockReturnValueOnce(chainReturning([{ c: 0 }]))
-      .mockReturnValueOnce(chainReturning([]))   // chapterIds 空 → 不查 passCount
+      .mockReturnValueOnce(chainReturning([]))   // chapterIds empty → do not query passCount
 
     const metrics = await collectUserMetrics(1, 1)
     expect(metrics.courseScore).toBe(0)
@@ -233,8 +233,8 @@ describe('server/utils/medals - collectUserMetrics', () => {
 describe('server/utils/medals - checkAndAwardMedals', () => {
   it('无奖章 → 返回空数组', async () => {
     vi.mocked(db.select)
-      .mockReturnValueOnce(chainReturning([]))  // allMedals 空
-    // collectUserMetrics 的调用不会发生（allMedals.length === 0 → 提前返回）
+      .mockReturnValueOnce(chainReturning([]))  // allMedals is empty
+    // collectUserMetrics call does not happen (allMedals.length === 0 → early return)
 
     const result = await checkAndAwardMedals(1, 1)
     expect(result).toEqual([])
@@ -244,7 +244,7 @@ describe('server/utils/medals - checkAndAwardMedals', () => {
     vi.mocked(db.select)
       .mockReturnValueOnce(chainReturning([{ id: 1, content: DEFAULT_MEDALS[0].content }]))  // allMedals
       .mockReturnValueOnce(chainReturning([{ medalId: 1 }]))  // owned
-      // collectUserMetrics 调用
+      // collectUserMetrics call
       .mockReturnValueOnce(chainReturning([{ score: '0', exp: 0 }]))
       .mockReturnValueOnce(chainReturning([{ c: 0 }]))
       .mockReturnValueOnce(chainReturning([{ c: 0 }]))
@@ -259,7 +259,7 @@ describe('server/utils/medals - checkAndAwardMedals', () => {
     const medal = { id: 5, content: { ...DEFAULT_MEDALS[0].content } } // questionCount >= 1
     vi.mocked(db.select)
       .mockReturnValueOnce(chainReturning([medal]))           // allMedals
-      .mockReturnValueOnce(chainReturning([]))                 // owned 空
+      .mockReturnValueOnce(chainReturning([]))                 // owned is empty
       // collectUserMetrics
       .mockReturnValueOnce(chainReturning([{ score: '10', exp: 5 }]))
       .mockReturnValueOnce(chainReturning([{ c: 3 }]))         // questionCount=3 >= 1
@@ -289,12 +289,12 @@ describe('server/utils/medals - checkAndAwardMedals', () => {
   })
 
   it('Bug 5 回归：不抛 ReferenceError（isNull 已导入）', async () => {
-    // Bug 5: medals.ts 曾缺少 isNull import，导致 checkAndAwardMedals 抛 ReferenceError
-    // 修复后 isNull 已导入，查询 medals 表时使用 isNull(schema.medals.deletedAt) 过滤软删除
+    // Bug 5: medals.ts previously lacked isNull import, causing checkAndAwardMedals to throw ReferenceError
+    // After fix, isNull is imported, querying medals table uses isNull(schema.medals.deletedAt) to filter soft deletes
     vi.mocked(db.select)
       .mockReturnValueOnce(chainReturning([]))
 
-    // 不应抛出 ReferenceError: isNull is not defined
+    // Should not throw ReferenceError: isNull is not defined
     await expect(checkAndAwardMedals(1, 1)).resolves.toEqual([])
   })
 })

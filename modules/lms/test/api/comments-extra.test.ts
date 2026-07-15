@@ -1,16 +1,16 @@
 /**
- * LMS Comments 端点测试
+ * LMS Comments endpoint test
  * @see modules/lms/server/api/comments/*.ts
  *
- * 覆盖：
- * - add.post.ts     新增（自动分配 cid + checkAndAwardMedals）
- * - batch.post.ts   批量（delete/remove/restore）
- * - delete.post.ts  删除（作者本人 或 教师/管理员）
- * - like.post.ts    点赞（upsert userComments）
- * - list.get.ts     列表（root + children + userMap + likeCount）
- * - records.get.ts  班级学生记录
- * - show.ts         单条详情
- * - update.post.ts  更新（教师/管理员）
+ * Coverage:
+ * - add.post.ts     add (auto-assign cid + checkAndAwardMedals)
+ * - batch.post.ts   batch (delete/remove/restore)
+ * - delete.post.ts  delete (author themselves or teacher/admin)
+ * - like.post.ts    like (upsert userComments)
+ * - list.get.ts     list (root + children + userMap + likeCount)
+ * - records.get.ts  class student records
+ * - show.ts         single detail
+ * - update.post.ts  update (teacher/admin)
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
@@ -257,14 +257,14 @@ describe('API: comments/list', () => {
     ])
     _mockDb.query.userComments.findMany = vi.fn().mockResolvedValue([
       { userId: 99, courseId: 1, commentCid: 2, like: true },
-      { userId: 1, courseId: 1, commentCid: 2, like: true }, // 当前用户点赞了 cid 2
+      { userId: 1, courseId: 1, commentCid: 2, like: true }, // current user liked cid 2
     ])
     const handler = (await import('../../server/api/comments/list.get')).default
     const r = await handler(makeEvent({ query: { course_id: '1', cid: '1' } }))
     expect(r.success).toBe(true)
     expect(r.data.root.userName).toBe('Alice')
     expect(r.data.children).toHaveLength(2)
-    expect(r.data.children[0].cid).toBe(2) // likeCount 多的排前面
+    expect(r.data.children[0].cid).toBe(2) // higher likeCount first
     expect(r.data.children[0].likeCount).toBe(2)
     expect(r.data.children[0].liked).toBe(true)
   })

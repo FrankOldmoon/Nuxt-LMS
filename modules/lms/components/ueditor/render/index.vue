@@ -7,8 +7,8 @@
       </div>
     </div>
 
-    <!-- 图片全屏预览 -->
-    <UeditorRenderImageModal v-model:open="imageModalOpen" :images="imageList" :initial-index="imageModalIndex" />
+    <!-- Image fullscreen preview -->
+    <UeditorRenderImageModal v-model:open="imageModalOpen" :images="image list" :initial-index="imageModalIndex" />
   </div>
 </template>
 
@@ -21,29 +21,29 @@ const props = defineProps({
     type: [Object, String, Number, Boolean],
     default: () => ({}),
   },
-  // CDN 地址（用于文件图标、echarts、KaTeX 等资源加载）
+  // CDN URL (for loading resources like file icons, echarts, KaTeX, etc.)
   cdnUrl: {
     type: String,
     default: 'https://unpkg.com/@umoteam/editor-external@latest',
   },
-  // 默认行高
+  // Default line height
   lineHeight: {
     type: [Number, String],
     default: 1.75,
   },
-  // 页面背景色
+  // Page background color
   background: {
     type: String,
     default: '#fff',
   },
-  // 课程 ID：admin 后台复用本组件时传入，覆盖全局 editableCourseId
-  // 使内部 vue 节点（如 question/homework 等）能获取正确的 course 上下文
+  // Course ID: passed in when admin backend reuses this component, overrides global editableCourseId
+  // So that internal vue nodes (like question/homework, etc.) can get the correct course context
   courseId: {
     type: [Number, String],
     default: undefined,
   },
-  // 是否追踪 hover 阅读进度：仅章节主内容区（已登录）开启
-  // 嵌套 ueditorRender（题目内容/作业说明等）不开启，避免误计入阅读进度
+  // Whether to track hover reading progress: only enabled in chapter main content area (logged in)
+  // Nested ueditorRender (question content/homework instructions, etc.) is not enabled, to avoid miscounting reading progress
   trackReading: {
     type: Boolean,
     default: false,
@@ -57,7 +57,7 @@ const {
   renderContent,
   imageModalOpen,
   imageModalIndex,
-  imageList,
+  image list,
 } = useRenderIndex(props, null)
 </script>
 

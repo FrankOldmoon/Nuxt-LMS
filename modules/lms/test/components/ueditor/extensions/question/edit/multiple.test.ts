@@ -1,9 +1,9 @@
 /**
- * multiple 编辑组件测试 (edit)
+ * multiple edit component test (edit)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/edit/multiple.vue
  *
- * multiple.vue 接收 form prop，使用 UCheckbox 多选答案
- * UCheckbox 使用 @change="toggleAnswer(idx)" 而非 @update:modelValue
+ * multiple.vue receives form prop, uses UCheckbox for multiple-choice answers
+ * UCheckbox uses @change="toggleAnswer(idx)" instead of @update:modelValue
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -51,10 +51,10 @@ describe('question/edit/multiple.vue', () => {
       global: { stubs: _globalStubs, mocks: _mocks },
     })
     const checkboxes = wrapper.findAll('input[type="checkbox"]')
-    // 勾选第 1 个
+    // Check the 1st one
     await checkboxes[0].trigger('change')
     expect(form.answer).toEqual([0])
-    // 勾选第 3 个
+    // Check the 3rd one
     await checkboxes[2].trigger('change')
     expect(form.answer).toEqual([0, 2])
   })
@@ -69,7 +69,7 @@ describe('question/edit/multiple.vue', () => {
       global: { stubs: _globalStubs, mocks: _mocks },
     })
     const checkboxes = wrapper.findAll('input[type="checkbox"]')
-    // 第 1 和第 3 个应勾选
+    // The 1st and 3rd should be checked
     expect(checkboxes[0].element.checked).toBe(true)
     expect(checkboxes[1].element.checked).toBe(false)
     expect(checkboxes[2].element.checked).toBe(true)

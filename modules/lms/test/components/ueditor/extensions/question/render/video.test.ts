@@ -1,9 +1,9 @@
 /**
- * video 组件测试 (render)
+ * video component test (render)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/render/video.vue
  *
- * video.vue 导入 QuestionRender (render.vue)，需 stub
- * useVideo 使用 useChapterTask，需 expose 到 globalThis
+ * video.vue imports QuestionRender (render.vue), needs stub
+ * useVideo uses useChapterTask, needs to be exposed to globalThis
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

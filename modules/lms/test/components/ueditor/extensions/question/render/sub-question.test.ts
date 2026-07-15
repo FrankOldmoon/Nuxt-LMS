@@ -1,8 +1,8 @@
 /**
- * sub-question 组件测试 (render)
- * @see modules/lms/components/ueditor/extensions/nodes/vue/question/render/sub-question.vue
+ * sub-question component test (render)
+ * @see modules/lms/components/ueditor/extensions/nodes/vue/question/render/subQuestion.vue
  *
- * sub-question 自己 provide injects（questionSubmitted 等），不需要外部 provide
+ * sub-question provides its own injects (questionSubmitted etc.), does not need external provide
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -23,7 +23,7 @@ const _globalConfig = {
   mocks: { $t: (k: string) => k },
 }
 
-describe('question/render/sub-question.vue', () => {
+describe('question/render/subQuestion.vue', () => {
   const sampleSubQuestion = {
     type: 'single',
     name: 'Sub question 1',
@@ -35,7 +35,7 @@ describe('question/render/sub-question.vue', () => {
 
   it('mounts and renders sub question name', async () => {
     const { default: SubQuestion } = await import(
-      '../../../../../../components/ueditor/extensions/nodes/vue/question/render/sub-question.vue'
+      '../../../../../../components/ueditor/extensions/nodes/vue/question/render/subQuestion.vue'
     )
     const wrapper = mount(SubQuestion, {
       props: { subQuestion: sampleSubQuestion, index: 0 },
@@ -46,7 +46,7 @@ describe('question/render/sub-question.vue', () => {
 
   it('renders index number (1-based)', async () => {
     const { default: SubQuestion } = await import(
-      '../../../../../../components/ueditor/extensions/nodes/vue/question/render/sub-question.vue'
+      '../../../../../../components/ueditor/extensions/nodes/vue/question/render/subQuestion.vue'
     )
     const wrapper = mount(SubQuestion, {
       props: { subQuestion: sampleSubQuestion, index: 2 },
@@ -57,7 +57,7 @@ describe('question/render/sub-question.vue', () => {
 
   it('exposes submit/hasAnswer/fillCorrectAnswer methods', async () => {
     const { default: SubQuestion } = await import(
-      '../../../../../../components/ueditor/extensions/nodes/vue/question/render/sub-question.vue'
+      '../../../../../../components/ueditor/extensions/nodes/vue/question/render/subQuestion.vue'
     )
     const wrapper = mount(SubQuestion, {
       props: { subQuestion: sampleSubQuestion, index: 0 },

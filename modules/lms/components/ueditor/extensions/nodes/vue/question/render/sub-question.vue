@@ -1,7 +1,7 @@
 <template>
   <div class="sub-question-render p-3 mb-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/30"
     :data-question-id="uniqueId">
-    <!-- 子题头部 -->
+    <!-- child questionHead -->
     <div class="flex items-center gap-2 mb-2">
       <span class="shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white text-xs flex items-center justify-center font-medium">
         {{ index + 1 }}
@@ -13,16 +13,16 @@
       <span class="text-xs text-gray-400 ml-auto">{{ subQuestion.point }}{{ $t('question.points') }}</span>
     </div>
 
-    <!-- 子题内容（html 题型由组件内部处理） -->
+    <!-- child questionContent（html question type by ComponentInsideHandle） -->
     <div v-if="subQuestion.type !== 'html'" class="prose prose-sm dark:prose-invert max-w-none mb-2">
       <ueditorRender :json="subQuestion.content" />
     </div>
 
-    <!-- 子题特定渲染组件 -->
+    <!-- child question specificRender Component -->
     <component v-if="renderComponent" :is="renderComponent" ref="renderRef"
       :question="localQuestion" :question-id="0" />
 
-    <!-- 子题结果 -->
+    <!-- child question result -->
     <div v-if="submitted" class="mt-2">
       <div class="flex items-center gap-2">
         <UIcon :name="isCorrect ? 'i-heroicons-check-circle' : 'i-heroicons-x-circle'"
@@ -33,7 +33,7 @@
       </div>
     </div>
 
-    <!-- 教师查看答案 -->
+    <!-- TeacherView Answer -->
     <div v-if="showAnswer" class="mt-2 p-2 rounded bg-blue-50 dark:bg-blue-900/20">
       <span class="text-xs text-blue-600 dark:text-blue-300">{{ $t('question.correctAnswerLabel') }}: </span>
       <span class="text-xs font-medium text-blue-700 dark:text-blue-200">{{ formattedAnswer }}</span>

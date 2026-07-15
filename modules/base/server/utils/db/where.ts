@@ -2,20 +2,20 @@ import { and, isNull, isNotNull, or, ilike, sql, inArray, eq, getTableColumns } 
 import type { ListQuery } from "./schema-meta"
 
 /**
- * 构建 where 条件数组（软删除 / 搜索 / 筛选）
- * 返回 undefined 表示无条件
+ * Build where condition array (soft delete / search / filter)
+ * Returns undefined when no conditions
  */
 export function _buildWhere(table: any, query?: ListQuery) {
   const cols = getTableColumns(table) as Record<string, any>
   const conditions: any[] = []
 
-  // 软删除过滤
+  // Soft delete filter
   if ('deletedAt' in cols) {
     if (query?.includeDeleted) conditions.push(isNotNull(cols.deletedAt))
     else conditions.push(isNull(cols.deletedAt))
   }
 
-  // 全局搜索：前 4 个文本列（排除 deletedAt / password）
+  // Global search: first 4 text columns (excluding deletedAt / password)
   if (query?.search) {
     const q = `%${query.search}%`
     const textCols: any[] = []
@@ -30,7 +30,7 @@ export function _buildWhere(table: any, query?: ListQuery) {
     }
   }
 
-  // 多条件筛选
+  // Multi-condition filter
   if (query?.filters && query.filters.length > 0) {
     for (const f of query.filters) {
       const col = cols[f.column]

@@ -1,9 +1,9 @@
 /**
- * course/view/index.vue 组件测试
+ * course/view/index.vue component test
  * @see modules/lms/components/course/view/index.vue
  *
- * 课程详情视图：头部 + 教师团队 + 内容 + 章节目录
- * 重点测试：能否挂载、能否接收 props
+ * Course detail view: header + teacher team + content + chapter catalog
+ * Key test: can mount, can receive props
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -20,7 +20,7 @@ beforeEach(() => {
     openTeachersModal: vi.fn(),
     closeTeachersModal: vi.fn(),
   })
-  // stub useSiteConfig（base 模块 composable，auto-import）
+  // stub useSiteConfig (base module composable, auto-import)
   ;(globalThis as any).useSiteConfig = () => ({
     siteTitle: ref('AI LMS'),
     config: ref({}),

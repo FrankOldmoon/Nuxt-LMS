@@ -1,10 +1,10 @@
 /**
- * WebSocket 竞赛（Race）功能方法
+ * WebSocket Race feature methods
  *
- * 加入房间 / 开始竞赛 / 推送题目 / 提交答案 /
- * 结束题目 / 结束竞赛 / 竞赛在线状态
+ * Join room / start race / push question / submit answer /
+ * end question / end race / race online status
  *
- * 连接层与回调注册表由 base 提供（useWsConnection / registerWsHandler）。
+ * Connection layer and callback registry provided by base (useWsConnection / registerWsHandler).
  */
 export function useWsRace() {
   const { send } = useWsConnection()

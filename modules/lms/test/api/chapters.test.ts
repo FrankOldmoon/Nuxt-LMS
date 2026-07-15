@@ -1,5 +1,5 @@
 /**
- * Chapters API 端点测试（classes.get 章节班级开放控制）
+ * Chapters API endpoint test (classes.get chapter class open control)
  * @see modules/lms/server/api/chapters/classes.get.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -78,9 +78,9 @@ describe('API: chapters/classes.get', () => {
 
   it('admin 返回班级开放状态', async () => {
     setMockAuthState({ id: 1, username: 'admin', roles: ['admin'], permissions: [] })
-    // 第一次 select + limit: chapter 查找
-    // 第二次 select: 所有 classes
-    // 第三次 select: classChapters
+    // First select + limit: chapter lookup
+    // Second select: all classes
+    // Third select: classChapters
     _mockDb.limit = vi.fn().mockResolvedValueOnce([{ courseId: 100 }])
     let selectCount = 0
     _mockDb.select = vi.fn(() => {

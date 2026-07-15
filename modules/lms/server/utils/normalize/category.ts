@@ -1,6 +1,6 @@
 import type { LmsSeries, LmsChapterSummary } from '#lms/types/lms'
 
-/** 归一化分类（DB categories → LmsSeries） */
+/** Normalize category (DB categories -> LmsSeries) */
 export function normalizeCategory(cat: any): LmsSeries {
   return {
     id: cat.id,
@@ -12,7 +12,7 @@ export function normalizeCategory(cat: any): LmsSeries {
   }
 }
 
-/** 归一化章节摘要（DB chapters → LmsChapterSummary） */
+/** Normalize chapter summary (DB chapters -> LmsChapterSummary) */
 export function normalizeChapterSummary(ch: any, userChapter?: any): LmsChapterSummary {
   const result: LmsChapterSummary = {
     id: ch.id,

@@ -10,8 +10,8 @@ export interface AuthUser {
 }
 
 /**
- * 从 cookie 中解析当前登录用户（不抛错，未登录返回 null）
- * 适合需要"可选登录"的场景
+ * Parse current logged-in user from cookie (no throw, returns null if not logged in)
+ * Suitable for "optional login" scenarios
  */
 export async function getCurrentUser(event: any): Promise<AuthUser | null> {
   const tokenStr = getCookie(event, 'auth_token')
@@ -35,14 +35,14 @@ export async function getCurrentUser(event: any): Promise<AuthUser | null> {
 
   const userId = users[0].id
 
-  // 查角色
+  // Query roles
   const roleRows = await db
     .select({ code: schema.roles.code })
     .from(schema.userRoles)
     .innerJoin(schema.roles, eq(schema.userRoles.roleId, schema.roles.id))
     .where(eq(schema.userRoles.userId, userId))
 
-  // 查权限
+  // Query permissions
   const permRows = await db
     .selectDistinct({ code: schema.permissions.code })
     .from(schema.userRoles)
@@ -59,36 +59,36 @@ export async function getCurrentUser(event: any): Promise<AuthUser | null> {
   }
 }
 
-/** 要求登录，未登录抛 401 */
+/** Require login, throw 401 if not logged in */
 export async function requireAuth(event: any): Promise<AuthUser> {
   const user = await getCurrentUser(event)
   if (!user) {
-    throw createError({ statusCode: 401, message: '请先登录' })
+    throw createError({ statusCode: 401, message: 'Please log in first' })
   }
   return user
 }
 
-/** 要求用户拥有指定角色之一，否则抛 403 */
+/** Require user to have one of the specified roles, throw 403 otherwise */
 export async function requireRole(event: any, roleCodes: string[]): Promise<AuthUser> {
   const user = await requireAuth(event)
   const hasRole = roleCodes.some((code) => user.roles.includes(code))
   if (!hasRole) {
-    throw createError({ statusCode: 403, message: '无权限执行此操作' })
+    throw createError({ statusCode: 403, message: 'No permission to perform this operation' })
   }
   return user
 }
 
-/** 要求用户拥有指定权限之一，否则抛 403 */
+/** Require user to have one of the specified permissions, throw 403 otherwise */
 export async function requirePermission(event: any, permCodes: string[]): Promise<AuthUser> {
   const user = await requireAuth(event)
   const hasPerm = permCodes.some((code) => user.permissions.includes(code))
   if (!hasPerm) {
-    throw createError({ statusCode: 403, message: '无权限执行此操作' })
+    throw createError({ statusCode: 403, message: 'No permission to perform this operation' })
   }
   return user
 }
 
-/** 要求管理员角色，否则抛 403 */
+/** Require admin role, throw 403 otherwise */
 export async function requireAdmin(event: any): Promise<AuthUser> {
   return requireRole(event, ['admin'])
 }

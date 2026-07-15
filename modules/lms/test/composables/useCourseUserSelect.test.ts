@@ -1,5 +1,5 @@
 /**
- * useCourseUserSelect composable 测试
+ * useCourseUserSelect composable test
  * @see modules/lms/composables/useCourseUserSelect.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -75,7 +75,7 @@ describe('composables/useCourseUserSelect', () => {
     expect(impersonateCalled).toBe(true)
     expect(impersonating.value).toBe(true)
     expect(emittedUserId).toBe(5)
-    // 应显示成功 toast
+    // Should show success toast
     const toasts = getToastCalls()
     expect(toasts.length).toBeGreaterThan(0)
     expect(toasts[toasts.length - 1].color).toBe('success')

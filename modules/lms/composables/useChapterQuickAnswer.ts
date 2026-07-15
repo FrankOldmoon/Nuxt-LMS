@@ -6,13 +6,13 @@ export interface ChapterQuickAnswerProps {
 }
 
 /**
- * useChapterQuickAnswer — 章节抢答
+ * useChapterQuickAnswer — Chapter quick answer
  *
- * 教师：发起/结束抢答；学生：提交抢答。
- * WebSocket 事件驱动状态同步。从 quick-answer-modal.vue 抽离，组件仅负责 UI。
+ * Teacher: start/end quick answer; Student: submit quick answer.
+ * WebSocket event-driven state sync. Extracted from quick-answer-modal.vue, component only handles UI.
  *
- * @param props 包含 classId 与 canEdit
- * @param open  弹窗开关 Ref（关闭时若教师未结束抢答，自动 endQA）
+ * @param props Contains classId and canEdit
+ * @param open  Modal open Ref (auto endQA if teacher hasn't ended when closing)
  */
 export function useChapterQuickAnswer(props: ChapterQuickAnswerProps, open: Ref<boolean>) {
   const { user } = useAuth()

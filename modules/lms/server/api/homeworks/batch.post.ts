@@ -2,21 +2,21 @@ import { db, schema } from "@nuxthub/db"
 import { eq, and, or, sql } from "drizzle-orm"
 
 /**
- * homeworks 批量操作（复合主键 courseId + cid）
+ * homeworks batch operation (composite primary key courseId + cid)
  * body: { rows: { courseId, cid }[], action: 'delete' | 'remove' | 'restore' }
  */
 export default eventHandler(async (event) => {
-  // 仅管理员可批量操作
+  // Only admins can perform batch operations
   await requireAdmin(event)
 
   const body = await readBody(event)
   const { rows, action } = body as { rows: { courseId: number; cid: number }[]; action: string }
 
   if (!rows || !Array.isArray(rows) || rows.length === 0) {
-    return cResp(null, 'rows 不能为空', false)
+    return cResp(null, 'rows cannot be empty', false)
   }
   if (!['delete', 'remove', 'restore'].includes(action)) {
-    return cResp(null, `无效的 action: ${action}`, false)
+    return cResp(null, `Invalid action: ${action}`, false)
   }
 
   try {
@@ -44,7 +44,7 @@ export default eventHandler(async (event) => {
       return cResp({ count: rows.length, result })
     }
   } catch (error: any) {
-    console.error(`homeworks 批量[${action}]操作失败:`, error)
-    return cResp(null, error.message || 'homeworks 批量操作失败', false)
+    console.error(`homeworks batch [${action}] operation failed:`, error)
+    return cResp(null, error.message || 'homeworks batch operation failed', false)
   }
 })

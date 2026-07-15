@@ -1,5 +1,5 @@
 /**
- * useCourseMembersManager composable 测试
+ * useCourseMembersManager composable test
  * @see modules/lms/composables/useCourseMembersManager.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -47,8 +47,8 @@ describe('composables/useCourseMembersManager', () => {
     const r = useCourseMembersManager({ courseId: 1 })
     await r.loadMembers()
     expect(r.members.value).toHaveLength(3)
-    expect(r.teachers.value).toHaveLength(2) // userId 1 和 3
-    expect(r.editors.value).toHaveLength(2) // userId 2 和 3
+    expect(r.teachers.value).toHaveLength(2) // userId 1 and 3
+    expect(r.editors.value).toHaveLength(2) // userId 2 and 3
   })
 
   it('loadMembers 失败时 members 设为空数组', async () => {
@@ -93,7 +93,7 @@ describe('composables/useCourseMembersManager', () => {
         return {
           data: [
             { id: 10, name: 'alice' },
-            { id: 20, name: 'bob' }, // 已是 teacher+editor，应过滤掉
+            { id: 20, name: 'bob' }, // Already teacher+editor, should be filtered out
             { id: 30, name: 'carol' },
           ],
           success: true,
@@ -143,7 +143,7 @@ describe('composables/useCourseMembersManager', () => {
     expect(addCalled).toBe(true)
     expect(membersCallCount).toBeGreaterThanOrEqual(1)
     expect(r.memberUpdating.value).toBeNull()
-    // addMember 之后 searchResults 仍保留全部：5 现在是 teacher 但不是 editor，仍可被加为 editor
+    // After addMember, searchResults still retains all: 5 is now teacher but not editor, can still be added as editor
     expect(r.searchResults.value).toHaveLength(2)
   })
 
@@ -190,8 +190,8 @@ describe('composables/useCourseMembersManager', () => {
     const r = useCourseMembersManager({ courseId: 1 })
     r.memberSearchKeyword.value = 'alice'
     await new Promise((resolve) => setTimeout(resolve, 0))
-    // watch 是同步触发的（无显式 flush），keyword 变化即触发 searchUsers
-    // 注意：searchUsers 是 async，需要 await microtask
+    // watch is triggered synchronously (no explicit flush), keyword change immediately triggers searchUsers
+    // Note: searchUsers is async, needs await microtask
     await new Promise((resolve) => setTimeout(resolve, 0))
     expect(r.searchResults.value.length).toBeGreaterThan(0)
   })

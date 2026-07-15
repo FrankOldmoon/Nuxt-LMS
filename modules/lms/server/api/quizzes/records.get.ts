@@ -2,7 +2,7 @@ import { db, schema } from "@nuxthub/db"
 import { eq, and } from "drizzle-orm"
 
 /**
- * 获取 quiz 的所有学生提交记录
+ * Get all student submission records for a quiz
  * query: course_id, cid
  */
 export default eventHandler(async (event) => {
@@ -10,13 +10,13 @@ export default eventHandler(async (event) => {
 
   const { course_id, cid } = getQuery(event)
   if (!course_id || !cid) {
-    return cResp(null, '缺少参数', false)
+    return cResp(null, 'Missing parameters', false)
   }
 
   const courseId = Number(course_id)
   const quizCid = Number(cid)
 
-  // 获取教师默认班级
+  // Get teacher's default class
   const userRow = await db.select({ defaultClass: schema.users.defaultClass })
     .from(schema.users)
     .where(eq(schema.users.id, user.id))
@@ -27,7 +27,7 @@ export default eventHandler(async (event) => {
     return cResp([])
   }
 
-  // 获取班级学生
+  // Get class students
   const classUsers = await getClassUsers(classId)
   const studentIds = classUsers.filter(u => !u.isTeacher).map(u => u.id)
 
@@ -35,7 +35,7 @@ export default eventHandler(async (event) => {
     return cResp([])
   }
 
-  // 查询 quiz 提交记录
+  // Query quiz submission records
   const records = await db.query.userQuizzes.findMany({
     where: and(
       eq(schema.userQuizzes.courseId, courseId),

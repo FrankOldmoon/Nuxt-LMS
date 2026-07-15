@@ -1,8 +1,8 @@
 /**
- * dashboard/StatCards.vue 组件测试
+ * dashboard/StatCards.vue component tests
  * @see modules/admin/components/dashboard/StatCards.vue
  *
- * 统计卡片：骨架（stats=null）+ 统计数值卡片
+ * Statistics cards: skeleton (stats=null) + numeric stat cards
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -44,7 +44,7 @@ describe('dashboard/StatCards.vue', () => {
       props: { stats: sampleStats },
       global: _globalConfig,
     })
-    // 10 张卡片（8 counts + 2 newUsers）
+    // 10 cards (8 counts + 2 newUsers)
     const cards = wrapper.findAll('.p-4.rounded-lg')
     expect(cards.length).toBe(10)
   })
@@ -74,7 +74,7 @@ describe('dashboard/StatCards.vue', () => {
       global: _globalConfig,
     })
     expect(wrapper.text()).toContain('5')
-    // courses 回退 0
+    // courses falls back to 0
     expect(wrapper.text()).toContain('0')
   })
 

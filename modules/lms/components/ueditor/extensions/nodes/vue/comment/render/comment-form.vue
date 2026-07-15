@@ -1,8 +1,8 @@
 <template>
     <div class="space-y-2">
-        <!-- 富文本编辑器（回帖禁用粘贴） -->
+        <!-- Rich Text Editor（replyDisablePaste） -->
         <richEditor v-model="content" :placeholder="placeholder" :pasteable="false" />
-        <!-- 提交按钮 -->
+        <!-- Submit Button -->
         <div class="flex justify-end">
             <UButton size="sm" color="primary" variant="soft" :disabled="!hasContent"
                 @click="submit">
@@ -29,7 +29,7 @@ const hasContent = computed(() => {
     return false
 })
 
-function submit() {
+^function submit() {
     if (!hasContent.value) return
     emit('submit', { content: content.value, parentCid: props.parentCid })
     content.value = ''

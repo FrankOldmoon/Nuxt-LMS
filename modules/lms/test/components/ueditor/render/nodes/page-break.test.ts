@@ -1,5 +1,5 @@
 /**
- * ueditor/render/nodes/page-break.vue 组件测试
+ * ueditor/render/nodes/page-break.vue component test
  * @see modules/lms/components/ueditor/render/nodes/page-break.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

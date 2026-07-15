@@ -1,8 +1,8 @@
 /**
- * MessageChat 组件测试
+ * MessageChat component tests
  * @see modules/base/components/layout/messageChat.vue
  *
- * 消息聊天区：消息列表 + 输入框 + 发送
+ * Message chat area: message list + input box + send
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -10,14 +10,14 @@ import { ref } from 'vue'
 import { resetAllStubs, setMockI18n } from '../../../../../test/setup/nuxt-stubs'
 import { provideMessages } from '../../../composables/useMessages'
 
-// 在模块顶层导入并暴露到 globalThis（beforeEach 中不能使用 await import）
+// Import at module top level and expose to globalThis (cannot use await import in beforeEach)
 import { useMessagesContext } from '../../../composables/useMessages'
 ;(globalThis as any).useMessagesContext = useMessagesContext
 
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
-  // 确保每个测试都能访问到 useMessagesContext
+  // Ensure each test can access useMessagesContext
   ;(globalThis as any).useMessagesContext = useMessagesContext
 })
 
@@ -72,7 +72,7 @@ const _globalConfig = {
 
 describe('layout/messageChat.vue', () => {
   beforeEach(() => {
-    // 清除可能的 async beforeEach 问题，直接赋值
+    // Clear potential async beforeEach issues, assign directly
     ;(globalThis as any).useMessagesContext = useMessagesContext
   })
 

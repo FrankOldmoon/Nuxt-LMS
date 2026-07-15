@@ -1,13 +1,13 @@
 /**
- * 鉴权工具测试（hashPassword / verifyPassword / requireAuth / requireRole / requireAdmin）
+ * Auth utility tests (hashPassword / verifyPassword / requireAuth / requireRole / requireAdmin)
  * @see modules/base/server/utils/auth.ts
  *
- * mock @nuxthub/db 以避免实际数据库调用
+ * Mock @nuxthub/db to avoid actual database calls
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 // ====================== Mock @nuxthub/db ======================
-// 必须 mock，否则测试启动时 @nuxthub/db 会尝试连接真实数据库
+// Must mock, otherwise @nuxthub/db will try to connect to a real database on test startup
 const _mockDb = {
   select: vi.fn().mockReturnThis(),
   selectDistinct: vi.fn().mockReturnThis(),
@@ -38,7 +38,7 @@ vi.mock('@nuxthub/db', () => ({
   schema: _mockSchema,
 }))
 
-// ====================== 引入测试目标 ======================
+// ====================== Import test target ======================
 import {
   resetAllStubs,
   setMockCookie,
@@ -90,14 +90,14 @@ describe('server/utils/auth - generateToken', () => {
     const t1 = generateToken()
     const t2 = generateToken()
     expect(t1).toMatch(/^[0-9a-f]{64}$/)
-    expect(t1).not.toBe(t2) // 随机
+    expect(t1).not.toBe(t2) // random
   })
 })
 
 describe('server/utils/auth - getCurrentUser', () => {
   it('未登录（无 cookie）返回 null', async () => {
     const { getCurrentUser } = await import('../../server/utils/auth')
-    // 链式调用终结于 .limit(1).then(...) → 这里用 mockResolvedValue 模拟 Promise
+    // Chain call terminates at .limit(1).then(...) → use mockResolvedValue to simulate Promise here
     const finalLimit = vi.fn().mockResolvedValue([])
     _mockDb.limit = finalLimit
     const user = await getCurrentUser({} as any)
@@ -107,7 +107,7 @@ describe('server/utils/auth - getCurrentUser', () => {
   it('token 不存在返回 null', async () => {
     const { getCurrentUser } = await import('../../server/utils/auth')
     setMockCookie('auth_token', 'invalid-token')
-    // token 查询返回空
+    // Token query returns empty
     const finalLimit = vi.fn().mockResolvedValueOnce([])
     _mockDb.limit = finalLimit
     const user = await getCurrentUser({} as any)
@@ -117,16 +117,16 @@ describe('server/utils/auth - getCurrentUser', () => {
   it('token 有效时调用 getCurrentUser 不抛错', async () => {
     const { getCurrentUser } = await import('../../server/utils/auth')
     setMockCookie('auth_token', 'valid-token')
-    // 链式 mock：所有终结（.limit() / 直接 await）都返回空数组
+    // Chainable mock: all terminators (.limit() / direct await) return empty arrays
     _mockDb.limit = vi.fn().mockResolvedValue([])
     _mockDb.innerJoin = vi.fn().mockReturnThis()
-    // 让 .where() 也支持作为终结符（返回 thenable）
+    // Make .where() also support being a terminator (return thenable)
     _mockDb.where = vi.fn(function () {
       const r: any = { ..._mockDb }
       r.then = (resolve: any) => resolve([])
       return r
     })
-    // 不应抛错
+    // Should not throw
     await expect(getCurrentUser({} as any)).resolves.toBeDefined()
   })
 })

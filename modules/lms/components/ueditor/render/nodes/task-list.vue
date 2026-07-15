@@ -14,8 +14,8 @@ import RenderNode from '../node.vue'
 
 const props = defineProps({
   node: { type: Object, required: true },
-  // 顶层块 index（字符串），由 node.vue 在 trackReading 开启时传入。
-  // 存在时为每个 <li> 生成独立 blockKey，实现逐行 hover 标黄。
+  // Top-level block index (string), passed in by node.vue when trackReading is enabled.
+  // When present, generates independent blockKey for each <li> to enable per-line hover highlight.
   blockKeyPrefix: { type: String, default: undefined },
 })
 

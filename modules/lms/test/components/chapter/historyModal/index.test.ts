@@ -1,9 +1,9 @@
 /**
- * chapter/historyModal/index.vue 组件测试
+ * chapter/historyModal/index.vue component test
  * @see modules/lms/components/chapter/historyModal/index.vue
  *
- * 历史版本弹窗：触发按钮 + 内容预览 + 分页/恢复。
- * 逻辑由 useChapterHistory() 提供，测试中导入真实 composable，stub useLayoutState。
+ * History version modal: trigger button + content preview + pagination/restore.
+ * Logic provided by useChapterHistory(), imports real composable, stubs useLayoutState in tests.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -15,7 +15,7 @@ import { useChapterHistory } from '../../../../composables/useChapterHistory'
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
-  // useChapterHistory 调用 useLayoutState().notifyContentSaved
+  // useChapterHistory calls useLayoutState().notifyContentSaved
   ;(globalThis as any).useLayoutState = () => ({
     notifyContentSaved: vi.fn(),
     notifyCourseNavUpdate: vi.fn(),

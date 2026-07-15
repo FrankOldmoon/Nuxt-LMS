@@ -2,7 +2,7 @@
   <div class="umo-node-view" data-node-view-wrapper="">
     <div
       class="umo-node-container hover-shadow umo-node-callout"
-      :style="{ color: attrs.fontColor, backgroundColor: attrs.backgroundColor }"
+      :style="{ color: attrs.fontColor, background color: attrs.background color }"
     >
       <span v-if="attrs.icon" class="umo-node-callout-icon" contenteditable="false">{{ attrs.icon }}</span>
       <div class="umo-node-callout-content" data-node-view-content="" style="white-space: pre-wrap">

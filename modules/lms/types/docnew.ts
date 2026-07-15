@@ -1,20 +1,20 @@
 /**
- * LMS 前端数据类型定义
- * 这些类型对应 API 返回的归一化数据结构
+ * LMS frontend data type definitions
+ * These types correspond to the normalized data structures returned by the API
  */
 
-/** 课程系列（对应 DB categories 表） */
+/** Course series (corresponds to the DB categories table) */
 export interface LmsSeries {
   id: number
   title: string
   code: string | null
   icon: string
   order: number
-  /** 导航排序配置（来自 categories 表的 orders 字段） */
+  /** Navigation ordering config (from the orders field of the categories table) */
   orders: { id: string; label: string; order: number; parentId?: string | null }[]
 }
 
-/** 课程摘要（列表用，不含章节数据） */
+/** Course summary (for list views, excludes chapter data) */
 export interface LmsCourseSummary {
   id: number
   title: string
@@ -29,34 +29,34 @@ export interface LmsCourseSummary {
   teachers: LmsMember[]
 }
 
-/** 章节摘要（列表用） */
+/** Chapter summary (for list views) */
 export interface LmsChapterSummary {
   id: number
   title: string
   accessible?: boolean
-  /** 章节是否默认开放 */
+  /** Whether the chapter is open by default */
   isOpen?: boolean
-  /** 当前用户是否已完成本章全部任务（is_pass） */
+  /** Whether the current user has completed all tasks in this chapter (is_pass) */
   isPass?: boolean
 }
 
-/** UEditor 文档 JSON 类型 */
+/** UEditor document JSON type */
 export type UEditorContent = Record<string, any>
 
-/** 课程详情（含完整章节列表 + 富文本内容） */
+/** Course detail (includes full chapter list + rich text content) */
 export interface LmsCourseDetail extends Omit<LmsCourseSummary, 'chapterCount'> {
   content: UEditorContent
-  /** 课程评分标准 */
+  /** Course grading criteria */
   grade_criteria: [],
   config: Record<string, any>
   chapters: LmsChapterSummary[]
-  /** 导航排序配置（来自 courses 表的 orders 字段） */
+  /** Navigation ordering config (from the orders field of the courses table) */
   orders: { id: string; label: string; order: number; parentId?: string | null }[]
   teachers: LmsMember[]
   studentCount: number
 }
 
-/** 章节详情 */
+/** Chapter detail */
 export interface LmsChapterDetail {
   id: number
   title: string
@@ -66,15 +66,15 @@ export interface LmsChapterDetail {
   commentIds?: number[]
   isOpen?: boolean
   classChapters?: { classId: number; open: boolean }[]
-  /** 各 heading 的完成状态：{ [headingId]: boolean } */
+  /** Completion status per heading: { [headingId]: boolean } */
   taskStatus?: Record<string, boolean>
-  /** 当前用户是否已完成本章全部任务 */
+  /** Whether the current user has completed all tasks in this chapter */
   isPass?: boolean
-  /** 用户章节记录（tiptap JSON，AI 生成内容 + 用户编辑） */
+  /** User chapter record (tiptap JSON, AI-generated content + user edits) */
   record?: any
 }
 
-/** 章节页面数据（章节 + 所属课程含章节列表用于导航） */
+/** Chapter page data (chapter + parent course with chapter list for navigation) */
 export interface LmsChapterPageData {
   chapter: LmsChapterDetail
   course: {
@@ -83,30 +83,30 @@ export interface LmsChapterPageData {
     icon: string
     color: string
     showDanmaku: boolean
-    /** 章节按钮开关配置 */
+    /** Chapter button toggle config */
     chapterBtns?: Record<string, boolean>
-    /** 课程按钮开关配置 */
+    /** Course button toggle config */
     courseBtns?: Record<string, boolean>
-    /** AI 助手配置（全局 + 课程级合并） */
+    /** AI assistant config (merged from global + course-level) */
     ai?: Record<string, any>
     chapters: LmsChapterSummary[]
   }
 }
 
-/** 首页数据（分类 + 课程列表） */
+/** Homepage data (categories + course list) */
 export interface LmsHomeData {
   categories: LmsSeries[]
   courses: LmsCourseSummary[]
 }
 
-/** 班级（对应 DB classes 表） */
+/** Class (corresponds to the DB classes table) */
 export interface LmsClass {
   id: number
   name: string
   code: string
 }
 
-/** 课程成员（教师/编辑者） */
+/** Course member (teacher / editor) */
 export interface LmsMember {
   userId: number
   username: string
@@ -116,7 +116,7 @@ export interface LmsMember {
   isEditor: boolean
 }
 
-/** 用户搜索结果 */
+/** User search result */
 export interface LmsSearchUser {
   id: number
   username: string
@@ -124,7 +124,7 @@ export interface LmsSearchUser {
   avatarImg: string | null
 }
 
-/** 班级用户（班级成员列表） */
+/** Class user (class member list) */
 export interface LmsClassUser {
   id: number
   username: string
@@ -138,7 +138,7 @@ export interface LmsClassUser {
   isTeacher: boolean | null
 }
 
-/** 用户资料表单数据 */
+/** User profile formData */
 export interface UserProfileForm {
   name: string
   preferName: string
@@ -151,7 +151,7 @@ export interface UserProfileForm {
   classId: number | null
 }
 
-/** 通知 */
+/** Notification */
 export interface LmsNotification {
   id: number
   name: string
@@ -162,7 +162,7 @@ export interface LmsNotification {
   createdAt: string
 }
 
-/** 通知列表分页数据 */
+/** Paginated notification list data */
 export interface LmsNotificationList {
   items: LmsNotification[]
   total: number

@@ -1,4 +1,4 @@
-/** 搜索用户（按用户名或姓名模糊匹配），不含已选课程/班级限制 */
+/** Search users (fuzzy match by username or name), no selected course/class restriction */
 export default eventHandler(async (event) => {
   await requireAuth(event)
 

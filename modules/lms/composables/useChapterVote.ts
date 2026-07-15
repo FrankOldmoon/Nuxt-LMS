@@ -1,21 +1,21 @@
 import type { Ref } from 'vue'
 
 /**
- * 章节投票弹窗逻辑
- * - 教师：创建投票、查看实时进度、结束投票
- * - 学生：投票、查看结果
- * - 监听 WebSocket 投票事件（start/update/end）
+ * Chapter voting modal logic
+ * - Teacher: create vote, view real-time progress, end vote
+ * - Student: vote, view results
+ * - Listen to WebSocket vote events (start/update/end)
  */
 export function useChapterVote(props: { classId: number; canEdit: boolean }, open: Ref<boolean>) {
   const { user } = useAuth()
   const { sendVoteStart, onVoteStart, sendVoteSubmit, onVoteUpdate, sendVoteEnd, onVoteEnd } = useWebSocket()
 
-  // 教师：创建投票
+  // Teacher: create vote
   const question = ref('')
   const options = ref(['', ''])
   const activeVoteId = ref<string | null>(null)
 
-  // 投票状态
+  // Vote state
   const voteQuestion = ref('')
   const voteOptions = ref<string[]>([])
   const voteResults = ref<number[]>([])
@@ -71,7 +71,7 @@ export function useChapterVote(props: { classId: number; canEdit: boolean }, ope
     return `${((voteResults.value[i] || 0) / voteTotal.value * 100).toFixed(1)}%`
   }
 
-  // 监听投票事件
+  // Listen to vote events
   onVoteStart((data) => {
     activeVoteId.value = data.voteId
     voteQuestion.value = data.question
@@ -94,7 +94,7 @@ export function useChapterVote(props: { classId: number; canEdit: boolean }, ope
     voteTotal.value = data.total
   })
 
-  // 弹窗关闭时教师重置
+  // Reset for teacher when modal closes
   watch(open, (v) => {
     if (!v && props.canEdit && activeVoteId.value) {
       endVote()

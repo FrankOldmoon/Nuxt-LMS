@@ -1,9 +1,9 @@
 /**
- * chapter/historyModal/footer.vue 组件测试
+ * chapter/historyModal/footer.vue component test
  * @see modules/lms/components/chapter/historyModal/footer.vue
  *
- * 历史版本底部：版本号 + 新版本徽章 + 上一页/下一页 + 恢复按钮。
- * 纯展示组件，通过 props 渲染、emits 上报 prev/next/restore。
+ * History version footer: version number + new version badge + prev/next + restore button.
+ * Pure display component, renders via props, emits prev/next/restore.
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -94,9 +94,9 @@ describe('chapter/historyModal/footer.vue', () => {
       global: _globalConfig,
     })
     const btns = wrapper.findAll('button')
-    // 第一个 button 是 prev
+    // The first button is prev
     expect((btns[0].element as HTMLButtonElement).disabled).toBe(true)
-    // 第二个是 next（可点击）
+    // The second is next (clickable)
     expect((btns[1].element as HTMLButtonElement).disabled).toBe(false)
   })
 
@@ -136,7 +136,7 @@ describe('chapter/historyModal/footer.vue', () => {
       props: { page: 1, total: 3, currentVersion: sampleVersion, restoring: false },
       global: _globalConfig,
     })
-    // 最后一个 button 是恢复
+    // The last button is restore
     const btns = wrapper.findAll('button')
     await btns[btns.length - 1].trigger('click')
     expect(wrapper.emitted('restore')).toBeTruthy()

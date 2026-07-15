@@ -2,27 +2,27 @@ import { db, schema } from "@nuxthub/db"
 import { eq, and, inArray } from "drizzle-orm"
 
 /**
- * 章节详情 API（lms 覆盖版）
+ * Chapter detail API (lms override)
  *
- * 覆盖机制：
- * - 文件名：lms 用 `show.get.ts`（method=GET），doc 也用 `show.get.ts`（method=GET）
- *   → 必须 method 相同，否则 hook 倒序去重会跳过不同 method 的 handler
- * - 实际生效靠 lms/index.ts 的 `nitro:config` hook：
- *   Nitro 的 nitroConfig.handlers 数组是 push 累加的，h3 router 匹配时取第一个命中的 handler。
- *   lms 在 doc 之后 addServerScanDir，所以 lms 的 handler 在数组中排在 doc 之后。
- *   hook 对 lmsOverridePaths 列表中的 path 做"倒序去重"，保留后注册者（lms），让 h3 命中 lms。
+ * Override mechanism:
+ * - File names: lms uses `show.get.ts` (method=GET), doc also uses `show.get.ts` (method=GET)
+ *   -> Methods must match, otherwise the reverse-order dedup hook will skip handlers with different methods
+ * - The actual override relies on the `nitro:config` hook in lms/index.ts:
+ *   Nitro's nitroConfig.handlers array is appended to (push), and the h3 router matches the first hit.
+ *   lms calls addServerScanDir after doc, so lms's handlers end up after doc's in the array.
+ *   The hook reverse-dedupes paths in lmsOverridePaths, keeping the later-registered (lms) so h3 hits lms.
  *
- * 不要删除 doc/.../show.get.ts：
- * - lms 未启用时，doc 版本仍需工作（不带 lms 增强，但保持向后兼容）
- * - lms 启用时，doc 版本会被 hook 移除
+ * Do not delete doc/.../show.get.ts:
+ * - When lms is not enabled, the doc version must still work (without lms enhancements, but backwards compatible)
+ * - When lms is enabled, the doc version will be removed by the hook
  *
- * 不要把 lms 文件改名为 `show.ts`（method=ALL）：
- * - ALL 不会被去重（method 字段不同），doc 的 GET 仍然先被命中，覆盖失败
+ * Do not rename the lms file to `show.ts` (method=ALL):
+ * - ALL is not deduped (different method field), so doc's GET would still match first and the override would fail
  */
 export default eventHandler(async (event) => {
   const id = requireQueryId(event)
   if (!id) {
-    return cResp(null, '章节 ID 无效', false)
+    return cResp(null, 'Invalid chapter ID', false)
   }
 
   const chapter = await db.query.chapters.findFirst({
@@ -35,15 +35,15 @@ export default eventHandler(async (event) => {
   })
 
   if (!chapter) {
-    return cResp(null, '章节不存在', false)
+    return cResp(null, 'Chapter not found', false)
   }
 
-  // 访问控制：admin / 课程教师 / 编辑者始终可访问
+  // Access control: admin / course teacher / editor can always access
   const user = await getCurrentUser(event)
   const isAdmin = user?.roles?.includes('admin')
   const isTeacher = user ? await isCourseTeacher(user.id, chapter.courseId) : false
 
-  // 班级 gating（lms 模式必启用，无需 lmsEnabled 守卫）
+  // Class gating (always enabled in lms mode, no lmsEnabled guard needed)
   if (!isAdmin && !isTeacher && !chapter.isOpen) {
     let classAccessible = false
     if (user) {
@@ -66,12 +66,12 @@ export default eventHandler(async (event) => {
     }
 
     if (!classAccessible) {
-      throw createError({ statusCode: 403, message: '该章节尚未开放' })
+      throw createError({ statusCode: 403, message: 'This chapter is not yet open' })
     }
   }
 
-  // 查询当前用户的章节学习记录（task_status / is_pass）
-  // lms 模式下对所有登录用户都查询（非 lms 模式无 userChapters 表，但 lms 启用时表一定存在）
+  // Look up the current user's chapter study record (task_status / is_pass)
+  // In lms mode, query for all logged-in users (no userChapters table in non-lms mode, but the table is guaranteed to exist when lms is enabled)
   let userChapter: any = null
   if (user) {
     userChapter = await db.query.userChapters.findFirst({
@@ -80,8 +80,8 @@ export default eventHandler(async (event) => {
   }
   const result = normalizeChapterPageData(chapter, chapter.course, userChapter)
 
-  // 教师/管理员：附带 isOpen 和班级开放状态
-  // 仍保留角色限制：非教师用户前端 accessBar 由 canEdit=v-if 隐藏，没必要传输 isOpen
+  // For teachers/admins: also include isOpen and class-open status
+  // Keep the role restriction: non-teacher users' frontend accessBar is hidden by canEdit=v-if, so no need to transmit isOpen
   if (isAdmin || isTeacher) {
     result.chapter.isOpen = !!chapter.isOpen
     const allClassChapters = await db

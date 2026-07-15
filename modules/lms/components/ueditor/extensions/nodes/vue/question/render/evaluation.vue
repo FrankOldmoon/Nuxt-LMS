@@ -1,6 +1,6 @@
 <template>
     <div class="space-y-4">
-        <!-- 评价目标 + 进度条 -->
+        <!-- Reviewtarget + Progress Bar -->
         <div class="p-4 rounded-lg border border-primary/20 bg-primary/5">
             <div class="flex items-center gap-2 mb-2">
                 <UIcon name="i-lucide-target" class="size-5 text-primary" />
@@ -22,7 +22,7 @@
             </p>
         </div>
 
-        <!-- AI 对话评估（AI 生成的题目由 ueditorRender 直接内联渲染） -->
+        <!-- AI Rightdialog evaluation（AI GenerateQuestionby ueditorRender directlyInsideinlineRender） -->
         <AiChatbox
             ref="chatboxRef"
             :title="$t('question.evaluationChatTitle')"

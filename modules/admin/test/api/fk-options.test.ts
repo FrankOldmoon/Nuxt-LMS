@@ -1,5 +1,5 @@
 /**
- * Admin FK Options API 测试（含复合主键回归）
+ * Admin FK Options API tests (including composite primary key regression)
  * @see modules/admin/server/api/admin/fk-options.get.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -12,7 +12,7 @@ const _mockDb = {
 }
 const _mockSchema = {
   users: { id: 'id', name: 'name', deletedAt: 'deletedAt' },
-  userRoles: { userId: 'userId', roleId: 'roleId', deletedAt: 'deletedAt' }, // 复合主键表，无 id
+  userRoles: { userId: 'userId', roleId: 'roleId', deletedAt: 'deletedAt' }, // Composite primary key table, no id
 }
 vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
 
@@ -51,7 +51,7 @@ describe('API: admin/fk-options.get', () => {
     setMockTableMeta('users', { hasId: true, labelColumn: 'name', columns: [{ jsName: 'id' }, { jsName: 'name' }] })
     _mockDb.limit = vi.fn().mockResolvedValue([
       { id: 1, label: 'Alice' },
-      { id: 2, label: '' }, // 空 label 回退 #id
+      { id: 2, label: '' }, // Empty label falls back to #id
     ]) as any
     const handler = (await import('../../server/api/admin/fk-options.get')).default
     const result = await handler(makeEvent({ table: 'users' }))
@@ -63,13 +63,13 @@ describe('API: admin/fk-options.get', () => {
 
   it('回归：复合主键外表（无 id）返回空数组而非崩溃', async () => {
     setMockAuthState({ id: 1, username: 'admin', name: 'Admin', roles: ['admin'], permissions: [] })
-    // userRoles 是复合主键表，无 id 列
+    // userRoles is a composite primary key table, no id column
     setMockTableMeta('userRoles', { hasId: false, compositePk: true, labelColumn: undefined, columns: [{ jsName: 'userId' }, { jsName: 'roleId' }] })
     const handler = (await import('../../server/api/admin/fk-options.get')).default
     const result = await handler(makeEvent({ table: 'userRoles' }))
     expect(result.success).toBe(true)
     expect(result.data).toEqual([])
-    // 不应触发 db.select（避免 table.id 为 undefined 崩溃）
+    // Should not trigger db.select (avoid table.id undefined crash)
     expect(_mockDb.select).not.toHaveBeenCalled()
   })
 
@@ -79,7 +79,7 @@ describe('API: admin/fk-options.get', () => {
     _mockDb.limit = vi.fn().mockResolvedValue([{ id: 1, label: 'alice' }]) as any
     const handler = (await import('../../server/api/admin/fk-options.get')).default
     await handler(makeEvent({ table: 'users', label: 'username' }))
-    // select 应被调用（label 列为 username）
+    // select should be called (label column is username)
     expect(_mockDb.select).toHaveBeenCalled()
   })
 })

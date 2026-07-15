@@ -1,8 +1,8 @@
 /**
- * formField/iconField 组件测试
+ * formField/iconField component tests
  * @see modules/admin/components/table/formField/iconField.vue
  *
- * 嵌套 FormInputIcon + UInput 两个输入控件，都绑定到 form[col.jsName]
+ * Nests FormInputIcon + UInput two input controls, both bind to form[col.jsName]
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -17,7 +17,7 @@ beforeEach(() => {
   })
 })
 
-// 桩 FormInputIcon 子组件（Nuxt 自动导入的组件名）
+// Stub FormInputIcon child component (Nuxt auto-imported component name)
 const _globalStubs = {
   FormInputIcon: {
     template: '<div class="form-input-icon"><input type="text" class="icon-input" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" /></div>',

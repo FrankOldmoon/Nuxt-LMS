@@ -1,8 +1,8 @@
 /**
- * fill 组件测试 (render)
+ * fill component test (render)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/render/fill.vue
  *
- * fill 渲染组件无模板内容（内容由父组件渲染），只暴露 submit/reset/fillCorrectAnswer 方法
+ * fill render component has no template content (content rendered by parent), only exposes submit/reset/fillCorrectAnswer methods
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

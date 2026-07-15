@@ -4,7 +4,7 @@
       <UIcon name="i-lucide-eye" class="size-4 text-primary" />
       <span class="text-sm font-semibold">{{ $t('settings.uiSection') }}</span>
     </div>
-    <p class="text-xs text-muted">控制前端页面/按钮的显示，保存后通过 WebSocket 实时推送给所有在线客户端</p>
+    <p class="text-xs text-muted">Controls the display of front-end pages/buttons, pushed in real-time to all online clients via WebSocket after saving</p>
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
       <UFormField :label="$t('settings.showNotify')" class="w-full">
         <USwitch v-model="form.siteShowNotify" />

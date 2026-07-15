@@ -1,9 +1,9 @@
 /**
- * class/usersTable/resetModal.vue 组件测试
+ * class/usersTable/resetModal.vue component test
  * @see modules/lms/components/class/usersTable/resetModal.vue
  *
- * 重置密码弹窗：UModal + 密码输入 + 确认/取消按钮。
- * 依赖 useClassUsersTableContext()（inject），测试中 stub 到 globalThis。
+ * Reset password modal: UModal + password input + confirm/cancel buttons.
+ * Depends on useClassUsersTableContext() (inject), stubbed to globalThis in tests.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'

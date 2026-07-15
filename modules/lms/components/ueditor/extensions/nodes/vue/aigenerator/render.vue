@@ -1,6 +1,6 @@
 <template>
     <div class="aigenerator-render w-full space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900">
-        <!-- 顶部标题栏 + 导航 -->
+        <!-- TopTitlecolumn + Navigation -->
         <div class="flex items-center gap-3">
             <span class="px-2 py-0.5 bg-purple-50 dark:bg-purple-800 text-purple-600 dark:text-purple-300 rounded text-xs font-medium flex items-center gap-1">
                 <UIcon name="i-lucide-sparkles" class="text-xs" />
@@ -9,7 +9,7 @@
             <span v-if="currentQuestion" class="font-semibold text-gray-800 dark:text-gray-200 text-sm">
                 {{ currentQuestion.name }}
             </span>
-            <!-- 导航指示器 -->
+            <!-- Navigationindicator -->
             <div v-if="questions.length > 0" class="flex items-center gap-1 ml-auto text-xs text-gray-500">
                 <UButton icon="i-lucide-chevron-left" variant="ghost" size="2xs" :disabled="currentIndex <= 0"
                     @click="goPrev" />
@@ -19,13 +19,13 @@
             </div>
         </div>
 
-        <!-- 加载中 -->
+        <!-- Loading -->
         <div v-if="generating && !currentQuestion" class="flex items-center justify-center py-12 text-gray-400">
             <UIcon name="i-lucide-loader-2" class="animate-spin mr-2" />
             <span>{{ t('ueditor.aigeneratorLoading') }}</span>
         </div>
 
-        <!-- 未开始：显示 Start 按钮 -->
+        <!-- Not Started：Show Start Button -->
         <div v-else-if="!started && !currentQuestion"
             class="flex flex-col items-center justify-center py-10 gap-3 text-gray-500">
             <UIcon name="i-lucide-sparkles" class="size-10 text-purple-500" />
@@ -36,13 +36,13 @@
             </UButton>
         </div>
 
-        <!-- 未登录提示 -->
+        <!-- Not Logged InTip -->
         <div v-else-if="!isLoggedIn && !currentQuestion" class="flex items-center justify-center py-12 text-gray-400 text-sm">
             <UIcon name="i-lucide-log-in" class="mr-2" />
             <span>{{ t('common.loginRequired') }}</span>
         </div>
 
-        <!-- 错误提示 -->
+        <!-- Error Hint -->
         <div v-if="genError" class="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-md text-sm text-red-700 dark:text-red-300 flex items-start gap-2">
             <UIcon name="i-lucide-alert-circle" class="shrink-0 mt-0.5" />
             <div class="flex-1">
@@ -53,7 +53,7 @@
             </div>
         </div>
 
-        <!-- 题目内容（使用 QuestionRender 组件） -->
+        <!-- Question Content（makeuse QuestionRender Component） -->
         <QuestionRender
             v-if="currentQuestion"
             ref="renderRef"
@@ -62,7 +62,7 @@
             @submitted="onSubmitted"
         />
 
-        <!-- 底部操作：重新生成 + 下一题 -->
+        <!-- BottomOperation：Regenerate + Next Question -->
         <div v-if="currentQuestion" class="flex items-center gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
             <UButton icon="i-lucide-refresh-cw" variant="ghost" size="xs" :disabled="generating"
                 @click="regenerate">
@@ -85,7 +85,7 @@ const props = defineProps({ node: Object })
 const {
     t, typeLabel, currentQuestion, questions, currentIndex, generating,
     genError, started, isLoggedIn, renderRef,
-    onStart, goPrev, goNext, regenerate, retry, onSubmitted,
+    onStart, goPrev, goNext, regenerate, retry, on submitted,
 } = useAiGeneratorRender(props)
 </script>
 

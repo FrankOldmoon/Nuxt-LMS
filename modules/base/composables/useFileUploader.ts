@@ -1,5 +1,5 @@
 /**
- * 文件上传：file list 管理 + v-model 同步
+ * File upload: file list management + v-model sync
  */
 export function useFileUploader(
   multiple: () => boolean,
@@ -39,11 +39,11 @@ export function useFileUploader(
         updateModelValue()
       } else {
         fileItem.status = 'error'
-        console.error('上传失败:', result.message)
+        console.error('Upload failed:', result.message)
       }
     } catch (error) {
       fileItem.status = 'error'
-      console.error('上传出错:', error)
+      console.error('Upload error:', error)
     }
   }
 

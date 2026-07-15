@@ -1,5 +1,5 @@
 /**
- * Courses API 端点测试
+ * Courses API endpoint test
  * @see modules/lms/server/api/courses/*.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -41,7 +41,7 @@ import {
 beforeEach(() => {
   resetAllStubs()
   vi.clearAllMocks()
-  // 默认链式调用：select(...).from(...).where(...).limit(1) → []
+  // Default chain call: select(...).from(...).where(...).limit(1) → []
   _mockDb.select = vi.fn().mockReturnThis()
   _mockDb.selectDistinct = vi.fn().mockReturnThis()
   _mockDb.from = vi.fn().mockReturnThis()
@@ -83,9 +83,9 @@ describe('API: courses/me.get', () => {
 
   it('指定 chapterId 且属于该课程时返回章节分数', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
-    // 第一次 limit: userCourses → score/exp
-    // 第二次 limit: chapters → 存在
-    // 第三次 limit: userChapters → score
+    // First limit: userCourses → score/exp
+    // Second limit: chapters → exists
+    // Third limit: userChapters → score
     _mockDb.limit = vi.fn()
       .mockResolvedValueOnce([{ score: 80, exp: 50 }])  // userCourses
       .mockResolvedValueOnce([{ id: 10 }])             // chapters
@@ -100,7 +100,7 @@ describe('API: courses/me.get', () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
     _mockDb.limit = vi.fn()
       .mockResolvedValueOnce([{ score: 80, exp: 50 }])
-      .mockResolvedValueOnce([]) // chapters 查询为空 → 章节不属于该课程
+      .mockResolvedValueOnce([]) // chapters query empty → chapter not in this course
     const handler = (await import('../../server/api/courses/me.get')).default
     const result = await handler(makeEvent({ query: { courseId: '1', chapterId: '999' } }))
     expect(result.success).toBe(true)

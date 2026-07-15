@@ -5,7 +5,7 @@ export interface QuizRecordsProps {
     courseId: number
     cid: number
     quizPoint: number
-    /** quiz 题目列表：[{ id, point }] */
+    /** quiz Question List：[{ id, point }] */
     questions: Array<{ id: number; point: number }>
 }
 
@@ -23,14 +23,14 @@ export function useQuizRecords(props: QuizRecordsProps, emit: QuizRecordsEmit) {
     const rows = ref<any[]>([])
     const pending = ref(false)
 
-    // 额外列：总分 + 正确率 + 提交次数 + 每道题一列
+    // extraOutsidecolumns：total score + Accuracy Rate + Submittimescount + each question onecolumns
     const extraColumns = computed(() => {
         const cols = [
             { id: 'score', header: t('quiz.score'), canSort: true },
             { id: 'correctRate', header: t('quiz.correctRate'), canSort: true },
             { id: 'submitCount', header: t('quiz.submitLimit'), canSort: true },
         ]
-        // 每道题一列，列名为 Q1/Q2/...
+        // each question onecolumns，columnsname Q1/Q2/...
         props.questions.forEach((q, idx) => {
             cols.push({
                 id: `q${q.id}`,
@@ -43,7 +43,7 @@ export function useQuizRecords(props: QuizRecordsProps, emit: QuizRecordsEmit) {
 
     const defaultSort = [{ id: 'score', desc: true }]
 
-    // 从用户的 record 中提取某道题的答题记录
+    // from User record Middleextract a question'sAnswer Record
     function getQuestionRecord(rowData, questionCid) {
         const records = rowData?.record?.records
         if (!Array.isArray(records)) return null
@@ -60,7 +60,7 @@ export function useQuizRecords(props: QuizRecordsProps, emit: QuizRecordsEmit) {
             avatarImg: s.avatarImg,
             record: recordMap.get(s.id) || null,
         }))
-        // 有记录的排前面，按分数降序
+        // HasRecordsrowFrontSurface，By Score Desc
         rows.value.sort((a, b) => {
             const aHas = a.record ? 1 : 0
             const bHas = b.record ? 1 : 0
@@ -124,6 +124,6 @@ export function useQuizRecords(props: QuizRecordsProps, emit: QuizRecordsEmit) {
 
     return {
         open, rows, pending, extraColumns, defaultSort,
-        getQuestionRecord, scoreClass, formatRate, rateIcon, rateIconClass,
+        getQuestionRecord, scoreClass, formatRate, rateIcon, rateIcon Class,
     }
 }

@@ -1,5 +1,5 @@
 /**
- * ueditor/render/nodes/footnote-reference.vue 组件测试
+ * ueditor/render/nodes/footnote-reference.vue component test
  * @see modules/lms/components/ueditor/render/nodes/footnote-reference.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

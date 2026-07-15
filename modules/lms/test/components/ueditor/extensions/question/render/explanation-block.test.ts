@@ -1,5 +1,5 @@
 /**
- * explanation-block 组件测试
+ * explanation-block component test
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/render/explanation-block.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

@@ -29,7 +29,7 @@ type QuestionEditCtx = ReturnType<typeof useQuestionEdit>
 export const QuestionEditKey: InjectionKey<QuestionEditCtx> = Symbol('QuestionEdit')
 export function useQuestionEditContext() {
     const ctx = inject(QuestionEditKey)
-    if (!ctx) throw new Error('useQuestionEditContext must be used within Question edit.vue')
+    if (!ctx) throw new Error('useQuestionEditContext must be used withinQuestion edit.vue')
     return ctx
 }
 
@@ -78,14 +78,14 @@ export function useQuestionEdit(props: QuestionEditProps, emit: QuestionEditEmit
     let skipPreviewSync = false
     let justSaved = false
 
-    // ── JSON 原始数据编辑器 ──
+    // ── JSON originalStartDataEditeditor ──
     const showJsonEditor = ref(false)
     const jsonText = ref('')
     const jsonError = ref('')
     let syncingFromForm = false
     let syncingFromJson = false
 
-    // ── AI 流式生成状态 ──
+    // ── AI streamingGenerateStatus ──
     const aiStreaming = ref(false)
     let aiGenSucceeded = false
 
@@ -192,7 +192,7 @@ export function useQuestionEdit(props: QuestionEditProps, emit: QuestionEditEmit
         nextTick(() => { skipPreviewSync = false })
     }
 
-    // 实时预览：form 变化时同步到 props.question
+    // real-time preview：form when changesSyncto props.question
     watch(form, (newForm) => {
         if (skipPreviewSync || !newForm || !props.question) return
         const q = props.question
@@ -271,7 +271,7 @@ export function useQuestionEdit(props: QuestionEditProps, emit: QuestionEditEmit
                 emit('saved', { ...form.value, cid: result.cid })
             }
             saveOk.value = true
-            saveMsg.value = t('question.saveSuccess')
+            saveMsg.value = t('question.save success')
             originalData = JSON.parse(JSON.stringify(form.value))
             if (isModal.value) { justSaved = true; open.value = false }
         } catch (err: any) {
@@ -282,13 +282,13 @@ export function useQuestionEdit(props: QuestionEditProps, emit: QuestionEditEmit
         }
     }
 
-    // Modal 模式：弹窗打开时初始化 form
+    // Modal mode：ModalOpenwhenInitialize form
     watch(open, (val) => {
         if (val) {
             justSaved = false
             initForm()
         } else {
-            // 取消关闭（未保存）：还原 props.question 到原始状态
+            // CancelClose（notSave）：alsooriginal props.question tooriginalStartStatus
             if (!justSaved && originalData && props.question) {
                 const q = props.question
                 q.name = originalData.name; q.type = originalData.type; q.point = originalData.point
@@ -304,7 +304,7 @@ export function useQuestionEdit(props: QuestionEditProps, emit: QuestionEditEmit
         }
     }, { immediate: true })
 
-    // 内联模式：组件加载时初始化 form
+    // Insideinline mode：ComponentLoadwhenInitialize form
     watch(() => props.question, () => {
         if (!isModal.value) initForm()
     }, { immediate: true })

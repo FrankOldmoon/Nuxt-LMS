@@ -2,7 +2,7 @@ import { db, schema } from '@nuxthub/db'
 import { like } from 'drizzle-orm'
 
 /**
- * 管理员：返回所有 site:* 配置键值（供 settingsModal 加载）
+ * Admin: return all site:* config key-values (for settingsModal loading)
  */
 export default defineEventHandler(async (event) => {
   await requireAdmin(event)

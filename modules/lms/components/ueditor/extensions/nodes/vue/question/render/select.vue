@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- select 题型：内容在父组件渲染（含 ::select 下拉框），此处无需模板 -->
+    <!-- select question type：ContentParent ComponentRender（include ::select Dropdown），thislocationNoneneedTemplate -->
   </div>
 </template>
 

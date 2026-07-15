@@ -13,16 +13,16 @@
                 </div>
             </template>
         </UModal>
-        <!-- 字符串模式：3行文本域 + 右上角半透明书本按钮 -->
+        <!-- String mode: 3-line Text Area + top-right semi-transparent book Button -->
         <div v-if="!isJson" class="relative">
             <UTextarea v-model="model" :rows="3" class="w-full" :placeholder="t('richEditor.placeholder')" />
-            <!-- 富文本编辑弹窗 -->
+            <!-- Rich Text Editor Modal -->
             <UButton icon="i-heroicons-book-open" variant="ghost" size="sm"
                 class="absolute top-0 right-0 opacity-50 hover:opacity-100 transition-opacity z-10"
                 :aria-label="t('richEditor.openEditor')" @click="openEditor" />
         </div>
 
-        <!-- JSON 模式：渲染富文本（可交互） + 右上角编辑按钮（弹 modal 编辑） -->
+        <!-- JSON mode: Render rich text (interactive) + top-right Edit Button (opens modal editor) -->
         <div v-if="isJson" class="relative border rounded-md p-3 min-h-[72px]">
             <ueditorRender :json="model" />
             <div class="absolute top-0 right-0 flex items-center gap-1 z-10">

@@ -1,5 +1,5 @@
 /**
- * LMS 用户 / 通用 / 网盘参数
+ * LMS user / general / cloud drive parameters
  */
 export const userDefaults = {
   general: {

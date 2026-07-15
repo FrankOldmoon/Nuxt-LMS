@@ -1,7 +1,7 @@
 import type { LmsMember, LmsSearchUser } from '#lms/types/lms'
 
 /**
- * 课程成员管理：加载教师/编辑者、搜索用户、添加/移除成员
+ * Course member management: load teachers/editors, search users, add/remove members
  */
 export function useCourseMembersManager(props: { courseId: number }) {
   const { t } = useI18n()

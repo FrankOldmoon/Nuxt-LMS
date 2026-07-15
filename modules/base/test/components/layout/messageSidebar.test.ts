@@ -1,8 +1,8 @@
 /**
- * MessageSidebar 组件测试
+ * MessageSidebar component tests
  * @see modules/base/components/layout/messageSidebar.vue
  *
- * 消息侧边栏：搜索 + 会话列表
+ * Message sidebar: search + conversation list
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -10,7 +10,7 @@ import { ref } from 'vue'
 import { resetAllStubs, setMockI18n } from '../../../../../test/setup/nuxt-stubs'
 import { provideMessages, useMessagesContext } from '../../../composables/useMessages'
 
-// 在模块顶层暴露到 globalThis
+// Expose to globalThis at module top level
 ;(globalThis as any).useMessagesContext = useMessagesContext
 
 beforeEach(() => {

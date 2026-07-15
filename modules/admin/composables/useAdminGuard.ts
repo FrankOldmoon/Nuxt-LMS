@@ -1,18 +1,18 @@
 /**
- * 后台管理访问守卫
- * - adminMiddleware：页面级路由中间件，非 admin 跳回首页
- * - useAdminGuard：命令式断言（按钮 / 组件内调用）
+ * Admin backend access guard
+ * - adminMiddleware: page-level route middleware, non-admin redirects to home
+ * - useAdminGuard: imperative assertion (called in buttons / components)
  */
 
 export const adminMiddleware = defineNuxtRouteMiddleware(() => {
   const { hasRole, isLoggedIn } = useAuth()
-  // 未登录或非管理员均跳回首页
+  // Both not logged in and non-admin redirect to home
   if (!isLoggedIn.value || !hasRole('admin')) {
     return navigateTo('/')
   }
 })
 
-/** 命令式断言当前用户是否为管理员，非管理员弹提示并返回 false */
+/** Imperatively assert whether the current user is an admin, non-admin shows toast and returns false */
 export function useAdminGuard() {
   const { hasRole } = useAuth()
   const toast = useToast()

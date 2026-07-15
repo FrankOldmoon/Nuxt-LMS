@@ -6,7 +6,7 @@
     </div>
     <div class="max-w-[75%] px-3 py-2 rounded-lg text-sm leading-relaxed"
       :class="msg.role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200'">
-      <!-- 思考过程（可折叠） -->
+      <!-- thinking process（canCollapse） -->
       <div v-if="msg.reasoning" class="mb-2 pl-2 border-l-2 border-gray-300 dark:border-gray-600">
         <div class="flex items-center gap-1 cursor-pointer select-none hover:opacity-70" @click="toggleReasoning(idx)">
           <UIcon :name="msg._reasoningExpanded ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'" class="size-3 text-gray-400" />
@@ -14,9 +14,9 @@
         </div>
         <div v-if="msg._reasoningExpanded" class="mt-1 text-xs text-gray-500 dark:text-gray-400 leading-relaxed" v-html="renderContent(msg.reasoning)" />
       </div>
-      <!-- 消息内容 -->
+      <!-- Message Content -->
       <ueditorRender :json="msg.content" />
-      <!-- 朗读按钮（仅 assistant 文本消息） -->
+      <!-- readButton（only assistant TextMessage） -->
       <div v-if="canSpeak(msg)" class="flex justify-end mt-1">
         <button type="button" class="text-xs flex items-center gap-1 transition-colors"
           :class="speakingIdx === idx ? 'text-blue-500' : 'text-gray-400 hover:text-blue-500'"

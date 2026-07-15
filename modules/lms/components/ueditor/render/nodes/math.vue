@@ -13,7 +13,7 @@ const isBlock = computed(() => props.node.type === 'blockMath')
 const latex = computed(() => props.node.attrs?.latex || '')
 const tag = computed(() => (isBlock.value ? 'div' : 'span'))
 
-// ---- CDN 资源加载 ----
+// ---- CDN resourceLoad ----
 const loadCss = (url, id) =>
   new Promise((resolve) => {
     if (document.getElementById(id)) return resolve()

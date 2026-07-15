@@ -3,12 +3,14 @@ import { defineNuxtModule, createResolver, addComponentsDir, addImportsDir, addS
 /**
  * lms module
  *
- * 在线学习系统：师生角色、question 等互动组件、章节/课程功能按钮与互动数据、
- * 班级选择与数据、课程学习数据。组件按 course/chapter/class 分类。
+ * Online learning system: teacher/student roles, interactive components such as question,
+ * chapter/course feature buttons and interaction data, class selection and data,
+ * and course learning data. Components are categorized by course/chapter/class.
  *
- * 依赖：base（cRequest、WS 连接层、通用 CRUD、form）、doc（courses/chapters 内容）、auth（users）
+ * Dependencies: base (cRequest, WS connection layer, generic CRUD, form),
+ * doc (courses/chapters content), auth (users)
  *
- * 脚手架阶段：NUXT_MODULE_LMS=false 时跳过注册，使用原始文件。
+ * Scaffolding phase: when NUXT_MODULE_LMS=false, skip registration and use the original files.
  */
 export default defineNuxtModule({
   meta: { name: 'module-lms', configKey: 'moduleLms' },
@@ -26,12 +28,12 @@ export default defineNuxtModule({
     const enabled = process.env.NUXT_MODULE_LMS === 'true'
     if (!enabled) return
 
-    // 标记 lms 模块已启用，供组件条件渲染使用
+    // Mark lms module as enabled, for conditional rendering in components
     nuxt.options.runtimeConfig.public.moduleLms = true
 
     addComponentsDir({ path: resolve('./components'), pathPrefix: true })
 
-    // Nuxt 的 addComponentsDir 对同名组件采用"先注册者胜"策略，
+    // Nuxt's addComponentsDir uses a "first registered wins" strategy for components with the same name,
     nuxt.hook('components:extend', (components) => {
       const overrides: Record<string, string> = {
         LayoutAside: resolve('./components/layout/aside.vue'),
@@ -56,7 +58,7 @@ export default defineNuxtModule({
     addImportsDir(resolve('./utils'))
 
     nuxt.hook('pages:extend', (pages) => {
-      // 移除 base/doc 的首页和课程路由，避免路径冲突（lms 覆盖全部）
+      // Remove base/doc home and course routes to avoid path conflicts (lms overrides all)
       const pathsToRemove = ['/', '/course/:id', '/course/:id/:cid']
       for (let i = pages.length - 1; i >= 0; i--) {
         if (pathsToRemove.includes(pages[i].path || '')) {
@@ -83,12 +85,14 @@ export default defineNuxtModule({
 
     addServerScanDir(resolve('./server'))
 
-    // 覆盖 base 模块同路径 API：base 与 lms 都通过 addServerScanDir 把
-    // server 目录加入 nitro:config 的 scanDirs，Nitro 按顺序扫描，先注册者胜。
-    // 默认 base 先 addScanDir（modules 数组中 base 在前），base 胜出。
-    // 此处用 nitro:config hook 把 lms/server 移到 scanDirs 最前，使 lms 先被
-    // 扫描；任何同 route+method 的 lms handler 会先于 base 注册，Nitro 去重
-    // 时保留 lms 版本，从而实现 lms 覆盖 base。
+    // Override base module same-path API: both base and lms add their
+    // server directory to nitro:config's scanDirs via addServerScanDir.
+    // Nitro scans in order, first registered wins. By default base calls
+    // addScanDir first (base is earlier in the modules array), so base wins.
+    // Here we use the nitro:config hook to move lms/server to the front of
+    // scanDirs, so lms is scanned first; any lms handler with the same
+    // route+method is registered before base, and Nitro deduplication keeps
+    // the lms version, thereby achieving lms overriding base.
     nuxt.hook('nitro:config', (config) => {
       const lmsServerDir = resolve('./server')
       const dirs = config.scanDirs ||= []
@@ -98,14 +102,14 @@ export default defineNuxtModule({
     })
 
 
-    // 客户端插件：监听 chapterAccessUpdate WS 消息，刷新当前课程侧边栏导航
-    // （教师在 accessBar 切换章节 isOpen 或开放给班级时，服务端广播此消息）
+    // Client plugin: listen for chapterAccessUpdate WS messages to refresh the current course sidebar navigation
+    // (when a teacher toggles a chapter's isOpen or opens it to a class in accessBar, the server broadcasts this message)
     addPlugin(resolve('./plugins/ws-sync.client.ts'))
 
-    // 共享数据单例插件：应用启动时预拉取一次 /api/home 和 /api/config/lms-public，
-    // 存入 useState 后所有组件通过 useHome() / useLmsPublicConfig() 共享同一份数据。
-    // 注：模块 plugins/ 目录不会被 Nuxt 自动发现，必须显式 addPlugin() 注册
-    // （参考 base 模块的 site-config.ts 注册方式）。
+    // Shared data singleton plugin: pre-fetch /api/home and /api/config/lms-public once on app startup,
+    // store into useState so all components share the same data via useHome() / useLmsPublicConfig().
+    // Note: the module's plugins/ directory is not auto-discovered by Nuxt, must explicitly addPlugin() to register
+    // (refer to the base module's site-config.ts registration approach).
     addPlugin(resolve('./plugins/home-data.ts'))
     addPlugin(resolve('./plugins/lms-public-config.ts'))
 

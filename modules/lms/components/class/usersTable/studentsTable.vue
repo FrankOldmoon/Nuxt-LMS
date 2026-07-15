@@ -2,7 +2,7 @@
   <div v-show="!showGroup() || activeTab === 'students'">
     <ClassUsersTableTeachers />
 
-    <!-- 学生表格 -->
+    <!-- Student table -->
     <div v-if="students.length" class="flex justify-end mb-2">
       <UButton icon="i-lucide-download" size="xs" color="neutral" variant="outline"
         :label="t('classSelector.export')" @click="openExport" />
@@ -14,14 +14,14 @@
       :columns="columns"
       :ui="{ td: 'py-1.5' }"
     >
-      <!-- number 列 -->
+      <!-- number column -->
       <template v-if="!hideNumber()" #number-cell="{ row }">
         <UInput v-model="numberMap[row.original.id]" size="xs" class="w-16"
           :placeholder="'-'"
           @blur="onNumberBlur(row.original.id)"
           @keydown.enter="$event.target.blur()" />
       </template>
-      <!-- number 表头：排序按钮 + 一键填充 -->
+      <!-- number header: sort button + quick fill -->
       <template v-if="!hideNumber()" #number-header="{ column }">
         <div class="flex items-center gap-1">
           <component :is="sortableHeader(t('classSelector.colNumber'))({ column })" />
@@ -37,7 +37,7 @@
           <span class="text-sm text-primary group-hover:underline cursor-pointer">{{ row.original.name }}</span>
         </button>
       </template>
-      <!-- 重置密码列 -->
+      <!-- Reset password column -->
       <template v-if="!hideActions()" #resetPassword-cell="{ row }">
         <UButton
           icon="i-lucide-key-round"
@@ -58,7 +58,7 @@
           @click="openEdit(row.original.id)"
         />
       </template>
-      <!-- 转发额外列的插槽 -->
+      <!-- Forward extra column slots -->
       <template v-for="col in (extraColumns() || [])" :key="col.id" #[col.id+'-cell']="slotProps">
         <slot :name="col.id+'-cell'" v-bind="slotProps" />
       </template>
@@ -66,10 +66,10 @@
 
     <ClassUsersTableChart />
 
-    <!-- 导出弹窗 -->
+    <!-- Export modal -->
     <ClassUsersTableExportSheet v-model:open="exportOpen" />
 
-    <!-- 学生学习数据弹窗（点击姓名触发） -->
+    <!-- Student learning data modal (triggered by clicking name) -->
     <ClassUsersTableStudentStatsModal v-model:open="statsOpen"
       :user-id="statsUserId || 0"
       :class-id="classId() || 0"

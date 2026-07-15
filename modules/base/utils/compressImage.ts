@@ -1,17 +1,17 @@
 /**
- * 图片压缩工具函数
- * 使用 browser-image-compression 库进行智能压缩
+ * Image compression utility functions
+ * Uses browser-image-compression library for smart compression
  */
 import imageCompression from 'browser-image-compression'
 
 /**
- * 图片压缩配置
+ * Image compression configuration
  */
 export interface CompressOptions {
-    maxSizeMB?: number           // 最大文件大小（MB）
-    maxWidthOrHeight?: number    // 最大宽高（px）
-    quality?: number             // 压缩质量（0-1）
-    fileType?: string            // 输出格式
+    maxSizeMB?: number           // Maximum file size (MB)
+    maxWidthOrHeight?: number    // Maximum width/height (px)
+    quality?: number             // Compression quality (0-1)
+    fileType?: string            // Output format
 }
 
 const DEFAULT_OPTIONS: CompressOptions = {
@@ -22,10 +22,10 @@ const DEFAULT_OPTIONS: CompressOptions = {
 }
 
 /**
- * 压缩图片文件
- * @param file - 原始图片文件
- * @param options - 压缩选项
- * @returns 压缩后的 File 对象（如果压缩失败或变大则返回原文件）
+ * Compress image file
+ * @param file - Original image file
+ * @param options - Compression options
+ * @returns Compressed File object (returns original file if compression fails or file becomes larger)
  */
 export async function compressImage(file: File, options?: CompressOptions): Promise<File> {
     const mergedOptions = { ...DEFAULT_OPTIONS, ...options }
@@ -41,12 +41,12 @@ export async function compressImage(file: File, options?: CompressOptions): Prom
     try {
         const compressedFile = await imageCompression(file, compressionOptions)
 
-        // 如果压缩后变大，返回原文件
+        // If compressed file is larger, return original file
         if (compressedFile.size >= file.size) {
             return file
         }
 
-        // 重命名文件扩展名（如果转为 webp）
+        // Rename file extension (if converted to webp)
         if (mergedOptions.fileType === 'image/webp') {
             const webpName = file.name.replace(/\.(png|jpg|jpeg|gif|bmp|webp)$/i, '.webp')
             return new File([compressedFile], webpName, { type: 'image/webp' })
@@ -54,16 +54,16 @@ export async function compressImage(file: File, options?: CompressOptions): Prom
 
         return compressedFile
     } catch (error) {
-        console.warn('图片压缩失败，使用原文件:', error)
+        console.warn('Image compression failed, using original file:', error)
         return file
     }
 }
 
 /**
- * 压缩并上传图片
- * @param file - 原始图片文件
- * @param options - 压缩选项
- * @returns 上传后的 URL
+ * Compress and upload image
+ * @param file - Original image file
+ * @param options - Compression options
+ * @returns Uploaded URL
  */
 export async function compressAndUpload(file: File, options?: CompressOptions): Promise<string> {
     const compressedFile = await compressImage(file, options)
@@ -77,7 +77,7 @@ export async function compressAndUpload(file: File, options?: CompressOptions): 
     })
 
     if (!res.success) {
-        throw new Error(res.msg || '上传失败')
+        throw new Error(res.msg || 'Upload failed')
     }
 
     return res.data.url

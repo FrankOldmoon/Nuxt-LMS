@@ -1,8 +1,8 @@
 /**
- * lms/configEditor/switchSections.vue 组件测试
+ * lms/configEditor/switchSections.vue component test
  * @see modules/lms/components/lms/configEditor/switchSections.vue
  *
- * 开关配置区域：course / chapterBtns / courseBtns / home / chapterPage
+ * Switch config areas: course / chapterBtns / courseBtns / home / chapterPage
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -67,8 +67,8 @@ describe('lms/configEditor/switchSections.vue', () => {
     setupContext(true)
     const { default: SwitchSections } = await import('../../../../components/lms/configEditor/switchSections.vue')
     const wrapper = mount(SwitchSections, { global: _globalConfig })
-    // v-show=false 仍渲染 DOM 但 display:none
-    // course section 标题仍存在但不显示
+    // v-show=false still renders DOM but display:none
+    // course section title still exists but is not shown
     expect(wrapper.text()).toContain('lmsConfig.chapterBtns')
   })
 

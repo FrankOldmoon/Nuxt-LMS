@@ -2,7 +2,7 @@ import { ref, computed, inject, watch } from 'vue'
 import { submitQuestion, recordAnswer } from './shared'
 
 export function useSingle(props: any) {
-  const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')
+  const submitted = inject<import('vue').Ref<boolean>>('question submitted')
   const isCorrect = inject<import('vue').Ref<boolean>>('questionIsCorrect')
   const fromRecord = inject<import('vue').Ref<boolean>>('questionFromRecord')
   const { courseId, chapterId } = useLmsContext()
@@ -10,7 +10,7 @@ export function useSingle(props: any) {
 
   const hasAnswer = computed(() => selected.value >= 0)
 
-  // 监听 question.record 变化，同步到 selected
+  // listen question.record change，Syncto selected
   watch(() => props.question?.record, (record) => {
     if (record && record.length > 0) {
       selected.value = record[0]
@@ -18,7 +18,7 @@ export function useSingle(props: any) {
   }, { immediate: true })
 
   function select(idx: number) {
-    // 提交后重新作答，清除判断状态
+    // SubmitBackHeavyNewanswer，ClearjudgeStatus
     if (submitted.value) {
       submitted.value = false
     }
@@ -32,11 +32,11 @@ export function useSingle(props: any) {
   function optionClass(idx: number) {
     if (submitted.value) {
       if (isCorrect.value) {
-        // 答对：选中项标绿
+        // answerRight：SelecteditemsmarkGreen
         if (selected.value === idx) return 'border-green-400 bg-green-50 dark:bg-green-900/20'
         return 'border-gray-200 dark:border-gray-600'
       } else {
-        // 答错：只标红用户选错的项，不标绿正确答案
+        // answerWrong：onlymarkRedUseroptionWrongitems，no markGreenCorrectAnswer
         if (selected.value === idx) return 'border-red-400 bg-red-50 dark:bg-red-900/20'
         return 'border-gray-200 dark:border-gray-600'
       }
@@ -82,7 +82,7 @@ export function useSingle(props: any) {
     props.question.record = []
   }
 
-  // 填充正确答案为 record
+  // fillCorrectAnswer record
   function fillCorrectAnswer() {
     if (props.question?.answer && props.question.answer.length > 0) {
       selected.value = props.question.answer[0]
@@ -94,7 +94,7 @@ export function useSingle(props: any) {
     selected,
     hasAnswer,
     select,
-    optionClass,
+    option Class,
     dotClass,
     submit,
     reset,

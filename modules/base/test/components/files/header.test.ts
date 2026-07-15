@@ -1,8 +1,8 @@
 /**
- * FilesHeader 组件测试
+ * FilesHeader component tests
  * @see modules/base/components/files/header.vue
  *
- * 文件列表头部：标题 + 上传按钮 + 空间使用
+ * File list header: title + upload button + space usage
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -107,9 +107,9 @@ describe('files/header.vue', () => {
       },
       global: _globalConfig,
     })
-    // uploading prop 传给 UButton 的 loading
+    // uploading prop is passed to UButton's loading
     const btn = wrapper.find('button')
-    // 验证组件接受 uploading prop
+    // Verify the component accepts the uploading prop
     expect(wrapper.props('uploading')).toBe(true)
   })
 })

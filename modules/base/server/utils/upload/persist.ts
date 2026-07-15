@@ -1,10 +1,10 @@
 /**
- * 上传步骤 3：落盘 + 写库 + 改名（最终步骤）
+ * Upload step 3: persist to disk + write DB + rename (final step)
  *
- *  1. 写入临时文件 hash.ext
- *  2. 插入 files 表（拿到 id）
- *  3. 重命名为 {id}.ext，更新 db.path
- * 并发插入失败 → 移除临时文件 + 抛错（外层 catch 复用 buildDedupWhere 重新查重）
+ *  1. Write temp file hash.ext
+ *  2. Insert into files table (get id)
+ *  3. Rename to {id}.ext, update db.path
+ * Concurrent insert failure → remove temp file + throw error (outer catch reuses buildDedupWhere to re-dedup)
  */
 import { db, schema } from '@nuxthub/db'
 import { eq } from 'drizzle-orm'
@@ -17,24 +17,24 @@ export function sha256Hex(buffer: Buffer): string {
   return createHash('sha256').update(buffer).digest('hex')
 }
 
-/** 在 UPLOAD_ROOT 下按"距 2026-01-01 天数"生成目录名 */
+/** Generate directory name under UPLOAD_ROOT by "days since 2026-01-01" */
 export function dayDirNameFn(now: Date = new Date()): string {
   const baseDate = new Date('2026-01-01T00:00:00Z')
   const daysSinceBase = Math.floor((now.getTime() - baseDate.getTime()) / (24 * 60 * 60 * 1000))
   return String(daysSinceBase)
 }
 
-/** 把 buffer 落盘为 hash.ext 临时文件，返回 { tempPath, tempDbPath } */
+/** Write buffer to disk as hash.ext temp file, return { tempPath, tempDbPath } */
 export async function writeTempFile(buffer: Buffer, hash: string, ext: string, dayDir: string, dayDirName: string) {
   const tempFileName = `${hash}${ext}`
   const tempFilePath = join(dayDir, tempFileName)
-  // DB path 只保留 UPLOAD_ROOT 之内的相对目录（serve 端会自己拼接 UPLOAD_ROOT）
+  // DB path keeps only the relative directory within UPLOAD_ROOT (serve endpoint will prepend UPLOAD_ROOT itself)
   const tempDbPath = `/${dayDirName}/${tempFileName}`
   await writeFile(tempFilePath, buffer)
   return { tempFilePath, tempDbPath }
 }
 
-/** 落盘 + 写库 + 改名（最终步骤） */
+/** Persist to disk + write DB + rename (final step) */
 export async function persistUploadedFile(args: {
   buffer: Buffer
   hash: string
@@ -69,7 +69,7 @@ export async function persistUploadedFile(args: {
 
   const finalFileName = `${record.id}${ext}`
   const finalFilePath = join(dayDir, finalFileName)
-  // DB path 只保留 UPLOAD_ROOT 之内的相对路径，避免 URL 里出现 storage 前缀
+  // DB path keeps only the relative path within UPLOAD_ROOT to avoid the storage prefix in the URL
   const finalDbPath = `/${dayDirName}/${finalFileName}`
   await rename(tempFilePath, finalFilePath)
   await db.update(schema.files)

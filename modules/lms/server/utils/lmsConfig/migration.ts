@@ -1,15 +1,15 @@
 /**
- * LMS 拍平键前缀（与 site: 对应）+ 旧版数据迁移
+ * LMS flattened key prefix (corresponds to site:) + legacy data migration
  */
 import { db, schema } from '@nuxthub/db'
 import { eq, like } from 'drizzle-orm'
 
 export const LMS_KEY_PREFIX = 'lms:'
-/** 历史遗留：旧版单行 json 存储的 id（迁移完成后将删除） */
+/** Legacy: id of the legacy single-row json storage (will be deleted after migration) */
 export const LEGACY_LMS_CONFIG_ID = 'lms_config'
 
 /**
- * 将树形对象拍平为 { 'lms:section.key': value } 形式，供 upsert
+ * Flatten a tree object into { 'lms:section.key': value } form, for upsert
  */
 export function buildLmsConfigPairs(obj: any): Array<{ key: string; value: any }> {
   const flat: Record<string, any> = {}
@@ -31,10 +31,10 @@ export function buildLmsConfigPairs(obj: any): Array<{ key: string; value: any }
 }
 
 /**
- * 旧版单行 json 迁移到拍平行（仅一次）
- * - 检测：configs 表中 id='lms_config' 行存在
- * - 动作：拍平其 value 为 lms:* 行后删除原行
- * - 静默：若 lms:* 行已存在也跳过（避免覆盖新格式）
+ * Migrate legacy single-row json to flattened rows (only once)
+ * - Detection: a row with id='lms_config' exists in the configs table
+ * - Action: flatten its value into lms:* rows, then delete the original row
+ * - Silent: skip if lms:* rows already exist (to avoid overwriting the new format)
  */
 export async function migrateLegacyLmsConfigIfNeeded() {
   try {
@@ -52,7 +52,7 @@ export async function migrateLegacyLmsConfigIfNeeded() {
     const pairs = buildLmsConfigPairs(legacy.value)
     if (!pairs.length) {
       await db.delete(schema.configs).where(eq(schema.configs.id, LEGACY_LMS_CONFIG_ID))
-      console.log('[lms_config] 已迁移：旧 lms_config 为空，已删除')
+      console.log('[lms_config] Migrated: legacy lms_config was empty, deleted')
       return
     }
 
@@ -62,8 +62,8 @@ export async function migrateLegacyLmsConfigIfNeeded() {
         .onConflictDoUpdate({ target: schema.configs.id, set: { value } })
     }
     await db.delete(schema.configs).where(eq(schema.configs.id, LEGACY_LMS_CONFIG_ID))
-    console.log(`[lms_config] 已迁移：${pairs.length} 个 lms:* 拍平键（来自旧 lms_config）`)
+    console.log(`[lms_config] Migrated: ${pairs.length} lms:* flattened keys (from legacy lms_config)`)
   } catch (e) {
-    console.error('[lms_config] 旧版数据迁移失败', e)
+    console.error('[lms_config] Legacy data migration failed', e)
   }
 }

@@ -1,28 +1,28 @@
 /**
- * 恢复原始身份（模拟登录后刷新页面时自动调用）
+ * Restore original identity (auto-called on page refresh after impersonation login)
  * POST /api/auth/restore
  *
- * 检查 original_token cookie，如果存在则恢复原始身份
+ * Check original_token cookie, restore original identity if it exists
  */
 export default defineEventHandler(async (event) => {
   const originalToken = getCookie(event, 'original_token')
   const currentToken = getCookie(event, 'auth_token')
 
   if (!originalToken || !currentToken) {
-    return cResp({ restored: false }, '无需恢复')
+    return cResp({ restored: false }, 'No restoration needed')
   }
 
-  // 恢复原始 token
+  // Restore original token
   setCookie(event, 'auth_token', originalToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7, // 7 天
+    maxAge: 60 * 60 * 24 * 7, // 7 days
     path: '/',
   })
 
-  // 清除 original_token
+  // Clear original_token
   deleteCookie(event, 'original_token', { path: '/' })
 
-  return cResp({ restored: true }, '已恢复原始身份')
+  return cResp({ restored: true }, 'Original identity restored')
 })

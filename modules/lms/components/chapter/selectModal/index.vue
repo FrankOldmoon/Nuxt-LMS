@@ -9,11 +9,11 @@
             <UButton size="xs" variant="outline" :label="$t('chapter.selectNone')" @click="clearSelection" />
           </div>
         </div>
-        <div v-if="!classId" class="py-8 text-center text-muted text-sm">{{ $t('chapter.noClass') }}</div>
+        <div v-if="!classId" class="py-8 text-center text-muted text-sm">{{ $t('chapter.no class') }}</div>
         <div v-else-if="loading" class="py-8 text-center text-muted">
           <UIcon name="i-lucide-loader-2" class="animate-spin size-4 mr-2 inline-block" />{{ $t('common.loading') }}
         </div>
-        <div v-else-if="!students.length" class="py-8 text-center text-muted text-sm">{{ $t('classSelector.noUsers') }}</div>
+        <div v-else-if="!students.length" class="py-8 text-center text-muted text-sm">{{ $t('classSelector.no users') }}</div>
         <template v-else>
           <div class="flex items-center gap-2 p-3 bg-muted/30 rounded-lg flex-wrap">
             <span class="text-sm text-muted whitespace-nowrap">{{ $t('chapter.randomCount') }}</span>

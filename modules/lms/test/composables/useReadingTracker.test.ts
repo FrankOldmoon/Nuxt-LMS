@@ -1,5 +1,5 @@
 /**
- * useReadingTracker composable 测试
+ * useReadingTracker composable test
  * @see modules/lms/composables/useReadingTracker.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'

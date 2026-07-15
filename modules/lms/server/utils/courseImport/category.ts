@@ -1,13 +1,13 @@
 /**
- * 课程导入：创建分类 + 创建课程
+ * Course import: create category + create course
  */
 import { db, schema } from '@nuxthub/db'
 import { eq } from 'drizzle-orm'
 import type { ExportedCourse } from './types'
 
 /**
- * 创建或复用分类
- * @param overrideCategoryId 指定 categoryId 时直接复用，否则以课程名新建
+ * Create or reuse a category
+ * @param overrideCategoryId When categoryId is specified, reuse it directly; otherwise create a new one named after the course
  * @returns categoryId
  */
 export async function resolveCategory(
@@ -19,7 +19,7 @@ export async function resolveCategory(
     const cat = await tx.query.categories.findFirst({
       where: eq(schema.categories.id, overrideCategoryId),
     })
-    if (!cat) throw new Error('指定的分类不存在')
+    if (!cat) throw new Error('Specified category does not exist')
     return overrideCategoryId
   }
   const [newCategory] = await tx.insert(schema.categories).values({
@@ -27,12 +27,12 @@ export async function resolveCategory(
     code: course.code || null,
     orders: [],
   }).returning()
-  if (!newCategory) throw new Error('分类创建失败')
+  if (!newCategory) throw new Error('Category creation failed')
   return newCategory.id
 }
 
 /**
- * 创建课程（orders 先写空数组，待章节插入完再回填）
+ * Create a course (orders is written as an empty array first, backfilled after chapters are inserted)
  */
 export async function createCourse(
   tx: typeof db,
@@ -49,6 +49,6 @@ export async function createCourse(
     tags: course.tags || [],
     config: course.config || null,
   }).returning()
-  if (!newCourse) throw new Error('课程创建失败')
+  if (!newCourse) throw new Error('Course creation failed')
   return newCourse.id
 }

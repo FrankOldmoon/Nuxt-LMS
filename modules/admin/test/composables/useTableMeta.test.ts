@@ -1,5 +1,5 @@
 /**
- * useTableMeta composable 测试
+ * useTableMeta composable tests
  * @see modules/admin/composables/useTableMeta.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -37,7 +37,7 @@ describe('composables/useTableMeta', () => {
     })
     const { useTableMeta } = await import('../../composables/useTableMeta')
     const { summary, columns, readOnly, labelColumn, ensure } = useTableMeta('users')
-    // 加载前为空
+    // Empty before loading
     expect(summary.value).toBeUndefined()
     await ensure()
     expect(summary.value?.name).toBe('users')

@@ -1,5 +1,5 @@
 /**
- * Notifications API 端点测试
+ * Notifications API endpoint tests
  * @see modules/base/server/api/notifications/*.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -106,7 +106,7 @@ describe('API: notifications/unread.get', () => {
 
   it('返回未读计数', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
-    // unread.get 用 .select({total:count()}).from().where() 链式（无 limit）
+    // unread.get uses .select({total:count()}).from().where() chain (no limit)
     _mockDb.where = vi.fn().mockResolvedValue([{ total: 5 }, { total: 2 }])
     const handler = (await import('../../server/api/notifications/unread.get')).default
     const result = await handler(makeEvent())

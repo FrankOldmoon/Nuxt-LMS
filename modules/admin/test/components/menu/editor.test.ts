@@ -1,8 +1,8 @@
 /**
- * menu/Editor.vue 组件测试
+ * menu/Editor.vue component tests
  * @see modules/admin/components/menu/Editor.vue
  *
- * 菜单编辑器弹窗：菜单树 + 单条编辑 + 保存/重置/取消
+ * Menu editor modal: menu tree + single item edit + save/reset/cancel
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

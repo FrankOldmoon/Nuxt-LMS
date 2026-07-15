@@ -1,9 +1,9 @@
 /**
- * ai/chatbox/index.vue 组件测试
+ * ai/chatbox/index.vue component test
  * @see modules/lms/components/ai/chatbox/index.vue
  *
- * 聊天框容器：标题 + 消息列表 + 输入栏。逻辑由 useChatbox() 提供，
- * 通过 provideChatbox 向子组件注入上下文。测试中导入真实 composable。
+ * Chatbox container: title + message list + input bar. Logic provided by useChatbox(),
+ * Injects context to child components via provideChatbox. Imports real composable in tests.
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -54,7 +54,7 @@ describe('ai/chatbox/index.vue', () => {
   it('不传 title 时不渲染标题区', async () => {
     const { default: Chatbox } = await import('../../../../components/ai/chatbox/index.vue')
     const wrapper = mount(Chatbox, { global: _globalConfig })
-    // 无 title 时不显示标题区（i-lucide-bot 图标只在 title 区出现）
+    // When there is no title, the title area is not shown (i-lucide-bot icon only appears in the title area)
     expect(wrapper.find('.uicon').exists()).toBe(false)
   })
 

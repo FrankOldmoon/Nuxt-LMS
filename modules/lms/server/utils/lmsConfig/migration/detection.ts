@@ -1,11 +1,11 @@
 /**
- * LMS 拍平键存在性检测（轻量级，供插件 / 迁移检查使用）
+ * LMS flat-key existence detection (lightweight, for plugin / migration check)
  */
 import { db, schema } from '@nuxthub/db'
 import { eq, like } from 'drizzle-orm'
 import { LMS_KEY_PREFIX, LEGACY_LMS_CONFIG_ID } from '../migration'
 
-/** 检测：当前是否存在 lms:* 拍平行 */
+/** Check: whether lms:* flat rows currently exist */
 export async function hasLmsFlatRows(): Promise<boolean> {
   try {
     const rows = await db.select({ id: schema.configs.id })
@@ -16,7 +16,7 @@ export async function hasLmsFlatRows(): Promise<boolean> {
   } catch { return false }
 }
 
-/** 检测：当前是否仍存在旧版 lms_config 单行（迁移未完成） */
+/** Check: whether the legacy lms_config single row still exists (migration incomplete) */
 export async function hasLegacyLmsConfig(): Promise<boolean> {
   try {
     const rows = await db.select({ id: schema.configs.id })

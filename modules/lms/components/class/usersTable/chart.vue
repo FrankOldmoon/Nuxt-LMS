@@ -2,7 +2,7 @@
   <ClientOnly v-if="showChart() && students.length">
     <div class="mt-4 relative">
       <Chart :option="chartOption" height="320" />
-      <!-- 右侧 HTML 覆盖层：头像 + 名字 -->
+      <!-- Right HTML overlay：Avatar + namecharacters -->
       <div class="absolute top-0 right-0 h-full flex flex-col justify-around py-[10px]" style="width: 120px;">
         <div v-for="item in chartData" :key="item.id"
           class="flex items-center gap-1.5 h-6 transition-all duration-700 ease-in-out">

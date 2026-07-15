@@ -1,8 +1,8 @@
 /**
- * ProfileField 组件测试
+ * ProfileField component tests
  * @see modules/base/components/auth/profileField.vue
  *
- * 简单的展示组件：label + value
+ * Simple display component: label + value
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -35,7 +35,7 @@ describe('auth/profileField.vue', () => {
   it('value 为空字符串时显示空内容', async () => {
     const { default: ProfileField } = await import('../../components/auth/profileField.vue')
     const wrapper = mount(ProfileField, { props: { label: '昵称', value: '' } })
-    // 组件用 value ?? '-',空字符串非 null/undefined,会原样显示空内容
+    // Component uses value ?? '-', empty string is not null/undefined, will display empty content as-is
     const span = wrapper.findAll('span')[1]
     expect(span.text()).toBe('')
   })

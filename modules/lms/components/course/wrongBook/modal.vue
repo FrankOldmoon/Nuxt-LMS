@@ -2,7 +2,7 @@
   <UModal v-model:open="isOpen" :ui="{ content: 'sm:max-w-4xl' }">
     <template #content>
       <div class="flex flex-col" style="height: 80vh;">
-        <!-- 固定头部 -->
+        <!-- Fixed header -->
         <div class="p-4 space-y-3 shrink-0 border-b border-gray-100 dark:border-gray-800">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold flex items-center gap-2">
@@ -12,7 +12,7 @@
             <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" @click="isOpen = false" />
           </div>
 
-          <!-- 搜索 + 题型筛选 -->
+          <!-- Search + question type filter -->
           <div class="flex items-center gap-2">
             <USelect v-model="filterType" :items="typeOptions" size="sm" class="w-36" />
             <UInput v-model="keyword" :placeholder="$t('courseData.searchPlaceholder')"
@@ -23,7 +23,7 @@
           </div>
         </div>
 
-        <!-- 滚动列表区 -->
+        <!-- Scrollable list area -->
         <div class="flex-1 overflow-y-auto p-4">
           <div v-if="loading" class="flex items-center justify-center py-10 text-gray-400">
             <UIcon name="i-lucide-loader-2" class="animate-spin size-5 mr-2" />
@@ -40,7 +40,7 @@
           </div>
         </div>
 
-        <!-- 固定底部：分页 -->
+        <!-- Fixed bottom: pagination -->
         <div class="p-4 shrink-0 border-t border-gray-100 dark:border-gray-800 space-y-2">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">

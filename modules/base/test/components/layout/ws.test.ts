@@ -1,8 +1,8 @@
 /**
- * Ws 组件测试
+ * Ws component tests
  * @see modules/base/components/layout/ws.vue
  *
- * WebSocket 连接编排器：登录后建立连接
+ * WebSocket connection orchestrator: establishes connection after login
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

@@ -1,5 +1,5 @@
 /**
- * 章节任务提取工具测试
+ * Chapter task extraction utility test
  * @see modules/lms/utils/chapterTask.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -112,7 +112,7 @@ describe('utils/chapterTask - extractChapterTasks', () => {
         },
         {
           type: 'vue',
-          attrs: { type: 'image', content: 'xxx' }, // 非可提交类型
+          attrs: { type: 'image', content: 'xxx' }, // Non-submittable type
         },
       ],
     }
@@ -153,7 +153,7 @@ describe('utils/chapterTask - extractChapterTasks', () => {
       content: [
         {
           type: 'heading',
-          attrs: { level: 1 }, // 无 id
+          attrs: { level: 1 }, // No id
           content: [{ type: 'text', text: '无 id 标题' }],
         },
       ],

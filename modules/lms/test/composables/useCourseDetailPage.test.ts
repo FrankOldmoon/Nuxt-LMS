@@ -1,5 +1,5 @@
 /**
- * useCourseDetailPage composable 测试
+ * useCourseDetailPage composable test
  * @see modules/lms/composables/useCourseDetailPage.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -18,17 +18,17 @@ beforeEach(async () => {
   resetAllStubs()
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
   setMockFetchHandler(async () => ({ data: null, success: true, msg: '' }))
-  // useLayoutState 需提供 courseNavVersion + notifyCourseNavUpdate
+  // useLayoutState needs to provide courseNavVersion + notifyCourseNavUpdate
   setMockLayoutState({
     courseNavVersion: ref(0),
     notifyCourseNavUpdate: vi.fn(),
   })
-  // 桩 useAuthLms（auto-import from lms）
+  // Stub useAuthLms (auto-import from lms)
   ;(globalThis as any).useAuthLms = () => ({
     isCourseTeacher: (cid: number) => cid === 5,
     isCourseEditor: (cid: number) => cid === 5,
   })
-  // 桩 useSidebarNav（auto-import from lms）
+  // Stub useSidebarNav (auto-import from lms)
   ;(globalThis as any).useSidebarNav = () => ({
     refresh: vi.fn(),
   })
@@ -60,7 +60,7 @@ describe('composables/useCourseDetailPage', () => {
     const r = useCourseDetailPage(computed(() => '1'), computed(() => '/api/courses/show?id=1'))
     expect(r.course.value).toBe(null)
     expect(r.exporting.value).toBe(false)
-    expect(r.pending.value).toBe(true) // useFetch 初始 pending
+    expect(r.pending.value).toBe(true) // useFetch initial pending
   })
 
   it('hasContent=false 当 content 为空对象', async () => {
@@ -96,7 +96,7 @@ describe('composables/useCourseDetailPage', () => {
   it('canEdit：学生 false', async () => {
     setMockAuthUser({ id: 3, name: 's' }, [{ code: 'student', name: 'Student' }])
     const { useCourseDetailPage } = await import('../../composables/useCourseDetailPage')
-    // courseId=99 不是教师课程（stub 中仅 cid===5 算 teacher）
+    // courseId=99 is not a teacher course (in stub only cid===5 counts as teacher)
     const r = useCourseDetailPage(computed(() => '99'), computed(() => '/api/courses/show?id=99'))
     expect(r.canEdit.value).toBe(false)
   })
@@ -180,7 +180,7 @@ describe('composables/useCourseDetailPage', () => {
       }
       return { data: null, success: true, msg: '' }
     })
-    // document.createElement / URL.createObjectURL 在 happy-dom 下可用
+    // document.createElement / URL.createObjectURL are available under happy-dom
     const { useCourseDetailPage } = await import('../../composables/useCourseDetailPage')
     const r = useCourseDetailPage(computed(() => '7'), computed(() => '/api/courses/show?id=7'))
     await r.exportCourse()
@@ -194,8 +194,8 @@ describe('composables/useCourseDetailPage', () => {
     const r = useCourseDetailPage(computed(() => '1'), computed(() => '/api/courses/show?id=1'))
     await new Promise((resolve) => setTimeout(resolve, 0))
     await r.handleSaved()
-    // notifyCourseNavUpdate 已通过 setMockLayoutState 注入 vi.fn()
-    // 这里仅验证不抛错即可
+    // notifyCourseNavUpdate is injected via setMockLayoutState as vi.fn()
+    // Here only verify no error thrown
     expect(true).toBe(true)
   })
 

@@ -1,5 +1,5 @@
 /**
- * useLmsCourseDetail composable 测试
+ * useLmsCourseDetail composable test
  * @see modules/lms/composables/useLmsCourseDetail.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'

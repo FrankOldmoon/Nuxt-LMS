@@ -2,7 +2,7 @@
     position: fixed;
     inset: 0;
     z-index: 9999;
-    /* 背景透明度 50% */
+    /* Background opacity 50% */
     background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
@@ -15,7 +15,7 @@
     cursor: pointer;
 }
 
-/* ===== 覆盖层 UI：默认隐藏，hover 后显示 ===== */
+/* ===== Overlay UI: hidden by default, shown on hover ===== */
 .image-modal-toolbar,
 .image-modal-nav,
 .image-modal-thumbs {
@@ -30,7 +30,7 @@
     pointer-events: auto;
 }
 
-/* 顶部工具栏 */
+/* Top toolbar */
 .image-modal-toolbar {
     position: absolute;
     top: 0;
@@ -49,7 +49,7 @@
     border-radius: 6px;
 }
 
-/* 左右导航 */
+/* Left/right navigation */
 .image-modal-nav {
     position: absolute;
     top: 50%;
@@ -62,7 +62,7 @@
     right: 20px;
 }
 
-/* 底部缩略图 */
+/* Bottom thumbnails */
 .image-modal-thumbs {
     position: absolute;
     bottom: 0;

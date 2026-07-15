@@ -1,5 +1,5 @@
 /**
- * composables/useIconPicker 测试
+ * composables/useIconPicker tests
  * @see modules/base/composables/useIconPicker.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -57,14 +57,14 @@ describe('composables/useIconPicker - filterIcons & pagination', () => {
   it('无关键字时返回全部图标', async () => {
     const { useIconPicker } = await import('../../composables/useIconPicker')
     const { filterIcons } = useIconPicker(() => '', () => 20, () => {})
-    // lucide json 有大量图标
+    // lucide json has a large number of icons
     expect(filterIcons.value.length).toBeGreaterThan(100)
   })
 
   it('关键字过滤图标（大小写不敏感）', async () => {
     const { useIconPicker } = await import('../../composables/useIconPicker')
     const { filterIcons, searchText } = useIconPicker(() => '', () => 20, () => {})
-    // lucide 图标名使用 kebab-case；'arrow' 匹配 a-arrow-down 等
+    // lucide icon names use kebab-case; 'arrow' matches a-arrow-down etc.
     searchText.value = 'arrow'
     expect(filterIcons.value.length).toBeGreaterThan(0)
     expect(filterIcons.value.every((n: string) => n.toLowerCase().includes('arrow'))).toBe(true)
@@ -85,7 +85,7 @@ describe('composables/useIconPicker - filterIcons & pagination', () => {
     expect(pageIcons.value).toHaveLength(5)
     page.value = 2
     expect(pageIcons.value).toHaveLength(5)
-    // 第 2 页第 1 个应不同于第 1 页第 1 个
+    // The 1st item on page 2 should differ from the 1st item on page 1
     searchText.value = ''
   })
 
@@ -94,7 +94,7 @@ describe('composables/useIconPicker - filterIcons & pagination', () => {
     const { page, searchText } = useIconPicker(() => '', () => 20, () => {})
     page.value = 3
     searchText.value = 'arrow'
-    await nextTick() // watch(searchText) 回调异步执行
+    await nextTick() // watch(searchText) callback executes asynchronously
     expect(page.value).toBe(1)
   })
 })
@@ -105,10 +105,10 @@ describe('composables/useIconPicker - selectIcon & selectMatchIcon', () => {
     const calls: string[] = []
     const { innerValue, popoverOpen, selectIcon } = useIconPicker(() => '', () => 20, (v) => calls.push(v))
     selectIcon('i-lucide-star')
-    // selectIcon 直接设置 innerValue.value（同步），popoverOpen 也是同步
+    // selectIcon directly sets innerValue.value (synchronous), popoverOpen is also synchronous
     expect(innerValue.value).toBe('i-lucide-star')
     expect(popoverOpen.value).toBe(false)
-    // watch(innerValue, ...) 异步触发 onUpdate
+    // watch(innerValue, ...) asynchronously triggers onUpdate
     await nextTick()
     expect(calls).toEqual(['i-lucide-star'])
   })
@@ -118,10 +118,10 @@ describe('composables/useIconPicker - selectIcon & selectMatchIcon', () => {
     const calls: string[] = []
     const { innerValue, searchText, selectMatchIcon, filterIcons } = useIconPicker(() => '', () => 20, (v) => calls.push(v))
     searchText.value = 'arrow'
-    await nextTick() // 等 watch(searchText) 回调（page 重置）
+    await nextTick() // wait for watch(searchText) callback (page reset)
     selectMatchIcon()
     expect(innerValue.value).toBe(filterIcons.value[0])
-    await nextTick() // 等 watch(innerValue) 回调（onUpdate）
+    await nextTick() // wait for watch(innerValue) callback (onUpdate)
     expect(calls).toHaveLength(1)
   })
 
@@ -143,7 +143,7 @@ describe('composables/useIconPicker - popoverOpen 联动', () => {
     searchText.value = 'abc'
     page.value = 5
     popoverOpen.value = true
-    await nextTick() // watch(popoverOpen) 回调异步执行
+    await nextTick() // watch(popoverOpen) callback executes asynchronously
     expect(searchText.value).toBe('')
     expect(page.value).toBe(1)
   })
@@ -156,7 +156,7 @@ describe('composables/useIconPicker - modelValue 同步', () => {
     const { innerValue } = useIconPicker(() => mValue.value, () => 20, () => {})
     expect(innerValue.value).toBe('initial')
     mValue.value = 'updated'
-    await nextTick() // watch(modelValue) 回调异步执行
+    await nextTick() // watch(modelValue) callback executes asynchronously
     expect(innerValue.value).toBe('updated')
   })
 })

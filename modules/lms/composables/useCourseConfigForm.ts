@@ -1,7 +1,7 @@
 import type { InjectionKey } from 'vue'
 
 /**
- * 课程编辑器配置表单：封面图片 + 课程配置 + LMS 配置
+ * Course editor config form: cover image + course config + LMS config
  */
 export function useCourseConfigForm() {
   const { t } = useI18n()

@@ -2,30 +2,30 @@ import { ref, computed, inject, watch, nextTick } from 'vue'
 import { submitQuestion, recordAnswer, computeCorrectRate } from './shared'
 
 export function useCompositeRender(props: any) {
-  const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')
+  const submitted = inject<import('vue').Ref<boolean>>('question submitted')
   const isCorrect = inject<import('vue').Ref<boolean>>('questionIsCorrect')
   const fromRecord = inject<import('vue').Ref<boolean>>('questionFromRecord')
   const { courseId, chapterId } = useLmsContext()
 
-  // 子题列表（存储在 question.content 中）
-  const subQuestions = computed(() => {
+  // child question list（store question.content Middle）
+  const sub-questions = computed(() => {
     return Array.isArray(props.question.content) ? props.question.content : []
   })
 
   const subRefs = ref([])
   const showAnswer = ref(false)
 
-  // 各子题的 record
+  // eachchild question record
   const subRecords = ref({})
 
-  // 防止 fillCorrectAnswer → setRecord → answer-change → syncRecord → record watcher → setRecord 循环
+  // prevent fillCorrectAnswer → setRecord → answer-change → syncRecord → record watcher → setRecord loop
   let isRestoring = false
 
   const hasAnswer = computed(() => {
     return Object.keys(subRecords.value).length > 0
   })
 
-  // 子题答案变化
+  // child questionAnswerchange
   function onAnswerChange(idx, record) {
     subRecords.value[idx] = record
     if (submitted.value) {
@@ -39,16 +39,16 @@ export function useCompositeRender(props: any) {
     }
   }
 
-  // 同步到 question.record
+  // Syncto question.record
   function syncRecord() {
-    const record = subQuestions.value.map((_, i) => subRecords.value[i] || [])
+    const record = sub-questions.value.map((_, i) => subRecords.value[i] || [])
     recordAnswer(props.question, record)
   }
 
-  // 监听 question.record 变化（fetchRecord 回填场景 / fillCorrectAnswer 触发）
+  // listen question.record change（fetchRecord backfill scenario / fillCorrectAnswer Trigger）
   watch(() => props.question?.record, (record) => {
     if (!Array.isArray(record) || record.length === 0) return
-    // 将每个子题的 record 设置到对应的 SubQuestionRenderer
+    // willeachitemschild question record SettingstoRightshould Sub-questionRenderer
     isRestoring = true
     nextTick(() => {
       record.forEach((subRecord, idx) => {
@@ -57,7 +57,7 @@ export function useCompositeRender(props: any) {
           subRecords.value[idx] = subRecord
         }
       })
-      // 回填后若父级已是 submitted 状态，子题也显示判断
+      // backfillBackifFatherlevelalreadyYes submitted Status，child questionalsoShowjudge
       if (submitted.value) {
         subRefs.value.forEach(ref => ref?.applyJudgment?.())
       }
@@ -65,7 +65,7 @@ export function useCompositeRender(props: any) {
     })
   }, { immediate: true })
 
-  // 监听 submitted 变化（reset 场景）
+  // listen submitted change（reset scenario）
   watch(submitted, (val) => {
     if (!val) {
       showAnswer.value = false
@@ -74,8 +74,8 @@ export function useCompositeRender(props: any) {
   })
 
   function submit() {
-    if (!props.question || !subQuestions.value.length) return
-    // 调用每个子题的 submit
+    if (!props.question || !sub-questions.value.length) return
+    // Calleachitemschild question submit
     const results = []
     subRefs.value.forEach(ref => {
       if (ref) {
@@ -83,23 +83,23 @@ export function useCompositeRender(props: any) {
         if (result) results.push(result)
       }
     })
-    // 计算总分和得分
+    // calculate total scoreandScore
     let totalPoint = 0
     let correctPoint = 0
-    subQuestions.value.forEach((sub, i) => {
+    sub-questions.value.forEach((sub, i) => {
       const pt = Number(sub.point) || 0
       totalPoint += pt
       const subRecord = subRecords.value[i] || []
-      const subQuestion = { ...sub, record: subRecord }
-      const rate = computeCorrectRate(subQuestion)
+      const sub-question = { ...sub, record: subRecord }
+      const rate = computeCorrectRate(sub-question)
       correctPoint += rate * pt
     })
     const correctRate = totalPoint > 0 ? correctPoint / totalPoint : 0
-    const correct = correctRate >= 1 && results.length === subQuestions.value.length
+    const correct = correctRate >= 1 && results.length === sub-questions.value.length
     isCorrect.value = correct
 
-    // 构建完整 record
-    const fullRecord = subQuestions.value.map((_, i) => subRecords.value[i] || [])
+    // Build complete record
+    const fullRecord = sub-questions.value.map((_, i) => subRecords.value[i] || [])
 
     submitQuestion({
       questionId: props.questionId,
@@ -128,7 +128,7 @@ export function useCompositeRender(props: any) {
   }
 
   return {
-    subQuestions,
+    sub-questions,
     subRefs,
     showAnswer,
     hasAnswer,
