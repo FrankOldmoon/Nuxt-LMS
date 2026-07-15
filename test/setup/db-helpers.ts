@@ -1,7 +1,7 @@
 /**
- * 共享测试助手：DB mock 工厂 + LMS auto-import 注入
+ * Shared test helpers: DB mock factory + LMS auto-import injection
  *
- * 用法：
+ * Usage:
  * ```ts
  * import { createMockDb, installLmsAutoImports, resetDb } from '../../../../test/setup/db-helpers'
  *
@@ -18,10 +18,10 @@
 import { vi } from 'vitest'
 
 /**
- * 创建 drizzle-orm 风格的 mock DB：
- * - 链式方法（select / from / where / ...）全部返回 this
- * - returning / findFirst / findMany 可被测试 case 单独 mock 返回值
- * - 终端方法（getMockDbResult）需在 case 中显式设置
+ * Create a drizzle-orm style mock DB:
+ * - chainable methods(select / from / where / ...)all return this
+ * - returning / findFirst / findMany return value can be individually mocked per test case
+ * - terminal method(getMockDbResult)must be explicitly set in the case
  */
 export function createMockDb(extraQuery: Record<string, any> = {}) {
   const baseChain = () => {
@@ -45,7 +45,7 @@ export function createMockDb(extraQuery: Record<string, any> = {}) {
       returning: vi.fn().mockResolvedValue([]),
       onConflictDoUpdate: vi.fn().mockReturnThis(),
       onConflictDoNothing: vi.fn().mockReturnThis(),
-      then: undefined, // 避免被误认为 thenable
+      then: undefined, // avoid being mistaken for a thenable
     }
     return chain
   }
@@ -90,9 +90,9 @@ export function createMockDb(extraQuery: Record<string, any> = {}) {
 }
 
 /**
- * 在 beforeEach 中重置 DB mock 状态
- * - 重新初始化所有链式方法的 mockReturnThis
- * - 重新初始化所有 query.findFirst/findMany
+ * Reset DB mock state in beforeEach
+ * - re-initialize mockReturnThis for all chainable methods
+ * - re-initialize all query.findFirst/findMany
  */
 export function resetDb(db: any, extraQuery: Record<string, any> = {}) {
   const chainMethods = [
@@ -105,8 +105,8 @@ export function resetDb(db: any, extraQuery: Record<string, any> = {}) {
     db[m] = vi.fn().mockReturnThis()
   }
   db.returning = vi.fn().mockResolvedValue([])
-  db.then = undefined // 重置 thenable 标记（个别测试需设为函数使链式查询可 await）
-  // 重新初始化 query
+  db.then = undefined // reset thenable flag (some tests need it set to a function so chained queries are awaitable)
+  // Re-initialize query
   if (db.query) {
     const queryDefaults: Record<string, any> = {}
     for (const table of Object.keys(db.query)) {
@@ -117,8 +117,8 @@ export function resetDb(db: any, extraQuery: Record<string, any> = {}) {
 }
 
 /**
- * 安装 LMS 模块的所有 auto-import 桩到 globalThis
- * 这些是 lms 服务器端代码使用的全局函数（无显式 import）
+ * Install all LMS module auto-import stubs onto globalThis
+ * These are global functions used by LMS server-side code (no explicit import)
  */
 export function installLmsAutoImports(overrides: Record<string, any> = {}) {
   const defaults: Record<string, any> = {
@@ -155,7 +155,7 @@ export function installLmsAutoImports(overrides: Record<string, any> = {}) {
   return defaults
 }
 
-/** 移除所有 LMS auto-import（test isolation） */
+/** Remove all LMS auto-imports (test isolation) */
 export function uninstallLmsAutoImports() {
   const keys = [
     'getCourseLmsConfig', 'addChapterScore', 'addCourseScore', 'addCourseScoreMax',
@@ -170,8 +170,8 @@ export function uninstallLmsAutoImports() {
 }
 
 /**
- * 创建 mock event 对象（API endpoint handler 参数）
- * 默认空 query/body/cookies/params，可在 case 中覆盖
+ * Create a mock event object (API endpoint handler argument)
+ * Empty query/body/cookies/params by default; can be overridden per case
  */
 export function makeEvent(opts: {
   query?: Record<string, any>
@@ -190,10 +190,10 @@ export function makeEvent(opts: {
 }
 
 /**
- * 创建 mock WebSocket peer（用于 WS handler 测试）
- * - send: vi.fn() 捕获所有广播
+ * Create a mock WebSocket peer (for WS handler tests)
+ * - send: vi.fn() captures all broadcasts
  * - readyState: 1 (OPEN)
- * - 可设置 _userId / _classId / _userName 等 peer 上的属性
+ * - can set properties on peer such as _userId / _classId / _userName
  */
 export function makeMockPeer(opts: {
   userId?: number

@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 export default defineConfig({
   define: {
-    // Nuxt 编译时常量，composable 测试中视为客户端
+    // Nuxt compile-time constant; treated as client in composable tests
     "import.meta.client": "true",
   },
   plugins: [vue()],
@@ -19,14 +19,14 @@ export default defineConfig({
             "modules/*/test/api/*.{test,spec}.ts",
           ],
           environment: "node",
-          // 共享 setup：把 Nitro/Nuxt/composable auto-imports stub 暴露到 globalThis
+          // Shared setup: expose Nitro/Nuxt/composable auto-import stubs to globalThis
           setupFiles: ["./test/setup/unit-shared.ts"],
         },
       },
       {
         test: {
           name: "composables",
-          // composable 测试：stub Nuxt auto-imports，用 happy-dom 提供 DOM API
+          // Composable tests: stub Nuxt auto-imports; use happy-dom for the DOM API
           include: [
             "modules/*/test/composables/*.{test,spec}.ts",
           ],
@@ -37,17 +37,17 @@ export default defineConfig({
       {
         test: {
           name: "components",
-          // 组件测试：用 happy-dom + @vue/test-utils
+          // Component tests: use happy-dom + @vue/test-utils
           include: ["modules/*/test/components/**/*.{test,spec}.ts"],
           environment: "happy-dom",
           setupFiles: ["./test/setup/nuxt-stubs.ts"],
         },
-        // 在 project 内部添加 vue plugin 以解析 .vue 文件
+        // Add the vue plugin inside the project to resolve .vue files
         plugins: [vue()],
         resolve: {
           alias: {
-            // pretty-bytes 是 file.vue 的直接依赖，但 pnpm 未提升到顶层 node_modules；
-            // vi.mock 无法拦截 .vue 文件内 Vite import-analysis 阶段的解析，故用 alias 桩
+            // pretty-bytes is a direct dependency of file.vue, but pnpm does not hoist it to the top-level node_modules;
+            // vi.mock cannot intercept resolution during Vite's import-analysis phase inside .vue files, so use an alias stub
             "pretty-bytes": fileURLToPath(
               new URL("./test/setup/pretty-bytes-stub.ts", import.meta.url),
             ),
@@ -64,11 +64,11 @@ export default defineConfig({
             "modules/*/test/nuxt/*.{test,spec}.ts",
           ],
           environment: "node",
-          // Nuxt 启动（含 fontless 字体元数据联网）+ 浏览器启动较慢，需放宽超时
+          // Nuxt startup (incl. fontless font-metadata network calls) + browser startup is slow; relax timeouts
           hookTimeout: 600000,
           testTimeout: 120000,
-          // @nuxt/test-utils 含 import('bun:test')（仅 Bun 运行时调用），
-          // Vite transform 阶段无法解析该 built-in，需 external 让 Node 直接 require
+          // @nuxt/test-utils contains import('bun:test') (only invoked under the Bun runtime),
+          // Vite's transform phase cannot resolve this built-in, so mark it external to let Node require it directly
           server: { deps: { external: [/^@nuxt\/test-utils/] } },
         },
       },

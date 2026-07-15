@@ -15,10 +15,10 @@ export default defineNuxtConfig({
   ui: { fonts: false },
   vite: {
     server: {
-      // 允许指定域名
+      // Allow specific domains
       allowedHosts: [
         "mxlms.oldmoon.cn",
-        // 本地调试可保留
+        // Keep for local debugging
         "localhost",
         "127.0.0.1",
       ],

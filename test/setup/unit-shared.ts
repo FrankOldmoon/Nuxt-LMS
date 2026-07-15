@@ -1,7 +1,7 @@
 /**
- * 单元测试 setup：把 Nitro + Nuxt + base 模块的 stubs 暴露到 globalThis
+ * Unit test setup: expose Nitro + Nuxt + base module stubs to globalThis
  *
- * vitest.config.ts 中 unit 项目通过 setupFiles 引用此文件。
+ * Referenced by the 'unit' project in vitest.config.ts via setupFiles.
  */
 import { ref, computed, reactive, watch, watchEffect, onMounted, onBeforeUnmount, onUnmounted, onBeforeMount, nextTick, getCurrentInstance, toValue } from 'vue'
 import {

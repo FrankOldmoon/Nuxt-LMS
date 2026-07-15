@@ -1,13 +1,13 @@
 /**
  * Nuxt auto-imports + composable test stubs
  *
- * 被 vitest.config.ts 中 "composables" 项目引用。
+ * Referenced by the "composables" project in vitest.config.ts.
  *
- * 为所有 composable 测试提供：
- * 1. Nuxt auto-imports（useState / useFetch / useRoute / useI18n / $fetch / ...）
- * 2. Nitro auto-imports（createError / getQuery / getCookie / defineEventHandler / ...）
- * 3. base 模块 utils（cRequest / useAuth / useWsConnection / registerWsHandler）
- * 4. 浏览器 API 桩（通过 happy-dom 提供，但 Web Speech / WebGPU 需要手动 stub）
+ * Provides the following for all composable tests:
+ * 1. Nuxt auto-imports(useState / useFetch / useRoute / useI18n / $fetch / ...)
+ * 2. Nitro auto-imports(createError / getQuery / getCookie / defineEventHandler / ...)
+ * 3. base module utils(cRequest / useAuth / useWsConnection / registerWsHandler)
+ * 4. Browser API stubs (provided by happy-dom, but Web Speech / WebGPU need manual stubs)
  *
  * @example
  * ```ts
@@ -19,7 +19,7 @@ import { ref, computed, reactive, watch, watchEffect, onMounted, onBeforeUnmount
 
 // ===================== 1. Nuxt auto-imports =====================
 
-/** useState: 跨调用全局共享响应式状态 */
+/** useState: globally shared reactive state across calls */
 const _useStateStore = new Map<string, any>()
 export function useState<T>(key: string, init?: () => T) {
   if (!_useStateStore.has(key)) {
@@ -32,7 +32,7 @@ export function clearUseState() {
   _useStateStore.clear()
 }
 
-/** useRoute: 提供 route.params / query */
+/** useRoute: provides route.params / query */
 let _mockRoute: any = { params: {}, query: {}, path: '/', fullPath: '/' }
 export function useRoute() {
   return _mockRoute
@@ -56,7 +56,7 @@ export function setMockRouter(router: any) {
   _mockRouter = { ...router }
 }
 
-/** useNuxtApp: 提供 payload / static / ssrContext */
+/** useNuxtApp: provides payload / static / ssrContext */
 const _nuxtApp: any = {
   payload: { data: {}, state: {} },
   static: { data: {} },
@@ -71,7 +71,7 @@ export function clearNuxtAppPayload() {
   _nuxtApp.static.data = {}
 }
 
-/** useFetch: 模拟 useFetch（单层包装） */
+/** useFetch: simulate useFetch (single-layer wrapper) */
 export function useFetch(url: any, options: any = {}) {
   const data = ref<any>(options.default ? options.default() : null)
   const status = ref<'idle' | 'pending' | 'success' | 'error'>('idle')
@@ -80,11 +80,11 @@ export function useFetch(url: any, options: any = {}) {
     status.value = 'pending'
     try {
       let resp: any
-      // 优先用 _mockFetchHandler（可完整 mock 响应）
+      // prefer _mockFetchHandler (can fully mock the response)
       if (_mockFetchHandler) {
         resp = await _mockFetchHandler(toValue(url), options)
       } else if (url === '/api/auth/me' && _mockAuthUser) {
-        // 兼容旧的 _mockAuthUser 短路
+        // back-compat: old _mockAuthUser short-circuit
         resp = {
           data: {
             user: _mockAuthUser,
@@ -105,14 +105,14 @@ export function useFetch(url: any, options: any = {}) {
       status.value = 'error'
     }
   }
-  // 默认立刻执行（lazy=false）
+  // execute immediately by default (lazy=false)
   if (options.lazy !== true) {
     refresh()
   }
   return { data, status, error, refresh, pending: computed(() => status.value === 'pending') }
 }
 
-/** useAsyncData: 类似 useFetch */
+/** useAsyncData: similar to useFetch */
 export function useAsyncData(_key: string, _handler?: () => Promise<any>, options: any = {}) {
   return useFetch('', { ...options, transform: options.transform })
 }
@@ -141,7 +141,7 @@ export async function $fetch(url: any, options: any = {}): Promise<any> {
   if (_mockFetchHandler) {
     return _mockFetchHandler(toValue(url), options)
   }
-  // 默认返回 success 包裹格式
+  // return success-wrapped format by default
   return { data: null, success: true, msg: '' }
 }
 export function setMockFetchHandler(handler: (url: string, options: any) => Promise<any>) {
@@ -151,7 +151,7 @@ export function clearMockFetchHandler() {
   _mockFetchHandler = null
 }
 
-/** refreshNuxtData: 触发 useFetch 重新拉取 */
+/** refreshNuxtData: triggers useFetch to re-fetch */
 export async function refreshNuxtData(key: string) {
   if (_mockRefreshHandlers.has(key)) {
     await _mockRefreshHandlers.get(key)!()
@@ -162,11 +162,11 @@ export function registerMockRefresh(key: string, handler: () => Promise<void>) {
   _mockRefreshHandlers.set(key, handler)
 }
 
-/** useHead / useSeoMeta (空实现) */
+/** useHead / useSeoMeta (empty implementation) */
 export function useHead() {}
 export function useSeoMeta() {}
 
-/** definePageMeta (空实现) */
+/** definePageMeta (empty implementation) */
 export function definePageMeta() {}
 
 /** navigateTo */
@@ -175,7 +175,7 @@ export async function navigateTo(to: any) {
   return Promise.resolve()
 }
 
-/** useToast — Nuxt UI toast，测试中收集 add 调用便于断言 */
+/** useToast — Nuxt UI toast; collects add calls in tests for easier assertions */
 const _toastCalls: any[] = []
 export function useToast() {
   return {
@@ -187,17 +187,17 @@ export function useToast() {
 export function getToastCalls() { return _toastCalls }
 export function clearToastCalls() { _toastCalls.length = 0 }
 
-/** defineNuxtRouteMiddleware — 路由中间件定义，返回传入函数 */
+/** defineNuxtRouteMiddleware — route middleware definition; returns the passed-in function */
 export function defineNuxtRouteMiddleware(fn: (to: any, from: any) => any) {
   return fn
 }
 
-/** getRouterParam — 从 event.params 读取路由参数 */
+/** getRouterParam — read route param from event.params */
 export function getRouterParam(event: any, name: string): string | undefined {
   return event?.params?.[name]
 }
 
-/** useLayoutState — layout 共享状态（lms useChapterTask 用） */
+/** useLayoutState — layout shared state (used by lms useChapterTask) */
 let _mockLayoutState: any = { notifyCourseNavUpdate: () => {} }
 export function useLayoutState() {
   return _mockLayoutState
@@ -206,7 +206,7 @@ export function setMockLayoutState(state: any) {
   _mockLayoutState = { ..._mockLayoutState, ...state }
 }
 
-/** provide / inject — Vue 依赖注入桩（useLmsContext 用，无组件上下文时用 Map 存储） */
+/** provide / inject — Vue dependency injection stub (used by useLmsContext; uses Map storage when no component context) */
 const _provideStore = new Map<any, any>()
 export function provide(key: any, value: any) {
   _provideStore.set(key, value)
@@ -227,7 +227,7 @@ import { useRaceEditContext } from '../../modules/lms/components/ueditor/extensi
 /** formatTime — base auto-import from modules/base/utils/format.ts (pure function) */
 import { formatTime } from '../../modules/base/utils/format'
 
-/** useReadingTracker 桩 — 返回默认的 hover 追踪接口（list-item / task-item / readingBlock 用） */
+/** useReadingTracker stub — returns the default hover-tracking interface (used by list-item / task-item / readingBlock) */
 export function useReadingTracker(_blockKey: string) {
   const isHovering = ref(false)
   return {
@@ -240,12 +240,12 @@ export function useReadingTracker(_blockKey: string) {
   }
 }
 
-/** useChapterTask 桩 — 返回 null（useReadingTracker 内部调用，但已通过桩绕过） */
+/** useChapterTask stub — returns null (called internally by useReadingTracker, but bypassed via the stub) */
 export function useChapterTask() {
   return null
 }
 
-/** useUserCard 桩 — 全局 userCard 刷新触发器（任何操作完成后调用 refresh() 通知 userCard.vue） */
+/** useUserCard stub — global userCard refresh trigger (calls refresh() after any operation to notify userCard.vue) */
 let _mockUserCardRefreshTrigger = ref(0)
 let _mockUserCardRefreshCount = 0
 export function useUserCard() {
@@ -264,7 +264,7 @@ export function resetMockUserCardRefresh() {
   clearUserCardRefreshCount()
 }
 
-/** useLmsContext 桩 — 返回可配置的 courseId/chapterId computed refs */
+/** useLmsContext stub — returns configurable courseId/chapterId computed refs */
 let _mockLmsCourseId = ref(0)
 let _mockLmsChapterId = ref(0)
 export function useLmsContext() {
@@ -278,7 +278,7 @@ export function setMockLmsContext(courseId: number, chapterId: number = 0) {
   _mockLmsChapterId.value = chapterId
 }
 
-/** provideLmsContext / provideLmsCourseId — 桩（测试中 no-op） */
+/** provideLmsContext / provideLmsCourseId — stub(no-op in tests) */
 export function provideLmsContext(_courseId: any, _chapterId?: any) {}
 export function provideLmsCourseId(_courseId: any) {}
 
@@ -290,7 +290,7 @@ export function createError(opts: { statusCode?: number; statusMessage?: string;
   return err
 }
 
-/** import.meta.client / import.meta.server — 由 vitest.config.ts define 提供 */
+/** import.meta.client / import.meta.server — provided by vitest.config.ts define */
 
 // ===================== 2. Nitro auto-imports =====================
 
@@ -299,10 +299,10 @@ export function defineEventHandler(handler: (event: any) => any) {
   return handler
 }
 
-/** eventHandler — 别名（部分文件用此小写形式） */
+/** eventHandler — alias (some files use this lowercase form) */
 export const eventHandler = defineEventHandler
 
-/** defineWebSocketHandler 桩 — 透传配置对象，测试中可直接访问 cfg.message / open / close */
+/** defineWebSocketHandler stub — pass-through config object; tests can directly access cfg.message / open / close */
 export function defineWebSocketHandler(cfg: any) {
   return cfg
 }
@@ -359,7 +359,7 @@ export function getHeader(_event: any, _name: string) {
   return undefined
 }
 
-/** setCookie / deleteCookie（实际写入 event.cookies） */
+/** setCookie / deleteCookie(actually writes to event.cookies) */
 export function setCookie(event: any, name: string, value: string, _opts?: any) {
   if (!event.cookies) event.cookies = {}
   event.cookies[name] = value
@@ -368,7 +368,7 @@ export function deleteCookie(event: any, name: string, _opts?: any) {
   if (event.cookies) delete event.cookies[name]
 }
 
-/** setResponseHeader / sendStream 桩（Nitro 额外 auto-imports） */
+/** setResponseHeader / sendStream stub(extra Nitro auto-imports) */
 export function setResponseHeader(_event: any, _name: string, _value: any) {
   /* stub */
 }
@@ -376,12 +376,12 @@ export async function sendStream(_event: any, stream: any) {
   return stream
 }
 
-/** getRequestIP 桩 */
+/** getRequestIP stub */
 export function getRequestIP(_event: any, _opts?: any): string | null {
   return null
 }
 
-/** runOnMeEnrich 桩 — 跨模块扩展钩子 */
+/** runOnMeEnrich stub — cross-module extension hook */
 const _meEnrichHandlers: Array<(user: any) => Promise<any> | any> = []
 export function registerMeEnrich(handler: (user: any) => Promise<any> | any) {
   _meEnrichHandlers.push(handler)
@@ -406,7 +406,7 @@ export function clearMeEnrichHandlers() {
   _meEnrichHandlers.length = 0
 }
 
-/** runOnUserImported 桩 — 用户导入后跨模块扩展钩子（空实现，不阻塞） */
+/** runOnUserImported stub — cross-module extension hook after user import (empty impl, non-blocking) */
 export async function runOnUserImported(_inserted: any[], _rawUsers: any[]): Promise<void> {
   /* no-op stub */
 }
@@ -420,7 +420,7 @@ export function useStorage() {
   }
 }
 
-/** getSchemaTables 桩 — 返回可配置的表名列表（admin server utils/端点 auto-import） */
+/** getSchemaTables stub — returns a configurable table-name list (admin server utils / endpoint auto-import) */
 let _mockSchemaTables: string[] = ['users', 'courses', 'chapters', 'questions', 'roles', 'permissions']
 export function getSchemaTables(): string[] {
   return [..._mockSchemaTables].sort()
@@ -429,7 +429,7 @@ export function setMockSchemaTables(tables: string[]) {
   _mockSchemaTables = [...tables]
 }
 
-/** getTableMeta 桩 — 返回可配置的表元数据（admin 端点 auto-import） */
+/** getTableMeta stub — returns configurable table metadata (admin endpoint auto-import) */
 const _mockTableMetaStore: Record<string, any> = {}
 export function getTableMeta(tableName: string): any {
   return _mockTableMetaStore[tableName] || {
@@ -448,7 +448,7 @@ export function clearMockTableMeta() {
   Object.keys(_mockTableMetaStore).forEach(k => delete _mockTableMetaStore[k])
 }
 
-/** validateTable 桩 — 校验表名在 mock schema 中，否则抛 400 */
+/** validateTable stub — validates the table name exists in the mock schema, otherwise throws 400 */
 export function validateTable(tableName: string | undefined): string {
   if (!tableName || !_mockSchemaTables.includes(tableName)) {
     throw createError({ statusCode: 400, message: `无效的表名: ${tableName}` })
@@ -456,9 +456,9 @@ export function validateTable(tableName: string | undefined): string {
   return tableName
 }
 
-// ===================== 2.5. base 模块 server utils 桩 =====================
+// ===================== 2.5. base module server utils stubs =====================
 
-/** getConfig — 从内存缓存读 site config（默认 mock：返回 null，业务测试可 spy 覆盖） */
+/** getConfig — read site config from in-memory cache (default mock: returns null, business tests can spy/override) */
 let _mockConfigStore: Record<string, any> = {}
 export async function getConfig(key: string): Promise<any> {
   return _mockConfigStore[key] ?? null
@@ -473,10 +473,10 @@ export function clearMockConfigStore() {
   _mockConfigStore = {}
 }
 
-/** assignRoleToUser 桩 */
+/** assignRoleToUser stub */
 const _assignedRoles: Array<{ userId: number; roleCode: string; result: boolean }> = []
 export async function assignRoleToUser(userId: number, roleCode: string): Promise<boolean> {
-  // 默认行为：查 role 是否存在；不 mock db 时返回 true
+  // default behavior: check if the role exists; returns true when db is not mocked
   const result = true
   _assignedRoles.push({ userId, roleCode, result })
   return result
@@ -488,13 +488,13 @@ export function clearAssignedRoles() {
   _assignedRoles.length = 0
 }
 
-/** getCurrentUserId 桩（utils/auth 中如有） */
+/** getCurrentUserId stub (if present in utils/auth) */
 export function getCurrentUserId(_event: any): number | null {
   return null
 }
 
-/** addTable / updateTable / batchTable 桩 — 基础 CRUD 工具（auto-import，见 modules/base/server/utils/db.ts）
- *  测试环境不连真实 db，这里返回最小可用值让端点逻辑（如 broadcastToAll）能继续执行 */
+/** addTable / updateTable / batchTable stub — basic CRUD utilities (auto-import, see modules/base/server/utils/db.ts)
+ *  the test env does not connect to a real db; here we return minimal usable values so endpoint logic (e.g. broadcastToAll) can continue */
 export async function addTable(_tableName: string, data: Record<string, any>) {
   return [data]
 }
@@ -517,14 +517,14 @@ export async function exportTableRows(_tableName: string, _query?: any) {
   return []
 }
 
-/** cResp — 统一响应包装（mock 版本） */
+/** cResp — unified response wrapper(mock version) */
 export function cResp(data: any = null, msg: string = '', success: boolean = true) {
   return { data, msg, success }
 }
 
-/** hashPassword / verifyPassword / generateToken 桩
- *  使用 node:crypto 的 scrypt 生成与真实实现相同格式的 salt:derivedKey
- *  真实实现基于 @nuxthub/db 的依赖，动态加载可能不可用
+/** hashPassword / verifyPassword / generateToken stub
+ *  uses node:crypto scrypt to generate salt:derivedKey in the same format as the real implementation
+ *  the real implementation depends on @nuxthub/db; dynamic loading may be unavailable
  */
 import { randomBytes, scrypt as _scrypt } from 'node:crypto'
 const _SALT_LEN = 16
@@ -554,7 +554,7 @@ export function generateToken(): string {
   return randomBytes(32).toString('hex')
 }
 
-/** requireAuth / requireRole / requireAdmin / requirePermission 桩 */
+/** requireAuth / requireRole / requireAdmin / requirePermission stub */
 let _mockAuthState: { id: number; username: string; name: string; roles: string[]; permissions: string[] } | null = null
 export function setMockAuthState(state: typeof _mockAuthState) {
   _mockAuthState = state
@@ -592,15 +592,15 @@ export async function getCurrentUser(_event: any) {
   return _mockAuthState
 }
 
-/** upsertConfig / reloadConfig 桩（直接操作 _mockConfigStore） */
+/** upsertConfig / reloadConfig stub(directly operates on _mockConfigStore) */
 export async function upsertConfig(key: string, value: any) {
   _mockConfigStore[key] = value
 }
 export async function reloadConfig() {
-  // mock：无操作；真实实现会重读 db
+  // mock: no-op; the real implementation re-reads the db
 }
 
-/** broadcastToAll（WebSocket）桩 */
+/** broadcastToAll (WebSocket) stub */
 const _wsBroadcasts: any[] = []
 export function broadcastToAll(msg: any) {
   _wsBroadcasts.push(msg)
@@ -612,7 +612,7 @@ export function clearWsBroadcasts() {
   _wsBroadcasts.length = 0
 }
 
-/** sendToUser（WebSocket 推送给指定用户）桩 */
+/** sendToUser (WebSocket push to a specific user) stub */
 const _wsSentToUser: Array<{ userId: number; msg: any }> = []
 export function sendToUser(userId: number, msg: any) {
   _wsSentToUser.push({ userId, msg })
@@ -624,14 +624,14 @@ export function clearWsSentToUser() {
   _wsSentToUser.length = 0
 }
 
-/** trackPeer / untrackPeer / userPeers / allPeers 桩 */
+/** trackPeer / untrackPeer / userPeers / allPeers stubs */
 export const userPeers = new Map<number, Set<any>>()
 export const allPeers = new Set<any>()
 export function trackPeer(_userId: number, _peer: any) {}
 export function untrackPeer(_peer: any) {}
 
-/** requireCourseTeacher 桩 — admin 直接通过，其他角色需 isCourseTeacher 验证
- *  优先使用 globalThis 上的覆盖（测试可注入 mock），否则用默认实现 */
+/** requireCourseTeacher stub — admin passes directly; other roles need isCourseTeacher verification
+ *  prefer the override on globalThis (tests can inject a mock), otherwise use the default implementation */
 export async function requireCourseTeacher(_event: any, _courseId?: number) {
   if (!_mockAuthState) {
     const err: any = new Error('请先登录')
@@ -640,7 +640,7 @@ export async function requireCourseTeacher(_event: any, _courseId?: number) {
   }
   if (_mockAuthState.roles.includes('admin')) return _mockAuthState
   if (_mockAuthState.roles.includes('teacher')) {
-    // teacher 还需通过 isCourseTeacher 二次验证
+    // teacher also needs a second verification via isCourseTeacher
     const _isCourseTeacher = (globalThis as any).isCourseTeacher ?? isCourseTeacher
     if (await _isCourseTeacher(_mockAuthState.id, _courseId ?? 0)) return _mockAuthState
   }
@@ -649,16 +649,16 @@ export async function requireCourseTeacher(_event: any, _courseId?: number) {
   throw err
 }
 
-/** isCourseTeacher 桩（LMS 扩展用） */
+/** isCourseTeacher stub(for LMS extension) */
 export async function isCourseTeacher(_userId: number, _courseId: number): Promise<boolean> {
   return false
 }
 
-/** broadcastToClass / classRooms 桩（LMS 章节班级广播） */
+/** broadcastToClass / classRooms stub(LMS chapter class broadcast) */
 const _classRooms = new Map<number, Set<any>>()
 export const classRooms = _classRooms
 export function broadcastToClass(_classId: number, _msg: any) {
-  // 默认 no-op；测试可通过 _wsBroadcasts 追踪（与 broadcastToAll 一致）
+  // default no-op; tests can track via _wsBroadcasts (consistent with broadcastToAll)
   _wsBroadcasts.push({ classId: _classId, msg: _msg })
 }
 export function joinClassRoom(_classId: number, _peer: any) {
@@ -669,16 +669,16 @@ export function leaveClassRoom(_classId: number, _peer: any) {
   _classRooms.get(_classId)?.delete(_peer)
 }
 
-/** broadcastSubmitDanmaku 桩（LMS 提交后班级弹幕广播） */
+/** broadcastSubmitDanmaku stub(LMS class danmaku broadcast after submission) */
 let _mockSubmitDanmakuCalls: Array<{ args: any; ts: number }> = []
 export async function broadcastSubmitDanmaku(args: any) {
-  // 默认 no-op；测试可通过 _mockSubmitDanmakuCalls 追踪调用
+  // default no-op; tests can track calls via _mockSubmitDanmakuCalls
   _mockSubmitDanmakuCalls.push({ args, ts: Date.now() })
 }
 export function getSubmitDanmakuCalls() { return _mockSubmitDanmakuCalls }
 export function clearSubmitDanmakuCalls() { _mockSubmitDanmakuCalls = [] }
 
-/** normalizeChapterPageData 桩（lms server/utils/normalize/chapter 的默认实现） */
+/** normalizeChapterPageData stub(default implementation of lms server/utils/normalize/chapter) */
 export function normalizeChapterPageData(ch: any, course: any, userChapter?: any) {
   return {
     chapter: {
@@ -703,12 +703,12 @@ export function normalizeChapterPageData(ch: any, course: any, userChapter?: any
   }
 }
 
-/** saveContentVersion 桩 */
+/** saveContentVersion stub */
 export async function saveContentVersion(_type: string, _entityId: number, _content: any): Promise<any> {
   return { id: 1, type: _type, entityId: _entityId, content: _content, createdAt: new Date() }
 }
 
-/** listTable 桩 — 返回全表数据（无分页，courses/list 用） */
+/** listTable stub — returns all table rows (no pagination, used by courses/list) */
 let _mockListTableResult: any[] = []
 export async function listTable(_tableName: string): Promise<any[]> {
   return _mockListTableResult
@@ -717,7 +717,7 @@ export function setMockListTableResult(rows: any[]) {
   _mockListTableResult = rows
 }
 
-/** normalizeCourseDetail 桩 — 返回课程详情（含 chapters 数组） */
+/** normalizeCourseDetail stub — returns course details (including chapters array) */
 export function normalizeCourseDetail(course: any): any {
   return {
     id: course.id,
@@ -736,7 +736,7 @@ export function normalizeCourseDetail(course: any): any {
   }
 }
 
-/** getCourseMembers 桩 — 返回课程成员列表 */
+/** getCourseMembers stub — returns the course member list */
 let _mockCourseMembers: any[] = []
 export async function getCourseMembers(_courseId: number): Promise<any[]> {
   return _mockCourseMembers
@@ -745,7 +745,7 @@ export function setMockCourseMembers(members: any[]) {
   _mockCourseMembers = members
 }
 
-/** searchUsers 桩 — 按关键字搜索用户 */
+/** searchUsers stub — search users by keyword */
 let _mockSearchUsersResult: any[] = []
 export async function searchUsers(_keyword: string): Promise<any[]> {
   return _mockSearchUsersResult
@@ -754,7 +754,7 @@ export function setMockSearchUsersResult(users: any[]) {
   _mockSearchUsersResult = users
 }
 
-/** getClassUsers 桩 — 返回班级学生列表 */
+/** getClassUsers stub — returns the class student list */
 let _mockClassUsers: any[] = []
 export async function getClassUsers(_classId: number, _courseId?: number): Promise<any[]> {
   return _mockClassUsers
@@ -763,12 +763,12 @@ export function setMockClassUsers(users: any[]) {
   _mockClassUsers = users
 }
 
-/** reloadSiteConfig 桩 — 刷新 site config 缓存（no-op） */
+/** reloadSiteConfig stub — refresh site config cache (no-op) */
 export async function reloadSiteConfig(): Promise<void> {
   /* no-op stub */
 }
 
-/** LMS config auto-imports 桩 */
+/** LMS config auto-imports stubs */
 const _lmsConfigStore: Record<string, any> = {
   ai: { mode: 'api', model: 'gpt-3.5' },
   question: { submitExp: 2 },
@@ -805,8 +805,8 @@ export function clearMockLmsConfig() {
 }
 
 /**
- * 拍平存储桩（与 lmsConfig.ts 实现一致：把树形对象转换为 [{key:'lms:section.field', value}]）
- * 供 update.post.ts 在测试环境写入"拍平行"使用
+ * flatten storage stub (consistent with lmsConfig.ts: converts a tree object into [{key:'lms:section.field', value}])
+ * used by update.post.ts to write the "flattened rows" in the test environment
  */
 export function flattenTree(prefix: string, obj: any, result: Record<string, any>) {
   if (obj === null || obj === undefined) return
@@ -857,19 +857,19 @@ export function mergeConfig(defaults: any, overrides: any): any {
   }
   return result
 }
-/** 拍平为 lms:* 键值对列表 */
+/** flatten into a list of lms:* key-value pairs */
 export function buildLmsConfigPairs(obj: any): Array<{ key: string; value: any }> {
   const flat: Record<string, any> = {}
   flattenTree('', obj, flat)
   return Object.entries(flat).map(([k, v]) => ({ key: `lms:${k}`, value: v }))
 }
-/** 测试助手：返回最近一次 buildLmsConfigPairs 的调用（用于断言） */
+/** test helper: returns the most recent buildLmsConfigPairs call (for assertions) */
 let _lastLmsPairs: Array<{ key: string; value: any }> = []
 export function getLastLmsPairs() { return _lastLmsPairs }
 
-// ===================== 3. base 模块 utils 桩 =====================
+// ===================== 3. base module utils stubs =====================
 
-/** cRequest — 命令式 API 调用，自动解包 {data, success, msg} */
+/** cRequest — imperative API call; auto-unwraps {data, success, msg} */
 export async function cRequest<T = any>(url: string, options: any = {}): Promise<T> {
   const resp = await $fetch(url, options)
   if (resp && typeof resp === 'object' && 'success' in resp) {
@@ -879,7 +879,7 @@ export async function cRequest<T = any>(url: string, options: any = {}): Promise
   return resp as T
 }
 
-/** 给 cRequest 加 .use 方法（composables 测试用） — 模拟真实 cRequest.use 的 transform 解包逻辑 */
+/** add a .use method to cRequest (for composable tests) — simulates the real cRequest.use transform-unwrapping logic */
 ;(cRequest as any).use = (url: any, options: any = {}) => {
   const { transform: customTransform, ...rest } = options
   return useFetch(url, {
@@ -893,7 +893,7 @@ export async function cRequest<T = any>(url: string, options: any = {}): Promise
   })
 }
 
-/** useAuth 桩 — 完整 mock（login/register/logout 走 cRequest，便于测试断言 API 调用） */
+/** useAuth stub — full mock (login/register/logout go through cRequest, making API-call assertions easy) */
 let _mockAuthUser: any = null
 let _mockAuthRoles: any[] = []
 let _mockAuthPermissions: any[] = []
@@ -933,7 +933,7 @@ export function useAuth() {
     },
     refreshUser: async () => {},
     data,
-    // 暴露 authData 别名，与真实 useAuth 返回结构一致（供 useAuthLms 读取扩展字段）
+    // expose the authData alias, consistent with the real useAuth return shape (so useAuthLms can read extended fields)
     authData: data,
   }
 }
@@ -950,7 +950,7 @@ export function clearMockAuth() {
   _mockAuthExtra = {}
 }
 
-/** useWsConnection 桩 */
+/** useWsConnection stub */
 export function useWsConnection() {
   return {
     ws: ref(null),
@@ -965,19 +965,19 @@ export function useWsConnection() {
 }
 
 /**
- * registerWsHandler (composable 测试中可用)
- * 通过动态 import 真实实现，避免在 setup 阶段同步加载造成循环依赖
+ * registerWsHandler (composable usable in composable tests)
+ * dynamically import the real implementation to avoid circular deps from synchronous loading during the setup phase
  */
 let _wsHandlersModule: any = null
 export async function getWsCallbacksModule() {
   if (!_wsHandlersModule) {
-    // vitest 工作目录是项目根，路径用绝对路径
+    // vitest working dir is the project root, so use an absolute path
     _wsHandlersModule = await import('../../modules/base/composables/ws/callbacks')
   }
   return _wsHandlersModule
 }
 
-// 同步桥接：先占位，由 setupNuxtStubs 异步预加载
+// sync bridge: placeholder first, asynchronously preloaded by setupNuxtStubs
 const _wsHandlerStubs = new Map<string, ((data: any) => void)[]>()
 export function registerWsHandler(type: string, cb: (data: any) => void): () => void {
   let arr = _wsHandlerStubs.get(type)
@@ -1002,7 +1002,7 @@ export function clearMockWsHandlers() {
   _wsHandlerStubs.clear()
 }
 
-// ===================== 4. 浏览器 API 扩展桩 =====================
+// ===================== 4. Browser API extension stubs =====================
 
 /** Web Speech API stub */
 if (typeof (globalThis as any).speechSynthesis === 'undefined') {
@@ -1031,7 +1031,7 @@ if (typeof (globalThis as any).speechSynthesis === 'undefined') {
   }
 }
 
-/** window 桩：让 ai.ts 等访问 window.speechSynthesis 不报 ReferenceError */
+/** window stub:lets ai.ts etc. access window.speechSynthesis without a ReferenceError */
 if (typeof (globalThis as any).window === 'undefined') {
   ;(globalThis as any).window = globalThis as any
 }
@@ -1049,21 +1049,21 @@ try {
   }
 } catch { /* ignore */ }
 
-// ===================== 4b. base 模块额外 auto-import 桩 =====================
+// ===================== 4b. base module extra auto-import stubs =====================
 
-/** getConfigByPrefix — 返回指定前缀的配置键值对（与 base/server/utils/config/reload.ts 同构） */
+/** getConfigByPrefix — returns config key-value pairs for a given prefix (isomorphic with base/server/utils/config/reload.ts) */
 export async function getConfigByPrefix(prefix: string): Promise<Record<string, any>> {
   const result: Record<string, any> = {}
   for (const [key, value] of Object.entries(_mockConfigStore)) {
     if (key.startsWith(prefix)) {
-      const shortKey = key.slice(prefix.length + 1) // 去掉 "prefix:"
+      const shortKey = key.slice(prefix.length + 1) // strip the "prefix:" prefix
       result[shortKey] = value
     }
   }
   return result
 }
 
-/** sendPasswordResetEmail 桩 — 默认返回 true，测试可覆盖 */
+/** sendPasswordResetEmail stub — returns true by default; tests can override */
 let _mockSendMailResult = true
 export async function sendPasswordResetEmail(_email: string, _resetUrl: string): Promise<boolean> {
   return _mockSendMailResult
@@ -1072,7 +1072,7 @@ export function setMockSendMailResult(result: boolean) {
   _mockSendMailResult = result
 }
 
-/** checkDriveSpace 桩 — 默认空间足够 */
+/** checkDriveSpace stub — space is sufficient by default */
 let _mockDriveSpace: { ok: boolean; quota: number; used: number } = { ok: true, quota: Infinity, used: 0 }
 export async function checkDriveSpace(_user: any, _size: number): Promise<{ ok: boolean; quota: number; used: number }> {
   return _mockDriveSpace
@@ -1081,7 +1081,7 @@ export function setMockDriveSpace(space: { ok: boolean; quota: number; used: num
   _mockDriveSpace = space
 }
 
-/** getDriveQuota 桩 */
+/** getDriveQuota stub */
 let _mockDriveQuota: number = Infinity
 export async function getDriveQuota(_user: any): Promise<number> {
   return _mockDriveQuota
@@ -1090,7 +1090,7 @@ export function setMockDriveQuota(quota: number) {
   _mockDriveQuota = quota
 }
 
-/** getDriveUsed 桩 */
+/** getDriveUsed stub */
 let _mockDriveUsed: number = 0
 export async function getDriveUsed(_userId: number): Promise<number> {
   return _mockDriveUsed
@@ -1099,9 +1099,9 @@ export function setMockDriveUsed(used: number) {
   _mockDriveUsed = used
 }
 
-// ===================== 4c. admin 模块 utils 桩 =====================
+// ===================== 4c. admin module utils stubs =====================
 
-/** 表个性化覆盖注册表（与 admin/utils/tableOverride.ts 同构） */
+/** table personalization override registry (isomorphic with admin/utils/tableOverride.ts) */
 const _tableOverrideRegistry: Record<string, any> = {}
 export function registerTableOverride(table: string, override: any) {
   _tableOverrideRegistry[table] = { ..._tableOverrideRegistry[table], ...override }
@@ -1120,19 +1120,19 @@ export function useTableOverride(table: any) {
   }
 }
 
-// ===================== 5. 初始化入口 =====================
+// ===================== 5. Initialization entry =====================
 
-/** 全局 setup 入口 — composable 测试在 beforeEach 中调用 */
+/** global setup entry — called in beforeEach of composable tests */
 export function setupNuxtStubs() {
-  // 此 setup 文件已在 import 时完成所有 stub 注入；该函数仅为语义提示
+  // this setup file already injects all stubs at import time; this function is only a semantic hint
   return true
 }
 
-// ===================== 6. 暴露到 globalThis（关键）=====================
-// 源文件代码用 auto-imports（useState / useFetch / useI18n / ref / computed / ...），
-// 测试环境没有 nuxt 注入，需手动暴露到 globalThis 才能让源码正常运行
+// ===================== 6. Expose to globalThis (critical)=====================
+// source code uses auto-imports (useState / useFetch / useI18n / ref / computed / ...),
+// the test env has no nuxt injection, so they must be manually exposed to globalThis for the source to run
 const _stubsToExpose: Record<string, any> = {
-  // Vue auto-imports（composables 源码中直接用 ref / computed / watch 等）
+  // Vue auto-imports (composables use ref / computed / watch directly in source)
   ref,
   computed,
   reactive,
@@ -1159,7 +1159,7 @@ const _stubsToExpose: Record<string, any> = {
   refreshNuxtData, useHead, useSeoMeta, definePageMeta, navigateTo,
   createError,
   useToast, defineNuxtRouteMiddleware, getRouterParam, useLayoutState,
-  // Vue dependency injection auto-imports（provide/inject 桩，Map-based）
+  // Vue dependency injection auto-imports (provide/inject stubs, Map-based)
   provide,
   inject,
   // LMS context auto-imports
@@ -1275,7 +1275,7 @@ const _stubsToExpose: Record<string, any> = {
   useAuth,
   useWsConnection,
   registerWsHandler,
-  // 控制函数（测试 helper）
+  // control functions (test helpers)
   setMockRoute,
   setMockRouter,
   clearNuxtAppPayload,
@@ -1302,7 +1302,7 @@ for (const [name, value] of Object.entries(_stubsToExpose)) {
   ;(globalThis as any)[name] = value
 }
 
-/** 清理所有 stub（每个测试间调用） */
+/** clear all stubs (called between tests) */
 export function resetAllStubs() {
   clearUseState()
   clearNuxtAppPayload()
