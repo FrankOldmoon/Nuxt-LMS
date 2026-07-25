@@ -296,7 +296,7 @@ export function useContentPicker(props: ContentPickerProps, emit: ContentPickerE
         editOpen, editType, editId, editData, onEditSaved,
         editCurrent, deleteItem, deleteCurrent,
         importJson, importing, importMsg, importOk, doImport, copyPrompt,
-        currentType,
+        currentType, confirm,
     }
     provide(ContentPickerKey, ctx)
     return ctx
