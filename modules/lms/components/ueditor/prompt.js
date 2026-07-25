@@ -1,11 +1,11 @@
 /**
- * DocumentGenerateSystem Hintword。
+ * 文档生成的系统提示词。
  *
- * guide AI Generate markdown TeachingDocument：
- * - use ## level 2TitlePagination（each section controls one pagewithInside），Longruleuse ### level 3Titlesplit
- * - canInsertQuestion  true when，canDocumentMiddleembed ```question {json}``` Questionblock
- *   （syntaxand utils/markdown.ts AnalysiseditorRightshould），andwith full schema description for each question type JSON schema Description
- *   （from question/edit/prompts.js  allPrompts()）
+ * 指导 AI 生成 markdown 教学文档：
+ * - 用 ## 二级标题分页（每段控制在一页以内），过长则用 ### 三级标题拆分
+ * - canInsertQuestion 为 true 时，可在文档中嵌入 ```question {json}``` 题目块
+ *   （语法与 utils/markdown.ts 解析器对应），并附带各题型完整 JSON schema 说明
+ *   （来自 question/edit/prompts.js 的 allPrompts()）
  */
 import { allPrompts } from './extensions/nodes/vue/question/edit/prompts.js'
 

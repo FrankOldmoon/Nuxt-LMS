@@ -1,8 +1,8 @@
 /**
- * select edit component test (edit)
+ * select 编辑组件测试 (edit)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/edit/select.vue
  *
- * select.vue extracts ||answer|| answers from content, uses UInputTags to edit options
+ * select.vue 从 content 中提取 ||answer|| 答案，用 UInputTags 编辑 options
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -33,7 +33,7 @@ describe('question/edit/select.vue', () => {
       props: { form },
       global: { stubs: _globalStubs, mocks: _mocks },
     })
-    // Should extract 2 answers
+    // 应提取 2 个答案
     expect(form.answer).toEqual(['red', 'blue'])
     expect(wrapper.text()).toContain('red')
     expect(wrapper.text()).toContain('blue')

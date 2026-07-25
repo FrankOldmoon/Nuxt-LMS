@@ -1,9 +1,9 @@
 /**
- * ai/asr.vue component test
+ * ai/asr.vue 组件测试
  * @see modules/lms/components/ai/asr.vue
  *
- * Speech recognition component: language selection, continuous/intermediate result switches, start/stop buttons, recognition result area, clear/copy buttons.
- * Logic provided by useAsr() composable, imports real composable and exposes to globalThis in tests.
+ * 语音识别组件：语言选择、连续/中间结果开关、开始/停止按钮、识别结果区、清空/复制按钮。
+ * 逻辑由 useAsr() composable 提供，测试中导入真实 composable 暴露到 globalThis。
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -31,28 +31,28 @@ describe('ai/asr.vue', () => {
     const { default: Asr } = await import('../../../components/ai/asr.vue')
     const wrapper = mount(Asr, { global: _globalConfig })
     expect(wrapper.exists()).toBe(true)
-    // Language selection select
+    // 语言选择 select
     const langSelect = wrapper.find('select')
     expect(langSelect.exists()).toBe(true)
-    // Two checkboxes (continuous recognition / show intermediate results)
+    // 两个 checkbox（连续识别 / 显示中间结果）
     expect(wrapper.findAll('input[type="checkbox"]').length).toBe(2)
-    // Start recognition button
+    // 开始识别按钮
     const btns = wrapper.findAll('button')
-    expect(btns.length).toBeGreaterThanOrEqual(3) // Start + clear + copy
+    expect(btns.length).toBeGreaterThanOrEqual(3) // 开始 + 清空 + 复制
   })
 
   it('语言下拉包含 languageMap 中的语言选项', async () => {
     const { default: Asr } = await import('../../../components/ai/asr.vue')
     const wrapper = mount(Asr, { global: _globalConfig })
     const options = wrapper.find('select').findAll('option')
-    // languageMap contains at least zh-CN / en-US and other languages
+    // languageMap 至少包含 zh-CN / en-US 等多种语言
     expect(options.length).toBeGreaterThan(1)
   })
 
   it('默认状态显示"开始识别"按钮文案', async () => {
     const { default: Asr } = await import('../../../components/ai/asr.vue')
     const wrapper = mount(Asr, { global: _globalConfig })
-    // The first button is the start/stop recognition button
+    // 第一个 button 是开始/停止识别按钮
     expect(wrapper.find('button').text()).toContain('开始识别')
   })
 
@@ -66,7 +66,7 @@ describe('ai/asr.vue', () => {
     const { default: Asr } = await import('../../../components/ai/asr.vue')
     const wrapper = mount(Asr, { global: _globalConfig })
     const btns = wrapper.findAll('button')
-    // The last two buttons are clear / copy
+    // 最后两个按钮是清空 / 复制
     const clearBtn = btns[btns.length - 2]
     const copyBtn = btns[btns.length - 1]
     expect((clearBtn.element as HTMLButtonElement).disabled).toBe(true)
@@ -76,7 +76,7 @@ describe('ai/asr.vue', () => {
   it('isSupported=false 时显示不支持提示', async () => {
     const { default: Asr } = await import('../../../components/ai/asr.vue')
     const wrapper = mount(Asr, { global: _globalConfig })
-    // happy-dom has no SpeechRecognition → isSupported=false
+    // happy-dom 无 SpeechRecognition → isSupported=false
     expect(wrapper.text()).toContain('Web Speech API')
   })
 })

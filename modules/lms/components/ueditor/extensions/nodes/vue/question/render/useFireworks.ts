@@ -34,7 +34,7 @@ export function useFireworks(emit: (event: 'done', ...args: any[]) => void) {
 
     startTime = Date.now()
 
-    // one by oneitemsHairfireworkFlower
+    // 逐个发射烟花
     let count = 0
     const launch = () => {
       if (count >= 7 || Date.now() - startTime > DURATION - 800) {
@@ -84,7 +84,7 @@ export function useFireworks(emit: (event: 'done', ...args: any[]) => void) {
 
     ctx.clearRect(0, 0, w, h)
 
-    // UpdateFirearrow
+    // 更新火箭
     rockets = rockets.filter(r => {
       r.trail.push({ x: r.x, y: r.y })
       if (r.trail.length > 6) r.trail.shift()
@@ -105,7 +105,7 @@ export function useFireworks(emit: (event: 'done', ...args: any[]) => void) {
       return true
     })
 
-    // UpdateparticleSon
+    // 更新粒子
     particles = particles.filter(p => {
       p.x += p.vx
       p.y += p.vy

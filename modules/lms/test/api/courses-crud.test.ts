@@ -1,19 +1,19 @@
 /**
- * LMS Courses CRUD + grade-related endpoint test
+ * LMS Courses CRUD + 成绩相关端点测试
  * @see modules/lms/server/api/courses/*.ts
  *
- * Coverage:
- * - add.post.ts        add course (admin)
- * - list.ts            course list (public)
- * - batch.post.ts      batch operations on courses (admin)
- * - update.post.ts     update course (course teacher)
- * - show.get.ts        course details (includes teacher/student count/chapter accessibility/isPass)
- * - grades.get.ts      course grades (student sees self/teacher sees whole class)
- * - extra-score.post.ts extra score settings (teacher/admin)
- * - leaderboard.get.ts leaderboard
- * - members-search.get.ts member search
- * - number.post.ts     set student number/group
- * - numbers.get.ts     batch get student numbers
+ * 覆盖：
+ * - add.post.ts        新增课程（管理员）
+ * - list.ts            课程列表（公开）
+ * - batch.post.ts      批量操作课程（管理员）
+ * - update.post.ts     更新课程（课程教师）
+ * - show.get.ts        课程详情（含教师/学生人数/章节可访问性/isPass）
+ * - grades.get.ts      课程成绩（学生看自己/教师看全班）
+ * - extra-score.post.ts 额外分设置（教师/管理员）
+ * - leaderboard.get.ts 排行榜
+ * - members-search.get.ts 成员搜索
+ * - number.post.ts     设置学号/分组
+ * - numbers.get.ts     批量获取学号
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
@@ -177,7 +177,7 @@ describe('API: courses/update.post', () => {
       body: { id: 1, orders: [{ id: '10', label: '第一章' }, { id: 'custom-x', label: 'skip' }, { id: 'course', label: 'skip' }] },
     }))
     expect(r.success).toBe(true)
-    // chapters.update should be called (only id=10; custom-/course filtered out)
+    // chapters.update 应被调用（仅 id=10 这条；custom-/course 被过滤）
     expect(_mockDb.update).toHaveBeenCalled()
   })
 
@@ -215,7 +215,7 @@ describe('API: courses/show.get', () => {
       chapters: [{ id: 10, name: 'Ch1', isOpen: false }, { id: 11, name: 'Ch2', isOpen: true }],
     })
     ;(globalThis as any).getCourseMembers = vi.fn().mockResolvedValue([{ userId: 2, username: 't', name: 'T', isTeacher: true }])
-    // studentCount query + userChapters query: two where terminals
+    // studentCount 查询 + userChapters 查询：两次 where 终端
     let whereCall = 0
     _mockDb.where = vi.fn().mockImplementation(function () {
       whereCall++
@@ -239,7 +239,7 @@ describe('API: courses/show.get', () => {
     })
     ;(globalThis as any).getCourseMembers = vi.fn().mockResolvedValue([])
     ;(globalThis as any).isCourseTeacher = vi.fn().mockResolvedValue(false)
-    // 4 where calls: studentCount / userClasses / classChapters / userChapters
+    // 4 次 where：studentCount / userClasses / classChapters / userChapters
     let whereCall = 0
     _mockDb.where = vi.fn().mockImplementation(function () {
       whereCall++
@@ -304,7 +304,7 @@ describe('API: courses/grades.get', () => {
   it('学生只返回自己的成绩', async () => {
     setMockAuthState({ id: 5, username: 'stu', name: 'Stu', roles: ['student'], permissions: [] })
     ;(globalThis as any).isCourseTeacher = vi.fn().mockResolvedValue(false)
-    // 1st where: myGrade (terminal); 2nd where returns this for limit
+    // 第 1 次 where：myGrade（终端）；第 2 次 where 返回 this 给 limit
     let whereCall = 0
     _mockDb.where = vi.fn().mockImplementation(function (this: any) {
       whereCall++
@@ -315,7 +315,7 @@ describe('API: courses/grades.get', () => {
           records: { progress: 80 }, group: 'g1',
         }]
       }
-      return this // 2nd time returns for limit chain
+      return this // 第 2 次给 limit 链
     })
     _mockDb.limit = vi.fn().mockResolvedValue([{ gradeCriteria: { levels: [{ letter: 'A', min: 90 }] } }])
     const handler = (await import('../../server/api/courses/grades.get')).default
@@ -351,8 +351,8 @@ describe('API: courses/grades.get', () => {
     const r = await handler(makeEvent({ query: { courseId: '1', classId: '2' } }))
     expect(r.success).toBe(true)
     expect(r.data.grades).toHaveLength(2)
-    expect(r.data.grades[0].userId).toBe(3) // score 90 first
-    expect(r.data.grades[1].userId).toBe(2) // score 70 second
+    expect(r.data.grades[0].userId).toBe(3) // 90 分在前
+    expect(r.data.grades[1].userId).toBe(2) // 70 分在后
   })
 
   it('班级无学生返回空数组', async () => {
@@ -444,9 +444,9 @@ describe('API: courses/leaderboard.get', () => {
     const r = await handler(makeEvent({ query: { courseId: '1', classId: '2' } }))
     expect(r.success).toBe(true)
     expect(r.data.top10).toHaveLength(3)
-    expect(r.data.top10[0].userId).toBe(3)   // score 90 first
-    expect(r.data.top10[1].userId).toBe(4)   // score 80 second
-    expect(r.data.myRank).toBe(1)            // current user is rank 1
+    expect(r.data.top10[0].userId).toBe(3)   // 90 分第一
+    expect(r.data.top10[1].userId).toBe(4)   // 80 分第二
+    expect(r.data.myRank).toBe(1)            // 当前用户第 1 名
     expect(r.data.myInfo.score).toBe(90)
   })
 })

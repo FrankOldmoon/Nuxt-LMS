@@ -1,5 +1,5 @@
 /**
- * useSiteConfig composable tests
+ * useSiteConfig composable 测试
  * @see modules/base/composables/useSiteConfig.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -27,7 +27,7 @@ describe('composables/useSiteConfig - 派生 computed', () => {
   })
 
   it('config 已有值时返回对应字段', async () => {
-    // Simulate data pre-fetched by plugins/site-config.ts
+    // 模拟 plugins/site-config.ts 预拉取的数据
     setMockFetchHandler(async () => ({
       data: {
         siteTitle: 'My LMS',
@@ -42,8 +42,8 @@ describe('composables/useSiteConfig - 派生 computed', () => {
     }))
     const { useSiteConfig } = await import('../../composables/useSiteConfig')
     const cfg = useSiteConfig()
-    // Since useState is global, data may come from plugins (stub here won't auto-trigger)
-    // Verify type and default value handling
+    // 由于 useState 全局，data 可能来自 plugins（这里 stub 不会自动触发）
+    // 验证类型与默认值处理
     expect(cfg.siteTitle.value).toBeDefined()
     expect(typeof cfg.logo.value).toBe('string')
   })

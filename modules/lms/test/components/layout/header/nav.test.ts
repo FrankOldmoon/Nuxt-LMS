@@ -1,9 +1,9 @@
 /**
- * layout/header/nav.vue component test
+ * layout/header/nav.vue 组件测试
  * @see modules/lms/components/layout/header/nav.vue
  *
- * Top navigation: UNavigationMenu + NavEditor + course import button.
- * Uses useNav() (from ./useNav.ts), internally depends on useAuth/useHeaderNav.
+ * 顶部导航：UNavigationMenu + NavEditor + 课程导入按钮。
+ * 使用 useNav()（来自 ./useNav.ts），内部依赖 useAuth/useHeaderNav。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -69,7 +69,7 @@ describe('layout/header/nav.vue', () => {
   })
 
   it('admin 角色显示课程导入按钮', async () => {
-    // useAuth stub returns hasRole: (c) => c === 'admin'
+    // useAuth stub 返回 hasRole: (c) => c === 'admin'
     const { useAuth } = await import('../../../../../../test/setup/nuxt-stubs')
     const origUseAuth = (globalThis as any).useAuth
     ;(globalThis as any).useAuth = () => ({
@@ -80,9 +80,9 @@ describe('layout/header/nav.vue', () => {
     const { default: Nav } = await import('../../../../components/layout/header/nav.vue')
     const wrapper = mount(Nav, { global: _globalConfig })
     await flushPromises()
-    // admin can see NavEditor + import button
+    // admin 可见 NavEditor + 导入按钮
     expect(wrapper.find('.nav-editor').exists()).toBe(true)
-    // Restore
+    // 恢复
     ;(globalThis as any).useAuth = origUseAuth
   })
 

@@ -2,14 +2,14 @@ import type { ComputedRef } from 'vue'
 import type { ColumnMeta } from '../utils/types'
 
 /**
- * Foreign key label resolution
+ * 外键标签解析
  *
- * Scans FK columns in columns, fetches /api/admin/fk-options deduplicated by fkTable,
- * generates { [colJsName]: { [fkId]: label } } mapping for TableView/CShow to display foreign key values.
+ * 扫描 columns 中的 FK 列，按 fkTable 去重拉取 /api/admin/fk-options，
+ * 生成 { [colJsName]: { [fkId]: label } } 映射供 TableView/CShow 展示外键值。
  *
- * Skipped on SSR (does not forward Cookie), fetched after client hydration.
+ * SSR 跳过（不转发 Cookie），客户端 hydration 后再拉取。
  *
- * Extracted from Manager.vue, for future reuse in other table display scenarios.
+ * 提取自 Manager.vue，供未来其他表展示场景复用。
  */
 export function useFkLabels(columns: ComputedRef<ColumnMeta[]>) {
   const fkLabels = ref<Record<string, Record<number, string>>>({})

@@ -1,16 +1,16 @@
 /**
- * Goods management permission checks
+ * 商品管理权限校验
  *
- * - admin: can manage all goods (including global courseId=0)
- * - teacher/editor: can only manage goods of their own courses (courseId > 0)
- * - global goods (courseId=0): only admin can manage
+ * - admin：可管理所有商品（含全局 courseId=0）
+ * - 教师/编辑者：仅可管理自己课程的商品（courseId > 0）
+ * - 全局商品（courseId=0）：仅 admin 可管理
  */
 import { db, schema } from '@nuxthub/db'
 import { eq, and } from 'drizzle-orm'
 
 /**
- * Check whether the user can manage goods of the specified course
- * admin always returns true; courseId=0 admin only; courseId>0 requires being the course teacher/editor
+ * 检查用户是否可管理指定课程的商品
+ * admin 总是返回 true；courseId=0 仅 admin；courseId>0 需为该课程教师/编辑者
  */
 export async function canManageGoods(user: { id: number; roles: string[] }, courseId: number): Promise<boolean> {
   if (user.roles.includes('admin')) return true
@@ -26,8 +26,8 @@ export async function canManageGoods(user: { id: number; roles: string[] }, cour
 }
 
 /**
- * Check whether the user can manage an existing good
- * First query the good's courseId, then check permissions
+ * 检查用户是否可管理某个已存在商品
+ * 先查商品的 courseId，再校验权限
  */
 export async function canManageExistingGood(user: { id: number; roles: string[] }, goodId: number): Promise<boolean> {
   if (user.roles.includes('admin')) return true

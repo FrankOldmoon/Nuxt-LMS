@@ -1,10 +1,9 @@
 /**
- * Client-side initialization: listen for WS notifications of chapter access permission changes
+ * 客户端初始化：监听章节访问权限变更的 WS 通知
  *
- * When a teacher toggles a chapter's isOpen or a class_chapter's open state, the server
- * broadcasts a chapterAccessUpdate message over WS. After students receive it, if they
- * are viewing the same course, the sidebar navigation refresh is triggered
- * (clear cache + re-fetch) to update the chapter lock status in real time.
+ * 当教师切换章节 isOpen 或 class_chapter.open 后，服务端通过 WS 广播
+ * chapterAccessUpdate 消息。学生收到后，若正在查看同一课程，则触发
+ * 侧边栏导航刷新（清除缓存 + 重新请求），实时更新章节锁定状态。
  */
 export default defineNuxtPlugin(() => {
   if (!import.meta.client) return
@@ -14,7 +13,7 @@ export default defineNuxtPlugin(() => {
   const route = useRoute()
 
   onChapterAccessUpdate((data) => {
-    // Only refresh when the student is viewing the affected course, to avoid unnecessary requests for unrelated courses
+    // 仅当学生正在查看被变更的课程时才刷新，避免无关课程的不必要请求
     const match = route.path.match(/^\/course\/([^/]+)/)
     const currentCourseId = match?.[1]
     if (currentCourseId && String(data.courseId) === currentCourseId) {

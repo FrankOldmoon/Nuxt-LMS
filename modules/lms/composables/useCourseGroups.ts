@@ -9,7 +9,7 @@ type CourseGroupsCtx = ReturnType<typeof useCourseGroups>
 
 const CourseGroupsKey: InjectionKey<CourseGroupsCtx> = Symbol('CourseGroups')
 
-/** Course grouping modal: member drag-and-drop grouping + chat/file tabs */
+/** 课程分组弹窗：成员拖拽分组 + 聊天/文件标签 */
 export function useCourseGroups(props: GroupsModalProps, isOpen: Ref<boolean>) {
   const { t } = useI18n()
   const toast = useToast()
@@ -108,7 +108,7 @@ export function useCourseGroups(props: GroupsModalProps, isOpen: Ref<boolean>) {
       const data = await cRequest(`/api/courses/groups?${params}`)
       buildGroups(data)
     } catch (e) {
-      console.error('Failed to load groups', e)
+      console.error('加载分组失败', e)
     } finally {
       loading.value = false
     }

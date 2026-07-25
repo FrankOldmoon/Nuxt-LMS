@@ -1,27 +1,27 @@
 /**
- * WebSocket shared state and utility functions
+ * WebSocket 共享状态与工具函数
  *
- * base only provides user-level connection pool + generic rooms.
- * lms maintains its own class/race/group state (registers handler/cleanup via ws/registry).
+ * base 只提供用户级连接池 + 通用房间。
+ * lms 的 class/race/group 状态由 lms 自身维护（通过 ws/registry 注册 handler/cleanup）。
  */
 
-// ====================== User-level connection pool (private message push) ======================
+// ====================== 用户级连接池（私信推送） ======================
 export const userPeers = new Map<number, Set<any>>()
 
-/** All active connections (for system-level broadcasts, e.g. site-config-changed) */
+/** 所有活跃连接（用于系统级广播，如 site-config-changed） */
 const allPeers = new Set<any>()
 
-/** Register active connection (called on ws open) */
+/** 注册活跃连接（ws open 时调用） */
 export function trackPeer(peer: any) {
   allPeers.add(peer)
 }
 
-/** Unregister active connection (called on ws close) */
+/** 注销活跃连接（ws close 时调用） */
 export function untrackPeer(peer: any) {
   allPeers.delete(peer)
 }
 
-/** Push message to all online connections of the specified user */
+/** 向指定用户的所有在线连接推送消息 */
 export function sendToUser(userId: number, msg: object) {
   const peers = userPeers.get(userId)
   if (peers) {
@@ -30,29 +30,29 @@ export function sendToUser(userId: number, msg: object) {
       try {
         p.send(text)
       } catch {
-        // Connection disconnected, ignored
+        // 连接已断开，忽略
       }
     }
   }
 }
 
-/** Broadcast to all online connections (system-level messages, e.g. config changes) */
+/** 广播到所有在线连接（系统级消息，如配置变更） */
 export function broadcastToAll(msg: object) {
   const text = JSON.stringify(msg)
   for (const p of allPeers) {
     try {
       p.send(text)
     } catch {
-      // Ignored
+      // 忽略
     }
   }
 }
 
-// ====================== Generic rooms ======================
-/** roomId → set of online connections */
+// ====================== 通用房间 ======================
+/** roomId → 在线连接集合 */
 export const rooms = new Map<string, Set<any>>()
 
-/** Join room (also records peer._rooms for efficient cleanup on close) */
+/** 加入房间（同时记录 peer._rooms 以便关闭时高效清理） */
 export function joinRoom(roomId: string, peer: any) {
   if (!rooms.has(roomId)) rooms.set(roomId, new Set())
   rooms.get(roomId)!.add(peer)
@@ -60,7 +60,7 @@ export function joinRoom(roomId: string, peer: any) {
   peer._rooms.add(roomId)
 }
 
-/** Leave room */
+/** 离开房间 */
 export function leaveRoom(roomId: string, peer: any) {
   const room = rooms.get(roomId)
   if (!room) return
@@ -69,7 +69,7 @@ export function leaveRoom(roomId: string, peer: any) {
   if (peer._rooms) peer._rooms.delete(roomId)
 }
 
-/** Broadcast to room */
+/** 广播到房间 */
 export function broadcastToRoom(roomId: string, msg: string) {
   const room = rooms.get(roomId)
   if (!room) return
@@ -77,12 +77,12 @@ export function broadcastToRoom(roomId: string, msg: string) {
     try {
       p.send(msg)
     } catch {
-      // Ignored
+      // 忽略
     }
   }
 }
 
-/** Clean up all rooms a peer is in (called on connection close) */
+/** 清理某 peer 所在的所有房间（连接关闭时调用） */
 export function cleanupPeerRooms(peer: any) {
   const joined = peer._rooms as Set<string> | undefined
   if (!joined) return

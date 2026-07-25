@@ -1,8 +1,8 @@
 /**
- * course/groupChat.vue component test
+ * course/groupChat.vue 组件测试
  * @see modules/lms/components/course/groupChat.vue
  *
- * Group chat: message list + input area
+ * 群聊：消息列表 + 输入区
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'

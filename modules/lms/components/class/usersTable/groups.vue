@@ -29,7 +29,7 @@
       </template>
     </UTable>
 
-    <!-- GroupScorebar chart -->
+    <!-- 小组得分柱状图 -->
     <ClientOnly v-if="showChart() && groupTableRows.length">
       <div class="mt-4">
         <Chart :option="groupChartOption" height="320" />

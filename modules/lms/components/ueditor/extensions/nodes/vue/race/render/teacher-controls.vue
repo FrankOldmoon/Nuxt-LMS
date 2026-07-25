@@ -1,5 +1,5 @@
 <template>
-    <!-- ====== TeachercontrolButton（onlyTeacher，QuestionUpside） ====== -->
+    <!-- ====== 教师控制按钮（仅教师，题目上方） ====== -->
     <div class="flex items-center justify-between mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded">
         <UButton color="error" variant="outline" size="sm" icon="i-lucide-flag"
             :label="t('race.end')" @click="endRace" />

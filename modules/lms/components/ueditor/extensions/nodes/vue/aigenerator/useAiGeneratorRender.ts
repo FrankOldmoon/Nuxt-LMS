@@ -32,7 +32,7 @@ export function useAiGeneratorRender(props: AiGeneratorRenderProps) {
         return {}
     })
 
-    // question typeTag（useinTopShow）
+    // 题型标签（用于顶部显示）
     const typeLabel = computed(() => ({
         single: t('question.typeSingle'),
         judge: t('question.typeJudge'),
@@ -45,24 +45,24 @@ export function useAiGeneratorRender(props: AiGeneratorRenderProps) {
         match: t('question.typeMatch'),
     }))
 
-    // ====================== Status ======================
+    // ====================== 状态 ======================
     const questions = ref<any[]>([])
     const currentIndex = ref(0)
     const generating = ref(false)
     const genError = ref('')
-    // YesNoalreadyClick Start（notClickFrontnoAutogenerate question）
+    // 是否已点击 Start（未点击前不自动生题）
     const started = ref(false)
-    const renderRef = ref<any>(null) // QuestionRender Component reference
+    const renderRef = ref<any>(null) // QuestionRender 组件引用
 
-    // preGenerate promise（nonResponsetype，avoidTrigger watch）
+    // 预生成 promise（非响应式，避免触发 watch）
     let nextPromise: Promise<any> | null = null
 
     const currentQuestion = computed(() => questions.value[currentIndex.value] || null)
 
-    // ====================== LLM generate question ======================
+    // ====================== LLM 出题 ======================
 
     /**
-     * Build system hintword：inject each question type prompt + Currentquestion type requirements
+     * 构建系统提示词：注入各题型 prompt + 当前题型要求
      */
     function buildSystemPrompt() {
         const type = config.value.questionType || 'single'
@@ -82,7 +82,7 @@ Current requirement:
     }
 
     /**
-     * Call /api/aichat/chat GenerateoneQuestion（SSE streaming），ReturnAnalysisBack question Object
+     * 调用 /api/aichat/chat 生成一道题目（SSE 流式），返回解析后的 question 对象
      */
     async function generateQuestion() {
         const cfg = config.value
@@ -93,7 +93,7 @@ Current requirement:
 
         const messages = [
             { role: 'system', content: buildSystemPrompt() },
-            { role: 'user', content: `pleaseGenerateone${typeLabel.value[type] || type}Question。${refText ? `referenceText：\n${refText}` : 'pleaselinesSelectrelativeOffknowledgePointgenerate question。'}` },
+            { role: 'user', content: `请生成一道${typeLabel.value[type] || type}题目。${refText ? `参考文本：\n${refText}` : '请自行选择相关知识点出题。'}` },
         ]
 
         const response = await fetch('/api/aichat/chat', {
@@ -102,9 +102,9 @@ Current requirement:
             body: JSON.stringify({ messages, model, thinking }),
         })
 
-        // non-streamingResponse = Error（cResp Return JSON）
-        const content type = response.headers.get('Content-Type') || ''
-        if (!content type.includes('text/event-stream')) {
+        // 非流式响应 = 错误（cResp 返回 JSON）
+        const contentType = response.headers.get('Content-Type') || ''
+        if (!contentType.includes('text/event-stream')) {
             let msg = t('ueditor.aigeneratorFailed')
             try {
                 const data = await response.json()
@@ -113,7 +113,7 @@ Current requirement:
             throw new Error(msg)
         }
 
-        // Analysis SSE stream，concatenate complete content
+        // 解析 SSE 流，拼接完整 content
         const reader = response.body.getReader()
         const decoder = new TextDecoder()
         let buffer = ''
@@ -142,24 +142,24 @@ Current requirement:
     }
 
     /**
-     * Analysis LLM Return JSON Question，allowWrongHandle（go to markdown mark、extract JSON、completeField）
+     * 解析 LLM 返回的 JSON 题目，容错处理（去 markdown 标记、提取 JSON、补全字段）
      */
     function parseQuestionJson(text: string, expectedType: string) {
         let cleaned = text.trim()
-        // remove markdown Code Blockmark
+        // 去除 markdown 代码块标记
         if (cleaned.startsWith('```')) {
             cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?\s*```\s*$/, '')
         }
-        // extractFirstitems { tomostBackoneitems } betweenContent
+        // 提取第一个 { 到最后一个 } 之间的内容
         const start = cleaned.indexOf('{')
         const end = cleaned.lastIndexOf('}')
         if (start !== -1 && end !== -1 && end > start) {
             cleaned = cleaned.slice(start, end + 1)
         }
         const q = JSON.parse(cleaned)
-        // force question typeConfiguration question type
+        // 强制题型为配置的题型
         q.type = expectedType
-        // completeField
+        // 补全字段
         q.record = []
         q.correct_rate = 0
         q.point = q.point || config.value.point || 1
@@ -171,7 +171,7 @@ Current requirement:
     }
 
     /**
-     * ensure nextPromise Exist（BackpreloadGenerateNext Question），Returnthe promise
+     * 确保 nextPromise 存在（后台预生成下一题），返回该 promise
      */
     function ensureNextQuestion() {
         if (!nextPromise) {
@@ -184,7 +184,7 @@ Current requirement:
     }
 
     /**
-     * GenerateoneNewquestionandAppendto questions，Switch currentIndex，andpreGenerateNext Question
+     * 生成一道新题并追加到 questions，切换 currentIndex，并预生成下一题
      */
     async function startGeneration() {
         generating.value = true
@@ -196,7 +196,7 @@ Current requirement:
             q.isCorrect = false
             questions.value.push(q)
             currentIndex.value = questions.value.length - 1
-            // preGenerateNext Question（fire and forget）
+            // 预生成下一题（fire and forget）
             ensureNextQuestion()
         } catch (err: any) {
             genError.value = err.message || t('ueditor.aigeneratorFailed')
@@ -207,7 +207,7 @@ Current requirement:
     }
 
     /**
-     * SwitchtoNext Question：alreadyHasthen directlySwitch，ElseGenerateNewquestion
+     * 切换到下一题：已有则直接切换，否则生成新题
      */
     async function goNext() {
         if (currentIndex.value < questions.value.length - 1) {
@@ -218,7 +218,7 @@ Current requirement:
     }
 
     /**
-     * SwitchtoPrevious Question
+     * 切换到上一题
      */
     function goPrev() {
         if (currentIndex.value > 0) {
@@ -227,7 +227,7 @@ Current requirement:
     }
 
     /**
-     * RegenerateCurrentquestion（Replace）
+     * 重新生成当前题（替换）
      */
     async function regenerate() {
         if (generating.value) return
@@ -237,7 +237,7 @@ Current requirement:
             const q = await generateQuestion()
             q.submitted = false
             q.isCorrect = false
-            // ReplaceCurrentquestion
+            // 替换当前题
             questions.value[currentIndex.value] = q
         } catch (err: any) {
             genError.value = err.message || t('ueditor.aigeneratorFailed')
@@ -247,7 +247,7 @@ Current requirement:
     }
 
     /**
-     * Retry（outWrongwhen）
+     * 重试（出错时）
      */
     async function retry() {
         genError.value = ''
@@ -258,10 +258,10 @@ Current requirement:
         }
     }
 
-    // ====================== QuestionRender SubmitCallback ======================
+    // ====================== QuestionRender 提交回调 ======================
 
     /**
-     * QuestionRender SubmittedCallback：RecordsPoints + UpdateQuestion Status
+     * QuestionRender 提交完成回调：记录积分 + 更新题目状态
      */
     async function onSubmitted({ isCorrect }: { isCorrect: boolean; questionId?: number }) {
         if (!currentQuestion.value) return
@@ -269,15 +269,15 @@ Current requirement:
         const qData = currentQuestion.value
         const rate = computeCorrectRate(qData)
 
-        // store each questionStatus（SwitchwhenResume）
+        // 存储每题状态（切换时恢复）
         qData.submitted = true
         qData.isCorrect = isCorrect
         qData.correct_rate = rate
 
-        // UpreportChapterTaskCompleteStatus（makeuse index as cid avoid conflicts）
+        // 上报章节任务完成状态（使用 index 作为 cid 避免冲突）
         chapterTask?.reportNodeDone('aigenerator', currentIndex.value + 1, isCorrect)
 
-        // RecordsPointsto user_chapter / user_courses（no records user_question）
+        // 记录积分到 user_chapter / user_courses（不记录 user_question）
         try {
             await cRequest('/api/aichat/award', {
                 method: 'POST',
@@ -290,14 +290,14 @@ Current requirement:
             })
             useUserCard().refresh()
         } catch {
-            // silentIgnore（Network Error）
+            // 静默忽略（网络错误）
         }
     }
 
-    // ====================== Start Trigger ======================
+    // ====================== Start 触发 ======================
 
     /**
-     * UserClick Start BackStartgenerate question（Firsttimes/RestartallCallthisFunction）
+     * 用户点击 Start 后开始生题（首次/重新开始均调用此函数）
      */
     async function onStart() {
         if (!isLoggedIn.value) {
@@ -309,17 +309,17 @@ Current requirement:
         await startGeneration()
     }
 
-    // ====================== AutoGenerateFirstquestion ======================
-    // alreadyinstead：mustmustUserClick Start Buttononlygenerate question，nothen onMounted AutoTrigger
+    // ====================== 自动生成首题 ======================
+    // 已改为：必须用户点击 Start 按钮才生题，不再 onMounted 自动触发
     onMounted(() => {
         if (!import.meta.client) return
-        // preservecanextensionPoint：futurecanthischeckChapterTask/CacheResume
+        // 保留可扩展点：未来可在此检查章节任务/缓存恢复
     })
 
     const ctx = {
         t, typeLabel, currentQuestion, questions, currentIndex, generating,
         genError, started, isLoggedIn, renderRef,
-        onStart, goPrev, goNext, regenerate, retry, on submitted,
+        onStart, goPrev, goNext, regenerate, retry, onSubmitted,
     }
     provide(AiGeneratorRenderKey, ctx)
     return ctx

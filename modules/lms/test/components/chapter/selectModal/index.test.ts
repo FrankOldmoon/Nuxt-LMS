@@ -1,9 +1,9 @@
 /**
- * chapter/selectModal/index.vue component test
+ * chapter/selectModal/index.vue 组件测试
  * @see modules/lms/components/chapter/selectModal/index.vue
  *
- * Student selection modal: select all/invert/random pick + score adjustment buttons.
- * Depends on useChapterSelect(), stubs the composable in tests.
+ * 学生选择弹窗：全选/反选/随机抽取 + 加减分按钮。
+ * 依赖 useChapterSelect()，测试中 stub 该 composable。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -163,7 +163,7 @@ describe('chapter/selectModal/index.vue', () => {
       props: { open: true, courseId: 1, classId: 1 },
       global: _globalConfig,
     })
-    // 10 score-btns (+1..+5, -1..-5)
+    // 10 个 score-btn（+1..+5, -1..-5）
     expect(wrapper.findAll('.score-btn').length).toBe(10)
   })
 })

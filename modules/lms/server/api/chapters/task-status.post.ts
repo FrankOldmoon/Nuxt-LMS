@@ -3,18 +3,18 @@ import { eq, and, inArray, sql } from "drizzle-orm"
 
 
 /**
- * Persist the current user's heading task completion status for a chapter
+ * 持久化当前用户在某章节的 heading 任务完成状态
  * body: { chapter_id, task_status: { [headingId]: boolean }, is_pass: boolean }
  *
- * The client is responsible for calculating the completion status of each heading (hover reading for 3s + interactive component all answered correctly),
- * and only upsert persistence is done here; is_pass is calculated by the client based on the completion of all headings.
+ * 客户端负责计算每个 heading 的完成状态（hover 阅读停留 3s + 互动组件提交全部答对），
+ * 这里仅做 upsert 持久化；is_pass 由客户端根据全部 heading 完成情况计算。
  *
- * When a heading changes from incomplete to completed, reward chapter.headingExp exp + chapter.headingCoin coin +
- * chapter.headingScore course score (counted into userCourses.marksScore, participates in total score calculation).
- * When is_pass changes from false to true, trigger medal check.
+ * 当某个 heading 从未完成变为完成时，奖励 chapter.headingExp 经验 + chapter.headingCoin 金币 +
+ * chapter.headingScore 课程分（计入 userCourses.marksScore，参与总分计算）。
+ * 当 is_pass 从 false 变为 true 时，触发奖章检查。
  *
- * When is_pass status changes, also update user_courses.records.progress
- * (pass ratio of all chapters in the course = number of passed chapters / total chapters in the course).
+ * 当 is_pass 状态发生变化时，同步更新 user_courses.records.progress
+ * （整个课程所有章节的通过比 = 已通过章节数 / 课程总章节数）。
  */
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
@@ -22,7 +22,7 @@ export default eventHandler(async (event) => {
   const body = await readBody(event)
   const chapterId = Number(body.chapter_id)
   if (!chapterId) {
-    return cResp(null, 'Missing chapter_id parameter', false)
+    return cResp(null, '缺少 chapter_id 参数', false)
   }
 
   const taskStatus = (body.task_status && typeof body.task_status === 'object')
@@ -43,7 +43,7 @@ export default eventHandler(async (event) => {
       ? existing.taskStatus as Record<string, boolean>
       : {}
 
-    // Find newly completed headings (old status not true -> new status true)
+    // 找出新完成的 heading（旧状态非 true → 新状态 true）
     const newHeadingIds = Object.keys(taskStatus).filter(
       (key) => taskStatus[key] === true && !oldTaskStatus[key],
     )
@@ -62,7 +62,7 @@ export default eventHandler(async (event) => {
       })
     }
 
-    // Load courseId (needed for both heading rewards and is_pass logic)
+    // 加载 courseId（heading 奖励和 is_pass 逻辑都需要）
     const chapter = await db
       .select({ courseId: schema.chapters.courseId })
       .from(schema.chapters)
@@ -70,7 +70,7 @@ export default eventHandler(async (event) => {
       .limit(1)
     const courseId = chapter[0]?.courseId || 0
 
-    // Heading completion reward: grant headingExp + headingCoin + headingScore for each newly completed heading
+    // heading 完成奖励：每个新完成的 heading 发放 headingExp + headingCoin + headingScore
     if (courseId && newHeadingIds.length > 0) {
       const config = await getCourseLmsConfig(courseId)
       const headingExp = Number(config?.chapter?.headingExp) || 0
@@ -84,7 +84,7 @@ export default eventHandler(async (event) => {
       }
     }
 
-    // When chapter pass status changes, update the course pass ratio and check medals
+    // 章节通过状态变化时，更新课程通过比并检查奖章
     if (isPass !== wasPass && courseId) {
       const tasks: Promise<unknown>[] = [
         updateCourseProgress(user.id, courseId),
@@ -97,19 +97,19 @@ export default eventHandler(async (event) => {
 
     return cResp({ isPass, newMedals, gainedExp, gainedCoin })
   } catch (error: any) {
-    // drizzle's DrizzleQueryError hides the real PG error in error.cause
-    const pgError = error?.cause?.message || error?.message || 'Failed to save'
-    console.error('Failed to save chapter task status:', pgError, error?.cause || error)
+    // drizzle 的 DrizzleQueryError 把真正的 PG 错误藏在 error.cause 里
+    const pgError = error?.cause?.message || error?.message || '保存失败'
+    console.error('保存章节任务状态失败:', pgError, error?.cause || error)
     return cResp(null, pgError, false)
   }
 })
 
 /**
- * Update the user's chapter pass ratio for a course, stored in user_courses.records.progress
- * progress = number of passed chapters / total chapters in the course x 100 (percentage, 0~100)
+ * 更新用户在某课程的章节通过比，存入 user_courses.records.progress
+ * progress = 已通过章节数 / 课程总章节数 × 100（百分比，0~100）
  */
 async function updateCourseProgress(userId: number, courseId: number) {
-  // All chapter ids under the course
+  // 课程下所有章节 id
   const courseChapters = await db
     .select({ id: schema.chapters.id })
     .from(schema.chapters)
@@ -118,7 +118,7 @@ async function updateCourseProgress(userId: number, courseId: number) {
   if (total === 0) return
   const chapterIds = courseChapters.map(c => c.id)
 
-  // Number of chapters the user has passed
+  // 用户已通过的章节数
   const passed = await db
     .select({ chapterId: schema.userChapters.chapterId })
     .from(schema.userChapters)
@@ -129,7 +129,7 @@ async function updateCourseProgress(userId: number, courseId: number) {
     ))
   const progress = Math.round((passed.length / total) * 100)
 
-  // upsert to user_courses.records.progress (jsonb merge, does not overwrite other keys)
+  // upsert 到 user_courses.records.progress（jsonb 合并，不覆盖其它 key）
   await db.insert(schema.userCourses)
     .values({
       userId,

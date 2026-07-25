@@ -1,11 +1,11 @@
 import { db, schema } from '@nuxthub/db'
 import { eq, and } from 'drizzle-orm'
 
-/** Get the current user's coin balance for the specified course */
+/** 获取当前用户在指定课程的 coin 余额 */
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
   const courseId = Number(getQuery(event).courseId) || 0
-  if (!courseId) return cResp(null, 'Missing courseId parameter', false)
+  if (!courseId) return cResp(null, '缺少 courseId 参数', false)
 
   const rows = await db
     .select({ coin: schema.userCourses.coin })

@@ -1,16 +1,16 @@
 /**
- * Question submission
+ * 题目提交
  * POST /api/questions/submit
  * body: { course_id, chapter_id?, question_cid, user_answer, correct_rate, point }
  *
- * Anti-abuse strategy (see utils/submit/questions.ts for details):
- *  - Only the first submission (regardless of correctness) gives base exp
- *  - First correct answer additionally gives correctBonusExp + firstCorrectBonusExp
- *  - Only the "first correct" submission counts toward the questionScore increment
- *  - After exceeding maxSubmitCount, gainedExp=0
+ * 防刷策略（详见 utils/submit/questions.ts）：
+ *  - 仅首次提交（无论对错）给基础经验
+ *  - 首次答对额外给 correctBonusExp + firstCorrectBonusExp
+ *  - 仅"首次作对"那一次计入 questionScore 增量
+ *  - 超过 maxSubmitCount 后 gainedExp=0
  *
- * Note: addChapterScore / addCourseScore / checkAndAwardMedals / getCourseLmsConfig are introduced via Nuxt auto-import
- *       (no explicit import), so tests can inject mocks via globalThis.
+ * 注：addChapterScore / addCourseScore / checkAndAwardMedals / getCourseLmsConfig 通过 Nuxt auto-import 引入
+ *     （不显式 import），让测试可通过 globalThis 注入 mock。
  */
 import { parseSubmitContext } from '../../utils/submit/context'
 import { notifyCourseProgress } from '../../utils/submit/progress'
@@ -18,21 +18,21 @@ import { withSubmitHandler } from '../../utils/submit/handler'
 import { upsertUserQuestion } from '../../utils/submit/questions/upsert'
 import { calcQuestionGainedExp, calcQuestionGainedCoin } from '../../utils/submit/questions/calc'
 
-export default withSubmitHandler('Failed to submit question', async (event) => {
+export default withSubmitHandler('提交题目失败', async (event) => {
   const ctx = await parseSubmitContext(event, {
     cidField: 'question_cid',
     sectionKey: 'question',
   })
   const { user, courseId, cid: questionCid, section: qConfig, body } = ctx
 
-  // Compatible with chapter_id (used to update userChapters.score)
+  // 兼容 chapter_id（用于更新 userChapters.score）
   const chapterId = Number(body.chapter_id) || 0
   const totalPoint = Number(body.point) || 0
   const rate = Number(body.correct_rate) || 0
   const isCorrect = rate > 0
   const score = Math.round(rate * totalPoint * 100) / 100
 
-  // 1. Write userQuestions (anti-abuse is handled inside upsertUserQuestion)
+  // 1. 写 userQuestions（防刷由 upsertUserQuestion 内部处理）
   const { existing, newSubmitCount, scoreDelta } = await upsertUserQuestion({
     userId: user.id,
     courseId,
@@ -45,7 +45,7 @@ export default withSubmitHandler('Failed to submit question', async (event) => {
     trackSubmitCount: true,
   })
 
-  // 2. Calculate exp + coin
+  // 2. 计算经验值 + 金币
   const gainedExp = calcQuestionGainedExp({
     qConfig,
     isCorrect,
@@ -59,7 +59,7 @@ export default withSubmitHandler('Failed to submit question', async (event) => {
     newSubmitCount,
   })
 
-  // 3. Update userChapters.score (only added on first correct) + userCourses.questionScore
+  // 3. 更新 userChapters.score（仅首次作对时加）+ userCourses.questionScore
   if (scoreDelta > 0 && chapterId) {
     await addChapterScore(user.id, chapterId, scoreDelta)
   }
@@ -72,7 +72,7 @@ export default withSubmitHandler('Failed to submit question', async (event) => {
     coin: gainedCoin,
   })
 
-  // 4. Broadcast danmaku to the class room (fire-and-forget, does not affect response)
+  // 4. 向班级房间广播 danmaku（fire-and-forget，不影响响应）
   void broadcastSubmitDanmaku({
     userId: user.id,
     kind: 'question',

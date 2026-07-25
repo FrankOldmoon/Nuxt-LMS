@@ -1,5 +1,5 @@
 /**
- * useLmsContext composable test
+ * useLmsContext composable 测试
  * @see modules/lms/composables/useLmsContext.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -17,7 +17,7 @@ beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
   clearProvideStore()
-  // provide/inject stubs are not exposed to globalThis in nuxt-stubs, manually exposed here
+  // provide/inject 桩未在 nuxt-stubs 中暴露到 globalThis，这里手动暴露
   ;(globalThis as any).provide = stubProvide
   ;(globalThis as any).inject = stubInject
 })
@@ -44,7 +44,7 @@ describe('composables/useLmsContext', () => {
     const cid = ref('99')
     const chid = ref('5')
     provideLmsContext(cid, chid)
-    // provide writes to global store, useLmsContext internally reads via inject
+    // provide 写入全局 store，useLmsContext 内部 inject 读取
     const { courseId, chapterId } = useLmsContext()
     expect(courseId.value).toBe(99)
     expect(chapterId.value).toBe(5)

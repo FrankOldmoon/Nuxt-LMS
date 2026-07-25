@@ -1,5 +1,5 @@
 /**
- * composables/ws/callbacks tests
+ * composables/ws/callbacks 测试
  * @see modules/base/composables/ws/callbacks.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'

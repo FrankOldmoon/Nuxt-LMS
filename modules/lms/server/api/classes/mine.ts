@@ -2,16 +2,16 @@ import { db, schema } from '@nuxthub/db'
 import { eq, and, isNull } from 'drizzle-orm'
 
 /**
- * Return the classes the current user can choose (student view)
- * = users.classId primary class ∪ userClasses associated classes (excluding deleted, deduped by id)
+ * 返回当前用户可选择的班级（学生视角）
+ * = users.classId 主班级 ∪ userClasses 关联班级（排除已删除，按 id 去重）
  *
- * Difference from list.ts: list.ts returns only is_teacher=true classes for non-admins (for management);
- * this endpoint targets student class selection and returns all classes they are a member of + the primary class.
+ * 与 list.ts 区别：list.ts 对非 admin 只返回 is_teacher=true 的班级（供管理），
+ * 此端点面向学生选班，返回其作为成员的所有班级 + 主班级。
  */
 export default eventHandler(async (event) => {
   const authUser = await requireAuth(event)
 
-  // requireAuth's AuthUser doesn't include classId, so query separately
+  // requireAuth 返回的 AuthUser 不含 classId，单独查询
   const userRows = await db
     .select({ classId: schema.users.classId })
     .from(schema.users)
@@ -19,7 +19,7 @@ export default eventHandler(async (event) => {
     .limit(1)
   const mainClassId = userRows[0]?.classId ?? null
 
-  // All classes associated via userClasses (excluding deleted)
+  // userClasses 关联的所有班级（不含已删除）
   const associated = await db
     .select({ id: schema.classes.id, name: schema.classes.name, code: schema.classes.code })
     .from(schema.userClasses)
@@ -32,7 +32,7 @@ export default eventHandler(async (event) => {
 
   let result = [...associated]
 
-  // If the primary class is not in the associated list, query it separately
+  // 主班级不在关联列表中时单独查询
   if (mainClassId && !associated.some((c) => c.id === mainClassId)) {
     const mainClass = await db
       .select({ id: schema.classes.id, name: schema.classes.name, code: schema.classes.code })
@@ -42,7 +42,7 @@ export default eventHandler(async (event) => {
     if (mainClass[0]) result = [mainClass[0], ...result]
   }
 
-  // Dedupe by id
+  // 按 id 去重
   const seen = new Set<number>()
   const deduped = result.filter((c) => {
     if (seen.has(c.id)) return false

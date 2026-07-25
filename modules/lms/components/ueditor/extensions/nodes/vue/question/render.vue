@@ -3,24 +3,24 @@
         :class="containerBorderClass"
         :data-question-id="questionId"
         @mouseenter.once="onHover">
-        <!-- answerRightsmokeFlowereffect -->
+        <!-- 答对烟花效果 -->
         <Fireworks v-if="showFireworks" @done="showFireworks = false" />
-        <!-- Loading -->
+        <!-- 加载中 -->
         <div v-if="pending" class="flex items-center justify-center py-6 text-gray-400">
             <span>{{ t('question.loading') }}</span>
         </div>
-        <!-- QuestionNot Found -->
+        <!-- 题目未找到 -->
         <div v-else-if="!question" class="text-center py-6 text-gray-400">
             {{ t('question.notFound') }} (cid: {{ questionId }})
         </div>
         <template v-else>
-            <!-- Top-right cornerEdit Button（onlyTeacherVisible） -->
+            <!-- 右上角编辑按钮（仅教师可见） -->
             <div v-if="isTeacher" class="absolute top-2 right-2 flex items-center gap-1 z-10">
                 <UButton icon="i-heroicons-pencil-square" variant="ghost" size="2xs"
                     class="opacity-50 hover:opacity-100 transition-opacity"
                     @click="editOpen = true" />
             </div>
-            <!-- QuestionTitle -->
+            <!-- 题目标题 -->
             <div class="flex items-center gap-3 mb-3 pr-6">
                 <span class="px-2 py-0.5 bg-blue-50 dark:bg-blue-800 text-blue-600 dark:text-blue-300 rounded text-xs font-medium">
                     {{ typeLabel[question.type] }}
@@ -34,21 +34,21 @@
                     <span class="text-xs text-gray-400 font-mono">{{ scoreDisplay }}</span>
                 </div>
             </div>
-            <!-- Question Content（html/composite question type by ComponentInsideHandle） -->
+            <!-- 题目内容（html/composite 题型由组件内部处理） -->
             <div v-if="question?.type !== 'html' && question?.type !== 'composite'" class="prose prose-sm dark:prose-invert max-w-none">
                 <ueditorRender :json="question.content" />
             </div>
-            <!-- question type specificRender -->
+            <!-- 题型特定渲染 -->
             <component v-if="renderComponent" ref="renderRef" :is="renderComponent" :question="question"
                 :question-id="questionId" />
         </template>
 
-        <!-- Submit/Reset + result + TeacherAnswer -->
+        <!-- 提交/重置 + 结果 + 教师答案 -->
         <QuestionRenderFooter />
 
-        <!-- Edit Modal -->
+        <!-- 编辑弹窗 -->
         <QuestionEdit v-model="editOpen" :question-id="questionId" :question="question" :course-id="effectiveCourseId" @saved="onSaved" />
-        <!-- RecordsModal（onlyTeacher） -->
+        <!-- 记录弹窗（仅教师） -->
         <LmsRecordsModalQuestion v-if="isTeacher" v-model="recordsOpen"
             :course-id="effectiveCourseId" :cid="questionId" :question="question" />
     </div>

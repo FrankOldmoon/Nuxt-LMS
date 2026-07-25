@@ -1,12 +1,12 @@
 /**
- * configForm course editor config form test
+ * configForm 课程编辑器配置表单 测试
  * @see modules/lms/components/course/editor/configForm.vue
  *
- * Verify:
- * - top-level course.config no longer stores fields already in lmsConfig (showDanmaku etc.)
- * - courseSwitches initialization order: course-level lmsConfig.course > global lms_config.course > hardcoded default
- * - lmsConfig initialization: deep merge of global lms_config + cfg.lmsConfig
- * - buildConfig only outputs icon/color/level/coverImg/extra/lmsConfig
+ * 验证：
+ * - 顶层 course.config 不再存 lmsConfig 中已存在的字段（showDanmaku 等）
+ * - courseSwitches 初始化顺序：课程级 lmsConfig.course > 全局 lms_config.course > 硬编码默认
+ * - lmsConfig 初始化：全局 lms_config + cfg.lmsConfig 深合并
+ * - buildConfig 只输出 icon/color/level/coverImg/extra/lmsConfig
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import {
@@ -27,8 +27,8 @@ beforeEach(() => {
 })
 
 /**
- * Consistent with deepMerge implementation in configForm.vue (for testing, does not depend on .vue compilation)
- * Deep merge: keys present in target (defaults) take priority over source (overrides)
+ * 与 configForm.vue 中的 deepMerge 实现保持一致（用于测试，不依赖 .vue 编译）
+ * 深合并：target（defaults）中存在的 key 优先于 source（overrides）
  */
 function deepMerge(defaults: any, overrides: any): any {
   if (!overrides) return defaults
@@ -48,14 +48,14 @@ function deepMerge(defaults: any, overrides: any): any {
   return result
 }
 
-/** Fields that KNOWN_KEYS should contain (consistent with configForm.vue) */
+/** KNOWN_KEYS 应包含的字段（与 configForm.vue 保持一致） */
 const KNOWN_KEYS = [
   'icon', 'color', 'level', 'coverImg', 'lmsConfig',
-  // Old top-level fields are still kept in KNOWN_KEYS to prevent falling into extra, but no longer written to result top level
+  // 旧顶层字段仍保留在 KNOWN_KEYS 中以防止落入 extra，但不再写入 result 顶层
   'showDanmaku', 'showAnnouncement', 'showComments', 'showProgress', 'defaultChapterOpen',
 ]
 
-/** Hardcoded defaults (consistent with configForm.vue) */
+/** 硬编码默认（与 configForm.vue 保持一致） */
 const DEFAULT_COURSE_SWITCHES = {
   showDanmaku: true,
   showAnnouncement: true,
@@ -66,12 +66,12 @@ const DEFAULT_COURSE_SWITCHES = {
 
 describe('components/course/editor/configForm', () => {
   // ─────────────────────────────────────────────────────────────────
-  // courseSwitches initialization order (core logic)
+  // courseSwitches 初始化顺序（核心逻辑）
   // ─────────────────────────────────────────────────────────────────
   describe('courseSwitches 初始化顺序', () => {
     /**
-     * Simulate courseSwitches initialization logic in configForm.vue initFromConfig
-     * Priority: cfg.lmsConfig.course > global lms_config.course > hardcoded default
+     * 模拟 configForm.vue initFromConfig 中的 courseSwitches 初始化逻辑
+     * 优先级：cfg.lmsConfig.course > 全局 lms_config.course > 硬编码默认
      */
     function initCourseSwitches(courseOverride: any, globalCourse: any) {
       return {
@@ -94,8 +94,8 @@ describe('components/course/editor/configForm', () => {
     })
 
     it('课程级未配置 → 使用全局默认值（而非硬编码）', () => {
-      // Key scenario: admin sets global showDanmaku to false in settings
-      // Course not configured → should use global false (instead of hardcoded true)
+      // 关键场景：管理员在 settings 中将全局 showDanmaku 设为 false
+      // 课程未配置 → 应使用全局 false（而非硬编码 true）
       const result = initCourseSwitches({}, { showDanmaku: false })
       expect(result.showDanmaku).toBe(false)
     })
@@ -127,15 +127,15 @@ describe('components/course/editor/configForm', () => {
     })
 
     it('不再从 cfg.showDanmaku 等顶层字段读取（已废弃）', () => {
-      // Even if old top-level fields remain in cfg (e.g. cfg.showDanmaku),
-      // Should also not be read as courseSwitches value
-      // Here verify via initCourseSwitches signature: only accepts courseOverride and globalCourse
+      // 即使 cfg 中残留旧顶层字段（如 cfg.showDanmaku），
+      // 也不应被读取为 courseSwitches 的值
+      // 这里通过 initCourseSwitches 的签名验证：只接受 courseOverride 和 globalCourse
       expect(initCourseSwitches.length).toBe(2)
     })
   })
 
   // ─────────────────────────────────────────────────────────────────
-  // Deep merge logic (lmsConfig initialization = global + course-level)
+  // 深合并逻辑（lmsConfig 初始化 = 全局 + 课程级）
   // ─────────────────────────────────────────────────────────────────
   describe('全局 + 课程级 lmsConfig 深合并', () => {
     it('课程级覆盖全局：浅层字段', () => {
@@ -143,8 +143,8 @@ describe('components/course/editor/configForm', () => {
         { ai: { mode: 'api', model: 'gpt-3.5' } },
         { ai: { mode: 'ollama' } },
       )
-      expect(merged.ai.mode).toBe('ollama')   // Course-level override
-      expect(merged.ai.model).toBe('gpt-3.5')  // Global preserved
+      expect(merged.ai.mode).toBe('ollama')   // 课程级覆盖
+      expect(merged.ai.model).toBe('gpt-3.5')  // 全局保留
     })
 
     it('课程级覆盖全局：嵌套对象', () => {
@@ -159,11 +159,11 @@ describe('components/course/editor/configForm', () => {
         course: { showDanmaku: false },
       }
       const merged = deepMerge(globalCfg, courseCfg)
-      // Course-level override
+      // 课程级覆盖
       expect(merged.ai.mode).toBe('ollama')
       expect(merged.question.submitExp).toBe(5)
       expect(merged.course.showDanmaku).toBe(false)
-      // Global preserved
+      // 全局保留
       expect(merged.ai.model).toBe('gpt-3.5')
       expect(merged.ai.ttsGender).toBe('female')
       expect(merged.question.reviewExp).toBe(1)
@@ -195,12 +195,12 @@ describe('components/course/editor/configForm', () => {
   })
 
   // ─────────────────────────────────────────────────────────────────
-  // course.config field cleanup (KNOWN_KEYS verification)
+  // course.config 字段清理（KNOWN_KEYS 验证）
   // ─────────────────────────────────────────────────────────────────
   describe('course.config 字段清理', () => {
     /**
-     * Simulate extra extraction logic in initFromConfig
-     * extra only contains fields not in KNOWN_KEYS
+     * 模拟 initFromConfig 中的 extra 提取逻辑
+     * extra 只包含不在 KNOWN_KEYS 中的字段
      */
     function buildExtra(cfg: Record<string, any>): Record<string, any> {
       const extra: Record<string, any> = {}
@@ -220,7 +220,7 @@ describe('components/course/editor/configForm', () => {
         showProgress: true,
       }
       const extra = buildExtra(cfg)
-      // Old fields are excluded
+      // 旧字段被排除
       expect(extra).not.toHaveProperty('showDanmaku')
       expect(extra).not.toHaveProperty('showAnnouncement')
       expect(extra).not.toHaveProperty('showProgress')
@@ -248,13 +248,13 @@ describe('components/course/editor/configForm', () => {
     })
 
     it('buildConfig result 顶层只含 icon/color/level/coverImg/extra（不出现 showDanmaku）', () => {
-      // Simulate result construction in buildConfig
+      // 模拟 buildConfig 中的 result 构造
       const cfg: any = {
         icon: 'book',
         color: 'primary',
         level: 'beginner',
         coverImg: 'http://...',
-        showDanmaku: true,  // Old top-level fields
+        showDanmaku: true,  // 旧顶层字段
         lmsConfig: { course: { showDanmaku: true } },
         customField: 'extra-value',
       }
@@ -266,21 +266,21 @@ describe('components/course/editor/configForm', () => {
         coverImg: cfg.coverImg || undefined,
         ...extra,
       }
-      // showDanmaku should not appear at top level
+      // 顶层不应出现 showDanmaku
       expect(result).not.toHaveProperty('showDanmaku')
       expect(result).not.toHaveProperty('showAnnouncement')
-      // Course-specific fields preserved
+      // 课程特有字段保留
       expect(result.icon).toBe('book')
       expect(result.color).toBe('primary')
-      // Custom fields preserved
+      // 自定义字段保留
       expect(result.customField).toBe('extra-value')
-      // lmsConfig is provided by lmsData in buildConfig, does not appear at result top level
-      // (Here result is simulated, does not contain lmsConfig, because lmsData is provided by LmsConfigEditor.getConfig())
+      // lmsConfig 在 buildConfig 中由 lmsData 提供，不在 result 顶层出现
+      // （这里 result 是模拟，不含 lmsConfig，因为 lmsData 由 LmsConfigEditor.getConfig() 提供）
     })
   })
 
   // ─────────────────────────────────────────────────────────────────
-  // /api/config/get loading behavior (mock verification)
+  // /api/config/get 加载行为（mock 验证）
   // ─────────────────────────────────────────────────────────────────
   describe('loadGlobalLmsConfig（/api/config/get 集成）', () => {
     it('成功获取 lmsConfig（来自 setMockFetchHandler 的响应）', async () => {
@@ -297,7 +297,7 @@ describe('components/course/editor/configForm', () => {
         }
         return { data: null, success: false, msg: '' }
       })
-      // Verify mock is set (indirectly verified via export)
+      // 验证 mock 已设置（通过 export 间接验证）
       const stubs = await import('../../../../test/setup/nuxt-stubs')
       expect(typeof stubs.setMockFetchHandler).toBe('function')
     })
@@ -306,19 +306,19 @@ describe('components/course/editor/configForm', () => {
       setMockFetchHandler(async () => {
         throw new Error('Network error')
       })
-      // Directly call the handler set by setMockFetchHandler to verify it does throw
+      // 直接调用 setMockFetchHandler 设置的 handler 验证它确实抛错
       const stubs = await import('../../../../test/setup/nuxt-stubs')
-      // When testing via import, cannot directly call handler, changed to only verify setMockFetchHandler exists
+      // 通过 import 测试时不能直接调用 handler，改为只验证 setMockFetchHandler 存在
       expect(typeof stubs.clearMockFetchHandler).toBe('function')
     })
   })
 
   // ─────────────────────────────────────────────────────────────────
-  // buildConfig overall flow (end-to-end)
+  // buildConfig 整体流程（端到端）
   // ─────────────────────────────────────────────────────────────────
   describe('buildConfig 端到端', () => {
     /**
-     * Simulate the core logic of buildConfig:
+     * 模拟 buildConfig 的核心逻辑：
      * result = { icon, color, level, coverImg, ...extra, lmsConfig: { ...lmsData, course: courseSwitches } }
      */
     function buildResult(
@@ -354,11 +354,11 @@ describe('components/course/editor/configForm', () => {
         { ai: { mode: 'api' }, course: { showDanmaku: true, showAnnouncement: true, showComments: true, showProgress: false, defaultChapterOpen: true } },
         '{}',
       )
-      // Course-level courseSwitches override lmsData.course
+      // 课程级 courseSwitches 覆盖 lmsData.course
       expect(result!.lmsConfig.course.showDanmaku).toBe(false)
       expect(result!.lmsConfig.course.showAnnouncement).toBe(false)
       expect(result!.lmsConfig.course.showProgress).toBe(true)
-      // Other fields in lmsData are preserved
+      // lmsData 中的其他字段保留
       expect(result!.lmsConfig.ai.mode).toBe('api')
     })
 
@@ -386,7 +386,7 @@ describe('components/course/editor/configForm', () => {
       expect(result!.level).toBe('beginner')
       expect(result!.coverImg).toBe('http://...')
       expect(result!.lmsConfig.ai.mode).toBe('api')
-      // showDanmaku does not appear at top level
+      // 顶层不出现 showDanmaku
       expect(result).not.toHaveProperty('showDanmaku')
     })
   })

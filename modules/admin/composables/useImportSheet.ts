@@ -2,7 +2,7 @@ import type { Ref } from 'vue'
 import type { ColumnMeta } from '../utils/types'
 
 /**
- * Import modal logic: header/initial data generation, row extraction, template download, resultStatus
+ * 导入弹窗逻辑：表头/初始数据生成、行提取、模板下载、结果状态
  */
 export function useImportSheet(
   columns: () => ColumnMeta[],
@@ -19,7 +19,7 @@ export function useImportSheet(
   const headers = computed(() => columns().map((c) => c.jsName))
 
   const initialData = computed(() => {
-    // Only header row + one empty example row
+    // 仅表头行 + 一个空示例行
     const data: Record<number, Record<number, { v: any }>> = {
       1: headers.value.reduce((acc, _h, idx) => {
         acc[idx] = { v: '' }

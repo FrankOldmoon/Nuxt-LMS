@@ -1,19 +1,19 @@
 /**
- * WebSocket endpoint: /api/ws (base generic version)
+ * WebSocket 端点：/api/ws（base 通用版）
  *
- * base only handles registerUser + generic join/leave room;
- * other types are delegated to runWsServerHandlers (subsequent modules register via registerWsServerHandler).
+ * base 只处理 registerUser + 通用 join/leave room；
+ * 其余 type 委托 runWsServerHandlers（后续模块通过 registerWsServerHandler 注册）。
  *
- * Message format (JSON):
- * Client → Server:
+ * 消息格式（JSON）：
+ * 客户端 → 服务端：
  *   { type: 'registerUser', userId, from }
  *   { type: 'join', room }
  *   { type: 'leave', room }
- *   { type: ...other } ← delegated to registered business handlers
+ *   { type: ...其它 } ← 委托给注册的业务 handler
  *
- * Server → Client:
+ * 服务端 → 客户端：
  *   { type: 'joined', room }
- *   { type: 'site-config-changed' }  ← system-level broadcast: site config changed, frontend useSiteConfig auto refreshes
+ *   { type: 'site-config-changed' }  ← 系统级广播：站点配置变更，前端 useSiteConfig 自动 refresh
  *   { type: 'error', message }
  */
 import {
@@ -27,7 +27,7 @@ import {
 import { runWsServerHandlers, runWsServerCleanups } from '../utils/ws/registry'
 export default defineWebSocketHandler({
   open(peer) {
-    // Maintain full connection set (for system-level broadcasts, e.g. site-config-changed)
+    // 维护全连接集合（用于系统级广播，如 site-config-changed）
     trackPeer(peer)
   },
 
@@ -37,7 +37,7 @@ export default defineWebSocketHandler({
       const { type } = data
       const p = peer as any
 
-      // User-level registration (private message push)
+      // 用户级注册（私信推送）
       if (type === 'registerUser') {
         const userId = Number(data.userId)
         if (!userId) return
@@ -48,20 +48,20 @@ export default defineWebSocketHandler({
         return
       }
 
-      // Generic room join
+      // 通用房间加入
       if (type === 'join' && data.room) {
         joinRoom(String(data.room), peer)
         peer.send(JSON.stringify({ type: 'joined', room: data.room }))
         return
       }
 
-      // Generic room leave
+      // 通用房间离开
       if (type === 'leave' && data.room) {
         leaveRoom(String(data.room), peer)
         return
       }
 
-      // Delegate to registered business handlers (lms's class/race/group, etc.)
+      // 委托给注册的业务 handler（lms 的 class/race/group 等）
       runWsServerHandlers(peer, data)
     } catch {
       peer.send(JSON.stringify({ type: 'error', message: 'Invalid message format' }))
@@ -70,17 +70,17 @@ export default defineWebSocketHandler({
 
   close(peer) {
     const p = peer as any
-    // Clean up full connection set
+    // 清理全连接集合
     untrackPeer(peer)
-    // Clean up user-level connections
+    // 清理用户级连接
     const uid = p._userId
     if (uid && userPeers.has(uid)) {
       userPeers.get(uid)!.delete(peer)
       if (userPeers.get(uid)!.size === 0) userPeers.delete(uid)
     }
-    // Clean up generic rooms
+    // 清理通用房间
     cleanupPeerRooms(peer)
-    // Delegate business cleanup
+    // 委托业务清理
     runWsServerCleanups(peer)
   },
 

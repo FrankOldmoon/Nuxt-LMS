@@ -67,7 +67,7 @@ export function useMedalEditor() {
         return map[color] || 'text-primary'
     }
 
-    // Iconfull name：compatible i-lucide-xxx and lucide:xxx，NoneFrontprefix add when i-lucide-
+    // 图标全名：兼容 i-lucide-xxx 和 lucide:xxx，无前缀时补 i-lucide-
     function fullIconName(name: string) {
         if (!name) return 'i-lucide-award'
         if (name.startsWith('i-') || name.includes(':')) return name
@@ -78,7 +78,7 @@ export function useMedalEditor() {
         loading.value = true
         try {
             const data = await cRequest('/api/medals/list')
-            // use reactive wrap，ensure deepPropertychange（if content.icon）canTriggerResponsetypeUpdate
+            // 用 reactive 包裹，确保深层属性变更（如 content.icon）能触发响应式更新
             medals.value = (data || []).map((m: any) => reactive(m))
         } catch {
             medals.value = []
@@ -109,7 +109,7 @@ export function useMedalEditor() {
 
     async function deleteMedal(id: any) {
         if (!id) {
-            // notSaveNewitems，directlyfromListRemove
+            // 未保存的新项，直接从列表移除
             medals.value = medals.value.filter(m => m.id !== id)
             return
         }

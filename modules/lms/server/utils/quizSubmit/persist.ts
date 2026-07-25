@@ -1,10 +1,10 @@
 /**
- * Quiz submit: write userQuizzes + update quizzes.submitCount
+ * 测验提交：写 userQuizzes + 更新 quizzes.submitCount
  */
 import { db, schema } from '@nuxthub/db'
 import { and, eq } from 'drizzle-orm'
 
-/** Insert a new userQuizzes record */
+/** 插入新的 userQuizzes 记录 */
 export async function insertUserQuiz(args: {
   userId: number
   courseId: number
@@ -24,7 +24,7 @@ export async function insertUserQuiz(args: {
   })
 }
 
-/** Update existing userQuizzes: keep the highest score */
+/** 更新已有 userQuizzes：取最高分 */
 export async function updateUserQuizBestScore(args: {
   userId: number
   courseId: number
@@ -49,7 +49,7 @@ export async function updateUserQuizBestScore(args: {
   ))
 }
 
-/** Increment the global submit count of the quiz */
+/** 增加测验的全局提交计数 */
 export async function incrementQuizSubmitCount(courseId: number, quizCid: number, prevCount: number) {
   await db.update(schema.quizzes).set({
     submitCount: (prevCount || 0) + 1,

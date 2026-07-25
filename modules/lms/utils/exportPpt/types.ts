@@ -1,22 +1,22 @@
 /**
- * Type definitions for the PPT export module
+ * PPT 导出模块的类型定义
  */
 
-/** List item (flattened structure) */
+/** 列表项（扁平化后的结构） */
 export interface ListItem {
   runs: any[]
   indentLevel: number
-  bulletPrefix: string  // e.g., "• " / "1. " / "☑ "
+  bulletPrefix: string  // 如 "• " / "1. " / "☑ "
 }
 
-/** Pre-rendered math formula image (for blockMath) */
+/** 预渲染的数学公式图片（blockMath 用） */
 export interface MathImage {
   dataUrl: string   // PNG base64
-  width: number     // inches
-  height: number    // inches
+  width: number     // 英寸
+  height: number    // 英寸
 }
 
-/** Slide rendering context, used throughout the export process */
+/** 幻灯片渲染上下文，贯穿整个导出流程 */
 export interface SlideContext {
   pres: any
   slide: any
@@ -25,22 +25,22 @@ export interface SlideContext {
   contentWidth: number
   startY: number
   maxY: number
-  /** Pre-fetched question data cache (cid → question data) */
+  /** 预取的题目数据缓存（cid → question data） */
   questionCache: Map<number, any>
-  /** Pre-rendered block formula image cache (latex → MathImage | null, null means rendering failed) */
+  /** 预渲染的块级公式图片缓存（latex → MathImage | null，null 表示渲染失败） */
   blockMathCache: Map<string, MathImage | null>
-  /** Pre-rendered inline formula text cache (latex → Unicode string) */
+  /** 预渲染的行内公式文本缓存（latex → Unicode 字符串） */
   inlineMathCache: Map<string, string>
-  /** Pre-fetched quiz data cache (cid → quiz data) */
+  /** 预取的测验数据缓存（cid → quiz data） */
   quizCache: Map<number, any>
-  /** Pre-fetched homework data cache (cid → homework data) */
+  /** 预取的作业数据缓存（cid → homework data） */
   homeworkCache: Map<number, any>
-  /** Pre-fetched race data cache (cid → race data) */
+  /** 预取的竞赛数据缓存（cid → race data） */
   raceCache: Map<number, any>
-  /** Pre-rendered echarts chart image cache (node object reference → MathImage | null) */
+  /** 预渲染的 echarts 图表图片缓存（节点对象引用 → MathImage | null） */
   echartsCache: Map<any, MathImage | null>
-  /** Pre-rendered mindmap image cache (markdown content → MathImage | null) */
+  /** 预渲染的思维导图图片缓存（markdown 内容 → MathImage | null） */
   mindmapCache: Map<string, MathImage | null>
-  /** Pre-rendered HTML block image cache (html content → MathImage | null) */
+  /** 预渲染的 HTML 块图片缓存（html 内容 → MathImage | null） */
   htmlCache: Map<string, MathImage | null>
 }

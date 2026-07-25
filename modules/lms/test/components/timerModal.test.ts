@@ -1,11 +1,11 @@
 /**
- * TimerModal component test
+ * TimerModal 组件测试
  * @see modules/lms/components/chapter/timerModal.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { resetAllStubs, setMockI18n } from '../../../../test/setup/nuxt-stubs'
-// Logic has been extracted to composable, component tests need to expose auto-imported composable to globalThis
+// 逻辑已抽到 composable，组件测试需把 auto-imported composable 暴露到 globalThis
 import { useChapterTimer } from '../../composables/useChapterTimer'
 ;(globalThis as any).useChapterTimer = useChapterTimer
 

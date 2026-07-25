@@ -1,8 +1,8 @@
 /**
- * course/announcementsModal/createForm.vue component test
+ * course/announcementsModal/createForm.vue 组件测试
  * @see modules/lms/components/course/announcementsModal/createForm.vue
  *
- * New announcement form: canCreate controls display, showCreateForm toggles form expansion
+ * 新建公告表单：canCreate 控制显示，showCreateForm 切换表单展开
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -116,7 +116,7 @@ describe('course/announcementsModal/createForm.vue', () => {
     setupContext({ showCreateForm: ref(true), creating: ref(true) })
     const { default: CreateForm } = await import('../../../../components/course/announcementsModal/createForm.vue')
     const wrapper = mount(CreateForm, { global: _globalConfig })
-    // Find the publish button (the last ubutton)
+    // 找到发布按钮（最后一个 ubutton）
     const buttons = wrapper.findAll('.ubutton')
     const publishBtn = buttons[buttons.length - 1]!
     expect(publishBtn.attributes('data-loading')).toBe('true')

@@ -1,8 +1,8 @@
 /**
- * lms/configEditor/aiSection.vue component test
+ * lms/configEditor/aiSection.vue 组件测试
  * @see modules/lms/components/lms/configEditor/aiSection.vue
  *
- * AI assistant config: enabled switch + mode selection + api/ollama mode fields
+ * AI 助手配置：enabled 开关 + mode 选择 + api/ollama 模式字段
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -109,7 +109,7 @@ describe('lms/configEditor/aiSection.vue', () => {
     const wrapper = mount(AiSection, { global: _globalConfig })
     expect(wrapper.text()).toContain('lmsConfig.aiOllamaUrl')
     expect(wrapper.text()).toContain('lmsConfig.aiOllamaModel')
-    // api mode fields are not shown
+    // api 模式字段不显示
     expect(wrapper.text()).not.toContain('lmsConfig.aiLlmApiKey')
   })
 

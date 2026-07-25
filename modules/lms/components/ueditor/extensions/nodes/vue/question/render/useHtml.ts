@@ -2,7 +2,7 @@ import { ref, computed, inject, watch, onMounted, onBeforeUnmount } from 'vue'
 import { submitQuestion, recordAnswer, computeCorrectRate } from './shared'
 
 export function useHtml(props: any) {
-  const submitted = inject<import('vue').Ref<boolean>>('question submitted')
+  const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')
   const isCorrect = inject<import('vue').Ref<boolean>>('questionIsCorrect')
   const fromRecord = inject<import('vue').Ref<boolean>>('questionFromRecord')
   const { courseId, chapterId } = useLmsContext()
@@ -11,7 +11,7 @@ export function useHtml(props: any) {
   const containerRef = ref(null)
   const isFullscreen = ref(false)
 
-  // FullscreenSwitch
+  // 全屏切换
   function toggleFullscreen() {
     if (!import.meta.client) return
     const el = containerRef.value
@@ -27,21 +27,21 @@ export function useHtml(props: any) {
     isFullscreen.value = document.fullscreenElement === containerRef.value
   }
 
-  // HTML Content
+  // HTML 内容
   const htmlContent = computed(() => {
     const c = props.question.content
     if (typeof c === 'string') return c
     return ''
   })
 
-  // iframe pass inAccuracy Rate
+  // iframe 传来的正确率
   const latestRate = ref(null)
 
   const hasAnswer = computed(() => latestRate.value !== null)
 
-  // listen iframe message（Pass event.source distinguish differentsame iframe）
+  // 监听 iframe message（通过 event.source 区分不同 iframe）
   function onMessage(event) {
-    // onlyHandlefromCurrent iframe Message
+    // 只处理来自当前 iframe 的消息
     if (event.source !== iframeRef.value?.contentWindow) return
     if (event.data && typeof event.data === 'object' && event.data.type === 'correct_rate') {
       const rate = Number(event.data.rate)
@@ -53,7 +53,7 @@ export function useHtml(props: any) {
         if (fromRecord.value) {
           fromRecord.value = false
         }
-        // real-timeRecordsto record
+        // 实时记录到 record
         recordAnswer(props.question, [rate])
       }
     }
@@ -67,13 +67,13 @@ export function useHtml(props: any) {
   onBeforeUnmount(() => {
     window.removeEventListener('message', onMessage)
     document.removeEventListener('fullscreenchange', onFullscreenChange)
-    // ComponentUnmountwhenifstillFullscreen，Exit Fullscreen
+    // 组件卸载时若仍在全屏，退出全屏
     if (import.meta.client && document.fullscreenElement === containerRef.value) {
       document.exitFullscreen().catch(() => {})
     }
   })
 
-  // listen record change（fetchRecord backfill scenario）
+  // 监听 record 变化（fetchRecord 回填场景）
   watch(() => props.question?.record, (record) => {
     if (!Array.isArray(record) || record.length === 0) return
     const rate = Number(record[0])
@@ -105,7 +105,7 @@ export function useHtml(props: any) {
   }
 
   function fillCorrectAnswer() {
-    // HTML questionNonemethodAutofillCorrectAnswer
+    // HTML 题无法自动填充正确答案
     latestRate.value = 1
     recordAnswer(props.question, [1])
   }

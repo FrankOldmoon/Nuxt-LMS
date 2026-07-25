@@ -6,14 +6,14 @@ export default eventHandler(async (event) => {
 
   const { course_id } = getQuery(event)
   if (!course_id) {
-    return cResp(null, 'Missing course_id parameter', false)
+    return cResp(null, '缺少 course_id 参数', false)
   }
 
   const data = await db.query.userCourses.findMany({
     where: eq(schema.userCourses.courseId, Number(course_id)),
   })
 
-  // Return { userId: number } map
+  // 返回 { userId: number } 映射
   const map = {}
   for (const uc of data) {
     map[uc.userId] = uc.number || ''

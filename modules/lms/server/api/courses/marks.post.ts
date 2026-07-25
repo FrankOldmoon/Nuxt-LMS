@@ -1,9 +1,9 @@
 /**
- * Add/Subtract marks: batch update user_courses.marks_score field
+ * 加减分：批量更新 user_courses 的 marks_score 字段
  * POST /api/courses/marks
  * body: { course_id, user_ids: number[], delta: number }
  *
- * Positive delta adds marks, negative subtracts. Only teachers/admins can call.
+ * delta 为正则加分，为负则减分。仅教师/管理员可调用。
  */
 import { db, schema } from '@nuxthub/db'
 import { eq, and, inArray, sql } from 'drizzle-orm'
@@ -15,18 +15,18 @@ export default eventHandler(async (event) => {
   const { course_id, user_ids, delta } = body
 
   if (!course_id || !Array.isArray(user_ids) || user_ids.length === 0) {
-    return cResp(null, 'Missing course_id or user_ids parameter', false)
+    return cResp(null, '缺少 course_id 或 user_ids 参数', false)
   }
   const numDelta = Number(delta)
   if (isNaN(numDelta) || numDelta === 0) {
-    return cResp(null, 'Invalid delta', false)
+    return cResp(null, 'delta 无效', false)
   }
 
   const courseId = Number(course_id)
   const userIds = user_ids.map(Number)
 
   try {
-    // Add/subtract marks for existing records (COALESCE guards against NULL)
+    // 对已有记录执行加减分（COALESCE 防 NULL）
     await db.update(schema.userCourses)
       .set({
         marksScore: sql`COALESCE(${schema.userCourses.marksScore}, 0) + ${numDelta}`,
@@ -36,7 +36,7 @@ export default eventHandler(async (event) => {
         inArray(schema.userCourses.userId, userIds),
       ))
 
-    // Create initial records for students without a record
+    // 对没有记录的学生创建初始记录
     const existing = await db
       .select({ userId: schema.userCourses.userId })
       .from(schema.userCourses)
@@ -58,7 +58,7 @@ export default eventHandler(async (event) => {
 
     return cResp({ success: true, delta: numDelta })
   } catch (error: any) {
-    console.error('Failed to add/subtract marks:', error)
-    return cResp(null, error.message || 'Failed to add/subtract marks', false)
+    console.error('加减分失败:', error)
+    return cResp(null, error.message || '加减分失败', false)
   }
 })

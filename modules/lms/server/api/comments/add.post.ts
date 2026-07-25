@@ -8,11 +8,11 @@ export default eventHandler(async (event) => {
   const { course_id, content } = body
 
   if (!course_id) {
-    return cResp(null, 'Missing course_id parameter', false)
+    return cResp(null, '缺少 course_id 参数', false)
   }
 
   try {
-    // Query the maximum cid in this course
+    // 查询该课程中最大的 cid
     const maxCidResult = await db.select({ cid: schema.comments.cid })
       .from(schema.comments)
       .where(eq(schema.comments.courseId, course_id))
@@ -35,11 +35,11 @@ export default eventHandler(async (event) => {
 
     const result = await db.insert(schema.comments).values(insertData).returning()
 
-    // Check and award medals
+    // 检查并授予奖章
     await checkAndAwardMedals(user.id, course_id)
 
-    // Calculate expected exp for this submission (top-level comment -> publishExp; reply -> replyExp)
-    // Used for submitBroadcast.onlyOnReward filter
+    // 计算本次预期经验（顶层评论 → publishExp；回复 → replyExp）
+    // 用于 submitBroadcast.onlyOnReward 过滤
     let commentGainedExp: number | undefined
     try {
       const cfg = await getCourseLmsConfig(course_id)
@@ -49,9 +49,9 @@ export default eventHandler(async (event) => {
           ? Number(cConfig.replyExp) || 0
           : Number(cConfig.publishExp) || 0
       }
-    } catch { /* Do not block submission when config is unavailable */ }
+    } catch { /* 配置不可用时不阻塞提交 */ }
 
-    // Broadcast danmaku to the class room (fire-and-forget, does not affect response)
+    // 向班级房间广播 danmaku（fire-and-forget，不影响响应）
     void broadcastSubmitDanmaku({
       userId: user.id,
       kind: 'comment',
@@ -60,7 +60,7 @@ export default eventHandler(async (event) => {
 
     return cResp(result[0])
   } catch (error: any) {
-    console.error('Failed to add comment:', error)
-    return cResp(null, error.message || 'Failed to add', false)
+    console.error('新增评论失败:', error)
+    return cResp(null, error.message || '新增失败', false)
   }
 })

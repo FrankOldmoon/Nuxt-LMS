@@ -1,9 +1,9 @@
 /**
- * Learning progress: assembly utility (pure function, can be independently unit tested)
+ * 学习进度：装配工具（纯函数，可独立 unit test）
  */
 import type { ItemStatus } from './courseProgress/query'
 
-/** Collect question / homework / comment cids from all chapters (deduplication is handled inside the query function) */
+/** 收集所有章节中的 question / homework / comment cid（去重由 query 函数内部处理） */
 export function collectAllItemCids(chapters: any[]) {
   const allQuestionCids: number[] = []
   const allHomeworkCids: number[] = []
@@ -28,7 +28,7 @@ export type ProgressContext = {
   accessibleSet: Set<number>
 }
 
-/** Assemble each chapter's items + score + isPass + accessible */
+/** 装配每章节的 items + score + isPass + accessible */
 export function assembleProgress(chapters: any[], ctx: ProgressContext) {
   const { questionStatusMap, homeworkStatusMap, commentStatusMap, scoreMap, passMap, accessibleSet } = ctx
   return chapters.map((ch) => {

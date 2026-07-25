@@ -1,10 +1,10 @@
 /**
- * formBody edit component test (edit)
+ * formBody 编辑组件测试 (edit)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/edit/formBody.vue
  *
- * formBody.vue uses useQuestionEditContext() (auto-imported inject from nuxt-stubs, NOT Vue's inject)
- * Because inject in useQuestionEdit.ts is auto-imported (not explicitly imported from 'vue')
- * Need to provide QuestionEditKey via globalProvide (nuxt-stubs Map-based)
+ * formBody.vue 使用 useQuestionEditContext() (auto-imported inject from nuxt-stubs, NOT Vue's inject)
+ * 因为 useQuestionEdit.ts 中 inject 是 auto-imported（未从 'vue' 显式导入）
+ * 需要通过 globalProvide (nuxt-stubs Map-based) 提供 QuestionEditKey
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -98,7 +98,7 @@ function makeProvider(ctxOverrides: any = {}) {
 }
 
 describe('question/edit/formBody.vue', () => {
-  it('mounts and renders formName input', async () => {
+  it('mounts and renders form name input', async () => {
     const { default: FormBody } = await import(
       '../../../../../../components/ueditor/extensions/nodes/vue/question/edit/formBody.vue'
     )
@@ -108,7 +108,7 @@ describe('question/edit/formBody.vue', () => {
         return h(Provider, () => h(FormBody))
       },
     }, { global: { stubs: _globalStubs, mocks: _mocks } })
-    // Should render title containing "common.edit"
+    // 应渲染标题包含 "common.edit"
     expect(wrapper.text()).toContain('common.edit')
   })
 
@@ -136,7 +136,7 @@ describe('question/edit/formBody.vue', () => {
         return h(Provider, () => h(FormBody))
       },
     }, { global: { stubs: _globalStubs, mocks: _mocks } })
-    // single type should render content richEditor + explanation richEditor = 2
+    // single 类型应渲染 content richEditor + explanation richEditor = 2 个
     expect(wrapper.findAll('.rich-editor').length).toBeGreaterThanOrEqual(2)
   })
 })

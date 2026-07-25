@@ -1,38 +1,38 @@
 import type { Component } from 'vue'
 
-/** Delete/restore override: composite primary key tables or tables requiring special handling can register this function */
+/** 删除/恢复覆盖：复合主键表或需要特殊处理的表可注册此函数 */
 export type TableDeleteOverride = (
   rows: Record<string, any>[],
   action: 'delete' | 'remove' | 'restore',
 ) => Promise<any>
 
 /**
- * Table personalization override registry
+ * 表个性化覆盖注册表
  *
- * Any table can register custom show / form / cell / delete components/functions via registerTableOverride,
- * generic Manager / CForm / CShow / CellView queries the registry first, falls back to default rendering if no match.
+ * 任意表可通过 registerTableOverride 注册自定义的 show / form / cell / delete 组件/函数，
+ * 通用 Manager / CForm / CShow / CellView 优先查询注册表，未命中则回退默认渲染。
  *
- * Registration timing: typically in plugins (e.g. plugins/overrides.ts), written to REGISTRY at app startup.
+ * 注册时机：通常在插件中（如 plugins/overrides.ts），在 app 启动时写入 REGISTRY。
  */
 export interface TableOverride {
-  /** Replace CShow entire window content (row detail preview) */
+  /** 替换 CShow 整窗内容（行详情预览） */
   show?: Component
-  /** Replace CForm entire window content (add/edit form) */
+  /** 替换 CForm 整窗内容（新增/编辑表单） */
   form?: Component
-  /** Reserved: override cell rendering by column jsName */
+  /** 预留：按列 jsName 覆盖单元格渲染 */
   cell?: Record<string, Component>
-  /** Custom batch delete/restore (composite primary key tables like questions need this override) */
+  /** 自定义批量删除/恢复（复合主键表如 questions 需要此覆盖） */
   delete?: TableDeleteOverride
 }
 
 const REGISTRY: Record<string, TableOverride> = {}
 
-/** Register override components for a table (merge write) */
+/** 注册某表的覆盖组件（合并写入） */
 export function registerTableOverride(table: string, override: TableOverride) {
   REGISTRY[table] = { ...REGISTRY[table], ...override }
 }
 
-/** Query override config for a table (reactive: recompute when tableName changes) */
+/** 查询某表的覆盖配置（响应式：tableName 变化时重新计算） */
 export function useTableOverride(table: MaybeRefOrGetter<string>) {
   const name = computed(() => toValue(table))
   const override = computed<TableOverride>(() => REGISTRY[name.value] || {})

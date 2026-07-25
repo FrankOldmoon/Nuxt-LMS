@@ -1,16 +1,16 @@
 /**
- * useAuthLms — LMS authentication composable (reuses base useAuth)
+ * useAuthLms — LMS 认证组合式函数（复用 base useAuth）
  *
- * Design principles:
- * - The base useAuth obtains auth data via useFetch('/api/auth/me'),
- *   and transparently passes through the extension fields injected by the server-side runOnMeEnrich via [key: string]: any.
- * - LMS injects editorCourseIds /
- *   teacherCourseIds / classIds and other course-related fields into /api/auth/me on the server side.
- * - This composable only reuses all the capabilities of base useAuth, and on this basis derives
- *   LMS-specific course permission check methods, avoiding duplicate definitions of useFetch / login / logout etc.
+ * 设计原理：
+ * - base 的 useAuth 通过 useFetch('/api/auth/me') 获取认证数据，
+ *   并以 [key: string]: any 透传 server 端 runOnMeEnrich 注入的扩展字段。
+ * - LMS 在 server 端向 /api/auth/me 注入 editorCourseIds /
+ *   teacherCourseIds / classIds 等课程相关字段。
+ * - 本组合式函数仅复用 base useAuth 的全部能力，并在此基础上派生
+ *   LMS 特有的课程权限检查方法，避免重复定义 useFetch / login / logout 等。
  *
- * Note: Since useAuth and useAuthLms share the same useFetch cache key
- * ('/api/auth/me'), all callers read the same auth data.
+ * 注意：由于 useAuth 与 useAuthLms 共享同一 useFetch 缓存 key
+ * （'/api/auth/me'），所有调用方读到的是同一份认证数据。
  */
 export function useAuthLms() {
   const {
@@ -29,25 +29,25 @@ export function useAuthLms() {
     refreshUser,
   } = useAuth()
 
-  // ====================== LMS extension derived state ======================
+  // ====================== LMS 扩展派生状态 ======================
 
-  /** List of course IDs where the current user is an editor */
+  /** 当前用户作为编辑者的课程 ID 列表 */
   const editorCourseIds = computed<number[]>(() => authData.value?.editorCourseIds ?? [])
 
-  /** List of course IDs where the current user is a teacher */
+  /** 当前用户作为教师的课程 ID 列表 */
   const teacherCourseIds = computed<number[]>(() => authData.value?.teacherCourseIds ?? [])
 
-  /** List of class IDs the current user belongs to */
+  /** 当前用户所属班级 ID 列表 */
   const classIds = computed<number[]>(() => authData.value?.classIds ?? [])
 
-  // ====================== LMS course permission checks ======================
+  // ====================== LMS 课程权限检查 ======================
 
-  /** Check whether the current user is an editor of a course */
+  /** 检查当前用户是否是某课程的编辑者 */
   function isCourseEditor(courseId: number): boolean {
     return editorCourseIds.value.includes(courseId)
   }
 
-  /** Check whether the current user is a teacher or editor of a course (editor implies teacher permission) */
+  /** 检查当前用户是否是某课程的教师或编辑者（编辑者隐含教师权限） */
   function isCourseTeacher(courseId: number): boolean {
     return teacherCourseIds.value.includes(courseId) || editorCourseIds.value.includes(courseId)
   }

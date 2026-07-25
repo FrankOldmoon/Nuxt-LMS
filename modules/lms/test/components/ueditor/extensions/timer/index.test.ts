@@ -1,5 +1,5 @@
 /**
- * timer/index.vue component test (TipTap node-view)
+ * timer/index.vue 组件测试 (TipTap node-view)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/timer/index.vue
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'

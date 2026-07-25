@@ -6,11 +6,11 @@
     </div>
     <p class="text-xs text-gray-400 mb-2">{{ $t('question.classifyDragHint') }}</p>
 
-    <!-- CategoryList -->
+    <!-- 分类列表 -->
     <div class="space-y-3">
       <div v-for="(cat, ci) in form.options" :key="ci"
         class="rounded-md border border-gray-200 dark:border-gray-600 overflow-hidden">
-        <!-- CategoryHead -->
+        <!-- 分类头部 -->
         <div class="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800">
           <span class="shrink-0 w-6 h-6 rounded-full bg-teal-500 text-white text-xs flex items-center justify-center font-medium">
             {{ ci + 1 }}
@@ -18,7 +18,7 @@
           <UInput v-model="cat.name" :placeholder="$t('question.classifyNamePlaceholder')" size="sm" class="flex-1" />
           <UButton variant="ghost" size="2xs" color="red" icon="i-heroicons-x-mark" class="shrink-0" @click="removeCategory(ci)" />
         </div>
-        <!-- CategoryInsideoptionitems -->
+        <!-- 分类内选项 -->
         <div class="p-2 space-y-1.5">
           <div v-for="(item, ii) in cat.items" :key="ii" class="flex items-center gap-2">
             <UIcon name="i-heroicons-arrow-right" class="w-3 h-3 text-gray-400 shrink-0" />
@@ -43,7 +43,7 @@ const props = defineProps({
   form: { type: Object, required: true },
 })
 
-// InitializeCategorystructure
+// 初始化分类结构
 if (!Array.isArray(props.form.options) || !props.form.options.length) {
   props.form.options = [
     { name: '', items: ['', ''] },
@@ -51,8 +51,8 @@ if (!Array.isArray(props.form.options) || !props.form.options.length) {
   ]
 }
 
-// answer AutoGenerateflattenCategoryIndexArray
-// exampleif [{ name:'A', items:['x','y'] }, { name:'B', items:['z'] }] → [0, 0, 1]
+// answer 自动生成为扁平化的分类索引数组
+// 例如 [{ name:'A', items:['x','y'] }, { name:'B', items:['z'] }] → [0, 0, 1]
 watch(() => JSON.stringify(props.form.options), () => {
   const ans = []
   props.form.options.forEach((cat, ci) => {

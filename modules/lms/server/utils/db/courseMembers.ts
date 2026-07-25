@@ -1,5 +1,5 @@
 /**
- * Course member management
+ * 课程成员管理
  *
  * getCourseMembers / updateCourseMember
  */
@@ -7,7 +7,7 @@ import { db, schema } from "@nuxthub/db"
 import { eq, and, isNull, or } from "drizzle-orm"
 
 /**
- * Get the list of teachers and editors for a course
+ * 获取课程的教师和编辑者列表
  */
 export async function getCourseMembers(courseId: number) {
   return db
@@ -34,7 +34,7 @@ export async function getCourseMembers(courseId: number) {
 }
 
 /**
- * Add or remove a course's teacher/editor
+ * 添加或移除课程的教师/编辑者
  */
 export async function updateCourseMember(
   courseId: number,

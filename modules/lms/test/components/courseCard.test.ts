@@ -1,5 +1,5 @@
 /**
- * Course Card component test
+ * Course Card 组件测试
  * @see modules/lms/components/course/card.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -52,7 +52,7 @@ const _globalConfig = {
   },
   stubs: _globalStubs,
   config: {
-    // Register auto-imported helpers as Vue app globalProperties
+    // 把 auto-imported helpers 注册为 Vue app globalProperties
     globalProperties: {
       colorBgClass: (c: string) => {
         const map: Record<string, string> = {
@@ -145,8 +145,8 @@ describe('course/card.vue', () => {
       props: { course: sampleCourse },
       global: _globalConfig,
     })
-    // UBadge stub does not render label prop, only shows slot
-    // Verify stub elements exist (2 tag badges)
+    // UBadge stub 不渲染 label prop，只显示 slot
+    // 验证 stub 元素存在（2 个 tag badge）
     const badges = wrapper.findAll('.ubadge')
     expect(badges.length).toBeGreaterThanOrEqual(2)
   })
@@ -157,8 +157,8 @@ describe('course/card.vue', () => {
       props: { course: sampleCourse },
       global: _globalConfig,
     })
-    // $t('home.chapters', { count: 12 }) renders as home.chapters (count is interpolated into the key)
-    // Since mock does not resolve nested paths, verify key appears
+    // $t('home.chapters', { count: 12 }) 渲染为 home.chapters（count 被插入到 key 中）
+    // 由于 mock 不解析嵌套路径，验证 key 出现
     expect(wrapper.text()).toContain('home.chapters')
   })
 
@@ -202,7 +202,7 @@ describe('course/card.vue', () => {
       props: { course: { ...sampleCourse, teachers: manyTeachers } },
       global: _globalConfig,
     })
-    // 5 teachers + 1 cover = at least 5 imgs
+    // 5 个 teacher + 1 个 cover = 至少 5 个 img
     const imgs = wrapper.findAll('img')
     expect(imgs.length).toBeGreaterThanOrEqual(5)
   })
@@ -213,7 +213,7 @@ describe('course/card.vue', () => {
       props: { course: { ...sampleCourse, tags: [] } },
       global: _globalConfig,
     })
-    // Should not throw error
+    // 不应报错
     expect(wrapper.exists()).toBe(true)
   })
 

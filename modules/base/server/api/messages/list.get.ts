@@ -2,7 +2,7 @@ import { db, schema } from "@nuxthub/db"
 import { eq, and, or, desc, isNull } from "drizzle-orm"
 
 /**
- * Get chat history with a specific user
+ * 获取与某用户的聊天记录
  * query: userId
  */
 export default eventHandler(async (event) => {
@@ -10,7 +10,7 @@ export default eventHandler(async (event) => {
   const { userId } = getQuery(event)
   const otherUserId = Number(userId)
   if (!otherUserId) {
-    return cResp(null, 'Missing userId parameter', false)
+    return cResp(null, '缺少 userId 参数', false)
   }
 
   const msgs = await db
@@ -35,7 +35,7 @@ export default eventHandler(async (event) => {
     )
     .orderBy(desc(schema.messages.createdAt))
 
-  // Mark received messages as read
+  // 标记收到的消息为已读
   await db.update(schema.messages)
     .set({ readAt: new Date() })
     .where(

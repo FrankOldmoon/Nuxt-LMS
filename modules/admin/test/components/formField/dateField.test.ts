@@ -1,10 +1,10 @@
 /**
- * formField/dateField component tests
+ * formField/dateField 组件测试
  * @see modules/admin/components/table/formField/dateField.vue
  *
- * UInput type is determined by isDateTime(col):
+ * UInput type 由 isDateTime(col) 决定：
  *   - columnType === 'PgTimestamp' → datetime-local
- *   - Others → date
+ *   - 其他 → date
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

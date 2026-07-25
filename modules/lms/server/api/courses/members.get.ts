@@ -1,8 +1,8 @@
-/** Get the list of teachers and editors for a course */
+/** 获取课程的教师和编辑者列表 */
 export default eventHandler(async (event) => {
   const courseId = requireQueryId(event)
   if (!courseId) {
-    return cResp(null, 'Missing id parameter', false)
+    return cResp(null, '缺少 id 参数', false)
   }
 
   await requireCourseTeacher(event, courseId)

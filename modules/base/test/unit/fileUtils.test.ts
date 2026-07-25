@@ -1,5 +1,5 @@
 /**
- * utils/fileUtils unit tests
+ * utils/fileUtils 单元测试
  * @see modules/base/utils/fileUtils.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'

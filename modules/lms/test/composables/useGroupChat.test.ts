@@ -1,5 +1,5 @@
 /**
- * useGroupChat composable test
+ * useGroupChat composable 测试
  * @see modules/lms/composables/useGroupChat.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -38,11 +38,11 @@ describe('composables/useGroupChat', () => {
 
   it('canChat 依赖 userId、groupId 和 wsConnected', async () => {
     setMockAuthUser({ id: 1, name: 'Alice' })
-    // wsConnected is false
+    // wsConnected 为 false
     const { useGroupChat } = await import('../../composables/useGroupChat')
     const { canChat, cannotChatReason } = useGroupChat({ groupId: 'grp-1' })
     expect(canChat.value).toBe(false)
-    expect(cannotChatReason.value).toBeTruthy() // 'chatroom.connecting' etc.
+    expect(cannotChatReason.value).toBeTruthy() // 'chatroom.connecting' 等
   })
 
   it('cannotChatReason 未登录时返回 needLogin', async () => {
@@ -98,7 +98,7 @@ describe('composables/useGroupChat', () => {
     expect(sentData.text).toBe('hello world')
     expect(sentData.groupId).toBe('grp-1')
     expect(sentData.userId).toBe(1)
-    expect(inputText.value).toBe('') // Cleared after sending
+    expect(inputText.value).toBe('') // 发送后清空
   })
 
   it('formatTime 格式化时间戳', async () => {

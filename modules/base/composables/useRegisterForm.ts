@@ -1,5 +1,5 @@
 /**
- * Registration form: validation + call register API
+ * 注册表单：验证 + 调用注册 API
  */
 export function useRegisterForm(
   onSuccess: () => void,

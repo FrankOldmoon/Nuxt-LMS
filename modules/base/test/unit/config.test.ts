@@ -1,5 +1,5 @@
 /**
- * Config loading/caching utility tests
+ * 配置加载/缓存工具测试
  * @see modules/base/server/utils/config.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -22,7 +22,7 @@ import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'
 beforeEach(() => {
   resetAllStubs()
   vi.clearAllMocks()
-  // Clean up environment variables
+  // 清理环境变量
   delete process.env.MAIL_HOST
   delete process.env.MAIL_PORT
   delete process.env.MAIL_USER
@@ -50,15 +50,15 @@ describe('server/utils/config - reloadConfig', () => {
       { id: 'site:title', value: 'My LMS' },
       { id: 'site:allowRegistration', value: true },
     ]
-    // mock db.select().from().where() → chain terminus
+    // mock db.select().from().where() → 链终结
     const chain = _mockDb.select()
     chain.where = vi.fn().mockResolvedValueOnce(fakeRows)
     _mockDb.select.mockReturnValueOnce(chain as any)
 
     const result = await reloadConfig()
-    expect(result['site:title']).toBe('My LMS') // from DB
-    expect(result['site:allowRegistration']).toBe(true) // from DB
-    expect(result['site:pageSize']).toBe(20) // default value
+    expect(result['site:title']).toBe('My LMS') // 来自 DB
+    expect(result['site:allowRegistration']).toBe(true) // 来自 DB
+    expect(result['site:pageSize']).toBe(20) // 默认值
     expect(getConfigSync('site:title')).toBe('My LMS')
   })
 
@@ -146,7 +146,7 @@ describe('server/utils/config - getConfigByPrefix', () => {
     chain.where = vi.fn().mockResolvedValueOnce([])
     _mockDb.select.mockReturnValueOnce(chain as any)
     await reloadConfig()
-    // prefix must contain '.' to strip the leading dot
+    // prefix 含 '.' 才能去掉前导点
     const mail = await getConfigByPrefix('site:mail.')
     expect(mail).toHaveProperty('host')
     expect(mail).toHaveProperty('port')
@@ -160,7 +160,7 @@ describe('server/utils/config - getConfigByPrefix', () => {
     _mockDb.select.mockReturnValueOnce(chain as any)
     await reloadConfig()
     const mail = await getConfigByPrefix('site:mail')
-    // Actual behavior: keys are '.host' '.port' etc.
+    // 实际行为：key 为 '.host' '.port' 等
     expect(mail).toHaveProperty('.host')
   })
 })

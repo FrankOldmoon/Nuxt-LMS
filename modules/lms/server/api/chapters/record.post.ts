@@ -2,7 +2,7 @@ import { db, schema } from "@nuxthub/db"
 import { eq, and } from "drizzle-orm"
 
 /**
- * Save the current user's record for a chapter (tiptap JSON, with inline question nodes)
+ * 保存当前用户在某章节的 record（tiptap JSON，含内联 question 节点）
  * body: { chapter_id, record: tiptapJSON }
  */
 export default eventHandler(async (event) => {
@@ -11,7 +11,7 @@ export default eventHandler(async (event) => {
   const body = await readBody(event)
   const chapterId = Number(body.chapter_id)
   if (!chapterId) {
-    return cResp(null, 'Missing chapter_id parameter', false)
+    return cResp(null, '缺少 chapter_id 参数', false)
   }
 
   const record = body.record || null
@@ -31,7 +31,7 @@ export default eventHandler(async (event) => {
     }
     return cResp({ ok: true })
   } catch (error: any) {
-    console.error('Failed to save chapter record:', error)
-    return cResp(null, error.message || 'Save failed', false)
+    console.error('保存 chapter record 失败:', error)
+    return cResp(null, error.message || '保存失败', false)
   }
 })

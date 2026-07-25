@@ -3,9 +3,9 @@
     <p class="text-xs text-gray-500 mb-3">{{ $t('question.matchRenderHint') }}</p>
 
     <div ref="containerRef" class="relative flex gap-32 py-2">
-      <!-- SVG connectLinelayer -->
+      <!-- SVG 连线层 -->
       <svg class="absolute inset-0 w-full h-full pointer-events-none" style="z-index: 0;">
-        <!-- alreadyestablish connectLine -->
+        <!-- 已建立的连线 -->
         <line
           v-for="(rightIdx, leftIdx) in connections"
           :key="`line-${leftIdx}`"
@@ -15,7 +15,7 @@
           stroke-width="2"
           stroke-linecap="round"
         />
-        <!-- temporary connectLine（SelectedLeftBackwithfollow mouse） -->
+        <!-- 临时连线（选中左侧后跟随鼠标） -->
         <line
           v-if="selectedLeft !== null && mousePos.x > 0"
           :x1="getLeftX(selectedLeft)" :y1="getLeftY(selectedLeft)"
@@ -27,7 +27,7 @@
         />
       </svg>
 
-      <!-- LeftitemsList -->
+      <!-- 左侧项列表 -->
       <div class="flex-1 space-y-2 relative" style="z-index: 1;">
         <div
           v-for="(pair, leftIdx) in leftItems"
@@ -45,7 +45,7 @@
         </div>
       </div>
 
-      <!-- RightitemsList（shuffleOrder） -->
+      <!-- 右侧项列表（打乱顺序） -->
       <div class="flex-1 space-y-2 relative" style="z-index: 1;">
         <div
           v-for="(item, rightIdx) in rightItems"
@@ -66,7 +66,7 @@
       </div>
     </div>
 
-    <!-- Operation Tip -->
+    <!-- 操作提示 -->
     <p v-if="selectedLeft !== null" class="text-xs text-blue-500 mt-2">
       {{ $t('question.matchSelectRight') }}
     </p>

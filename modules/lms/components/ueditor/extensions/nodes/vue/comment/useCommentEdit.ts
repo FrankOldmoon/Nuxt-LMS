@@ -17,10 +17,10 @@ export function useCommentEditContext() {
 }
 
 export function useCommentEdit(props: CommentEditProps, emit: CommentEditEmit) {
-    // Determine if it's Modal mode (has modelValue prop)
+    // 判断是否为 Modal 模式（有 modelValue prop）
     const isModal = computed(() => props.modelValue !== undefined)
 
-    // Modal mode open state
+    // Modal 模式的 open 状态
     const open = computed({
         get: () => props.modelValue,
         set: (v: any) => emit('update:modelValue', v),
@@ -73,21 +73,21 @@ export function useCommentEdit(props: CommentEditProps, emit: CommentEditEmit) {
                     body: { id: props.commentId, course_id: effectiveCourseId.value, ...form.value },
                 })
                 emit('saved', form.value)
-                // Edit comment: toast success (does not broadcast danmaku, decided by backend update API as needed)
-                toast.add({ title: t('comment.save success'), color: 'success' })
+                // 编辑评论：toast 成功（不广播 danmaku，由后端 update 接口按需决定）
+                toast.add({ title: t('comment.saveSuccess'), color: 'success' })
             } else {
                 const result = await cRequest('/api/comments/add', {
                     method: 'POST',
                     body: { course_id: effectiveCourseId.value, ...form.value },
                 })
                 emit('saved', { ...form.value, cid: result.cid })
-                // New comment: toast success
-                toast.add({ title: t('comment.save success'), color: 'success' })
+                // 新增评论：toast 成功
+                toast.add({ title: t('comment.saveSuccess'), color: 'success' })
             }
             saveOk.value = true
-            saveMsg.value = t('comment.save success')
+            saveMsg.value = t('comment.saveSuccess')
             originalData = JSON.parse(JSON.stringify(form.value))
-            // Modal mode: close modal
+            // Modal 模式：关闭弹窗
             if (isModal.value) {
                 open.value = false
             }
@@ -104,7 +104,7 @@ export function useCommentEdit(props: CommentEditProps, emit: CommentEditEmit) {
         }
     }
 
-    // ── JSON raw data editor (advanced) ──
+    // ── JSON 原始数据编辑器（高级） ──
     const showJsonEditor = ref(false)
     const jsonText = ref('')
     const jsonError = ref('')
@@ -153,7 +153,7 @@ export function useCommentEdit(props: CommentEditProps, emit: CommentEditEmit) {
         }
     })
 
-    // Modal mode: init form when modal opens
+    // Modal 模式：弹窗打开时初始化 form
     watch(open, (val) => {
         if (val) initForm()
         else {
@@ -162,7 +162,7 @@ export function useCommentEdit(props: CommentEditProps, emit: CommentEditEmit) {
         }
     }, { immediate: true })
 
-    // Inline mode: init form when component loads
+    // 内联模式：组件加载时初始化 form
     watch(() => props.comment, () => {
         if (!isModal.value) initForm()
     }, { immediate: true })

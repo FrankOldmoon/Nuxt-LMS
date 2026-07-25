@@ -1,8 +1,8 @@
 /**
- * course/announcementsModal/index.vue component test
+ * course/announcementsModal/index.vue 组件测试
  * @see modules/lms/components/course/announcementsModal/index.vue
  *
- * Announcement modal: UModal container, internally useCourseAnnouncements provides context
+ * 公告弹窗：UModal 容器，内部 useCourseAnnouncements 提供上下文
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

@@ -23,14 +23,14 @@ export function useSearchModal(emit: SearchModalEmit) {
 
     const allEntries = ref<SearchEntry[]>([])
 
-    // detectCurrent PageSurfaceYesNo course/ChapterPage，Get courseId
-    // makeusepath match ingandnon-routebyname，compatible base/doc/lms nosameModuleRegisterroutebyname
+    // 检测当前页面是否为课程/章节页面，获取 courseId
+    // 使用路径匹配而非路由名，兼容 base/doc/lms 不同模块注册的路由名
     const currentCourseId = computed(() => {
         const match = route.path.match(/^\/course\/(\d+)/)
         return match ? match[1] : undefined
     })
 
-    // based on PageUpDowncontext determinesSearch API
+    // 根据页面上下文决定搜索的 API
     const searchApiUrl = computed(() => {
         if (currentCourseId.value) {
             return `/api/search?courseId=${currentCourseId.value}`
@@ -38,7 +38,7 @@ export function useSearchModal(emit: SearchModalEmit) {
         return '/api/search'
     })
 
-    // SearchFilter
+    // 搜索过滤
     const filteredResults = computed(() => {
         const kw = keyword.value.trim().toLowerCase()
         if (!kw) return []
@@ -60,7 +60,7 @@ export function useSearchModal(emit: SearchModalEmit) {
         selectedIndex.value = 0
     })
 
-    // KeykeyboardOperation
+    // 键盘操作
     function moveSelection(delta: number) {
         const max = filteredResults.value.length
         if (max === 0) return
@@ -84,7 +84,7 @@ export function useSearchModal(emit: SearchModalEmit) {
         router.push(targetUrl)
     }
 
-    // Highhighlight
+    // 高亮
     function highlightText(text: string): { text: string; highlight: boolean }[] {
         const kw = keyword.value.trim()
         if (!kw) return [{ text, highlight: false }]
@@ -111,14 +111,14 @@ export function useSearchModal(emit: SearchModalEmit) {
         return segments
     }
 
-    // Pagewhen path changesReloadRightshouldIndex
+    // 页面路径变化时重新加载对应索引
     watch(() => route.fullPath, () => {
         keyword.value = ''
         selectedIndex.value = 0
         loadData()
     })
 
-    // On component mountLoadDataandfocus
+    // 组件挂载时加载数据并聚焦
     onMounted(() => {
         loadData()
     })
@@ -138,11 +138,11 @@ export function useSearchModal(emit: SearchModalEmit) {
         })
     }
 
-    // GlobalFastshortcutKey Cmd+K / Ctrl+K OpenSearch
+    // 全局快捷键 Cmd+K / Ctrl+K 打开搜索
     function onGlobalKeydown(e: KeyboardEvent) {
         if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
             e.preventDefault()
-            // by header Middle UModal open Status control，ThisInsideno need for addOutsideHandle
+            // 由 header 中的 UModal open 状态控制，这里不需要额外处理
         }
     }
 

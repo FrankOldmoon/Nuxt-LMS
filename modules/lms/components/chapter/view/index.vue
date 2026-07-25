@@ -1,12 +1,12 @@
 <template>
-  <!-- Chapter content -->
+  <!-- 章节内容 -->
   <ChapterWs />
   <div v-if="data" class="flex gap-8">
-    <!-- Left main content -->
+    <!-- 左侧主内容 -->
     <div class="flex-1 min-w-0 max-w-none">
       <slot name="access-bar" />
 
-      <!-- ChapterHead -->
+      <!-- 章节头部 -->
       <div class="mb-8 pb-6 border-b border-default">
         <div class="flex items-center gap-2 text-sm text-muted mb-3">
           <UIcon :name="data.course.icon" class="size-4" />
@@ -21,13 +21,13 @@
 
       <UeditorRender :json="data.chapter.content" :course-id="courseId" :track-reading="!!user" />
 
-      <!-- AI GenerateContent（UsercanEdit，ForbidSwitchPlain Textmode） -->
+      <!-- AI 生成内容（用户可编辑，禁止切换纯文本模式） -->
       <div class="mt-8 pt-6 border-t border-default">
         <h2 class="text-lg font-semibold mb-3">{{ $t('chapter.aiContent') }}</h2>
         <RichEditor v-model="aiRecord" :allow-text-mode="false" @update:model-value="saveRecord" />
       </div>
 
-      <!-- Upone chapter/Downone chapterNavigation -->
+      <!-- 上一章/下一章导航 -->
       <div class="flex items-center justify-between gap-4 pt-8 mt-8 border-t border-default">
         <NuxtLink v-if="prevChapter" :to="prevChapter.to" class="flex-1">
           <UCard :ui="{ body: 'flex items-center gap-3' }" class="transition-all hover:ring-2 hover:ring-primary/30">
@@ -53,7 +53,7 @@
       </div>
     </div>
 
-    <!-- RightTable of Contents（chapterPage.showOutline Close when Hide） -->
+    <!-- 右侧目录（chapterPage.showOutline 关闭时隐藏） -->
     <div v-if="chapterPageCfg.showOutline" class="hidden lg:block w-56 shrink-0">
       <div class="sticky top-20">
         <UPageAside style="padding-top: 0px">
@@ -63,19 +63,19 @@
     </div>
 
     <div class="fixed bottom-16 right-6 z-50 flex flex-col items-end gap-3">
-      <!-- AI ChapterTeaching Assistant + VRM NumberPerson -->
+      <!-- AI 章节助教 + VRM 数字人 -->
       <ChapterViewAiAssistant />
     </div>
   </div>
 
-  <!-- Chapter does not exist -->
+  <!-- 章节不存在 -->
   <div v-else-if="!pending && notFound" class="flex flex-col items-center justify-center py-20">
     <UIcon name="i-lucide-search-x" class="size-12 text-muted mb-4" />
     <p class="text-lg text-muted mb-4">{{ $t('chapter.notFound') }}</p>
     <UButton :to="`/course/${courseId}`" :label="$t('chapter.backToCourse')" color="primary" variant="outline" />
   </div>
 
-  <!-- ChapternotOnput -->
+  <!-- 章节未开放 -->
   <div v-else-if="!pending && extraCondition" class="flex flex-col items-center justify-center py-20">
     <slot name="locked">
       <UIcon name="i-lucide-lock" class="size-12 text-muted mb-4" />

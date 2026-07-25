@@ -1,13 +1,13 @@
 /**
- * Course import: ID mapping helper functions
+ * 课程导入：ID 映射辅助函数
  *
- * 1. remapIdArray   - rewrite numeric id array using the mapping
- * 2. remapContentIds - recursively traverse Tiptap JSON, replacing vue node cid
- * 3. remapOrderEntry - rewrite numeric id / parentId in course.orders
+ * 1. remapIdArray   - 用映射重写数字 id 数组
+ * 2. remapContentIds - 递归遍历 Tiptap JSON，替换 vue 节点 cid
+ * 3. remapOrderEntry - 重写 course.orders 中数字 id / parentId
  */
 import type { ChapterIdMap } from './types'
 
-/** Rewrite numeric id array using the mapping (keeps the original value when no mapping is found, filters non-positive integers) */
+/** 用映射重写数字 id 数组（找不到映射时保留原值，过滤非正整数） */
 export function remapIdArray(ids: any, map: Map<number, number>): number[] {
   if (!Array.isArray(ids)) return []
   return ids
@@ -16,8 +16,8 @@ export function remapIdArray(ids: any, map: Map<number, number>): number[] {
 }
 
 /**
- * Recursively traverse Tiptap JSON, replacing the cid of vue nodes
- * node.attrs.type determines which mapping to use
+ * 递归遍历 Tiptap JSON，替换 vue 节点的 cid
+ * node.attrs.type 决定用哪个映射
  */
 export function remapContentIds(content: any, maps: Record<string, Map<number, number>>): any {
   if (!content) return content
@@ -45,10 +45,10 @@ export function remapContentIds(content: any, maps: Record<string, Map<number, n
 }
 
 /**
- * Rewrite a single entry of course.orders:
- * - 'course' node remains unchanged
- * - 'custom-xxx' custom group remains unchanged
- * - Numeric id (chapter) and numeric id in parentId (nested sub-chapters) are rewritten via chapterIdMap
+ * 重写 course.orders 的单个 entry：
+ * - 'course' 节点保持不变
+ * - 'custom-xxx' 自定义分组保持不变
+ * - 数字 id（章节）和 parentId 中的数字 id（嵌套子章节）按 chapterIdMap 重写
  */
 export function remapOrderEntry(o: any, chapterIdMap: ChapterIdMap): any {
   if (!o || typeof o !== 'object') return o

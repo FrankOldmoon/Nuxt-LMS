@@ -1,5 +1,5 @@
 /**
- * useAdminTable composable tests
+ * useAdminTable composable 测试
  * @see modules/admin/composables/useAdminTable.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -9,7 +9,7 @@ beforeEach(() => {
   resetAllStubs()
 })
 
-/** Build mock /api/crud/:table/list response */
+/** 构造 mock /api/crud/:table/list 响应 */
 function mockListResponse(data: any[] = [], opts: { hasId?: boolean; columns?: any[] } = {}) {
   const hasId = opts.hasId ?? true
   return {
@@ -93,7 +93,7 @@ describe('composables/useAdminTable - load & buildQuery', () => {
     const t = useAdminTable('users')
     t.page.value = 3
     t.pageSize.value = 50
-    // buildQuery is an internal function, verified indirectly via URL during load
+    // buildQuery 是内部函数，通过 load 时的 URL 间接验证
     let capturedUrl = ''
     setMockFetchHandler(async (url: string) => {
       capturedUrl = url
@@ -238,7 +238,7 @@ describe('composables/useAdminTable - 列可见性', () => {
     t.toggleColumn('name')
     expect(t.hiddenColumns.value.has('name')).toBe(true)
     expect(putBody.hidden).toContain('name')
-    // visibleColumns excludes hidden columns
+    // visibleColumns 排除隐藏列
     expect(t.visibleColumns.value.map((c: any) => c.jsName)).not.toContain('name')
   })
 

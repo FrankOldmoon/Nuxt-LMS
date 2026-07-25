@@ -26,7 +26,7 @@ const props = defineProps({
 
 const { t } = useI18n()
 
-// fixed optionitems：Correct / Error
+// 固定选项：正确 / 错误
 props.form.options = [t('question.correct'), t('question.wrong')]
 if (!props.form.answer?.length) props.form.answer = [0]
 

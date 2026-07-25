@@ -1,5 +1,5 @@
 /**
- * ueditor/render/nodes/callout.vue component test
+ * ueditor/render/nodes/callout.vue 组件测试
  * @see modules/lms/components/ueditor/render/nodes/callout.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

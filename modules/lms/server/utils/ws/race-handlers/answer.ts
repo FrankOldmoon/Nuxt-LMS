@@ -1,5 +1,5 @@
 /**
- * raceAnswer: record a single user's answer + broadcast raceAnswerUpdate / raceScores
+ * raceAnswer：记录单用户答案 + 广播 raceAnswerUpdate / raceScores
  */
 import { raceStates, broadcastToRace, computeRaceScores } from '../state'
 

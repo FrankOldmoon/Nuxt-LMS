@@ -1,10 +1,10 @@
 // ueditor/render/readingBlock.vue component tests
 // @see modules/lms/components/ueditor/render/readingBlock.vue
 //
-// Visual feedback contract (all nodes use box-shadow border, no distinction between text/non-text):
-// - default (not hovered, not read): no border class
-// - hover enter: reading-hover-border (yellow), not shown when heading is completed
-// - read (after 3s hover): reading-visited-border (green, persistent)
+// 视觉反馈契约（所有 node 一律用 box-shadow 边框，不区分文字/非文字）：
+// - 默认（未 hover、未读）：无边框类
+// - hover 进入：reading-hover-border（黄色），heading 已完成时不显示
+// - 已读（3s hover 后）：reading-visited-border（绿色，持久）
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { resetAllStubs, setMockI18n } from '../../../../../../test/setup/nuxt-stubs'
@@ -83,7 +83,7 @@ describe('ueditor/render/readingBlock.vue', () => {
       global: _globalConfig,
     })
     await wrapper.find('div').trigger('mouseenter')
-    // Text nodes also use border (no longer distinguished by background)
+    // 文字节点也用边框（不再用 background 区分）
     expect(wrapper.find('div').classes()).toContain('reading-hover-border')
     expect(wrapper.find('div').classes()).not.toContain('reading-visited-bg')
   })

@@ -1,5 +1,5 @@
 /**
- * useTts composable test
+ * useTts composable 测试
  * @see modules/lms/composables/useTts.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -42,7 +42,7 @@ describe('composables/useTts', () => {
     selectedLang.value = 'zh-CN'
     selectedGender.value = 'female'
     expect(filteredVoices.value.length).toBeGreaterThan(0)
-    // All returned voices should belong to zh-CN
+    // 所有返回的 voice 应属于 zh-CN
     for (const v of filteredVoices.value) {
       expect(v.lang).toBe('zh-CN')
     }

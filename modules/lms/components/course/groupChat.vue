@@ -1,6 +1,6 @@
 <template>
   <div class="w-full flex flex-col h-full">
-    <!-- Message List -->
+    <!-- 消息列表 -->
     <div ref="msgListRef"
       class="flex-1 min-h-0 overflow-y-auto p-2 bg-gray-50 dark:bg-gray-900 rounded-md flex flex-col gap-2">
       <div v-if="!messages.length" class="text-center py-8 text-gray-400 text-sm">
@@ -27,7 +27,7 @@
       </div>
     </div>
 
-    <!-- Input area -->
+    <!-- 输入区 -->
     <div class="flex gap-2 items-center mt-3">
       <UInput v-model="inputText" :placeholder="$t('chatroom.inputPlaceholder')" size="sm"
         class="flex-1" @keydown.enter="sendMessage" :disabled="!canChat" />

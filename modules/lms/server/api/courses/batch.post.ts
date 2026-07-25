@@ -1,7 +1,7 @@
 
 
 export default eventHandler(async (event) => {
-  // Only admins can perform batch operations on courses
+  // 仅管理员可批量操作课程
   await requireAdmin(event)
 
   const body = await readBody(event)
@@ -9,11 +9,11 @@ export default eventHandler(async (event) => {
 
   try {
     const result = await batchTable('courses', ids, action as any)
-    // Deleting courses affects the home navigation
+    // 删除课程会影响首页导航
     broadcastToAll({ type: 'home-changed', reason: 'courses.batch' })
     return cResp(result)
   } catch (error: any) {
-    console.error(`Batch [${action}] operation on courses failed:`, error)
-    return cResp(null, error.message || 'Batch operation failed', false)
+    console.error(`批量[${action}]操作课程失败:`, error)
+    return cResp(null, error.message || '批量操作失败', false)
   }
 })

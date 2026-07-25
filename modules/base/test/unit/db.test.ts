@@ -1,5 +1,5 @@
 /**
- * Generic CRUD database utility tests
+ * 通用 CRUD 数据库工具测试
  * @see modules/base/server/utils/db.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -39,7 +39,7 @@ const _mockSchema = {
   permissions: { id: 'id', code: 'code' },
   rolePermissions: { roleId: 'roleId', permissionId: 'permissionId' },
   configs: { id: 'id', value: 'value' },
-  // Generic schema placeholder (CRUD utils use schema[tableName])
+  // 通用 schema 占位（CRUD 工具用 schema[tableName]）
   categories: { id: 'id', name: 'name' },
   courses: { id: 'id', title: 'title' },
 }
@@ -54,7 +54,7 @@ import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'
 beforeEach(() => {
   resetAllStubs()
   vi.clearAllMocks()
-  // Reset chainable mocks (after clearAllMocks all .mockReturnThis reset to return undefined)
+  // 重置链式 mock（clearAllMocks 后所有 .mockReturnThis 重置返回 undefined）
   _mockDb.select.mockReturnThis()
   _mockDb.from.mockReturnThis()
   _mockDb.where.mockReturnThis()
@@ -126,7 +126,7 @@ describe('server/utils/db - updateTable', () => {
     const { updateTable } = await import('../../server/utils/db/crud')
     _mockDb.set.mockReturnThis()
     _mockDb.where.mockReturnThis()
-    // Terminus: where returns a promise
+    // 终结：where 返回 promise
     ;(_mockDb.where as any).mockResolvedValueOnce({ changes: 1 })
     const result = await updateTable('categories', 1, { name: 'Y' })
     expect(result).toEqual({ changes: 1 })
@@ -174,14 +174,14 @@ describe('server/utils/db - batchTable', () => {
 describe('server/utils/db - assignRoleToUser', () => {
   it('role 不存在返回 false', async () => {
     const { assignRoleToUser } = await import('../../server/utils/db/users')
-    _mockDb.limit.mockResolvedValueOnce([]) // role not found
+    _mockDb.limit.mockResolvedValueOnce([]) // 找不到 role
     const result = await assignRoleToUser(1, 'unknown-role')
     expect(result).toBe(false)
   })
 
   it('role 存在时插入并返回 true', async () => {
     const { assignRoleToUser } = await import('../../server/utils/db/users')
-    _mockDb.limit.mockResolvedValueOnce([{ id: 5 }]) // role exists
+    _mockDb.limit.mockResolvedValueOnce([{ id: 5 }]) // role 存在
     _mockDb.insert.mockReturnThis()
     _mockDb.values.mockReturnThis()
     _mockDb.onConflictDoNothing.mockResolvedValueOnce(undefined)

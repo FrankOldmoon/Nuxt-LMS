@@ -83,7 +83,7 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
         }).filter(Boolean)
     })
 
-    // ====================== State variables ======================
+    // ====================== 状态变量 ======================
     const userRecord = ref<any>(null)
     const recordFetched = ref(false)
     const started = ref(false)
@@ -155,7 +155,7 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
                     nextTick(() => fillRecordsToQuestions(data.records))
                 }
             }
-        } catch (err) { /* silent */ }
+        } catch (err) { /* 静默 */ }
         recordFetched.value = true
     }
 
@@ -347,7 +347,7 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
             resultPassed.value = result.isPassed
             submitted.value = true
             started.value = false
-            // Post-submit toast hint: score + pass status + experience
+            // 提交后 toast 提示：得分 + 是否通过 + 经验
             const gainedExp = Number(result?.gainedExp) || 0
             const scoreVal = Math.round(Number(result?.score) || 0)
             const titleKey = result.isPassed ? 'quiz.submitPassed' : 'quiz.submitFinished'

@@ -1,9 +1,9 @@
 /**
- * class/userCard.vue component test
+ * class/userCard.vue 组件测试
  * @see modules/lms/components/class/userCard.vue
  *
- * User card: avatar + name + student ID + medals + level/EXP/points (course context).
- * Uses useUserCardSetup (from ./useUserCard.ts), internally depends on useAuth/useMedals/useUserCard.
+ * 用户卡片：头像 + 姓名 + 学号 + 奖章 + 等级/经验/积分（课程上下文）。
+ * 使用 useUserCardSetup（来自 ./useUserCard.ts），内部依赖 useAuth/useMedals/useUserCard。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -26,7 +26,7 @@ beforeEach(() => {
     fetchMyMedals: vi.fn(),
     checkMedals: vi.fn(),
   })
-  // stub useUserCard (global composable, returns refreshTrigger)
+  // stub useUserCard（全局 composable，返回 refreshTrigger）
   ;(globalThis as any).useUserCard = () => ({
     refreshTrigger: ref(0),
   })
@@ -77,7 +77,7 @@ describe('class/userCard.vue', () => {
   })
 
   it('用户未登录时不渲染卡片', async () => {
-    // Does not call setMockAuthUser → user is null
+    // 不调用 setMockAuthUser → user 为 null
     setMockRoute({ params: {}, query: {}, path: '/', fullPath: '/' })
     const { default: UserCard } = await import('../../../components/class/userCard.vue')
     const wrapper = mount(UserCard, { global: _globalConfig })
@@ -91,7 +91,7 @@ describe('class/userCard.vue', () => {
     const { default: UserCard } = await import('../../../components/class/userCard.vue')
     const wrapper = mount(UserCard, { global: _globalConfig })
     await flushPromises()
-    // When hasCourse is true, shows Lv. and EXP
+    // hasCourse 为 true 时显示 Lv. 和 EXP
     expect(wrapper.text()).toContain('Lv.')
     expect(wrapper.text()).toContain('EXP')
     expect(wrapper.text()).toContain('userCard.courseScore')

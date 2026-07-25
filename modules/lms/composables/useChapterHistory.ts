@@ -1,8 +1,8 @@
 /**
- * Chapter history version modal logic
- * - Fetch history version list
- * - Paginate content preview
- * - Restore specified version
+ * 章节历史版本弹窗逻辑
+ * - 拉取历史版本列表
+ * - 分页浏览内容预览
+ * - 恢复指定版本
  */
 export function useChapterHistory(props: { table: string; id: number }) {
   const { t } = useI18n()
@@ -13,7 +13,7 @@ export function useChapterHistory(props: { table: string; id: number }) {
   const versions = ref<{ id: number; content: any; createdAt: string }[]>([])
   const pending = ref(false)
   const restoring = ref(false)
-  // Current page number (1-based, versions sorted newest first, so page=1 is the latest version)
+  // 当前页码（1 起始，versions 按最新在前排序，故 page=1 即最新版本）
   const page = ref(1)
 
   const currentVersion = computed(() => versions.value[page.value - 1] ?? null)
@@ -45,12 +45,12 @@ export function useChapterHistory(props: { table: string; id: number }) {
         body: { versionId },
       })
       toast.add({ title: t('layout.restoreSuccess'), color: 'success' })
-      // Notify page to refresh data (contentVersion +1, page watch will re-fetch)
+      // 通知页面刷新数据（contentVersion +1，页面 watch 会重新拉取）
       notifyContentSaved()
       open.value = false
       location.reload()
     } catch {
-      // cRequest already throws error, no extra handling needed here
+      // cRequest 已抛错，此处无需额外处理
     } finally {
       restoring.value = false
     }
@@ -63,7 +63,7 @@ export function useChapterHistory(props: { table: string; id: number }) {
     if (page.value < versions.value.length) page.value++
   }
 
-  // Fetch history versions when modal opens
+  // 打开弹窗时拉取历史版本
   watch(open, (val) => {
     if (val) fetchVersions()
   })

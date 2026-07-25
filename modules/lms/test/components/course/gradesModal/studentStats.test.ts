@@ -1,8 +1,8 @@
 /**
- * course/gradesModal/studentStats.vue component test
+ * course/gradesModal/studentStats.vue 组件测试
  * @see modules/lms/components/course/gradesModal/studentStats.vue
  *
- * Student-side learning stats + ability radar chart
+ * 学生端学习统计 + 能力雷达图
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'

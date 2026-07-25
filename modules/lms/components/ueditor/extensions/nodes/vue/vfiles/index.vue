@@ -2,14 +2,14 @@
     <div class="p-2">
         <Edit v-if="showConfig" :config="config" @update:config="onConfigChange" @close="showConfig = false" />
     </div>
-    <!-- Preview/Editarea（Start and end show，interactiveEditFileContent） -->
+    <!-- 预览/编辑区（始终显示，交互式编辑文件内容） -->
     <div class="vue-node-body">
         <div class="flex" style="min-height: 300px;">
-            <!-- LeftNavigation -->
+            <!-- 左侧导航 -->
             <div style="width: 220px; border-right: 1px solid #e5e7eb; padding: 8px; overflow-y: auto; max-height: 400px;">
                 <UNavigationMenu :items="navItems" orientation="vertical" class="w-full" />
             </div>
-            <!-- RightContentEdit -->
+            <!-- 右侧内容编辑 -->
             <div style="flex: 1; padding: 12px; min-width: 0; max-height: 400px; overflow: hidden;">
                 <div v-if="selectedFile" class="flex flex-col h-full">
                     <div class="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100 dark:border-gray-800">

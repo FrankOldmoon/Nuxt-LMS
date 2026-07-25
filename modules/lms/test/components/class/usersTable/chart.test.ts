@@ -1,9 +1,9 @@
 /**
- * class/usersTable/chart.vue component test
+ * class/usersTable/chart.vue 组件测试
  * @see modules/lms/components/class/usersTable/chart.vue
  *
- * Student score bar chart + right-side avatar overlay.
- * Depends on useClassUsersTableContext() (inject), stubbed to globalThis in tests.
+ * 学生得分柱状图 + 右侧头像覆盖层。
+ * 依赖 useClassUsersTableContext()（inject），测试中 stub 到 globalThis。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'

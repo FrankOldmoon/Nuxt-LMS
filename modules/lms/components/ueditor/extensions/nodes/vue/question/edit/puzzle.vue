@@ -1,12 +1,12 @@
 <template>
   <div>
-    <!-- Image Upload -->
+    <!-- 图片上传 -->
     <div>
       <label class="text-xs text-gray-500 mb-1 block">{{ $t('question.puzzleImageLabel') }}</label>
       <FormInputFile v-model="config.url" :placeholder="$t('question.puzzleUploadHint')" />
     </div>
 
-    <!-- splitParameter -->
+    <!-- 分割参数 -->
     <div class="mt-3">
       <label class="text-xs text-gray-500 mb-1 block">{{ $t('question.puzzleSplitLabel') }}</label>
       <div class="flex items-center gap-2">
@@ -15,7 +15,7 @@
       </div>
     </div>
 
-    <!-- Preview -->
+    <!-- 预览 -->
     <div v-if="config.url" class="mt-3">
       <label class="text-xs text-gray-500 mb-1 block">{{ $t('question.puzzlePreview') }}</label>
       <div class="inline-block p-2 border border-gray-200 dark:border-gray-600 rounded">
@@ -48,13 +48,13 @@ const splitOptions = [
   { label: '4 × 4', value: 4 },
 ]
 
-// from form.options ReadConfiguration（cancanYesObject {url, split} orEmpty）
+// 从 form.options 读取配置（可能是对象 {url, split} 或空）
 const config = ref({
   url: '',
   split: 3,
 })
 
-// form.options → config（Initialize + ResponseOutsideexternal change，if AI Generate）
+// form.options → config（初始化 + 响应外部变更，如 AI 生成）
 watch(() => props.form.options, (opts) => {
   let val = { url: '', split: 3 }
   if (opts && typeof opts === 'object' && !Array.isArray(opts)) {
@@ -70,11 +70,11 @@ watch(() => props.form.options, (opts) => {
 
 const splitHint = computed(() => t('question.puzzleSplitHint', { n: config.value.split * config.value.split }))
 
-// config when changesSyncto form.options and form.answer
+// config 变化时同步到 form.options 和 form.answer
 watch(config, (val) => {
   const newOpts = { url: val.url, split: val.split }
   const curOpts = props.form.options
-  // ValuerelativesamewhenSkip，avoidFeedbackcycle
+  // 值相同时跳过，避免反馈环
   if (curOpts && typeof curOpts === 'object' && !Array.isArray(curOpts) &&
     curOpts.url === newOpts.url && Number(curOpts.split) === newOpts.split) return
   props.form.options = newOpts
@@ -82,7 +82,7 @@ watch(config, (val) => {
   props.form.answer = Array.from({ length: n }, (_, i) => i)
 }, { deep: true, immediate: true })
 
-// calculatePreviewMiddleeach block background Style
+// 计算预览中每块的 background 样式
 function pieceStyle(originalIndex) {
   const split = config.value.split
   const row = Math.floor(originalIndex / split)

@@ -1,6 +1,6 @@
 import type { MedalContent } from './types'
 
-// ====================== Default medals ======================
+// ====================== 默认奖章 ======================
 
 export const DEFAULT_MEDALS: { name: string; content: MedalContent }[] = [
   {

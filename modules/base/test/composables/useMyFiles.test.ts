@@ -1,5 +1,5 @@
 /**
- * composables/useMyFiles tests
+ * composables/useMyFiles 测试
  * @see modules/base/composables/useMyFiles.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -14,7 +14,7 @@ import {
 beforeEach(() => {
   resetAllStubs()
   clearMockFetchHandler()
-  // confirm returns true by default
+  // confirm 默认返回 true
   ;(globalThis as any).confirm = () => true
 })
 
@@ -39,7 +39,7 @@ describe('composables/useMyFiles - 初始状态 & title', () => {
     expect(usage.value).toEqual({ used: 0, quota: 0, free: 0, unlimited: false })
     expect(page.value).toBe(1)
     expect(sortBy.value).toBe('createdAt')
-    // sortOrder is not in the return value, indirectly verified via orderIcon (desc = down arrow)
+    // sortOrder 不在返回值中，通过 orderIcon 间接验证（desc = 向下箭头）
     expect(orderIcon.value).toBe('i-lucide-arrow-down-narrow-wide')
     expect(uploading.value).toBe(false)
   })
@@ -65,7 +65,7 @@ describe('composables/useMyFiles - toggleOrder', () => {
     setMockFetchHandler(async () => ({ data: { list: [], total: 0 }, success: true, msg: '' }))
     const { useMyFiles } = await import('../../composables/useMyFiles')
     const { toggleOrder, orderIcon } = useMyFiles(() => undefined)
-    // sortOrder is not in the return value, indirectly verified via orderIcon
+    // sortOrder 不在返回值中，通过 orderIcon 间接验证
     expect(orderIcon.value).toBe('i-lucide-arrow-down-narrow-wide') // desc
     toggleOrder()
     expect(orderIcon.value).toBe('i-lucide-arrow-up-wide-narrow') // asc
@@ -124,9 +124,9 @@ describe('composables/useMyFiles - rename', () => {
     const { startRename, confirmRename, renamingId } = useMyFiles(() => undefined)
     const file = { id: 5, name: 'old.jpg' }
     startRename(file)
-    // renameValue was set to 'old.jpg' by startRename
+    // renameValue 已被 startRename 设置为 'old.jpg'
     confirmRename(file)
-    // Since name === f.name, cancelRename is called directly
+    // 因 name === f.name 直接 cancelRename
     expect(renamingId.value).toBeNull()
   })
 
@@ -165,7 +165,7 @@ describe('composables/useMyFiles - uploadFile', () => {
   it('group 模式上传时附加 group 字段', async () => {
     let capturedBody: any
     setMockFetchHandler(async (url, opts: any) => {
-      // Only capture the upload request body (loadFiles request has no body property and would overwrite)
+      // 只捕获 upload 请求的 body（loadFiles 请求没有 body 属性会覆盖）
       if (String(url).includes('/api/files/upload')) {
         capturedBody = opts.body
       }
@@ -177,7 +177,7 @@ describe('composables/useMyFiles - uploadFile', () => {
     const { useMyFiles } = await import('../../composables/useMyFiles')
     const { uploadFile } = useMyFiles(() => 'g1')
     await uploadFile(new File(['x'], 'a.jpg'))
-    // FormData group field
+    // FormData 的 group 字段
     expect(capturedBody.get('group')).toBe('g1')
   })
 })
@@ -189,7 +189,7 @@ describe('composables/useMyFiles - remove', () => {
     const { useMyFiles } = await import('../../composables/useMyFiles')
     const { remove } = useMyFiles(() => undefined)
     await remove({ id: 1, name: 'a.jpg' })
-    // No toast calls
+    // 无 toast 调用
     expect(getToastCalls()).toHaveLength(0)
   })
 
@@ -259,7 +259,7 @@ describe('composables/useMyFiles - download / preview', () => {
   it('download 创建 a 标签并点击', async () => {
     const { useMyFiles } = await import('../../composables/useMyFiles')
     const { download } = useMyFiles(() => undefined)
-    // Not throwing an error is considered success (document.createElement is available in happy-dom)
+    // 不抛错即视为成功（document.createElement 在 happy-dom 中可用）
     expect(() => download({ id: 1 })).not.toThrow()
   })
 

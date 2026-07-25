@@ -1,15 +1,15 @@
 /**
- * lms/medalEditor.vue component test
+ * lms/medalEditor.vue 组件测试
  * @see modules/lms/components/lms/medalEditor.vue
  *
- * Medal editor: list + add/delete/save + condition edit
+ * 奖章编辑器：列表 + 新增/删除/保存 + 条件编辑
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { ref } from 'vue'
 import { resetAllStubs, setMockI18n } from '../../../../../test/setup/nuxt-stubs'
 
-// mock useMedalEditor (local import)
+// mock useMedalEditor（本地导入）
 vi.mock('../../../components/lms/useMedalEditor', () => ({
   useMedalEditor: () => ({
     loading: ref(false),
@@ -83,12 +83,12 @@ describe('lms/medalEditor.vue', () => {
   it('点击新增按钮调用 addMedal', async () => {
     const { default: MedalEditor } = await import('../../../components/lms/medalEditor.vue')
     const wrapper = mount(MedalEditor, { global: _globalConfig })
-    // Find the add button (label contains medal.add)
+    // 找到 add 按钮（label 包含 medal.add）
     const buttons = wrapper.findAll('.ubutton')
     const addBtn = buttons.find(b => b.text().includes('medal.add'))
     expect(addBtn).toBeTruthy()
     await addBtn!.trigger('click')
-    // addMedal is mocked, verify the call
+    // addMedal 被 mock，验证调用
   })
 
   it('点击保存按钮调用 saveAll', async () => {
@@ -99,7 +99,7 @@ describe('lms/medalEditor.vue', () => {
     expect(saveBtn).toBeTruthy()
     await saveBtn!.trigger('click')
     await new Promise(r => setTimeout(r, 0))
-    // saveAll is mocked, verify the call
+    // saveAll 被 mock，验证调用
   })
 
   it('loading=true 时显示加载图标', async () => {
@@ -118,7 +118,7 @@ describe('lms/medalEditor.vue', () => {
     const { default: MedalEditor } = await import('../../../components/lms/medalEditor.vue')
     const wrapper = mount(MedalEditor, { global: _globalConfig })
     expect(wrapper.find('.uicon').exists()).toBe(true)
-    // When loading, does not render add/save buttons
+    // loading 时不渲染新增/保存按钮
     expect(wrapper.text()).not.toContain('medal.add')
   })
 })

@@ -6,7 +6,7 @@ export default eventHandler(async (event) => {
 
   const { course_id, type } = getQuery(event)
   if (!course_id) {
-    return cResp(null, 'Missing course_id parameter', false)
+    return cResp(null, '缺少 course_id 参数', false)
   }
 
   const courseId = Number(course_id)
@@ -99,7 +99,7 @@ export default eventHandler(async (event) => {
     })))
   }
 
-  // Sort by type and then by cid
+  // 按 type 再按 cid 排序
   result.sort((a, b) => {
     if (a.type !== b.type) return a.type.localeCompare(b.type)
     return a.cid - b.cid

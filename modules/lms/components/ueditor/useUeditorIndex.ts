@@ -27,10 +27,10 @@ export interface UeditorIndexProps {
 export function useUeditorIndex(props: any, json: any) {
     const isReadonly = ref(false)
 
-    // only teacher withUpRolecanEditContent（Show Cinserts）
+    // 仅 teacher 以上角色可编辑内容（显示 Cinserts）
     const { hasRole, isCourseEditor, isCourseTeacher } = useAuth()
     const route = useRoute()
-    // prioritymakeuse props.courseId（admin duplicateusescenario），Elseuse route.params.id
+    // 优先使用 props.courseId（admin 复用场景），否则用 route.params.id
     const effectiveCourseId = computed(() => {
         if (props.courseId !== undefined && props.courseId !== null && props.courseId !== '') {
             return Number(props.courseId) || 0
@@ -52,20 +52,20 @@ export function useUeditorIndex(props: any, json: any) {
             content: json.value,
         },
         height: '600px',
-        content type: 'markdown',
+        contentType: 'markdown',
         readonly: isReadonly.value,
         extensions,
-        async on save(content: any, page: any, document: any) {
+        async onSave(content: any, page: any, document: any) {
             if (props.saveHandler) {
                 return props.saveHandler(content)
             }
-            localStorage.set item('json', JSON.stringify(content.json))
+            localStorage.setItem('json', JSON.stringify(content.json))
             return 1
         },
         async onFileUpload(file: any) {
             if (!file) throw new Error('File not found')
 
-            // Image CompressionHandle
+            // 图片压缩处理
             const processedFile = file.type.startsWith('image/')
                 ? await compressImage(file)
                 : file
@@ -87,14 +87,14 @@ export function useUeditorIndex(props: any, json: any) {
         },
     }))
 
-    // editor CreateBack，will cinserts mobiletoToolbarmostFrontSurfaceandShow
+    // editor 创建后，将 cinserts 移动到工具栏最前面并显示
     const onCreated = () => {
         nextTick(() => {
             injectCinserts()
             if (isReadonly.value) {
                 editorRef.value?.useEditor()?.setEditable(false)
             }
-            // DisablePaste
+            // 禁用粘贴
             if (!props.pasteable) {
                 editorRef.value?.useEditor()?.on('paste', ({ event }: any) => {
                     event.preventDefault()
@@ -148,18 +148,18 @@ export function useUeditorIndex(props: any, json: any) {
             return
         }
 
-        // Ifalreadyif already injected thenSkip
+        // 如果已经注入过则跳过
         if (ribbon.querySelector('.cinserts-injected')) return
 
-        // will cinsertsWrapper mobiletoToolbarmostFrontSurface
+        // 将 cinsertsWrapper 移动到工具栏最前面
         const wrapper = cinsertsWrapper.value
         if (!wrapper) return
-        wrapper.class list.add('cinserts-injected')
+        wrapper.classList.add('cinserts-injected')
         wrapper.style.display = ''
         ribbon.insertBefore(wrapper, ribbon.firstChild)
     }
 
-    const on changed = () => {
+    const onChanged = () => {
         const markdown = editorRef.value.useEditor().getMarkdown()
         json.value = editorRef.value.getJSON()
         //console.log({ markdown, json: json.value })
@@ -181,7 +181,7 @@ export function useUeditorIndex(props: any, json: any) {
         onCreated,
         onPaste,
         onLockUpdate,
-        on changed,
+        onChanged,
         saveDocument,
     }
 }

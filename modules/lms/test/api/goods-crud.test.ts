@@ -1,13 +1,13 @@
 /**
- * LMS Goods CRUD API endpoint test
+ * LMS Goods CRUD API 端点测试
  * @see modules/lms/server/api/goods/*.ts
  *
- * Coverage:
- * - list.get.ts     shop goods list (student browsing)
- * - manage.get.ts   manageable goods list (admin/teacher)
- * - add.post.ts     add goods
- * - update.post.ts  update goods
- * - delete.post.ts  delete goods
+ * 覆盖：
+ * - list.get.ts     商店商品列表（学生浏览）
+ * - manage.get.ts   可管理商品列表（admin/教师）
+ * - add.post.ts     新增商品
+ * - update.post.ts  更新商品
+ * - delete.post.ts  删除商品
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 

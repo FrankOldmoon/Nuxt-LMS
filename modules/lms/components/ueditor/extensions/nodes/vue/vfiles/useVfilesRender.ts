@@ -17,7 +17,7 @@ export function useVfilesRender(props: VfilesRenderProps) {
 
     const selectedId = ref(null)
 
-    // AutoSelectFirstitemsFile
+    // 自动选择第一个文件
     watch(() => config.value.items, (items) => {
         if (!selectedId.value && items && items.length) {
             function findFirstFile(nodes) {
@@ -61,7 +61,7 @@ export function useVfilesRender(props: VfilesRenderProps) {
                     icon: item.type === 'folder' ? 'i-lucide-folder' : 'i-lucide-file',
                 }
                 if (item.type === 'file') {
-                    navItem.on select = () => { selectedId.value = item.id }
+                    navItem.onSelect = () => { selectedId.value = item.id }
                     if (item.id === selectedId.value) navItem.active = true
                 }
                 if (item.children && item.children.length) {

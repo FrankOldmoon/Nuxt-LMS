@@ -1,5 +1,5 @@
 /**
- * composables/useProfileModal tests
+ * composables/useProfileModal 测试
  * @see modules/base/composables/useProfileModal.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -38,7 +38,7 @@ describe('composables/useProfileModal - watch isOpen', () => {
     const isOpen = ref(false)
     const { form } = useProfileModal(isOpen)
     isOpen.value = true
-    await nextTick() // watch(isOpen) callback executes asynchronously
+    await nextTick() // watch(isOpen) 回调异步执行
     expect(form.value.name).toBe('Alice')
     expect(form.value.preferName).toBe('Al')
     expect(form.value.email).toBe('a@x.com')

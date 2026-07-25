@@ -2,7 +2,7 @@
   <section
     :id="section.id"
   >
-    <!-- systemcolumnsTitle -->
+    <!-- 系列标题 -->
     <div class="flex items-center gap-3 mb-6 scroll-mt-20">
       <div class="flex items-center justify-center size-10 rounded-lg bg-primary/10">
         <UIcon :name="section.icon" class="size-5 text-primary" />
@@ -15,7 +15,7 @@
       </span>
     </div>
 
-    <!-- Course Cardgrid（grid mode 3 columns；list mode singlecolumns） -->
+    <!-- 课程卡片网格（grid 模式 3 列；list 模式单列） -->
     <div
       v-if="viewMode === 'list'"
       class="flex flex-col gap-3"

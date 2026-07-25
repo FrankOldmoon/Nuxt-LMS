@@ -1,8 +1,8 @@
 /**
- * navEditor/importModal.vue component test
+ * navEditor/importModal.vue 组件测试
  * @see modules/lms/components/navEditor/importModal.vue
  *
- * Batch import modal: AI generation + text input
+ * 批量导入弹窗：AI 生成 + 文本输入
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -91,7 +91,7 @@ describe('navEditor/importModal.vue', () => {
       global: _globalConfig,
     })
     const buttons = wrapper.findAll('.ubutton')
-    // The last button is confirm
+    // 最后一个按钮是确认
     const confirmBtn = buttons[buttons.length - 1]!
     await confirmBtn.trigger('click')
     expect(wrapper.emitted('confirm')).toBeTruthy()
@@ -104,7 +104,7 @@ describe('navEditor/importModal.vue', () => {
       global: _globalConfig,
     })
     const buttons = wrapper.findAll('.ubutton')
-    // Button order: AI Generate(0), Cancel(1), Confirm(2) — finding by text is more robust
+    // 按钮顺序：AI Generate(0), Cancel(1), Confirm(2) — 按文本查找更稳健
     const cancelBtn = buttons.find(b => b.text().includes('common.cancel'))
     expect(cancelBtn).toBeTruthy()
     await cancelBtn!.trigger('click')
@@ -120,7 +120,7 @@ describe('navEditor/importModal.vue', () => {
       global: _globalConfig,
     })
     const buttons = wrapper.findAll('.ubutton')
-    // AI generate button is the first button (with sparkles icon)
+    // AI 生成按钮是第一个按钮（带 sparkles icon）
     const aiBtn = buttons.find(b => b.text().includes('navEditor.aiGenerate'))
     expect(aiBtn).toBeTruthy()
     expect(aiBtn!.attributes('disabled')).toBeDefined()

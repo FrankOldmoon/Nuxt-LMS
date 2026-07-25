@@ -1,13 +1,13 @@
 /**
- * LMS WS Group message handler unit test
+ * LMS WS 小组（Group）消息处理器单元测试
  * @see modules/lms/server/utils/ws/group.ts
  *
- * Coverage:
- * - handleGroupMessage: dispatcher (type routing + unknown type returns false)
- * - joinGroup: join group + joinedGroup push
- * - groupChat: broadcast chat messages (truncate 1000 chars + skip empty text)
- * - leaveGroup: leave group
- * - cleanupGroupPeer: close connection and clean up all group rooms
+ * 覆盖：
+ * - handleGroupMessage  dispatcher（type 路由 + 未知 type 返回 false）
+ * - joinGroup  加入小组 + joinedGroup 推送
+ * - groupChat  广播聊天消息（截断 1000 字符 + 空文本跳过）
+ * - leaveGroup  离开小组
+ * - cleanupGroupPeer  关闭连接清理所有小组房间
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { makeMockPeer } from '../../../../test/setup/db-helpers'
@@ -54,7 +54,7 @@ describe('ws/group: joinGroup', () => {
   it('joinGroup 不带 userId/from 不会覆盖已有字段', () => {
     const peer = makeMockPeer({ userId: 99, userName: 'preset' })
     handleGroupMessage(peer, { type: 'joinGroup', groupId: 'g1' })
-    // makeMockPeer defaults userId=undefined/userName='test-user', preset here is not overwritten
+    // makeMockPeer 默认 userId=undefined/userName='test-user'，此处 preset 不被覆盖
     expect(peer._userId).toBe(99)
     expect(peer._userName).toBe('preset')
   })

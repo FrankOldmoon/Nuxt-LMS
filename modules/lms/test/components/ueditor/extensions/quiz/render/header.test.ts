@@ -1,5 +1,5 @@
 /**
- * quiz render header component test
+ * quiz render header 组件测试
  * @see modules/lms/components/ueditor/extensions/nodes/vue/quiz/render/header.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

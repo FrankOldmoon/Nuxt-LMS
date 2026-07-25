@@ -5,7 +5,7 @@
       :class="highlight ? 'ring-2 ring-primary/30 shadow-lg shadow-primary/10' : ''"
       :ui="{ body: 'flex flex-col h-full p-0' }"
     >
-      <!-- Cover Imageimage area -->
+      <!-- 封面图片区域 -->
       <div class="relative aspect-16/10 overflow-hidden bg-elevated">
         <img
           v-if="course.coverImg"
@@ -20,7 +20,7 @@
         >
           <UIcon :name="course.icon" class="size-12" :class="colorTextClass(course.color)" />
         </div>
-        <!-- difficultyTagoverlayImage top-right corner -->
+        <!-- 难度标签覆盖在图片右上角 -->
         <div class="absolute top-3 left-3">
           <UBadge
             :label="course.level"
@@ -31,14 +31,14 @@
         </div>
       </div>
 
-      <!-- Contentarea -->
+      <!-- 内容区域 -->
       <div class="p-4 flex flex-col flex-1">
-        <!-- Title -->
+        <!-- 标题 -->
         <h3 class="text-lg font-semibold text-highlighted mb-2 group-hover:text-primary transition-colors line-clamp-2">
           {{ course.title }}
         </h3>
 
-        <!-- Tag -->
+        <!-- 标签 -->
         <div v-if="course.tags?.length" class="flex flex-wrap gap-1.5 mb-4">
           <UBadge
             v-for="tag in course.tags"
@@ -50,7 +50,7 @@
           />
         </div>
 
-        <!-- TeacherInfo -->
+        <!-- 教师信息 -->
         <div v-if="course.teachers?.length" class="flex items-center gap-2 mb-4">
           <div class="flex -space-x-2">
             <img
@@ -70,7 +70,7 @@
           <span class="text-xs text-muted truncate">{{ course.teachers.map(t => t.name).join('、') }}</span>
         </div>
 
-        <!-- BottomInfo -->
+        <!-- 底部信息 -->
         <div class="flex items-center justify-between pt-4 mt-auto border-t border-default">
           <span class="flex items-center gap-1.5 text-sm text-muted">
             <UIcon name="i-lucide-list-video" class="size-4" />

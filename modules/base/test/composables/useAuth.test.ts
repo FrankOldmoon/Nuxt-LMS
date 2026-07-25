@@ -1,5 +1,5 @@
 /**
- * useAuth composable tests (happy-dom + nuxt-stubs)
+ * useAuth composable 测试（happy-dom + nuxt-stubs）
  * @see modules/base/composables/useAuth.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'

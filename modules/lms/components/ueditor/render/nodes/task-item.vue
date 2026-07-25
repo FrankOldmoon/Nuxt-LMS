@@ -1,6 +1,6 @@
 <template>
-  <!-- Top-level task item: enable per-item hover tracking when blockKey exists -->
-  <!-- hover → yellow border; stay 3s → green border (read, persistent) -->
+  <!-- 顶层任务项：blockKey 存在时启用逐项 hover 追踪 -->
+  <!-- hover → 黄边；停留 3s → 绿边（已读持久） -->
   <li
     :data-checked="checkedAttr"
     :class="liClass"
@@ -21,7 +21,7 @@ import RenderNode from '../node.vue'
 
 const props = defineProps({
   node: { type: Object, required: true },
-  // Passed in by list component, e.g. "3.1"; absence means non-tracking context
+  // 由列表组件传入，形如 "3.1"；不存在表示非追踪上下文
   blockKey: { type: String, default: undefined },
 })
 
@@ -29,7 +29,7 @@ const attrs = computed(() => props.node.attrs || {})
 const content = computed(() => props.node.content || [])
 const checkedAttr = computed(() => (attrs.value.checked ? 'true' : 'false'))
 
-// Only enable hover tracking when blockKey exists
+// 仅在有 blockKey 时启用 hover 追踪
 const tracking = props.blockKey ? useReadingTracker(props.blockKey) : null
 
 const liClass = computed(() => {
@@ -48,7 +48,7 @@ function onLeave() {
 </script>
 
 <style scoped>
-/* Use box-shadow instead of border to avoid 2px layout jitter when highlight appears/disappears */
+/* 用 box-shadow 替代 border，避免高亮出现/消失时 2px 布局抖动 */
 .reading-hover-border {
   box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.9);
   border-radius: 4px;

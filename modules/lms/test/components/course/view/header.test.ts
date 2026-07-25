@@ -1,8 +1,8 @@
 /**
- * course/view/header.vue component test
+ * course/view/header.vue 组件测试
  * @see modules/lms/components/course/view/header.vue
  *
- * Course header: cover + title + tags + teachers + start learning button
+ * 课程头部：封面 + 标题 + 标签 + 教师 + 开始学习按钮
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -139,7 +139,7 @@ describe('course/view/header.vue', () => {
       global: _globalConfig,
     })
     await flushPromises()
-    // Export button is inside UTooltip, is the first .ubutton (CourseEditor is stubbed as a buttonless div)
+    // 导出按钮在 UTooltip 内，是第一个 .ubutton（CourseEditor 被 stub 为无按钮的 div）
     const exportBtn = wrapper.find('.utooltip .ubutton')
     expect(exportBtn.exists()).toBe(true)
     await exportBtn.trigger('click')

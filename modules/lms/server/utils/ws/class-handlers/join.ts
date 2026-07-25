@@ -1,15 +1,15 @@
 /**
- * Class messages: join / invite / danmaku / online / chatroom
+ * 班级消息：join / invite / danmaku / online / chatroom
  */
 import { broadcastToClass, joinClassRoom } from '../state'
 
-/** join: join a class room
- * Compatible with two field names:
- *   - data.classId: field explicitly sent by the lms business layer (e.g. sendDanmaku, sendOnline)
- *   - data.room: generic room field sent by the base layer useWsConnection().joinRoom()
- * Bug fix: the client useWsConnection().joinRoom() actually sends { type: 'join', room: <id> },
- *   but this function originally only read data.classId, causing join to silently fail and classRooms to always be empty,
- *   so all class broadcasts (danmaku / online / chatroom / vote / quickAnswer / submitBroadcast / invite) were dropped.
+/** join: 加入班级房间
+ * 兼容两种字段名：
+ *   - data.classId：lms 业务层（如 sendDanmaku、sendOnline）显式发送的字段
+ *   - data.room：base 层 useWsConnection().joinRoom() 发送的通用房间字段
+ * 修复 bug：客户端 useWsConnection().joinRoom() 实际发送 { type: 'join', room: <id> }，
+ *   但本函数原本只读 data.classId，导致 join 静默失败、classRooms 始终为空，
+ *   进而所有班级广播（danmaku / online / chatroom / vote / quickAnswer / submitBroadcast / invite）落空。
  */
 export function handleClassJoin(peer: any, data: any) {
   const cid = Number(data.room ?? data.classId)
@@ -24,7 +24,7 @@ export function handleClassJoin(peer: any, data: any) {
   }
 }
 
-/** invite: teacher invites students to a course chapter */
+/** invite: 教师邀请学生进入课程章节 */
 export function handleClassInvite(_peer: any, data: any) {
   const cid = Number(data.classId); if (!cid) return
   broadcastToClass(cid, JSON.stringify({
@@ -34,7 +34,7 @@ export function handleClassInvite(_peer: any, data: any) {
   }))
 }
 
-/** danmaku: danmaku broadcast */
+/** danmaku: 弹幕广播 */
 export function handleClassDanmaku(_peer: any, data: any) {
   const cid = Number(data.classId); if (!cid) return
   broadcastToClass(cid, JSON.stringify({
@@ -44,7 +44,7 @@ export function handleClassDanmaku(_peer: any, data: any) {
   }))
 }
 
-/** online: user online status change */
+/** online: 用户在线状态变更 */
 export function handleClassOnline(_peer: any, data: any) {
   const cid = Number(data.classId); if (!cid) return
   broadcastToClass(cid, JSON.stringify({
@@ -54,7 +54,7 @@ export function handleClassOnline(_peer: any, data: any) {
   }))
 }
 
-/** chatroom: class chatroom broadcast (not persisted) */
+/** chatroom: 班级聊天室广播（不持久化） */
 export function handleClassChatroom(_peer: any, data: any) {
   const cid = Number(data.classId); if (!cid) return
   const text = String(data.text || '').slice(0, 1000); if (!text) return

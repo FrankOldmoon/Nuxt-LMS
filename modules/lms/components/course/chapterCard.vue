@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-// LMS extended chapter card: with lock/pass icon + inaccessible disabled
+// lms 扩展章节卡片：含锁/通过图标 + 不可访问禁用
 defineProps<{
   item: {
     id: number | string

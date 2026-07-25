@@ -1,4 +1,4 @@
-/* ====================== Common styles (not scoped, child components can use directly) ====================== */
+/* ====================== 通用样式（非 scoped，子组件可直接使用） ====================== */
 .vue-node-container {
     border: 1px solid var(--umo-content-node-border, #e5e7eb);
     border-radius: 8px;

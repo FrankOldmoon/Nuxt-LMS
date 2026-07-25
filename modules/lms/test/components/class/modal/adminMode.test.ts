@@ -1,9 +1,9 @@
 /**
- * class/modal/adminMode.vue component test
+ * class/modal/adminMode.vue 组件测试
  * @see modules/lms/components/class/modal/adminMode.vue
  *
- * Admin mode class selection: class dropdown + add class + user table + member search.
- * Depends on useClassModalContext() (inject), stubbed to globalThis in tests.
+ * 管理模式班级选择：班级下拉 + 新增班级 + 用户表格 + 成员搜索。
+ * 依赖 useClassModalContext()（inject），测试中 stub 到 globalThis。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -36,7 +36,7 @@ const _globalConfig = {
   stubs: _globalStubs,
 }
 
-/** Stub useClassModalContext, returns controllable mock data */
+/** Stub useClassModalContext，返回可控的 mock 数据 */
 function setupMockContext(overrides: any = {}) {
   const ctx = {
     hasRole: (code: string) => code === 'admin',
@@ -84,7 +84,7 @@ describe('class/modal/adminMode.vue', () => {
     setupMockContext()
     const { default: AdminMode } = await import('../../../../components/class/modal/adminMode.vue')
     const wrapper = mount(AdminMode, { global: _globalConfig })
-    // Has select (UInputMenu stub) and buttons
+    // 有 select（UInputMenu stub）和按钮
     expect(wrapper.find('select').exists()).toBe(true)
   })
 

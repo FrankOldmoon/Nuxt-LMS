@@ -1,9 +1,9 @@
 /**
- * class/usersTable/groups.vue component test
+ * class/usersTable/groups.vue 组件测试
  * @see modules/lms/components/class/usersTable/groups.vue
  *
- * Group mode table + group score bar chart.
- * Depends on useClassUsersTableContext() (inject), stubbed to globalThis in tests.
+ * 小组模式表格 + 小组得分柱状图。
+ * 依赖 useClassUsersTableContext()（inject），测试中 stub 到 globalThis。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'

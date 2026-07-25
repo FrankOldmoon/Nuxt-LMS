@@ -1,9 +1,9 @@
 /**
- * ueditor/render/nodes/echarts.vue component test
+ * ueditor/render/nodes/echarts.vue 组件测试
  * @see modules/lms/components/ueditor/render/nodes/echarts.vue
  *
- * echarts is dynamically loaded from CDN in test environment, window.echarts is unavailable,
- * Component should still mount and render container.
+ * echarts 在测试环境从 CDN 动态加载，window.echarts 不可用，
+ * 组件仍应挂载并渲染容器。
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

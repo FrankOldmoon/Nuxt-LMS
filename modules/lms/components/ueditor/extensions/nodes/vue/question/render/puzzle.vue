@@ -2,7 +2,7 @@
   <div>
     <p class="text-xs text-gray-500 mb-3">{{ $t('question.puzzleRenderHint') }}</p>
 
-    <!-- puzzle grid -->
+    <!-- 拼图网格 -->
     <div
       v-if="imageUrl && split"
       class="inline-block p-1 border border-gray-200 dark:border-gray-600 rounded select-none"
@@ -23,7 +23,7 @@
       </div>
     </div>
 
-    <!-- Tip -->
+    <!-- 提示 -->
     <p v-if="selectedPos !== null" class="text-xs text-blue-500 mt-2">
       {{ $t('question.puzzleSelectAnother') }}
     </p>

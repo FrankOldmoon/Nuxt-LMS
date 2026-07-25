@@ -4,7 +4,7 @@ import { eq, and } from "drizzle-orm"
 export default eventHandler(async (event) => {
   const { course_id, cid } = getQuery(event)
   if (!course_id || !cid) {
-    return cResp(null, 'Missing id parameter', false)
+    return cResp(null, '缺少 id 参数', false)
   }
 
   const data = await db.query.quizzes.findFirst({

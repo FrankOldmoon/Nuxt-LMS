@@ -2,8 +2,8 @@
     <UFormField :label="t('ueditor.aigeneratorTitle')" size="sm">
         <UInput v-model="cfgTitle" :placeholder="t('ueditor.aigeneratorTitlePlaceholder')" size="sm" class="w-full" />
     </UFormField>
-    <UFormField :label="t('ueditor.aigeneratorQuestion type')" size="sm">
-        <USelect v-model="cfgQuestion type" :items="typeOptions" size="sm" class="w-full" />
+    <UFormField :label="t('ueditor.aigeneratorQuestionType')" size="sm">
+        <USelect v-model="cfgQuestionType" :items="typeOptions" size="sm" class="w-full" />
     </UFormField>
     <UFormField :label="t('ueditor.aigeneratorReferenceText')" size="sm" :hint="t('ueditor.aigeneratorReferenceTextHint')">
         <div class="flex items-center justify-between gap-2 mb-2">
@@ -34,11 +34,11 @@ const props = defineProps({
 const emit = defineEmits(['update:config', 'close'])
 const { t } = useI18n()
 
-// CurrentChapter Content（from useLayoutState  chapterContent，ChapterpagewillWrite）
+// 当前章节内容（来自 useLayoutState 的 chapterContent，章节页会写入）
 const { chapterContent } = useLayoutState()
 
 const cfgTitle = ref(props.config?.title || '')
-const cfgQuestion type = ref(props.config?.questionType || 'single')
+const cfgQuestionType = ref(props.config?.questionType || 'single')
 const cfgReferenceText = ref(props.config?.referenceText || '')
 const cfgReferenceFromChapter = ref(!!props.config?.referenceFromChapter)
 const cfgPoint = ref(props.config?.point ?? 1)
@@ -57,7 +57,7 @@ const typeOptions = computed(() => [
     { label: t('question.typeShortAnswer'), value: 'short-answer' },
 ])
 
-// Open「fromCurrent chapter extract text」when，AutouseChapterPlain Textoverlay referenceText
+// 开启「从当前 chapter 提取 text」时，自动用章节纯文本覆盖 referenceText
 watch(cfgReferenceFromChapter, (val) => {
     if (val) {
         const text = extractPlainText(chapterContent.value)
@@ -69,7 +69,7 @@ function apply() {
     const newConfig = {
         ...props.config,
         title: cfgTitle.value,
-        questionType: cfgQuestion type.value,
+        questionType: cfgQuestionType.value,
         referenceText: cfgReferenceText.value,
         referenceFromChapter: cfgReferenceFromChapter.value,
         point: Number(cfgPoint.value) || 1,

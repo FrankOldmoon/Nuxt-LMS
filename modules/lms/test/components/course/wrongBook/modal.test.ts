@@ -1,8 +1,8 @@
 /**
- * course/wrongBook/modal.vue component test
+ * course/wrongBook/modal.vue 组件测试
  * @see modules/lms/components/course/wrongBook/modal.vue
  *
- * Wrong book modal: search + filter + list + pagination
+ * 错题本弹窗：搜索 + 筛选 + 列表 + 分页
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

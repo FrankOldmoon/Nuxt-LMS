@@ -4,11 +4,11 @@ import type { TableColumn } from '@nuxt/ui'
 interface ExtraColumn {
   id: string
   header: any
-  /** Pass true to enable sorting (internally auto-fills accessorKey + sortableHeader) */
+  /** 传 true 即可启用排序（内部自动补充 accessorKey + sortableHeader） */
   canSort?: boolean
-  /** Custom sorting function (use one of canSort/sortingFn, or both) */
+  /** 自定义排序函数（与 canSort 二选一或同时使用） */
   sortingFn?: any
-  /** Explicitly specify the value field (defaults to id) */
+  /** 显式指定取值字段（默认用 id） */
   accessorKey?: string
 }
 
@@ -39,17 +39,17 @@ export function useClassUsersTableContext() {
   return ctx
 }
 
-/** UI component references that need to be resolved by the caller and passed in */
+/** 需要调用方解析后传入的 UI 组件引用 */
 interface ClassUsersTableUiComponents {
   UButton: any
 }
 
 /**
- * Class users table: student/teacher list + number management + online status + groups + score chart + password reset
+ * 班级用户表格：学生/教师列表 + 编号管理 + 在线状态 + 小组 + 得分图表 + 重置密码
  *
- * Note: UButton must be resolved by the caller (index.vue) at the top level of setup using resolveComponent and then passed in.
- * Because resolveComponent inside the composable may return a string, and h() actually renders in UTable's
- * header() after mount, the string reference lookup would fail (the button column would not display).
+ * 注意：UButton 必须由调用方（index.vue）在 setup 顶层 resolveComponent 解析后传入。
+ * 因为 composable 内部 resolveComponent 返回的可能是字符串，而 h() 真正在 UTable
+ * 的 header() 中渲染发生在 mount 之后，字符串引用会 lookup 失败（按钮列不显示）。
  */
 export function useClassUsersTable(
   props: ClassUsersTableProps,
@@ -87,7 +87,7 @@ export function useClassUsersTable(
 
   const currentCourseId = computed(() => props.courseId || ctxCourseId.value)
 
-  // ====================== Student score chart ======================
+  // ====================== 学生得分图表 ======================
   const chartData = computed(() => {
     return [...students.value]
       .sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0))
@@ -142,7 +142,7 @@ export function useClassUsersTable(
     }
   })
 
-  // ====================== Group mode ======================
+  // ====================== 小组模式 ======================
   const activeTab = ref('students')
   const groupRows = ref<any[]>([])
   const groupSorting = ref([{ id: 'avgScore', desc: true }])
@@ -271,7 +271,7 @@ export function useClassUsersTable(
     }
   }, { immediate: true })
 
-  // ====================== Edit modal ======================
+  // ====================== 编辑弹窗 ======================
   const editModal = ref<{ show: () => void } | null>(null)
   const editingUserId = ref<number | null>(null)
 
@@ -280,7 +280,7 @@ export function useClassUsersTable(
     editModal.value?.show()
   }
 
-  // ====================== Sortable header ======================
+  // ====================== 排序表头 ======================
   
 
   function sortableHeader(label: string) {
@@ -301,7 +301,7 @@ export function useClassUsersTable(
     }
   }
 
-  // ====================== Number management ======================
+  // ====================== 编号管理 ======================
   const numberMap = reactive<Record<number, string>>({})
 
   watch(students, (list) => {
@@ -371,7 +371,7 @@ export function useClassUsersTable(
     }
   }
 
-  // ====================== Reset password ======================
+  // ====================== 重置密码 ======================
   const resetUserId = ref<number | null>(null)
   const resetPassword = ref('')
   const resetOpen = ref(false)
@@ -382,7 +382,7 @@ export function useClassUsersTable(
     resetOpen.value = true
   }
 
-  // ====================== Student learning data modal ======================
+  // ====================== 学生学习数据弹窗 ======================
   const statsUserId = ref<number | null>(null)
   const statsUser = ref<any | null>(null)
   const statsOpen = ref(false)
@@ -408,7 +408,7 @@ export function useClassUsersTable(
     }
   }
 
-  // ====================== Column definitions ======================
+  // ====================== 列定义 ======================
   const columns = computed(() => {
     const cols: TableColumn<any>[] = []
     if (props.showOnline) {
@@ -446,10 +446,10 @@ export function useClassUsersTable(
       cols.push({ id: 'actions', header: t('classSelector.actions') })
     }
     if (props.extraColumns?.length) {
-      // canSort / sortingFn triggers auto-assembly:
-      // 1. When accessorKey is missing, fill it with id → TanStack Table creates accessorFn → getCanSort() = true
-      // 2. When header is a string, auto-wrap with sortableHeader → render a clickable sort button
-      // 3. When sortingFn is missing, TanStack Table's getAutoSortingFn auto-selects based on data type
+      // canSort / sortingFn 触发自动装配：
+      // 1. accessorKey 缺省时用 id 补上 → TanStack Table 创建 accessorFn → getCanSort() = true
+      // 2. header 为字符串时自动包装 sortableHeader → 渲染可点击的排序按钮
+      // 3. sortingFn 缺省时由 TanStack Table 的 getAutoSortingFn 按数据类型自动选择
       for (const col of props.extraColumns) {
         if (col.canSort || col.sortingFn) {
           const merged: any = { ...col }
@@ -466,7 +466,7 @@ export function useClassUsersTable(
     return cols
   })
 
-  // ====================== Data source watchers ======================
+  // ====================== 数据源 watchers ======================
   watch(() => props.rows, (val) => {
     if (val !== undefined) {
       users.value = val

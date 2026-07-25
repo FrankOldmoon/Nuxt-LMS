@@ -1,9 +1,9 @@
 /**
- * layout/searchModal.vue component test
+ * layout/searchModal.vue 组件测试
  * @see modules/lms/components/layout/searchModal.vue
  *
- * Search modal: input box + resultList + highlight matches.
- * Uses useSearchModal(emit) (from ./useSearchModal.ts), internally depends on useRoute/useRouter.
+ * 搜索弹窗：输入框 + 结果列表 + 高亮匹配。
+ * 使用 useSearchModal(emit)（来自 ./useSearchModal.ts），内部依赖 useRoute/useRouter。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

@@ -1,8 +1,8 @@
 /**
- * InputFile component tests
+ * InputFile 组件测试
  * @see modules/base/components/form/input-file.vue
  *
- * File upload: drag + URL + drive selection
+ * 文件上传：拖拽 + URL + 网盘选择
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -86,7 +86,7 @@ describe('form/input-file.vue', () => {
     const dropzone = wrapper.findComponent({ name: 'FormInputFileDropzone' })
     dropzone.vm.$emit('drive-open')
     await flushPromises()
-    // The open prop of FilesMyFilesModal should become true
+    // FilesMyFilesModal 的 open prop 应变为 true
     const modal = wrapper.findComponent({ name: 'FilesMyFilesModal' })
     expect(modal.props('open')).toBe(true)
   })

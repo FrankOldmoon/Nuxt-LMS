@@ -1,5 +1,5 @@
 /**
- * Site config - reload / async get / query by prefix
+ * site 配置 - 重新加载 / 异步获取 / 按前缀查询
  */
 import { db, schema } from '@nuxthub/db'
 import { like } from 'drizzle-orm'
@@ -14,9 +14,9 @@ import {
 } from './state'
 
 /**
- * Reload all site:* configs from database and update cache
+ * 重新从数据库加载所有 site:* 配置并更新缓存
  *
- * mail config supports reading from .env environment variables (higher priority than database):
+ * mail 配置支持从 .env 环境变量读取（优先级高于数据库）：
  *   MAIL_HOST / MAIL_PORT / MAIL_SECURE / MAIL_USER / MAIL_PASS / MAIL_FROM / SITE_URL
  */
 export async function reloadConfig(): Promise<Record<string, any>> {
@@ -33,12 +33,12 @@ export async function reloadConfig(): Promise<Record<string, any>> {
       }
     }
   } catch (e) {
-    console.error('[config] Load failed, using default config', e)
+    console.error('[config] 加载失败，使用默认配置', e)
     clearCache()
     resetCacheToDefaults()
   }
 
-  // Environment variables override mail config (highest priority, empty keeps database/default value)
+  // 环境变量覆盖 mail 配置（优先级最高，留空则保持数据库/默认值）
   const env = process.env
   if (env.MAIL_HOST) setCacheEntry('site:mail.host', env.MAIL_HOST)
   if (env.MAIL_PORT) setCacheEntry('site:mail.port', Number(env.MAIL_PORT) || getCacheEntry('site:mail.port'))
@@ -53,8 +53,8 @@ export async function reloadConfig(): Promise<Record<string, any>> {
 }
 
 /**
- * Async get config (load first if not loaded)
- * Pass key to return a single value, omit to return a copy of the entire config object
+ * 异步获取配置（未加载则先加载）
+ * 传 key 返回单值，不传返回整个配置对象副本
  */
 export async function getConfig(key?: string): Promise<any> {
   if (!isLoaded()) await reloadConfig()
@@ -63,7 +63,7 @@ export async function getConfig(key?: string): Promise<any> {
 }
 
 /**
- * Get all configs under the specified prefix (prefix stripped)
+ * 获取指定前缀下所有配置（去掉前缀）
  * @example getConfigByPrefix('site:mail') → { host, port, secure, user, pass, from, siteUrl }
  */
 export async function getConfigByPrefix(prefix: string): Promise<Record<string, any>> {

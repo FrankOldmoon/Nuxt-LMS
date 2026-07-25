@@ -1,5 +1,5 @@
 /**
- * race render component test
+ * race render 组件测试
  * @see modules/lms/components/ueditor/extensions/nodes/vue/race/render.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

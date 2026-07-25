@@ -1,5 +1,5 @@
 export default eventHandler(async (event) => {
-  // Only admin can add
+  // 仅管理员可新增
   await requireAdmin(event)
 
   const table = validateTable(getRouterParam(event, 'table')!)
@@ -9,7 +9,7 @@ export default eventHandler(async (event) => {
     const result = await addTable(table, body)
     return cResp(result)
   } catch (error: any) {
-    console.error('Insert failed:', error)
-    return cResp(null, error.message || 'Insert failed', false)
+    console.error('插入失败:', error)
+    return cResp(null, error.message || '插入失败', false)
   }
 })

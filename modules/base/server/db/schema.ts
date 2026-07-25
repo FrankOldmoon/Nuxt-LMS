@@ -1,14 +1,14 @@
 /**
- * base module schema (complete schema after merging auth)
+ * base module schema（合并 auth 后的完整 schema）
  *
- * Contains tables: roles, permissions, configs, rolePermissions, files,
+ * 包含表：roles, permissions, configs, rolePermissions, files,
  *         users, tokens, userRoles, userClasses, notifys, messages
  *
- * This file is the complete schema fragment after merging base+auth.
- * The root server/db/schema.ts is the @nuxthub/core scan entry, with content identical to this file.
- * doc/lms modules reference the public helper of this file via import { withTimestamps }.
+ * 此文件为 base+auth 合并后的完整 schema 片段。
+ * root 的 server/db/schema.ts 为 @nuxthub/core 扫描入口，内容与此文件一致。
+ * doc/lms 模块通过 import { withTimestamps } 引用此文件的公共 helper。
  *
- * Note: this file must be self-contained, with no cross-module relative imports (@nuxthub/core's bundler cannot resolve them).
+ * 注意：此文件必须自包含，不能有跨 module 的相对 import（@nuxthub/core 的 bundler 无法解析）。
  */
 import {
   pgTable,
@@ -24,14 +24,14 @@ import {
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
-// ----- Common timestamp columns (soft delete + timestamps) -----
+// ----- 公共时间戳列（软删除 + 时间戳） -----
 export const withTimestamps = {
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
   deletedAt: timestamp('deleted_at'),
 };
 
-// ====================== Base tables ======================
+// ====================== 基础表 ======================
 
 export const roles = pgTable('roles', {
   id: serial('id').primaryKey(),
@@ -93,7 +93,7 @@ export const classes = pgTable('classes', {
   ...withTimestamps,
 });
 
-// ====================== User tables (originally auth module) ======================
+// ====================== 用户表（原 auth module） ======================
 
 export const users = pgTable(
   'users',

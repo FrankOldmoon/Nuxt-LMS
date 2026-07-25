@@ -2,7 +2,7 @@ import { ref, computed, inject, watch } from 'vue'
 import { submitQuestion, recordAnswer, computeCorrectRate } from './shared'
 
 export function useMultiple(props: any) {
-  const submitted = inject<import('vue').Ref<boolean>>('question submitted')
+  const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')
   const isCorrect = inject<import('vue').Ref<boolean>>('questionIsCorrect')
   const fromRecord = inject<import('vue').Ref<boolean>>('questionFromRecord')
   const { courseId, chapterId } = useLmsContext()
@@ -10,7 +10,7 @@ export function useMultiple(props: any) {
 
   const hasAnswer = computed(() => selected.value.length > 0)
 
-  // listen question.record change，Syncto selected
+  // 监听 question.record 变化，同步到 selected
   watch(() => props.question?.record, (record) => {
     if (record && record.length > 0) {
       selected.value = [...record]
@@ -36,11 +36,11 @@ export function useMultiple(props: any) {
     if (submitted.value) {
       const sel = selected.value.includes(idx)
       if (isCorrect.value) {
-        // answerRight：SelecteditemsmarkGreen
+        // 答对：选中项标绿
         if (sel) return 'border-green-400 bg-green-50 dark:bg-green-900/20'
         return 'border-gray-200 dark:border-gray-600'
       } else {
-        // answerWrong：onlymarkRedUseroptionWrongitems，no markGreen/YellowCorrectAnswer
+        // 答错：只标红用户选错的项，不标绿/黄正确答案
         if (sel) return 'border-red-400 bg-red-50 dark:bg-red-900/20'
         return 'border-gray-200 dark:border-gray-600'
       }
@@ -89,7 +89,7 @@ export function useMultiple(props: any) {
     props.question.record = []
   }
 
-  // fillCorrectAnswer record
+  // 填充正确答案为 record
   function fillCorrectAnswer() {
     if (props.question?.answer && props.question.answer.length > 0) {
       selected.value = [...props.question.answer]
@@ -101,7 +101,7 @@ export function useMultiple(props: any) {
     selected,
     hasAnswer,
     toggle,
-    option Class,
+    optionClass,
     checkClass,
     submit,
     reset,

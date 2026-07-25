@@ -1,5 +1,5 @@
 /**
- * ECharts wrapper: CDN loading + initialization + auto-resize + exposed methods
+ * ECharts 封装：CDN 加载 + 初始化 + 自适应 + 暴露方法
  */
 export function useECharts(
   option: () => any,
@@ -25,7 +25,7 @@ export function useECharts(
 
   const CDN_SCRIPT_ID = 'chart-echarts-script'
 
-  // ========== Size handling ==========
+  // ========== 尺寸处理 ==========
   function normalizeSize(val: string | number | null | undefined): string | undefined {
     if (val == null || val === '') return undefined
     if (typeof val === 'number') return `${val}px`
@@ -37,7 +37,7 @@ export function useECharts(
     height: normalizeSize(height()),
   }))
 
-  // ========== CDN loading ==========
+  // ========== CDN 加载 ==========
   function loadScript(url: string, id: string): Promise<boolean> {
     return new Promise((resolve) => {
       if ((window as any).echarts || document.getElementById(id)) {
@@ -76,14 +76,14 @@ export function useECharts(
     })
   }
 
-  // ========== Initialization ==========
+  // ========== 初始化 ==========
   async function initChart() {
     await nextTick()
     if (!chartRef.value) return
 
     const ok = await loadScript(cdnUrl(), CDN_SCRIPT_ID)
     if (!ok) {
-      console.error('[Chart] ECharts CDN load failed')
+      console.error('[Chart] ECharts CDN 加载失败')
       return
     }
     await waitForECharts()
@@ -104,7 +104,7 @@ export function useECharts(
 
     if (group()) chart.group = group()
 
-    // Event binding
+    // 事件绑定
     chart.on('click', (params: any) => onClick(params))
     chart.on('rendered', () => onRendered())
 
@@ -139,7 +139,7 @@ export function useECharts(
     }
   }
 
-  // ========== Auto-resize ==========
+  // ========== 自适应 ==========
   function setupResizeObserver() {
     if (typeof ResizeObserver === 'undefined' || !chartRef.value) return
     resizeObserver = new ResizeObserver(() => {
@@ -148,7 +148,7 @@ export function useECharts(
     resizeObserver.observe(chartRef.value)
   }
 
-  // ========== Dispose ==========
+  // ========== 销毁 ==========
   function disposeChart() {
     if (resizeObserver) {
       resizeObserver.disconnect()
@@ -160,7 +160,7 @@ export function useECharts(
     }
   }
 
-  // ========== Exposed methods ==========
+  // ========== 暴露方法 ==========
   function resize() {
     chart?.resize()
   }
@@ -177,7 +177,7 @@ export function useECharts(
     chart?.dispatchAction(payload)
   }
 
-  // ========== Watchers ==========
+  // ========== 侦听器 ==========
   watch(option, () => {
     applyOption()
   }, { deep: true })
@@ -202,7 +202,7 @@ export function useECharts(
     nextTick(() => chart?.resize())
   })
 
-  // ========== Lifecycle ==========
+  // ========== 生命周期 ==========
   onMounted(() => {
     initChart()
   })

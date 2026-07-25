@@ -18,7 +18,7 @@
         <NavEditorList v-model="flatItems" :max-depth="maxDepth" :gen-key="genKey" />
       </div>
 
-      <!-- BottomButton -->
+      <!-- 底部按钮 -->
       <div class="flex justify-between gap-2 p-4 border-t">
         <UButton color="neutral" variant="ghost" @click="cancel">
           {{ $t('common.cancel') }}
@@ -35,7 +35,7 @@
     </template>
   </UModal>
 
-  <!-- BatchImportModal -->
+  <!-- 批量导入弹窗 -->
   <NavEditorImportModal
     v-model:open="importOpen"
     v-model:text="importText"

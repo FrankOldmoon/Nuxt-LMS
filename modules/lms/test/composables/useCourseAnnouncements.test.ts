@@ -1,5 +1,5 @@
 /**
- * useCourseAnnouncements composable test
+ * useCourseAnnouncements composable 测试
  * @see modules/lms/composables/useCourseAnnouncements.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -15,7 +15,7 @@ import { ref } from 'vue'
 beforeEach(async () => {
   resetAllStubs()
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
-  // Override useAuth stub to include isCourseTeacher (source destructure automatically obtains)
+  // 覆盖 useAuth 桩以包含 isCourseTeacher（源码 destructure 自动获得）
   const baseUseAuth = (globalThis as any).useAuth
   ;(globalThis as any).useAuth = () => {
     const base = baseUseAuth()
@@ -25,7 +25,7 @@ beforeEach(async () => {
       isCourseEditor: (cid: number) => cid === 5,
     }
   }
-  // renderContent depends on auto-imported extractText: use real implementation
+  // renderContent 依赖 auto-import 的 extractText：用真实实现
   const { extractText } = await import('../../utils/tiptapText')
   ;(globalThis as any).extractText = extractText
 })
@@ -125,9 +125,9 @@ describe('composables/useCourseAnnouncements', () => {
     const { useCourseAnnouncements } = await import('../../composables/useCourseAnnouncements')
     const r = useCourseAnnouncements({ courseId: 1 }, isOpen)
     r.form.value = { name: 'old', contentText: 'text', classIds: [1] }
-    r.toggleCreateForm() // Reset on close
+    r.toggleCreateForm() // 关闭时重置
     expect(r.showCreateForm.value).toBe(true)
-    r.toggleCreateForm() // Close
+    r.toggleCreateForm() // 关闭
     expect(r.showCreateForm.value).toBe(false)
     expect(r.form.value).toEqual({ name: '', contentText: '', classIds: [] })
   })

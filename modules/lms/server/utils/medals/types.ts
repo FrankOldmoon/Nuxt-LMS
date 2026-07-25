@@ -1,32 +1,32 @@
-// ====================== Type definitions ======================
+// ====================== 类型定义 ======================
 
-/** Medal condition: a metric reaches a certain value */
+/** 奖章条件：某个指标达到某个值 */
 export interface MedalCondition {
-  /** Metric name: courseScore / exp / level / questionScore / homeworkScore / commentScore / quizScore / raceScore / questionCount / homeworkCount / commentCount / chapterPassCount */
+  /** 指标名：courseScore / exp / level / questionScore / homeworkScore / commentScore / quizScore / raceScore / questionCount / homeworkCount / commentCount / chapterPassCount */
   metric: string
-  /** Operator: >= / > / <= / < / == */
+  /** 运算符：>= / > / <= / < / == */
   op: string
-  /** Threshold value */
+  /** 阈值 */
   value: number
 }
 
-/** Medal configuration (stored in medals.content) */
+/** 奖章配置（存入 medals.content） */
 export interface MedalContent {
-  /** Icon name (lucide) */
+  /** 图标名（lucide） */
   icon: string
-  /** Color: bronze / silver / gold / diamond / primary / success / warning / error / info */
+  /** 颜色：bronze / silver / gold / diamond / primary / success / warning / error / info */
   color: string
-  /** Tier: 1=Bronze 2=Silver 3=Gold 4=Diamond */
+  /** 层级：1=铜 2=银 3=金 4=钻 */
   tier: number
-  /** Description */
+  /** 描述 */
   description: string
-  /** Condition list */
+  /** 条件列表 */
   conditions: MedalCondition[]
-  /** Condition logic: all=all satisfied / any=any satisfied */
+  /** 条件逻辑：all=全部满足 / any=任一满足 */
   logic: 'all' | 'any'
 }
 
-/** Queryable user metrics */
+/** 可查询的用户指标 */
 export interface UserMetrics {
   courseScore: number
   exp: number

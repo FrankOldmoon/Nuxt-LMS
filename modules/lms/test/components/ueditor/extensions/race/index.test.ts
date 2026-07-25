@@ -1,5 +1,5 @@
 /**
- * race index component test (TipTap node-view)
+ * race index 组件测试 (TipTap node-view)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/race/index.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

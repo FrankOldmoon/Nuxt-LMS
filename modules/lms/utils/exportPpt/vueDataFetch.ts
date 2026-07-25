@@ -1,15 +1,15 @@
 /**
- * Vue extension node (quiz/homework/race) data pre-fetching
+ * Vue 扩展节点（quiz/homework/race）数据预取
  *
- * These vue types reference backend data via cid, and need to be pre-fetched in parallel before rendering:
+ * 这些 vue 类型通过 cid 引用后端数据，需在渲染前并行预取：
  *  - quiz:     /api/quizzes/show?course_id=X&cid=Y
  *  - homework: /api/homeworks/show?course_id=X&cid=Y
  *  - race:     /api/races/show?course_id=X&cid=Y
  *
- * After pre-fetching, nested question cids within quiz/race are extracted and merged into questionCids (coordinated by index.ts)
+ * 预取后，quiz/race 中的嵌套题目 cid 会被提取并合并到 questionCids（由 index.ts 协调）
  */
 
-/** Recursively collect cids of all vue quiz/homework/race nodes */
+/** 递归收集所有 vue quiz/homework/race 节点的 cid */
 export function collectVueContentCids(
   nodes: any[],
   quizCids: number[],
@@ -21,7 +21,7 @@ export function collectVueContentCids(
     if (node.type === 'vue') {
       const vueType = node.attrs?.type
       const c = node.attrs?.content
-      // Only collect when cid is a string/number; object type is inline data, no API needed
+      // cid 为字符串/数字时才收集；对象类型是内联数据，无需 API
       if (c != null && typeof c !== 'object') {
         const cid = Number(c)
         if (cid > 0) {
@@ -31,14 +31,14 @@ export function collectVueContentCids(
         }
       }
     }
-    // Recursively scan child nodes
+    // 递归扫描子节点
     if (Array.isArray(node.content)) {
       collectVueContentCids(node.content, quizCids, homeworkCids, raceCids)
     }
   }
 }
 
-/** Extract nested question cids from quiz data */
+/** 从 quiz 数据中提取嵌套题目 cid */
 export function extractQuizQuestionCids(quiz: any): number[] {
   const cids: number[] = []
   const questions = quiz?.questions
@@ -50,7 +50,7 @@ export function extractQuizQuestionCids(quiz: any): number[] {
   return cids
 }
 
-/** Extract nested question cids from race data */
+/** 从 race 数据中提取嵌套题目 cid */
 export function extractRaceQuestionCids(race: any): number[] {
   const cids: number[] = []
   const questionIds = race?.questionIds
@@ -62,7 +62,7 @@ export function extractRaceQuestionCids(race: any): number[] {
   return cids
 }
 
-/** Parallel pre-fetch quiz/homework/race data, write to corresponding cache */
+/** 并行预取 quiz/homework/race 数据，写入对应 cache */
 export async function fetchVueContent(
   courseId: number,
   quizCids: number[],
@@ -85,7 +85,7 @@ export async function fetchVueContent(
         if (resp?.success && resp.data) {
           quizCache.set(cid, resp.data)
         }
-      } catch { /* Silently ignored */ }
+      } catch { /* 静默忽略 */ }
     })())
   }
 
@@ -98,7 +98,7 @@ export async function fetchVueContent(
         if (resp?.success && resp.data) {
           homeworkCache.set(cid, resp.data)
         }
-      } catch { /* Silently ignored */ }
+      } catch { /* 静默忽略 */ }
     })())
   }
 
@@ -111,7 +111,7 @@ export async function fetchVueContent(
         if (resp?.success && resp.data) {
           raceCache.set(cid, resp.data)
         }
-      } catch { /* Silently ignored */ }
+      } catch { /* 静默忽略 */ }
     })())
   }
 

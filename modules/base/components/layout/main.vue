@@ -1,9 +1,9 @@
 <template>
   <UPageBody>
-    <!-- Page content -->
+    <!-- 页面内容 -->
     <slot />
 
-    <!-- WebSocket connection (base message/notification real-time communication) -->
+    <!-- WebSocket 连接（base 的消息/通知实时通信） -->
     <LayoutWs />
   </UPageBody>
 </template>

@@ -13,7 +13,7 @@ export function useAnnouncementsContext() {
 }
 
 /**
- * Course announcement modal: load announcements/class list, publish/delete announcements (permission controlled)
+ * 课程公告弹窗：加载公告/班级列表、发布/删除公告（权限受控）
  */
 export function useCourseAnnouncements(
   props: { courseId: string | number },
@@ -23,7 +23,7 @@ export function useCourseAnnouncements(
   const { hasRole, isCourseTeacher } = useAuth()
   const toast = useToast()
 
-  // Reactive state
+  // 响应式状态
   const pending = ref(false)
   const creating = ref(false)
   const showCreateForm = ref(false)
@@ -36,7 +36,7 @@ export function useCourseAnnouncements(
     classIds: [] as number[],
   })
 
-  // Computed properties
+  // 计算属性
   const classMap = computed(() => {
     const map = new Map<number, { id: number; name: string }>()
     for (const cls of classes.value) {
@@ -45,7 +45,7 @@ export function useCourseAnnouncements(
     return map
   })
 
-  // Permission check: admin / system teacher / course teacher can publish announcements
+  // 权限判断：管理员 / 系统教师 / 本课程教师可发布公告
   const canCreate = computed(() => {
     const cid = Number(props.courseId)
     if (!cid) return false
@@ -54,7 +54,7 @@ export function useCourseAnnouncements(
       || isCourseTeacher(cid)
   })
 
-  // Utility functions
+  // 工具函数
   function toggleClass(id: number, checked: boolean) {
     const set = new Set(form.value.classIds)
     if (checked) set.add(id)
@@ -70,8 +70,8 @@ export function useCourseAnnouncements(
   }
 
   /**
-   * Render content (compatible with plain text / JSON format Tiptap document)
-   * Announcement body is displayed as plain text
+   * 渲染 content（兼容纯文本 / JSON 格式 Tiptap 文档）
+   * 公告正文取纯文本展示
    */
   function renderContent(content: any): string {
     if (content == null) return ''
@@ -95,25 +95,25 @@ export function useCourseAnnouncements(
     }
   }
 
-  // Data loading
+  // 数据加载
   async function loadData() {
     if (!props.courseId) return
     pending.value = true
     try {
-      // Load class list for teacher role, used to select target classes when publishing
+      // 教师身份加载班级列表，用于发布时选择目标班级
       if (canCreate.value) {
         const classRes = await cRequest<any>('/api/classes/list')
         const data = (classRes as any)?.data
         classes.value = Array.isArray(data) ? data : (Array.isArray(classRes) ? classRes : [])
       }
-      // Load announcement list
+      // 加载公告列表
       const annRes = await cRequest<any>('/api/announcements/list', {
         query: { courseId: Number(props.courseId) },
       })
       const data = (annRes as any)?.data
       announcements.value = Array.isArray(data) ? data : (Array.isArray(annRes) ? annRes : [])
     } catch (e: any) {
-      console.error('Failed to load announcements', e)
+      console.error('加载公告失败', e)
       toast.add({
         title: t('announcement.loadFailed'),
         description: e?.message,
@@ -124,7 +124,7 @@ export function useCourseAnnouncements(
     }
   }
 
-  // Action methods
+  // 操作方法
   async function createAnnouncement() {
     if (!form.value.name.trim()) return
     creating.value = true
@@ -169,7 +169,7 @@ export function useCourseAnnouncements(
     }
   }
 
-  // Auto load data when modal opens
+  // 弹窗打开时自动加载数据
   watch(isOpen, (val) => {
     if (val) loadData()
   })

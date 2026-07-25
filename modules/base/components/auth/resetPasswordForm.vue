@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- Invalid token -->
+    <!-- 无效 token -->
     <div v-if="!token" class="text-center py-8">
       <UIcon name="i-lucide-alert-circle" class="size-12 mx-auto text-error mb-3 opacity-50" />
       <p class="text-sm text-muted">{{ $t('auth.invalidResetToken') }}</p>
@@ -9,7 +9,7 @@
       </UButton>
     </div>
 
-    <!-- Success -->
+    <!-- 成功 -->
     <div v-else-if="done" class="text-center py-8">
       <UIcon name="i-lucide-check-circle" class="size-12 mx-auto text-success mb-3" />
       <p class="text-sm font-medium">{{ $t('auth.passwordResetSuccess') }}</p>
@@ -18,7 +18,7 @@
       </UButton>
     </div>
 
-    <!-- Reset form -->
+    <!-- 重置表单 -->
     <div v-else>
       <h3 class="text-lg font-semibold mb-1">{{ $t('auth.resetPasswordTitle') }}</h3>
       <p class="text-sm text-(--ui-text-muted) mb-5">{{ $t('auth.resetPasswordSubtitle') }}</p>

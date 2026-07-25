@@ -1,35 +1,35 @@
 /**
- * Site config singleton plugin
+ * 站点配置单例插件
  *
- * - Called once on app startup (SSR + client first load) to /api/config/get
- * - Result stored in useState('site-config'), all components share the same data via useSiteConfig()
+ * - 应用启动时（SSR + 客户端首次加载）调用一次 /api/config/get
+ * - 结果存入 useState('site-config')，所有组件通过 useSiteConfig() 共享同一份数据
  *
- * Benefits:
- * - Only 1 useState data source for the entire app
- * - 6 computed values derived from the same data
- * - WS broadcast site-config-changed triggers refreshNuxtData(key) to auto-sync to useState
- * - Any component calling useSiteConfig() does not create a new useFetch / new network request
+ * 收益：
+ * - 整个应用只有 1 个 useState 数据源
+ * - 6 个 computed 派生自同一份数据
+ * - WS 广播 site-config-changed 触发 refreshNuxtData(key) 自动同步到 useState
+ * - 任何组件调用 useSiteConfig() 都不会产生新的 useFetch / 新的 network 请求
  *
- * Refresh mechanism:
- * - useState uses devalue for serialization under the hood, **cannot store functions**
- * - Use Nuxt built-in refreshNuxtData('site-config-singleton-fetch') to trigger refresh via key
- *   (no need to save refresh function reference, Nuxt will look up the key to find the corresponding useFetch and call its refresh)
+ * 刷新机制：
+ * - useState 底层用 devalue 序列化，**不能存函数**
+ * - 改用 Nuxt 内置 refreshNuxtData('site-config-singleton-fetch') 通过 key 触发刷新
+ *   （不需要保存 refresh 函数引用，Nuxt 自己会查 key 找到对应的 useFetch 并调用其 refresh）
  */
 export default defineNuxtPlugin(async () => {
-  // Initialize shared state (shares the same key with useSiteConfig)
+  // 初始化共享 state（与 useSiteConfig 共用同一 key）
   const config = useState<{ [key: string]: any }>('site-config', () => ({}))
 
-  // First fetch: SSR blocks first screen waiting for data, client uses payload (no extra request)
+  // 首次拉取：SSR 阻塞首屏等待数据，客户端用 payload（不产生额外请求）
   const { data } = await useFetch<{ data?: { [key: string]: any } } | any>(
     '/api/config/get',
     {
-      // Explicit key: refreshNuxtData uses this key to find this useFetch instance
+      // 显式 key：refreshNuxtData 用这个 key 找到此 useFetch 实例
       key: 'site-config-singleton-fetch',
     }
   )
 
-  // Watch data changes (initial + each refreshNuxtData), sync to shared state
-  // Compatible with both cResp wrapper ({ success, data, message }) and direct object return
+  // 监听 data 变化（initial + 每次 refreshNuxtData），同步到共享 state
+  // 兼容 cResp 包装（{ success, data, message }）和直接返回对象两种情况
   watch(
     data,
     (newData) => {

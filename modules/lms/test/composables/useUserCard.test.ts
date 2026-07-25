@@ -1,5 +1,5 @@
 /**
- * useUserCard composable test
+ * useUserCard composable 测试
  * @see modules/lms/composables/useUserCard.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -30,7 +30,7 @@ describe('composables/useUserCard', () => {
     const { useUserCard } = await import('../../composables/useUserCard')
     const a = useUserCard()
     const b = useUserCard()
-    expect(a.refreshTrigger).toBe(b.refreshTrigger) // Same reference
+    expect(a.refreshTrigger).toBe(b.refreshTrigger) // 同一引用
     a.refresh()
     expect(b.refreshTrigger.value).toBe(1)
   })

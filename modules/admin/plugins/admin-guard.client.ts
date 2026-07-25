@@ -1,6 +1,6 @@
 /**
- * Client route guard: only guards /dashboard prefix paths
- * Non-admin (including not logged in) accessing /dashboard* redirects to home, does not affect normal users accessing other pages.
+ * 客户端路由守卫：仅守卫 /dashboard 前缀路径
+ * 非管理员（含未登录）访问 /dashboard* 时跳回首页，不影响普通用户访问其他页面。
  */
 export default defineNuxtPlugin(() => {
   addRouteMiddleware(

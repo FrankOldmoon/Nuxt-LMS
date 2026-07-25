@@ -1,5 +1,5 @@
 /**
- * sheet/edit.vue component test
+ * sheet/edit.vue 组件测试
  * @see modules/lms/components/ueditor/extensions/nodes/vue/sheet/edit.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

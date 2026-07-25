@@ -1,8 +1,8 @@
 /**
- * On server startup:
- * 1. Seed each key of DEFAULT_SITE_CONFIG as an independent row in the configs table (insert only if not exists)
- * 2. Load config into in-memory cache
- * 3. Check and create default admin account + base roles/permissions
+ * 服务启动时：
+ * 1. 把 DEFAULT_SITE_CONFIG 每个 key 拍平播种为 configs 表独立行（不存在才插入）
+ * 2. 加载配置到内存缓存
+ * 3. 检查并创建默认 admin 账号 + 基础角色/权限
  */
 import { db, schema } from "@nuxthub/db"
 import { eq } from "drizzle-orm"
@@ -10,12 +10,12 @@ import { DEFAULT_SITE_CONFIG } from "../utils/config/defaults"
 import { reloadConfig } from "../utils/config/reload"
 import { hashPassword } from "../utils/auth"
 
-// Fixed admin account config
+// 固定 admin 账号配置
 const ADMIN_USERNAME = 'admin'
 const ADMIN_PASSWORD = 'REDACTED'
 
 export default defineNitroPlugin(async () => {
-  // 1. Flattened seeding: each site:* key as an independent row
+  // 1. 拍平播种：每个 site:* key 独立一行
   try {
     for (const [key, defaultValue] of Object.entries(DEFAULT_SITE_CONFIG)) {
       const existing = await db.query.configs.findFirst({
@@ -28,15 +28,15 @@ export default defineNitroPlugin(async () => {
         })
       }
     }
-    console.log('[startup] site config initialized (flattened key-values)')
+    console.log('[startup] site 配置已初始化（拍平键值）')
   } catch (e) {
-    console.error('[startup] site config initialization failed', e)
+    console.error('[startup] site 配置初始化失败', e)
   }
 
-  // 2. Load into in-memory cache
+  // 2. 加载到内存缓存
   await reloadConfig()
 
-  // 3. Check and create default admin account
+  // 3. 检查并创建默认 admin 账号
   try {
     const existingAdmin = await db
       .select({ id: schema.users.id })
@@ -45,35 +45,35 @@ export default defineNitroPlugin(async () => {
       .limit(1)
 
     if (existingAdmin.length === 0) {
-      // Query admin role
+      // 查询 admin 角色
       const adminRole = await db
         .select({ id: schema.roles.id })
         .from(schema.roles)
         .where(eq(schema.roles.code, 'admin'))
         .limit(1)
 
-      // If admin role does not exist, create roles and permissions first
+      // 若 admin 角色不存在，先创建角色和权限
       if (adminRole.length === 0) {
-        // base common permissions (lms/doc permissions are added by each module's own startup)
+        // base 通用权限（lms/doc 各自的权限由各模块 startup 自行添加）
         const permData = [
-          { name: 'Manage Users', code: 'user:manage' },
-          { name: 'Manage Config', code: 'config:manage' },
-          { name: 'Manage Files', code: 'file:manage' },
-          { name: 'Publish Announcements', code: 'announce:write' },
+          { name: '管理用户', code: 'user:manage' },
+          { name: '管理配置', code: 'config:manage' },
+          { name: '管理文件', code: 'file:manage' },
+          { name: '发布公告', code: 'announce:write' },
         ]
         await db.insert(schema.permissions).values(permData).onConflictDoNothing()
         const permissions = await db.select().from(schema.permissions)
 
-        // Base roles
+        // 基础角色
         const roleData = [
-          { name: 'Administrator', code: 'admin' },
-          { name: 'Teacher', code: 'teacher' },
-          { name: 'Student', code: 'student' },
+          { name: '管理员', code: 'admin' },
+          { name: '教师', code: 'teacher' },
+          { name: '学生', code: 'student' },
         ]
         await db.insert(schema.roles).values(roleData).onConflictDoNothing()
         const roles = await db.select().from(schema.roles)
 
-        // Associate role permissions
+        // 关联角色权限
         const rolePermMap: Record<string, number[]> = {
           admin: permissions.map(p => p.id),
           teacher: permissions.filter(p => ['announce:write', 'file:manage'].includes(p.code)).map(p => p.id),
@@ -89,9 +89,9 @@ export default defineNitroPlugin(async () => {
         if (rolePermInserts.length) {
           await db.insert(schema.rolePermissions).values(rolePermInserts).onConflictDoNothing()
         }
-        console.log('[startup] Base roles and permissions initialized')
+        console.log('[startup] 已初始化基础角色和权限')
 
-        // Re-query admin role
+        // 重新查询 admin 角色
         const [newAdminRole] = await db
           .select({ id: schema.roles.id })
           .from(schema.roles)
@@ -99,11 +99,11 @@ export default defineNitroPlugin(async () => {
           .limit(1)
 
         if (!newAdminRole) {
-          console.error('[startup] admin role creation failed')
+          console.error('[startup] admin 角色创建失败')
           return
         }
 
-        // Create admin user
+        // 创建 admin 用户
         const hashedPwd = await hashPassword(ADMIN_PASSWORD)
         const [adminUser] = await db
           .insert(schema.users)
@@ -121,15 +121,15 @@ export default defineNitroPlugin(async () => {
           })
           .returning({ id: schema.users.id })
 
-        // Associate admin role
+        // 关联 admin 角色
         await db.insert(schema.userRoles).values({
           userId: adminUser.id,
           roleId: newAdminRole.id,
         }).onConflictDoNothing()
 
-        console.log(`[startup] Default admin account created (username: ${ADMIN_USERNAME}, password: ${ADMIN_PASSWORD})`)
+        console.log(`[startup] 已创建默认 admin 账号 (用户名: ${ADMIN_USERNAME}, 密码: ${ADMIN_PASSWORD})`)
       } else {
-        // admin role already exists, create user directly
+        // admin 角色已存在，直接创建用户
         const hashedPwd = await hashPassword(ADMIN_PASSWORD)
         const [adminUser] = await db
           .insert(schema.users)
@@ -147,18 +147,18 @@ export default defineNitroPlugin(async () => {
           })
           .returning({ id: schema.users.id })
 
-        // Associate admin role
+        // 关联 admin 角色
         await db.insert(schema.userRoles).values({
           userId: adminUser.id,
           roleId: adminRole[0].id,
         }).onConflictDoNothing()
 
-        console.log(`[startup] Default admin account created (username: ${ADMIN_USERNAME}, password: ${ADMIN_PASSWORD})`)
+        console.log(`[startup] 已创建默认 admin 账号 (用户名: ${ADMIN_USERNAME}, 密码: ${ADMIN_PASSWORD})`)
       }
     } else {
-      console.log('[startup] admin account already exists, skip creation')
+      console.log('[startup] admin 账号已存在，跳过创建')
     }
   } catch (e) {
-    console.error('[startup] admin account initialization failed', e)
+    console.error('[startup] admin 账号初始化失败', e)
   }
 })

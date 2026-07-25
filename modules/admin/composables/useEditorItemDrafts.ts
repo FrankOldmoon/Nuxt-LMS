@@ -1,8 +1,8 @@
 import type { FlatMenuItem } from '../components/menu/EditorItem.vue'
 
 /**
- * Menu item edit draft: manages working copy of label/icon/to/table/visible
- * (icon/to empty string means "clear", converted to undefined on submit)
+ * 菜单项编辑草稿：管理 label/icon/to/table/visible 的工作副本
+ * （icon/to 空字符串代表「清空」, 提交时转为 undefined）
  */
 export function useEditorItemDrafts(
   open: () => boolean,

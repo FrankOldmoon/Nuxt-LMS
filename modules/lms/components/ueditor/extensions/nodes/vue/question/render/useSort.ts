@@ -2,21 +2,21 @@ import { ref, computed, inject, watch, nextTick } from 'vue'
 import { submitQuestion, recordAnswer, computeCorrectRate } from './shared'
 
 export function useSort(props: any) {
-  const submitted = inject<import('vue').Ref<boolean>>('question submitted')
+  const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')
   const isCorrect = inject<import('vue').Ref<boolean>>('questionIsCorrect')
   const fromRecord = inject<import('vue').Ref<boolean>>('questionFromRecord')
   const { courseId, chapterId } = useLmsContext()
 
-  // dragList: [{ originalIndex: 2 }, { originalIndex: 0 }, ...] — driven vuedraggable
+  // dragList: [{ originalIndex: 2 }, { originalIndex: 0 }, ...] — 驱动 vuedraggable
   const dragList = ref([])
-  // prevent dragList watcher → recordAnswer → record watcher → dragList loop
+  // 防止 dragList watcher → recordAnswer → record watcher → dragList 循环
   let isRecording = false
-  // userOrder: from dragList derived originalStartIndexArray
+  // userOrder: 从 dragList 派生的原始索引数组
   const userOrder = computed(() => dragList.value.map(item => item.originalIndex))
 
   const hasAnswer = computed(() => userOrder.value.length > 0)
 
-  // Initialize：shuffleOrder
+  // 初始化：打乱顺序
   function shuffle() {
     const options = props.question.options || []
     const indices = options.map((_, i) => i)
@@ -24,21 +24,21 @@ export function useSort(props: any) {
       const j = Math.floor(Math.random() * (i + 1))
       ;[indices[i], indices[j]] = [indices[j], indices[i]]
     }
-    // avoid justGoodandCorrectOrdersame（Ifexceed1items）
+    // 避免刚好和正确顺序一样（如果超过1项）
     if (indices.length > 1 && indices.every((v, i) => v === i)) {
       ;[indices[0], indices[1]] = [indices[1], indices[0]]
     }
     dragList.value = indices.map(idx => ({ originalIndex: idx }))
   }
 
-  // listen question when changesInitialize
+  // 监听 question 变化时初始化
   watch(() => props.question, (q) => {
     if (q?.type === 'sort' && Array.isArray(q.options) && q.options.length) {
       shuffle()
     }
   }, { immediate: true })
 
-  // listen record change（fetchRecord backfill scenario）
+  // 监听 record 变化（fetchRecord 回填场景）
   watch(() => props.question?.record, (record) => {
     if (isRecording) return
     if (!Array.isArray(record) || record.length === 0) return
@@ -47,7 +47,7 @@ export function useSort(props: any) {
 
 
 
-  // dragList real-time when changesRecords
+  // dragList 变化时实时记录
   watch(dragList, () => {
     if (submitted.value) {
       submitted.value = false
@@ -73,7 +73,7 @@ export function useSort(props: any) {
     if (isCorrect.value) {
       return 'border-green-400 bg-green-50 dark:bg-green-900/20'
     }
-    // answerWrong：eachitemsPositionseparateColor
+    // 答错：每个位置单独着色
     const correctOrder = props.question.answer || []
     const currentPos = userOrder.value.indexOf(originalIndex)
     if (correctOrder[currentPos] === originalIndex) {
@@ -104,7 +104,7 @@ export function useSort(props: any) {
     shuffle()
   }
 
-  // fillCorrectAnswer
+  // 填充正确答案
   function fillCorrectAnswer() {
     const correctOrder = props.question.answer || []
     if (correctOrder.length) {

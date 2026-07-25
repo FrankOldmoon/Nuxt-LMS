@@ -1,5 +1,5 @@
 <template>
-    <!-- Inline mode: render content directly, no modal -->
+    <!-- Inline 模式：直接渲染内容，无弹窗 -->
     <div v-if="inline" class="flex flex-col h-full">
         <FilesMyFilesInner
             :group="group"
@@ -9,7 +9,7 @@
             @confirm="onConfirm"
         />
     </div>
-    <!-- Modal mode -->
+    <!-- 弹窗模式 -->
     <UModal v-else v-model:open="isOpen" :ui="{ content: 'max-w-4xl' }" scrollable>
         <template #content>
             <div class="flex flex-col" style="height: 80vh;">

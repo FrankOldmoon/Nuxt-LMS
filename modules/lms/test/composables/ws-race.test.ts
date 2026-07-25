@@ -1,5 +1,5 @@
 /**
- * ws/race composable test
+ * ws/race composable 测试
  * @see modules/lms/composables/ws/race.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'

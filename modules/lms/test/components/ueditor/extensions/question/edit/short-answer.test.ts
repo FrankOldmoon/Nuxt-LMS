@@ -1,8 +1,8 @@
 /**
- * short-answer edit component test (edit)
+ * short-answer 编辑组件测试 (edit)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/edit/short-answer.vue
  *
- * short-answer.vue receives form prop, edits regex pattern answers
+ * short-answer.vue 接收 form prop，编辑正则模式答案
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

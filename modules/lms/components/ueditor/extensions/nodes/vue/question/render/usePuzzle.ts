@@ -2,12 +2,12 @@ import { ref, computed, inject, watch } from 'vue'
 import { submitQuestion, recordAnswer, computeCorrectRate } from './shared'
 
 export function usePuzzle(props: any) {
-  const submitted = inject<import('vue').Ref<boolean>>('question submitted')
+  const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')
   const isCorrect = inject<import('vue').Ref<boolean>>('questionIsCorrect')
   const fromRecord = inject<import('vue').Ref<boolean>>('questionFromRecord')
   const { courseId, chapterId } = useLmsContext()
 
-  // from options ReadImage URL andsplit count
+  // 从 options 读取图片 URL 和分割数
   const opts = computed(() => {
     const o = props.question.options
     if (o && typeof o === 'object' && !Array.isArray(o)) {
@@ -18,14 +18,14 @@ export function usePuzzle(props: any) {
   const imageUrl = computed(() => opts.value.url)
   const split = computed(() => opts.value.split)
 
-  // pieces: UserrowcolumnsoriginalStartIndexArray
-  // pieces[0] = originalStartIndex 2 representsPosition 0 Show 2 block
+  // pieces: 用户排列的原始索引数组
+  // pieces[0] = 原始索引 2 表示位置 0 显示第 2 块
   const pieces = ref([])
   const selectedPos = ref(null)
 
   const hasAnswer = computed(() => pieces.value.length > 0)
 
-  // shuffleOrder
+  // 打乱顺序
   function shuffle() {
     const n = split.value * split.value
     const indices = Array.from({ length: n }, (_, i) => i)
@@ -33,7 +33,7 @@ export function usePuzzle(props: any) {
       const j = Math.floor(Math.random() * (i + 1))
       ;[indices[i], indices[j]] = [indices[j], indices[i]]
     }
-    // avoid justGoodandCorrectOrdersame
+    // 避免刚好和正确顺序一样
     if (indices.length > 1 && indices.every((v, i) => v === i)) {
       ;[indices[0], indices[1]] = [indices[1], indices[0]]
     }
@@ -41,20 +41,20 @@ export function usePuzzle(props: any) {
     recordAnswer(props.question, [...indices])
   }
 
-  // listen question changeInitialize
+  // 监听 question 变化初始化
   watch(() => props.question, (q) => {
     if (q?.type === 'puzzle' && opts.value.url) {
       shuffle()
     }
   }, { immediate: true })
 
-  // listen record change（fetchRecord backfill scenario）
+  // 监听 record 变化（fetchRecord 回填场景）
   watch(() => props.question?.record, (record) => {
     if (!Array.isArray(record) || record.length === 0) return
     pieces.value = [...record]
   }, { immediate: true })
 
-  // Click swap
+  // 点击交换
   function onPieceClick(pos) {
     if (submitted.value) {
       submitted.value = false
@@ -67,7 +67,7 @@ export function usePuzzle(props: any) {
     } else if (selectedPos.value === pos) {
       selectedPos.value = null
     } else {
-      // swap
+      // 交换
       const arr = [...pieces.value]
       ;[arr[selectedPos.value], arr[pos]] = [arr[pos], arr[selectedPos.value]]
       pieces.value = arr
@@ -76,7 +76,7 @@ export function usePuzzle(props: any) {
     }
   }
 
-  // each blockBackgroundStyle
+  // 每块的背景样式
   function pieceStyle(originalIndex) {
     const s = split.value
     const row = Math.floor(originalIndex / s)
@@ -98,7 +98,7 @@ export function usePuzzle(props: any) {
     if (isCorrect.value) {
       return 'ring-1 ring-green-400'
     }
-    // answerWrong：block by blockColor
+    // 答错：逐块着色
     const correctOrder = props.question.answer || []
     if (correctOrder[pos] === originalIndex) {
       return 'ring-1 ring-green-400'

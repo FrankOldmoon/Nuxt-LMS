@@ -1,5 +1,5 @@
 /**
- * ueditor/render/nodes/datetime.vue component test
+ * ueditor/render/nodes/datetime.vue 组件测试
  * @see modules/lms/components/ueditor/render/nodes/datetime.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

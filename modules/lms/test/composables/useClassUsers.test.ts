@@ -1,5 +1,5 @@
 /**
- * useClassUsers composable test
+ * useClassUsers composable 测试
  * @see modules/lms/composables/useClassUsers.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -67,7 +67,7 @@ describe('composables/useClassUsers', () => {
     const r = useClassUsers()
     await r.fetchUsers(10, 5)
     expect(callCount).toBe(1)
-    await r.fetchUsers(10, 5) // Same cacheKey, skip
+    await r.fetchUsers(10, 5) // 同样的 cacheKey，跳过
     expect(callCount).toBe(1)
   })
 
@@ -106,7 +106,7 @@ describe('composables/useClassUsers', () => {
     const { useClassUsers } = await import('../../composables/useClassUsers')
     const a = useClassUsers()
     const b = useClassUsers()
-    expect(a.classUsers).toBe(b.classUsers) // Same ref reference
+    expect(a.classUsers).toBe(b.classUsers) // 同一 ref 引用
     a.classUsers.value = [{ id: 1, name: 'a', isTeacher: false }]
     expect(b.classUsers.value).toHaveLength(1)
   })

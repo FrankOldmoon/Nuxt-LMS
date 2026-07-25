@@ -1,18 +1,18 @@
 /**
- * Broadcast a danmaku notification to the class channel after submission
+ * 提交后向班级频道广播一条弹幕通知
  *
- * Scenario: After a user submits question / homework / quiz / comment,
- *           broadcast a friendly danmaku message via WebSocket class room,
- *           so classmates can see it and create an interactive atmosphere.
+ * 场景：用户提交 question / homework / quiz / comment 后，
+ *       通过 WebSocket 班级房间广播一条友好的 danmaku 消息，
+ *       让同班同学看到并产生互动氛围。
  *
- * Design notes:
- *  - Goes through `broadcastToClass` (the same broadcast already used in class-handlers); the client
- *    `chapter/danmaku/index.vue` has registered an `onDanmaku` callback that consumes it directly.
- *  - The user's classId / displayName are fetched in a single SELECT to avoid N+1.
- *  - Fully fire-and-forget: callers use `void broadcastSubmitDanmaku(...)`
- *    to explicitly indicate "no await", not blocking the HTTP response; internal try/catch swallows all errors,
- *    so broadcast failure will not drag down the submission request.
- *  - Exposed via Nuxt auto-import; tests can inject mocks into globalThis.
+ * 设计要点：
+ *  - 走 `broadcastToClass`（class-handlers 中已有同款广播），客户端
+ *    `chapter/danmaku/index.vue` 已注册 `onDanmaku` 回调直接消费。
+ *  - 用户 classId / displayName 通过单次 SELECT 一次性查回，避免 N+1。
+ *  - 完全 fire-and-forget：调用方用 `void broadcastSubmitDanmaku(...)`
+ *    显式表达"不 await"，不阻塞 HTTP 响应；内部 try/catch 吞掉所有错误，
+ *    不会让广播失败拖垮提交请求。
+ *  - 通过 Nuxt auto-import 暴露，测试可在 globalThis 注入 mock。
  */
 import { eq } from 'drizzle-orm'
 import { db, schema } from '@nuxthub/db'
@@ -21,22 +21,22 @@ import { broadcastToClass } from './state'
 export type SubmitDanmakuKind = 'question' | 'homework' | 'quiz' | 'comment'
 
 export interface BroadcastSubmitDanmakuArgs {
-  /** Submitter userId (from requireAuth) */
+  /** 提交者 userId（来自 requireAuth） */
   userId: number
   kind: SubmitDanmakuKind
-  /** Whether the question is answered correctly; ignored for non-question kinds */
+  /** question 是否答对；question 之外忽略 */
   isCorrect?: boolean
-  /** Quiz total score; ignored for non-quiz kinds */
+  /** quiz 总分；quiz 之外忽略 */
   score?: number
-  /** Whether the quiz passed; ignored for non-quiz kinds */
+  /** quiz 是否及格；quiz 之外忽略 */
   isPassed?: boolean
-  /** Exp gained this time (0 also means none) */
+  /** 本次获得经验（0 也表示未获得） */
   gainedExp?: number
-  /** Coin gained this time (optional) */
+  /** 本次获得金币（可选） */
   gainedCoin?: number
 }
 
-/** Read danmaku config (from LMS config cache; returns defaults if not loaded) */
+/** 读取 danmaku 配置（取自 LMS 配置缓存，未加载则返回默认） */
 function getDanmakuCfg(): {
   enableOnQuestion: boolean
   enableOnHomework: boolean
@@ -57,7 +57,7 @@ function getDanmakuCfg(): {
       onlyOnReward: d.onlyOnReward !== false,
     }
   } catch {
-    // Test environment or uninitialized: use defaults (all on + strict filtering)
+    // 测试环境或未初始化：使用默认（全开 + 严格过滤）
     return {
       enableOnQuestion: true,
       enableOnHomework: true,
@@ -70,17 +70,17 @@ function getDanmakuCfg(): {
 }
 
 /**
- * Filter rules: whether to allow this broadcast.
- *  - per-kind master switch
- *  - questionOnlyOnCorrect: blocks when the question is answered wrong
- *  - onlyOnReward: when gainedExp is provided (question/homework/quiz), only allows when >0
- *  - comment: always-on by default (does not depend on gainedExp)
+ * 过滤规则：是否允许本次广播。
+ *  - per-kind 总开关
+ *  - questionOnlyOnCorrect：题目答错时拦截
+ *  - onlyOnReward：当 gainedExp 已传入时（question/homework/quiz），仅在 >0 时放行
+ *  - comment：默认 always-on（不依赖 gainedExp）
  */
 function shouldBroadcast(
   args: BroadcastSubmitDanmakuArgs,
   cfg: ReturnType<typeof getDanmakuCfg>,
 ): boolean {
-  // 1) per-kind master switch
+  // 1) per-kind 总开关
   const switchMap: Record<SubmitDanmakuKind, boolean> = {
     question: cfg.enableOnQuestion,
     homework: cfg.enableOnHomework,
@@ -89,14 +89,14 @@ function shouldBroadcast(
   }
   if (switchMap[args.kind] === false) return false
 
-  // 2) Do not broadcast when the question is answered wrong
+  // 2) 题目答错不广播
   if (args.kind === 'question'
     && args.isCorrect === false
     && cfg.questionOnlyOnCorrect) {
     return false
   }
 
-  // 3) Only broadcast when there is a reward (only applies to kinds with explicit gainedExp)
+  // 3) 仅在有奖励时广播（仅对显式传入 gainedExp 的类型生效）
   if (cfg.onlyOnReward
     && args.kind !== 'comment'
     && args.gainedExp !== undefined
@@ -109,34 +109,34 @@ function shouldBroadcast(
 }
 
 /**
- * Build danmaku text based on kind + result (full format with emoji + score info)
- * A single danmaku is limited to 200 characters (consistent with the existing danmaku protocol).
+ * 根据 kind + 结果拼接弹幕文本（带 emoji + 得分信息的完整格式）
+ * 单条弹幕限 200 字符以内（与现有 danmaku 协议一致）。
  */
 function buildDanmakuText(args: BroadcastSubmitDanmakuArgs): string {
   const exp = Number(args.gainedExp) || 0
   switch (args.kind) {
     case 'question':
       return args.isCorrect
-        ? `🎉 Answered a question correctly (+${exp} exp)`
-        : `💪 Submitted a question`
+        ? `🎉 答对了题目 (+${exp}经验)`
+        : `💪 提交了题目`
     case 'homework':
-      return `📚 Submitted homework (+${exp} exp)`
+      return `📚 提交了作业 (+${exp}经验)`
     case 'quiz': {
       const score = Math.round(Number(args.score) || 0)
       return args.isPassed
-        ? `🎊 Completed a quiz (${score} points)`
-        : `📝 Completed a quiz (${score} points)`
+        ? `🎊 完成了测验 (${score}分)`
+        : `📝 完成了测验 (${score}分)`
     }
     case 'comment':
-      return `💬 Posted a comment`
+      return `💬 发表了评论`
     default:
-      return 'Submitted'
+      return '提交了'
   }
 }
 
 /**
- * Asynchronously query the user's classId + display name (preferName > name > username).
- * Any error is swallowed (returns null), and the caller silently skips the broadcast.
+ * 异步查 user 的 classId + 显示名（preferName > name > username）。
+ * 任何错误都吞掉（返回 null），由调用方静默跳过广播。
  */
 async function resolveUserClassContext(userId: number): Promise<{ classId: number; name: string } | null> {
   try {
@@ -162,11 +162,11 @@ async function resolveUserClassContext(userId: number): Promise<{ classId: numbe
 }
 
 /**
- * Broadcast danmaku to the submitter's class room after submission.
- * - Callers should use `void broadcastSubmitDanmaku(...)` to explicitly fire-and-forget.
- * - No classId / no online peer / any exception will not throw.
- * - Config filtering: danmaku.enableOn{Kind}, questionOnlyOnCorrect, onlyOnReward.
- *   Silently skips (no broadcast) when any rule is not satisfied.
+ * 提交后向提交者所在班级房间广播 danmaku。
+ * - 调用方应使用 `void broadcastSubmitDanmaku(...)` 显式 fire-and-forget。
+ * - 无 classId / 无在线 peer / 任何异常都不会抛出。
+ * - 配置过滤：danmaku.enableOn{Kind}、questionOnlyOnCorrect、onlyOnReward。
+ *   任一规则不满足时静默跳过（不广播）。
  */
 export async function broadcastSubmitDanmaku(args: BroadcastSubmitDanmakuArgs): Promise<void> {
   try {
@@ -183,7 +183,7 @@ export async function broadcastSubmitDanmaku(args: BroadcastSubmitDanmakuArgs): 
       from: ctx.name,
     }))
   } catch (err) {
-    // Broadcast failure should not affect the main submission flow
+    // 广播失败不应影响提交主流程
     console.error('[broadcastSubmitDanmaku] failed:', err)
   }
 }

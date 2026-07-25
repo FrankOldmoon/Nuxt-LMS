@@ -54,9 +54,9 @@ export function useVfilesEdit(props: VfilesEditProps, emit: (event: string, ...a
     function addItem(type) {
         editItems.value.push({ id: `n${idCounter++}`, label: '', type, content: '', depth: 0 })
     }
-    function addChild(parent node, type) {
-        const idx = editItems.value.indexOf(parent node)
-        editItems.value.splice(idx + 1, 0, { id: `n${idCounter++}`, label: '', type, content: '', depth: parent node.depth + 1 })
+    function addChild(parentNode, type) {
+        const idx = editItems.value.indexOf(parentNode)
+        editItems.value.splice(idx + 1, 0, { id: `n${idCounter++}`, label: '', type, content: '', depth: parentNode.depth + 1 })
     }
     function removeItem(idx) {
         const node = editItems.value[idx]
@@ -77,7 +77,7 @@ export function useVfilesEdit(props: VfilesEditProps, emit: (event: string, ...a
         items.splice(newIdx, 0, moved)
     }
 
-    // On component mountfrom config Heavycreate editItems
+    // 组件挂载时从 config 重建 editItems
     onMounted(() => {
         rebuildEditItems()
     })

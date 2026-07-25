@@ -1,8 +1,8 @@
 /**
- * course/task/dot.vue component test
+ * course/task/dot.vue 组件测试
  * @see modules/lms/components/course/task/dot.vue
  *
- * Task status dot: shows different icon and color based on type and status
+ * 任务状态点：根据 type 和 status 显示不同图标和颜色
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -69,7 +69,7 @@ describe('course/task/dot.vue', () => {
     const clickEvents = wrapper.emitted('click')
     expect(clickEvents).toBeTruthy()
     expect(clickEvents!.length).toBe(1)
-    // Props object is passed when emitting
+    // emit 时传入 props 对象
     const emittedArg = clickEvents![0]![0] as any
     expect(emittedArg.id).toBe(5)
     expect(emittedArg.type).toBe('question')
@@ -111,7 +111,7 @@ describe('course/task/dot.vue', () => {
       props: { status: 'todo', id: 1 },
       global: _globalConfig,
     })
-    // type defaults to '', icon is '', UIcon does not render (v-if="icon")
+    // type 默认 ''，icon 为 ''，UIcon 不渲染（v-if="icon"）
     expect(wrapper.find('.uicon').exists()).toBe(false)
   })
 })

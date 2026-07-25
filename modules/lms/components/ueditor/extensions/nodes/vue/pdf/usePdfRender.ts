@@ -55,7 +55,7 @@ export function usePdfRender(props: PdfRenderProps) {
             }
             return true
         } catch (e) {
-            console.error('pdf.js Failed to load', e)
+            console.error('pdf.js 加载失败', e)
             return false
         }
     }
@@ -137,7 +137,7 @@ export function usePdfRender(props: PdfRenderProps) {
                 }
             }
         } catch (e) {
-            console.error('PDF Render Failed', e)
+            console.error('PDF 渲染失败', e)
         } finally {
             rendering.value = false
         }

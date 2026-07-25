@@ -1,5 +1,5 @@
 /**
- * Course leaderboard: load leaderboard data + compute my rank + table row data
+ * 课程排行榜：加载排行榜数据 + 计算我的排名 + 表格行数据
  */
 export function useCourseLeaderboard(
   props: { courseId: string | number; classId: string | number },
@@ -12,11 +12,11 @@ export function useCourseLeaderboard(
   const loading = ref(false)
   const scoreRows = ref<any[]>([])
 
-  // Student info map: userId -> LmsClassUser
+  // 学生信息 map：userId -> LmsClassUser
   const stuMap = computed(() => new Map(students.value.map(s => [s.id, s])))
   const myStudent = computed(() => user.value ? stuMap.value.get(user.value.id) : null)
 
-  // My rank
+  // 我的排名
   const myRank = computed(() => {
     if (!user.value) return null
     const sorted = [...scoreRows.value].sort((a, b) => (b.score || 0) - (a.score || 0))
@@ -25,7 +25,7 @@ export function useCourseLeaderboard(
     return { rank: idx + 1, userId: user.value.id, score: sorted[idx].score || 0 }
   })
 
-  // ClassUsersTable row data: merge students and score
+  // ClassUsersTable 的行数据：合并 students 和 score
   const tableRows = computed(() => {
     const scoreMap = new Map(scoreRows.value.map(r => [r.userId, r.score || 0]))
     return students.value.map(s => ({
@@ -38,7 +38,7 @@ export function useCourseLeaderboard(
     }))
   })
 
-  // Extra column: total score
+  // 额外列：总分
   const extraColumns = computed(() => [
     { id: 'score', header: t('coursePanel.score') },
   ])
@@ -53,10 +53,10 @@ export function useCourseLeaderboard(
       const params = new URLSearchParams({ courseId: String(props.courseId) })
       if (props.classId) params.set('classId', String(props.classId))
       const data = await cRequest<any>(`/api/courses/leaderboard?${params}`)
-      // Use full top10 as row data (include all students, fill 0)
+      // 用全量 top10 作为行数据（包含所有学生，补0）
       scoreRows.value = data?.top10 || []
     } catch (e) {
-      console.error('Failed to load leaderboard', e)
+      console.error('加载排行榜失败', e)
     } finally {
       loading.value = false
     }

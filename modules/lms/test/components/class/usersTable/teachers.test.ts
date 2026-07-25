@@ -1,9 +1,9 @@
 /**
- * class/usersTable/teachers.vue component test
+ * class/usersTable/teachers.vue 组件测试
  * @see modules/lms/components/class/usersTable/teachers.vue
  *
- * Teacher list: avatar + name + edit button.
- * Depends on useClassUsersTableContext() (inject), stubbed to globalThis in tests.
+ * 教师列表：头像 + 姓名 + 编辑按钮。
+ * 依赖 useClassUsersTableContext()（inject），测试中 stub 到 globalThis。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'

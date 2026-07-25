@@ -13,7 +13,7 @@ const props = defineProps({
 const emit = defineEmits(['update:config', 'close'])
 const { t } = useI18n()
 
-// mindmap  config Yes markdown charactersstring（Exist node.attrs.content Middle）
+// mindmap 的 config 是 markdown 字符串（存在 node.attrs.content 中）
 const markdownText = ref(typeof props.config === 'string' ? props.config : (props.config?.content || ''))
 
 function apply() {

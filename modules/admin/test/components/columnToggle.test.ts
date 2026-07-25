@@ -1,5 +1,5 @@
 /**
- * ColumnToggle component tests
+ * ColumnToggle 组件测试
  * @see modules/admin/components/table/ColumnToggle.vue
  */
 import { describe, it, expect, beforeEach, mount, baseBeforeEach, _globalConfig, makeColumn } from './_shared'
@@ -70,9 +70,9 @@ describe('table/ColumnToggle.vue', () => {
       global: _globalConfig,
     })
     const checkboxes = wrapper.findAll('input[type="checkbox"]')
-    // The second (name) is unchecked
+    // 第二个（name）未选中
     expect((checkboxes[1].element as HTMLInputElement).checked).toBe(false)
-    // The first (id) is checked
+    // 第一个（id）选中
     expect((checkboxes[0].element as HTMLInputElement).checked).toBe(true)
   })
 
@@ -94,9 +94,9 @@ describe('table/ColumnToggle.vue', () => {
       props: { columns, hidden: new Set(['name']) },
       global: _globalConfig,
     })
-    // showAll is the button inside the popover
+    // showAll 是 popover 内的按钮
     const buttons = wrapper.findAll('button')
-    // The first button is the trigger, the second is showAll
+    // 第一个按钮是触发器，第二个是 showAll
     await buttons[1].trigger('click')
     expect(wrapper.emitted('showAll')).toBeTruthy()
   })
@@ -108,7 +108,7 @@ describe('table/ColumnToggle.vue', () => {
       global: _globalConfig,
     })
     const text = wrapper.text()
-    // dataType is shown on the right side of each column
+    // dataType 显示在每列右侧
     expect(text).toContain('number')
     expect(text).toContain('string')
   })

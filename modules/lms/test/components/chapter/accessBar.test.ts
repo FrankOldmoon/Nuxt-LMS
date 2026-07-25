@@ -1,9 +1,9 @@
 /**
- * chapter/accessBar.vue component test
+ * chapter/accessBar.vue 组件测试
  * @see modules/lms/components/chapter/accessBar.vue
  *
- * Chapter access control bar: open switch + class multi-select. Rendered when canEdit=true.
- * Logic provided by useChapterAccess(), imports real composable + depends on useAuthLms/useClasses in tests.
+ * 章节访问控制条：开放开关 + 班级多选。canEdit=true 时渲染。
+ * 逻辑由 useChapterAccess() 提供，测试中导入真实 composable + 依赖 useAuthLms/useClasses。
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

@@ -1,10 +1,10 @@
 /**
- * useVrm composable test
+ * useVrm composable 测试
  * @see modules/lms/composables/useVrm.ts
  *
- * Note: useVrm's core logic (CDN loading, Three.js scene, VRM model loading) executes in onMounted,
- * test environment has no active component instance, onMounted won't trigger.
- * Therefore only synchronous parts are tested: initial refs, close(), t function, subscribeVrmSpeech subscription registration.
+ * 注意：useVrm 的核心逻辑（CDN 加载、Three.js 场景、VRM 模型加载）在 onMounted 中执行，
+ * 测试环境无 active component instance，onMounted 不会触发。
+ * 因此仅测试同步部分：初始 refs、close()、t 函数、subscribeVrmSpeech 订阅注册。
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { ref } from 'vue'
@@ -46,14 +46,14 @@ describe('composables/useVrm', () => {
   it('无 modelUrl 时仍可创建', async () => {
     const { useVrm } = await import('../../composables/useVrm')
     const { loadState, errorMsg } = useVrm({}, () => {})
-    // onMounted won't trigger, so loadState stays at initial 'loading'
+    // onMounted 不会触发，所以 loadState 保持初始 'loading'
     expect(loadState.value).toBe('loading')
     expect(errorMsg.value).toBe('')
   })
 
   it('subscribeVrmSpeech 订阅被注册（composable 创建不报错）', async () => {
-    // subscribeVrmSpeech is called at composable top level, will immediately trigger a callback
-    // If registration succeeds, composable should return normally
+    // subscribeVrmSpeech 在 composable 顶层调用，会立即触发一次回调
+    // 如果注册成功，composable 应正常返回
     const { useVrm } = await import('../../composables/useVrm')
     const result = useVrm({ modelUrl: 'http://example.com/model.vrm' }, () => {})
     expect(result).toBeDefined()

@@ -1,5 +1,5 @@
 /**
- * raceQuestion: set the current question + broadcast raceQuestion
+ * raceQuestion：设置当前题 + 广播 raceQuestion
  */
 import { raceStates, broadcastToRace } from '../state'
 

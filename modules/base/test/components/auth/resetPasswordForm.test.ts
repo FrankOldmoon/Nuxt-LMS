@@ -1,5 +1,5 @@
 /**
- * auth/resetPasswordForm.vue component tests
+ * auth/resetPasswordForm.vue 组件测试
  * @see modules/base/components/auth/resetPasswordForm.vue
  */
 import {

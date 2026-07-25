@@ -1,7 +1,7 @@
 /**
- * Class-related composable (global shared state)
- * Reused in aside.vue, profileModal.vue, userEditModal.vue, accessBar.vue, etc.
- * Uses useState to ensure global single load, no repeated requests when switching chapters
+ * 班级相关 composable（全局共享状态）
+ * 复用于 aside.vue、profileModal.vue、userEditModal.vue、accessBar.vue 等
+ * 使用 useState 保证全局只加载一次，切换章节时不重复请求
  */
 
 export interface ClassItem {
@@ -11,7 +11,7 @@ export interface ClassItem {
 }
 
 /**
- * Get class list (global cache, loads on first call, reads directly afterwards)
+ * 获取班级列表（全局缓存，首次调用加载，后续直接读取）
  * @returns { classes, classOptions, loadClasses }
  */
 export function useClasses() {
@@ -38,7 +38,7 @@ export function useClasses() {
 }
 
 /**
- * Gender options (reused in profileModal, userEditModal)
+ * 性别选项（复用于 profileModal、userEditModal）
  */
 export function useGenderOptions() {
   const { t } = useI18n()

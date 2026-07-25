@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-// SSR-friendly dashboard stats fetch; API rejects for non-admin, data stays null
+// SSR 友好拉取仪表盘统计；非 admin 时接口拒绝，data 保持 null
 const { data: stats } = cRequest.use<any>(
   () => '/api/admin/stats',
   { default: () => null },

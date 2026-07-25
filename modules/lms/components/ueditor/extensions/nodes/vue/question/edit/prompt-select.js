@@ -2,12 +2,12 @@
  * Dropdown (Word Selection) question type generation prompt
  * Output: JSON object with type='select'
  */
-export default `Dropdown / Word Selection (type: "select") — The question text contains one or more blanks; the student picks the match ing word from a given word bank.
+export default `Dropdown / Word Selection (type: "select") — The question text contains one or more blanks; the student picks the matching word from a given word bank.
 
 Structure:
 - content: string, the question text with blank positions marked as ||placeholder||. Supports markdown syntax (headings, bold, italic, lists, inline code, code blocks, links, images, etc.) in the surrounding text.
 - options: array of strings, all candidate words (including distractors). Each option supports markdown syntax.
-- answer: array of strings, the correct words in left-to-right order match ing the blanks
+- answer: array of strings, the correct words in left-to-right order matching the blanks
 - point: number, the point value
 - type: must be "select"
 - tags: array, category tags

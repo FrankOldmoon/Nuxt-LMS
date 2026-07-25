@@ -1,5 +1,5 @@
 <template>
-  <!-- Hide buttons when not logged in -->
+  <!-- 未登录时不显示按钮 -->
   <div v-if="isLoggedIn" class="flex items-center gap-1 mb-3 flex-wrap">
     <UTooltip v-if="courseBtnsConfig.showProgress" :text="$t('coursePanel.progress')">
       <UButton icon="i-lucide-trending-up" color="primary" size="xs" @click="progressOpen = true" />
@@ -21,7 +21,7 @@
     </UTooltip>
   </div>
 
-  <!-- Course panel modal -->
+  <!-- 课程面板弹窗 -->
   <CourseProgressModal v-model:open="progressOpen" :course-id="courseId" :navigation="navigation" />
   <CourseLeaderboardModal v-model:open="leaderboardOpen" :course-id="courseId" :class-id="classId" />
   <CourseGroupsModal v-model:open="groupsOpen" :course-id="courseId" :class-id="classId" />
@@ -43,7 +43,7 @@ const classId = computed(() => user.value?.defaultClass?.id || user.value?.class
 
 
 
-// Whether logged in
+// 是否已登录
 const isLoggedIn = computed(() => !!user.value)
 
 const progressOpen = ref(false)

@@ -3,7 +3,7 @@
     <p class="text-xs text-gray-500 mb-3">{{ $t('question.classifyRenderHint') }}</p>
 
     <div class="flex gap-4">
-      <!-- waitCategorypool -->
+      <!-- 待分类池 -->
       <div class="w-1/3 shrink-0">
         <div class="text-xs font-medium text-gray-500 mb-2 pb-1 border-b border-gray-200 dark:border-gray-600">
           {{ $t('question.classifyPool') }}
@@ -26,7 +26,7 @@
         </draggable>
       </div>
 
-      <!-- Categoryarea -->
+      <!-- 分类区域 -->
       <div class="flex-1 grid grid-cols-2 gap-3">
         <div v-for="(cat, ci) in categories" :key="ci" class="flex flex-col">
           <div class="text-xs font-medium text-gray-500 mb-2 pb-1 border-b border-gray-200 dark:border-gray-600">

@@ -3,7 +3,7 @@ import type { MenuItem } from '../utils/types'
 import type { FlatMenuItem } from '../components/menu/EditorItem.vue'
 
 /**
- * Menu editor: manages local flat copy, tree↔flat conversion, single item edit orchestration, save
+ * 菜单编辑器：管理本地扁平副本、树↔扁平转换、单条编辑编排、保存
  */
 export function useMenuEditor(open: Ref<boolean>, emit: (e: 'update:open', v: boolean) => void) {
   const { items, save, pending } = useAdminMenu()
@@ -15,7 +15,7 @@ export function useMenuEditor(open: Ref<boolean>, emit: (e: 'update:open', v: bo
     return keyCounter++
   }
 
-  // ==================== Tree ↔ flat conversion ====================
+  // ==================== 树 ↔ 扁平 转换 ====================
   function treeToFlat(list: MenuItem[], depth = 0): FlatMenuItem[] {
     const result: FlatMenuItem[] = []
     for (const it of list) {
@@ -68,7 +68,7 @@ export function useMenuEditor(open: Ref<boolean>, emit: (e: 'update:open', v: bo
     return root
   }
 
-  // ==================== Single item edit orchestration ====================
+  // ==================== 单条编辑编排 ====================
   const itemEditOpen = ref(false)
   const editingIndex = ref<number>(-1)
   const editingItem = computed<FlatMenuItem | null>(() =>
@@ -88,7 +88,7 @@ export function useMenuEditor(open: Ref<boolean>, emit: (e: 'update:open', v: bo
     local.value = local.value.map((it, i) => (i === idx ? { ...it, ...updated } : it))
   }
 
-  // ==================== Main modal: initialize / save ====================
+  // ==================== 主弹窗：初始化 / 保存 ====================
   function resetFromItems() {
     keyCounter = 0
     local.value = treeToFlat(items.value)

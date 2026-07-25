@@ -1,8 +1,8 @@
 /**
- * AI service composable test (TTS / ASR, using happy-dom to provide window)
+ * AI 服务 composable 测试（TTS / ASR，使用 happy-dom 提供 window）
  * @see modules/lms/utils/ai
  *
- * TTS is now implemented via server-side edge-tts API, client plays with HTMLAudioElement
+ * TTS 现通过服务端 edge-tts API 实现，客户端用 HTMLAudioElement 播放
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'

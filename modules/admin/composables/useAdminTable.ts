@@ -1,17 +1,17 @@
 import type { ColumnMeta, FilterCondition, TableMeta } from '../utils/types'
 
 /**
- * Table management core state machine: pagination / sorting / search / filtering / soft-delete toggle / batch selection / CRUD / import-export
+ * 表管理核心状态机：分页 / 排序 / 搜索 / 筛选 / 软删除切换 / 批量选择 / CRUD / 导入导出
  *
- * Composite primary key tables (no id): selection uses string key (PK columns joined by '-'), batch operations go through
- * TableOverride.delete override (no longer uses generic /api/crud/[table]/batch inArray(id)).
+ * 复合主键表（无 id）：selection 改用 string key（PK 列拼 '-'），批量操作走
+ * TableOverride.delete 覆盖（不再走通用 /api/crud/[table]/batch 的 inArray(id)）。
  */
 export function useAdminTable(tableName: MaybeRefOrGetter<string>) {
   const name = computed(() => toValue(tableName))
   const toast = useToast()
   const { t } = useI18n()
 
-  // ====================== State ======================
+  // ====================== 状态 ======================
   const page = ref(1)
   const pageSize = ref(20)
   const sort = ref<{ column: string; dir: 'asc' | 'desc' } | null>(null)
@@ -30,8 +30,8 @@ export function useAdminTable(tableName: MaybeRefOrGetter<string>) {
   const hasId = computed(() => meta.value?.hasId ?? true)
 
   /**
-   * Stable row key: uses String(id) if id exists, otherwise PK columns joined by '-'.
-   * Consistent with rowKey inside TableView.vue.
+   * 行稳定 key：有 id 用 String(id)，否则用 PK 列拼 '-'。
+   * 与 TableView.vue 内部 rowKey 保持一致。
    */
   function rowKeyOf(row: Record<string, any>): string {
     if (hasId.value) return row.id != null ? String(row.id) : JSON.stringify(row)
@@ -40,35 +40,35 @@ export function useAdminTable(tableName: MaybeRefOrGetter<string>) {
     return pkCols.map((c) => String(row[c.jsName])).join('-')
   }
 
-  // ====================== Column visibility (persisted to backend configs table, shared across admins/devices) ======================
+  // ====================== 列可见性（持久化到后端 configs 表，跨管理员/设备共享） ======================
   const hiddenColumns = ref<Set<string>>(new Set())
 
-  /** Fetch column config from backend; skip on SSR (imperative cRequest uses $fetch without forwarding Cookie, admin guard is client-only) */
+  /** 从后端拉取列配置；SSR 跳过（命令式 cRequest 走 $fetch 不转发 Cookie，admin 守卫 client-only） */
   async function loadHidden() {
     if (import.meta.server) return
     try {
       const data = await cRequest<{ hidden: string[] }>(`/api/admin/columns/${name.value}`)
       hiddenColumns.value = new Set(data?.hidden ?? [])
     } catch {
-      // Keep current hiddenColumns on backend request failure, does not affect existing rendering
+      // 后端请求失败时保留当前 hiddenColumns，不影响已有渲染
     }
   }
 
-  /** Save column config to backend (fire-and-forget, silent on failure) */
+  /** 保存列配置到后端（fire-and-forget，失败静默） */
   function saveColumnConfig() {
     if (import.meta.server) return
     cRequest(`/api/admin/columns/${name.value}`, {
       method: 'PUT',
       body: { hidden: [...hiddenColumns.value] },
     }).catch(() => {
-      // Ignore save failure
+      // 忽略保存失败
     })
   }
 
   function toggleColumn(jsName: string) {
     if (hiddenColumns.value.has(jsName)) hiddenColumns.value.delete(jsName)
     else hiddenColumns.value.add(jsName)
-    hiddenColumns.value = new Set(hiddenColumns.value) // Trigger reactivity
+    hiddenColumns.value = new Set(hiddenColumns.value) // 触发响应式
     saveColumnConfig()
   }
 
@@ -79,7 +79,7 @@ export function useAdminTable(tableName: MaybeRefOrGetter<string>) {
 
   const visibleColumns = computed(() => columns.value.filter((c) => !hiddenColumns.value.has(c.jsName)))
 
-  // ====================== Query building ======================
+  // ====================== 查询构建 ======================
   function buildQuery(): string {
     const params = new URLSearchParams()
     params.set('page', String(page.value))
@@ -91,9 +91,9 @@ export function useAdminTable(tableName: MaybeRefOrGetter<string>) {
     return params.toString()
   }
 
-  // ====================== Load ======================
+  // ====================== 加载 ======================
   async function load() {
-    // SSR does not forward Cookie (imperative cRequest uses $fetch), admin guard is client-only → skip SSR fetch
+    // SSR 不转发 Cookie（命令式 cRequest 走 $fetch），admin 守卫 client-only → 跳过 SSR 拉取
     if (import.meta.server) return
     pending.value = true
     try {
@@ -113,7 +113,7 @@ export function useAdminTable(tableName: MaybeRefOrGetter<string>) {
     }
   }
 
-  /** Toggle sort (click column header: asc → desc → cancel) */
+  /** 切换排序（点击表头：asc → desc → 取消） */
   function toggleSort(column: string) {
     if (!sort.value || sort.value.column !== column) {
       sort.value = { column, dir: 'asc' }
@@ -126,7 +126,7 @@ export function useAdminTable(tableName: MaybeRefOrGetter<string>) {
     load()
   }
 
-  /** Search (loads after 300ms debounce) */
+  /** 搜索（防抖 300ms 后加载） */
   let searchTimer: any = null
   function applySearch(value: string) {
     search.value = value
@@ -137,13 +137,13 @@ export function useAdminTable(tableName: MaybeRefOrGetter<string>) {
     }, 300)
   }
 
-  /** Apply filters (set, then deep watcher triggers load) */
+  /** 应用筛选（设置后由 deep watcher 触发加载） */
   function applyFilters(next: FilterCondition[]) {
     filters.value = next
     page.value = 1
   }
 
-  // Debounce reload when filter items are modified in place (v-model changes column/op/value)
+  // 筛选项就地变更（v-model 修改 column/op/value）时防抖重新加载
   let filterTimer: any = null
   watch(
     filters,
@@ -157,7 +157,7 @@ export function useAdminTable(tableName: MaybeRefOrGetter<string>) {
     { deep: true },
   )
 
-  /** Toggle trash bin / normal mode */
+  /** 切换垃圾桶 / 普通模式 */
   function toggleTrash() {
     includeDeleted.value = !includeDeleted.value
     selectedKeys.value = new Set()
@@ -165,7 +165,7 @@ export function useAdminTable(tableName: MaybeRefOrGetter<string>) {
     load()
   }
 
-  /** Paginate */
+  /** 翻页 */
   function setPage(p: number) {
     page.value = p
     load()
@@ -177,7 +177,7 @@ export function useAdminTable(tableName: MaybeRefOrGetter<string>) {
     load()
   }
 
-  // ====================== Selection (composite primary key aware: uses string key) ======================
+  // ====================== 选择（复合主键感知：用 string key） ======================
   function toggleSelect(key: string) {
     if (selectedKeys.value.has(key)) selectedKeys.value.delete(key)
     else selectedKeys.value.add(key)
@@ -196,10 +196,10 @@ export function useAdminTable(tableName: MaybeRefOrGetter<string>) {
     () => rows.value.length > 0 && rows.value.every((r) => selectedKeys.value.has(rowKeyOf(r))),
   )
 
-  /** Currently selected rows (for batch operations) */
+  /** 当前选中的行（用于批量操作） */
   const selectedRows = computed(() => rows.value.filter((r) => selectedKeys.value.has(rowKeyOf(r))))
 
-  // Keep selectedArray alias → old UI/batch bar still uses .length
+  // 保留 selectedArray 别名 → 旧 UI/批量条仍用 .length
   const selectedArray = computed(() => [...selectedKeys.value])
 
   // ====================== CRUD ======================
@@ -218,9 +218,9 @@ export function useAdminTable(tableName: MaybeRefOrGetter<string>) {
   }
 
   /**
-   * Batch operations (delete/remove/restore):
-   * - Composite primary key tables or tables with registered TableOverride.delete → go through override
-   * - Normal tables → go through generic /api/crud/[table]/batch, body: { ids, action }
+   * 批量操作（delete/remove/restore）：
+   * - 复合主键表或注册了 TableOverride.delete 的表 → 走覆盖
+   * - 普通表 → 走通用 /api/crud/[table]/batch，body: { ids, action }
    */
   async function batchAction(rowsIn: Record<string, any>[], action: 'delete' | 'remove' | 'restore') {
     if (rowsIn.length === 0) return
@@ -254,7 +254,7 @@ export function useAdminTable(tableName: MaybeRefOrGetter<string>) {
     return batchAction(rowsIn, 'restore')
   }
 
-  // ====================== Import / Export ======================
+  // ====================== 导入 / 导出 ======================
   async function exportRows(): Promise<any[]> {
     const params = new URLSearchParams()
     if (search.value.trim()) params.set('search', search.value.trim())
@@ -274,20 +274,20 @@ export function useAdminTable(tableName: MaybeRefOrGetter<string>) {
   }
 
   return {
-    // State
+    // 状态
     page, pageSize, sort, search, filters, includeDeleted,
     selectedKeys, selectedArray, selectedRows, allSelected, rows, total, pending, meta,
     columns, visibleColumns, hiddenColumns, readOnly, labelColumn, hasId,
     rowKeyOf,
-    // Column control
+    // 列控制
     toggleColumn, showAllColumns, loadHidden,
-    // Load and query
+    // 加载与查询
     load, toggleSort, applySearch, applyFilters, toggleTrash, setPage, setPageSize,
-    // Selection
+    // 选择
     toggleSelect, toggleSelectAll,
     // CRUD
     addRow, updateRow, batchDelete, batchRemove, batchRestore,
-    // Import/Export
+    // 导入导出
     exportRows, importRows,
   }
 }

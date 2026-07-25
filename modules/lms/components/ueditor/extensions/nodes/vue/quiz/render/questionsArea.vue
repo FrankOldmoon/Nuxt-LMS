@@ -1,6 +1,6 @@
 <template>
     <div class="space-y-3">
-        <!-- Progress BarTimer -->
+        <!-- 进度条计时器 -->
         <div v-if="started" class="space-y-1">
             <div class="flex items-center justify-between text-xs">
                 <span :class="remainingTime <= 30 ? 'text-red-500 font-bold' : 'text-gray-500'">
@@ -16,7 +16,7 @@
             </div>
         </div>
 
-        <!-- LeftRightlayout：LeftQuestion selecteditor + RightCurrentQuestion -->
+        <!-- 左右布局：左题目选择器 + 右当前题目 -->
         <div class="flex gap-3" style="min-height: 300px;">
             <div class="w-12 shrink-0 flex flex-col gap-1">
                 <button v-for="(q, idx) in quizQuestions" :key="q.id"
@@ -34,7 +34,7 @@
             </div>
         </div>
 
-        <!-- BottomSubmit Button + Navigation -->
+        <!-- 底部提交按钮 + 导航 -->
         <div v-if="started"
             class="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-800">
             <UButton color="success" variant="solid" size="lg" icon="i-lucide-chevron-left"
@@ -50,7 +50,7 @@
                 @click="switchQuestion(currentIndex + 1)" />
         </div>
 
-        <!-- SubmitConfirm Modal -->
+        <!-- 提交确认弹窗 -->
         <UModal v-model:open="confirmOpen">
             <template #content>
                 <div class="p-6 space-y-4">

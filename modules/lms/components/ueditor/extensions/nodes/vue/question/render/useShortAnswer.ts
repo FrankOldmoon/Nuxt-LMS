@@ -2,7 +2,7 @@ import { ref, computed, inject, watch } from 'vue'
 import { submitQuestion, recordAnswer, computeCorrectRate } from './shared'
 
 export function useShortAnswer(props: any) {
-  const submitted = inject<import('vue').Ref<boolean>>('question submitted')
+  const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')
   const isCorrect = inject<import('vue').Ref<boolean>>('questionIsCorrect')
   const fromRecord = inject<import('vue').Ref<boolean>>('questionFromRecord')
   const { courseId, chapterId } = useLmsContext()
@@ -12,13 +12,13 @@ export function useShortAnswer(props: any) {
 
   const hasAnswer = computed(() => userAnswer.value.trim() !== '')
 
-  // CorrectAnswerregular expression
+  // 正确答案的正则表达式
   const correctPattern = computed(() => {
     const ans = props.question.answer || []
     return Array.isArray(ans) ? (ans[0] || '') : String(ans || '')
   })
 
-  // Compileregex
+  // 编译正则
   function compileRegex() {
     const pattern = correctPattern.value
     if (!pattern) return null
@@ -29,12 +29,12 @@ export function useShortAnswer(props: any) {
     }
   }
 
-  // listen question change
+  // 监听 question 变化
   watch(() => props.question, () => {
     userAnswer.value = ''
   }, { immediate: true })
 
-  // listen record change（fetchRecord backfill scenario）
+  // 监听 record 变化（fetchRecord 回填场景）
   watch(() => props.question?.record, (record) => {
     if (!Array.isArray(record) || record.length === 0) return
     userAnswer.value = String(record[0] || '')
@@ -81,8 +81,8 @@ export function useShortAnswer(props: any) {
   }
 
   function fillCorrectAnswer() {
-    // Short AnswerNonemethodAutofillCorrectAnswer，onlydisplay regex
-    // usecanmatch regex exampleText（if "abc"）asTip
+    // 简答题无法自动填充正确答案，只展示正则
+    // 用能匹配正则的示例文本（如 "abc"）作为提示
     const re = compileRegex()
     if (re) {
       userAnswer.value = ''

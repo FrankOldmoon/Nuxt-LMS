@@ -1,5 +1,5 @@
 export default eventHandler(async (event) => {
-  // Only teachers/admins can create
+  // 仅教师/管理员可新增
   await requireRole(event, ['teacher', 'admin'])
 
   const table = 'classes'
@@ -9,7 +9,7 @@ export default eventHandler(async (event) => {
     const result = await addTable(table, body)
     return cResp(result)
   } catch (error: any) {
-    console.error('Insert failed:', error)
-    return cResp(null, error.message || 'Insert failed', false)
+    console.error('插入失败:', error)
+    return cResp(null, error.message || '插入失败', false)
   }
 })

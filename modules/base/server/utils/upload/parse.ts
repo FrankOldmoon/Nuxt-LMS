@@ -1,17 +1,17 @@
 /**
- * Upload step 1: resolve source
+ * 上传步骤 1：解析来源
  *
- * Two sources:
- *  1) JSON body: { url }        - remote image download + sharp webp compression
- *  2) multipart: files[] + group - raw form upload
+ * 两种来源：
+ *  1) JSON body: { url }        - 远程图片下载 + sharp webp 压缩
+ *  2) multipart: files[] + group - 原始表单上传
  *
- * Also defines UploadError (business error classification), handler formats response accordingly.
+ * 同时定义 UploadError（业务错误分类），handler 据此格式化响应。
  */
 import { extname } from 'node:path'
 import { readMultipartFormData } from 'h3'
 import { downloadAndCompressImageToWebp } from '../files/remoteImage'
 
-/** Business error classification */
+/** 业务错误分类 */
 export class UploadError extends Error {
   code: 'size' | 'type' | 'empty' | 'quota' | 'generic' = 'generic'
   extra: Record<string, any> = {}
@@ -22,7 +22,7 @@ export class UploadError extends Error {
   }
 }
 
-/** Parse file source + group from multipart form, return buffer / ext / fileType / group */
+/** 从 multipart form 中解析文件来源 + group，返回 buffer / ext / fileType / group */
 export async function resolveUploadSource(event: any, body: any) {
   let group = body?.group ? String(body.group).trim() : ''
   if (body?.url) {
@@ -38,7 +38,7 @@ export async function resolveUploadSource(event: any, body: any) {
   const formData = await readMultipartFormData(event)
   const fileField = formData?.find((f: any) => f.name === 'files')
   if (!fileField || !fileField.filename) {
-    throw new UploadError('Please upload a file', 'empty')
+    throw new UploadError('请上传文件', 'empty')
   }
   const groupField = formData?.find((f: any) => f.name === 'group')
   if (groupField?.data) {

@@ -28,7 +28,7 @@ const iframeStyle = computed(() => ({
   width: '100%',
   height: `${attrs.value.height || 200}px`,
   border: 'none',
-  background color: '#fff',
+  backgroundColor: '#fff',
   pointerEvents: 'auto',
 }))
 </script>

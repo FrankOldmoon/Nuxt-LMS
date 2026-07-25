@@ -1,26 +1,26 @@
 /**
- * LMS config - private cache state
+ * LMS 配置 - 私有缓存状态
  *
- * Module-level singleton, accessed externally via reloadLmsConfig / getLmsConfigSync.
+ * 模块级单例，外部通过 reloadLmsConfig / getLmsConfigSync 访问。
  */
 import { DEFAULT_LMS_CONFIG } from '../defaults'
 import { flattenTree, deepClone } from '../tree'
 
-/** Flattened defaults (key='a.b.c' without lms: prefix) */
+/** 拍平默认值（key='a.b.c' 不带 lms: 前缀） */
 export const FLAT_DEFAULTS: Record<string, any> = (() => {
   const r: Record<string, any> = {}
   flattenTree('', DEFAULT_LMS_CONFIG, r)
   return r
 })()
 
-/** Tree-shaped in-memory cache */
+/** 树形内存缓存 */
 let _lmsConfig: any = null
 
 export function getRaw(): any { return _lmsConfig }
 export function setLoaded(cfg: any) { _lmsConfig = cfg }
 export function resetCache() { _lmsConfig = null }
 
-/** Synchronously get the cached config (returns a clone of defaults when not loaded) */
+/** 同步获取已缓存的配置（未加载时返回默认值克隆） */
 export function getLmsRawConfig(): any {
   return _lmsConfig ? _lmsConfig : deepClone(DEFAULT_LMS_CONFIG)
 }

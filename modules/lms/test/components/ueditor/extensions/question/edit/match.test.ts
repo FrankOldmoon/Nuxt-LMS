@@ -1,8 +1,8 @@
 /**
- * match edit component test (edit)
+ * match 编辑组件测试 (edit)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/edit/match.vue
  *
- * match.vue receives form prop, edits pairs [{left, right}]
+ * match.vue 接收 form prop，编辑配对 [{left, right}]
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -41,7 +41,7 @@ describe('question/edit/match.vue', () => {
       props: { form },
       global: { stubs: _globalStubs, mocks: _mocks },
     })
-    // Each pair has 2 inputs (left + right), 2 pairs = 4
+    // 每对有 2 个 input（left + right），2 对 = 4 个
     expect(wrapper.findAll('input')).toHaveLength(4)
   })
 
@@ -74,7 +74,7 @@ describe('question/edit/match.vue', () => {
       props: { form },
       global: { stubs: _globalStubs, mocks: _mocks },
     })
-    // 3 pairs × 2 inputs (left + right) = 6 inputs
+    // 3 对 × 2 inputs (left + right) = 6 inputs
     expect(wrapper.findAll('input')).toHaveLength(6)
   })
 })

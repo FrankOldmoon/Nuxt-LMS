@@ -1,5 +1,5 @@
 /**
- * filterRow component tests
+ * filterRow 组件测试
  * @see modules/admin/components/table/filterRow.vue
  */
 import { describe, it, expect, beforeEach, mount, baseBeforeEach, _globalConfig, makeColumn } from './_shared'
@@ -41,9 +41,9 @@ describe('table/filterRow.vue', () => {
       props: { filter: { column: 'active', op: 'eq', value: true }, columns },
       global: _globalConfig,
     })
-    // op=eq, boolean type goes through USelect branch
+    // op=eq，boolean 类型走 USelect 分支
     const selects = wrapper.findAll('select')
-    // Column select + operator select + boolean value select = 3
+    // 列选择 + 操作符选择 + boolean 值 select = 3
     expect(selects.length).toBe(3)
   })
 
@@ -63,7 +63,7 @@ describe('table/filterRow.vue', () => {
       props: { filter: { column: 'name', op: 'null', value: '' }, columns },
       global: _globalConfig,
     })
-    // Only column select + op select + remove button remain, no input
+    // 只剩列 select + op select + remove button，无 input
     expect(wrapper.findAll('input').length).toBe(0)
   })
 
@@ -92,10 +92,10 @@ describe('table/filterRow.vue', () => {
       props: { filter: { column: 'name', op: 'eq', value: '' }, columns },
       global: _globalConfig,
     })
-    // Options of the operator select (the second select)
+    // 操作符 select（第二个 select）的 options
     const opSelect = wrapper.findAll('select')[1]
     const options = opSelect.findAll('option')
-    // 10 operators
+    // 10 个操作符
     expect(options.length).toBe(10)
     const values = options.map(o => o.attributes('value'))
     expect(values).toContain('eq')
@@ -123,7 +123,7 @@ describe('table/filterRow.vue', () => {
     })
     const colSelect = wrapper.findAll('select')[0]
     const options = colSelect.findAll('option')
-    // id kept, createdAt filtered (auto-increment), name kept → 2
+    // id 保留，createdAt 被过滤（自增），name 保留 → 2 个
     expect(options.length).toBe(2)
     const values = options.map(o => o.attributes('value'))
     expect(values).toContain('id')

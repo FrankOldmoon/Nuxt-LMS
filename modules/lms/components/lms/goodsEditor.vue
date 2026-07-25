@@ -7,7 +7,7 @@
     </div>
 
     <div v-else class="space-y-3">
-      <!-- Existing goods list -->
+      <!-- 已有商品列表 -->
       <div v-for="(good, idx) in goods" :key="good.id || `new_${idx}`"
         class="border border-default rounded-lg p-3 space-y-2 bg-elevated/30">
         <div class="flex items-center gap-2">
@@ -23,7 +23,7 @@
         </div>
         <UInput v-model="good.content.description" size="xs" class="w-full"
           :placeholder="$t('goods.namePlaceholder')" />
-        <!-- price/sell price/stock -->
+        <!-- 价格/卖出价/库存 -->
         <div class="flex items-center gap-2 flex-wrap">
           <UFormField :label="$t('goods.price')" size="xs" class="flex-1 min-w-[80px]">
             <UInput v-model.number="good.price" type="number" size="xs" class="w-full" />
@@ -38,11 +38,11 @@
         </div>
       </div>
 
-      <!-- Add button -->
+      <!-- 新增按钮 -->
       <UButton :label="$t('goods.add')" icon="i-lucide-plus" color="primary" variant="outline" size="sm"
         block @click="addGood" />
 
-      <!-- Save Button -->
+      <!-- 保存按钮 -->
       <div class="flex justify-end pt-2">
         <UButton :label="$t('common.save')" color="primary" size="sm" :loading="saving" @click="saveAll" />
       </div>

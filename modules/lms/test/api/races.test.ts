@@ -1,5 +1,5 @@
 /**
- * Races API endpoint test
+ * Races API 端点测试
  * @see modules/lms/server/api/races/*.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -127,7 +127,7 @@ describe('API: races/add.post', () => {
 
   it('教师成功新增竞赛（自动分配 cid）', async () => {
     setMockAuthState({ id: 1, username: 'teacher', name: 'Teacher', roles: ['teacher'], permissions: [] })
-    // maxCid query returns [{cid: 5}]
+    // maxCid 查询返回 [{cid: 5}]
     _mockDb.limit = vi.fn().mockResolvedValue([{ cid: 5 }])
     _mockDb.returning = vi.fn().mockResolvedValue([{ id: 10, cid: 6, courseId: 1, title: 'Race1' }])
     const handler = (await import('../../server/api/races/add.post')).default

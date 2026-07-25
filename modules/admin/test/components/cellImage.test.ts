@@ -1,5 +1,5 @@
 /**
- * cellImage component tests
+ * cellImage 组件测试
  * @see modules/admin/components/table/cellImage.vue
  */
 import { describe, it, expect, beforeEach, mount, baseBeforeEach, _globalStubs, _globalConfig } from './_shared'
@@ -34,11 +34,11 @@ describe('table/cellImage.vue', () => {
       props: { value: 'http://example.com/a.png' },
       global: _globalConfig,
     })
-    // Initially no modal
+    // 初始无 modal
     expect(wrapper.find('.modal').exists()).toBe(false)
-    // Click avatar
+    // 点击 avatar
     await wrapper.find('.uavatar').trigger('click')
-    // Modal should appear
+    // modal 应出现
     expect(wrapper.find('.modal').exists()).toBe(true)
   })
 

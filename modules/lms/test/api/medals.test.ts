@@ -1,5 +1,5 @@
 /**
- * LMS Medals API endpoint tests
+ * LMS Medals API 端点测试
  * @see modules/lms/server/api/medals/*.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -54,7 +54,7 @@ describe('API: medals/list.get', () => {
     const sample = [
       { id: 1, code: 'first-login', name: '首次登录', description: '...', icon: 'i-lucide-award', points: 10 },
     ]
-    // db.select().from() should return medal array
+    // db.select().from() 应该返回奖章数组
     _mockDb.from = vi.fn().mockResolvedValue(sample)
     const handler = (await import('../../server/api/medals/list.get')).default
     const result = await handler(makeEvent())

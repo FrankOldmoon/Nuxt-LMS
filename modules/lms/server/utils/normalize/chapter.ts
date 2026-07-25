@@ -2,7 +2,7 @@ import type { LmsChapterDetail, LmsChapterPageData } from '#lms/types/lms'
 import { normalizeChapterSummary } from './category'
 import { mergeCourseLmsConfig } from '../lmsConfig/cache/course-merge'
 
-/** Normalize chapter detail (DB chapters -> LmsChapterDetail) */
+/** 归一化章节详情（DB chapters → LmsChapterDetail） */
 export function normalizeChapterDetail(ch: any, userChapter?: any): LmsChapterDetail {
   const result: LmsChapterDetail = {
     id: ch.id,
@@ -20,7 +20,7 @@ export function normalizeChapterDetail(ch: any, userChapter?: any): LmsChapterDe
   return result
 }
 
-/** Normalize chapter page data (DB chapter + course -> LmsChapterPageData) */
+/** 归一化章节页面数据（DB chapter + course → LmsChapterPageData） */
 export function normalizeChapterPageData(ch: any, course: any, userChapter?: any): LmsChapterPageData {
   const cfg = (course?.config as Record<string, any>) || {}
   const courseLms = mergeCourseLmsConfig(cfg)

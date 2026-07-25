@@ -1,9 +1,9 @@
 /**
- * chapter/btns.vue component test
+ * chapter/btns.vue 组件测试
  * @see modules/lms/components/chapter/btns.vue
  *
- * Chapter action button group: score/select/timer/invite/danmaku/vote/quick answer.
- * Depends on multiple composables, stubs useAuthLms/useLayoutState/useWebSocket/useLmsPublicConfig in tests.
+ * 章节操作按钮组：得分/选择/计时器/邀请/弹幕/投票/抢答。
+ * 依赖多个 composable，测试中 stub useAuthLms/useLayoutState/useWebSocket/useLmsPublicConfig。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -13,7 +13,7 @@ import { resetAllStubs, setMockI18n, setMockAuthUser } from '../../../../../test
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
-  // Default stub: non-teacher, all button switches on
+  // 默认 stub：非教师、所有按钮开关开启
   ;(globalThis as any).useAuthLms = () => ({
     isCourseTeacher: () => false,
     isCourseEditor: () => false,
@@ -53,7 +53,7 @@ const _globalConfig = {
 
 describe('chapter/btns.vue', () => {
   it('未登录时不渲染按钮组', async () => {
-    // Does not call setMockAuthUser → user=null
+    // 不调用 setMockAuthUser → user=null
     const { default: Btns } = await import('../../../components/chapter/btns.vue')
     const wrapper = mount(Btns, { global: _globalConfig })
     await flushPromises()
@@ -65,7 +65,7 @@ describe('chapter/btns.vue', () => {
     const { default: Btns } = await import('../../../components/chapter/btns.vue')
     const wrapper = mount(Btns, { global: _globalConfig })
     await flushPromises()
-    // canEdit=false → only showTimer button (danmaku requires canEdit||showDanmaku, showDanmaku=false)
+    // canEdit=false → 只有 showTimer 按钮（弹幕需 canEdit||showDanmaku，showDanmaku=false）
     expect(wrapper.findAll('.utooltip').length).toBe(1)
   })
 
@@ -74,7 +74,7 @@ describe('chapter/btns.vue', () => {
     const { default: Btns } = await import('../../../components/chapter/btns.vue')
     const wrapper = mount(Btns, { global: _globalConfig })
     await flushPromises()
-    // canEdit=true, chapterBtnsConfig all on, showDanmakuPanel=true → 7 buttons
+    // canEdit=true，chapterBtnsConfig 全开，showDanmakuPanel=true → 7 个按钮
     expect(wrapper.findAll('.utooltip').length).toBe(7)
   })
 
@@ -91,7 +91,7 @@ describe('chapter/btns.vue', () => {
     const { default: Btns } = await import('../../../components/chapter/btns.vue')
     const wrapper = mount(Btns, { global: _globalConfig })
     await flushPromises()
-    // One less timer → 6
+    // 少 1 个 timer → 6 个
     expect(wrapper.findAll('.utooltip').length).toBe(6)
   })
 
@@ -100,13 +100,13 @@ describe('chapter/btns.vue', () => {
     const { default: Btns } = await import('../../../components/chapter/btns.vue')
     const wrapper = mount(Btns, { global: _globalConfig })
     await flushPromises()
-    // The first tooltip button is score
+    // 第一个 tooltip 的按钮是得分
     const scoreBtn = wrapper.findAll('button')[0]
     await scoreBtn.trigger('click')
     await flushPromises()
-    // ChapterScoreModal open prop should be true
+    // ChapterScoreModal open prop 应为 true
     const modal = wrapper.findComponent({ name: 'ChapterScoreModal' })
-    // stub component name may not be registered, use .score-modal to detect its presence
+    // stub 组件名可能未注册，用 .score-modal 检测其存在
     expect(wrapper.find('.score-modal').exists()).toBe(true)
   })
 

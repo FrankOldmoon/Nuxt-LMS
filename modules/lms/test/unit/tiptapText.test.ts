@@ -1,9 +1,9 @@
 /**
- * tiptapText.ts unit test
+ * tiptapText.ts 单元测试
  *
- * Coverage:
- * - extractText: null/string/array/text node/codeBlock(raw/fence/skip)/nested content
- * - contentToText: string/object/null/number/array/options pass-through
+ * 覆盖：
+ * - extractText：null/字符串/数组/文本节点/codeBlock(raw/fence/skip)/嵌套内容
+ * - contentToText：字符串/对象/null/number/数组/options 透传
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'

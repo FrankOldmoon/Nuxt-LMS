@@ -1,10 +1,10 @@
 /**
- * Shop composable: manage goods list, bag, coin status + buy/sell operations
+ * 商店 composable：管理商品列表、背包、金币状态 + 买卖操作
  *
- * Data flow:
- * - fetchAll: when opening the modal, fetch coin / goods / bags in parallel
- * - buy(goodId): call /api/goods/buy → refresh coin + bags on success
- * - sell(goodId): call /api/goods/sell → refresh coin + bags on success
+ * 数据流：
+ * - fetchAll: 打开弹窗时并行拉取 coin / goods / bags
+ * - buy(goodId): 调用 /api/goods/buy → 成功后刷新 coin + bags
+ * - sell(goodId): 调用 /api/goods/sell → 成功后刷新 coin + bags
  */
 import type { Ref } from 'vue'
 
@@ -52,7 +52,7 @@ export function useShop(courseId: Ref<number | string>) {
       })
       coin.value = data?.coin || 0
     } catch {
-      // silent
+      // 静默
     }
   }
 
@@ -131,7 +131,7 @@ export function useShop(courseId: Ref<number | string>) {
     }
   }
 
-  /** Get the number of a product owned by the user in the backpack */
+  /** 获取用户在背包中拥有某商品的数量 */
   function getOwnedQuantity(goodId: number, goodCourseId: number): number {
     const item = bags.value.find((b) => b.goodId === goodId && b.courseId === goodCourseId)
     return item?.quantity || 0

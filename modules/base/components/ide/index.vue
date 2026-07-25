@@ -1,6 +1,6 @@
 <template>
   <div class="ide-container">
-    <!-- Top toolbar -->
+    <!-- 顶部工具栏 -->
     <IdeToolbar
       v-model:lang="currentLang"
       :lang-items="langItems"
@@ -11,7 +11,7 @@
       @clear="clearOutput"
     />
 
-    <!-- Top: Monaco editor (80%) -->
+    <!-- 上方：Monaco 编辑器（80%） -->
     <div class="ide-editor-area">
       <Monaco
         v-model="code"
@@ -21,7 +21,7 @@
       />
     </div>
 
-    <!-- Bottom: input box + output box (20%) -->
+    <!-- 下方：输入框 + 输出框（20%） -->
     <div class="ide-bottom-area">
       <IdeInputPanel v-model:input="inputText" />
       <IdeOutputPanel :output="output" />

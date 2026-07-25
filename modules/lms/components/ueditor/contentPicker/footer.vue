@@ -1,6 +1,6 @@
 <template>
     <div class="p-4 shrink-0 border-t border-gray-100 dark:border-gray-800 space-y-2">
-        <!-- Previewmode：Navigation + Edit/Delete -->
+        <!-- 预览模式：导航 + 编辑/删除 -->
         <template v-if="previewMode">
             <div v-if="filtered.length" class="flex items-center justify-between gap-2">
                 <div class="flex items-center gap-1">
@@ -14,7 +14,7 @@
                         <UButton size="sm" color="error" variant="soft" icon="i-lucide-trash" :disabled="!currentItem">{{ t('common.delete') }}</UButton>
                         <template #content>
                             <div class="p-3 space-y-2 w-48">
-                                <p class="text-sm text-gray-600 dark:text-gray-300">{{ t('courseData.confirm delete') }}</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-300">{{ t('courseData.confirmDelete') }}</p>
                                 <div class="flex justify-end gap-2">
                                     <UButton size="xs" color="error" @click="deleteCurrent">{{ t('common.delete') }}</UButton>
                                 </div>
@@ -24,7 +24,7 @@
                 </div>
             </div>
         </template>
-        <!-- Selectmode：Pagination + ConfirmInsert -->
+        <!-- 选择模式：分页 + 确认插入 -->
         <template v-else>
             <div v-if="filtered.length" class="flex items-center justify-between">
                 <div class="flex items-center gap-2">

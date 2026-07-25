@@ -1,6 +1,6 @@
 import type { Ref } from 'vue'
 
-/** Client-side default values (mirror of server-side DEFAULT_SITE_CONFIG editable items) */
+/** 客户端默认值（镜像服务端 DEFAULT_SITE_CONFIG 的可编辑项） */
 const DEFAULTS = {
   siteTitle: 'AI LMS',
   siteDescription: '',
@@ -37,7 +37,7 @@ const DEFAULTS = {
   },
 }
 
-/** form ↔ API key mapping table */
+/** form ↔ API key 映射表 */
 const KEY_MAP: { field: string; key: string }[] = [
   { field: 'siteTitle', key: 'site:title' },
   { field: 'siteDescription', key: 'site:description' },
@@ -76,7 +76,7 @@ const MAIL_KEY_MAP: { field: string; key: string }[] = [
 ]
 
 /**
- * Site settings form: state management + load/save + slot extension save callback
+ * 站点设置表单：状态管理 + 加载/保存 + slot 扩展保存回调
  */
 export function useSettingsForm(isOpen: Ref<boolean | undefined>) {
   const { t } = useI18n()
@@ -88,7 +88,7 @@ export function useSettingsForm(isOpen: Ref<boolean | undefined>) {
 
   const form = ref<any>({ ...DEFAULTS, mail: { ...DEFAULTS.mail } })
 
-  // Extension slot: subsequent modules can inject additional config editors via settings-extra slot
+  // 扩展 slot：后续模块可通过 settings-extra slot 注入额外配置编辑器
   const slotSaveHandler = ref<(() => Promise<void>) | null>(null)
   function registerSlotSave(handler: () => Promise<void>) {
     slotSaveHandler.value = handler
@@ -135,7 +135,7 @@ export function useSettingsForm(isOpen: Ref<boolean | undefined>) {
       await cRequest('/api/config/update-batch', { method: 'POST', body: { items } })
       await cRequest('/api/config/reload', { method: 'POST' }).catch(() => {})
 
-      // Save callback for slot-injected components (e.g. lms's LmsConfigEditor)
+      // slot 注入组件的保存回调（如 lms 的 LmsConfigEditor）
       if (slotSaveHandler.value) {
         try {
           await slotSaveHandler.value()

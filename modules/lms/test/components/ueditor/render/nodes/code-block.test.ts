@@ -1,5 +1,5 @@
 /**
- * ueditor/render/nodes/code-block.vue component test
+ * ueditor/render/nodes/code-block.vue 组件测试
  * @see modules/lms/components/ueditor/render/nodes/code-block.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

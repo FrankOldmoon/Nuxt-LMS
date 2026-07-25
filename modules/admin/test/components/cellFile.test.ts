@@ -1,5 +1,5 @@
 /**
- * cellFile component tests
+ * cellFile 组件测试
  * @see modules/admin/components/table/cellFile.vue
  */
 import { describe, it, expect, beforeEach, mount, baseBeforeEach, _globalConfig } from './_shared'
@@ -13,7 +13,7 @@ describe('table/cellFile.vue', () => {
       props: { value: 'http://example.com/a.pdf' },
       global: _globalConfig,
     })
-    // admin.cell.files {n:1} → admin.cell.files (mock does not parse {n})
+    // admin.cell.files {n:1} → admin.cell.files (mock 不解析 {n})
     expect(wrapper.text()).toContain('admin.cell.files')
   })
 
@@ -23,9 +23,9 @@ describe('table/cellFile.vue', () => {
       props: { value: '["http://a.com/1.pdf","http://b.com/2.pdf"]' },
       global: _globalConfig,
     })
-    // Rendered popover + content slot
+    // 渲染了 popover + content slot
     expect(wrapper.find('.popover').exists()).toBe(true)
-    // Content area contains two links
+    // 内容区含两个链接
     const links = wrapper.findAll('a')
     expect(links.length).toBe(2)
   })
@@ -77,7 +77,7 @@ describe('table/cellFile.vue', () => {
       props: { value: '' },
       global: _globalConfig,
     })
-    // Content area shows empty hint
+    // 内容区显示空提示
     expect(wrapper.text()).toContain('admin.cell.empty')
   })
 

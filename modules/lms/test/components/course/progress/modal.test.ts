@@ -1,8 +1,8 @@
 /**
- * course/progress/modal.vue component test
+ * course/progress/modal.vue 组件测试
  * @see modules/lms/components/course/progress/modal.vue
  *
- * Course progress modal: user selection + overall progress + chapter table + task modal
+ * 课程进度弹窗：用户选择 + 总进度 + 章节表格 + 任务弹窗
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

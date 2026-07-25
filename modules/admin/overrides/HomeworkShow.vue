@@ -23,7 +23,7 @@ const props = defineProps<{
 
 defineEmits<{ close: [] }>()
 
-// Build the node required by homework/render.vue (content = cid)
+// 构造 homework/render.vue 需要的 node 节点（content = cid）
 const renderNode = computed(() => ({
   attrs: { type: 'homework', content: String((props.row as any)?.cid || '') },
 }))

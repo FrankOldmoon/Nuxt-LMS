@@ -1,5 +1,5 @@
 /**
- * useAdminMenu composable tests (including reorder regression)
+ * useAdminMenu composable 测试（含 reorder 回归）
  * @see modules/admin/composables/useAdminMenu.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -21,7 +21,7 @@ describe('composables/useAdminMenu', () => {
     })
     const { useAdminMenu } = await import('../../composables/useAdminMenu')
     const { items } = useAdminMenu()
-    // useFetch executes immediately by default (lazy=false), wait for microtask
+    // useFetch 默认立即执行（lazy=false），等微任务
     await new Promise(r => setTimeout(r, 10))
     expect(items.value).toHaveLength(2)
     expect(items.value[0].table).toBe('users')
@@ -80,15 +80,15 @@ describe('composables/useAdminMenu', () => {
     await new Promise(r => setTimeout(r, 10))
     expect(items.value[0].table).toBe('users')
 
-    // Reverse order
+    // 反序
     reorder([
       { table: 'courses', label: 'Courses', visible: true, order: 0 },
       { table: 'users', label: 'Users', visible: true, order: 1 },
     ])
-    // reorder should take effect immediately (before Bug 2 fix, reorder was an invalid assignment, items unchanged)
+    // reorder 应立即生效（Bug 2 修复前 reorder 是无效赋值，items 不变）
     expect(items.value[0].table).toBe('courses')
     expect(items.value[1].table).toBe('users')
-    // order resequenced to 0/1
+    // order 被重排为 0/1
     expect(items.value[0].order).toBe(0)
     expect(items.value[1].order).toBe(1)
   })

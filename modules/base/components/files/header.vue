@@ -5,7 +5,7 @@
       <UButton icon="i-lucide-upload" color="primary" variant="soft" size="xs" :label="t('common.upload')"
         :loading="uploading" @click="triggerUpload" />
       <input ref="fileInputRef" type="file" class="hidden" @change="onChange" />
-      <!-- Personal space usage -->
+      <!-- 个人空间使用 -->
       <span v-if="!group" class="text-xs text-gray-400">
         {{ t('myFiles.used') }}: {{ formatBytes(usage.used) }}
         <template v-if="!usage.unlimited"> / {{ formatBytes(usage.quota) }}</template>
@@ -26,7 +26,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  /** User selected file, handed to parent component for upload */
+  /** 用户选好文件，交给父组件上传 */
   upload: [file: File]
 }>()
 

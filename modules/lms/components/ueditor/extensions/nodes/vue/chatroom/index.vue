@@ -1,10 +1,10 @@
 <template>
-    <!-- lms notEnableornotJoin Class：show placeholderholder -->
+    <!-- lms 未启用或未加入班级：显示占位 -->
     <div v-if="!canShow" class="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-center text-gray-400 text-sm">
         {{ placeholderText }}
     </div>
     <div v-else class="chatroom-render w-full p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900">
-        <!-- Titlecolumn -->
+        <!-- 标题栏 -->
         <div class="flex items-center gap-3 mb-3 pr-6">
             <span class="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-800 text-indigo-600 dark:text-indigo-300 rounded text-xs font-medium">
                 {{ $t('chatroom.label') }}
@@ -19,7 +19,7 @@
             </div>
         </div>
 
-        <!-- Message List -->
+        <!-- 消息列表 -->
         <div ref="msgListRef" class="chatroom-messages">
             <div v-if="!messages.length" class="text-center py-8 text-gray-400 text-sm">
                 {{ $t('chatroom.empty') }}
@@ -37,7 +37,7 @@
             </div>
         </div>
 
-        <!-- Input area -->
+        <!-- 输入区 -->
         <div class="chatroom-input-area">
             <UInput v-model="inputText" :placeholder="$t('chatroom.inputPlaceholder')" size="sm"
                 class="flex-1" @keydown.enter="sendMessage" :disabled="!canChat" />

@@ -41,7 +41,7 @@ export function useChatboxContext() {
 }
 
 /**
- * Chatbox: message send/receive + SSE streaming + voice input/output (ASR/TTS) + reasoning collapse
+ * 聊天框：消息收发 + SSE 流式 + 语音输入输出(ASR/TTS) + 思考过程折叠
  */
 export function useChatbox(
   props: ChatboxProps,
@@ -57,7 +57,7 @@ export function useChatbox(
   const messages = ref<ChatMessage[]>([])
   const userScrolledUp = ref(false)
 
-  // ===================== Voice related =====================
+  // ===================== 语音相关 =====================
   const asrService = createASRService()
   const ttsService = createTTSService()
   const asrSupported = ref(false)
@@ -131,7 +131,7 @@ export function useChatbox(
     }
   }
 
-  // ===================== Voice input (ASR) =====================
+  // ===================== 语音输入 (ASR) =====================
   function toggleVoiceInput() {
     if (isListening.value) {
       asrService.stop()
@@ -171,7 +171,7 @@ export function useChatbox(
     })
   }
 
-  // ===================== Voice output (TTS) =====================
+  // ===================== 语音输出 (TTS) =====================
   function canSpeak(msg: ChatMessage): boolean {
     if (!props.enableVoiceOutput || !ttsSupported.value) return false
     if (msg.role !== 'assistant' || msg._isJson) return false
@@ -241,7 +241,7 @@ export function useChatbox(
     }
   })
 
-  // ===================== Send message =====================
+  // ===================== 发送消息 =====================
   async function handleSend(externalText?: string | Event) {
     const text = (typeof externalText === 'string' ? externalText : inputText.value).trim()
     if (!text || loading.value || props.disabled) return
@@ -297,7 +297,7 @@ export function useChatbox(
         return
       }
 
-      // Default to API call (SSE streaming)
+      // 默认使用 API 调用（SSE 流式）
       const resp = await fetch(props.apiUrl || '/api/aichat/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -375,10 +375,10 @@ export function useChatbox(
   })
 
   return {
-    // Messages
+    // 消息
     msgListRef, inputText, loading, messages, userScrolledUp,
     onScroll, scrollToBottom, toggleReasoning, renderContent, handleSend,
-    // Voice
+    // 语音
     asrSupported, ttsSupported, isListening, interimText, voiceError,
     voiceOutputEnabled, speakingIdx,
     toggleVoiceInput, canSpeak, toggleSpeakMessage, toggleVoiceOutput,

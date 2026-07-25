@@ -4,7 +4,7 @@ import { getTable } from "./_helpers"
 import { getTableMeta, type ListQuery, type ListResult } from "./schema-meta"
 import { _buildWhere } from "./where"
 
-/** Count rows matching the condition */
+/** 统计符合条件的行数 */
 export async function countTableRows(tableName: string, query?: ListQuery): Promise<number> {
   const table = getTable(tableName)
   const where = _buildWhere(table, query)
@@ -13,8 +13,8 @@ export async function countTableRows(tableName: string, query?: ListQuery): Prom
 }
 
 /**
- * Paginated list query: supports sorting / search / filtering / soft-delete toggle
- * Returns { data, total, page, pageSize, columns, meta }
+ * 分页列表查询：支持排序 / 搜索 / 筛选 / 软删除切换
+ * 返回 { data, total, page, pageSize, columns, meta }
  */
 export async function listTablePaged(tableName: string, query: ListQuery): Promise<ListResult> {
   const table = getTable(tableName)
@@ -22,7 +22,7 @@ export async function listTablePaged(tableName: string, query: ListQuery): Promi
   const cols = getTableColumns(table) as Record<string, any>
   const where = _buildWhere(table, query)
 
-  // Sort: validate column exists, default id desc (composite PK uses first PK column)
+  // 排序：校验列存在，默认 id desc（复合主键用首个 PK 列）
   let orderBy: any
   if (query.sort && query.sort.column in cols) {
     orderBy = query.sort.dir === 'asc' ? asc(cols[query.sort.column]) : desc(cols[query.sort.column])
@@ -43,7 +43,7 @@ export async function listTablePaged(tableName: string, query: ListQuery): Promi
   }
 }
 
-/** Export table data (no pagination, max 5000 rows) */
+/** 导出表数据（不分页，上限 5000 行） */
 export async function exportTableRows(tableName: string, query?: Partial<ListQuery>): Promise<any[]> {
   const table = getTable(tableName)
   const where = _buildWhere(table, query as ListQuery | undefined)
@@ -51,8 +51,8 @@ export async function exportTableRows(tableName: string, query?: Partial<ListQue
 }
 
 /**
- * Import rows: header names accept jsName / DB column names (case-insensitive), skip unknown columns,
- * skip id / timestamp columns by default (unless explicitly provided). Insert in batches, collect errors.
+ * 导入行数据：表头名兼容 jsName / DB 列名（不区分大小写），跳过未知列，
+ * 默认跳过 id / 时间戳列（除非显式提供）。逐批插入，收集错误。
  */
 export async function importTableRows(
   tableName: string,
@@ -61,14 +61,14 @@ export async function importTableRows(
   const table = getTable(tableName)
   const meta = getTableMeta(tableName)
 
-  // Build column name map: lower(jsName) / lower(dbName) → jsName
+  // 建立列名映射：lower(jsName) / lower(dbName) → jsName
   const nameMap = new Map<string, string>()
   for (const col of meta.columns) {
     nameMap.set(col.jsName.toLowerCase(), col.jsName)
     nameMap.set(col.name.toLowerCase(), col.jsName)
   }
 
-  // Columns skipped by default (unless explicitly provided and non-auto-increment)
+  // 默认跳过的列（除非显式提供且非自增）
   const skipByDefault = new Set(['id', 'createdAt', 'updatedAt', 'deletedAt'])
 
   let inserted = 0
@@ -92,7 +92,7 @@ export async function importTableRows(
       await db.insert(table).values(record)
       inserted++
     } catch (err: any) {
-      errors.push(`Row ${i + 2} (after skipping header): ${err?.message || String(err)}`)
+      errors.push(`第 ${i + 2} 行（跳过表头后）: ${err?.message || String(err)}`)
     }
   }
 

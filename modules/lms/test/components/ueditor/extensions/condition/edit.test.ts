@@ -1,8 +1,8 @@
 /**
- * condition edit component test
+ * condition edit 组件测试
  * @see modules/lms/components/ueditor/extensions/nodes/vue/condition/edit.vue
  *
- * useConditionEdit returns directly (non provide/inject mode), uses useLmsContext + cRequest + $fetch
+ * useConditionEdit 直接返回（非 provide/inject 模式），用 useLmsContext + cRequest + $fetch
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

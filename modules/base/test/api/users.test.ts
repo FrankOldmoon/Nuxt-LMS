@@ -1,8 +1,8 @@
 /**
- * base module Users API endpoint tests
+ * base 模块 Users API 端点测试
  * @see modules/base/server/api/users/*.ts
  *
- * Test endpoints: show / search.get / update.post / import.post / reset-password.post
+ * 测试端点：show / search.get / update.post / import.post / reset-password.post
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
@@ -25,7 +25,7 @@ import { resetAllStubs, setMockAuthState } from '../../../../test/setup/nuxt-stu
 beforeEach(() => {
   resetAllStubs()
   vi.clearAllMocks()
-  // Reset db chain
+  // 重置 db 链
   _mockDb.insert = vi.fn().mockReturnThis()
   _mockDb.values = vi.fn().mockReturnThis()
   _mockDb.returning = vi.fn()
@@ -160,7 +160,7 @@ describe('API: users/import.post', () => {
     await handler(makeEvent({
       body: { users: [{ username: 'alice', email: 'alice@test.com' }] },
     }))
-    // hashPassword should be called (default password REDACTED)
+    // hashPassword 应被调用（默认密码 REDACTED）
     expect(globalThis.hashPassword).toBeDefined()
   })
 })

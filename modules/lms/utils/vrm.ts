@@ -1,26 +1,26 @@
 /**
- * VRM digital human speech state singleton
+ * VRM 数字人语音状态单例
  *
- * Decouples chatbox (produces streaming text) from the VRM component (consumes text to drive lip-sync).
- * Follows the module-level singleton pattern from ai.ts's subscribeLLMState:
- * - State is a module-level plain variable, not part of the Vue reactive system
- * - Components subscribe to state changes via subscribeVrmSpeech
+ * 解耦 chatbox（产生流式文本）与 VRM 组件（消费文本驱动口型同步）。
+ * 参考 ai.ts 中 subscribeLLMState 的模块级单例模式：
+ * - 状态为模块级普通变量，不进入 Vue 响应式系统
+ * - 通过 subscribeVrmSpeech 让组件订阅状态变化
  */
 
 export interface VrmSpeechState {
-  /** Whether currently "speaking" (has text to consume, driven by LLM streaming text, used for gestures) */
+  /** 当前是否在"说话"（有待消费的文本，由 LLM 流式文本驱动，用于手势） */
   isSpeaking: boolean
-  /** Text not yet consumed (consumed by the VRM animation loop at a given rate) */
+  /** 尚未消费的文本（VRM 动画循环按速率消费） */
   pendingText: string
-  /** TTS audio is playing (drives lip-sync, decoupled from the text stream) */
+  /** TTS 音频正在播放（驱动口型同步，与文本流分离） */
   audioSpeaking: boolean
-  /** Text currently being read by TTS (consumed at a given rate to drive lip shapes) */
+  /** TTS 正在朗读的文本（按速率消费驱动唇形） */
   audioText: string
 }
 
 type VrmSpeechListener = (state: VrmSpeechState) => void
 
-// ✅ Module-level singleton: not part of the reactive system
+// ✅ 模块级单例：不进入响应式系统
 let vrmSpeechState: VrmSpeechState = {
   isSpeaking: false,
   pendingText: '',
@@ -35,9 +35,9 @@ function notify(): void {
 }
 
 /**
- * Feed a chunk of streaming text.
- * If speaking has already ended (isSpeaking=false), automatically clears old text and restarts;
- * if still speaking, appends directly to the end of pendingText.
+ * 喂入一段流式文本。
+ * 若之前已结束说话（isSpeaking=false），自动清空旧文本重新开始；
+ * 若仍在说话，直接追加到 pendingText 末尾。
  */
 export function feedVrmText(text: string): void {
   if (!text) return
@@ -51,8 +51,8 @@ export function feedVrmText(text: string): void {
 }
 
 /**
- * Consume n characters, returning the consumed text.
- * When pendingText is exhausted, automatically sets isSpeaking=false.
+ * 消费 n 个字符，返回被消费的文本。
+ * pendingText 耗尽时自动置 isSpeaking=false。
  */
 export function consumeVrmChars(n: number): string {
   if (n <= 0 || !vrmSpeechState.pendingText) return ''
@@ -67,7 +67,7 @@ export function consumeVrmChars(n: number): string {
   return consumed
 }
 
-/** Clear all pending speech text and stop (text stream channel only, does not affect audio lip-sync) */
+/** 清空所有待说话文本并停止（仅文本流通道，不影响音频口型） */
 export function clearVrmSpeech(): void {
   if (!vrmSpeechState.isSpeaking && !vrmSpeechState.pendingText) return
   vrmSpeechState = {
@@ -78,10 +78,10 @@ export function clearVrmSpeech(): void {
   notify()
 }
 
-// ===================== TTS audio channel (drives lip-sync) =====================
-// Lip movement only follows the actually playing audio, decoupled from the LLM text stream: prevents the text stream from driving lip shapes prematurely.
+// ===================== TTS 音频通道（驱动口型同步） =====================
+// 口型只跟随真实播放的语音，与 LLM 文本流解耦：避免文本流提前驱动嘴型。
 
-/** TTS starts reading: sets audio text to drive lip-sync (resets previous audio text) */
+/** TTS 开始朗读：设置音频文本，驱动口型同步（重置之前的音频文本） */
 export function feedVrmAudio(text: string): void {
   if (!text) return
   vrmSpeechState = {
@@ -92,7 +92,7 @@ export function feedVrmAudio(text: string): void {
   notify()
 }
 
-/** Consume n audio text characters for lip-sync */
+/** 消费 n 个音频文本字符用于唇形同步 */
 export function consumeVrmAudioChars(n: number): string {
   if (n <= 0 || !vrmSpeechState.audioText) return ''
   const consumed = vrmSpeechState.audioText.slice(0, n)
@@ -105,7 +105,7 @@ export function consumeVrmAudioChars(n: number): string {
   return consumed
 }
 
-/** TTS finishes reading: stop lip-sync */
+/** TTS 结束朗读：停止口型同步 */
 export function clearVrmAudio(): void {
   if (!vrmSpeechState.audioSpeaking && !vrmSpeechState.audioText) return
   vrmSpeechState = {
@@ -116,14 +116,14 @@ export function clearVrmAudio(): void {
   notify()
 }
 
-/** Subscribe to state changes, immediately triggers once with the current state. Returns an unsubscribe function. */
+/** 订阅状态变化，立即触发一次当前状态。返回取消订阅函数。 */
 export function subscribeVrmSpeech(listener: VrmSpeechListener): () => void {
   listeners.add(listener)
   listener(vrmSpeechState)
   return () => { listeners.delete(listener) }
 }
 
-/** Get the current state snapshot */
+/** 获取当前状态快照 */
 export function getVrmSpeechState(): VrmSpeechState {
   return vrmSpeechState
 }

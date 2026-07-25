@@ -1,7 +1,7 @@
 <template>
-    <!-- Student: pure display of weight ratio and grade criteria (read-only) -->
+    <!-- 学生端：纯展示权重比与等第标准（只读） -->
     <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-        <!-- Collapse header -->
+        <!-- 折叠头 -->
         <button type="button"
             class="w-full flex items-center gap-2 px-4 py-2.5 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             @click="expanded = !expanded">
@@ -11,9 +11,9 @@
             <span class="text-xs text-gray-400 truncate hidden sm:inline">{{ t('coursePanel.criteriaHint') }}</span>
         </button>
 
-        <!-- Expanded content (read-only) -->
+        <!-- 展开内容（只读） -->
         <div v-if="expanded" class="p-4 space-y-5">
-            <!-- Weight: full score for each item + percentage -->
+            <!-- 权重：每项满分 + 占比 -->
             <div>
                 <div class="flex items-center justify-between mb-2">
                     <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
@@ -40,7 +40,7 @@
                 <p class="text-xs text-gray-400 mt-2">{{ t('coursePanel.weightsHint') }}</p>
             </div>
 
-            <!-- grade threshold -->
+            <!-- 等第阈值 -->
             <div>
                 <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
                     {{ t('coursePanel.levels') }}

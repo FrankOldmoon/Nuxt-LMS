@@ -2,7 +2,7 @@
     <div class="p-2">
         <Edit v-if="showConfig" :config="config" @update:config="onConfigChange" @close="showConfig = false" />
     </div>
-    <!-- Sheet Component（Start and end show，interactiveEdit） -->
+    <!-- Sheet 组件（始终显示，交互式编辑） -->
     <div class="vue-node-body" :style="{ height: `${sheetHeight}px` }">
         <Sheet ref="sheetRef" :col-widths="{}" :row-count="100" :show-tools="true" :show-footer="false"
             :show-context-menu="true" :active="true" :initial-data="initialCellData" @change="onDataChange" />
@@ -35,15 +35,15 @@ const parseConfig = () => {
 const config = ref(parseConfig())
 const sheetHeight = computed(() => Number(config.value.height) || 300)
 
-// onetimespropertyFastaccording：onlyuseinInitialize Sheet，nowillbecauselocalGroundSaveandchange
-// avoid onDataChange SaveBack config.cellData change → Trigger Sheet  initialData watch → HeavyNewInitialize（DestroyCurrentWorkbook）
+// 一次性快照：仅用于初始化 Sheet，不会因本地保存而变化
+// 避免 onDataChange 保存后 config.cellData 变化 → 触发 Sheet 的 initialData watch → 重新初始化（销毁当前工作簿）
 const initialCellData = ref(config.value.cellData || null)
 
-// TrackUptimesSaveData，avoid unmustneed updateAttributes Call
+// 跟踪上次保存的数据，避免不必要的 updateAttributes 调用
 let lastSavedDataStr = JSON.stringify(config.value.cellData || null)
 
 function onConfigChange(newConfig) {
-    // firstSaveCurrent Data，thenuseLatestData Update initialCellData，avoid reset() lost unSaveInput
+    // 先保存当前数据，再用最新数据更新 initialCellData，避免 reset() 丢失未保存的输入
     flushSave()
     initialCellData.value = config.value.cellData || null
 
@@ -78,7 +78,7 @@ function onDataChange() {
     }, 500)
 }
 
-// periodicAuto save（safety net：preventEventevent listener missing causesDatalost）
+// 定期自动保存（安全网：防止事件监听遗漏导致数据丢失）
 let autoSaveTimer = null
 function handleVisibilityChange() {
     if (document.visibilityState === 'hidden') flushSave()
@@ -89,7 +89,7 @@ onMounted(() => {
     document.addEventListener('visibilitychange', handleVisibilityChange)
 })
 
-// ComponentUnmountFrontRefreshnotSaveData
+// 组件卸载前刷新未保存的数据
 onBeforeUnmount(() => {
     if (autoSaveTimer) {
         clearInterval(autoSaveTimer)

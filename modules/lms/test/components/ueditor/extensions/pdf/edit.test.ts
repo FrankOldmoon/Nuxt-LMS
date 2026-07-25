@@ -1,5 +1,5 @@
 /**
- * pdf/edit.vue component test
+ * pdf/edit.vue 组件测试
  * @see modules/lms/components/ueditor/extensions/nodes/vue/pdf/edit.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

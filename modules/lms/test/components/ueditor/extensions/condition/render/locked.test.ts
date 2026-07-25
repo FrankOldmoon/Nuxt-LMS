@@ -1,5 +1,5 @@
 /**
- * condition/render/locked component test
+ * condition/render/locked 组件测试
  * @see modules/lms/components/ueditor/extensions/nodes/vue/condition/render/locked.vue
  *
  * Simple props-based component (config + formatCondition function), uses useI18n

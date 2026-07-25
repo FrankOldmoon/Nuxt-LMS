@@ -1,5 +1,5 @@
 /**
- * sort component test (render)
+ * sort 组件测试 (render)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/render/sort.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

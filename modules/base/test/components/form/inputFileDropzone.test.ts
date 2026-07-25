@@ -1,8 +1,8 @@
 /**
- * InputFileDropzone component tests
+ * InputFileDropzone 组件测试
  * @see modules/base/components/form/inputFileDropzone.vue
  *
- * Drag upload area: click to select + drag + URL input + drive button
+ * 拖拽上传区域：点击选择 + 拖拽 + URL 输入 + 网盘按钮
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -82,7 +82,7 @@ describe('form/inputFileDropzone.vue', () => {
   it('点击网盘按钮 emit drive-open', async () => {
     const { default: InputFileDropzone } = await import('../../../components/form/inputFileDropzone.vue')
     const wrapper = mount(InputFileDropzone, { global: _globalConfig })
-    // Find the button corresponding to myFiles.pickFromDrive
+    // 找到 myFiles.pickFromDrive 对应的按钮
     const buttons = wrapper.findAll('button')
     const driveBtn = buttons.find((b) => b.text().includes('myFiles.pickFromDrive'))
     expect(driveBtn).toBeTruthy()

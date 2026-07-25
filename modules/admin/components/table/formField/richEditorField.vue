@@ -42,7 +42,7 @@ const props = defineProps<{
 
 const { t } = useI18n()
 
-/** RichEditor component (provided by LMS), falls back to JSON textarea when lms is not enabled */
+/** RichEditor 组件（LMS 提供），lms 未启用时回退 JSON 文本域 */
 const richEditorComp = computed(() => {
   if (!useRuntimeConfig().public.moduleLms) return null
   try { return resolveComponent('RichEditor') }

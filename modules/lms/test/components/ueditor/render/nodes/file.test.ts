@@ -1,5 +1,5 @@
 /**
- * ueditor/render/nodes/file.vue component test
+ * ueditor/render/nodes/file.vue 组件测试
  * @see modules/lms/components/ueditor/render/nodes/file.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

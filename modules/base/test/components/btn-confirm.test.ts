@@ -1,8 +1,8 @@
 /**
- * BtnConfirm component tests
+ * BtnConfirm 组件测试
  * @see modules/base/components/form/btn-confirm.vue
  *
- * Use @vue/test-utils + happy-dom to simulate component rendering
+ * 使用 @vue/test-utils + happy-dom 模拟组件渲染
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -17,7 +17,7 @@ beforeEach(() => {
   })
 })
 
-// Globally mock NuxtUI components so the component can render
+// 全局 mock NuxtUI 组件，让组件能渲染
 const _globalStubs = {
   UPopover: {
     template: '<div><slot /><slot name="content" /></div>',

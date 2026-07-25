@@ -1,19 +1,19 @@
 /**
- * Unified course progress update after submission
+ * 提交后统一更新课程进度
  *
- * All submit APIs (except some scenarios of aichat/award) need to do the following after writing userXxx:
- *   1. Update userCourses (sub-item + total score + exp + coin)
- *   2. Trigger medal check
+ * 所有 submit API（除 aichat/award 部分场景外）在写完 userXxx 后都需：
+ *   1. 更新 userCourses（分项 + 总分 + 经验 + 金币）
+ *   2. 触发奖章检查
  *
- * Merged into the two notifyCourseProgress* functions, to avoid business handlers missing calls or wrong order.
+ * 合并为 notifyCourseProgress* 两个函数，避免业务 handler 漏调用或顺序错乱。
  *
- * Note: addCourseScore / addCourseScoreMax / checkAndAwardMedals are introduced via Nuxt auto-import
- *       (no explicit import), so tests can inject mocks via globalThis.
+ * 注：addCourseScore / addCourseScoreMax / checkAndAwardMedals 通过 Nuxt auto-import 引入
+ *     （不显式 import），让测试可通过 globalThis 注入 mock。
  */
 
 /**
- * Accumulate mode: sub-item scoreKey accumulation + total score accumulation + exp + coin + medal check
- * @param scoreKey Sub-item field: questionScore / homeworkScore / quizScore / raceScore
+ * 累加模式：分项 scoreKey 累加 + 总分累加 + 经验值 + 金币 + 奖章检查
+ * @param scoreKey 分项字段：questionScore / homeworkScore / quizScore / raceScore
  */
 export async function notifyCourseProgress(args: {
   userId: number
@@ -31,7 +31,7 @@ export async function notifyCourseProgress(args: {
 }
 
 /**
- * Highest score mode: sub-item takes max (anti-abuse) + total score accumulates by difference + exp + coin + medal check
+ * 最高分模式：分项取 max（防刷）+ 总分按差额累加 + 经验值 + 金币 + 奖章检查
  */
 export async function notifyCourseProgressMax(args: {
   userId: number

@@ -1,6 +1,6 @@
 <template>
     <div class="flex items-center justify-center gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 select-none">
-        <!-- mincolumns -->
+        <!-- 分钟列 -->
         <div class="flex flex-col items-center gap-1">
             <UButton icon="i-lucide-chevron-up" size="xs" variant="ghost" :disabled="timerState !== 'idle'"
                 @click="adjustMinutes(1)" />
@@ -15,7 +15,7 @@
 
         <div class="text-4xl font-bold text-muted pb-6">:</div>
 
-        <!-- scolumns -->
+        <!-- 秒列 -->
         <div class="flex flex-col items-center gap-1">
             <UButton icon="i-lucide-chevron-up" size="xs" variant="ghost" :disabled="timerState !== 'idle'"
                 @click="adjustSeconds(1)" />
@@ -28,7 +28,7 @@
             <span class="text-xs text-muted">{{ $t('chapter.seconds') }}</span>
         </div>
 
-        <!-- controlButton -->
+        <!-- 控制按钮 -->
         <div class="flex flex-col gap-1 ml-2">
             <UButton v-if="timerState !== 'running'" icon="i-lucide-play" color="primary" variant="soft" size="xs"
                 :disabled="totalSeconds <= 0 && timerState === 'idle'"

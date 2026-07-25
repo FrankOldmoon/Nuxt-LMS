@@ -1,5 +1,5 @@
 /**
- * ueditor/render/nodes/select.vue component test
+ * ueditor/render/nodes/select.vue 组件测试
  * @see modules/lms/components/ueditor/render/nodes/select.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -22,8 +22,8 @@ const _globalConfig = {
 
 describe('ueditor/render/nodes/select.vue', () => {
   it('renders a <select> with options from injected questionData', async () => {
-    // select.vue gets options via inject('questionData')
-    // Register questionData in the global provide stub
+    // select.vue 通过 inject('questionData') 获取 options
+    // 在全局 provide 桩中注册 questionData
     const { ref } = await import('vue')
     provide('questionData', ref({ options: ['Option A', 'Option B'] }))
 
@@ -32,7 +32,7 @@ describe('ueditor/render/nodes/select.vue', () => {
     const select = wrapper.find('select')
     expect(select.exists()).toBe(true)
     const options = wrapper.findAll('option')
-    // The first is a disabled placeholder, the latter two come from options
+    // 第一个是 disabled placeholder，后两个来自 options
     expect(options.length).toBe(3)
     expect(options[1].text()).toBe('Option A')
   })

@@ -1,5 +1,5 @@
 /**
- * timer/render.vue component test
+ * timer/render.vue 组件测试
  * @see modules/lms/components/ueditor/extensions/nodes/vue/timer/render.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

@@ -62,7 +62,7 @@ const { override, hasFormOverride } = useTableOverride(() => props.tableName)
 const isEdit = computed(() => !!props.row)
 const editableColumns = computed(() => props.columns.filter((c) => widgetFor(c) !== 'readonly'))
 
-/** Derive courseId from row data (needed by RichEditor) */
+/** 从行数据推导 courseId（RichEditor 需要） */
 const rowCourseId = computed(() => {
   const r: any = props.row
   if (!r) return undefined

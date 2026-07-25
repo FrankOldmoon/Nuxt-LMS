@@ -1,15 +1,15 @@
 type ConfirmAction = 'delete' | 'remove' | 'restore'
 
 /**
- * Batch/single confirm dialog (delete / restore / permanent delete)
+ * 批量/单条确认对话框（删除 / 恢复 / 彻底删除）
  *
- * Manages confirmOpen / confirmAction / confirmRows / confirmLoading state,
- * provides confirmBatch (batch) / onSingleXxx (single) trigger methods + executeConfirm execution callback.
+ * 管理 confirmOpen / confirmAction / confirmRows / confirmLoading 状态，
+ * 提供 confirmBatch（批量）/ onSingleXxx（单条）触发方法 + executeConfirm 执行回调。
  *
- * Caller must pass three execution functions (batchDelete / batchRemove / batchRestore),
- * these functions come from useAdminTable.
+ * 调用方需传入三个执行函数（batchDelete / batchRemove / batchRestore），
+ * 这些函数来自 useAdminTable。
  *
- * Extracted from Manager.vue.
+ * 提取自 Manager.vue。
  */
 export function useConfirmBatch(
   batchDelete: (rows: Record<string, any>[]) => Promise<void>,

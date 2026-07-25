@@ -2,9 +2,9 @@ import { db, schema } from "@nuxthub/db"
 import { eq } from "drizzle-orm"
 
 /**
- * Send message
+ * 发送消息
  * body: { receiverUserId, content }
- * After saving, push to receiver in real-time via WebSocket
+ * 保存后通过 WebSocket 实时推送给接收者
  */
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
@@ -13,10 +13,10 @@ export default eventHandler(async (event) => {
   const { receiverUserId, content } = body
 
   if (!receiverUserId || !content) {
-    return cResp(null, 'Missing parameters', false)
+    return cResp(null, '缺少参数', false)
   }
 
-  // Query receiver name
+  // 查询接收者名字
   const receiver = await db
     .select({ name: schema.users.name })
     .from(schema.users)
@@ -32,7 +32,7 @@ export default eventHandler(async (event) => {
 
   const msg = result[0]
 
-  // Push to receiver via WebSocket (received in real-time if online)
+  // 通过 WebSocket 推送给接收者（在线则实时收到）
   if (msg) {
     sendToUser(Number(receiverUserId), {
       type: 'message',

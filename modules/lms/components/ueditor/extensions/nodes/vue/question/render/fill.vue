@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- Fill in the Blanktype：ContentParent ComponentRender，thislocationNoneneedTemplate -->
+    <!-- 填空题型：内容在父组件渲染，此处无需模板 -->
   </div>
 </template>
 

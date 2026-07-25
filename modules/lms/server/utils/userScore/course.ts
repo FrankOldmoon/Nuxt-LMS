@@ -1,14 +1,14 @@
 /**
- * Course score: addCourseScore / addCourseScoreMax
+ * 课程分数：addCourseScore / addCourseScoreMax
  */
 import { db, schema } from '@nuxthub/db'
 import { findUserCourse, updateUserCourse } from './upsert'
 
 /**
- * Accumulate mode: sub-item scoreKey + total score + exp + coin all increase at the same time
- * @param scoreKey Sub-item field name: questionScore / homeworkScore / ...
- * @param exp Exp increment
- * @param coin Coin increment
+ * 累加模式：分项 scoreKey + 总分 + 经验值 + 金币同时增加
+ * @param scoreKey 分项字段名：questionScore / homeworkScore / ...
+ * @param exp 经验值增量
+ * @param coin 金币增量
  */
 export async function addCourseScore(
   userId: number, courseId: number, score: number, scoreKey: string, exp: number = 0, coin: number = 0,
@@ -39,8 +39,8 @@ export async function addCourseScore(
 }
 
 /**
- * Highest score mode: sub-item takes max(existing, input) to prevent repeated score farming; total score accumulates by sub-item difference.
- * exp / coin accumulate (no max), consistent with addCourseScore.
+ * 最高分模式：分项取 max(已有, 传入) 防重复刷分；总分按分项差额累加。
+ * exp / coin 为累加（不取 max），与 addCourseScore 一致。
  */
 export async function addCourseScoreMax(
   userId: number, courseId: number, score: number, scoreKey: string, exp: number = 0, coin: number = 0,

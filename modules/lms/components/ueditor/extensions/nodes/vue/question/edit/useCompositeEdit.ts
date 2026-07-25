@@ -14,7 +14,7 @@ import MatchEditor from './match.vue'
 export function useCompositeEdit(props: { form: any }) {
     const { t } = useI18n()
 
-    // child questionTypeoptionitems（exclude composite）
+    // 子题类型选项（排除 composite）
     const subTypeOptions = computed(() => [
         { label: t('question.typeSingle'), value: 'single' },
         { label: t('question.typeJudge'), value: 'judge' },
@@ -29,7 +29,7 @@ export function useCompositeEdit(props: { form: any }) {
         { label: t('question.typeMatch'), value: 'match' },
     ])
 
-    // child questionEditeditorMap
+    // 子题编辑器映射
     const subEditorMap: Record<string, any> = {
         single: SingleEditor, judge: JudgeEditor, multiple: MultipleEditor,
         fill: FillEditor, select: SelectEditor, sort: SortEditor,
@@ -41,44 +41,44 @@ export function useCompositeEdit(props: { form: any }) {
         return subEditorMap[type] || null
     }
 
-    // child question list（store form.content Middle）
-    const sub-questions = ref<any[]>([])
+    // 子题列表（存储在 form.content 中）
+    const subQuestions = ref<any[]>([])
 
-    // form.content → sub-questions（Initialize + ResponseOutsideexternal change，if AI Generate）
+    // form.content → subQuestions（初始化 + 响应外部变更，如 AI 生成）
     watch(() => props.form.content, (content) => {
         const val = Array.isArray(content) ? content : []
-        if (val !== sub-questions.value) {
-            sub-questions.value = val
+        if (val !== subQuestions.value) {
+            subQuestions.value = val
         }
-        // content NoArraywhen，SyncEmptyArrayto form（keepReferenceconsistent）
+        // content 不是数组时，同步空数组到 form（保持引用一致）
         if (!Array.isArray(props.form.content)) {
             props.form.content = val
         }
     }, { immediate: true })
 
-    // total score
+    // 总分
     const totalPoint = computed(() => {
-        return sub-questions.value.reduce((sum, sub) => sum + (Number(sub.point) || 0), 0)
+        return subQuestions.value.reduce((sum, sub) => sum + (Number(sub.point) || 0), 0)
     })
 
-    // Sonwhen question changesSync point and tags to form
-    watch([sub-questions, totalPoint], () => {
-        // point = child question total score
+    // 子题变化时同步 point 和 tags 到 form
+    watch([subQuestions, totalPoint], () => {
+        // point = 子题总分
         props.form.point = totalPoint.value
-        // tags = child questionTagandset
+        // tags = 子题标签的并集
         const allTags = new Set()
-        sub-questions.value.forEach(sub => {
+        subQuestions.value.forEach(sub => {
             (sub.tags || []).forEach(tag => allTags.add(tag))
         })
         props.form.tags = Array.from(allTags)
-        // content keepReferenceSync（relativesamewhenSkip，avoidFeedbackcycle）
-        if (props.form.content !== sub-questions.value) {
-            props.form.content = sub-questions.value
+        // content 保持引用同步（相同时跳过，避免反馈环）
+        if (props.form.content !== subQuestions.value) {
+            props.form.content = subQuestions.value
         }
     }, { deep: true, immediate: true })
 
     function addSub() {
-        sub-questions.value.push({
+        subQuestions.value.push({
             type: 'single',
             name: '',
             content: '',
@@ -91,11 +91,11 @@ export function useCompositeEdit(props: { form: any }) {
     }
 
     function removeSub(idx: number) {
-        sub-questions.value.splice(idx, 1)
+        subQuestions.value.splice(idx, 1)
     }
 
     function onSubTypeChange(idx: number) {
-        const sub = sub-questions.value[idx]
+        const sub = subQuestions.value[idx]
         if (!sub) return
         switch (sub.type) {
             case 'judge':
@@ -147,7 +147,7 @@ export function useCompositeEdit(props: { form: any }) {
     }
 
     return {
-        sub-questions,
+        subQuestions,
         subTypeOptions,
         totalPoint,
         addSub,

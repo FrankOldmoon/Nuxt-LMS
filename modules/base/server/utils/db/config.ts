@@ -1,7 +1,7 @@
 import { db, schema } from "@nuxthub/db"
 
 /**
- * Config item upsert (insert or update)
+ * 配置项 upsert（插入或更新）
  */
 export async function upsertConfig(id: string, value: any) {
   await db

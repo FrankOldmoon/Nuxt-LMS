@@ -1,5 +1,5 @@
 /**
- * useCourseProgress composable test
+ * useCourseProgress composable 测试
  * @see modules/lms/composables/useCourseProgress.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -11,7 +11,7 @@ import {
   setMockAuthUser,
 } from '../../../../test/setup/nuxt-stubs'
 
-// mock TaskDot.vue component (composables project has no vue plugin, cannot directly import .vue)
+// mock TaskDot.vue 组件（composables 项目无 vue 插件，无法直接 import .vue）
 vi.mock('../../components/course/task/dot.vue', () => ({
   default: { name: 'TaskDot', __isMock: true },
 }))
@@ -117,7 +117,7 @@ describe('composables/useCourseProgress', () => {
     )
     expect(canSelectStudent.value).toBe(false)
     isOpen.value = true
-    // watch(isOpen) triggers, admin can select students
+    // watch(isOpen) 触发，admin 可选学生
     await vi.waitFor(() => {
       expect(canSelectStudent.value).toBe(true)
     })
@@ -128,7 +128,7 @@ describe('composables/useCourseProgress', () => {
     const isOpen = ref(false)
     const ui = { UButton: {}, UTooltip: {}, UIcon: {}, NuxtLink: {} }
     const nav = [
-      { label: 'Home', to: '/course/1' }, // The first one is skipped by slice(1)
+      { label: 'Home', to: '/course/1' }, // 第一个被 slice(1) 跳过
       { label: 'Ch1', to: '/course/1/2' },
       { label: 'Ch2', to: '/course/1/3' },
     ]
@@ -137,7 +137,7 @@ describe('composables/useCourseProgress', () => {
       isOpen,
       ui,
     )
-    // slice(1) skips the first Home
+    // slice(1) 跳过第一个 Home
     expect(tableData.value).toHaveLength(2)
     expect(tableData.value[0].label).toBe('Ch1')
     expect(tableData.value[0].to).toBe('/course/1/2')

@@ -1,7 +1,7 @@
 <template>
-    <!-- cancollapseRating criteriaConfiguration(visible to teachers/admins) -->
+    <!-- 可收缩的评分标准配置（教师/管理员可见） -->
     <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-        <!-- Collapse header -->
+        <!-- 折叠头 -->
         <button type="button"
             class="w-full flex items-center gap-2 px-4 py-2.5 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             @click="expanded = !expanded">
@@ -15,9 +15,9 @@
             </span>
         </button>
 
-        <!-- Expanded content -->
+        <!-- 展开内容 -->
         <div v-if="expanded" class="p-4 space-y-5">
-            <!-- Weight: full score for each item + percentage -->
+            <!-- 权重：每项满分 + 占比 -->
             <div>
                 <div class="flex items-center justify-between mb-2">
                     <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
@@ -27,7 +27,7 @@
                         {{ t('coursePanel.percentSum') }}: {{ percentSum }}%
                     </span>
                 </div>
-                <!-- Table Header -->
+                <!-- 表头 -->
                 <div class="flex items-center gap-2 px-1 mb-1">
                     <span class="text-xs text-gray-400 flex-1">{{ t('coursePanel.item') }}</span>
                     <span class="text-xs text-gray-400 w-20 text-center">{{ t('coursePanel.maxScore') }}</span>
@@ -50,7 +50,7 @@
                 <p class="text-xs text-gray-400 mt-2">{{ t('coursePanel.weightsHint') }}</p>
             </div>
 
-            <!-- grade threshold -->
+            <!-- 等第阈值 -->
             <div>
                 <div class="flex items-center justify-between mb-2">
                     <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
@@ -74,7 +74,7 @@
                 </div>
             </div>
 
-            <!-- Action button -->
+            <!-- 操作按钮 -->
             <div class="flex items-center gap-2 pt-1 border-t border-gray-100 dark:border-gray-700">
                 <UButton icon="i-lucide-save" size="xs" color="primary" :loading="saving"
                     :label="t('common.save')" @click="onSave" />
@@ -92,7 +92,7 @@ const { gradeCriteria, criteriaDirty, saveCriteria, resetCriteria } = useGradesC
 const expanded = ref(false)
 const saving = ref(false)
 
-// eachitemspercentageand（should 100）
+// 各项占比之和（应为 100）
 const percentSum = computed(() =>
     gradeCriteria.value.weights.reduce((sum: number, w: any) => sum + (Number(w.percent) || 0), 0),
 )

@@ -12,13 +12,13 @@ import ChapterShow from '../overrides/ChapterShow.vue'
 import ChapterForm from '../overrides/ChapterForm.vue'
 
 /**
- * Table personalization override registration plugin
+ * 表个性化覆盖注册插件
  *
- * Only registers override components for question/homework/comment/quiz/race tables when both lms and admin modules are enabled.
- * Override components import LMS components (render.vue / edit.vue), if lms is not enabled they are not registered or compiled,
- * to avoid build failures caused by missing LMS auto-imports like useLayoutState.
+ * 仅当 lms 与 admin 模块同时启用时注册 question/homework/comment/quiz/race 表的覆盖组件。
+ * 覆盖组件 import LMS 组件（render.vue / edit.vue），若 lms 未启用则不注册、不编译，
+ * 避免 useLayoutState 等 LMS 自动导入缺失导致 build 失败。
  *
- * All 5 tables use composite primary keys (courseId + cid), batch deletion requires dedicated endpoints.
+ * 所有 5 个表都是复合主键（courseId + cid），批量删除需走专用端点。
  */
 export default defineNuxtPlugin(() => {
   const { moduleLms, moduleAdmin } = useRuntimeConfig().public
@@ -39,9 +39,9 @@ export default defineNuxtPlugin(() => {
     },
   })
 
-  // chapters: content uses ueditorRender for preview, RichEditor for editing
-  // Both accept course-id so internal nodes like question can load
-  // chapters primary key is single-column id, not composite primary key
+  // chapters: content 用 ueditorRender 预览、用 RichEditor 编辑
+  // 两者都接收 course-id 让内部 question 等节点能加载
+  // chapters 主键是单列 id，不是复合主键
   registerTableOverride('chapters', {
     show: ChapterShow,
     form: ChapterForm,

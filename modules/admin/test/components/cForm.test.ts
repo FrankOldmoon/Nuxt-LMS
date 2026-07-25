@@ -1,5 +1,5 @@
 /**
- * CForm component tests
+ * CForm 组件测试
  * @see modules/admin/components/table/CForm.vue
  */
 import { describe, it, expect, beforeEach, mount, flushPromises, baseBeforeEach, _globalStubs, _globalConfig, makeColumn } from './_shared'
@@ -92,7 +92,7 @@ describe('table/CForm.vue', () => {
       global: _config,
     })
     await flushPromises()
-    // id (readonly, isAutoIncrement) + createdAt (readonly) excluded, only renders name
+    // id (readonly, isAutoIncrement) + createdAt (readonly) 被排除，只渲染 name
     const fields = wrapper.findAll('.form-field')
     expect(fields.length).toBe(1)
     expect(fields[0].text()).toBe('name')
@@ -106,7 +106,7 @@ describe('table/CForm.vue', () => {
     })
     await wrapper.setProps({ open: true })
     await flushPromises()
-    // Form fields rendered (initForm triggered in watch open)
+    // 表单字段已渲染（initForm 在 watch open 中触发）
     expect(wrapper.findAll('.form-field').length).toBeGreaterThan(0)
   })
 

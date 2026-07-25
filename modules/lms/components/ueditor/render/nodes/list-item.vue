@@ -1,7 +1,7 @@
 <template>
-  <!-- Top-level list item: enable per-item hover tracking when blockKey exists -->
-  <!-- hover → yellow border; stay 3s → green border (read, persistent) -->
-  <!-- Nested list items (blockKey empty) are not tracked, covered by outer <li> -->
+  <!-- 顶层列表项：blockKey 存在时启用逐项 hover 追踪 -->
+  <!-- hover → 黄边；停留 3s → 绿边（已读持久） -->
+  <!-- 嵌套列表项（blockKey 为空）不追踪，由外层 <li> 统一覆盖 -->
   <li :class="liClass" @mouseenter="onEnter" @mouseleave="onLeave">
     <RenderNode v-for="(child, i) in content" :key="i" :node="child" />
   </li>
@@ -12,13 +12,13 @@ import RenderNode from '../node.vue'
 
 const props = defineProps({
   node: { type: Object, required: true },
-  // Passed in by list component, e.g. "3.1"; absence means non-tracking context (nested list or trackReading not enabled)
+  // 由列表组件传入，形如 "3.1"；不存在表示非追踪上下文（嵌套列表或未开启 trackReading）
   blockKey: { type: String, default: undefined },
 })
 
 const content = computed(() => props.node.content || [])
 
-// Only enable hover tracking when blockKey exists (evaluated once during setup, blockKey does not change)
+// 仅在有 blockKey 时启用 hover 追踪（setup 阶段一次性求值，blockKey 不会变化）
 const tracking = props.blockKey ? useReadingTracker(props.blockKey) : null
 
 const liClass = computed(() => {
@@ -37,7 +37,7 @@ function onLeave() {
 </script>
 
 <style scoped>
-/* Use box-shadow instead of border to avoid 2px layout jitter when highlight appears/disappears */
+/* 用 box-shadow 替代 border，避免高亮出现/消失时 2px 布局抖动 */
 .reading-hover-border {
   box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.9);
   border-radius: 4px;

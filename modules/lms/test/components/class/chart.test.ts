@@ -1,8 +1,8 @@
 /**
- * class/chart.vue component test
+ * class/chart.vue 组件测试
  * @see modules/lms/components/class/chart.vue
  *
- * The component template is empty (<template></template>), only verifies rendering without error.
+ * 该组件模板为空（<template></template>），仅验证渲染不报错。
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

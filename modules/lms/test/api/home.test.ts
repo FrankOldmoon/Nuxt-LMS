@@ -1,8 +1,8 @@
 /**
- * LMS Home API endpoint tests
+ * LMS Home API 端点测试
  * @see modules/lms/server/api/home.get.ts
  *
- * Home page aggregation endpoint: categories + courses (with teachers) + site config + unread counts
+ * 首页聚合端点：分类 + 课程（含教师） + 站点配置 + 未读计数
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
@@ -29,7 +29,7 @@ beforeEach(() => {
   resetAllStubs()
   resetDb(_mockDb)
   installLmsAutoImports()
-  // normalizeCategory / normalizeCourseSummary are lms auto-imports, inject simple stubs
+  // normalizeCategory / normalizeCourseSummary 是 lms auto-import，注入简单桩
   ;(globalThis as any).normalizeCategory = (cat: any) => ({
     id: cat.id, name: cat.name, order: cat.order || 0,
   })
@@ -53,7 +53,7 @@ describe('API: home.get', () => {
       { id: 10, name: '课程1', code: 'C1', categoryId: 1, tags: [], config: {}, chapters: [{ id: 100 }, { id: 101 }] },
       { id: 11, name: '课程2', code: 'C2', categoryId: 2, tags: [], config: {}, chapters: [] },
     ])
-    // Teacher query: where is the terminal
+    // 教师查询：where 是终端
     _mockDb.where = vi.fn().mockResolvedValue([
       { courseId: 10, userId: 5, isTeacher: true, isEditor: false, username: 't1', name: '教师1', avatarImg: '' },
     ])
@@ -80,13 +80,13 @@ describe('API: home.get', () => {
     _mockDb.query.categories.findMany = vi.fn().mockResolvedValue([])
     _mockDb.query.courses.findMany = vi.fn().mockResolvedValue([])
     _mockDb.query.configs.findFirst = vi.fn().mockResolvedValue(null)
-    // When no courses, allMembers is not queried (courseIds is empty)
-    // Unread counts: 2 where calls (notify + msg)
+    // 无课程时 allMembers 不查询（courseIds 为空）
+    // 未读计数：2 次 where（notify + msg）
     let whereCall = 0
     _mockDb.where = vi.fn().mockImplementation(function () {
       whereCall++
-      if (whereCall === 1) return [{ count: 3 }]  // notify unread
-      return [{ count: 5 }]                         // msg unread
+      if (whereCall === 1) return [{ count: 3 }]  // notify 未读
+      return [{ count: 5 }]                         // msg 未读
     })
     const handler = (await import('../../server/api/home.get')).default
     const r = await handler(makeEvent())
@@ -107,7 +107,7 @@ describe('API: home.get', () => {
     const handler = (await import('../../server/api/home.get')).default
     const r = await handler(makeEvent())
     expect(r.success).toBe(true)
-    // courseIds is empty → db.select is not called for teacher query
+    // courseIds 为空 → 不调用 db.select 教师查询
     expect(_mockDb.select).not.toHaveBeenCalled()
   })
 

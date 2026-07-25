@@ -1,5 +1,5 @@
 /**
- * useLlm composable test
+ * useLlm composable 测试
  * @see modules/lposables/useLlm.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -14,7 +14,7 @@ beforeEach(async () => {
   resetAllStubs()
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
   clearToastCalls()
-  // Stub useAiConfig (auto-import from lms) — returns empty config by default
+  // 桩 useAiConfig（auto-import from lms）— 默认返回空配置
   const aiConfigRef = ref<any>({})
   ;(globalThis as any).useAiConfig = () => ({
     aiConfig: aiConfigRef,
@@ -233,7 +233,7 @@ describe('composables/useLlm', () => {
     const { useLlm } = await import('../../composables/useLlm')
     const { emit } = makeEmit()
     const r = useLlm(makeProps({ mode: 'local' }), emit as any)
-    // state.ready=false → chatboxCustomSend is undefined
+    // state.ready=false → chatboxCustomSend 为 undefined
     expect(r.chatboxCustomSend.value).toBeUndefined()
   })
 
@@ -248,7 +248,7 @@ describe('composables/useLlm', () => {
     const { useLlm } = await import('../../composables/useLlm')
     const { emit } = makeEmit()
     const r = useLlm(makeProps({ mode: 'api', title: '' }), emit as any)
-    // api mode has no title → t('ueditor.aichat') = 'ueditor.aichat'
+    // api 模式无 title → t('ueditor.aichat') = 'ueditor.aichat'
     expect(r.chatboxTitle.value).toBe('ueditor.aichat')
   })
 
@@ -313,8 +313,8 @@ describe('composables/useLlm', () => {
     const { useLlm } = await import('../../composables/useLlm')
     const { emit } = makeEmit()
     const r = useLlm(makeProps({ mode: 'local' }), emit as any)
-    // happy-dom has no navigator.gpu → loadLLM throws WebGPU error → loadSelected catch
-    // loadSelected internally try/catch swallows errors, does not throw outward
+    // happy-dom 无 navigator.gpu → loadLLM 抛 WebGPU 错误 → loadSelected catch
+    // loadSelected 内部 try/catch 吞掉错误，不向外抛出
     await expect(r.loadSelected()).resolves.toBeUndefined()
   })
 

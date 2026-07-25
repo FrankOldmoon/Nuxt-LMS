@@ -1,5 +1,5 @@
 <template>
-  <!-- Trigger button -->
+  <!-- 触发按钮 -->
   <UButton
     icon="i-lucide-crop"
     size="sm"
@@ -8,7 +8,7 @@
     @click="openPicker"
   />
 
-  <!-- Hidden file input -->
+  <!-- 隐藏的 file input -->
   <input
     ref="fileInputRef"
     type="file"
@@ -17,7 +17,7 @@
     @change="onFileChange"
   />
 
-  <!-- Reuse base's FormImageCropperModal, bind uploaded callback -->
+  <!-- 复用 base 的 FormImageCropperModal，绑定 uploaded 回调 -->
   <FormImageCropperModal
     ref="cropperRef"
     :title="$t('admin.form.cropImage')"
@@ -32,16 +32,16 @@
 import { ref } from 'vue'
 
 /**
- * Image crop trigger
- * - Click button → open file picker → FormImageCropperModal opens automatically after selection
- * - User confirms crop → upload → emit uploaded(url)
+ * 图片裁剪触发器
+ * - 点击按钮 → 弹出文件选择 → 选完后 FormImageCropperModal 自动打开
+ * - 用户确认裁剪 → 上传 → emit uploaded(url)
  *
- * Reuses modules/base/components/form/imageCropperModal.vue to avoid duplicate implementation.
+ * 复用 modules/base/components/form/imageCropperModal.vue，避免重复实现。
  */
 const props = withDefaults(defineProps<{
-  /** Crop box style */
+  /** 裁剪框样式 */
   stencilType?: 'circle' | 'rectangle'
-  /** Fixed aspect ratio (free ratio if not provided) */
+  /** 固定宽高比（不传则自由比例） */
   aspectRatio?: number | null
 }>(), {
   stencilType: 'rectangle',
@@ -61,10 +61,10 @@ function openPicker() {
 
 function onFileChange(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
-  // Clear value to allow selecting the same file repeatedly
+  // 清空 value，允许重复选择同一文件
   ;(e.target as HTMLInputElement).value = ''
   if (!file) return
-  // Trigger FormImageCropperModal's setImage
+  // 触发 FormImageCropperModal 的 setImage
   if (cropperRef.value && typeof cropperRef.value.setImage === 'function') {
     cropperRef.value.setImage(file)
   } else {
@@ -77,6 +77,6 @@ function onUploaded(url: string) {
 }
 
 function onClose() {
-  // URL.revokeObjectURL is handled internally by FormImageCropperModal
+  // 由 FormImageCropperModal 内部处理 URL.revokeObjectURL
 }
 </script>

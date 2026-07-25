@@ -12,20 +12,20 @@
             <template #item="{ element, index }">
                 <div
                     class="flex items-center gap-2 p-2 rounded-md border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800">
-                    <!-- dragHandhandle -->
+                    <!-- 拖拽手柄 -->
                     <span
                         class="drag-handle cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 shrink-0">
                         <UIcon name="i-heroicons-bars-3" class="w-4 h-4" />
                     </span>
-                    <!-- Number -->
+                    <!-- 序号 -->
                     <span
                         class="shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-medium">
                         {{ index + 1 }}
                     </span>
-                    <!-- optionitemsContent -->
+                    <!-- 选项内容 -->
                     <UInput v-model="element.text" :placeholder="$t('question.optionPlaceholder')" size="sm"
                         class="flex-1" @change="syncToForm" />
-                    <!-- Delete -->
+                    <!-- 删除 -->
                     <UButton variant="ghost" size="2xs" color="red" icon="i-heroicons-x-mark" class="shrink-0"
                         @click="removeItem(index)" />
                 </div>
@@ -33,7 +33,7 @@
         </draggable>
 
         <div v-if="!dragItems.length" class="text-xs text-gray-400 py-2 text-center">
-            {{ $t('question.no options') }}
+            {{ $t('question.noOptions') }}
         </div>
     </div>
 </template>
@@ -45,10 +45,10 @@ const props = defineProps({
     form: { type: Object, required: true },
 })
 
-// makeusewith stable id ObjectArraydriven vuedraggable
+// 使用带稳定 id 的对象数组驱动 vuedraggable
 const dragItems = ref([])
 
-// form.options → dragItems（Initialize + ResponseOutsideexternal change，if AI Generate）
+// form.options → dragItems（初始化 + 响应外部变更，如 AI 生成）
 watch(() => props.form.options, (opts) => {
     let val
     if (Array.isArray(opts) && opts.length) {
@@ -60,13 +60,13 @@ watch(() => props.form.options, (opts) => {
             { id: 2, text: '' },
         ]
     }
-    // thancompare text Value，relativesamewhenSkip（preserveUserdrag produces id Order）
+    // 比较 text 值，相同时跳过（保留用户拖拽产生的 id 顺序）
     if (JSON.stringify(val.map(i => i.text)) !== JSON.stringify(dragItems.value.map(i => i.text))) {
         dragItems.value = val
     }
 }, { immediate: true })
 
-/** will dragItems Syncto form.options and form.answer，onlyUserOperationwhenCall */
+/** 将 dragItems 同步到 form.options 和 form.answer，仅在用户操作时调用 */
 function syncToForm() {
     props.form.options = dragItems.value.map(item => item.text)
     props.form.answer = dragItems.value.map((_, i) => i)

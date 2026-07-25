@@ -1,15 +1,15 @@
 /**
- * course/shopModal/index.vue component test
+ * course/shopModal/index.vue 组件测试
  * @see modules/lms/components/course/shopModal/index.vue
  *
- * Shop modal: shop/bag tab + buy/sell buttons + coin display
+ * 商店弹窗：商店/背包 Tab + 买卖按钮 + 金币显示
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { ref } from 'vue'
 import { resetAllStubs, setMockI18n } from '../../../../../../test/setup/nuxt-stubs'
 
-// Mutable mock holder — vi.hoisted ensures initialization before vi.mock registration
+// 可变 mock holder — vi.hoisted 保证在 vi.mock 注册之前初始化
 const _shopMock = vi.hoisted(() => ({ current: null as any }))
 
 vi.mock('../../../../components/course/shopModal/useShop', () => ({
@@ -148,11 +148,11 @@ describe('course/shopModal/index.vue', () => {
     const buyBtn = buttons.find((b) => b.text().includes('shop.buy'))
     expect(buyBtn).toBeTruthy()
     await buyBtn!.trigger('click')
-    expect(_shopMock.current.buy).toHaveBeenCalledWith(1) // The first product id=1
+    expect(_shopMock.current.buy).toHaveBeenCalledWith(1) // 第一个商品 id=1
   })
 
   it('coin < price 时买入按钮 disabled', async () => {
-    _shopMock.current.coin = ref(10) // Lower than the price of both products (50 and 30)
+    _shopMock.current.coin = ref(10) // 低于两个商品的价格（50 和 30）
     const { default: ShopModal } = await import('../../../../components/course/shopModal/index.vue')
     const wrapper = mount(ShopModal, {
       props: { open: true, courseId: 1 },
@@ -162,7 +162,7 @@ describe('course/shopModal/index.vue', () => {
     const buttons = wrapper.findAll('.ubutton')
     const buyBtns = buttons.filter((b) => b.text().includes('shop.buy'))
     expect(buyBtns.length).toBeGreaterThanOrEqual(1)
-    // All buy buttons should be disabled (coin=10 < 30 < 50)
+    // 所有买入按钮都应 disabled（coin=10 < 30 < 50）
     for (const btn of buyBtns) {
       expect(btn.attributes('disabled')).toBeDefined()
     }
@@ -186,13 +186,13 @@ describe('course/shopModal/index.vue', () => {
       global: _globalConfig,
     })
     await flushPromises()
-    // Item names in bag (v-show keeps DOM present)
+    // 背包中的物品名称（v-show 保持 DOM 存在）
     expect(wrapper.text()).toContain('Homework Pass')
     const buttons = wrapper.findAll('.ubutton')
     const sellBtn = buttons.find((b) => b.text().includes('shop.sell'))
     expect(sellBtn).toBeTruthy()
     await sellBtn!.trigger('click')
-    expect(_shopMock.current.sell).toHaveBeenCalledWith(1) // Bag item goodId=1
+    expect(_shopMock.current.sell).toHaveBeenCalledWith(1) // 背包物品 goodId=1
   })
 
   it('渲染商店/背包 Tab 标签', async () => {

@@ -1,5 +1,5 @@
 /**
- * tableRow component tests
+ * tableRow 组件测试
  * @see modules/admin/components/table/tableRow.vue
  */
 import { describe, it, expect, beforeEach, mount, baseBeforeEach, _globalStubs, _globalConfig, makeColumn } from './_shared'

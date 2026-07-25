@@ -1,8 +1,8 @@
 /**
- * formField component tests (wrapper)
+ * formField 组件测试（wrapper）
  * @see modules/admin/components/table/formField.vue
  *
- * Dispatches to the corresponding child component based on the widget type returned by widgetFor(col):
+ * 根据 widgetFor(col) 返回的 widget 类型分发到对应的子组件：
  * - 'date' → FormFieldDate
  * - 'boolean' → FormFieldBoolean
  * - 'select' → FormFieldSelect
@@ -15,7 +15,7 @@
  * - 'imageCropper' → FormFieldImageCropper
  * - 'image' → FormFieldImage
  * - 'password' → FormFieldPassword
- * - Others ('text' / 'readonly') → FormFieldText
+ * - 其他（'text' / 'readonly'）→ FormFieldText
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -31,8 +31,8 @@ beforeEach(() => {
 })
 
 /**
- * Stub all child FormField* components as divs with data-widget attributes,
- * to facilitate asserting which child component the wrapper actually renders.
+ * 把所有子 FormField* 组件桩为带 data-widget 属性的 div，
+ * 便于断言 wrapper 实际渲染了哪个子组件。
  */
 const _globalStubs = {
   FormFieldDate: { template: '<div data-widget="date" />' },
@@ -160,7 +160,7 @@ describe('formField.vue (wrapper)', () => {
 
   it('isTimestamp=true 分发到 FormFieldDate', async () => {
     const { default: FormField } = await import('../../components/table/formField.vue')
-    // Note: jsName cannot be createdAt/updatedAt/deletedAt (these return 'readonly' in widgetFor)
+    // 注意：jsName 不能用 createdAt/updatedAt/deletedAt（这些在 widgetFor 中返回 'readonly'）
     const wrapper = mount(FormField, {
       props: baseProps(makeCol({ dataType: 'date', columnType: 'PgTimestamp', jsName: 'publishedAt', name: 'publishedAt', isTimestamp: true })),
       global: _globalConfig,
@@ -210,7 +210,7 @@ describe('formField.vue (wrapper)', () => {
       props: baseProps(makeCol({ jsName: 'id', name: 'id', dataType: 'number', columnType: 'PgSerial', isPrimaryKey: true, isAutoIncrement: true })),
       global: _globalConfig,
     })
-    // widgetFor returns 'readonly', no corresponding branch in wrapper → goes to v-else (FormFieldText)
+    // widgetFor 返回 'readonly'，wrapper 中无对应分支 → 走 v-else（FormFieldText）
     expect(wrapper.find('[data-widget="text"]').exists()).toBe(true)
   })
 })

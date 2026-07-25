@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-4">
-    <!-- Avatar upload area -->
+    <!-- 头像上传区域 -->
     <div class="flex flex-col items-center mb-6">
       <div class="relative cursor-pointer group" :class="{ 'pointer-events-none opacity-60': !canEditAvatar }"
         @click="triggerFileInput" role="button" tabindex="0" @keydown.enter.prevent="triggerFileInput"
@@ -19,7 +19,7 @@
       <input ref="fileInputRef" type="file" accept="image/*" class="hidden" @change="onFileSelect" />
     </div>
 
-    <!-- Image cropping modal -->
+    <!-- 图片裁剪弹窗 -->
     <FormImageCropperModal ref="cropperRef" :title="$t('profile.cropAvatar')" :aspect-ratio="1"
       stencil-type="circle" @uploaded="onCropped" />
 
@@ -55,14 +55,14 @@
       <UInput v-model="form.telephone" :placeholder="$t('profile.telephonePlaceholder')" class="w-full" />
     </UFormField>
 
-    <!-- Change password -->
+    <!-- 修改密码 -->
     <div class="pt-2">
       <UButton :label="$t('profile.changePassword')" icon="i-lucide-key-round" color="neutral" variant="outline"
         size="sm" :disabled="!canEditPassword" @click="() => { showPwdModal = true }" />
     </div>
   </div>
 
-  <!-- Change password modal -->
+  <!-- 修改密码弹窗 -->
   <AuthUserProfilePasswordModal v-model:open="showPwdModal" />
 </template>
 

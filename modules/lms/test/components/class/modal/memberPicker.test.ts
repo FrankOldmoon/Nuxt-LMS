@@ -1,9 +1,9 @@
 /**
- * class/modal/memberPicker.vue component test
+ * class/modal/memberPicker.vue 组件测试
  * @see modules/lms/components/class/modal/memberPicker.vue
  *
- * Pure display + event component: search box + resultList + selected tags + add button.
- * Verify props passing, event triggering, selected state rendering.
+ * 纯展示+事件组件：搜索框 + 结果列表 + 已选标签 + 添加按钮。
+ * 验证 props 传递、事件触发、选中状态渲染。
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -115,7 +115,7 @@ describe('class/modal/memberPicker.vue', () => {
       props: { ...baseProps, results: [sampleUser, sampleUser2] },
       global: _globalConfig,
     })
-    // Find the clickable div in the resultList
+    // 找到结果列表中的可点击 div
     const resultItems = wrapper.findAll('.cursor-pointer')
     expect(resultItems.length).toBeGreaterThanOrEqual(2)
     await resultItems[0].trigger('click')

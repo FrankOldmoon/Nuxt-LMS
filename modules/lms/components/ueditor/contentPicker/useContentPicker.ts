@@ -151,7 +151,7 @@ export function useContentPicker(props: ContentPickerProps, emit: ContentPickerE
 
     function confirm() { emit('confirm', [...selected.value]); open.value = false }
 
-    // ===== Add/Edit/Delete/Import =====
+    // ===== 新增/编辑/删除/导入 =====
     const editOpen = ref(false)
     const editType = ref('')
     const editId = ref(0)

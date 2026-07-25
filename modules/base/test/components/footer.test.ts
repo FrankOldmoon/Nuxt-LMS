@@ -1,5 +1,5 @@
 /**
- * Footer component tests
+ * Footer 组件测试
  * @see modules/base/components/layout/footer.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

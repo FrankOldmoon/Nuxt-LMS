@@ -1,46 +1,46 @@
 import { defineNuxtModule, createResolver, addComponentsDir, addImportsDir, addServerScanDir, addPlugin, addLayout } from '@nuxt/kit'
 
 /**
- * admin module — backend dashboard table management
+ * admin module — 后台 dashboard 表管理
  *
- * Features:
- * - /dashboard dashboard: statistics visualization (reuses base's <Chart>)
- * - Left menu: UNavigationMenu generates buttons for each table in the database, supports editing labels / sorting / hiding,
- *   stored in the configs table (key=admin:menu). On small screens it becomes a left floating drawer.
- * - Right table management: combines base's /api/crud/[table] to implement CRUD; columns are dynamically displayed based on the column definitions returned by the API;
- *   pagination / sorting / hidden columns; top multi-condition filtering; trash bin (soft-delete recovery and permanent deletion, supports batch);
- *   import/export (reuses base's <Sheet>).
- * - cellView: custom rendering by column type (image preview, date localization, etc.), cshow reused to preview row details.
- * - cform: personalized add / edit forms by column type (date picker, foreign key select, etc.).
+ * 功能：
+ * - /dashboard 仪表盘：统计可视化（复用 base 的 <Chart>）
+ * - 左侧菜单：UNavigationMenu 按数据库每张表生成按钮，可编辑标签 / 排序 / 隐藏，
+ *   存入 configs 表（key=admin:menu）。小屏时变为左侧浮动抽屉。
+ * - 右侧表管理：结合 base 的 /api/crud/[table] 实现 CRUD；列依据 API 返回的列定义动态展示；
+ *   分页 / 排序 / 隐藏列；顶部多条件筛选；垃圾桶（软删除恢复与彻底删除，支持批量）；
+ *   导入导出（复用 base 的 <Sheet>）。
+ * - cellView：按列类型自定义渲染（图片预览、日期本地化等），cshow 复用以预览行详情。
+ * - cform：按列类型个性化新增 / 编辑表单（日期选择器、外键 select 等）。
  *
- * Dependencies: base (cRequest, auth, generic CRUD, <Chart>, <Sheet>)
+ * 依赖：base（cRequest、auth、通用 CRUD、<Chart>、<Sheet>）
  *
- * Switch: registers features when NUXT_MODULE_ADMIN=true.
+ * 开关：NUXT_MODULE_ADMIN=true 时注册功能。
  */
 export default defineNuxtModule({
   meta: { name: 'module-admin', configKey: 'moduleAdmin' },
   setup(_options, nuxt) {
     const { resolve } = createResolver(import.meta.url)
 
-    // Mark admin module enabled status, for conditional rendering of components
+    // 标记 admin 模块启用状态，供组件条件渲染使用
     const enabled = process.env.NUXT_MODULE_ADMIN === 'true'
     nuxt.options.runtimeConfig.public.moduleAdmin = enabled
     if (!enabled) return
 
-    // Register components directory (pathPrefix: true → subdirectory as prefix, e.g. table/Manager.vue → <TableManager>)
+    // 注册组件目录（pathPrefix: true → 子目录作为前缀，如 table/Manager.vue → <TableManager>）
     addComponentsDir({ path: resolve('./components'), pathPrefix: true })
 
-    // Register admin layout: independent shell (its own top bar + left menu + content), without base's header/footer
+    // 注册 admin 布局：独立外壳（自己的顶栏 + 左菜单 + 内容），不含 base 的 header/footer
     addLayout(resolve('./layouts/admin.vue'), 'admin')
 
-    // Register composables / utils auto-import
+    // 注册 composables / utils 自动导入
     addImportsDir(resolve('./composables'))
     addImportsDir(resolve('./utils'))
 
-    // Register server routes / utils
+    // 注册 server 路由 / utils
     addServerScanDir(resolve('./server'))
 
-    // Register pages (merged into main pages) — nested routes: parent shell dashboard.vue + child pages, so the left menu is shared across all /dashboard/*
+    // 注册页面（合并到主 pages）—— 嵌套路由：父壳 dashboard.vue + 子页，使左侧菜单在所有 /dashboard/* 共享
     nuxt.hook('pages:extend', (pages) => {
       pages.push({
         name: 'admin-dashboard',
@@ -53,7 +53,7 @@ export default defineNuxtModule({
       })
     })
 
-    // Register i18n locale
+    // 注册 i18n locale
     nuxt.hook('i18n:registerModule', (registerModule) => {
       registerModule({
         langDir: resolve('./i18n/locales'),
@@ -61,10 +61,10 @@ export default defineNuxtModule({
       })
     })
 
-    // Client plugin: admin backend access guard
+    // 客户端插件：管理后台访问守卫
     addPlugin(resolve('./plugins/admin-guard.client.ts'))
 
-    // Table personalization override plugin: only registered when lms is enabled (override components import LMS components, not compiled when lms is off)
+    // 表个性化覆盖插件：仅当 lms 启用时注册（覆盖组件 import LMS 组件，lms 关闭时不编译）
     if (process.env.NUXT_MODULE_LMS === 'true') {
       addPlugin(resolve('./plugins/overrides.ts'))
     }

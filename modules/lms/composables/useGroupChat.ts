@@ -1,5 +1,5 @@
 /**
- * Group chat: WebSocket message send/receive + scroll management
+ * 小组聊天：WebSocket 消息收发 + 滚动管理
  */
 export function useGroupChat(props: { groupId: string }) {
   const { t } = useI18n()

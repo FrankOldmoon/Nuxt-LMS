@@ -11,10 +11,10 @@ export function useHtmlRender(props: HtmlRenderProps) {
 
     const userHtml = computed(() => props.node?.attrs?.content || '')
 
-    /** Build iframe srcdoc: wrap as a basic HTML document + height reporting script */
+    /** 构造 iframe srcdoc：包裹为基础 HTML 文档 + 高度上报脚本 */
     const iframeContent = computed(() => {
       const html = userHtml.value
-      // If it's already a complete HTML document, use it directly
+      // 已是完整 HTML 文档则直接使用
       const isFullDoc = /<html[\s>]/i.test(html) || /<!DOCTYPE/i.test(html)
       if (isFullDoc) return html
 
@@ -38,8 +38,8 @@ body { margin: 0; padding: 8px; font-family: -apple-system, BlinkMacSystemFont, 
   if (document.readyState === 'complete') reportHeight();
   else window.addEventListener('load', reportHeight);
   new MutationObserver(reportHeight).observe(document.body, {
-    child list: true,
-    sub-tree: true,
+    childList: true,
+    subtree: true,
   });
 })();
 <\/script>

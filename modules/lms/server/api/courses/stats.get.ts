@@ -1,10 +1,10 @@
 /**
- * Course learning statistics: returns the count of various learning activities for the specified user in this course
+ * 课程学习统计：返回指定用户在该课程的各项学习行为数量
  * GET /api/courses/stats?courseId=1[&userId=2]
  *
- * - Without userId: returns the statistics of the currently logged-in user (displayed in the student-side "My Learning Data")
- * - With userId, and the current user is the course teacher / admin: returns the statistics of that userId (teacher viewing student learning status)
- * - With userId, but insufficient permissions: returns 403
+ * - 不传 userId：返回当前登录用户自己的统计（学生端"我的学习数据"展示）
+ * - 传 userId  且当前用户是课程教师 / 管理员：返回该 userId 的统计（教师查看学生学习情况）
+ * - 传 userId  但权限不足：返回 403
  */
 import { db, schema } from '@nuxthub/db'
 import { eq, and, count } from 'drizzle-orm'
@@ -12,20 +12,20 @@ import { eq, and, count } from 'drizzle-orm'
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
   const courseId = Number(getQuery(event).courseId)
-  if (!courseId) return cResp(null, 'Missing courseId', false)
+  if (!courseId) return cResp(null, '缺少 courseId', false)
 
   const queryUserId = Number(getQuery(event).userId) || 0
   let uid = user.id
   if (queryUserId && queryUserId !== user.id) {
-    // Only course teacher / admin can query statistics of other users
+    // 仅课程教师 / 管理员可查询其他用户的统计
     const isTeacher = await isCourseTeacher(user.id, courseId)
     if (!isTeacher && !user.roles?.includes('admin')) {
-      throw createError({ statusCode: 403, statusMessage: 'No permission to view this student\'s statistics' })
+      throw createError({ statusCode: 403, statusMessage: '无权查看该学生的统计' })
     }
     uid = queryUserId
   }
 
-  // Count of completed items per category (by user + course)
+  // 各分项完成数量（按用户+课程）
   const [q] = await db
     .select({ n: count() })
     .from(schema.userQuestions)

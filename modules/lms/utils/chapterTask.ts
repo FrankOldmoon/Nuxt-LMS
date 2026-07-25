@@ -1,18 +1,17 @@
 /**
- * Chapter task extraction utility
+ * 章节任务提取工具
  *
- * Extracts all headings and their following submittable task nodes
- * (question / homework / comment / quiz / race) from tiptap JSON content,
- * used to determine the completion status of each heading.
+ * 从 tiptap JSON 内容中提取所有 heading 及其下方可提交的任务节点
+ * （question / homework / comment / quiz / race），用于判断每个 heading 的完成状态。
  *
- * Rules:
- * - A heading's range spans from itself to the next heading (any level)
- * - If there are no submittable tasks in the range → pure text heading, requires 5s dwell to complete
- * - If there are submittable tasks in the range → completed only when all are answered correctly / submitted
+ * 规则：
+ * - 一个 heading 的范围从它本身到下一个 heading（任意层级）为止
+ * - 范围内若无可提交任务 → 纯文字 heading，需停留 5s 完成
+ * - 范围内若有可提交任务 → 全部答对/提交后才算完成
  */
 import { extractText } from './tiptapText'
 
-/** Submittable task node types (corresponding to the vue node's attrs.type) */
+/** 可提交的任务节点类型（对应 vue 节点的 attrs.type） */
 export const SUBMITTABLE_TYPES = ['question', 'homework', 'comment', 'quiz', 'race'] as const
 
 export interface HeadingInfo {
@@ -24,19 +23,19 @@ export interface HeadingInfo {
 export interface HeadingTask {
   type: string
   cid: number
-  /** Unique key: `type:cid`, used for indexing in the tracker */
+  /** 唯一键：`type:cid`，用于在 tracker 中索引 */
   key: string
 }
 
 export interface ChapterTaskMap {
-  /** Flat heading list in document order */
+  /** 按文档顺序的扁平 heading 列表 */
   headings: HeadingInfo[]
-  /** headingId → list of submittable tasks below it (pure text headings map to an empty array) */
+  /** headingId → 其下方的可提交任务列表（纯文字 heading 对应空数组） */
   tasksByHeading: Record<string, HeadingTask[]>
 }
 
 /**
- * Extract the heading list and the submittable tasks under each heading from tiptap JSON content
+ * 从 tiptap JSON content 中提取 heading 列表与每个 heading 下的可提交任务
  */
 export function extractChapterTasks(content: Record<string, any> | null | undefined): ChapterTaskMap {
   const headings: HeadingInfo[] = []
@@ -57,7 +56,7 @@ export function extractChapterTasks(content: Record<string, any> | null | undefi
       }
     }
 
-    // vue nodes carry submittable components such as question/homework/comment/quiz/race
+    // vue 节点承载 question/homework/comment/quiz/race 等可提交组件
     if (node.type === 'vue' && SUBMITTABLE_TYPES.includes(node.attrs?.type)) {
       const type = node.attrs.type
       const cid = Number(node.attrs?.content) || 0

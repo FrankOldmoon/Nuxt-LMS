@@ -55,7 +55,7 @@ const canDelete = computed(() => (hasId.value && !readOnly.value) || hasDeleteOv
 
 const { fkLabels } = useFkLabels(columns)
 
-// Initialize / switch table
+// 初始化 / 切表
 watch(() => props.tableName, async () => {
   await ensure()
   await loadHidden()
@@ -64,7 +64,7 @@ watch(() => props.tableName, async () => {
   await load()
 }, { immediate: true })
 
-// Form
+// 表单
 const formOpen = ref(false)
 const editingRow = ref<Record<string, any> | null>(null)
 const openAdd = () => { editingRow.value = null; formOpen.value = true }
@@ -75,15 +75,15 @@ const onFormSubmit = async (data: Record<string, any>) => {
 }
 const onOverrideSaved = async () => { formOpen.value = false; await load() }
 
-// Detail preview
+// 详情预览
 const showOpen = ref(false)
 const viewingRow = ref<Record<string, any> | null>(null)
 const onView = (row: Record<string, any>) => { viewingRow.value = row; showOpen.value = true }
 
-// Import/Export
+// 导入/导出
 const { importOpen, exportOpen, exportRows, exporting, onImport, openExport } = useManagerIo(importRows, fetchExportRows)
 
-// Confirm dialog
+// 确认对话框
 const {
   confirmOpen, confirmText, confirmColor, confirmLoading,
   confirmBatch, onSingleDelete, onSingleRestore, onSingleRemove, executeConfirm,

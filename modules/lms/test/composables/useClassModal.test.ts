@@ -1,5 +1,5 @@
 /**
- * useClassModal composable test
+ * useClassModal composable 测试
  * @see modules/lms/composables/useClassModal.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -22,7 +22,7 @@ beforeEach(async () => {
     [{ code: 'admin' }],
   )
   setMockFetchHandler(async () => ({ data: null, success: true, msg: '' }))
-  // useClassModal depends on useAuth, useClassUsers, useClasses, useLmsContext
+  // useClassModal 依赖 useAuth, useClassUsers, useClasses, useLmsContext
   const { useClassUsers } = await import('../../composables/useClassUsers')
   ;(globalThis as any).useClassUsers = () => ({
     classUsers: ref([]),
@@ -100,7 +100,7 @@ describe('composables/useClassModal', () => {
     r.toggleStudentSelect(user)
     expect(r.isSelectedStudent(5)).toBe(true)
     expect(r.selectedStudents.value.length).toBe(1)
-    r.toggleStudentSelect(user) // Toggle again → remove
+    r.toggleStudentSelect(user) // 再次 toggle → 移除
     expect(r.isSelectedStudent(5)).toBe(false)
     r.toggleStudentSelect(user)
     r.removeSelectedStudent(5)
@@ -152,7 +152,7 @@ describe('composables/useClassModal', () => {
     const r = useClassModal(open)
     r.studentSearch.value = 'stu'
     r.onStudentSearchInput()
-    // Wait for 300ms delay
+    // 等待 300ms 延迟
     await new Promise((resolve) => setTimeout(resolve, 400))
     expect(r.studentSearchResults.value.length).toBe(1)
     expect(r.studentSearchResults.value[0].id).toBe(5)

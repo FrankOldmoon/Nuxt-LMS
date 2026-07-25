@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-// Course student count badge
+// 课程学生人数徽标
 defineProps<{
   count: number
 }>()

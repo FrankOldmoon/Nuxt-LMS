@@ -36,7 +36,7 @@ export function useCommentRender(props: CommentRenderProps) {
     const editOpen = ref(false)
     const recordsOpen = ref(false)
 
-    // SSR-friendly data fetching (if props.comment does not exist, fetch from API)
+    // SSR-friendly data fetching（如果 props.comment 不存在，从 API 获取）
     const apiUrl = computed(() => {
         if (!commentId.value || !effectiveCourseId.value) return ''
         return `/api/comments/show?course_id=${effectiveCourseId.value}&cid=${commentId.value}`
@@ -54,7 +54,7 @@ export function useCommentRender(props: CommentRenderProps) {
         },
     })
 
-    // comment ref: prefer props.comment, otherwise use API data
+    // comment ref：优先使用 props.comment，否则使用 API 数据
     const comment = ref<any>(null)
     watch([() => props.comment, fetchedComment], () => {
         if (props.comment) {
@@ -66,28 +66,28 @@ export function useCommentRender(props: CommentRenderProps) {
         }
     }, { immediate: true })
 
-    // Loading state (only for API fetching)
+    // 加载状态（仅用于 API 获取）
     const pending = computed(() => !props.comment && !!commentId.value && fetchedPending.value)
 
     function onSaved(updatedComment: any) {
-        // New comment: notify parent node to update content attribute after getting new cid
+        // 新建评论：拿到新增 cid 后通知父节点更新 content 属性
         if (updatedComment.cid && Number(updatedComment.cid) !== commentId.value) {
-            // Need to emit to parent node here (if needed)
+            // 这里需要 emit 给父节点（如果需要）
         } else {
-            // Existing comment: refresh API data
+            // 已有评论：刷新接口数据
             refresh()
         }
-        // Update content locally immediately to avoid blank during refresh
+        // 本地立即更新内容，避免刷新期间空白
         if (comment.value) {
             Object.assign(comment.value, updatedComment)
         }
     }
 
-    // Sub-comment pagination (frontend pagination, API fetches all at once)
+    // 子评论分页（前端分页，API 一次性获取全部）
     const pageSize = 5
     const page = ref(1)
 
-    // Comment list data (self + sub-comments)
+    // 评论列表数据（自身 + 子评论）
     const rootComment = ref<any>(null)
     const children = ref<any[]>([])
     const listPending = ref(false)
@@ -98,7 +98,7 @@ export function useCommentRender(props: CommentRenderProps) {
         return children.value.slice(start, start + pageSize)
     })
 
-    // Correct page number after adding/deleting comments
+    // 新增/删除评论后校正页码
     watch([children, totalPages], () => {
         if (page.value > totalPages.value) page.value = totalPages.value
     })
@@ -111,7 +111,7 @@ export function useCommentRender(props: CommentRenderProps) {
             if (data) {
                 rootComment.value = data.root || null
                 children.value = data.children || []
-                // If current user has replied, report completion state
+                // 若当前用户已回复过，上报完成状态
                 const uid = user.value?.id
                 if (uid && Array.isArray(data.children) && data.children.some((c: any) => c.userId === uid)) {
                     chapterTask?.reportNodeDone('comment', commentId.value, true)
@@ -125,15 +125,15 @@ export function useCommentRender(props: CommentRenderProps) {
         }
     }
 
-    // Load comment list on open
+    // 打开时加载评论列表
     watch(commentId, () => {
         if (commentId.value) fetchComments()
     }, { immediate: true })
 
-    // Like/unlike
+    // 点赞/取消点赞
     async function toggleLike(item: any) {
         const newLike = !item.liked
-        // Optimistic update: update both liked and likeCount
+        // 乐观更新：同时更新 liked 和 likeCount
         item.liked = newLike
         item.likeCount = Math.max(0, (item.likeCount || 0) + (newLike ? 1 : -1))
         try {
@@ -145,18 +145,18 @@ export function useCommentRender(props: CommentRenderProps) {
                     like: newLike,
                 },
             })
-            // Defensively notify userCard to refresh (if liking also grants points in the future, it can be reflected immediately)
+            // 防御性通知 userCard 刷新（未来若点赞也会加分，可即时反映）
             useUserCard().refresh()
         } catch {
-            // Rollback
+            // 回滚
             item.liked = !newLike
             item.likeCount = Math.max(0, (item.likeCount || 0) + (newLike ? -1 : 1))
         }
     }
 
-    // Reply to comment
+    // 回复评论
     async function onReply({ content, parentCid }: { content: any, parentCid: number }) {
-        // Forbid submission when not logged in
+        // 未登录时禁止提交
         if (!isLoggedIn.value) {
             toast.add({ title: t('common.loginRequired'), color: 'warning' })
             return
@@ -172,20 +172,20 @@ export function useCommentRender(props: CommentRenderProps) {
                     name: '',
                 },
             })
-            // Add to sub-comment list
+            // 添加到子评论列表
             if (result) {
                 children.value.push({
                     ...result,
                     liked: false,
                 })
-                // Jump to the last page so the user can see the new reply
+                // 跳转到最后一页，让用户看到新回复
                 page.value = totalPages.value
-                // Report comment completion (replying means completion)
+                // 上报评论完成（回复即完成）
                 chapterTask?.reportNodeDone('comment', commentId.value, true)
-                // Reply success toast
+                // 回复成功 toast
                 toast.add({ title: t('comment.replySuccess'), color: 'success' })
             }
-            // Defensively notify userCard to refresh (if commenting also grants points in the future, it can be reflected immediately)
+            // 防御性通知 userCard 刷新（未来若评论也会加分，可即时反映）
             useUserCard().refresh()
         } catch (err: any) {
             toast.add({
@@ -196,7 +196,7 @@ export function useCommentRender(props: CommentRenderProps) {
         }
     }
 
-    // Delete sub-comment
+    // 删除子评论
     async function onDelete(item: any) {
         try {
             await cRequest('/api/comments/delete', {
@@ -206,10 +206,10 @@ export function useCommentRender(props: CommentRenderProps) {
                     cid: item.cid,
                 },
             })
-            // Remove from list
+            // 从列表中移除
             children.value = children.value.filter((c: any) => c.cid !== item.cid)
         } catch (err) {
-            // Silent
+            // 静默
         }
     }
 

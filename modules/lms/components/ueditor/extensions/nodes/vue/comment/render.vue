@@ -1,13 +1,13 @@
 <template>
     <div class="comment-render w-full space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 relative"
         :data-comment-id="commentId">
-        <!-- CommentNot Found -->
+        <!-- 评论未找到 -->
         <div v-if="!comment" class="text-center py-6 text-gray-400">
             {{ $t('comment.notFound') }} (cid: {{ commentId }})
         </div>
 
         <template v-else>
-            <!-- CommentTitle -->
+            <!-- 评论标题 -->
             <div class="flex items-center gap-3 mb-3">
                 <span class="px-2 py-0.5 bg-teal-50 dark:bg-teal-800 text-teal-600 dark:text-teal-300 rounded text-xs font-medium">
                     {{ $t('comment.label') }}
@@ -25,12 +25,12 @@
                 </div>
             </div>
 
-            <!-- Comment Content -->
+            <!-- 评论内容 -->
             <div class="prose prose-sm dark:prose-invert max-w-none">
                 <ueditorRender :json="comment.content" :course-id="effectiveCourseId" />
             </div>
 
-            <!-- Tag -->
+            <!-- 标签 -->
             <div v-if="comment.tags && comment.tags.length" class="flex flex-wrap gap-1">
                 <span v-for="(tag, idx) in comment.tags" :key="idx"
                     class="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded text-xs">
@@ -38,32 +38,32 @@
                 </span>
             </div>
 
-            <!-- Commentarea：Showself + AllSonComment -->
+            <!-- 评论区：显示自己 + 所有子评论 -->
             <div class="pt-3 border-t border-gray-100 dark:border-gray-800 space-y-3">
-                <!-- Loading -->
+                <!-- 加载中 -->
                 <div v-if="listPending" class="flex items-center justify-center py-4 text-gray-400">
                     <UIcon name="i-lucide-loader-2" class="animate-spin size-4 mr-2" />
                     <span class="text-xs">{{ $t('comment.loading') }}</span>
                 </div>
                 <template v-else>
-                    <!-- ReplyForm -->
+                    <!-- 回复表单 -->
                     <CommentForm :parent-cid="commentId" :placeholder="$t('comment.replyPlaceholder')"
                         @submit="onReply" />
 
-                    <!-- SonComment List（Pagination） -->
+                    <!-- 子评论列表（分页） -->
                     <CommentList :comments="pagedChildren" :current-user-id="user?.id"
                         @toggle-like="toggleLike" @delete="onDelete" />
 
-                    <!-- Paginationcontrol -->
+                    <!-- 分页控件 -->
                     <CommentPagination />
                 </template>
             </div>
         </template>
 
-        <!-- Edit Modal -->
+        <!-- 编辑弹窗 -->
         <Edit v-model="editOpen" :comment-id="commentId" :comment="comment" @saved="onSaved" />
 
-        <!-- RecordsModal（onlyTeacher） -->
+        <!-- 记录弹窗（仅教师） -->
         <LmsRecordsModalComment v-if="isTeacher" v-model="recordsOpen"
             :course-id="courseId" :cid="commentId" />
     </div>
@@ -79,7 +79,7 @@ import Edit from './edit.vue'
 const props = defineProps({
     node: Object,
     comment: Object,
-    courseId: { type: [Number, String], default: undefined }, // admin BackreplayTime Usedpass in
+    courseId: { type: [Number, String], default: undefined }, // admin 后台复用时传入
 })
 
 const {

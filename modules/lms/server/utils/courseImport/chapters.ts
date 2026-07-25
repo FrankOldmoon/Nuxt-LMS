@@ -1,8 +1,8 @@
 /**
- * Course import: batch insert chapters
+ * 课程导入：批量插入章节
  *
- * The cid referenced by vue nodes in the chapter content needs to be rewritten using maps.
- * Also records the "old chapter id → new chapter id" mapping (used to backfill course.orders).
+ * 章节 content 中 vue 节点引用 cid 需要用 maps 全部重写。
+ * 同时记录「旧 chapter id → 新 chapter id」映射（用于回填 course.orders）。
  */
 import { db, schema } from '@nuxthub/db'
 import type { ChapterIdMap, IdMaps } from './types'

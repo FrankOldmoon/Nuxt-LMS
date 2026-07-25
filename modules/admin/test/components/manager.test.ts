@@ -1,16 +1,16 @@
 /**
- * Manager component tests
+ * Manager 组件测试
  * @see modules/admin/components/table/Manager.vue
  *
- * Manager is an orchestration component, combining 8 child components + 5 composables.
- * This test only verifies: mounts successfully, accepts tableName prop, child components are rendered,
- * Does not attempt to test full interaction flows (that requires e2e).
+ * Manager 是编排组件，组合了 8 个子组件 + 5 个 composable。
+ * 此测试只验证：mounts 成功、接受 tableName prop、子组件被渲染、
+ * 不尝试测试完整交互流程（那需要 e2e）。
  */
 import { describe, it, expect, beforeEach, mount, flushPromises, baseBeforeEach, _globalStubs, _globalConfig } from './_shared'
 
 beforeEach(baseBeforeEach)
 
-// Stub all child components, letting Manager only handle orchestration logic
+// stub 所有子组件，让 Manager 只负责编排逻辑
 const _stubs = {
   ..._globalStubs,
   TableFilterBar: { template: '<div class="filter-bar" />', props: ['columns', 'filters', 'search'] },

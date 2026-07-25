@@ -1,5 +1,5 @@
 /**
- * useWrongBook composable test
+ * useWrongBook composable 测试
  * @see modules/lms/composables/useWrongBook.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -95,12 +95,12 @@ describe('composables/useWrongBook', () => {
     nextPage()
     expect(page.value).toBe(3)
     nextPage()
-    expect(page.value).toBe(3) // Already at last page
+    expect(page.value).toBe(3) // 已到最后一页
     prevPage()
     expect(page.value).toBe(2)
     prevPage()
     expect(page.value).toBe(1)
     prevPage()
-    expect(page.value).toBe(1) // Already at first page
+    expect(page.value).toBe(1) // 已到第一页
   })
 })

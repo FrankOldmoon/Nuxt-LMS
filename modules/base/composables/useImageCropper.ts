@@ -2,7 +2,7 @@ import { Cropper, CircleStencil, RectangleStencil } from 'vue-advanced-cropper'
 import 'vue-advanced-cropper/dist/style.css'
 
 /**
- * Image cropping modal: set image + crop + upload
+ * 图片裁剪弹窗：设置图片 + 裁剪 + 上传
  */
 export function useImageCropper(
   aspectRatio: () => number | null | undefined,
@@ -60,13 +60,13 @@ export function useImageCropper(
       })
 
       if (!res.success) {
-        throw new Error(res.msg || 'Upload failed')
+        throw new Error(res.msg || '上传失败')
       }
 
       onUploaded(res.data.url)
       close()
     } catch (e: any) {
-      useToast().add({ title: e.message || 'Crop upload failed', color: 'error' })
+      useToast().add({ title: e.message || '裁剪上传失败', color: 'error' })
     } finally {
       uploading.value = false
     }

@@ -1,8 +1,8 @@
 /**
- * course/studentCount.vue component test
+ * course/studentCount.vue 组件测试
  * @see modules/lms/components/course/studentCount.vue
  *
- * Course student count badge: UIcon + number + i18n text
+ * 课程学生人数徽标：UIcon + 数字 + i18n 文案
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

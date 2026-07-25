@@ -2,19 +2,19 @@ import { ref, watch, computed, onMounted, onBeforeUnmount, inject, nextTick } fr
 import { submitQuestion, recordAnswer, computeCorrectRate } from './shared'
 
 export function useSelect(props: any) {
-  const submitted = inject<import('vue').Ref<boolean>>('question submitted')!
+  const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')!
   const isCorrect = inject<import('vue').Ref<boolean>>('questionIsCorrect')!
   const fromRecord = inject<import('vue').Ref<boolean>>('questionFromRecord')!
   const { courseId, chapterId } = useLmsContext()
   const selectAnswers = ref<any[]>([])
   let selectEls: HTMLSelectElement[] = []
 
-  // findtoCurrentQuestionareaDownAll select element container
+  // 找到当前题目区域下的所有 select 元素容器
   function getContainer(): Element | null {
     return document.querySelector(`[data-question-id="${props.questionId}"] .prose`)
   }
 
-  // collect DOM MiddleAll select elementandbindEvent
+  // 收集 DOM 中所有 select 元素并绑定事件
   function bindSelects() {
     const container = getContainer()
     if (!container) return
@@ -36,7 +36,7 @@ export function useSelect(props: any) {
   function onChange(e: Event) {
     const target = e.target as HTMLSelectElement
     const idx = Number(target.dataset.fillIndex)
-    // SubmitBackHeavyNewanswer，ClearjudgeStatus
+    // 提交后重新作答，清除判断状态
     if (submitted.value) {
       submitted.value = false
     }
@@ -52,18 +52,18 @@ export function useSelect(props: any) {
     setTimeout(bindSelects, 0)
   })
 
-  // Initialize
+  // 初始化
   watch(() => props.question, (q: any) => {
     if (q?.type === 'select') {
       selectAnswers.value = (q.answer || []).map(() => '')
     }
   }, { immediate: true })
 
-  // listen record change，Syncto selectAnswers and DOM（fetchRecord backfill scenario）
+  // 监听 record 变化，同步到 selectAnswers 和 DOM（fetchRecord 回填场景）
   watch(() => props.question?.record, (record: any) => {
     if (!Array.isArray(record) || record.length === 0) return
     selectAnswers.value = [...record]
-    // DOM cancanalsonotRender，use nextTick ensurealreadyMount
+    // DOM 可能还未渲染，用 nextTick 确保已挂载
     nextTick(() => {
       const container = getContainer()
       if (!container) return
@@ -78,7 +78,7 @@ export function useSelect(props: any) {
 
   const hasAnswer = computed(() => selectAnswers.value.some((a: any) => a && a.trim() !== ''))
 
-  // submit Backto select Color：CorrectGreen、ErrorRed
+  // submit 后给 select 着色：正确绿、错误红
   function styleSelects() {
     const container = getContainer()
     if (!container) return

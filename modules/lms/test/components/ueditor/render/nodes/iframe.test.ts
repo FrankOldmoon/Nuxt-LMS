@@ -1,5 +1,5 @@
 /**
- * ueditor/render/nodes/iframe.vue component test
+ * ueditor/render/nodes/iframe.vue 组件测试
  * @see modules/lms/components/ueditor/render/nodes/iframe.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

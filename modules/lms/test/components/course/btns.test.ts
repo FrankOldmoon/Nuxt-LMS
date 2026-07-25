@@ -1,8 +1,8 @@
 /**
- * course/btns.vue component test
+ * course/btns.vue 组件测试
  * @see modules/lms/components/course/btns.vue
  *
- * Course panel button group: shows different function buttons based on courseBtnsConfig
+ * 课程面板按钮组：根据 courseBtnsConfig 显示不同功能按钮
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -12,7 +12,7 @@ import { resetAllStubs, setMockI18n, setMockAuthUser } from '../../../../../test
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
-  // stub useLayoutState returns configurable courseBtnsConfig
+  // stub useLayoutState 返回可配置的 courseBtnsConfig
   const courseBtnsConfig = reactive({
     showProgress: true,
     showLeaderboard: true,
@@ -33,7 +33,7 @@ const _globalStubs = {
     template: '<button class="ubutton" @click="$emit(\'click\', $event)"><slot /></button>',
     props: ['icon', 'color', 'size'],
   },
-  // stub course modal components (by auto-import component name)
+  // stub 课程弹窗组件（按 auto-import 组件名）
   CourseProgressModal: { template: '<div class="course-progress-modal" />' },
   CourseLeaderboardModal: { template: '<div class="course-leaderboard-modal" />' },
   CourseGroupsModal: { template: '<div class="course-groups-modal" />' },
@@ -49,7 +49,7 @@ const _globalConfig = {
 
 describe('course/btns.vue', () => {
   it('未登录时不渲染按钮组', async () => {
-    // Does not call setMockAuthUser → user is null
+    // 不调用 setMockAuthUser → user 为 null
     const { default: Btns } = await import('../../../components/course/btns.vue')
     const wrapper = mount(Btns, {
       props: { courseId: '1', navigation: [] },
@@ -65,7 +65,7 @@ describe('course/btns.vue', () => {
       props: { courseId: '1', navigation: [] },
       global: _globalConfig,
     })
-    // All buttons on → at least 6 buttons
+    // 所有按钮都开启 → 至少 6 个按钮
     const buttons = wrapper.findAll('.ubutton')
     expect(buttons.length).toBeGreaterThanOrEqual(6)
   })
@@ -87,7 +87,7 @@ describe('course/btns.vue', () => {
       props: { courseId: '1', navigation: [] },
       global: _globalConfig,
     })
-    // 5 buttons (excluding progress)
+    // 5 个按钮（去掉 progress）
     const buttons = wrapper.findAll('.ubutton')
     expect(buttons.length).toBe(5)
   })

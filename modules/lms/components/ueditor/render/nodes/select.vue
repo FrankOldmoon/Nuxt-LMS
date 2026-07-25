@@ -14,7 +14,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['update'])
 
-// from question RenderUpDowncontext inject questionData，Get options
+// 从 question 渲染上下文注入 questionData，获取 options
 const questionData = inject('questionData', null)
 const options = computed(() => questionData?.value?.options || [])
 

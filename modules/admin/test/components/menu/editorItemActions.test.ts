@@ -1,8 +1,8 @@
 /**
- * menu/editorItemActions.vue component tests
+ * menu/editorItemActions.vue 组件测试
  * @see modules/admin/components/menu/editorItemActions.vue
  *
- * Menu item action button group: edit + add child + add sibling + delete
+ * 菜单项操作按钮组：编辑 + 添加子项 + 添加兄弟 + 删除
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -45,7 +45,7 @@ describe('menu/editorItemActions.vue', () => {
       props: { item: sampleItem, index: 0, maxDepth: 2 },
       global: _globalConfig,
     })
-    // The add child button has title="admin.menu.addChild"
+    // 添加子项按钮有 title="admin.menu.addChild"
     const addChildBtn = wrapper.findAll('.ubutton').find(b => b.attributes('title') === 'admin.menu.addChild')
     expect(addChildBtn).toBeTruthy()
   })
@@ -57,7 +57,7 @@ describe('menu/editorItemActions.vue', () => {
       global: _globalConfig,
     })
     const buttons = wrapper.findAll('.ubutton')
-    // depth=2 >= maxDepth=2 → only 3 buttons (edit, addSibling, delete)
+    // depth=2 >= maxDepth=2 → 只有 3 个按钮（edit, addSibling, delete）
     expect(buttons.length).toBe(3)
     const addChildBtn = buttons.find(b => b.attributes('title') === 'admin.menu.addChild')
     expect(addChildBtn).toBeUndefined()

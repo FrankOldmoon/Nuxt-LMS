@@ -6,21 +6,21 @@ export default eventHandler(async (event) => {
 
   const body = await readBody(event)
   const id = Number(body.id)
-  if (!id) return cResp(null, 'id cannot be empty', false)
+  if (!id) return cResp(null, 'id 不能为空', false)
 
-  // Find file (not deleted): group files can be deleted by any member; personal files only by owner
+  // 查找文件（未删除）：小组文件任何成员可删；个人文件仅所有者可删
   const file = await db.query.files.findFirst({
     where: and(eq(schema.files.id, id), isNull(schema.files.deletedAt)),
   })
-  if (!file) return cResp(null, 'File does not exist or no permission', false)
+  if (!file) return cResp(null, '文件不存在或无权限', false)
   if (!file.group && file.userId !== user.id) {
-    return cResp(null, 'File does not exist or no permission', false)
+    return cResp(null, '文件不存在或无权限', false)
   }
 
-  // Soft delete: only mark deletedAt, keep physical file for recovery
+  // 软删除：仅标记 deletedAt，保留物理文件以便恢复
   await db.update(schema.files)
     .set({ deletedAt: new Date() })
     .where(eq(schema.files.id, id))
 
-  return cResp({ id }, 'Deleted successfully')
+  return cResp({ id }, '删除成功')
 })

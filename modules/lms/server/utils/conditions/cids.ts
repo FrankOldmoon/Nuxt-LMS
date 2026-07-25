@@ -1,14 +1,14 @@
 /**
- * Condition type: cids array completion check
+ * 条件类型：cids 数组已完成检查
  *
- * The "value is a cid array, all must be completed" logic shared by all types:
+ * 所有类型共享的"value 为 cid 数组，需全部完成"逻辑：
  *  - question: userQuestions.questionCid
  *  - homework: userHomeworks.homeworkCid
  *  - comment:  userComments.commentCid
  *  - quiz:     userQuizzes.quizCid
  *  - race:     userRaces.raceCid
  *
- * Each type constructs a different SELECT and IN field.
+ * 每种类型构造不同的 SELECT 和 IN 字段。
  */
 import { db, schema } from '@nuxthub/db'
 import { and, eq, inArray } from 'drizzle-orm'
@@ -20,13 +20,13 @@ type CidTable = {
   cidAlias: string
 }
 
-/** Normalize value to a numeric array, filtering out non-positive integers */
+/** 把 value 标准化为数字数组，过滤非正整数 */
 export function normalizeCidValue(value: any): number[] {
   const raw = Array.isArray(value) ? value : [value]
   return raw.map(Number).filter(Boolean)
 }
 
-/** Check whether the user has completed all items in the specified cids list */
+/** 检查用户是否完成指定 cids 列表中的全部项 */
 export async function checkAllCidsCompleted(
   userId: number,
   cids: number[],
@@ -49,7 +49,7 @@ const TABLES: Record<string, CidTable> = {
   race:     { table: schema.userRaces,     userIdField: schema.userRaces.userId,     cidField: schema.userRaces.raceCid,     cidAlias: 'raceCid' },
 }
 
-/** Dispatch to the corresponding table by condition.type */
+/** 按 condition.type 分发到对应表 */
 export async function checkCidsByType(userId: number, type: string, value: any): Promise<boolean> {
   const t = TABLES[type]
   if (!t) return false

@@ -1,5 +1,5 @@
 /**
- * Files API endpoint tests
+ * Files API 端点测试
  * @see modules/base/server/api/files/*.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -30,7 +30,7 @@ const _mockSchema = {
 }
 vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
 
-// h3: download/serve explicitly imports sendStream/setResponseHeader/createError
+// h3: download/serve 显式 import sendStream/setResponseHeader/createError
 vi.mock('h3', () => ({
   sendStream: async (_e: any, s: any) => s,
   setResponseHeader: () => {},
@@ -42,7 +42,7 @@ vi.mock('h3', () => ({
   },
 }))
 
-// fs: download/serve uses createReadStream + access; keep promises.readFile for static analysis
+// fs: download/serve 用 createReadStream + access；保留 promises.readFile 给静态分析
 vi.mock('fs', async (importActual) => {
   const actual = await importActual<typeof import('fs')>()
   return {
@@ -52,7 +52,7 @@ vi.mock('fs', async (importActual) => {
   }
 })
 
-// upload utils: control source parsing, validation, disk write
+// upload utils: 控制来源解析、校验、落盘
 vi.mock('../../server/utils/upload/parse', () => ({
   UploadError: class UploadError extends Error {
     code: string = 'generic'
@@ -102,11 +102,11 @@ function resetChain() {
   _mockDb.set = vi.fn().mockReturnThis()
   _mockDb.delete = vi.fn().mockReturnThis()
   _mockDb.query.files.findFirst = vi.fn()
-  // Reset upload util mock
+  // 重置 upload util mock
   vi.mocked(resolveUploadSource).mockReset()
   vi.mocked(validateUpload).mockReset()
   vi.mocked(persistUploadedFile).mockReset()
-  // Reset fs.access default behavior (file exists)
+  // 重置 fs.access 默认行为（文件存在）
   vi.mocked(access).mockImplementation(((_p: any, cb: any) => cb(null)) as any)
 }
 
@@ -156,7 +156,7 @@ describe('API: files/delete.post (soft delete)', () => {
     const result = await handler(makeEvent({ id: 1 }))
     expect(result.success).toBe(true)
     expect(result.data.id).toBe(1)
-    // Soft delete: calls update.set({deletedAt: ...}), does not call fs.rm
+    // 软删除：调用 update.set({deletedAt: ...})，不调用 fs.rm
     expect(db.update).toHaveBeenCalled()
     expect(db.delete).not.toHaveBeenCalled()
   })
@@ -178,12 +178,12 @@ describe('API: files/delete.post (soft delete)', () => {
     vi.mocked(db.query.files.findFirst).mockResolvedValue({
       id: 1, userId: 1, group: null, path: '/a/b.png',
     } as any)
-    // Static check: source code should no longer import node:fs/promises (soft delete does not delete physical files)
+    // 静态校验：源码不应再 import node:fs/promises（软删除不删物理文件）
     const source = await import('node:fs').then(fs =>
       fs.promises.readFile('/Users/oldmoon/Documents/ubuntu/nuxt_lms_2026/modules/base/server/api/files/delete.post.ts', 'utf8')
     )
     expect(source).not.toMatch(/from\s+['"]node:fs\/promises['"]/)
-    expect(source).not.toMatch(/\brm\s*\(/) // should not have rm() call
+    expect(source).not.toMatch(/\brm\s*\(/) // 不应有 rm() 调用
     const handler = (await import('../../server/api/files/delete.post')).default
     const result = await handler(makeEvent({ id: 1 }))
     expect(result.success).toBe(true)
@@ -196,7 +196,7 @@ describe('API: files/upload.post — 软删除后重新上传', () => {
       '/Users/oldmoon/Documents/ubuntu/nuxt_lms_2026/modules/base/server/utils/upload/validate.ts',
       'utf8'
     )
-    // dedup check (main flow + catch branch) must filter deletedAt
+    // dedup 查重（主流程 + catch 分支）必须过滤 deletedAt
     const matches = text.match(/isNull\(schema\.files\.deletedAt\)/g) || []
     expect(matches.length).toBeGreaterThanOrEqual(2)
   })
@@ -206,13 +206,13 @@ describe('API: files/upload.post — 软删除后重新上传', () => {
       '/Users/oldmoon/Documents/ubuntu/nuxt_lms_2026/modules/base/server/utils/upload/validate.ts',
       'utf8'
     )
-    // buildDedupWhere must include isNull(deletedAt) in both group and non-group branches
+    // buildDedupWhere 必须在 group 与非 group 两个分支都包含 isNull(deletedAt)
     expect(text).toMatch(/and\(eq\(schema\.files\.hash, hash\), eq\(schema\.files\.group, group\), isNull\(schema\.files\.deletedAt\)\)/)
     expect(text).toMatch(/and\(eq\(schema\.files\.hash, hash\), isNull\(schema\.files\.group\), isNull\(schema\.files\.deletedAt\)\)/)
   })
 })
 
-// ====================== upload.post functional tests ======================
+// ====================== upload.post 功能测试 ======================
 
 describe('API: files/upload.post (functional)', () => {
   beforeEach(resetChain)
@@ -309,7 +309,7 @@ describe('API: files/upload.post (functional)', () => {
     })
     vi.mocked(validateUpload).mockImplementation(() => {})
     const { db } = await import('@nuxthub/db')
-    // First findFirst (main dedup) returns null, second (catch conflict) returns existing file
+    // 第一次 findFirst（主查重）返回 null，第二次（catch 冲突）返回已有文件
     vi.mocked(db.query.files.findFirst)
       .mockResolvedValueOnce(null as any)
       .mockResolvedValueOnce({ id: 77, path: '/dir/77.png' } as any)
@@ -431,7 +431,7 @@ describe('API: files/list.get', () => {
 
   it('返回分页文件列表（个人文件）', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
-    // 2 selects: 1=count, 2=rows
+    // 2 次 select：1=count, 2=rows
     let callIdx = 0
     _mockDb.select = vi.fn(() => {
       const idx = callIdx++

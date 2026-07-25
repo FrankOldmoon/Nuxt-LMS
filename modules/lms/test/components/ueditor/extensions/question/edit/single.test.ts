@@ -1,8 +1,8 @@
 /**
- * single edit component test (edit)
+ * single 编辑组件测试 (edit)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/edit/single.vue
  *
- * single.vue receives form prop (Object, required), directly modifies form.options/form.answer
+ * single.vue 接收 form prop（Object, required），直接修改 form.options/form.answer
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -30,7 +30,7 @@ describe('question/edit/single.vue', () => {
       props: { form },
       global: { stubs: _globalStubs, mocks: _mocks },
     })
-    // Render 4 options (each containing a richEditor)
+    // 渲染 4 个选项（每个包含一个 richEditor）
     expect(wrapper.findAll('.rich-editor')).toHaveLength(4)
   })
 
@@ -58,7 +58,7 @@ describe('question/edit/single.vue', () => {
     })
     // labels[0] = header label, labels[1] = option 0, labels[2] = option 1
     const labels = wrapper.findAll('label')
-    // Click the label of the 2nd option (selectAnswer(1))
+    // 点击第 2 个选项的 label（selectAnswer(1)）
     await labels[2].trigger('click')
     expect(form.answer).toEqual([1])
   })

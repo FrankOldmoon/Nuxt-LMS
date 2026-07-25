@@ -23,9 +23,9 @@ const config = computed(() => {
 
 const orientation = computed(() => config.value.orientation || 'horizontal')
 
-// UStepper items：title useinstepTitle，description storeRich TextContent
-// Pass #description slotRender ueditorRender，eachitemsstepDescriptionStartEndVisible
-// noassume icon → DefaultShow 1234 NumberIcon
+// UStepper items：title 用于步骤标题，description 存放富文本内容
+// 通过 #description 插槽渲染 ueditorRender，每个步骤的描述始终可见
+// 不设 icon → 默认显示 1234 数字图标
 const stepperItems = computed(() => {
     const steps = config.value.steps || []
     return steps.map((s) => ({

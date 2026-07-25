@@ -1,8 +1,8 @@
 /**
- * useConfirmBatch composable tests
+ * useConfirmBatch composable 测试
  * @see modules/admin/composables/useConfirmBatch.ts
  *
- * Batch/single confirm dialog (delete/restore/permanent delete)
+ * 批量/单条确认对话框（删除/恢复/彻底删除）
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { resetAllStubs, setMockI18n } from '../../../../test/setup/nuxt-stubs'

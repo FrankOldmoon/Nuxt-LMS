@@ -1,7 +1,7 @@
 <template>
     <h2 class="text-lg font-semibold">{{ form.name || t('quiz.namePlaceholder') }}</h2>
 
-    <!-- basicConfiguration -->
+    <!-- 基本配置 -->
     <div class="grid grid-cols-2 gap-3">
         <UFormField :label="t('quiz.namePlaceholder')" size="sm">
             <UInput v-model="form.name" :placeholder="t('quiz.namePlaceholder')" size="sm" class="w-full" />
@@ -23,13 +23,13 @@
         </UFormField>
     </div>
 
-    <!-- QuizContent -->
+    <!-- 测验内容 -->
     <div>
         <label class="text-xs text-gray-500 mb-1 block">{{ t('quiz.contentLabel') }}</label>
         <richEditor v-model="form.content" />
     </div>
 
-    <!-- Question select -->
+    <!-- 题目选择 -->
     <div>
         <div class="flex items-center justify-between mb-2">
             <label class="text-sm font-medium">{{ t('quiz.questionsLabel') }} ({{ form.questions.length }})</label>
@@ -44,10 +44,10 @@
                 <UButton icon="i-lucide-x" color="error" variant="ghost" size="2xs" @click="form.questions.splice(idx, 1)" />
             </div>
         </div>
-        <p v-else class="text-sm text-gray-400">{{ t('quiz.no questions') }}</p>
+        <p v-else class="text-sm text-gray-400">{{ t('quiz.noQuestions') }}</p>
     </div>
 
-    <!-- ========== JSON originalStartDataEditeditor（Highlevel） ========== -->
+    <!-- ========== JSON 原始数据编辑器（高级） ========== -->
     <div class="border-t border-gray-100 dark:border-gray-800 pt-3">
         <div class="flex items-center justify-between mb-2">
             <div class="flex items-center gap-2">
@@ -75,7 +75,7 @@
         </p>
     </div>
 
-    <!-- Action button -->
+    <!-- 操作按钮 -->
     <div class="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
         <span v-if="saveMsg" class="text-xs self-center" :class="saveOk ? 'text-green-500' : 'text-red-500'">{{ saveMsg }}</span>
         <UButton v-if="showCancel" variant="soft" @click="$emit('cancel')">{{ t('common.cancel') }}</UButton>

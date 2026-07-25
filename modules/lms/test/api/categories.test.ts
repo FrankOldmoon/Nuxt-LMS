@@ -1,5 +1,5 @@
 /**
- * LMS Categories API endpoint test
+ * LMS Categories API 端点测试
  * @see modules/lms/server/api/categories/*.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -56,23 +56,23 @@ describe('API: categories/add.post', () => {
 
   it('admin 创建分类成功', async () => {
     setMockAuthState({ id: 1, username: 'admin', roles: ['admin'], permissions: [] })
-    // addTable goes through db.insert().values().returning() chain call
+    // addTable 走 db.insert().values().returning() 链式调用
     _mockDb.returning = vi.fn().mockResolvedValue([{ id: 1, name: '前端' }])
     const handler = (await import('../../server/api/categories/add.post')).default
     const result = await handler(makeEvent({ body: { name: '前端', code: 'fe' } }))
-    // Verify response was generated
+    // 验证响应已生成
     expect(result).toBeDefined()
-    // addTable actually returns the db chain call result (this), cResp wraps it as success=true
-    // but our mock chain returns _mockDb object, wrapped as data by cResp
-    // As long as no error is thrown, the test passes
+    // addTable 实际返回的是 db 链式调用的结果（this），cResp 包装后是 success=true
+    // 但我们的 mock chain 返回 _mockDb 对象，被 cResp 包装为 data
+    // 只要不报错就算测试通过
   })
 
   it('缺少必填字段时返回失败', async () => {
     setMockAuthState({ id: 1, username: 'admin', roles: ['admin'], permissions: [] })
     const handler = (await import('../../server/api/categories/add.post')).default
-    // addTable does not validate fields, all pass through to insert; here mainly test that permissions pass
+    // addTable 不校验字段，全部通过到 insert；这里主要测试权限通过
     const result = await handler(makeEvent({ body: {} }))
-    // No error is enough
+    // 不报错即可
     expect(result).toBeDefined()
   })
 })
@@ -95,10 +95,10 @@ describe('API: categories/update.post', () => {
 
   it('admin 调用正常处理（mock updateTable）', async () => {
     setMockAuthState({ id: 1, username: 'admin', roles: ['admin'], permissions: [] })
-    // updateTable goes through db.update().set().where() chain call, chain mock will not throw
+    // updateTable 走 db.update().set().where() 链式调用，链式 mock 不会抛错
     const handler = (await import('../../server/api/categories/update.post')).default
     const result = await handler(makeEvent({ body: { id: 1, name: '新名称' } }))
-    // Don't verify specific success status, just verify no error thrown
+    // 不验证具体成功状态，验证不抛错
     expect(result).toBeDefined()
   })
 })
@@ -121,7 +121,7 @@ describe('API: categories/batch.post', () => {
 })
 
 // ─────────────────────────────────────────────────────────────────
-// home-changed WebSocket broadcast: notify all clients when navigation data changes
+// home-changed WebSocket 广播：导航数据变化时通知所有客户端
 // ─────────────────────────────────────────────────────────────────
 describe('API: navigation → home-changed WS 广播', () => {
   beforeEach(() => {

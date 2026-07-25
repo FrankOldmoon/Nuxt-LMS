@@ -1,5 +1,5 @@
 /**
- * ueditor/render/nodes/task-item.vue component test
+ * ueditor/render/nodes/task-item.vue 组件测试
  * @see modules/lms/components/ueditor/render/nodes/task-item.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

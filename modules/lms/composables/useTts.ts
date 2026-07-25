@@ -1,8 +1,8 @@
 /**
- * useTts — Text-to-speech composable
+ * useTts — 文本转语音组合式函数
  *
- * Wraps edge-tts service play/pause/stop logic and voice list filtering.
- * Voice list is statically preset, no async loading required.
+ * 封装 edge-tts 服务的播放/暂停/停止逻辑与语音列表筛选。
+ * 语音列表为静态预置，无需异步加载。
  */
 import { createTTSService, languageMap } from '../utils/ai'
 import type { TTSVoice } from '../utils/ai'
@@ -29,7 +29,7 @@ export function useTts() {
   })
 
   onMounted(() => {
-    // edge-tts voice list is statically preset, no async loading required
+    // edge-tts 语音列表为静态预置，无需异步加载
     voices.value = ttsService.getVoices()
   })
 
@@ -52,11 +52,11 @@ export function useTts() {
         pitch: pitch.value,
         volume: volume.value,
         voice,
-        // When a voice is explicitly selected, do not pass gender (let voice take priority); otherwise filter by gender
+        // 显式选了语音时不传 gender（让 voice 优先），否则按性别筛选
         gender: voice ? undefined : selectedGender.value
       })
     } catch (e: any) {
-      error.value = e.message || 'Speech synthesis failed'
+      error.value = e.message || '语音合成失败'
     } finally {
       isSpeaking.value = false
       isPaused.value = false

@@ -1,9 +1,9 @@
 /**
- * layout/main.vue component test
+ * layout/main.vue 组件测试
  * @see modules/lms/components/layout/main.vue
  *
- * Main content area: wraps BaseMain, injects mobile toolbar + slot content.
- * Uses useLayoutState() + useChapterBtns() + useRoute().
+ * 主内容区：包裹 BaseMain，注入移动端工具栏 + slot 内容。
+ * 使用 useLayoutState() + useChapterBtns() + useRoute()。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -15,7 +15,7 @@ beforeEach(() => {
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
   setMockRoute({ params: {}, query: {}, path: '/', fullPath: '/' })
 
-  // Override useLayoutState stub
+  // 覆盖 useLayoutState stub
   ;(globalThis as any).useLayoutState = () => ({
     showSidebar: ref(false),
     mobileTocOpen: ref(false),

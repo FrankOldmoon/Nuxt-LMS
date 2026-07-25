@@ -1,6 +1,6 @@
 <template>
   <div class="p-4">
-    <!-- Edit mode: directly render QuestionEdit inline panel -->
+    <!-- 编辑模式：直接渲染 QuestionEdit 内联面板 -->
     <ClientOnly v-if="row">
       <QuestionEdit
         :question-id="Number(row.cid) || 0"
@@ -11,7 +11,7 @@
       <template #fallback><div class="py-8 text-center text-muted text-sm">Loading...</div></template>
     </ClientOnly>
 
-    <!-- Add mode: select course first, then render QuestionEdit -->
+    <!-- 新增模式：先选课程，再渲染 QuestionEdit -->
     <template v-else>
       <div v-if="!selectedCourseId" class="space-y-3">
         <h3 class="text-base font-semibold">{{ t('admin.form.selectCourse') }}</h3>
@@ -56,7 +56,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-// Course selection (add mode)
+// 课程选择（新增模式）
 const selectedCourseId = ref<number | null>(null)
 const courseOptions = ref<{ id: number; label: string }[]>([])
 const courseLoading = ref(false)

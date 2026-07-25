@@ -1,9 +1,9 @@
 /**
- * sort edit component test (edit)
+ * sort 编辑组件测试 (edit)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/edit/sort.vue
  *
- * sort.vue uses vuedraggable, needs to stub draggable component
- * Note: syncToForm is only called on user interaction, answer is not synced during initialization
+ * sort.vue 使用 vuedraggable，需 stub draggable 组件
+ * 注意：syncToForm 只在用户交互时调用，初始化时不同步 answer
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -23,7 +23,7 @@ const _globalStubs = {
   },
   UIcon: { template: '<span class="icon" />', props: ['name'] },
   draggable: {
-    // Simple stub: renders slot content (item slot)
+    // 简单 stub：渲染 slot 内容（item slot）
     template: '<div class="draggable"><slot name="item" v-for="(element, index) in modelValue" :element="element" :index="index" /></div>',
     props: ['modelValue', 'itemKey', 'handle', 'animation'],
   },
@@ -41,7 +41,7 @@ describe('question/edit/sort.vue', () => {
       props: { form },
       global: { stubs: _globalStubs, mocks: _mocks },
     })
-    // Should render 3 drag items (each with 1 input)
+    // 应渲染 3 个拖拽项（每个有 1 个 input）
     const inputs = wrapper.findAll('input')
     expect(inputs).toHaveLength(3)
   })
@@ -55,7 +55,7 @@ describe('question/edit/sort.vue', () => {
       props: { form },
       global: { stubs: _globalStubs, mocks: _mocks },
     })
-    // Default initializes 3 empty items (dragItems has 3 items, but syncToForm is not called during initialization)
+    // 默认初始化 3 个空项（dragItems 有 3 项，但 syncToForm 不在初始化时调用）
     const inputs = wrapper.findAll('input')
     expect(inputs).toHaveLength(3)
   })
@@ -69,7 +69,7 @@ describe('question/edit/sort.vue', () => {
       props: { form },
       global: { stubs: _globalStubs, mocks: _mocks },
     })
-    // 2 drag items → 2 drag-handle icons + 2 delete buttons + 1 add button
+    // 2 个拖拽项 → 2 个 drag-handle icon + 2 个 delete button + 1 个 add button
     const icons = wrapper.findAll('.icon')
     const buttons = wrapper.findAll('button')
     expect(icons.length).toBeGreaterThanOrEqual(2)

@@ -1,8 +1,8 @@
 /**
- * Layout component tests
+ * Layout 组件测试
  * @see modules/base/components/layout/index.vue
  *
- * Overall layout: Header + Main + Footer
+ * 整体布局：Header + Main + Footer
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

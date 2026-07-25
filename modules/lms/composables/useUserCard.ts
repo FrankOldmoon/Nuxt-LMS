@@ -1,16 +1,16 @@
 /**
- * userCard real-time refresh trigger
+ * userCard 实时刷新触发器
  *
- * After any operation that changes the current user's points/experience (answering questions, submitting homework, commenting, etc.) completes,
- * call refresh() to increment the counter, userCard.vue watches this trigger to automatically re-fetch points.
+ * 任何会改变当前用户积分/经验的操作（答题、交作业、评论等）完成后，
+ * 调用 refresh() 自增计数，userCard.vue 监听此 trigger 自动重新拉取积分。
  *
- * Cross-component communication: userCard is in the layout sidebar, submit components are in the page main area,
- * reactive linkage is achieved via useState's global state, no need for ref pass-through or event bus.
+ * 跨组件通信：userCard 在 layout 侧栏，提交组件在页面主区域，
+ * 通过 useState 的全局状态实现响应式联动，无需 ref 透传或事件总线。
  */
 export function useUserCard() {
   const refreshTrigger = useState<number>('user-card-refresh-trigger', () => 0)
 
-  /** Notify userCard to re-fetch course/chapter points */
+  /** 通知 userCard 重新拉取课程/章节积分 */
   function refresh() {
     refreshTrigger.value++
   }

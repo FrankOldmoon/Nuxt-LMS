@@ -1,14 +1,14 @@
 /**
- * Condition check API
+ * 条件检查接口
  * POST /api/condition/check
  *
  * body: { conditions: [{ type, value }] }
- * Condition types:
- *   - role: check user role (admin/teacher/student; the teacher condition also passes for admin)
- *   - class: check whether the user belongs to the specified class
- *   - question / homework / comment / quiz / race: check whether the user has completed the specified cid array (all must be completed)
+ * 条件类型：
+ *   - role: 检查用户角色（admin/teacher/student；teacher 条件 admin 也通过）
+ *   - class: 检查用户是否属于指定班级
+ *   - question / homework / comment / quiz / race: 检查用户是否完成指定 cid 数组（需全部完成）
  *
- * Returns { met: boolean, details: [{ type, value, met }] }
+ * 返回 { met: boolean, details: [{ type, value, met }] }
  */
 import { checkCondition } from '../../utils/conditions'
 
@@ -17,10 +17,10 @@ export default eventHandler(async (event) => {
   const conditions = (await readBody(event))?.conditions
 
   if (!Array.isArray(conditions) || !conditions.length) {
-    return cResp({ met: true, details: [] }, 'No conditions, satisfied by default')
+    return cResp({ met: true, details: [] }, '无条件，默认满足')
   }
 
-  // Concurrently check each condition, collect met / details
+  // 并发检查每条 condition，收集 met / details
   const settled = await Promise.all(conditions.map(async (cond: any) => {
     const met = await checkCondition(user, cond)
     return { type: cond.type, value: cond.value, met }

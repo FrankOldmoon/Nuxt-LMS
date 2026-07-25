@@ -1,20 +1,20 @@
 /**
- * Public (no auth required): returns a safe subset of the LMS public config
+ * 公开（无鉴权）：返回 LMS 公开配置的安全子集
  *
- * Excludes sensitive groups:
- *   - ai.llmApiKey / ai.llmApiUrl (used by server-side chat proxy, not exposed to frontend)
- *   - _system.* (system flags, e.g. testAccountsSeeded)
+ * 排除敏感分组：
+ *   - ai.llmApiKey / ai.llmApiUrl（服务端 chat 代理用，不暴露前端）
+ *   - _system.*（系统标记位，如 testAccountsSeeded）
  *
- * Includes groups:
- *   - home / courseList / chapterPage (page visibility toggles)
- *   - course (course feature toggles, shared by chapter page/course page/course settings panel)
- *   - chapterBtns / courseBtns (button visibility, injected into layout state by the chapter page)
- *   - user (user-side feature toggles, including allowChangePassword/Email/Locale/ExportData/SelfAvatarUpload)
- *   - chapter.passScore (chapter passing score, may be shown publicly)
- *   - Public ai fields (mode/model/apiUrl/ollamaUrl/ollamaModel/title/preset/opening/ttsGender/thinking/enabled)
- *     -> kept consistent with /api/config/ai; specific stripping is done via selectKeys
+ * 包含分组：
+ *   - home / courseList / chapterPage（页面显隐开关）
+ *   - course（课程功能开关，章节页/课程页/课程设置面板共用）
+ *   - chapterBtns / courseBtns（按钮显隐，由章节页注入到 layout state）
+ *   - user（用户端功能开关，含 allowChangePassword/Email/Locale/ExportData/SelfAvatarUpload）
+ *   - chapter.passScore（章节及格分，可能用于公开显示）
+ *   - 公开 ai 字段（mode/model/apiUrl/ollamaUrl/ollamaModel/title/preset/opening/ttsGender/thinking/enabled）
+ *     → 与 /api/config/ai 保持一致；具体剥离通过 selectKeys 实现
  *
- * Called by useLmsPublicConfig(); WS broadcast 'lms-config-changed' triggers automatic refresh.
+ * 由 useLmsPublicConfig() 调用，WS 广播 'lms-config-changed' 触发自动 refresh。
  */
 
 const PUBLIC_KEYS = [
@@ -45,21 +45,21 @@ export default defineEventHandler(() => {
 
   for (const key of PUBLIC_KEYS) {
     if (key.includes('.')) {
-      // Nested fields (ai.* / chapter.passScore)
+      // 嵌套字段（ai.* / chapter.passScore）
       const [section, field] = key.split('.')
       if (cfg[section] && cfg[section][field] !== undefined) {
         if (!out[section]) out[section] = {}
         out[section][field] = cfg[section][field]
       }
     } else {
-      // Whole section
+      // 整段
       if (cfg[key] !== undefined) {
         out[key] = cfg[key]
       }
     }
   }
 
-  // ai object must exist (frontend useAiConfig expects to read .mode/.model etc. from ai)
+  // ai 对象必存在（前端 useAiConfig 期望有 ai 对象可读 .mode/.model 等）
   if (!out.ai) out.ai = {}
 
   return cResp(out)

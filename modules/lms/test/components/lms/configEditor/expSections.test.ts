@@ -1,8 +1,8 @@
 /**
- * lms/configEditor/expSections.vue component test
+ * lms/configEditor/expSections.vue 组件测试
  * @see modules/lms/components/lms/configEditor/expSections.vue
  *
- * EXP config area: 7 sections (question/homework/comment/chapter/race/quiz/general)
+ * 经验值配置区域：7 个 section（question/homework/comment/chapter/race/quiz/general）
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -99,9 +99,9 @@ describe('lms/configEditor/expSections.vue', () => {
     const { default: ExpSections } = await import('../../../../components/lms/configEditor/expSections.vue')
     const wrapper = mount(ExpSections, { global: _globalConfig })
     const inputs = wrapper.findAll('.uinput')
-    // 4+3+4+3+4+3+2 = 23 inputs (chapter section 3 fields: headingExp/headingCoin/headingScore)
+    // 4+3+4+3+4+3+2 = 23 个输入框（chapter 段 3 字段：headingExp/headingCoin/headingScore）
     expect(inputs.length).toBe(23)
-    // Are all number type
+    // 都是 number 类型
     expect(inputs[0]!.attributes('type')).toBe('number')
   })
 })

@@ -1,15 +1,15 @@
 /**
- * navEditor/list.vue component test
+ * navEditor/list.vue 组件测试
  * @see modules/lms/components/navEditor/list.vue
  *
- * Nav list: draggable + add root-level button
+ * 导航列表：draggable + 添加根级按钮
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { ref } from 'vue'
 import { resetAllStubs, setMockI18n } from '../../../../../test/setup/nuxt-stubs'
 
-// stub vuedraggable (external dependency, simplified in test environment)
+// stub vuedraggable（外部依赖，测试环境简化）
 vi.mock('vuedraggable', () => ({
   default: {
     name: 'Draggable',

@@ -1,5 +1,5 @@
 /**
- * Header: user menu + modal state + unread count listeners
+ * Header：用户菜单 + 弹窗状态 + 未读数监听
  */
 export function useHeaderMenu() {
   const { user, isLoggedIn, hasRole, logout } = useAuth()
@@ -16,12 +16,12 @@ export function useHeaderMenu() {
   const showImportUsersModal = ref(false)
   const showMyFilesModal = ref(false)
 
-  // Fetch unread counts after login
+  // 登录后拉取未读数
   watch(isLoggedIn, (val) => {
     if (val) refreshUnread()
   }, { immediate: true })
 
-  // Refresh unread counts after modal closes
+  // 弹窗关闭后刷新未读数
   watch(showNotificationModal, (val) => {
     if (!val && isLoggedIn.value) refreshUnread()
   })
@@ -45,7 +45,7 @@ export function useHeaderMenu() {
       ],
     ]
 
-    // "My Files" controlled by site:showMyFiles
+    // "My Files" 受 site:showMyFiles 控制
     if (showMyFiles.value) {
       items[0].push({
         label: t('myFiles.title'),

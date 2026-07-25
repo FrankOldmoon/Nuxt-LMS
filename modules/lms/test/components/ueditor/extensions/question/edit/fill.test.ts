@@ -1,8 +1,8 @@
 /**
- * fill edit component test (edit)
+ * fill 编辑组件测试 (edit)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/edit/fill.vue
  *
- * fill.vue uses useFillEdit composable, extracts {{}} answers from content
+ * fill.vue 使用 useFillEdit composable，从 content 中提取 {{}} 答案
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -34,7 +34,7 @@ describe('question/edit/fill.vue', () => {
       props: { form },
       global: { stubs: _globalStubs, mocks: _mocks },
     })
-    // useFillEdit should extract 2 answers from content and sync to form.answer
+    // useFillEdit 应从 content 提取 2 个答案并同步到 form.answer
     expect(form.answer).toEqual(['sky', 'blue'])
     expect(wrapper.text()).toContain('sky')
     expect(wrapper.text()).toContain('blue')

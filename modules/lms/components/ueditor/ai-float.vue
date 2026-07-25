@@ -1,7 +1,7 @@
 <template>
-    <!-- only teacher withUpRoleandEditeditor nonRead-onlywhenShow -->
+    <!-- 仅 teacher 以上角色且编辑器非只读时显示 -->
     <div v-if="visible" class="fixed bottom-14 right-6 z-50 print:hidden">
-        <!-- Collapsestate：hoverButton -->
+        <!-- 收起态：悬浮按钮 -->
         <UButton
             v-if="!open"
             icon="i-lucide-sparkles"
@@ -12,7 +12,7 @@
             :aria-label="$t('ueditor.aiFloat.title')"
             @click="openPanel"
         />
-        <!-- Expandstate：TipwordInputPanel -->
+        <!-- 展开态：提示词输入面板 -->
         <div v-else class="bg-white dark:bg-gray-900 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-3 w-80 max-w-[calc(100vw-3rem)] space-y-2">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-1.5">

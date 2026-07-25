@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { widgetFor, cellTypeFor, isImageColumn, isIconColumn, isFileColumn } from '../../utils/widgetMap'
 import type { ColumnMeta } from '../../utils/types'
 
-/** Construct ColumnMeta test stub */
+/** 构造 ColumnMeta 测试桩 */
 function makeCol(over: Partial<ColumnMeta>): ColumnMeta {
   return {
     name: over.name || over.jsName || 'col',
@@ -70,7 +70,7 @@ describe('admin/widgetMap', () => {
       expect(widgetFor(makeCol({ jsName: 'icon' }))).toBe('icon')
       expect(widgetFor(makeCol({ jsName: 'menuIcon' }))).toBe('icon')
       expect(widgetFor(makeCol({ jsName: 'app_icon' }))).toBe('icon')
-      // Contains icon but not at the end → treated as other type (with _icon suffix)
+      // 包含 icon 但不是结尾 → 视为其它类型（用 _icon 后缀）
       expect(widgetFor(makeCol({ jsName: 'iconography' }))).not.toBe('icon')
     })
 
@@ -82,7 +82,7 @@ describe('admin/widgetMap', () => {
 
     it('img/avatar/logo/cover 等 → imageCropper', () => {
       expect(widgetFor(makeCol({ jsName: 'avatarImg' }))).toBe('imageCropper')
-      // coverUrl ends with Url → pure URL string
+      // coverUrl 结尾是 Url → 纯 URL 字符串
       expect(widgetFor(makeCol({ jsName: 'coverUrl' }))).toBe('image')
       expect(widgetFor(makeCol({ jsName: 'logoImg' }))).toBe('imageCropper')
       expect(widgetFor(makeCol({ jsName: 'banner' }))).toBe('imageCropper')

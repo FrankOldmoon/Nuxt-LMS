@@ -1,5 +1,5 @@
 /**
- * auth/userProfilePasswordModal.vue component tests
+ * auth/userProfilePasswordModal.vue 组件测试
  * @see modules/base/components/auth/userProfilePasswordModal.vue
  */
 import {

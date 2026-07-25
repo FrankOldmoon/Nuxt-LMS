@@ -1,8 +1,8 @@
 /**
- * FilesFooter component tests
+ * FilesFooter 组件测试
  * @see modules/base/components/files/footer.vue
  *
- * File list footer: total + pagination + confirm selection button
+ * 文件列表底部：总数 + 分页 + 确认选择按钮
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

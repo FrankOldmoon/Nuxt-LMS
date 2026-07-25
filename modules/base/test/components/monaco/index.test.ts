@@ -1,9 +1,9 @@
 /**
- * Monaco component tests
+ * Monaco 组件测试
  * @see modules/base/components/monaco/index.vue
  *
- * Monaco editor wrapper: CDN loading + initialization + formatting
- * Depends on useMonacoEditor() composable (auto-import), stub injected via globalThis in tests
+ * Monaco 编辑器封装：CDN 加载 + 初始化 + 格式化
+ * 依赖 useMonacoEditor() composable（auto-import），测试中通过 globalThis 注入桩
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -17,7 +17,7 @@ beforeEach(() => {
     t: (k: string) => k,
     d: (v: any) => String(v),
   })
-  // Stub useMonacoEditor composable (auto-import) to avoid loading Monaco CDN
+  // 桩 useMonacoEditor composable（auto-import），避免加载 Monaco CDN
   ;(globalThis as any).useMonacoEditor = (
     _modelValue: () => string,
     _language: () => string,
@@ -40,7 +40,7 @@ afterEach(() => {
   delete (globalThis as any).useMonacoEditor
 })
 
-// Stub ClientOnly (directly render slot, bypassing SSR restrictions)
+// 桩 ClientOnly（直接渲染 slot，绕过 SSR 限制）
 const _globalStubs = {
   ClientOnly: { template: '<div class="client-only"><slot /></div>' },
 }

@@ -1,14 +1,14 @@
 <template>
   <div class="max-w-none">
-    <!-- Page title (hero): hidden when home.showHero is off -->
+    <!-- 页面标题（hero）：home.showHero 关闭时隐藏 -->
     <HomeHero v-if="homeCfg.showHero" />
 
     <!--
-      Course list
-      - Hidden when home.showRecentCourses=false
-      - home.showStats / home.showLeaderboard: caller inserts corresponding sections into this template as needed
+      课程列表
+      - home.showRecentCourses=false 隐藏
+      - home.showStats / home.showLeaderboard 由调用方按需在此模板中插入对应区块
       - courseList.defaultView / showSearch / showFilter / showSort
-        Reserved for course list / search pages: current home page only shows grid view
+        预留给课程列表页 / 搜索页：当前首页只有 grid 展示
     -->
     <div v-if="homeCfg.showRecentCourses" class="flex flex-col gap-16">
       <HomeCourseSection
@@ -29,9 +29,9 @@ useHead(() => ({
   title: siteTitle.value || 'AI LMS',
 }))
 
-// Home page data (categories + courses) shared through useHome singleton
+// 首页数据（分类 + 课程）通过 useHome 单例共享
 const { categories, getCoursesByCategory } = useHomeCourses()
 
-// lms public config: home.* / courseList.* visibility and view
+// lms 公开配置：home.* / courseList.* 显隐与视图
 const { home: homeCfg, courseList: courseListCfg } = useLmsPublicConfig()
 </script>

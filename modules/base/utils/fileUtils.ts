@@ -1,4 +1,4 @@
-/** File size formatting */
+/** 文件大小格式化 */
 export function formatBytes(n: number): string {
   if (!n || n < 0) return '0 B'
   if (n < 1024) return `${n} B`
@@ -7,13 +7,13 @@ export function formatBytes(n: number): string {
   return `${(n / 1024 / 1024 / 1024).toFixed(2)} GB`
 }
 
-/** Localize file timestamp (includes time part, unlike formatDate in format.ts which is date-only) */
+/** 文件时间戳本地化（含时间部分，区别于 format.ts 的 formatDate 仅日期） */
 export function formatFileDate(d: any): string {
   if (!d) return ''
   return new Date(d).toLocaleString()
 }
 
-/** Infer lucide icon based on file name/type */
+/** 根据文件名/类型推断 lucide 图标 */
 export function fileIcon(f: any): string {
   const name = (f.name || '').toLowerCase()
   const type = f.type || ''
@@ -29,19 +29,19 @@ export function fileIcon(f: any): string {
   return 'i-lucide-file'
 }
 
-/** Determine if the file is an image */
+/** 判断文件是否为图片 */
 export function isImageFile(f: any): boolean {
   const name = (f.name || '').toLowerCase()
   const type = f.type || ''
   return type.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|svg|bmp)$/.test(name)
 }
 
-/** Get file access URL */
+/** 获取文件访问 URL */
 export function fileUrl(f: any): string {
   return `/api/files/serve?pathname=${encodeURIComponent(f.path.replace(/^\/+/, ''))}`
 }
 
-/** Build external file data (selector mode) */
+/** 构建可外发的文件数据（选择器模式） */
 export function buildFileData(f: any) {
   return {
     id: f.id,

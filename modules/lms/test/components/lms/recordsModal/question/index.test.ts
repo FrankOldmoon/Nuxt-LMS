@@ -1,14 +1,14 @@
 /**
- * lms/recordsModal/question/index.vue component test
+ * lms/recordsModal/question/index.vue 组件测试
  * @see modules/lms/components/lms/recordsModal/question/index.vue
  *
- * Question record modal: UModal + ClassUsersTable + option distribution bar chart
+ * 题目记录弹窗：UModal + ClassUsersTable + 选项分布柱状图
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { resetAllStubs, setMockI18n } from '../../../../../../../test/setup/nuxt-stubs'
 
-// mock useQuestionRecords (local import)
+// mock useQuestionRecords（本地导入）
 vi.mock('../../../../../components/lms/recordsModal/question/useQuestionRecords', () => ({
   useQuestionRecords: (props: any, emit: any) => {
     const { ref, computed }: any = globalThis as any

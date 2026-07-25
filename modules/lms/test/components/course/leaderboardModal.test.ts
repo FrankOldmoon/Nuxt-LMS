@@ -1,8 +1,8 @@
 /**
- * course/leaderboardModal.vue component test
+ * course/leaderboardModal.vue 组件测试
  * @see modules/lms/components/course/leaderboardModal.vue
  *
- * Leaderboard modal: my ranking + table
+ * 排行榜弹窗：我的排名 + 表格
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

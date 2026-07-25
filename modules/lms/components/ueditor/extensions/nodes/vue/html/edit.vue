@@ -14,7 +14,7 @@ const { t } = useI18n()
 
 const html = ref(props.config || '')
 
-// real-time preview：Inputwhenthat isNotificationParent Componentpersist
+// 实时预览：输入时即通知父组件持久化
 watch(html, () => {
     emit('update:config', html.value)
 })

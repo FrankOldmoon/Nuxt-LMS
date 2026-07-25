@@ -1,13 +1,13 @@
 /**
- * useLlm — LLM AI assistant composable
+ * useLlm — LLM AI 助手组合式函数
  *
- * Centrally manages all state and logic of the AiLlm component: config read/write, mode switching, local model loading,
- * Ollama direct streaming chat, chatbox parameter derivation, etc. Shares state with settings panel sub-components via provide/inject.
+ * 集中管理 AiLlm 组件的全部状态与逻辑：配置读写、模式切换、本地模型加载、
+ * Ollama 直连流式对话、聊天框参数派生等。通过 provide/inject 与设置面板子组件共享状态。
  *
- * Design highlights:
- * - chatboxRef is held by this composable; refreshMessages/getMessages are called by the parent component via defineExpose
- * - state is a reactive mirror; the engine itself (module-level singleton) does not enter the reactive system
- * - When showSettings=true, uses internal editable cfg* state; otherwise directly reads prop > lms_config > hardcoded
+ * 设计要点：
+ * - chatboxRef 由本 composable 持有，refreshMessages/getMessages 供父组件通过 defineExpose 调用
+ * - state 为响应式镜像，引擎本身（模块级单例）不进入响应式系统
+ * - showSettings=true 时使用内部可编辑 cfg* 状态；否则直接读 prop > lms_config > 硬编码
  */
 import { provide, inject, type InjectionKey } from 'vue'
 import {
@@ -17,20 +17,20 @@ import {
 import type { LLMMessage } from '../utils/ai'
 
 export interface LlmProps {
-  /** Show parameter settings panel (set to false when reusing in render.vue, parameters are provided by edit.vue) */
+  /** 显示参数设置面板（render.vue 复用时设为 false，由 edit.vue 提供参数） */
   showSettings?: boolean
-  /** Mode: local browser local WebLLM / api server-side API / ollama local Ollama (falls back to lms_config.ai.mode if not provided) */
+  /** 模式：local 浏览器本地 WebLLM / api 服务端 API / ollama 本地 Ollama（未传则回退 lms_config.ai.mode） */
   mode?: 'local' | 'api' | 'ollama'
   title?: string
   opening?: string
   preset?: string
-  /** Model: local model ID for local mode, server-side model name for api mode */
+  /** 模型：local 时为本地模型 ID，api 时为服务端模型名 */
   model?: string
   thinking?: boolean
   apiUrl?: string
-  /** TTS voice gender (falls back to lms_config.ai.ttsGender if not provided, defaults to female) */
+  /** TTS 语音性别（未传则回退 lms_config.ai.ttsGender，默认 female） */
   ttsGender?: 'female' | 'male'
-  /** Course-level merged AI configuration (passed in by the chapter page, overrides global lms_config) */
+  /** 课程级合并后的 AI 配置（由章节页传入，覆盖全局 lms_config） */
   aiConfig?: Record<string, any>
 }
 
@@ -57,7 +57,7 @@ export function useLlm(props: LlmProps, emit: LlmEmit) {
     return chatboxRef.value?.getMessages()
   }
 
-  // ===================== Editable configuration (only used when showSettings, initialized from prop > lms_config > hardcoded) =====================
+  // ===================== 可编辑配置（仅 showSettings 时使用，从 prop > lms_config > 硬编码 初始化） =====================
   const cfgMode = ref<'local' | 'api' | 'ollama'>(props.mode ?? aiCfg.value.mode ?? DEFAULT_LLM_MODE)
   const cfgTitle = ref(props.title ?? aiCfg.value.title ?? '')
   const cfgPreset = ref(props.preset ?? aiCfg.value.preset ?? '')
@@ -86,7 +86,7 @@ export function useLlm(props: LlmProps, emit: LlmEmit) {
     { label: t('ai.ttsMale'), value: 'male' },
   ])
 
-  // ===================== Effective configuration (showSettings uses internal editable state, otherwise prop > lms_config > hardcoded) =====================
+  // ===================== 有效配置（showSettings 用内部可编辑状态，否则 prop > lms_config > 硬编码） =====================
   const effMode = computed(() => props.showSettings ? cfgMode.value : (props.mode ?? aiCfg.value.mode ?? DEFAULT_LLM_MODE))
   const effTitle = computed(() => props.showSettings ? cfgTitle.value : (props.title ?? aiCfg.value.title ?? ''))
   const effPreset = computed(() => props.showSettings ? cfgPreset.value : (props.preset ?? aiCfg.value.preset ?? ''))
@@ -103,7 +103,7 @@ export function useLlm(props: LlmProps, emit: LlmEmit) {
     return LOCAL_LLM_MODELS.some(x => x.value === m) ? (m as string) : DEFAULT_LLM_MODEL
   })
 
-  // ===================== LLM engine state subscription (the engine itself does not enter reactivity) =====================
+  // ===================== LLM 引擎状态订阅（引擎本身不进入响应式） =====================
   const state = reactive({
     ready: false,
     loading: false,
@@ -122,22 +122,22 @@ export function useLlm(props: LlmProps, emit: LlmEmit) {
     state.error = s.error
   })
 
-  // ===================== Model loading/unloading =====================
+  // ===================== 模型加载/卸载 =====================
   async function loadSelected() {
     try {
       await loadLLM(effLocalModel.value)
       if (props.showSettings) toast.add({ title: t('ai.loadSuccess'), color: 'success' })
     } catch {
-      // Error has already been written to state.error
+      // 错误已写入 state.error
     }
   }
 
-  // Default auto-load (local mode)
+  // 默认自动加载（local 模式）
   onMounted(() => {
     if (effMode.value === 'local') loadSelected()
   })
 
-  // Mode switching: local→api/ollama unload, api/ollama→local load
+  // 模式切换：local→api/ollama 卸载，api/ollama→local 加载
   watch(effMode, async (mode) => {
     if (mode === 'local' && !state.ready && !state.loading) {
       await loadSelected()
@@ -146,7 +146,7 @@ export function useLlm(props: LlmProps, emit: LlmEmit) {
     }
   })
 
-  // Reload when switching local models
+  // 本地模型切换时重新加载
   watch(effLocalModel, async (newModel, oldModel) => {
     if (newModel === oldModel) return
     if (state.ready || state.loading) {
@@ -158,8 +158,8 @@ export function useLlm(props: LlmProps, emit: LlmEmit) {
   })
 
   /**
-   * Custom send: bridge chatbox customSend to chatLLM streaming interface
-   * chatbox has already concatenated preset into a system message, just pass it through
+   * 自定义发送：桥接 chatbox customSend 到 chatLLM 流式接口
+   * chatbox 已把 preset 拼成 system 消息，直接透传即可
    */
   async function handleCustomSend(
     messages: LLMMessage[],
@@ -169,8 +169,8 @@ export function useLlm(props: LlmProps, emit: LlmEmit) {
   }
 
   /**
-   * Ollama direct connection: the browser directly calls the local Ollama's OpenAI-compatible interface
-   * Requires Ollama to set OLLAMA_ORIGINS=* to allow cross-origin
+   * Ollama 直连：浏览器直接调用本地 Ollama 的 OpenAI 兼容接口
+   * 需要 Ollama 设置 OLLAMA_ORIGINS=* 允许跨域
    */
   async function handleOllamaSend(
     messages: LLMMessage[],
@@ -187,7 +187,7 @@ export function useLlm(props: LlmProps, emit: LlmEmit) {
 
     if (!response.ok) {
       const errText = await response.text().catch(() => '')
-      throw new Error(`Ollama request failed: ${response.status} ${errText}`)
+      throw new Error(`Ollama 请求失败: ${response.status} ${errText}`)
     }
 
     const reader = response.body!.getReader()
@@ -209,13 +209,13 @@ export function useLlm(props: LlmProps, emit: LlmEmit) {
           const delta = json.choices?.[0]?.delta
           if (delta?.content) onChunk(delta.content)
         } catch {
-          // Skip lines that cannot be parsed
+          // 跳过无法解析的行
         }
       }
     }
   }
 
-  // ===================== Final parameters passed to chatbox =====================
+  // ===================== 传给 chatbox 的最终参数 =====================
   const chatboxTitle = computed(() => effTitle.value || (effMode.value === 'local' ? t('ai.webllmTitle') : t('ueditor.aichat')))
   const chatboxPreset = computed(() => effPreset.value || (effMode.value === 'local' ? t('ai.webllmPreset') : 'You are a helpful assistant.'))
   const chatboxOpening = computed(() => effOpening.value || (effMode.value === 'local' ? t('ai.webllmOpening') : ''))
@@ -229,12 +229,12 @@ export function useLlm(props: LlmProps, emit: LlmEmit) {
   const chatboxModel = computed(() => (effMode.value === 'api' ? effApiModel.value : undefined))
   const chatboxThinking = computed(() => (effMode.value === 'api' ? effThinking.value : undefined))
 
-  // ===================== chatbox event forwarding (named functions, avoid inline expressions) =====================
+  // ===================== chatbox 事件转发（命名函数，避免内联表达式） =====================
   function onChunk(c: string) { emit('chunk', c) }
   function onUserMessage(txt: string) { emit('user-message', txt) }
   function onMessage(msg: any) { emit('message', msg) }
 
-  // On unmount, only cancel subscription (the engine is a module-level singleton, shared across instances, not released here)
+  // 卸载时仅取消订阅（引擎为模块级单例，多实例共享，不在此释放）
   onBeforeUnmount(() => {
     unsubscribe()
   })
@@ -242,20 +242,20 @@ export function useLlm(props: LlmProps, emit: LlmEmit) {
   const ctx = {
     showSettings,
     t,
-    // Editable configuration (used by settings panel)
+    // 可编辑配置（设置面板用）
     cfgMode, cfgTitle, cfgPreset, cfgOpening, cfgThinking,
     cfgApiModel, cfgOllamaUrl, cfgOllamaModel, cfgTtsGender, selectedLocalModel,
     modeOptions, genderOptions,
     state,
     loadSelected, unloadLLM, LOCAL_LLM_MODELS,
-    // Effective configuration (used by main template)
+    // 有效配置（主模板用）
     effMode, effTtsGender,
-    // chatbox parameters (used by main template)
+    // chatbox 参数（主模板用）
     chatboxRef, chatboxTitle, chatboxOpening, chatboxPreset,
     chatboxCustomSend, chatboxModel, chatboxThinking, chatboxApiUrl, chatboxDisabled,
-    // Event forwarding (used by main template)
+    // 事件转发（主模板用）
     onChunk, onUserMessage, onMessage,
-    // Exposed to parent component
+    // 暴露给父组件
     refreshMessages, getMessages,
   }
 
@@ -266,6 +266,6 @@ export function useLlm(props: LlmProps, emit: LlmEmit) {
 
 export function useLlmContext(): LlmCtx {
   const ctx = inject(LlmKey)
-  if (!ctx) throw new Error('useLlmContext must be used within a component that has called useLlm')
+  if (!ctx) throw new Error('useLlmContext 必须在调用过 useLlm 的组件内使用')
   return ctx
 }

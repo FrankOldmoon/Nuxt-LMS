@@ -1,16 +1,16 @@
 /**
- * Color and difficulty level mapping utility functions
- * Reused across multiple pages and components (homepage course cards, course detail page, course editor, etc.)
+ * 颜色与难度级别映射工具函数
+ * 在多个页面和组件中复用（首页课程卡片、课程详情页、课程编辑器等）
  */
 
-/** Difficulty level → UBadge color mapping */
+/** 难度级别 → UBadge color 映射 */
 const LEVEL_COLOR_MAP: Record<string, 'success' | 'warning' | 'error'> = {
   beginner: 'success',
   intermediate: 'warning',
   advanced: 'error',
 }
 
-/** Color value → Tailwind text class mapping */
+/** 颜色值 → Tailwind text class 映射 */
 const COLOR_TEXT_MAP: Record<string, string> = {
   primary: 'text-primary',
   success: 'text-success',
@@ -20,7 +20,7 @@ const COLOR_TEXT_MAP: Record<string, string> = {
   neutral: 'text-highlighted',
 }
 
-/** Color value → Tailwind bg class mapping */
+/** 颜色值 → Tailwind bg class 映射 */
 const COLOR_BG_MAP: Record<string, string> = {
   primary: 'bg-primary/10',
   success: 'bg-success/10',
@@ -30,7 +30,7 @@ const COLOR_BG_MAP: Record<string, string> = {
   neutral: 'bg-elevated',
 }
 
-/** Color value → Hero section dark background mapping */
+/** 颜色值 → Hero 区域深色背景映射 */
 const COLOR_HERO_BG_MAP: Record<string, string> = {
   primary: 'bg-primary',
   success: 'bg-success',
@@ -41,13 +41,13 @@ const COLOR_HERO_BG_MAP: Record<string, string> = {
 }
 
 /**
- * Get the UBadge color corresponding to the difficulty level
- * Compatible with i18n-translated level text (e.g. "Beginner")
+ * 获取难度级别对应的 UBadge color
+ * 兼容 i18n 翻译后的 level 文本（如"入门"/"Beginner"）
  */
 export function levelColor(level: string): 'success' | 'warning' | 'error' | 'neutral' {
-  // Try direct match first
+  // 先尝试直接匹配
   if (level in LEVEL_COLOR_MAP) return LEVEL_COLOR_MAP[level]
-  // Then try matching i18n-translated text
+  // 再尝试匹配 i18n 翻译后的文本
   const { t } = useI18n()
   const map: Record<string, 'success' | 'warning' | 'error'> = {
     [t('home.levels.beginner')]: 'success',
@@ -57,22 +57,22 @@ export function levelColor(level: string): 'success' | 'warning' | 'error' | 'ne
   return map[level] || 'neutral'
 }
 
-/** Get the Tailwind text class corresponding to the color value */
+/** 获取颜色值对应的 Tailwind text class */
 export function colorTextClass(color: string): string {
   return COLOR_TEXT_MAP[color] || 'text-primary'
 }
 
-/** Get the Tailwind bg class corresponding to the color value */
+/** 获取颜色值对应的 Tailwind bg class */
 export function colorBgClass(color: string): string {
   return COLOR_BG_MAP[color] || 'bg-primary/10'
 }
 
-/** Get the Hero section dark background class corresponding to the color value */
+/** 获取颜色值对应的 Hero 区域深色背景 class */
 export function colorHeroBgClass(color: string): string {
   return COLOR_HERO_BG_MAP[color] || 'bg-primary'
 }
 
-/** Color options (for USelect / UInputMenu) */
+/** 颜色选项（用于 USelect / UInputMenu） */
 export function colorOptions() {
   const { t } = useI18n()
   return [
@@ -85,7 +85,7 @@ export function colorOptions() {
   ]
 }
 
-/** Difficulty options (for USelect / UInputMenu) */
+/** 难度选项（用于 USelect / UInputMenu） */
 export function levelOptions() {
   const { t } = useI18n()
   return [

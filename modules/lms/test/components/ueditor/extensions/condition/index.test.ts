@@ -1,5 +1,5 @@
 /**
- * condition index component test (TipTap node-view)
+ * condition index 组件测试 (TipTap node-view)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/condition/index.vue
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'

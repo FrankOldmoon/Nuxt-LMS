@@ -41,7 +41,7 @@ const props = defineProps<{
   tableName: string
   columns: ColumnMeta[]
   row: Record<string, any> | null
-  /** FK label mapping { [columnJsName]: { [id]: label } } */
+  /** FK 标签映射 { [columnJsName]: { [id]: label } } */
   fkLabels?: Record<string, Record<number, string>>
 }>()
 

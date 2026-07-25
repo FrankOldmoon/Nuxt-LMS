@@ -1,5 +1,5 @@
 /**
- * fkLabel utility tests
+ * fkLabel 工具测试
  * @see modules/admin/utils/fkLabel.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'

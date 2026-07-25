@@ -8,7 +8,7 @@ export default eventHandler(async (event) => {
   const { course_id } = body
 
   if (!course_id) {
-    return cResp(null, 'Missing course_id parameter', false)
+    return cResp(null, '缺少 course_id 参数', false)
   }
 
   try {
@@ -30,7 +30,7 @@ export default eventHandler(async (event) => {
     const result = await db.insert(schema.quizzes).values(insertData).returning()
     return cResp(result[0])
   } catch (error: any) {
-    console.error('Failed to add quiz:', error)
-    return cResp(null, error.message || 'Add failed', false)
+    console.error('新增测验失败:', error)
+    return cResp(null, error.message || '新增失败', false)
   }
 })

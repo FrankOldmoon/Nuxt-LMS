@@ -1,8 +1,8 @@
 /**
- * useCForm composable tests
+ * useCForm composable 测试
  * @see modules/admin/composables/useCForm.ts
  *
- * CForm formState and submission logic
+ * CForm 表单状态与提交逻辑
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { resetAllStubs, setMockFetchHandler, getToastCalls, setMockI18n } from '../../../../test/setup/nuxt-stubs'
@@ -88,7 +88,7 @@ describe('composables/useCForm', () => {
     form.name = 'Alice'
     jsonStrings.meta = '{invalid json}'
     await onSubmit()
-    // Invalid JSON → do not emit
+    // 无效 JSON → 不 emit
     expect(emit).not.toHaveBeenCalled()
   })
 
@@ -131,9 +131,9 @@ describe('composables/useCForm', () => {
     const row = computed(() => ({ name: 'Bob' }))
     const open = ref(false)
     const { form, initForm } = useCForm(cols, row, vi.fn(), open)
-    // auto initForm when open changes to true
+    // open 变 true 时自动 initForm
     open.value = true
-    await initForm() // ensure watch has executed
+    await initForm() // 确保 watch 已执行
     expect(form.name).toBe('Bob')
   })
 })

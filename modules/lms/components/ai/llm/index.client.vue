@@ -1,9 +1,9 @@
 <template>
     <div class="space-y-4">
-        <!-- Parameter Settings Panel (can hide: render.vue duplicates it, used by edit.vue to provide parameters) -->
+        <!-- 参数设置面板（可隐藏：render.vue 复用时由 edit.vue 提供参数） -->
         <AiLlmSettingsPanel v-if="showSettings" />
 
-        <!-- Local model loading progress (always visible in local mode, includes showSettings=false scenario) -->
+        <!-- 本地模型加载进度（local 模式始终可见，含 showSettings=false 场景） -->
         <div v-if="effMode === 'local' && state.loading && state.progress > 0"
             class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
             <div class="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-400 mb-2">
@@ -18,14 +18,14 @@
             </div>
         </div>
 
-        <!-- Preparing (CDN / engine init, still no progress) -->
+        <!-- 准备中（CDN / 引擎初始化，尚无进度） -->
         <div v-if="effMode === 'local' && state.loading && state.progress === 0"
             class="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm text-blue-700 dark:text-blue-400">
             <UIcon name="i-lucide-loader-2" class="size-4 animate-spin" />
             <span>{{ t('ai.loading') }}</span>
         </div>
 
-        <!-- Error Hint -->
+        <!-- 错误提示 -->
         <div v-if="effMode === 'local' && state.error"
             class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
             <div class="flex items-center gap-2 text-sm text-red-700 dark:text-red-400">
@@ -34,7 +34,7 @@
             </div>
         </div>
 
-        <!-- Chat interface (core) -->
+        <!-- 聊天界面（核心） -->
         <aiChatbox
             ref="chatboxRef"
             :title="chatboxTitle"
@@ -48,7 +48,7 @@
             :disabled="chatboxDisabled"
             height-class="h-[200px] sm:h-[450px]"
             @chunk="onChunk"
-            @user-message="on UserMessage"
+            @user-message="onUserMessage"
             @message="onMessage"
         />
     </div>
@@ -59,8 +59,8 @@ import type { LlmProps } from '../../../composables/useLlm'
 
 const props = withDefaults(defineProps<LlmProps>(), {
     showSettings: true,
-    // mode/thinking/title/opening/preset/model/apiUrl/ttsGender/aiConfig: no default value,
-    // undefined represents "not passed", used to distinguish "explicitly pass value" and "needs to fall back to lms_config"
+    // mode/thinking/title/opening/preset/model/apiUrl/ttsGender/aiConfig 不设默认值，
+    // undefined 表示"未传"，用于区分"显式传值"和"需要回退 lms_config"
 })
 
 const emit = defineEmits<{
@@ -73,7 +73,7 @@ const {
     showSettings, t, effMode, state, chatboxRef,
     chatboxTitle, chatboxOpening, chatboxPreset, chatboxCustomSend,
     chatboxModel, chatboxThinking, chatboxApiUrl, effTtsGender, chatboxDisabled,
-    onChunk, on UserMessage, onMessage, refreshMessages, getMessages,
+    onChunk, onUserMessage, onMessage, refreshMessages, getMessages,
 } = useLlm(props, emit)
 
 defineExpose({ refreshMessages, getMessages })

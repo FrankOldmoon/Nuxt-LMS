@@ -1,8 +1,8 @@
 /**
- * useMenuListEditor composable tests
+ * useMenuListEditor composable 测试
  * @see modules/admin/composables/useMenuListEditor.ts
  *
- * Menu list editing: collapse state, drag sorting, add/delete/modify
+ * 菜单列表编辑：折叠状态、拖拽排序、增删改
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'
@@ -54,9 +54,9 @@ describe('composables/useMenuListEditor', () => {
     const { useMenuListEditor } = await import('../../composables/useMenuListEditor')
     const ctx = setup()
     const { hasChildren } = useMenuListEditor(ctx.getModelValue, ctx.update, ctx.genKey, () => 3)
-    expect(hasChildren(0)).toBe(true)  // A has A1/A2
-    expect(hasChildren(1)).toBe(false) // A1 has no children
-    expect(hasChildren(3)).toBe(false) // B (last item) has no children
+    expect(hasChildren(0)).toBe(true)  // A 有 A1/A2
+    expect(hasChildren(1)).toBe(false) // A1 无子节点
+    expect(hasChildren(3)).toBe(false) // B（最后一项）无子节点
   })
 
   it('toggleCollapse 切换折叠状态', async () => {
@@ -64,9 +64,9 @@ describe('composables/useMenuListEditor', () => {
     const ctx = setup()
     const { toggleCollapse, visibleItems } = useMenuListEditor(ctx.getModelValue, ctx.update, ctx.genKey, () => 3)
     expect(visibleItems.value).toHaveLength(4)
-    toggleCollapse(0) // Collapse A's children
-    expect(visibleItems.value).toHaveLength(2) // Only A and B remain
-    toggleCollapse(0) // Expand
+    toggleCollapse(0) // 折叠 A 的子项
+    expect(visibleItems.value).toHaveLength(2) // 只剩 A 和 B
+    toggleCollapse(0) // 展开
     expect(visibleItems.value).toHaveLength(4)
   })
 
@@ -86,10 +86,10 @@ describe('composables/useMenuListEditor', () => {
     const { useMenuListEditor } = await import('../../composables/useMenuListEditor')
     const ctx = setup()
     const { addSibling } = useMenuListEditor(ctx.getModelValue, ctx.update, ctx.genKey, () => 3)
-    addSibling(1) // Sibling of A1
+    addSibling(1) // A1 的兄弟
     const newItems = ctx.update.mock.calls[0][0]
     expect(newItems).toHaveLength(5)
-    // New item depth should match A1 (=1)
+    // 新项 depth 应与 A1 相同（=1）
     const newItem = newItems.find((i: FlatMenuItem) => i._key >= 100)
     expect(newItem!.depth).toBe(1)
   })
@@ -98,7 +98,7 @@ describe('composables/useMenuListEditor', () => {
     const { useMenuListEditor } = await import('../../composables/useMenuListEditor')
     const ctx = setup()
     const { addChild } = useMenuListEditor(ctx.getModelValue, ctx.update, ctx.genKey, () => 3)
-    addChild(0) // Child of A
+    addChild(0) // A 的子项
     const newItems = ctx.update.mock.calls[0][0]
     expect(newItems).toHaveLength(5)
     const newItem = newItems.find((i: FlatMenuItem) => i._key >= 100)
@@ -109,7 +109,7 @@ describe('composables/useMenuListEditor', () => {
     const { useMenuListEditor } = await import('../../composables/useMenuListEditor')
     const ctx = setup()
     const { addChild } = useMenuListEditor(ctx.getModelValue, ctx.update, ctx.genKey, () => 1)
-    addChild(1) // A1 depth=1, maxDepth=1 → not added
+    addChild(1) // A1 depth=1, maxDepth=1 → 不添加
     expect(ctx.update).not.toHaveBeenCalled()
   })
 
@@ -117,9 +117,9 @@ describe('composables/useMenuListEditor', () => {
     const { useMenuListEditor } = await import('../../composables/useMenuListEditor')
     const ctx = setup()
     const { deleteItem } = useMenuListEditor(ctx.getModelValue, ctx.update, ctx.genKey, () => 3)
-    deleteItem(0) // Delete A and its children A1/A2
+    deleteItem(0) // 删除 A 及其子项 A1/A2
     const newItems = ctx.update.mock.calls[0][0]
-    expect(newItems).toHaveLength(1) // Only B remains
+    expect(newItems).toHaveLength(1) // 只剩 B
     expect(newItems[0].label).toBe('B')
   })
 
@@ -145,7 +145,7 @@ describe('composables/useMenuListEditor', () => {
     const ctx = setup()
     const { onVisibleUpdate } = useMenuListEditor(ctx.getModelValue, ctx.update, ctx.genKey, () => 3)
     const items = ctx.getModelValue()
-    // Reverse order
+    // 反转顺序
     const reversed = [...items].reverse()
     onVisibleUpdate(reversed)
     const newItems = ctx.update.mock.calls[0][0]

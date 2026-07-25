@@ -1,5 +1,5 @@
 /**
- * ueditor/render/nodes/paragraph.vue component test
+ * ueditor/render/nodes/paragraph.vue 组件测试
  * @see modules/lms/components/ueditor/render/nodes/paragraph.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

@@ -3,5 +3,5 @@
 </template>
 
 <script setup>
-// NoneProperty，pureTag
+// 无属性，纯标签
 </script>

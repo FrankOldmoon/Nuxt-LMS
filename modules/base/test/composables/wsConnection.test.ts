@@ -1,20 +1,20 @@
 /**
- * composables/ws/connection tests
+ * composables/ws/connection 测试
  * @see modules/base/composables/ws/connection.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'
 
-// getAuthUserSync is an auto-import of useAuth.ts, not exposed in nuxt-stubs, needs manual stub
+// getAuthUserSync 是 useAuth.ts 的 auto-import，未在 nuxt-stubs 中暴露，需手动 stub
 function stubGetAuthUserSync(user: any = null) {
   ;(globalThis as any).getAuthUserSync = () => user
 }
 
 /**
- * Create a WebSocket mock constructor that can be called with `new`.
- * The implementation of vi.fn(() => obj) is an arrow function, cannot be called with `new`;
- * use a plain function constructor instead, return an object to override `this`.
- * The returned constructor itself has a .mock property (compatible with vi.fn's calls array).
+ * 创建可被 `new` 调用的 WebSocket mock 构造函数。
+ * vi.fn(() => obj) 的实现是箭头函数，不能被 `new` 调用；
+ * 改用普通 function 构造器，返回对象覆盖 `this`。
+ * 返回的构造函数本身附带 .mock 属性（与 vi.fn 兼容的 calls 数组）。
  */
 function mockWebSocket(opts: {
   readyState?: number
@@ -48,7 +48,7 @@ function mockWebSocket(opts: {
 beforeEach(async () => {
   resetAllStubs()
   stubGetAuthUserSync(null)
-  // Clean up module-level joinedRooms / reconnectTimer (via disconnect)
+  // 清理模块级 joinedRooms / reconnectTimer（通过 disconnect）
   const { useWsConnection } = await import('../../composables/ws/connection')
   try { useWsConnection().disconnect() } catch { /* noop */ }
 })
@@ -67,7 +67,7 @@ describe('composables/ws/connection - send', () => {
     const { useWsConnection } = await import('../../composables/ws/connection')
     const { ws, connect, send } = useWsConnection()
     connect()
-    // Trigger onopen to set wsConnected
+    // 触发 onopen 设置 wsConnected
     ;(ws.value as any).onopen()
     send({ type: 'ping' })
     expect(sendSpy).toHaveBeenCalledWith(JSON.stringify({ type: 'ping' }))
@@ -119,11 +119,11 @@ describe('composables/ws/connection - joinRoom / leaveRoom', () => {
     ;(globalThis as any).WebSocket = WsCtor
     const { useWsConnection } = await import('../../composables/ws/connection')
     const { ws, connect, joinRoom } = useWsConnection()
-    // Join room before first connection (at this point ws is null, send is no-op, but joinedRooms is recorded)
+    // 第一次连接前加入房间（此时 ws 为 null，send no-op，但 joinedRooms 已记录）
     joinRoom('room-x')
     connect()
     ;(ws.value as any).onopen()
-    // Should have sent registerUser + join room-x
+    // 应该发送了 registerUser + join room-x
     const calls = sendSpy.mock.calls.map(c => c[0])
     expect(calls.some(s => s.includes('"registerUser"') && s.includes('"userId":7'))).toBe(true)
     expect(calls.some(s => s.includes('"join"') && s.includes('"room-x"'))).toBe(true)
@@ -152,7 +152,7 @@ describe('composables/ws/connection - connect / disconnect', () => {
     connect()
     expect(ws.value).not.toBeNull()
     expect(wsConnected.value).toBe(false)
-    // Trigger onopen
+    // 触发 onopen
     ;(ws.value as any).onopen()
     expect(wsConnected.value).toBe(true)
   })
@@ -188,7 +188,7 @@ describe('composables/ws/connection - connect / disconnect', () => {
     const { dispatch, clearWsHandlers } = await import('../../composables/ws/callbacks')
     clearWsHandlers()
     const received: any[] = []
-    // registerWsHandler comes from the callbacks module (directly import the real implementation)
+    // registerWsHandler 来自 callbacks 模块（直接导入真实实现）
     const { registerWsHandler } = await import('../../composables/ws/callbacks')
     registerWsHandler('notify', (d) => { received.push(d) })
 

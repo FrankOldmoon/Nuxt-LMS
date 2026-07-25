@@ -1,9 +1,9 @@
 /**
- * home/courseSection.vue component test
+ * home/courseSection.vue 组件测试
  * @see modules/lms/components/home/courseSection.vue
  *
- * Home course section: series title + course card grid/list.
- * Depends on useAuthLms().isCourseTeacher for highlight, imports real composable in tests.
+ * 首页课程分区：系列标题 + 课程卡片网格/列表。
+ * 依赖 useAuthLms().isCourseTeacher 判断高亮，测试中导入真实 composable。
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -122,7 +122,7 @@ describe('home/courseSection.vue', () => {
       props: { section: sampleSection, courses: sampleCourses },
       global: _globalConfig,
     })
-    // home.courses key contains count=3
+    // home.courses key 含 count=3
     expect(wrapper.text()).toContain('home.courses')
   })
 })

@@ -1,5 +1,5 @@
 /**
- * Announcements API endpoint test
+ * Announcements API 端点测试
  * @see modules/lms/server/api/announcements/*.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'

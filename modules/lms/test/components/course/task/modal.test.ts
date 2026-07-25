@@ -1,8 +1,8 @@
 /**
- * course/task/modal.vue component test
+ * course/task/modal.vue 组件测试
  * @see modules/lms/components/course/task/modal.vue
  *
- * Task detail modal: renders question/homework/comment/quiz based on type
+ * 任务详情弹窗：根据 type 渲染 question/homework/comment/quiz
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

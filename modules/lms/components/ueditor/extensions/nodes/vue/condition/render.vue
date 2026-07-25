@@ -1,21 +1,21 @@
 <template>
     <div class="condition-render-container" :class="{ 'condition-hoverable': needsHoverCheck }"
         @mouseenter="checkCondition">
-        <!-- itemsconditionFullsufficient whenShowContent -->
+        <!-- 条件满足时显示内容 -->
         <div v-if="conditionMet && config.content">
             <ueditorRender :json="config.content" />
         </div>
 
-        <!-- notFullsufficient：ShowblurContent + itemsconditionTag -->
+        <!-- 未满足：显示模糊内容 + 条件标签 -->
         <ConditionLocked v-else-if="config.content" :config="config" :format-condition="formatCondition" />
 
-        <!-- checkMiddle -->
+        <!-- 检查中 -->
         <div v-else-if="checking" class="condition-checking">
             <UIcon name="i-lucide-loader-2" class="animate-spin text-gray-400" />
             <span class="text-xs text-gray-400 ml-1">{{ t('ueditor.conditionChecking') }}</span>
         </div>
 
-        <!-- No Contentwhen hover Tip -->
+        <!-- 无内容时的 hover 提示 -->
         <div v-else-if="needsHoverCheck" class="condition-hint">
             <UIcon name="i-lucide-shield-check" class="text-gray-400" />
             <span class="text-xs text-gray-400">{{ t('ueditor.conditionHint') }}</span>

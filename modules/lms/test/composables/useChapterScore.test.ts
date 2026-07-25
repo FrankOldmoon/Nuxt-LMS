@@ -1,5 +1,5 @@
 /**
- * useChapterScore composable test
+ * useChapterScore composable 测试
  * @see modules/lms/composables/useChapterScore.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -13,10 +13,10 @@ import { ref } from 'vue'
 beforeEach(async () => {
   resetAllStubs()
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
-  // Real useClassUsers (already tested independently)
+  // 真实 useClassUsers（已独立测试）
   const { useClassUsers } = await import('../../composables/useClassUsers')
   ;(globalThis as any).useClassUsers = useClassUsers
-  // Stub useChapterTask (returns taskMap containing headings)
+  // 桩 useChapterTask（返回 taskMap 含 headings）
   ;(globalThis as any).useChapterTask = () => ({
     taskMap: ref({ headings: [{ id: 'h1', level: 2, text: 'Heading 1' }, { id: 'h2', level: 2, text: 'Heading 2' }] }),
   })
@@ -98,7 +98,7 @@ describe('composables/useChapterScore', () => {
     await r.loadData()
     expect(r.scoreData.value).toHaveLength(2)
     expect(r.scoreData.value[0].score).toBe(80)
-    // tableRows merges students + scoreData
+    // tableRows 合并了 students + scoreData
     expect(r.tableRows.value).toHaveLength(2)
     const alice = r.tableRows.value.find((row: any) => row.id === 1)
     expect(alice.score).toBe(80)

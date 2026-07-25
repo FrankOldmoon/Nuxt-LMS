@@ -1,8 +1,8 @@
 /**
- * WebSocket endpoint: /api/ws
+ * WebSocket 端点：/api/ws
  *
- * Message format (JSON):
- * Client → Server:
+ * 消息格式（JSON）：
+ * 客户端 → 服务端：
  *   { type: 'registerUser', userId, from }
  *   { type: 'join', classId, userId?, from? }
  *   { type: 'invite', classId, courseId, chapterId, from }
@@ -22,7 +22,7 @@
  *   { type: 'raceQuestionEnd', pin, raceCid }
  *   { type: 'raceEnd', pin, raceCid }
  *
- * Server → Client:
+ * 服务端 → 客户端：
  *   { type: 'joined', classId }
  *   { type: 'invite', courseId, chapterId, from }
  *   { type: 'danmaku', text, from }
@@ -41,7 +41,7 @@
  *   { type: 'raceQuestionEnd', raceCid, questionCid, results, top3, answeredCount }
  *   { type: 'raceEnd', raceCid, leaderboard, scores }
  *   { type: 'raceOnlineUpdate', pin, userId, from, online }
- *   { type: 'chapterAccessUpdate', courseId, chapterId }  ← Chapter access status change notification
+ *   { type: 'chapterAccessUpdate', courseId, chapterId }  ← 章节开放状态变更通知
  *   { type: 'error', message }
  */
 import { handleClassMessage, cleanupClassPeer } from '../utils/ws/class'
@@ -50,7 +50,7 @@ import { handleGroupMessage, cleanupGroupPeer } from '../utils/ws/group'
 
 export default defineWebSocketHandler({
   open() {
-    // When a connection is established, do not automatically join any room; wait for the client to send join
+    // 连接建立时不自动加入任何房间，等待客户端发送 join
   },
 
   message(peer, message) {
@@ -59,7 +59,7 @@ export default defineWebSocketHandler({
       const { type } = data
       //console.log('[ws] received:', type, 'data:', JSON.stringify(data).slice(0, 200))
 
-      // User-level registration (private message push)
+      // 用户级注册（私信推送）
       if (type === 'registerUser') {
         const userId = Number(data.userId)
         if (!userId) return
@@ -70,7 +70,7 @@ export default defineWebSocketHandler({
         return
       }
 
-      // Try class message → race message → group message
+      // 尝试班级消息 → 竞赛消息 → 小组消息
       try {
         if (handleClassMessage(peer, data)) return
       } catch (e) { console.error('[ws] class handler error:', e); peer.send(JSON.stringify({ type: 'error', message: 'class handler error' })); return }
@@ -86,10 +86,10 @@ export default defineWebSocketHandler({
   },
 
   close(peer) {
-    // Clean up class room
+    // 清理班级房间
     cleanupClassPeer(peer)
 
-    // Clean up user-level connections
+    // 清理用户级连接
     const uid = peer._userId
     if (uid && userPeers.has(uid)) {
       userPeers.get(uid)!.delete(peer)
@@ -98,10 +98,10 @@ export default defineWebSocketHandler({
       }
     }
 
-    // Clean up race room
+    // 清理竞赛房间
     cleanupRacePeer(peer)
 
-    // Clean up group room
+    // 清理小组房间
     cleanupGroupPeer(peer)
   },
 

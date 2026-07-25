@@ -12,7 +12,7 @@ export default eventHandler(async (event) => {
     eq(schema.notifys.userId, user.id),
   )
 
-  // Query total count
+  // 查询总数
   const countResult = await db
     .select({ count: sql<number>`COUNT(*)` })
     .from(schema.notifys)
@@ -20,7 +20,7 @@ export default eventHandler(async (event) => {
 
   const total = countResult[0]?.count ?? 0
 
-  // Paginated query of notification list, sorted by creation time descending
+  // 分页查询通知列表，按创建时间倒序
   const items = await db
     .select({
       id: schema.notifys.id,
@@ -37,7 +37,7 @@ export default eventHandler(async (event) => {
     .limit(pageSize)
     .offset(offset)
 
-  // Mark unread notifications on this page as read
+  // 标记本页未读通知为已读
   const unreadIds = items.filter(i => !i.readAt).map(i => i.id)
   if (unreadIds.length > 0) {
     await db.update(schema.notifys)

@@ -32,7 +32,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
     const chapterTask = useChapterTask()
     const { wsConnected, connect, raceJoin, onRaceJoined, sendRaceStart, onRaceStart, sendRaceQuestion, onRaceQuestion, sendRaceAnswer, onRaceAnswerUpdate, onRaceScores, sendRaceQuestionEnd, onRaceQuestionEnd, sendRaceEnd, onRaceEnd, sendRaceOnline, onRaceOnlineUpdate } = useWebSocket()
 
-    // inform question ComponentCurrent race Middle：ShowSubmit ButtonbutnotoBackserverSubmit
+    // 告知 question 组件当前在 race 中：显示提交按钮但不向后端提交
     provide('inRace', true)
 
     const raceId = computed(() => Number(props.node?.attrs?.content) || 0)
@@ -41,7 +41,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
     // pin = classId_chapterId
     const pin = computed(() => `${classId.value}_${chapterId.value}`)
 
-    // lms notEnableornotJoin Classnot whenShow
+    // lms 未启用或未加入班级时不显示
     const canShow = computed(() => !!moduleLms && !!classId.value)
     const placeholderText = computed(() => {
         if (!moduleLms) return t('race.needLms')
@@ -49,7 +49,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         return ''
     })
 
-    // DefaultCompetition
+    // 默认竞赛
     const defaultRace = reactive({
         name: '', gapTime: 30, point: 100, questionIds: [],
     })
@@ -80,14 +80,14 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         }
     }, { immediate: true, flush: 'sync' })
 
-    // normalize questionIds countWord Countgroup
+    // 规范化 questionIds 为数字数组
     const raceQuestions = computed(() => {
         const raw = race.value?.questionIds
         if (!Array.isArray(raw)) return []
         return raw.map((item: any) => typeof item === 'number' ? item : Number(item.id)).filter(Boolean)
     })
 
-    // ====================== StatusVariable ======================
+    // ====================== 状态变量 ======================
     const raceActive = ref(false)
     const currentIndex = ref(-1)
     const currentQuestionCid = ref(0)
@@ -95,7 +95,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
     const totalTime = ref(0)
     const studentAnswered = ref(false)
     const questionRef = ref<any>(null)
-    // Questionresult podium：Fronttop three
+    // 题目结果 podium：前三名
     const questionTop3 = ref<any[]>([])
     const showPodium = ref(false)
     const raceScores = ref<any[]>([])
@@ -104,25 +104,25 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
     let timerInterval: any = null
     let submitCheckTimer: any = null
 
-    // race LineUser：userId → boolean
+    // race 在线用户：userId → boolean
     const raceOnlineMap = reactive<Record<number, boolean>>({})
 
-    // ====================== pin roombetweenJoin ======================
+    // ====================== pin 房间加入 ======================
     onMounted(() => {
         if (!canShow.value) return
-        // ensure ws Connection
+        // 确保 ws 连接
         if (!wsConnected.value) {
             connect()
         }
-        // delayJoin race roombetween（etc. ws Connection）
+        // 延迟加入 race 房间（等 ws 连接）
         const joinTimer = setTimeout(() => {
             if (pin.value && classId.value) {
                 raceJoin(pin.value)
-                // SendLinesignal
+                // 发送在线信号
                 sendRaceOnline(pin.value, user.value?.id || 0, user.value?.name || 'anonymous', true)
             }
         }, 500)
-        // keep tryingJoin（At most 10 times）
+        // 持续尝试加入（最多 10 次）
         let retries = 0
         const retryInterval = setInterval(() => {
             if (wsConnected.value && pin.value && classId.value) {
@@ -139,16 +139,16 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         })
     })
 
-    // listen race LineStatus
+    // 监听 race 在线状态
     onRaceOnlineUpdate((data: any) => {
         raceOnlineMap[data.userId] = data.online
     })
 
     onRaceJoined((_data: any) => {
-        // Join Successful
+        // 加入成功
     })
 
-    // ====================== StudentScoretable ======================
+    // ====================== 学生得分表 ======================
     const { students } = useClassUsers()
 
     const studentRows = computed(() => {
@@ -174,7 +174,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         return 'text-green-600 dark:text-green-300'
     }
 
-    // ====================== WebSocket Eventlisten ======================
+    // ====================== WebSocket 事件监听 ======================
     onRaceStart((data: any) => {
         if (data.raceCid !== raceId.value) return
         raceActive.value = true
@@ -194,20 +194,20 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         showPodium.value = false
         questionTop3.value = []
 
-        // StartCountdown
+        // 启动倒计时
         if (timerInterval) clearInterval(timerInterval)
         timerInterval = setInterval(() => {
             timeRemaining.value = Math.max(0, timeRemaining.value - 1)
             if (timeRemaining.value <= 0) {
                 clearInterval(timerInterval)
-                // Student：TimetoAutoSubmit
+                // 学生：时间到自动提交
                 if (!isTeacher.value && !studentAnswered.value) {
                     submitStudentAnswer()
                 }
             }
         }, 1000)
 
-        // Student：StartSubmitdetect
+        // 学生：启动提交检测
         if (!isTeacher.value) {
             if (submitCheckTimer) clearInterval(submitCheckTimer)
             submitCheckTimer = setInterval(checkStudentSubmit, 500)
@@ -215,7 +215,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
     })
 
     onRaceAnswerUpdate((_data: any) => {
-        // answer questionProgressUpdate（canPass scores Get）
+        // 答题进度更新（可通过 scores 获取）
     })
 
     onRaceScores((data: any) => {
@@ -237,7 +237,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         raceActive.value = false
         currentQuestionCid.value = 0
         raceScores.value = data.scores || data.leaderboard || []
-        // ShowmostEndtotalScoreFronttop three podium
+        // 显示最终总得分前三名 podium
         questionTop3.value = (data.scores || data.leaderboard || []).slice(0, 3).map((s: any) => ({
             userId: s.userId,
             from: s.from,
@@ -248,7 +248,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         if (submitCheckTimer) clearInterval(submitCheckTimer)
     })
 
-    // ====================== Teachercontrol ======================
+    // ====================== 教师控制 ======================
     function startRace() {
         if (!pin.value) return
         sendRaceStart(pin.value, raceId.value, courseId.value, raceQuestions.value.length, race.value.gapTime, user.value?.name || 'teacher')
@@ -275,7 +275,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         totalTime.value = race.value.gapTime
         sendRaceQuestion(pin.value, raceId.value, qid, currentIndex.value, raceQuestions.value.length, race.value.gapTime)
 
-        // StartTeacherCountdown
+        // 启动教师倒计时
         if (timerInterval) clearInterval(timerInterval)
         timerInterval = setInterval(() => {
             timeRemaining.value = Math.max(0, timeRemaining.value - 1)
@@ -298,16 +298,16 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         if (timerInterval) clearInterval(timerInterval)
     }
 
-    // ====================== Studentanswer question ======================
+    // ====================== 学生答题 ======================
     function checkStudentSubmit() {
         if (studentAnswered.value) return
         const comp = questionRef.value
         if (!comp) return
-        // detect question YesNoalreadySubmit（StudentPointSubmit Button）
+        // 检测 question 是否已提交（学生点了提交按钮）
         const qData = comp.getQuestionData?.()
         if (!qData) return
-        // submitted StatusPass question ComponentInside ref expose
-        // Passcheck record YesNoHasValueto judgeYesNoalreadyanswer
+        // submitted 状态通过 question 组件的内部 ref 暴露
+        // 通过检查 record 是否有值来判断是否已作答
         const record = qData.record
         if (Array.isArray(record) && record.length > 0) {
             submitStudentAnswer()
@@ -315,7 +315,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
     }
 
     function submitStudentAnswer() {
-        // Not Logged InwhenForbidSubmit
+        // 未登录时禁止提交
         if (!isLoggedIn.value) {
             toast.add({ title: t('common.loginRequired'), color: 'warning' })
             return
@@ -325,7 +325,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         if (!comp) return
         const qData = comp.getQuestionData?.()
         if (!qData) return
-        // ensure answer alreadyDecrypt
+        // 确保 answer 已解密
         if (Array.isArray(qData.answer) && qData.answer.some((a: any) => typeof a === 'string' && a.startsWith('enc:'))) {
             qData.answer = decryptAnswer(qData.answer)
         }
@@ -336,18 +336,18 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         studentAnswered.value = true
         if (submitCheckTimer) clearInterval(submitCheckTimer)
 
-        // UpreportCompetitionCompleteStatus（participateandanswer questionthat isComplete）
+        // 上报竞赛完成状态（参与答题即完成）
         chapterTask?.reportNodeDone('race', raceId.value, true)
 
         sendRaceAnswer(
             pin.value, raceId.value, currentQuestionCid.value,
             record, rate, correct, user.value?.name || 'anonymous', user.value?.id || 0
         )
-        // Showresult UI
+        // 显示结果 UI
         comp.showResult?.()
     }
 
-    // ====================== toolFunction ======================
+    // ====================== 工具函数 ======================
     function formatTime(seconds: number) {
         const m = Math.floor(seconds / 60)
         const s = seconds % 60
@@ -359,22 +359,22 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         return (timeRemaining.value / totalTime.value) * 100
     })
 
-    // EditSaveCallback：NotificationParent Component（EditeditorMiddlewillCall updateAttributes）
+    // 编辑保存回调：通知父组件（编辑器中会调用 updateAttributes）
     function onSaved(rc: any) {
-        // nothenCall refresh()：refresh willTrigger pending=true → loading state flicker，
-        // causeEdit Buttonfrom DOM Remove，modal Closewhen Radix focus fallbackto body causeDocumentscrolltoTop。
-        // Object.assign alreadyuseForm Datathat iswhenUpdatelocalGroundStatus，NoneneedHeavyNewfetch。
+        // 不再调用 refresh()：refresh 会触发 pending=true → loading 态闪烁，
+        // 导致编辑按钮从 DOM 移除，modal 关闭时 Radix focus 回退到 body 造成文档滚动到顶部。
+        // Object.assign 已用表单数据即时更新本地状态，无需重新拉取。
         if (race.value) {
             Object.assign(race.value, rc)
         }
-        // Notification index.vue（EditeditorMiddlewillCall updateAttributes Update content Property）
+        // 通知 index.vue（编辑器中会调用 updateAttributes 更新 content 属性）
         emit('saved', rc)
     }
 
     onBeforeUnmount(() => {
         if (timerInterval) clearInterval(timerInterval)
         if (submitCheckTimer) clearInterval(submitCheckTimer)
-        // SendleaveLinesignal
+        // 发送离线信号
         if (pin.value && canShow.value) {
             sendRaceOnline(pin.value, user.value?.id || 0, user.value?.name || 'anonymous', false)
         }

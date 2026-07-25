@@ -52,24 +52,24 @@ export default Node.create({
 
   addInputRules() {
     return [
-      // pluralType：::questions / ::homeworks / ::comments TriggerSelecteditorEvent（noInsertnodePoint）
+      // 复数类型：::questions / ::homeworks / ::comments 触发选择器事件（不插入节点）
       new InputRule({
         find: /^::(questions|homeworks|comments)$/,
         handler: ({ state, range, match, commands }) => {
           const type = match[1]
           commands.deleteRange(range)
-          // PasscustomEvent triggerSelecteditor
+          // 通过自定义事件触发选择器
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('ueditor-open-picker', { detail: { type } }))
           }
         },
       }),
-      // singleType：::question 12:: format
+      // 单数类型：::question 12:: 格式
       new InputRule({
         find: /^::(\w+)\s+(.*?)::$/,
         handler: ({ state, range, match, commands }) => {
-          const type = match[1];    // exampleif 'counter'
-          const content = match[2]; // exampleif '12'
+          const type = match[1];    // 例如 'counter'
+          const content = match[2]; // 例如 '12'
           commands.deleteRange(range);
           commands.insertContentAt(range.from, {
             type: 'vue',
@@ -85,11 +85,11 @@ export default Node.create({
     level: 'block',
     start: src => src.search(/::\w/),
     tokenize: (src, tokens, lexer) => {
-      const match = /^::(\w+)\s+(.*?)::$/s.exec(src)  // noteuse s flaglet . match newlineslines
+      const match = /^::(\w+)\s+(.*?)::$/s.exec(src)  // 注意用 s 标志让 . 匹配换行
       if (!match) return undefined
 
       return {
-        type: 'vue',          // fixed token Type
+        type: 'vue',          // 固定 token 类型
         raw: match[0],
         vueType: match[1],
         text: match[2],

@@ -1,9 +1,9 @@
 /**
- * layout/toc/index.vue component test
+ * layout/toc/index.vue 组件测试
  * @see modules/lms/components/layout/toc/index.vue
  *
- * TOC area: play button + download menu + ChapterBtns + ClassUserCard + learning progress + TOC list.
- * Uses useToc() (from ./useToc.ts), internally depends on useAuth/useAuthLms/useLayoutState/useLmsContext/useChapterBtns/useChapterTask/useLmsPublicConfig.
+ * 目录区：播放按钮 + 下载菜单 + ChapterBtns + ClassUserCard + 学习进度 + TOC 列表。
+ * 使用 useToc()（来自 ./useToc.ts），内部依赖 useAuth/useAuthLms/useLayoutState/useLmsContext/useChapterBtns/useChapterTask/useLmsPublicConfig。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -29,7 +29,7 @@ beforeEach(() => {
     refreshUser: vi.fn(),
   })
 
-  // Override useLayoutState stub
+  // 覆盖 useLayoutState stub
   ;(globalThis as any).useLayoutState = () => ({
     tocLinks: ref([{ id: 'h1', text: 'Heading 1' }]),
     chapterContent: ref(null),
@@ -60,7 +60,7 @@ beforeEach(() => {
     chapterPage: { enableFullscreen: true },
   })
 
-  // stub useChapterTask (auto-import) — returns null
+  // stub useChapterTask（auto-import）— 返回 null
   ;(globalThis as any).useChapterTask = () => null
 })
 

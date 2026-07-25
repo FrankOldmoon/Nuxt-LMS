@@ -2,7 +2,7 @@
   <div>
     <USeparator :label="$t('courseEditor.membersSection')" class="my-4" />
 
-    <!-- Teacher List -->
+    <!-- 教师列表 -->
     <div>
       <p class="text-sm font-medium mb-2 flex items-center gap-1.5">
         <UIcon name="i-lucide-graduation-cap" class="size-4 text-primary" />
@@ -15,7 +15,7 @@
       <p v-else class="text-sm text-muted text-center py-2">{{ $t('courseEditor.noTeachers') }}</p>
     </div>
 
-    <!-- EditerList -->
+    <!-- 编辑者列表 -->
     <div>
       <p class="text-sm font-medium mb-2 flex items-center gap-1.5">
         <UIcon name="i-lucide-pencil" class="size-4 text-info" />
@@ -28,7 +28,7 @@
       <p v-else class="text-sm text-muted text-center py-2">{{ $t('courseEditor.noEditors') }}</p>
     </div>
 
-    <!-- SearchandAdd Member -->
+    <!-- 搜索并添加成员 -->
     <UFormField :label="$t('courseEditor.addMember')" class="w-full">
       <UInput
         v-model="memberSearchKeyword"

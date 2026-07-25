@@ -1,5 +1,5 @@
 /**
- * ueditor/render/nodes/tag.vue component test
+ * ueditor/render/nodes/tag.vue 组件测试
  * @see modules/lms/components/ueditor/render/nodes/tag.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

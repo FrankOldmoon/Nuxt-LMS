@@ -3,18 +3,18 @@ import { eq } from 'drizzle-orm'
 
 
 export default eventHandler(async (event) => {
-  // Only admins can update categories
+  // 仅管理员可更新分类
   await requireAdmin(event)
 
   const body = await readBody(event)
   const { id, ...setData } = body
 
   if (!id) {
-    return cResp(null, 'Missing id parameter', false)
+    return cResp(null, '缺少 id 参数', false)
   }
 
   try {
-    // If orders is updated, sync the course name as well
+    // 若更新了 orders，同步更新 course 的 name
     if (setData.orders !== undefined && Array.isArray(setData.orders)) {
       const courseUpdates = (setData.orders as any[])
         .filter(o => o.id && !o.id.startsWith('custom-') && !isNaN(Number(o.id)))
@@ -30,11 +30,11 @@ export default eventHandler(async (event) => {
     }
 
     const result = await updateTable('categories', Number(id), setData)
-    // Notify all clients: home navigation has been updated (all useHome() consumers auto-refresh)
+    // 通知所有客户端：首页导航已更新（所有 useHome() 消费者自动 refresh）
     broadcastToAll({ type: 'home-changed', reason: 'categories.update' })
     return cResp(result)
   } catch (error: any) {
-    console.error('Failed to update category:', error)
-    return cResp(null, error.message || 'Update failed', false)
+    console.error('更新分类失败:', error)
+    return cResp(null, error.message || '更新失败', false)
   }
 })

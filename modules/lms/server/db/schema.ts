@@ -1,11 +1,11 @@
 /**
- * doc module schema fragment
+ * doc module schema 片段
  *
- * Includes tables: categories, courses, chapters, chapterVersions, courseVersions
+ * 包含表：categories, courses, chapters, chapterVersions, courseVersions
  *
- * Cross-module foreign key dependencies:
- * - chapters.userId → users.id (auth module)
- * Cross-module references are resolved by base during aggregation.
+ * 跨 module 外键依赖：
+ * - chapters.userId → users.id（auth module）
+ * 聚合时由 base 解析跨 module 引用。
  */
 import {
   pgTable,
@@ -73,7 +73,7 @@ export const chapters = pgTable(
   },
   (t) => ({
     courseFk: foreignKey({ columns: [t.courseId], foreignColumns: [courses.id] }).onDelete('cascade'),
-    // authorFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('set null'), // users is in the auth module
+    // authorFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('set null'), // users 在 auth module
     courseIdx: index('idx_chapters_course_id').on(t.courseId),
     authorIdx: index('idx_chapters_user_id').on(t.userId),
   })
@@ -125,7 +125,7 @@ export const chaptersRelations = relations(chapters, ({ one, many }) => ({
 }));
 
 
-// ====================== Medals / Gamification ======================
+// ====================== 勋章/游戏化 ======================
 export const medals = pgTable('medals', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
@@ -142,14 +142,14 @@ export const userMedals = pgTable(
   },
   (t) => ({
     pk: primaryKey({ columns: [t.userId, t.medalId] }),
-    // userFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('cascade'), // users is in auth
+    // userFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('cascade'), // users 在 auth
     medalFk: foreignKey({ columns: [t.medalId], foreignColumns: [medals.id] }).onDelete('cascade'),
     userIdx: index('idx_user_medals_user_id').on(t.userId),
     medalIdx: index('idx_user_medals_medal_id').on(t.medalId),
   })
 );
 
-// ====================== Announcements ======================
+// ====================== 公告 ======================
 export const announcements = pgTable(
   'announcements',
   {
@@ -161,14 +161,14 @@ export const announcements = pgTable(
     ...withTimestamps,
   },
   (t) => ({
-    // courseFk: foreignKey({ columns: [t.courseId], foreignColumns: [courses.id] }).onDelete('cascade'), // courses is in doc
+    // courseFk: foreignKey({ columns: [t.courseId], foreignColumns: [courses.id] }).onDelete('cascade'), // courses 在 doc
     classFk: foreignKey({ columns: [t.classId], foreignColumns: [classes.id] }).onDelete('set null'),
     courseIdx: index('idx_announcements_course_id').on(t.courseId),
     classIdx: index('idx_announcements_class_id').on(t.classId),
   })
 );
 
-// ====================== Teaching content (composite primary key courseId + cid) ======================
+// ====================== 教学内容（复合主键 courseId + cid） ======================
 export const questions = pgTable(
   'questions',
   {
@@ -191,7 +191,7 @@ export const questions = pgTable(
   },
   (t) => ({
     pk: primaryKey({ columns: [t.courseId, t.cid] }),
-    // courseFk: foreignKey({ columns: [t.courseId], foreignColumns: [courses.id] }).onDelete('cascade'), // courses is in doc
+    // courseFk: foreignKey({ columns: [t.courseId], foreignColumns: [courses.id] }).onDelete('cascade'), // courses 在 doc
     courseIdx: index('idx_questions_course_id').on(t.courseId),
     typeIdx: index('idx_questions_type').on(t.type),
   })
@@ -215,7 +215,7 @@ export const homeworks = pgTable(
   },
   (t) => ({
     pk: primaryKey({ columns: [t.courseId, t.cid] }),
-    // courseFk: foreignKey({ columns: [t.courseId], foreignColumns: [courses.id] }).onDelete('cascade'), // courses is in doc
+    // courseFk: foreignKey({ columns: [t.courseId], foreignColumns: [courses.id] }).onDelete('cascade'), // courses 在 doc
   })
 );
 
@@ -241,7 +241,7 @@ export const quizzes = pgTable(
   },
   (t) => ({
     pk: primaryKey({ columns: [t.courseId, t.cid] }),
-    // courseFk: foreignKey({ columns: [t.courseId], foreignColumns: [courses.id] }).onDelete('cascade'), // courses is in doc
+    // courseFk: foreignKey({ columns: [t.courseId], foreignColumns: [courses.id] }).onDelete('cascade'), // courses 在 doc
   })
 );
 
@@ -261,7 +261,7 @@ export const races = pgTable(
   },
   (t) => ({
     pk: primaryKey({ columns: [t.courseId, t.cid] }),
-    // courseFk: foreignKey({ columns: [t.courseId], foreignColumns: [courses.id] }).onDelete('cascade'), // courses is in doc
+    // courseFk: foreignKey({ columns: [t.courseId], foreignColumns: [courses.id] }).onDelete('cascade'), // courses 在 doc
   })
 );
 
@@ -282,8 +282,8 @@ export const comments = pgTable(
   },
   (t) => ({
     pk: primaryKey({ columns: [t.courseId, t.cid] }),
-    // courseFk: foreignKey({ columns: [t.courseId], foreignColumns: [courses.id] }).onDelete('cascade'), // courses is in doc
-    // userFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('cascade'), // users is in auth
+    // courseFk: foreignKey({ columns: [t.courseId], foreignColumns: [courses.id] }).onDelete('cascade'), // courses 在 doc
+    // userFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('cascade'), // users 在 auth
     parentFk: foreignKey({
       columns: [t.courseId, t.parentId],
       foreignColumns: [t.courseId, t.cid],
@@ -293,7 +293,7 @@ export const comments = pgTable(
   })
 );
 
-// ====================== User behavior junction tables ======================
+// ====================== 用户行为中间表 ======================
 export const userChapters = pgTable(
   'user_chapters',
   {
@@ -309,7 +309,7 @@ export const userChapters = pgTable(
   },
   (t) => ({
     pk: primaryKey({ columns: [t.userId, t.chapterId] }),
-    // userFk / chapterFk is in auth/doc module
+    // userFk / chapterFk 在 auth/doc module
     userIdx: index('idx_user_chapters_user_id').on(t.userId),
     chapterIdx: index('idx_user_chapters_chapter_id').on(t.chapterId),
   })
@@ -443,7 +443,7 @@ export const userQuizzes = pgTable(
   })
 );
 
-// ====================== Class association tables ======================
+// ====================== 班级关联表 ======================
 export const classChapters = pgTable(
   'class_chapters',
   {
@@ -456,7 +456,7 @@ export const classChapters = pgTable(
   (t) => ({
     pk: primaryKey({ columns: [t.classId, t.chapterId] }),
     classFk: foreignKey({ columns: [t.classId], foreignColumns: [classes.id] }).onDelete('cascade'),
-    // chapterFk: foreignKey({ columns: [t.chapterId], foreignColumns: [chapters.id] }).onDelete('cascade'), // chapters is in doc
+    // chapterFk: foreignKey({ columns: [t.chapterId], foreignColumns: [chapters.id] }).onDelete('cascade'), // chapters 在 doc
     classIdx: index('idx_class_chapters_class_id').on(t.classId),
     chapterIdx: index('idx_class_chapters_chapter_id').on(t.chapterId),
   })
@@ -473,7 +473,7 @@ export const classCourses = pgTable(
   (t) => ({
     pk: primaryKey({ columns: [t.classId, t.courseId] }),
     classFk: foreignKey({ columns: [t.classId], foreignColumns: [classes.id] }).onDelete('cascade'),
-    // courseFk: foreignKey({ columns: [t.courseId], foreignColumns: [courses.id] }).onDelete('cascade'), // courses is in doc
+    // courseFk: foreignKey({ columns: [t.courseId], foreignColumns: [courses.id] }).onDelete('cascade'), // courses 在 doc
     classIdx: index('idx_class_courses_class_id').on(t.classId),
     courseIdx: index('idx_class_courses_course_id').on(t.courseId),
   })
@@ -509,13 +509,13 @@ export const activities = pgTable(
     ...withTimestamps,
   },
   (t) => ({
-    // chapterFk / userFk is in doc/auth module
+    // chapterFk / userFk 在 doc/auth module
     chapterIdx: index('idx_activities_chapter_id').on(t.chapterId),
     userIdx: index('idx_activities_user_id').on(t.userId),
   })
 );
 
-// ====================== Shop: goods + bags ======================
+// ====================== 商店：商品 + 背包 ======================
 export const goods = pgTable(
   'goods',
   {

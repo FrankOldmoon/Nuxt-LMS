@@ -1,5 +1,5 @@
 /**
- * Config API endpoint tests
+ * Config API 端点测试
  * @see modules/base/server/api/config/*.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'

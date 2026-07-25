@@ -1,18 +1,18 @@
 /**
- * LMS Search API endpoint tests
+ * LMS Search API 端点测试
  * @see modules/lms/server/api/search.ts
  *
- * search.ts explicitly imports { getQuery } from 'h3' and { readFile } from 'fs/promises',
- * so we need to mock these two modules.
+ * search.ts 显式 import { getQuery } from 'h3' 和 { readFile } from 'fs/promises'，
+ * 因此需 mock 这两个模块。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-// mock fs/promises (search.ts depends on the file system to read JSON)
+// mock fs/promises（search.ts 依赖文件系统读取 JSON）
 vi.mock('fs/promises', () => ({
   readFile: vi.fn(),
 }))
 
-// mock h3 (search.ts explicitly imports getQuery from 'h3')
+// mock h3（search.ts 显式 import getQuery from 'h3'）
 vi.mock('h3', () => ({
   getQuery: (event: any) => event?.query ?? {},
   eventHandler: (handler: any) => handler,
@@ -36,7 +36,7 @@ describe('API: search', () => {
     const handler = (await import('../../server/api/search')).default
     const result = await handler(makeEvent({ query: { courseId: '42' } }))
     expect(result).toEqual([{ id: 1, title: 'Result 1' }])
-    // Verify readFile was called, and the path contains search/42.json
+    // 验证 readFile 被调用，路径包含 search/42.json
     const calledPath = String(vi.mocked(readFile).mock.calls[0][0])
     expect(calledPath).toContain('search/42.json')
   })

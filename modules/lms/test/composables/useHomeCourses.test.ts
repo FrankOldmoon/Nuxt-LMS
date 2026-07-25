@@ -1,5 +1,5 @@
 /**
- * useHomeCourses composable test
+ * useHomeCourses composable 测试
  * @see modules/lms/composables/useHomeCourses.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -12,7 +12,7 @@ import {
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
-  // stub useHome (auto-imported), returns controllable data ref
+  // stub useHome（auto-imported），返回可控的 data ref
   const mockHomeData = ref({
     categories: [
       { id: 1, title: 'Cat A', icon: 'i-a', orders: [] },
@@ -25,7 +25,7 @@ beforeEach(() => {
     ],
   })
   ;(globalThis as any).useHome = () => ({ data: mockHomeData, refresh: () => {} })
-  // Saved to global for modification in tests
+  // 保存到全局以便测试中修改
   ;(globalThis as any)._mockHomeData = mockHomeData
 })
 

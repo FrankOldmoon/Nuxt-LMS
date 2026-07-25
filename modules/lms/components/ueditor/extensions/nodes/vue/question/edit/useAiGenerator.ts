@@ -10,7 +10,7 @@ export function useAiGenerator(props: { type: string }, emit: (event: string, ..
     const done = ref(false)
     const stopped = ref(false)
     const genError = ref('')
-    // accumulate originalStartstreamingText（include ```json fence），outputtoParent ComponentFrontthenuse stripFences strip
+    // 累积原始流式文本（含 ```json 围栏），输出给父组件前再用 stripFences 剥离
     const streamText = ref('')
 
     let abortController = null
@@ -24,20 +24,20 @@ ${typePrompt}`
     }
 
     /**
-     * strip markdown Code Blockmark（```json / ```），onlykeep pure JSON Content。
-     * streaming periodbetweenreal-time outputtoParent Component JSON Monaco —— not put fenced intoEditeditor。
+     * 剥离 markdown 代码块标记（```json / ```），只保留纯 JSON 内容。
+     * 流式期间实时输出到父组件的 JSON Monaco —— 不把围栏放进编辑器。
      */
     function stripFences(raw: string) {
         let s = raw || ''
-        // removeOnHead ```json or ``` mark
+        // 去除开头的 ```json 或 ``` 标记
         const openMatch = s.match(/^\s*```(?:json)?\s*\n?/)
         if (openMatch) s = s.slice(openMatch[0].length)
-        // remove endTail ``` mark（streaming periodbetweencancannot yettoarrive）
+        // 去除结尾的 ``` 标记（流式期间可能尚未到达）
         s = s.replace(/\n?\s*```\s*$/, '')
         return s
     }
 
-    // use rAF combinedandsameone frameInsideManyitems SSE chunk，subtractFewParent Component jsonText / Monaco HighfrequentRefresh
+    // 用 rAF 合并同一帧内的多个 SSE chunk，减少父组件 jsonText / Monaco 的高频刷新
     function scheduleStreamEmit() {
         if (rafId != null) return
         rafId = requestAnimationFrame(() => {
@@ -46,7 +46,7 @@ ${typePrompt}`
         })
     }
 
-    // SyncRefreshmostBackonetimesoutput（ensureFather Monaco Showcomplete JSON），useinstreamEndFront
+    // 同步刷新最后一次输出（确保父 Monaco 显示完整 JSON），用于流结束前
     function flushStreamEmit() {
         if (rafId != null) { cancelAnimationFrame(rafId); rafId = null }
         emit('streamText', stripFences(streamText.value))
@@ -56,7 +56,7 @@ ${typePrompt}`
         const text = scope.value.trim()
         if (!text || generating.value) return
 
-        // CapturelocaltimesGeneratequestion type when，avoid streaming periodbetweenUserSwitchquestion type changes causing result mismatch
+        // 捕获本次生成时的题型，避免流式期间用户切换题型导致结果不匹配
         const genType = props.type
 
         generating.value = true
@@ -81,9 +81,9 @@ ${typePrompt}`
                 signal: abortController.signal,
             })
 
-            // non-streamingResponse = outWrong（cResp Return JSON）
-            const content type = resp.headers.get('Content-Type') || ''
-            if (!content type.includes('text/event-stream')) {
+            // 非流式响应 = 出错（cResp 返回 JSON）
+            const contentType = resp.headers.get('Content-Type') || ''
+            if (!contentType.includes('text/event-stream')) {
                 let msg = t('question.aiGenerateFailed')
                 try {
                     const data = await resp.json()
@@ -118,7 +118,7 @@ ${typePrompt}`
                 }
             }
 
-            // streamEnd：firstSyncRefreshmostBackonetimesoutput（ensureFather Monaco Showcomplete JSON），thenAnalysisandApplication
+            // 流结束：先同步刷新最后一次输出（确保父 Monaco 显示完整 JSON），再解析并应用
             flushStreamEmit()
             const question = parseQuestionJson(streamText.value, genType)
             emit('generated', question)
@@ -126,7 +126,7 @@ ${typePrompt}`
             toast.add({ title: t('question.aiGenerateDone'), color: 'success' })
         } catch (err) {
             if (err?.name === 'AbortError') {
-                // UseractivelyStop
+                // 用户主动停止
                 stopped.value = true
                 done.value = true
             } else {
@@ -145,16 +145,16 @@ ${typePrompt}`
     }
 
     /**
-     * Analysis LLM Return JSON Question，allowWrongHandle（go to markdown mark、extract JSON、completeField）
-     * note：noSettings record / correct_rate，by Parent Componentpreserve originalHasRecordsField
+     * 解析 LLM 返回的 JSON 题目，容错处理（去 markdown 标记、提取 JSON、补全字段）
+     * 注意：不设置 record / correct_rate，由父组件保留原有记录字段
      */
     function parseQuestionJson(text: string, expectedType: string) {
         let cleaned = (text || '').trim()
-        // remove markdown Code Blockmark
+        // 去除 markdown 代码块标记
         if (cleaned.startsWith('```')) {
             cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?\s*```\s*$/, '')
         }
-        // extractFirstitems { tomostBackoneitems } betweenContent
+        // 提取第一个 { 到最后一个 } 之间的内容
         const start = cleaned.indexOf('{')
         const end = cleaned.lastIndexOf('}')
         if (start !== -1 && end !== -1 && end > start) {
@@ -166,9 +166,9 @@ ${typePrompt}`
         } catch (e) {
             throw new Error(t('question.aiGenerateFailed') + ': ' + (e?.message || 'invalid JSON'))
         }
-        // force question typeCurrentquestion type
+        // 强制题型为当前题型
         q.type = expectedType
-        // fill coreField（not change record，preserveparent formalreadyHasRecords）
+        // 补全核心字段（不动 record，保留父表单已有记录）
         if (!Array.isArray(q.options)) q.options = []
         if (!Array.isArray(q.answer)) q.answer = []
         if (!Array.isArray(q.tags)) q.tags = []
@@ -179,7 +179,7 @@ ${typePrompt}`
         return q
     }
 
-    // question typeSwitchwhenClearlocalComponentStatus（jsonText by Parent Componentfollow form changeAutoUpdate）
+    // 题型切换时清空本组件状态（jsonText 由父组件随 form 变化自动更新）
     watch(() => props.type, () => {
         if (generating.value) return
         done.value = false

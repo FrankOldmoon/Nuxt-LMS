@@ -1,5 +1,5 @@
 /**
- * chatroom/index.vue component test
+ * chatroom/index.vue 组件测试
  * @see modules/lms/components/ueditor/extensions/nodes/vue/chatroom/index.vue
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'

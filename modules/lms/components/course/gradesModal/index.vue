@@ -4,30 +4,30 @@
             <div class="p-6 space-y-4 min-w-[700px]">
                 <h3 class="text-lg font-semibold">{{ t('coursePanel.grades') }}</h3>
 
-                <!-- Rating criteria: collapsible configuration (teacher/admin) / student read-only display -->
+                <!-- 评分标准：可收缩配置（教师/管理员） / 学生只读展示 -->
                 <CourseGradesModalCriteria v-if="canEdit" />
                 <CourseGradesModalStudentCriteria v-else />
 
                 <ClassUsersTable :rows="rows" :loading="pending" :extra-columns="extraColumns"
                     :hide-actions="true" :hide-teachers="true" :hide-number="true"
                     :default-sort="defaultSort">
-                    <!-- group columns -->
+                    <!-- group 列 -->
                     <template #group-cell="{ row }">
                         <span class="text-xs text-gray-400">{{ row.original.group ? row.original.group.replace(/^c_/, '') : '-' }}</span>
                     </template>
-                    <!-- grade columns: character-based grade -->
+                    <!-- grade 列：字母等第 -->
                     <template #grade-cell="{ row }">
                         <span class="font-bold text-base" :class="[gradeLetterClass(computeGrade(row.original).letter), !row.original._hasGrade && 'opacity-40']">
                             {{ computeGrade(row.original).letter }}
                         </span>
                     </template>
-                    <!-- total columns：mostEndscore（byFullscore+percentageweightedBackpercentageScore） -->
+                    <!-- total 列：最终分（按满分+占比加权后的百分制分数） -->
                     <template #total-cell="{ row }">
                         <span class="font-mono font-bold" :class="!row.original._hasGrade && 'opacity-40'">
                             {{ computeGrade(row.original).finalScore.toFixed(1) }}
                         </span>
                     </template>
-                    <!-- progress columns：ChapterPassthan（0~100%） -->
+                    <!-- progress 列：章节通过比（0~100%） -->
                     <template #progress-cell="{ row }">
                         <div class="flex items-center gap-1.5" :class="!row.original._hasGrade && 'opacity-40'">
                             <div class="w-12 h-1.5 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
@@ -38,43 +38,43 @@
                             <span class="font-mono text-xs">{{ row.original.progress }}%</span>
                         </div>
                     </template>
-                    <!-- questionScore columns -->
+                    <!-- questionScore 列 -->
                     <template #questionScore-cell="{ row }">
                         <span class="font-mono text-xs" :class="!row.original._hasGrade && 'opacity-40'">
                             {{ row.original.questionScore.toFixed(1) }}
                         </span>
                     </template>
-                    <!-- homeworkScore columns -->
+                    <!-- homeworkScore 列 -->
                     <template #homeworkScore-cell="{ row }">
                         <span class="font-mono text-xs" :class="!row.original._hasGrade && 'opacity-40'">
                             {{ row.original.homeworkScore.toFixed(1) }}
                         </span>
                     </template>
-                    <!-- quizScore columns -->
+                    <!-- quizScore 列 -->
                     <template #quizScore-cell="{ row }">
                         <span class="font-mono text-xs" :class="!row.original._hasGrade && 'opacity-40'">
                             {{ row.original.quizScore.toFixed(1) }}
                         </span>
                     </template>
-                    <!-- raceScore columns -->
+                    <!-- raceScore 列 -->
                     <template #raceScore-cell="{ row }">
                         <span class="font-mono text-xs" :class="!row.original._hasGrade && 'opacity-40'">
                             {{ row.original.raceScore.toFixed(1) }}
                         </span>
                     </template>
-                    <!-- commentScore columns -->
+                    <!-- commentScore 列 -->
                     <template #commentScore-cell="{ row }">
                         <span class="font-mono text-xs" :class="!row.original._hasGrade && 'opacity-40'">
                             {{ row.original.commentScore.toFixed(1) }}
                         </span>
                     </template>
-                    <!-- marksScore columns -->
+                    <!-- marksScore 列 -->
                     <template #marksScore-cell="{ row }">
                         <span class="font-mono text-xs" :class="!row.original._hasGrade && 'opacity-40'">
                             {{ row.original.marksScore.toFixed(1) }}
                         </span>
                     </template>
-                    <!-- extraScore columns：TeachercanInputandSave，StudentRead-only -->
+                    <!-- extraScore 列：教师可输入并保存，学生只读 -->
                     <template #extraScore-cell="{ row }">
                         <UInput v-if="canEdit" v-model.number="extraScoreDraft[row.original.id]" type="number"
                             size="xs" class="w-20" :loading="extraScoreSaving === row.original.id"
@@ -85,7 +85,7 @@
                     </template>
                 </ClassUsersTable>
 
-                <!-- Student：LearningData + canabilityThunderchart -->
+                <!-- 学生端：学习数据 + 能力雷达图 -->
                 <CourseGradesModalStudentStats v-if="!canEdit" />
             </div>
         </template>
@@ -105,15 +105,15 @@ const ctx = useCourseGrades(props, isOpen)
 provideGrades(ctx)
 const { rows, pending, extraColumns, defaultSort, canEdit, computeGrade, saveExtraScore, extraScoreSaving } = ctx
 
-// extraScore Draft：uselocalGround ref TrackInputValue，blur/enter whenSubmitSave
+// extraScore 草稿：用本地 ref 跟踪输入值，blur/enter 时提交保存
 const extraScoreDraft = ref<Record<number, number | string>>({})
-// ModalHeavyNewOpenwhenClearDraft，let watch(rows) HeavyNewfromServiceserverDatafill
+// 弹窗重新打开时清空草稿，让 watch(rows) 重新从服务端数据填充
 watch(isOpen, (val) => {
     if (val) extraScoreDraft.value = {}
 })
 watch(rows, (newRows) => {
-    // only whenlinesHasTrueactualScoreData（_hasGrade）andDraftwhen not filledSyncServiceserverValue
-    // avoid buildRows([]) placeholderData（extraScore=0, _hasGrade=false）overlayTrueactualValue
+    // 仅当行有真实成绩数据（_hasGrade）且草稿未填充时同步服务端值
+    // 避免 buildRows([]) 占位数据（extraScore=0, _hasGrade=false）覆盖真实值
     for (const r of newRows) {
         if (r._hasGrade && extraScoreDraft.value[r.id] === undefined) {
             extraScoreDraft.value[r.id] = Number(r.extraScore || 0)
@@ -124,7 +124,7 @@ watch(rows, (newRows) => {
 async function onExtraScoreBlur(row: any) {
     const val = Number(extraScoreDraft.value[row.id])
     if (isNaN(val)) return
-    // Valueif not changed thenSkip
+    // 值未变化则跳过
     if (val === Number(row.extraScore || 0)) return
     await saveExtraScore(row.id, val)
 }
@@ -133,7 +133,7 @@ function onExtraScoreEnter(e: KeyboardEvent) {
     ;(e.target as HTMLInputElement).blur()
 }
 
-// etc.charactersMotherColorMap
+// 等第字母颜色映射
 function gradeLetterClass(letter: string) {
     switch (letter) {
         case 'A': return 'text-green-600 dark:text-green-300'
@@ -145,7 +145,7 @@ function gradeLetterClass(letter: string) {
     }
 }
 
-// Progress BarColor：0~33 Red、34~66 amber、67~100 Green
+// 进度条颜色：0~33 红、34~66 琥珀、67~100 绿
 function progressColor(p: number) {
     if (p >= 67) return 'bg-green-500'
     if (p >= 34) return 'bg-amber-500'

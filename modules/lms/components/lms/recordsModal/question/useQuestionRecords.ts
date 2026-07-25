@@ -35,7 +35,7 @@ export function useQuestionRecords(props: QuestionRecordsProps, emit: QuestionRe
 
     const defaultSort = [{ id: 'score', desc: true }]
 
-    // firstuseCacheStudentDatafill table，thenAsynccombinedand records
+    // 先用缓存学生数据填充 table，再异步合并 records
     function buildRows(recordsData) {
         const recordMap = new Map((recordsData || []).map(r => [r.userId, r.record]))
         rows.value = students.value.map(s => ({
@@ -46,7 +46,7 @@ export function useQuestionRecords(props: QuestionRecordsProps, emit: QuestionRe
             avatarImg: s.avatarImg,
             record: recordMap.get(s.id) || null,
         }))
-        // HasRecordsrowFrontSurface
+        // 有记录的排前面
         rows.value.sort((a, b) => {
             const aHas = a.record ? 1 : 0
             const bHas = b.record ? 1 : 0
@@ -59,7 +59,7 @@ export function useQuestionRecords(props: QuestionRecordsProps, emit: QuestionRe
             rows.value = []
             return
         }
-        // firstuseCacheStudentDataimmediatelythat isShow table
+        // 先用缓存学生数据立即显示 table
         buildRows([])
         pending.value = true
         try {
@@ -76,7 +76,7 @@ export function useQuestionRecords(props: QuestionRecordsProps, emit: QuestionRe
         if (val) fetchRecords()
     })
 
-    // format answerContent
+    // 格式化作答内容
     function formatUserAnswer(record: any) {
         const userAns = Array.isArray(record?.records) ? record.records : []
         const q = props.question
@@ -87,12 +87,12 @@ export function useQuestionRecords(props: QuestionRecordsProps, emit: QuestionRe
             return userAns.map(idx => String.fromCharCode(65 + Number(idx)))
         }
         if (type === 'sort') {
-            // ShowUserrowcolumnsoptionitemsText
+            // 显示用户排列的选项文本
             const options = q.options || []
             return userAns.map(idx => options[idx] || `#${idx}`)
         }
         if (type === 'classify') {
-            // ShoweachitemsanditsscoretoCategory
+            // 显示每项及其被分到的分类
             const options = q.options || []
             const flatItems = []
             options.forEach(cat => {
@@ -105,19 +105,19 @@ export function useQuestionRecords(props: QuestionRecordsProps, emit: QuestionRe
             })
         }
         if (type === 'puzzle') {
-            // Puzzle：ShowUserrowcolumnsNumber
+            // 拼图题：显示用户排列的序号
             return userAns.map((idx, i) => `#${i + 1}→${Number(idx) + 1}`)
         }
         if (type === 'html') {
-            // HTML question：Show correct_rate
+            // HTML 题：显示 correct_rate
             return [`${t('question.htmlCorrectRate')}: ${Math.round((Number(userAns[0]) || 0) * 100)}%`]
         }
         if (type === 'short-answer') {
-            // Short Answer：ShowUserInputText
+            // 简答题：显示用户输入文本
             return [String(userAns[0] || '')]
         }
         if (type === 'match') {
-            // connectLinequestion：ShowUsermatchRight（left → right Text）
+            // 连线题：显示用户的配对（left → right 文本）
             const options = q.options || []
             return options.map((pair, i) => {
                 const rightIdx = Number(userAns[i])
@@ -127,7 +127,7 @@ export function useQuestionRecords(props: QuestionRecordsProps, emit: QuestionRe
             })
         }
         if (type === 'composite') {
-            // Bigquestion：Showeachchild questionScorerate
+            // 大题：显示各子题的得分率
             const subs = Array.isArray(q.content) ? q.content : []
             return subs.map((sub, i) => {
                 const subRecord = Array.isArray(userAns[i]) ? userAns[i] : []
@@ -160,32 +160,32 @@ export function useQuestionRecords(props: QuestionRecordsProps, emit: QuestionRe
                 : 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300'
         }
         if (type === 'sort') {
-            // RightthaneachitemsPositionIndexYesNoCorrect
+            // 对比每个位置的索引是否正确
             return Number(val) === Number(answer[idx])
                 ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-300'
                 : 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300'
         }
         if (type === 'classify') {
-            // RightthaneachitemsCategoryIndexYesNoCorrect
+            // 对比每项的分类索引是否正确
             return Number(val) === Number(answer[idx])
                 ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-300'
                 : 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300'
         }
         if (type === 'puzzle') {
-            // RightthaneachitemsPositionoriginalStartIndexYesNoCorrect
+            // 对比每个位置的原始索引是否正确
             return Number(val) === Number(answer[idx])
                 ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-300'
                 : 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300'
         }
         if (type === 'html') {
-            // HTML question：based on correct_rate Color
+            // HTML 题：根据 correct_rate 着色
             const rate = Number(val) || 0
             if (rate >= 1) return 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-300'
             if (rate > 0) return 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-300'
             return 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300'
         }
         if (type === 'short-answer') {
-            // Short Answer：useregex judgment
+            // 简答题：用正则判断
             try {
                 const re = new RegExp(answer[0] || '')
                 return re.test(String(val || ''))
@@ -196,13 +196,13 @@ export function useQuestionRecords(props: QuestionRecordsProps, emit: QuestionRe
             }
         }
         if (type === 'match') {
-            // connectLinequestion：Rightthan left[idx] YesNoconnectto right[idx]
+            // 连线题：对比 left[idx] 是否连到了 right[idx]
             return Number(val) === Number(answer[idx])
                 ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-300'
                 : 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300'
         }
         if (type === 'composite') {
-            // Bigquestion：based onchild questionScorerateColor
+            // 大题：根据子题得分率着色
             const subs = Array.isArray(q.content) ? q.content : []
             const sub = subs[idx]
             if (!sub) return 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
@@ -231,13 +231,13 @@ export function useQuestionRecords(props: QuestionRecordsProps, emit: QuestionRe
         return 'i-heroicons-x-circle'
     }
 
-    // ====================== optionitemsoption distribution bar chart（single/multiple） ======================
+    // ====================== 选项分布柱状图（single/multiple） ======================
     const showOptionChart = computed(() => {
         const type = props.question?.type
         return type === 'single' || type === 'multiple'
     })
 
-    // StatisticseachitemsoptionitemsSelectPersoncount
+    // 统计每个选项被选择的人数
     const optionCounts = computed(() => {
         const q = props.question
         if (!q || !showOptionChart.value) return []
@@ -314,7 +314,7 @@ export function useQuestionRecords(props: QuestionRecordsProps, emit: QuestionRe
 
     return {
         open, rows, pending, extraColumns, defaultSort,
-        recordIcon, recordIcon Class, formatUserAnswer, answerItemClass, formatCorrectRate,
+        recordIcon, recordIconClass, formatUserAnswer, answerItemClass, formatCorrectRate,
         showOptionChart, optionChartOption,
     }
 }

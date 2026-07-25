@@ -1,8 +1,8 @@
 /**
- * condition render component test
+ * condition render 组件测试
  * @see modules/lms/components/ueditor/extensions/nodes/vue/condition/render.vue
  *
- * useConditionRender returns directly (non provide/inject), uses useAuth + useAuthLms
+ * useConditionRender 直接返回（非 provide/inject），用 useAuth + useAuthLms
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

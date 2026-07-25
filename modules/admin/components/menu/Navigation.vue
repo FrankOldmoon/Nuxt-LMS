@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- Top: overview link + edit menu entry -->
+    <!-- 顶部：概览链接 + 编辑菜单入口 -->
     <div class="flex items-center justify-between mb-2">
       <NuxtLink
         to="/dashboard"
@@ -18,7 +18,7 @@
       />
     </div>
 
-    <!-- Desktop vertical menu -->
+    <!-- 桌面竖直菜单 -->
     <div class="hidden lg:block">
       <UNavigationMenu
         :items="navItems"
@@ -29,7 +29,7 @@
       />
     </div>
 
-    <!-- Mobile trigger button -->
+    <!-- 移动端触发按钮 -->
     <div class="lg:hidden">
       <UButton
         icon="i-lucide-menu"
@@ -42,7 +42,7 @@
       />
     </div>
 
-    <!-- Mobile floating drawer -->
+    <!-- 移动端浮动抽屉 -->
     <USlideover v-model:open="drawerOpen" side="left" :title="t('admin.menu.tables')">
       <template #body>
         <UNavigationMenu
@@ -55,7 +55,7 @@
       </template>
     </USlideover>
 
-    <!-- Menu editor -->
+    <!-- 菜单编辑器 -->
     <MenuEditor v-model:open="editorOpen" />
   </div>
 </template>
@@ -69,7 +69,7 @@ const route = useRoute()
 const drawerOpen = ref(false)
 const editorOpen = ref(false)
 
-// Menu items (tree): visibleItems → UNavigationMenu items (supports children nesting)
+// 菜单项（树形）：visibleItems → UNavigationMenu items（支持 children 嵌套）
 function toNav(list: MenuItem[]): any[] {
   return list.map((it) => {
     if (it.children?.length) {
@@ -89,12 +89,12 @@ function toNav(list: MenuItem[]): any[] {
 
 const navItems = computed(() => toNav(visibleItems.value))
 
-// Close mobile drawer on route change (mimics lms/main.vue)
+// 路由变化关闭移动抽屉（仿 lms/main.vue）
 watch(
   () => route.fullPath,
   () => {
     drawerOpen.value = false
   },
 )
-// Menu data is fetched by useAdminMenu's internal useFetch during SSR and serialized into payload, no need for onMounted secondary loading.
+// 菜单数据由 useAdminMenu 内部 useFetch 在 SSR 期拉取并序列化 payload，无需 onMounted 二次加载。
 </script>

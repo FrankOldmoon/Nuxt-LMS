@@ -6,12 +6,12 @@
 
         <ClassUsersTable :rows="rows" :loading="pending" :extra-columns="extraColumns" :hide-actions="true"
           :hide-teachers="true" :default-sort="defaultSort">
-          <!-- record columns：ShowStudent Selection/filledBodyContent + CorrectandNo -->
+          <!-- record 列：显示学生选择/填写的具体内容 + 正确与否 -->
           <template #record-cell="{ row }">
             <div class="flex items-start gap-2">
               <template v-if="row.original.record">
                 <UIcon :name="recordIcon(row.original.record)" class="w-3.5 h-3.5 mt-0.5 shrink-0"
-                  :class="recordIcon Class(row.original.record)" />
+                  :class="recordIconClass(row.original.record)" />
                 <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                   <span v-for="(ans, idx) in formatUserAnswer(row.original.record)" :key="idx"
                     class="text-xs px-1.5 py-0.5 rounded" :class="answerItemClass(row.original.record, idx)">
@@ -27,7 +27,7 @@
           </template>
         </ClassUsersTable>
 
-        <!-- optionitemsoption distribution bar chart（only single/multiple Type） -->
+        <!-- 选项分布柱状图（仅 single/multiple 类型） -->
         <ClientOnly v-if="showOptionChart">
           <div class="mt-4 pt-4 border-t border-default">
             <h3 class="text-sm font-medium mb-2">{{ $t('record.optionDistribution') }}</h3>
@@ -53,7 +53,7 @@ const emit = defineEmits(['update:modelValue'])
 
 const {
   open, rows, pending, extraColumns, defaultSort,
-  recordIcon, recordIcon Class, formatUserAnswer, answerItemClass, formatCorrectRate,
+  recordIcon, recordIconClass, formatUserAnswer, answerItemClass, formatCorrectRate,
   showOptionChart, optionChartOption,
 } = useQuestionRecords(props, emit)
 </script>

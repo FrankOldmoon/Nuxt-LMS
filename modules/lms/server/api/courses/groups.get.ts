@@ -1,9 +1,9 @@
 /**
- * Group management: get the grouping info of a class for a course
+ * 小组管理：获取指定班级在本课程的分组信息
  * GET /api/courses/groups?courseId=1&classId=2
  *
- * Returns only userId + group + score; student info is merged by the frontend from useClassUsers cache
- * group format: c_<groupName>; the first member by sort order is the group leader
+ * 仅返回 userId + group + score，学生信息由前端从 useClassUsers 缓存合并
+ * group 格式：c_<groupName>，组内排序第一个是组长
  */
 import { db, schema } from '@nuxthub/db'
 import { eq, and, inArray } from 'drizzle-orm'
@@ -13,15 +13,15 @@ export default eventHandler(async (event) => {
   const query = getQuery(event)
   const courseId = Number(query.courseId)
   const classId = Number(query.classId) || 0
-  if (!courseId) return cResp(null, 'Missing courseId', false)
-  if (!classId) return cResp(null, 'Missing classId', false)
+  if (!courseId) return cResp(null, '缺少 courseId', false)
+  if (!classId) return cResp(null, '缺少 classId', false)
 
-  // Get the class student userIds (only used to determine query scope)
+  // 获取该班级学生 userIds（仅用于确定查询范围）
   const classUsers = await getClassUsers(classId, courseId)
   const studentIds = classUsers.filter(u => !u.isTeacher).map(u => u.id)
   if (studentIds.length === 0) return cResp([])
 
-  // Query the group and score of these students in this course
+  // 查询这些学生在本课程的分组和得分
   const rows = await db
     .select({
       userId: schema.userCourses.userId,

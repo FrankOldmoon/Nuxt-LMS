@@ -1,8 +1,8 @@
 /**
- * useEditorItemDrafts composable tests
+ * useEditorItemDrafts composable 测试
  * @see modules/admin/composables/useEditorItemDrafts.ts
  *
- * Menu item edit draft: manages working copy of label/icon/to/table/visible
+ * 菜单项编辑草稿：管理 label/icon/to/table/visible 的工作副本
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'

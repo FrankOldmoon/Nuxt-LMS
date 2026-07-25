@@ -1,8 +1,8 @@
 /**
- * course/gradesModal/studentCriteria.vue component test
+ * course/gradesModal/studentCriteria.vue 组件测试
  * @see modules/lms/components/course/gradesModal/studentCriteria.vue
  *
- * Student-side grading criteria display (read-only): weights + grade levels
+ * 学生端评分标准展示（只读）：权重 + 等第
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -83,9 +83,9 @@ describe('course/gradesModal/studentCriteria.vue', () => {
     setupContext()
     const { default: StudentCriteria } = await import('../../../../components/course/gradesModal/studentCriteria.vue')
     const wrapper = mount(StudentCriteria, { global: _globalConfig })
-    // Expanded by default
+    // 默认展开
     expect(wrapper.text()).toContain('coursePanel.weights')
-    // Click to collapse
+    // 点击折叠
     await wrapper.find('button').trigger('click')
     expect(wrapper.text()).not.toContain('coursePanel.weights')
   })
@@ -104,7 +104,7 @@ describe('course/gradesModal/studentCriteria.vue', () => {
     const { default: StudentCriteria } = await import('../../../../components/course/gradesModal/studentCriteria.vue')
     const wrapper = mount(StudentCriteria, { global: _globalConfig })
     const text = wrapper.text()
-    // A (90) should come before B (80), B should come before C (70)
+    // A (90) 应在 B (80) 之前，B 应在 C (70) 之前
     const aIdx = text.indexOf('A')
     const bIdx = text.indexOf('B')
     const cIdx = text.indexOf('C')

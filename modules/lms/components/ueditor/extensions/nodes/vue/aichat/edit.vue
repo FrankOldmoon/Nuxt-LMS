@@ -11,15 +11,15 @@
     <UFormField :label="t('ueditor.aichatOpening')" size="sm">
         <UTextarea v-model="cfgOpening" :rows="2" size="sm" class="w-full" />
     </UFormField>
-    <!-- API / Ollama mode：TextInputModelname -->
+    <!-- API / Ollama 模式：文本输入模型名 -->
     <UFormField v-if="cfgMode === 'api' || cfgMode === 'ollama'" :label="t('ueditor.aichatModel')" size="sm">
         <UInput v-model="cfgModel" :placeholder="cfgMode === 'ollama' ? 'llama3.2' : t('ueditor.aichatModelPlaceholder')" size="sm" class="w-full" />
     </UFormField>
-    <!-- localGroundmode：DropdownlocalGroundModel -->
+    <!-- 本地模式：下拉选择本地模型 -->
     <UFormField v-else :label="t('ai.localModel')" size="sm">
         <USelect v-model="cfgModel" :items="LOCAL_LLM_MODELS" size="sm" class="w-full" />
     </UFormField>
-    <!-- thinking only API modeValid（localGround WebLLM / Ollama not support） -->
+    <!-- thinking 仅 API 模式有效（本地 WebLLM / Ollama 不支持） -->
     <UFormField v-if="cfgMode === 'api'" :label="t('ueditor.aichatThinking')" size="sm" :hint="t('ueditor.aichatThinkingHint')">
         <USwitch v-model="cfgThinking" />
     </UFormField>
@@ -48,15 +48,15 @@ const modeOptions = computed(() => [
     { label: t('ai.modeOllama'), value: 'ollama' },
 ])
 
-// Switch ModewhenReset model Rightshouldpattern reasonableDefault Value，avoid mixuse
+// 切换模式时重置 model 为对应模式的合理默认值，避免串用
 watch(cfgMode, (newMode, oldMode) => {
     if (newMode === oldMode) return
-    const isLocal model = LOCAL_LLM_MODELS.some(m => m.value === cfgModel.value)
-    if (newMode === 'local' && !isLocal model) {
+    const isLocalModel = LOCAL_LLM_MODELS.some(m => m.value === cfgModel.value)
+    if (newMode === 'local' && !isLocalModel) {
         cfgModel.value = DEFAULT_LLM_MODEL
-    } else if (newMode === 'api' && isLocal model) {
+    } else if (newMode === 'api' && isLocalModel) {
         cfgModel.value = 'glm-4.5-air'
-    } else if (newMode === 'ollama' && isLocal model) {
+    } else if (newMode === 'ollama' && isLocalModel) {
         cfgModel.value = 'llama3.2'
     }
 })

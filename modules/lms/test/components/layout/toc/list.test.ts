@@ -1,9 +1,9 @@
 /**
- * layout/toc/list.vue component test
+ * layout/toc/list.vue 组件测试
  * @see modules/lms/components/layout/toc/list.vue
  *
- * TOC list: recursively renders TOC links (supports three levels), click to navigate.
- * Uses useList(props) (from ./useList.ts), internally depends on useChapterTask.
+ * 目录列表：递归渲染 TOC links（支持三级），点击跳转。
+ * 使用 useList(props)（来自 ./useList.ts），内部依赖 useChapterTask。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -13,7 +13,7 @@ import { resetAllStubs, setMockI18n } from '../../../../../../test/setup/nuxt-st
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
-  // stub useChapterTask (auto-import) — returns null indicating not on chapter page
+  // stub useChapterTask（auto-import）— 返回 null 表示不在章节页
   ;(globalThis as any).useChapterTask = () => null
 })
 

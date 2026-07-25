@@ -10,5 +10,5 @@
 </template>
 
 <script setup>
-// NoneOutsideexternal dependencies
+// 无外部依赖
 </script>

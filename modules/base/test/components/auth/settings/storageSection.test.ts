@@ -1,5 +1,5 @@
 /**
- * auth/settings/storageSection.vue component tests
+ * auth/settings/storageSection.vue 组件测试
  * @see modules/base/components/auth/settings/storageSection.vue
  */
 import {

@@ -1,8 +1,8 @@
 /**
- * lms/configEditor/gridSections.vue component test
+ * lms/configEditor/gridSections.vue 组件测试
  * @see modules/lms/components/lms/configEditor/gridSections.vue
  *
- * Course list visibility config + cloud storage config
+ * 课程列表显隐配置 + 网盘存储配置
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -69,7 +69,7 @@ describe('lms/configEditor/gridSections.vue', () => {
     expect(wrapper.text()).toContain('lmsConfig.showSearch')
     expect(wrapper.text()).toContain('lmsConfig.showFilter')
     expect(wrapper.text()).toContain('lmsConfig.showSort')
-    // 3 switches
+    // 3 个开关
     expect(wrapper.findAll('.uswitch').length).toBe(3)
   })
 

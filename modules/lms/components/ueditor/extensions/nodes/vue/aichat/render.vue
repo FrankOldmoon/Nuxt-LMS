@@ -1,5 +1,5 @@
 <template>
-    <!-- duplicateuse AiLlm，HideParameter Settings（by edit.vue provide parameters） -->
+    <!-- 复用 AiLlm，隐藏参数设置（由 edit.vue 提供参数） -->
     <AiLlm
         :show-settings="false"
         :mode="config.mode || 'api'"

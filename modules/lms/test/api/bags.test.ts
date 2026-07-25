@@ -1,5 +1,5 @@
 /**
- * LMS Bags API endpoint test
+ * LMS Bags API 端点测试
  * @see modules/lms/server/api/bags/my.get.ts
  * @see modules/lms/server/api/bags/coin.get.ts
  */
@@ -40,7 +40,7 @@ describe('API: bags/my.get', () => {
       { goodId: 1, quantity: 2, courseId: 0, name: 'Homework Pass', content: {}, price: 50, sellPrice: 25, stock: -1, type: 'item' },
       { goodId: 2, quantity: 1, courseId: 1, name: 'Course Card', content: {}, price: 30, sellPrice: 15, stock: 10, type: 'item' },
     ]
-    // select().from().innerJoin().where() → where is the terminal method
+    // select().from().innerJoin().where() → where 是终端方法
     _mockDb.where = vi.fn().mockResolvedValue(sample)
     const handler = (await import('../../server/api/bags/my.get')).default
     const result = await handler(makeEvent({ query: { courseId: 1 } }))

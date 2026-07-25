@@ -1,9 +1,9 @@
 /**
- * class/modal/studentMode.vue component test
+ * class/modal/studentMode.vue 组件测试
  * @see modules/lms/components/class/modal/studentMode.vue
  *
- * Student mode: single-select class (radio group) or empty hint.
- * Depends on useClassModalContext() (inject), stubbed to globalThis in tests.
+ * 学生模式：单选班级（radio group）或空提示。
+ * 依赖 useClassModalContext()（inject），测试中 stub 到 globalThis。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'

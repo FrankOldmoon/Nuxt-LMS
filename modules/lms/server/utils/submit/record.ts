@@ -1,10 +1,10 @@
 /**
- * Submit API common record lookup
+ * 提交 API 通用记录查找
  *
- * The primary key of all userXxx tables is (userId, courseId, xxxCid), and the findFirst logic is exactly the same,
- * extracted as a common utility to avoid repeating the same where construction in every submit.
+ * 所有 userXxx 表的主键都是 (userId, courseId, xxxCid)，findFirst 逻辑完全一致，
+ * 抽出为通用工具避免每个 submit 都重复同样的 where 构造。
  *
- * TABLES uses lazy initialization (getter pattern), allowing tests to mock only some userXxx tables.
+ * TABLES 使用惰性初始化（getter 模式），允许测试只 mock 部分 userXxx 表。
  */
 import { db, schema } from '@nuxthub/db'
 import { and, eq } from 'drizzle-orm'
@@ -18,7 +18,7 @@ export interface SubmitRecordTable {
   cidField: any
 }
 
-/** Lazily construct the TABLES view for the specified type on demand (avoids requiring all userXxx tables to be mocked at module load time) */
+/** 惰性按需构造指定类型的 TABLES 视图（避免在模块加载时强制要求所有 userXxx 表都已 mock） */
 function buildTable(type: RecordType): SubmitRecordTable {
   switch (type) {
     case 'question':
@@ -52,7 +52,7 @@ function buildTable(type: RecordType): SubmitRecordTable {
   }
 }
 
-/** Get the db.query.<name> reference by type */
+/** 按 type 获取 db.query.<name> 引用 */
 function buildQuery(type: RecordType): any {
   const map: Record<RecordType, any> = {
     question: db.query.userQuestions,
@@ -64,7 +64,7 @@ function buildQuery(type: RecordType): any {
 }
 
 /**
- * Common findFirst: returns the entire row when userId + courseId + cid matches, otherwise null.
+ * 通用 findFirst：userId + courseId + cid 命中时返回整行，否则 null。
  *   const existing = await findUserSubmitRecord(user.id, courseId, 'question', questionCid)
  */
 export async function findUserSubmitRecord(
@@ -85,7 +85,7 @@ export async function findUserSubmitRecord(
   })
 }
 
-/** Synchronous access to TABLES (only used for dispatching by type in other utilities like submit/questions). Note: only available when all 4 tables are mocked. */
+/** 同步访问 TABLES（仅用于在 submit/questions 等其它工具里以 type 分发）。注：仅当 4 张表都 mock 时可用。 */
 export const SUBMIT_RECORD_TABLES: Record<RecordType, SubmitRecordTable | undefined> = new Proxy({} as any, {
   get(_target, prop: string) {
     return buildTable(prop as RecordType)

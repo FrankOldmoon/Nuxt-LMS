@@ -1,11 +1,11 @@
 /**
- * formField/richEditorField component tests
+ * formField/richEditorField 组件测试
  * @see modules/admin/components/table/formField/richEditorField.vue
  *
- * Wrapped in ClientOnly:
- * - moduleLms enabled + RichEditor component resolvable → use RichEditor
- * - Otherwise → fallback to UTextarea (binds to jsonStrings[col.jsName])
- * Shows error message when jsonErrors[col.jsName] = true
+ * ClientOnly 包裹：
+ * - moduleLms 启用 + RichEditor 组件可解析 → 用 RichEditor
+ * - 否则 → 回退 UTextarea（绑定 jsonStrings[col.jsName]）
+ * jsonErrors[col.jsName] = true 时显示错误提示
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -56,7 +56,7 @@ function makeCol(over: Partial<any> = {}) {
 
 describe('formField/richEditorField.vue', () => {
   it('moduleLms 未启用时回退 UTextarea 绑定 jsonStrings', async () => {
-    // Default useRuntimeConfig().public.moduleLms = false (nuxt-stubs initial value)
+    // 默认 useRuntimeConfig().public.moduleLms = false（nuxt-stubs 初始值）
     setMockRuntimeConfig({ public: { moduleBase: true, moduleLms: false } })
     const { default: RichEditorField } = await import('../../../components/table/formField/richEditorField.vue')
     const wrapper = mount(RichEditorField, {

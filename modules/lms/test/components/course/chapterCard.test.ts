@@ -1,8 +1,8 @@
 /**
- * course/chapterCard.vue component test
+ * course/chapterCard.vue 组件测试
  * @see modules/lms/components/course/chapterCard.vue
  *
- * Chapter card: contains lock/pass icon + inaccessible disabled
+ * 章节卡片：含锁/通过图标 + 不可访问禁用
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -49,7 +49,7 @@ describe('course/chapterCard.vue', () => {
       global: _globalConfig,
     })
     expect(wrapper.text()).toContain('第一章 Vue 基础')
-    // Index 0 → number "01"
+    // 索引 0 → 编号 "01"
     expect(wrapper.text()).toContain('01')
   })
 
@@ -60,7 +60,7 @@ describe('course/chapterCard.vue', () => {
       global: _globalConfig,
     })
     expect(wrapper.find('.nuxt-link').attributes('href')).toBe('/course/1/1')
-    // Index 2 → number "03"
+    // 索引 2 → 编号 "03"
     expect(wrapper.text()).toContain('03')
   })
 
@@ -70,10 +70,10 @@ describe('course/chapterCard.vue', () => {
       props: { item: { ...baseItem, accessible: false }, index: 0 },
       global: _globalConfig,
     })
-    // Lock icon
+    // 锁图标
     const lockIcon = wrapper.find('[data-name="i-lucide-lock"]')
     expect(lockIcon.exists()).toBe(true)
-    // Link to is undefined
+    // 链接 to 为 undefined
     expect(wrapper.find('.nuxt-link').attributes('href')).toBeUndefined()
   })
 

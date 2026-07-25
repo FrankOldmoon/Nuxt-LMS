@@ -2,10 +2,10 @@ import { Node, InputRule, PasteRule, mergeAttributes } from '@tiptap/core'
 import { VueNodeViewRenderer } from '@tiptap/vue-3'
 import VueNodeView from './node-view.vue'
 
-// publicTotalmatch ing rule
+// 公共匹配规则
 const INPUT_REGEX = /\{\{(.*?)\}\}/
 
-// publicTotalHandler Function
+// 公共处理函数
 const handleMatch = ({ state, range, match, commands }) => {
   const content = match[1].trim()
   commands.deleteRange(range)

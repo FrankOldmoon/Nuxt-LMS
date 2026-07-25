@@ -1,8 +1,8 @@
 /**
- * LMS db utility test
+ * LMS db 工具测试
  * @see modules/lms/server/utils/db.ts
  *
- * Test saveContentVersion / listContentVersions / getContentVersion /
+ * 测试 saveContentVersion / listContentVersions / getContentVersion /
  *      restoreContentVersion / getCourseMembers / updateCourseMember / getClassUsers
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -43,7 +43,7 @@ import { getCourseMembers, updateCourseMember } from '../../server/utils/db/cour
 import { getClassUsers } from '../../server/utils/db/classUsers'
 import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'
 
-/** Create thenable chain mock: all chain methods return this, await chain obtains result */
+/** 创建 thenable 链式 mock：所有链方法返回 this，await chain 获得 result */
 function chainReturning(result: any = []) {
   const chain: any = {
     from: vi.fn().mockReturnThis(),
@@ -65,12 +65,12 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-// ====================== Content version snapshots ======================
+// ====================== 内容版本快照 ======================
 
 describe('server/utils/db - saveContentVersion', () => {
   it('插入快照且版本数 ≤ maxKeep 时不删除', async () => {
     vi.mocked(db.insert).mockReturnValue(chainReturning())
-    vi.mocked(db.select).mockReturnValue(chainReturning([{ id: 1 }, { id: 2 }])) // 2 entries ≤ maxKeep(10)
+    vi.mocked(db.select).mockReturnValue(chainReturning([{ id: 1 }, { id: 2 }])) // 2 条 ≤ maxKeep(10)
 
     await saveContentVersion('course', 1, { text: 'old' })
 
@@ -80,7 +80,7 @@ describe('server/utils/db - saveContentVersion', () => {
 
   it('版本数 > maxKeep 时删除多余版本', async () => {
     vi.mocked(db.insert).mockReturnValue(chainReturning())
-    // 12 entries, maxKeep=10 → delete last 2
+    // 12 条，maxKeep=10 → 删除最后 2 条
     const versions = Array.from({ length: 12 }, (_, i) => ({ id: i + 1 }))
     vi.mocked(db.select).mockReturnValue(chainReturning(versions))
     vi.mocked(db.delete).mockReturnValue(chainReturning())
@@ -96,7 +96,7 @@ describe('server/utils/db - saveContentVersion', () => {
 
     await saveContentVersion('chapter', 5, { text: 'old' })
 
-    // insert is called (using chapterVersions table)
+    // insert 被调用（使用 chapterVersions 表）
     expect(db.insert).toHaveBeenCalledTimes(1)
   })
 })
@@ -141,16 +141,16 @@ describe('server/utils/db - restoreContentVersion', () => {
   it('保存当前内容为快照 + 写回历史内容', async () => {
     vi.mocked(showTable).mockResolvedValue({ content: { old: true } } as any)
     vi.mocked(db.insert).mockReturnValue(chainReturning())
-    vi.mocked(db.select).mockReturnValue(chainReturning([])) // Version query of saveContentVersion
+    vi.mocked(db.select).mockReturnValue(chainReturning([])) // saveContentVersion 的版本查询
     vi.mocked(updateTable).mockResolvedValue(undefined as any)
 
     await restoreContentVersion('course', 1, { restored: true })
 
-    // showTable gets current content
+    // showTable 获取当前内容
     expect(showTable).toHaveBeenCalledWith('courses', 1)
-    // saveContentVersion saves old content
+    // saveContentVersion 保存旧内容
     expect(db.insert).toHaveBeenCalledTimes(1)
-    // updateTable writes back new content
+    // updateTable 写回新内容
     expect(updateTable).toHaveBeenCalledWith('courses', 1, { content: { restored: true } })
   })
 
@@ -165,7 +165,7 @@ describe('server/utils/db - restoreContentVersion', () => {
   })
 })
 
-// ====================== Course member management ======================
+// ====================== 课程成员管理 ======================
 
 describe('server/utils/db - getCourseMembers', () => {
   it('返回教师和编辑者列表', async () => {
@@ -188,16 +188,16 @@ describe('server/utils/db - updateCourseMember', () => {
     await updateCourseMember(1, 2, 'teacher', 'add')
 
     expect(db.update).toHaveBeenCalledTimes(1)
-    const setArg = vi.mocked(db.update).mock.calls[0][1] // update(table)'s second argument? 
-    // Actual call: db.update(schema.userCourses).set({ isTeacher: true })
-    // update's first argument is schema.userCourses, set's argument is { isTeacher: true }
-    // Since update returns chainReturning, set returns this
-    // Verify set is called
+    const setArg = vi.mocked(db.update).mock.calls[0][1] // update(table) 的第二参数? 
+    // 实际调用：db.update(schema.userCourses).set({ isTeacher: true })
+    // update 的第一个参数是 schema.userCourses，set 的参数是 { isTeacher: true }
+    // 由于 update 返回 chainReturning，set 返回 this
+    // 检查 set 被调用
     expect(db.update).toHaveBeenCalledTimes(1)
   })
 
   it('无记录 + add editor → insert', async () => {
-    vi.mocked(db.select).mockReturnValue(chainReturning([])) // No existing
+    vi.mocked(db.select).mockReturnValue(chainReturning([])) // 无 existing
     vi.mocked(db.insert).mockReturnValue(chainReturning())
 
     await updateCourseMember(1, 3, 'editor', 'add')
@@ -215,7 +215,7 @@ describe('server/utils/db - updateCourseMember', () => {
   })
 })
 
-// ====================== Class user queries ======================
+// ====================== 班级用户查询 ======================
 
 describe('server/utils/db - getClassUsers', () => {
   it('合并关联表和直接归属用户（去重）', async () => {
@@ -224,26 +224,26 @@ describe('server/utils/db - getClassUsers', () => {
       { id: 2, username: 'u2', name: 'U2', isTeacher: null },
     ]
     const directUsers = [
-      { id: 2, username: 'u2', name: 'U2' }, // Duplicate with relUsers
-      { id: 3, username: 'u3', name: 'U3' }, // New user
+      { id: 2, username: 'u2', name: 'U2' }, // 与 relUsers 重复
+      { id: 3, username: 'u3', name: 'U3' }, // 新用户
     ]
     vi.mocked(db.select)
-      .mockReturnValueOnce(chainReturning(relUsers))    // relUsers query
-      .mockReturnValueOnce(chainReturning(directUsers))  // directUsers query
+      .mockReturnValueOnce(chainReturning(relUsers))    // relUsers 查询
+      .mockReturnValueOnce(chainReturning(directUsers))  // directUsers 查询
 
     const result = await getClassUsers(1)
 
     expect(result).toHaveLength(3) // u1 + u2 + u3
-    // Users in relUsers retain isTeacher
+    // relUsers 中的用户保留 isTeacher
     expect(result.find(u => u.id === 1)?.isTeacher).toBe(true)
-    // New users in directUsers have isTeacher as null
+    // directUsers 中的新用户 isTeacher 为 null
     expect(result.find(u => u.id === 3)?.isTeacher).toBeNull()
   })
 
   it('有 courseId 时合并 userCourses 的 number 和 group', async () => {
     const relUsers = [{ id: 1, username: 'u1', name: 'U1', isTeacher: null }]
     vi.mocked(db.select).mockReturnValueOnce(chainReturning(relUsers))
-    vi.mocked(db.select).mockReturnValueOnce(chainReturning([])) // directUsers is empty
+    vi.mocked(db.select).mockReturnValueOnce(chainReturning([])) // directUsers 空
     vi.mocked(db.query.userCourses.findMany).mockResolvedValue([
       { userId: 1, number: '01', group: 'A' },
     ] as any)

@@ -10,11 +10,11 @@ export function useNav() {
   const fileInputRef = ref<HTMLInputElement | null>(null)
 
   /**
-   * Navigation saveBackRefresh：
-   * - mainly by Serverserver broadcast 'home-changed'（categories/courses add|update|batch|delete|import）
-   *   → useHome() Inside WS handler Trigger refreshNuxtData('home-singleton-fetch')
-   *   → All useHeaderNav / pages/index.vue / Other useHome() consumers real-timeUpdate
-   * - thislocationthenCallonetimes refresh() as fallbackBottom（prevent WS notConnectionorbroadcast lost）
+   * 导航保存后刷新：
+   * - 主要靠服务端广播 'home-changed'（categories/courses add|update|batch|delete|import）
+   *   → useHome() 内部 WS handler 触发 refreshNuxtData('home-singleton-fetch')
+   *   → 所有 useHeaderNav / pages/index.vue / 其他 useHome() 消费者实时更新
+   * - 此处再调用一次 refresh() 作为兜底（防止 WS 未连接或广播丢失）
    */
   async function handleSaved() {
     if (refresh) {
@@ -22,21 +22,21 @@ export function useNav() {
     }
   }
 
-  /** TriggerFile Selection */
+  /** 触发文件选择 */
   function triggerFilePicker() {
     fileInputRef.value?.click()
   }
 
   /**
-   * Select FileBack：
-   * 1. Analysis JSON
-   * 2. Call /api/courses/import
-   * 3. SuccessBackpopup toast，RefreshNavigation
+   * 选择文件后：
+   * 1. 解析 JSON
+   * 2. 调用 /api/courses/import
+   * 3. 成功后弹 toast，刷新导航
    */
   async function onFileSelected(e: Event) {
     const input = e.target as HTMLInputElement
     const file = input.files?.[0]
-    // Clear value，AllowHeavyduplicateSelectsameoneFile
+    // 清空 value，允许重复选择同一文件
     input.value = ''
     if (!file) return
 
@@ -65,7 +65,7 @@ export function useNav() {
         description: summary,
         color: 'success',
       })
-      // RefreshTop Navigation，letNewCourseShowshow
+      // 刷新顶部导航，让新课程显示出来
       if (refresh) await refresh()
     } catch (err: any) {
       toast.add({
@@ -79,6 +79,6 @@ export function useNav() {
   }
 
   return {
-    hasRole, links, handle saved, importing, triggerFilePicker, fileInputRef, onFileSelected,
+    hasRole, links, handleSaved, importing, triggerFilePicker, fileInputRef, onFileSelected,
   }
 }

@@ -22,7 +22,7 @@
               class="size-3.5 shrink-0 text-success" />
           </a>
 
-          <!-- recursiveRenderSonTitle -->
+          <!-- 递归渲染子标题 -->
           <ul
             v-if="link.children?.length"
             class="flex flex-col gap-0.5 ms-3 border-s border-default ps-2 mt-0.5"
@@ -43,7 +43,7 @@
                   class="size-3.5 shrink-0 text-success" />
               </a>
 
-              <!-- support three-levelTitle -->
+              <!-- 支持三级标题 -->
               <ul
                 v-if="child.children?.length"
                 class="flex flex-col gap-0.5 ms-3 border-s border-default ps-2 mt-0.5"

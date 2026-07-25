@@ -1,8 +1,8 @@
 /**
- * lms/configEditor/userSection.vue component test
+ * lms/configEditor/userSection.vue 组件测试
  * @see modules/lms/components/lms/configEditor/userSection.vue
  *
- * User-side feature availability config: 5 switches (avatar/password/email/language/export)
+ * 用户端功能可用性配置：5 个开关（头像/密码/邮箱/语言/导出）
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

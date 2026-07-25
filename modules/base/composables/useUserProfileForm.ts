@@ -13,7 +13,7 @@ interface UserProfileForm {
 }
 
 /**
- * User profile form: avatar upload + editability + class options
+ * 用户资料表单：头像上传 + 可编辑性 + 班级选项
  */
 export function useUserProfileForm(form: Ref<UserProfileForm>) {
   const toast = useToast()
@@ -27,7 +27,7 @@ export function useUserProfileForm(form: Ref<UserProfileForm>) {
     allowChangeEmail,
   } = useUserProfileConfig()
 
-  // Role-based editability
+  // 基于角色的可编辑性
   const canEditGeneral = computed(() => hasRole('admin') || hasRole('teacher'))
   const canEditAvatar = computed(() => allowSelfAvatarUpload.value && canEditGeneral.value)
   const canEditClass = computed(() => hasRole('admin'))

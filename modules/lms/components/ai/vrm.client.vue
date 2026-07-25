@@ -3,7 +3,7 @@
     <div
       class="relative w-[300px] h-[400px] rounded-2xl overflow-hidden shadow-2xl border border-default bg-default/90 backdrop-blur-sm"
     >
-      <!-- Close Button -->
+      <!-- 关闭按钮 -->
       <button
         type="button"
         class="absolute top-2 right-2 z-10 size-7 rounded-full flex items-center justify-center bg-black/30 hover:bg-black/50 text-white/80 hover:text-white transition-colors"
@@ -13,12 +13,12 @@
         <UIcon name="i-lucide-x" class="size-4" />
       </button>
 
-      <!-- Title -->
+      <!-- 标题 -->
       <div class="absolute top-2 left-3 z-10 text-xs text-white/70 font-medium pointer-events-none">
         {{ t('ai.digitalHuman') }}
       </div>
 
-      <!-- Loading -->
+      <!-- 加载中 -->
       <div
         v-if="loadState === 'loading'"
         class="absolute inset-0 flex flex-col items-center justify-center gap-3"
@@ -27,7 +27,7 @@
         <span class="text-xs text-muted">{{ loadingLabel }}</span>
       </div>
 
-      <!-- Error -->
+      <!-- 错误 -->
       <div
         v-else-if="loadState === 'error'"
         class="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6"
@@ -36,7 +36,7 @@
         <span class="text-xs text-red-500 text-center leading-relaxed">{{ errorMsg }}</span>
       </div>
 
-      <!-- Canvas（3D Render） -->
+      <!-- Canvas（3D 渲染） -->
       <canvas v-show="loadState === 'ready'" ref="canvasRef" class="w-full h-full block" />
     </div>
   </div>

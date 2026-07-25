@@ -2,19 +2,19 @@ import { ref, watch, computed, onMounted, onBeforeUnmount, inject, nextTick } fr
 import { submitQuestion, recordAnswer, computeCorrectRate } from './shared'
 
 export function useFill(props: any) {
-  const submitted = inject<import('vue').Ref<boolean>>('question submitted')!
+  const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')!
   const isCorrect = inject<import('vue').Ref<boolean>>('questionIsCorrect')!
   const fromRecord = inject<import('vue').Ref<boolean>>('questionFromRecord')!
   const { courseId, chapterId } = useLmsContext()
   const fillAnswers = ref<any[]>([])
   let inputEls: HTMLInputElement[] = []
 
-  // findtoCurrentQuestionareaDownAll input frame
+  // 找到当前题目区域下的所有 input 框
   function getInputContainer(): Element | null {
     return document.querySelector(`[data-question-id="${props.questionId}"] .prose`)
   }
 
-  // collect DOM MiddleAll input frameandbindEvent
+  // 收集 DOM 中所有 input 框并绑定事件
   function bindInputs() {
     const container = getInputContainer()
     if (!container) return
@@ -36,7 +36,7 @@ export function useFill(props: any) {
   function onInput(e: Event) {
     const target = e.target as HTMLInputElement
     const idx = Number(target.dataset.fillIndex)
-    // SubmitBackHeavyNewanswer，ClearjudgeStatus
+    // 提交后重新作答，清除判断状态
     if (submitted.value) {
       submitted.value = false
     }
@@ -52,18 +52,18 @@ export function useFill(props: any) {
     setTimeout(bindInputs, 0)
   })
 
-  // InitializefillEmptyAnswer
+  // 初始化填空答案
   watch(() => props.question, (q: any) => {
     if (q?.type === 'fill') {
       fillAnswers.value = (q.answer || []).map(() => '')
     }
   }, { immediate: true })
 
-  // listen record change，Syncto fillAnswers and DOM（fetchRecord backfill scenario）
+  // 监听 record 变化，同步到 fillAnswers 和 DOM（fetchRecord 回填场景）
   watch(() => props.question?.record, (record: any) => {
     if (!Array.isArray(record) || record.length === 0) return
     fillAnswers.value = [...record]
-    // DOM cancanalsonotRender，use nextTick ensurealreadyMount
+    // DOM 可能还未渲染，用 nextTick 确保已挂载
     nextTick(() => {
       const container = getInputContainer()
       if (!container) return
@@ -81,7 +81,7 @@ export function useFill(props: any) {
     return s && s.trim() !== ''
   }))
 
-  // submit BacktoInput BoxColor：CorrectGreen、ErrorRed（support regex match ing）
+  // submit 后给输入框着色：正确绿、错误红（支持正则匹配）
   function styleInputs() {
     const container = getInputContainer()
     if (!container) return
@@ -113,7 +113,7 @@ export function useFill(props: any) {
     })
   }
 
-  // ClearInput BoxColor
+  // 清除输入框着色
   function clearInputStyles() {
     const container = getInputContainer()
     if (!container) return
@@ -124,14 +124,14 @@ export function useFill(props: any) {
     })
   }
 
-  // submitted change false whenClearColor（reset scenario）
+  // submitted 变为 false 时清除着色（reset 场景）
   watch(submitted, (val) => {
     if (!val) clearInputStyles()
   })
 
   function submit() {
     if (!props.question) return
-    // SubmitFrontfrom DOM collectLatestValue
+    // 提交前从 DOM 收集最新值
     const container = getInputContainer()
     if (container) {
       const inputs = container.querySelectorAll('input')
@@ -144,7 +144,7 @@ export function useFill(props: any) {
     const correct = qAnswer.length > 0 && qAnswer.every((ans: any, i: number) => {
       const userVal = (fillAnswers.value[i] || '').trim()
       const correctVal = String(ans).trim()
-      // support regex match ing
+      // 支持正则表达式匹配
       if (qOptions[i] === 'regex') {
         try {
           return new RegExp(correctVal).test(userVal)
@@ -178,7 +178,7 @@ export function useFill(props: any) {
     props.question.record = []
   }
 
-  // fillCorrectAnswer record
+  // 填充正确答案为 record
   function fillCorrectAnswer() {
     if (props.question?.answer && props.question.answer.length > 0) {
       const container = getInputContainer()

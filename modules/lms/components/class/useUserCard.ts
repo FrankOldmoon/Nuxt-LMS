@@ -8,18 +8,18 @@ type MyStats = {
 }
 
 /**
- * Composable logic for class/userCard.vue.
+ * class/userCard.vue 的组合式逻辑。
  *
- * Note: function named useUserCardSetup (not useUserCard) to avoid
- * same-name recursive call with composables/useUserCard.ts's globally auto-imported useUserCard().
- * Nuxt auto-import works in .ts: internal calls to useUserCard() resolve to the global composable.
+ * 注意：函数命名为 useUserCardSetup（而非 useUserCard），避免与
+ * composables/useUserCard.ts 的全局自动导入 useUserCard() 产生同名递归调用。
+ * Nuxt 自动导入在 .ts 中生效：内部调用 useUserCard() 解析为全局 composable。
  */
 export function useUserCardSetup() {
     const { user } = useAuth()
     const route = useRoute()
     const { myMedals, fetchMyMedals, checkMedals } = useMedals()
 
-    // Course/chapter ID in route
+    // 路由中的课程/章节 ID
     const courseId = computed(() => Number(route.params.id) || 0)
     const chapterId = computed(() => Number(route.params.cid) || 0)
 
@@ -27,11 +27,11 @@ export function useUserCardSetup() {
     const hasChapter = computed(() => chapterId.value > 0)
 
     /**
-     * Single data source (useState global state)
+     * 单一数据源（useState 全局状态）
      *
-     * Does not use cRequest.use (useFetch path) because it would hit nuxtApp.payload.data cache,
-     * causing refresh() to actually get stale SSR data, unable to update in real-time after answering questions/submitting homework.
-     * Here we use imperative cRequest + write to useState, every time is a real request.
+     * 不使用 cRequest.use（useFetch 路径），因为它会命中 nuxtApp.payload.data 缓存，
+     * 导致 refresh() 实际拿到 SSR 时的旧数据，做题/交作业后无法实时更新。
+     * 这里改用命令式 cRequest + 写入 useState，每次都是真实请求。
      */
     const stats = useState<MyStats>('user-card-stats', () => ({
         courseScore: 0,
@@ -54,24 +54,24 @@ export function useUserCardSetup() {
             })
             stats.value = data
         } catch {
-            // Silently ignored, keep old value
+            // 静默忽略，保持旧值
         }
     }
 
-    // Refetch on route change (entering/switching course/chapter)
+    // 路由变化时（进入/切换课程/章节）重新拉取
     watch([courseId, chapterId], () => { fetchStats() }, { immediate: true })
 
-    // Listen to global trigger: auto refresh + check medals after scoring actions like answering questions / submitting homework / commenting
+    // 监听全局 trigger：答题 / 交作业 / 评论等加分操作后自动刷新 + 检查奖章
     const { refreshTrigger } = useUserCard()
     watch(refreshTrigger, () => {
         fetchStats()
         if (courseId.value) checkMedals(courseId.value)
     })
 
-    // Fetch earned medals on entering course
+    // 进入课程时拉取已获奖章
     watch(courseId, () => { fetchMyMedals() }, { immediate: true })
 
-    // Medal icon color mapping
+    // 奖章图标颜色映射
     function medalIconColor(color: any) {
         const map: Record<string, string> = {
             bronze: 'text-amber-700',
@@ -92,12 +92,12 @@ export function useUserCardSetup() {
     const coin = computed(() => stats.value.coin)
     const chapterScore = computed(() => stats.value.chapterScore)
 
-    // Experience → level conversion
-    // Cumulative experience threshold for level n = 50 * (n-1) * n
+    // 经验 → 等级换算
+    // 等级 n 的累计经验阈值 = 50 * (n-1) * n
     // Lv.1: 0   Lv.2: 100   Lv.3: 300   Lv.4: 600   Lv.5: 1000 ...
     const levelInfo = computed(() => {
         const total = Math.max(0, exp.value)
-        // Solve 50*(l-1)*l = total → l = (1 + sqrt(1 + 8*total/100)) / 2
+        // 解 50*(l-1)*l = total → l = (1 + sqrt(1 + 8*total/100)) / 2
         const raw = (1 + Math.sqrt(1 + (8 * total) / 100)) / 2
         const level = Math.max(1, Math.floor(raw))
         const currentThreshold = 50 * (level - 1) * level
@@ -113,14 +113,14 @@ export function useUserCardSetup() {
         }
     })
 
-    // Score display (keep 1 decimal place)
+    // 积分显示（保留 1 位小数）
     const courseScoreDisplay = computed(() => courseScore.value.toFixed(1))
     const coinDisplay = computed(() => String(coin.value))
     const chapterScoreDisplay = computed(() =>
         chapterScore.value == null ? '—' : chapterScore.value.toFixed(1),
     )
 
-    /** Active refresh entry (exposed to parent component) */
+    /** 主动刷新入口（暴露给父组件） */
     async function refresh() {
         await fetchStats()
     }

@@ -1,9 +1,9 @@
 /**
- * footer component test (render)
+ * footer 组件测试 (render)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/render/footer.vue
  *
- * footer.vue uses useQuestionRenderContext() (Vue inject from 'vue') + inject('inQuiz') (auto-import global stub)
- * Need to simultaneously provide QuestionRenderKey (via Vue provide) and inQuiz (via global provide Map)
+ * footer.vue 使用 useQuestionRenderContext() (Vue inject from 'vue') + inject('inQuiz') (auto-import global stub)
+ * 需要同时 provide QuestionRenderKey (via Vue provide) 和 inQuiz (via global provide Map)
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

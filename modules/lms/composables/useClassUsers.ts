@@ -1,8 +1,8 @@
 import type { LmsClassUser } from '#lms/types/lms'
 
 /**
- * Global class user cache composable
- * fetchUsers when selecting/switching class in modal.vue, other components read cached data directly
+ * 全局班级用户缓存 composable
+ * 在 modal.vue 中选择/切换班级时 fetchUsers，其他组件直接读取缓存数据
  */
 export function useClassUsers() {
   const classUsers = useState<LmsClassUser[]>('class-users', () => [])
@@ -18,7 +18,7 @@ export function useClassUsers() {
       currentClassId.value = null
       return
     }
-    // Skip if already current class+course and data exists
+    // 已是当前班级+课程且已有数据则跳过
     const cacheKey = `${classId}:${courseId}`
     if (currentClassId.value === cacheKey && classUsers.value.length > 0) return
     currentClassId.value = cacheKey

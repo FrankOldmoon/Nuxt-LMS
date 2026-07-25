@@ -1,5 +1,5 @@
 /**
- * ueditor/render/nodes/horizontal-rule.vue component test
+ * ueditor/render/nodes/horizontal-rule.vue 组件测试
  * @see modules/lms/components/ueditor/render/nodes/horizontal-rule.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

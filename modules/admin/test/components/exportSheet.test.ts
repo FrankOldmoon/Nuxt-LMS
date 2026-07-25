@@ -1,5 +1,5 @@
 /**
- * ExportSheet component tests
+ * ExportSheet 组件测试
  * @see modules/admin/components/table/ExportSheet.vue
  */
 import { describe, it, expect, beforeEach, mount, flushPromises, baseBeforeEach, _globalStubs, _globalConfig, makeColumn } from './_shared'
@@ -103,11 +103,11 @@ describe('table/ExportSheet.vue', () => {
       global: _config,
     })
     await flushPromises()
-    // Find the close button (ghost button with i-lucide-x icon)
+    // 找到 close 按钮（带 i-lucide-x icon 的 ghost 按钮）
     const buttons = wrapper.findAll('button')
     // downloadCsv=0, close=1
     await buttons[1].trigger('click')
-    // v-model:open should update
+    // v-model:open 应更新
     expect(wrapper.emitted('update:open')).toBeTruthy()
     expect(wrapper.emitted('update:open')![0]).toEqual([false])
   })

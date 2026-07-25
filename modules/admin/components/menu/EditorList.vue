@@ -29,7 +29,7 @@
       </template>
     </draggable>
 
-    <!-- Add root-level item -->
+    <!-- 添加根级项 -->
     <UButton
       icon="i-lucide-plus"
       color="primary"

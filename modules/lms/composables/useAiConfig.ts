@@ -1,10 +1,10 @@
 /**
- * useAiConfig — AI assistant config composable (SSR compatible)
+ * useAiConfig — AI 助手配置组合式函数（SSR 兼容）
  *
- * Fetch lms_config.ai group (mode/model/thinking/apiUrl/title/preset/opening/ttsGender).
- * - Fetch config during SSR, serialize to page payload, client hydration restores directly
- * - Multiple components share the same useFetch cache (key='lms-ai-config')
- * - Call refreshAiConfig to refresh cache after config update
+ * 获取 lms_config.ai 分组（mode/model/thinking/apiUrl/title/preset/opening/ttsGender）。
+ * - SSR 阶段即获取配置，序列化到页面 payload，客户端 hydration 直接还原
+ * - 多组件共享同一份 useFetch 缓存（key='lms-ai-config'）
+ * - 配置更新后调用 refreshAiConfig 刷新缓存
  */
 export function useAiConfig() {
   const { data, status, refresh } = useFetch('/api/config/ai', {

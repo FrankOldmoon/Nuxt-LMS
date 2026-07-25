@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-3">
-    <!-- Reviewtarget -->
+    <!-- 评价目标 -->
     <div>
       <label class="text-xs text-gray-500 mb-1 block">{{ $t('question.evaluationGoalLabel') }}</label>
       <UTextarea
@@ -12,7 +12,7 @@
       />
     </div>
 
-    <!-- PassthresholdValue -->
+    <!-- 通过阈值 -->
     <div>
       <label class="text-xs text-gray-500 mb-1 block">{{ $t('question.evaluationThresholdLabel') }}</label>
       <div class="flex items-center gap-2">
@@ -36,18 +36,18 @@ const props = defineProps({
   form: { type: Object, required: true },
 })
 
-// ensure options YesObject
+// 确保 options 是对象
 if (!props.form.options || typeof props.form.options !== 'object' || Array.isArray(props.form.options)) {
   props.form.options = { goal: '', threshold: 0.8 }
 }
 
-// Reviewtarget（doubletobindto form.options.goal）
+// 评价目标（双向绑定到 form.options.goal）
 const goal = computed({
   get: () => props.form.options?.goal ?? '',
   set: (v) => { props.form.options = { ...props.form.options, goal: v } },
 })
 
-// PassthresholdValue（doubletobindto form.options.threshold）
+// 通过阈值（双向绑定到 form.options.threshold）
 const threshold = computed({
   get: () => props.form.options?.threshold ?? 0.8,
   set: (v) => {

@@ -1,10 +1,10 @@
 /**
- * LMS WS endpoint tests (ws.ts / ws_lock.ts)
+ * LMS WS 端点测试（ws.ts / ws_lock.ts）
  * @see modules/lms/server/api/ws.ts
  * @see modules/lms/server/api/ws_lock.ts
  *
- * Strategy: use the defineWebSocketHandler stub already defined in nuxt-stubs.ts (passes through the config object),
- * directly call message(peer, mockMessage) to verify the send call.
+ * 策略：通过 nuxt-stubs.ts 已定义 defineWebSocketHandler 桩（透传配置对象），
+ * 直接调用 message(peer, mockMessage) 验证 send 调用。
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 
@@ -26,7 +26,7 @@ beforeEach(() => {
   lockHolders.clear()
 })
 
-/** Build a mock WebSocket message */
+/** 构造一个 mock WebSocket 消息 */
 function mockMessage(obj: any) {
   return { text: () => JSON.stringify(obj) } as any
 }
@@ -134,19 +134,19 @@ describe('API: lms/ws_lock', () => {
     const peer1 = makeMockPeer({ userId: 1, userName: 'alice', readyState: 1 })
     const peer2 = makeMockPeer({ userId: 2, userName: 'bob', readyState: 1 })
     const peer3 = makeMockPeer({ userId: 3, userName: 'carol', readyState: 1 })
-    // peer1 acquires the lock
+    // peer1 获取锁
     handler.message(peer1, mockMessage({ type: 'lockJoin', lockId: 'l1', userId: 1, userName: 'alice' }))
-    // peer2/peer3 join the room
+    // peer2/peer3 加入房间
     handler.message(peer2, mockMessage({ type: 'lockJoin', lockId: 'l1', userId: 2, userName: 'bob' }))
     handler.message(peer3, mockMessage({ type: 'lockJoin', lockId: 'l1', userId: 3, userName: 'carol' }))
-    // peer1 releases
+    // peer1 释放
     peer2.send.mockClear()
     peer3.send.mockClear()
     handler.message(peer1, mockMessage({ type: 'lockRelease' }))
-    // peer2 should acquire the lock
+    // peer2 应获得锁
     const sends2 = sendsOf(peer2)
     expect(sends2).toContainEqual({ type: 'lockAcquired', lockId: 'l1' })
-    // peer3 should be notified
+    // peer3 应被告知
     const sends3 = sendsOf(peer3)
     expect(sends3).toContainEqual({ type: 'lockDenied', lockId: 'l1', lockedBy: 'bob' })
   })
@@ -160,7 +160,7 @@ describe('API: lms/ws_lock', () => {
     const peer1 = makeMockPeer({ userId: 1, userName: 'alice', readyState: 1 })
     const peer2 = makeMockPeer({ userId: 2, userName: 'bob', readyState: 1 })
     handler.message(peer1, mockMessage({ type: 'lockJoin', lockId: 'l1', userId: 1, userName: 'alice' }))
-    // peer2 has not acquired the lock, tries to release
+    // peer2 没获取锁，尝试 release
     expect(() => handler.message(peer2, mockMessage({ type: 'lockRelease' }))).not.toThrow()
   })
 
@@ -168,7 +168,7 @@ describe('API: lms/ws_lock', () => {
     const peer = makeMockPeer({ userId: 1, userName: 'alice', readyState: 1 })
     handler.message(peer, mockMessage({ type: 'lockJoin', lockId: 'l1', userId: 1, userName: 'alice' }))
     handler.close(peer)
-    // peer._lockId has been cleared
+    // peer._lockId 已被清理
     expect(peer._lockId).toBeUndefined()
   })
 

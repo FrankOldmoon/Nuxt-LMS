@@ -1,5 +1,5 @@
 /**
- * composables/useImportUsers tests
+ * composables/useImportUsers 测试
  * @see modules/base/composables/useImportUsers.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -79,7 +79,7 @@ describe('composables/useImportUsers - doImport 成功', () => {
       const calls = getToastCalls()
       expect(calls[0].color).toBe('success')
       expect(calls[0].title).toBe('imported 3 users')
-      // reset is called after setTimeout 500ms
+      // reset 在 setTimeout 500ms 后调用
       vi.advanceTimersByTime(600)
       expect(resetSpy).toHaveBeenCalled()
     } finally {

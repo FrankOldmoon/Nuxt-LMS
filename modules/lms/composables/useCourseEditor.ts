@@ -1,5 +1,5 @@
 /**
- * Course editor: load/save course content, basic info, config, member management
+ * 课程编辑器：加载/保存课程内容、基础信息、配置、成员管理
  */
 export function useCourseEditor(
   props: { courseId: number },

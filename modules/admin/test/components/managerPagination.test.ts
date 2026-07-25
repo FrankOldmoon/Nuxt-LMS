@@ -1,5 +1,5 @@
 /**
- * managerPagination component tests
+ * managerPagination 组件测试
  * @see modules/admin/components/table/managerPagination.vue
  */
 import { describe, it, expect, beforeEach, mount, baseBeforeEach, _globalConfig } from './_shared'

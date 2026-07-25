@@ -1,5 +1,5 @@
 /**
- * useUserProfileConfig composable test
+ * useUserProfileConfig composable 测试
  * @see modules/lms/composables/useUserProfileConfig.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -34,7 +34,7 @@ describe('composables/useUserProfileConfig', () => {
   it('user 配置为 false 时开关为 false', async () => {
     const { useLmsPublicConfig } = await import('../../composables/useLmsPublicConfig')
     const { useUserProfileConfig } = await import('../../composables/useUserProfileConfig')
-    // useLmsPublicConfig is explicitly imported, directly operates on its config
+    // useLmsPublicConfig 是显式导入的，直接操作其 config
     const { config } = useLmsPublicConfig()
     config.value = {
       user: {

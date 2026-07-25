@@ -1,11 +1,11 @@
 /**
- * Race WebSocket message handling
+ * 竞赛（Race）WebSocket 消息处理
  *
- * Handles type: raceJoin / raceStart / raceQuestion / raceAnswer /
+ * 处理 type: raceJoin / raceStart / raceQuestion / raceAnswer /
  *           raceQuestionEnd / raceEnd / raceOnline
  *
- * The room table / state table / broadcast functions / race calculations are all imported from ./state (unified explicit export).
- * The case bodies are split into race-handlers/*.ts by type; this file only does dispatch.
+ * 房间表 / 状态表 / 广播函数 / 竞赛计算 全部从 ./state 引入（统一显式 export）。
+ * case 体按 type 拆到 race-handlers/*.ts，本文件仅做 dispatch。
  */
 import { raceRooms, broadcastToRace, leaveRaceRoom } from './state'
 import { handleRaceJoin, handleRaceOnline } from './race-handlers/join'
@@ -14,7 +14,7 @@ import { handleRaceQuestion } from './race-handlers/question'
 import { handleRaceAnswer } from './race-handlers/answer'
 import { handleRaceQuestionEnd, handleRaceEnd } from './race-handlers/end'
 
-/** Returns true to indicate the message has been handled */
+/** 返回 true 表示消息已被处理 */
 export function handleRaceMessage(peer: any, data: any): boolean {
   const { type } = data
   switch (type) {
@@ -29,7 +29,7 @@ export function handleRaceMessage(peer: any, data: any): boolean {
   return false
 }
 
-/** Clean up race room when connection closes */
+/** 连接关闭时清理 race 房间 */
 export function cleanupRacePeer(peer: any) {
   const pin = peer._racePin; if (!pin || !raceRooms.has(pin)) return
   const uid = peer._userId

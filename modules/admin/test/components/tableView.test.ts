@@ -1,5 +1,5 @@
 /**
- * TableView component tests
+ * TableView 组件测试
  * @see modules/admin/components/table/TableView.vue
  */
 import { describe, it, expect, beforeEach, mount, baseBeforeEach, _globalStubs, _globalConfig, makeColumn } from './_shared'
@@ -88,7 +88,7 @@ describe('table/TableView.vue', () => {
       global: _config,
     })
     const ths = wrapper.findAll('th')
-    // Find and click the "name" column (second column)
+    // 找到点击 "name" 列（第二列）
     await ths[1].trigger('click')
     expect(wrapper.emitted('sort')).toBeTruthy()
     expect(wrapper.emitted('sort')![0]).toEqual(['name'])
@@ -104,7 +104,7 @@ describe('table/TableView.vue', () => {
       },
       global: _config,
     })
-    // UIcon renders as span.uicon, just verify it exists
+    // UIcon 渲染为 span.uicon，验证存在即可
     expect(wrapper.findAll('.uicon').length).toBeGreaterThan(0)
   })
 

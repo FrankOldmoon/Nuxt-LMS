@@ -1,21 +1,21 @@
 <template>
-    <!-- lms notEnableornotJoin Class：show placeholderholder -->
+    <!-- lms 未启用或未加入班级：显示占位 -->
     <div v-if="!canShow" class="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-center text-gray-400 text-sm">
         {{ placeholderText }}
     </div>
     <div v-else class="race-render w-full p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 relative">
-        <!-- Loading -->
+        <!-- 加载中 -->
         <div v-if="pending" class="flex items-center justify-center py-6 text-gray-400">
             <span>{{ t('race.loading') }}</span>
         </div>
 
-        <!-- CompetitionNot Found -->
+        <!-- 竞赛未找到 -->
         <div v-else-if="!race" class="text-center py-6 text-gray-400">
             {{ t('race.notFound') }} (cid: {{ raceId }})
         </div>
 
         <template v-else>
-            <!-- CompetitionTitle -->
+            <!-- 竞赛标题 -->
             <div class="flex items-center gap-3 mb-3 pr-6">
                 <span class="px-2 py-0.5 bg-red-50 dark:bg-red-800 text-red-600 dark:text-red-300 rounded text-xs font-medium">
                     {{ t('race.label') }}
@@ -31,16 +31,16 @@
                 </div>
             </div>
 
-            <!-- ====== Top：StudentScoretable ====== -->
+            <!-- ====== 顶部：学生得分表 ====== -->
             <RaceScoresTable />
 
-            <!-- ====== TeachercontrolButton ====== -->
+            <!-- ====== 教师控制按钮 ====== -->
             <RaceTeacherControls v-if="isTeacher && raceActive" />
 
-            <!-- ====== Countdown ====== -->
+            <!-- ====== 倒计时 ====== -->
             <RaceTimer v-if="raceActive && currentQuestionCid" />
 
-            <!-- ====== Questionarea（showPodium whenHide） ====== -->
+            <!-- ====== 题目区域（showPodium 时隐藏） ====== -->
             <div v-if="currentQuestionCid && !showPodium" class="mb-4">
                 <component
                     ref="questionRef"
@@ -48,20 +48,20 @@
                     :node="{ attrs: { type: 'question', content: String(currentQuestionCid) } }" />
             </div>
 
-            <!-- ====== Podium：Fronttop three ====== -->
+            <!-- ====== Podium：前三名 ====== -->
             <RacePodium v-if="showPodium" />
 
-            <!-- Not Started -->
+            <!-- 未开始 -->
             <RaceNotStarted v-if="!raceActive" />
 
-            <!-- alreadySubmit Tip（Student） -->
+            <!-- 已提交提示（学生） -->
             <div v-if="!isTeacher && raceActive && studentAnswered && currentQuestionCid" class="flex items-center justify-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded">
                 <UIcon name="i-lucide-check" class="size-4 text-blue-500" />
                 <span class="text-sm text-blue-600 dark:text-blue-300">{{ t('race.submitted') }} - {{ t('race.waitingNext') }}</span>
             </div>
         </template>
 
-        <!-- Edit Modal -->
+        <!-- 编辑弹窗 -->
         <Edit v-model="editOpen" :race-id="raceId" :race="race" @saved="onSaved" />
     </div>
 </template>

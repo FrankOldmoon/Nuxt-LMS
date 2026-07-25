@@ -1,18 +1,18 @@
 /**
- * Class user query
+ * 班级用户查询
  *
- * Merge users from the user_classes relation table (including isTeacher) with users directly
- * belonging to the class via users.classId, and merge userCourses number / group as needed.
+ * 合并 user_classes 关联表用户（含 isTeacher）与 users.classId 直接归属用户，
+ * 并按需合并 userCourses 的 number / group。
  */
 import { db, schema } from "@nuxthub/db"
 import { eq, inArray, and, isNull } from "drizzle-orm"
 
 /**
- * Get user list of a class (user_classes relation table + users.class_id direct membership)
- * Merge and dedupe: relation-table users take priority (have isTeacher info), supplement with direct members
+ * 获取指定班级的用户列表（user_classes 关联表 + users.class_id 直接归属）
+ * 合并去重：关联表用户优先（有 isTeacher 信息），补充直接归属用户
  */
 export async function getClassUsers(classId: number, courseId: number = 0) {
-  // 1. Query through user_classes relation table (includes isTeacher info)
+  // 1. 通过 user_classes 关联表查询（含 isTeacher 信息）
   const relUsers = await db
     .select({
       id: schema.users.id,
@@ -37,7 +37,7 @@ export async function getClassUsers(classId: number, courseId: number = 0) {
       ),
     )
 
-  // 2. Query through users.class_id direct membership (not present in user_classes)
+  // 2. 通过 users.class_id 直接归属查询（未在 user_classes 中的）
   const relUserIds = new Set(relUsers.map((u) => u.id))
   const directUsers = await db
     .select({
@@ -60,7 +60,7 @@ export async function getClassUsers(classId: number, courseId: number = 0) {
       ),
     )
 
-  // 3. Merge and dedupe
+  // 3. 合并去重
   const merged = [...relUsers]
   for (const u of directUsers) {
     if (!relUserIds.has(u.id)) {
@@ -68,7 +68,7 @@ export async function getClassUsers(classId: number, courseId: number = 0) {
     }
   }
 
-  // 4. If courseId is provided, query userCourses for number and group, then merge
+  // 4. 如果有 courseId，查询 userCourses 的 number 和 group 并合并
   if (courseId && merged.length > 0) {
     const userIds = merged.map(u => u.id)
     const userCourses = await db.query.userCourses.findMany({

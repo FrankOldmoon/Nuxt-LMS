@@ -75,12 +75,12 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-/** Close modal (use named function to avoid inline assignment returning boolean triggering type error) */
+/** 关闭弹窗（使用具名函数避免内联赋值返回 boolean 触发类型错误） */
 function close() {
   emit('update:open', false)
 }
 
-/** Group placeholder item (value cannot be empty string, otherwise USelectMenu internal ComboboxItem validation reports error) */
+/** 分组占位项（value 不能为空字符串，否则 USelectMenu 内部 ComboboxItem 校验报错） */
 const GROUP_VALUE = '__group__'
 const tableItems = computed(() => [
   { label: t('admin.menu.group'), value: GROUP_VALUE },

@@ -1,8 +1,8 @@
 /**
- * course/wrongBook/item.vue component test
+ * course/wrongBook/item.vue 组件测试
  * @see modules/lms/components/course/wrongBook/item.vue
  *
- * Wrong question item: header (question type/name/wrong count) + question rendering
+ * 错题项：头部（题型/名称/错题次数）+ 题目渲染
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

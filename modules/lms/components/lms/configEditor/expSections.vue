@@ -1,10 +1,10 @@
 <template>
-  <!-- Experience config sections (question/homework/comment/chapter/race/quiz/general) -->
-  <div v-for="section in sections" :key="section.config key" class="space-y-2">
+  <!-- 经验值配置区域（题目/作业/评论/章节/竞赛/测验/通用） -->
+  <div v-for="section in sections" :key="section.configKey" class="space-y-2">
     <p class="text-sm font-medium">{{ $t(section.title) }}</p>
     <div class="grid grid-cols-2 gap-2">
       <UFormField v-for="f in section.fields" :key="f.key" :label="$t(f.label)" size="xs">
-        <UInput v-model.number="config[section.config key][f.key]" type="number" :step="f.step" size="xs" class="w-full" />
+        <UInput v-model.number="config[section.configKey][f.key]" type="number" :step="f.step" size="xs" class="w-full" />
       </UFormField>
     </div>
   </div>
@@ -16,7 +16,7 @@ const { config } = useConfigEditorContext()
 const sections = [
   {
     title: 'lmsConfig.question',
-    config key: 'question',
+    configKey: 'question',
     fields: [
       { key: 'submitExp', label: 'lmsConfig.submitExp' },
       { key: 'correctBonusExp', label: 'lmsConfig.correctBonusExp' },
@@ -26,7 +26,7 @@ const sections = [
   },
   {
     title: 'lmsConfig.homework',
-    config key: 'homework',
+    configKey: 'homework',
     fields: [
       { key: 'submitExp', label: 'lmsConfig.submitExp' },
       { key: 'resubmitExp', label: 'lmsConfig.resubmitExp' },
@@ -35,7 +35,7 @@ const sections = [
   },
   {
     title: 'lmsConfig.comment',
-    config key: 'comment',
+    configKey: 'comment',
     fields: [
       { key: 'publishExp', label: 'lmsConfig.publishExp' },
       { key: 'replyExp', label: 'lmsConfig.replyExp' },
@@ -45,7 +45,7 @@ const sections = [
   },
   {
     title: 'lmsConfig.chapter',
-    config key: 'chapter',
+    configKey: 'chapter',
     fields: [
       { key: 'headingExp', label: 'lmsConfig.headingExp' },
       { key: 'headingCoin', label: 'lmsConfig.headingCoin' },
@@ -54,7 +54,7 @@ const sections = [
   },
   {
     title: 'lmsConfig.race',
-    config key: 'race',
+    configKey: 'race',
     fields: [
       { key: 'participateExp', label: 'lmsConfig.participateExp' },
       { key: 'rank1Exp', label: 'lmsConfig.rank1Exp' },
@@ -64,7 +64,7 @@ const sections = [
   },
   {
     title: 'lmsConfig.quiz',
-    config key: 'quiz',
+    configKey: 'quiz',
     fields: [
       { key: 'submitExp', label: 'lmsConfig.submitExp' },
       { key: 'passScore', label: 'lmsConfig.passScore' },
@@ -73,7 +73,7 @@ const sections = [
   },
   {
     title: 'lmsConfig.general',
-    config key: 'general',
+    configKey: 'general',
     fields: [
       { key: 'dailyExpCap', label: 'lmsConfig.dailyExpCap' },
       { key: 'levelStep', label: 'lmsConfig.levelStep' },

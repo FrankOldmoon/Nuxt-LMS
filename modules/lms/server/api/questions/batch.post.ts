@@ -2,29 +2,29 @@ import { db, schema } from "@nuxthub/db"
 import { eq, and, or, isNull, isNotNull } from "drizzle-orm"
 
 /**
- * Questions batch operation (composite primary key courseId + cid)
+ * questions 批量操作（复合主键 courseId + cid）
  * body: { rows: { courseId, cid }[], action: 'delete' | 'remove' | 'restore' }
  *
- * - delete: soft delete (set deleted_at = now())
- * - remove: hard delete
- * - restore: restore soft-deleted record (deleted_at = null)
+ * - delete: 软删除（设置 deleted_at = now()）
+ * - remove: 硬删除
+ * - restore: 恢复软删除（deleted_at = null）
  */
 export default eventHandler(async (event) => {
-  // Only admins can perform batch operations
+  // 仅管理员可批量操作
   await requireAdmin(event)
 
   const body = await readBody(event)
   const { rows, action } = body as { rows: { courseId: number; cid: number }[]; action: string }
 
   if (!rows || !Array.isArray(rows) || rows.length === 0) {
-    return cResp(null, 'rows cannot be empty', false)
+    return cResp(null, 'rows 不能为空', false)
   }
   if (!['delete', 'remove', 'restore'].includes(action)) {
-    return cResp(null, `Invalid action: ${action}`, false)
+    return cResp(null, `无效的 action: ${action}`, false)
   }
 
   try {
-    // Build composite primary key OR conditions
+    // 构造复合主键 OR 条件
     const pkConditions = rows.map((r) =>
       and(eq(schema.questions.courseId, Number(r.courseId)), eq(schema.questions.cid, Number(r.cid))),
     )
@@ -50,7 +50,7 @@ export default eventHandler(async (event) => {
       return cResp({ count: rows.length, result })
     }
   } catch (error: any) {
-    console.error(`Questions batch [${action}] operation failed:`, error)
-    return cResp(null, error.message || 'Questions batch operation failed', false)
+    console.error(`questions 批量[${action}]操作失败:`, error)
+    return cResp(null, error.message || 'questions 批量操作失败', false)
   }
 })

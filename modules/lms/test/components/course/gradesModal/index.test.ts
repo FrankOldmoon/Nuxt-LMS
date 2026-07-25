@@ -1,9 +1,9 @@
 /**
- * course/gradesModal/index.vue component test
+ * course/gradesModal/index.vue 组件测试
  * @see modules/lms/components/course/gradesModal/index.vue
  *
- * Grades modal: UModal container, internally useCourseGrades provides context
- * Key test: can mount, can receive props
+ * 成绩弹窗：UModal 容器，内部 useCourseGrades 提供上下文
+ * 重点测试：能否挂载、能否接收 props
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -23,7 +23,7 @@ beforeEach(() => {
     computeGrade: () => ({ letter: '-', finalScore: 0 }),
     saveExtraScore: vi.fn(async () => {}),
     extraScoreSaving: ref(0),
-    // Grading criteria context (used by criteria/studentCriteria/studentStats)
+    // 评分标准上下文（criteria/studentCriteria/studentStats 用）
     gradeCriteria: ref({ weights: [], levels: [] }),
     effectiveCriteria: ref({ weights: [], levels: [] }),
     criteriaDirty: ref(false),
@@ -46,7 +46,7 @@ const _globalStubs = {
     props: ['modelValue', 'type', 'size', 'loading'],
   },
   UIcon: { template: '<span class="uicon" />', props: ['name'] },
-  // stub child components
+  // stub 子组件
   CourseGradesModalCriteria: { template: '<div class="criteria" />' },
   CourseGradesModalStudentCriteria: { template: '<div class="student-criteria" />' },
   CourseGradesModalStudentStats: { template: '<div class="student-stats" />' },
@@ -99,7 +99,7 @@ describe('course/gradesModal/index.vue', () => {
       global: _globalConfig,
     })
     await flushPromises()
-    // canEdit=false → render StudentCriteria (instead of teacher Criteria) + StudentStats
+    // canEdit=false → 渲染 StudentCriteria（而非教师 Criteria）+ StudentStats
     expect(wrapper.find('.student-criteria').exists()).toBe(true)
     expect(wrapper.find('.student-stats').exists()).toBe(true)
     expect(wrapper.find('.criteria').exists()).toBe(false)

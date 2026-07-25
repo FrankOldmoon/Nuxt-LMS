@@ -1,14 +1,14 @@
 /**
- * Group WebSocket message handling
+ * 小组 WebSocket 消息处理
  *
- * Handles type: joinGroup / groupChat / leaveGroup
- * Pure in-memory forwarding, does not persist any messages.
+ * 处理 type: joinGroup / groupChat / leaveGroup
+ * 纯内存转发，不持久化任何消息。
  *
- * The room table / broadcast functions are imported from ./state (unified explicit export).
+ * 房间表 / 广播函数 从 ./state 引入（统一显式 export）。
  */
 import { groupRooms, broadcastToGroup, joinGroupRoom, leaveGroupRoom } from './state'
 
-/** Returns true to indicate the message has been handled */
+/** 返回 true 表示消息已被处理 */
 export function handleGroupMessage(peer: any, data: any): boolean {
   const { type } = data
   switch (type) {
@@ -42,7 +42,7 @@ export function handleGroupMessage(peer: any, data: any): boolean {
   return false
 }
 
-/** Clean up all group rooms when the connection closes */
+/** 连接关闭时清理所有小组房间 */
 export function cleanupGroupPeer(peer: any) {
   const groupIds: Set<string> | undefined = peer._groupIds
   if (!groupIds || groupIds.size === 0) return

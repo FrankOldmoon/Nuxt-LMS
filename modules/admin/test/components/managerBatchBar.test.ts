@@ -1,5 +1,5 @@
 /**
- * managerBatchBar component tests
+ * managerBatchBar 组件测试
  * @see modules/admin/components/table/managerBatchBar.vue
  */
 import { describe, it, expect, beforeEach, mount, baseBeforeEach, _globalConfig } from './_shared'
@@ -13,7 +13,7 @@ describe('table/managerBatchBar.vue', () => {
       props: { selectedRows: [], includeDeleted: false },
       global: _globalConfig,
     })
-    // The entire root div has v-if, does not exist
+    // 整个根 div 有 v-if，不存在
     expect(wrapper.find('div').exists()).toBe(false)
   })
 
@@ -32,7 +32,7 @@ describe('table/managerBatchBar.vue', () => {
       props: { selectedRows: [{ id: 1 }, { id: 2 }, { id: 3 }], includeDeleted: false },
       global: _globalConfig,
     })
-    // admin.table.selected {count:3} → mock does not parse args, only shows key
+    // admin.table.selected {count:3} → mock 不解析参数，只显示 key
     expect(wrapper.text()).toContain('admin.table.selected')
   })
 

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- judgeButton -->
+    <!-- 判断按钮 -->
     <div class="flex gap-4">
       <button
         v-for="(_, idx) in question.options"
@@ -24,7 +24,7 @@ const props = defineProps({
   questionId: { type: Number, default: 0 },
 })
 
-const submitted = inject('question submitted')
+const submitted = inject('questionSubmitted')
 const isCorrect = inject('questionIsCorrect')
 const fromRecord = inject('questionFromRecord')
 const { courseId, chapterId } = useLmsContext()
@@ -32,7 +32,7 @@ const selected = ref(-1)
 
 const hasAnswer = computed(() => selected.value >= 0)
 
-// listen question.record change，Syncto selected
+// 监听 question.record 变化，同步到 selected
 watch(() => props.question?.record, (record) => {
   if (record && record.length > 0) {
     selected.value = record[0]
@@ -53,11 +53,11 @@ function select(idx) {
 function btnClass(idx) {
   if (submitted.value) {
     if (isCorrect.value) {
-      // answerRight：SelecteditemsmarkGreen
+      // 答对：选中项标绿
       if (selected.value === idx) return 'border-green-400 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
       return 'border-gray-200 dark:border-gray-600 text-gray-500'
     } else {
-      // answerWrong：onlymarkRedUseroptionWrongitems，no markGreenCorrectAnswer
+      // 答错：只标红用户选错的项，不标绿正确答案
       if (selected.value === idx) return 'border-red-400 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
       return 'border-gray-200 dark:border-gray-600 text-gray-500'
     }
@@ -67,7 +67,7 @@ function btnClass(idx) {
     : 'border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 text-gray-600 dark:text-gray-400'
 }
 
-^function submit() {
+function submit() {
   if (!props.question || selected.value < 0) return
   const correct = selected.value === props.question.answer[0]
   isCorrect.value = correct
@@ -88,7 +88,7 @@ function reset() {
   props.question.record = []
 }
 
-// fillCorrectAnswer record
+// 填充正确答案为 record
 function fillCorrectAnswer() {
   if (props.question?.answer && props.question.answer.length > 0) {
     selected.value = props.question.answer[0]

@@ -1,5 +1,5 @@
 /**
- * ueditor/render/nodes/blockquote.vue component test
+ * ueditor/render/nodes/blockquote.vue 组件测试
  * @see modules/lms/components/ueditor/render/nodes/blockquote.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

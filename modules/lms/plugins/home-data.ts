@@ -1,25 +1,24 @@
 /**
- * Homepage data singleton plugin
+ * 首页数据单例插件
  *
- * - Calls /api/home once at app startup (SSR + first client load)
- * - Result is stored in useState('home-data'); all components share the same data via useHome()
+ * - 应用启动时（SSR + 客户端首次加载）调用一次 /api/home
+ * - 结果存入 useState('home-data')，所有组件通过 useHome() 共享同一份数据
  *
- * Benefits:
- * - Only 1 useState data source across the entire app
- * - Multiple computed values derive from the same data
- * - WS broadcasts home-changed triggers refreshNuxtData(key) to auto-sync to useState
- * - Any component calling useHome() will not create new useFetch / new network requests
+ * 收益：
+ * - 整个应用只有 1 个 useState 数据源
+ * - 多个 computed 派生自同一份数据
+ * - WS 广播 home-changed 触发 refreshNuxtData(key) 自动同步到 useState
+ * - 任何组件调用 useHome() 都不会产生新的 useFetch / 新的 network 请求
  *
- * Refresh mechanism:
- * - refreshNuxtData('home-singleton-fetch') triggers refresh by key
- *   No need to keep a reference to the refresh function; Nuxt will look up the key
- *   to find the corresponding useFetch and call its refresh
- * - categories/add|update|batch.post.ts and courses/add|update|batch|delete|import.post.ts
- *   broadcastToAll({ type: 'home-changed' }) after server-side writes
- *   The WS handler registered inside useHome() on all clients triggers refreshNuxtData
+ * 刷新机制：
+ * - refreshNuxtData('home-singleton-fetch') 通过 key 触发刷新
+ *   不需要保存 refresh 函数引用，Nuxt 自己会查 key 找到对应的 useFetch 并调用其 refresh
+ * - categories/add|update|batch.post.ts 与 courses/add|update|batch|delete|import.post.ts
+ *   服务端写库后 broadcastToAll({ type: 'home-changed' })
+ *   所有客户端 useHome() 内部注册的 WS handler 触发 refreshNuxtData
  */
 export default defineNuxtPlugin(async () => {
-  // Initialize shared state (shares the same key with useHome)
+  // 初始化共享 state（与 useHome 共用同一 key）
   const data = useState<any>('home-data', () => ({
     categories: [],
     courses: [],
@@ -28,12 +27,12 @@ export default defineNuxtPlugin(async () => {
     msgUnread: 0,
   }))
 
-  // First fetch: SSR blocks first paint until data is ready; client reuses payload (no extra request)
+  // 首次拉取：SSR 阻塞首屏等待数据，客户端用 payload（不产生额外请求）
   const { data: fetched } = await useFetch<any>('/api/home', {
     key: 'home-singleton-fetch',
   })
 
-  // Watch data changes (initial + every refreshNuxtData) and sync to shared state
+  // 监听 data 变化（initial + 每次 refreshNuxtData），同步到共享 state
   watch(
     fetched,
     (newData) => {

@@ -1,6 +1,6 @@
 /**
- * Admin module client shared types (mirrors server-side ColumnMeta/TableMeta JSON form)
- * Server types are defined in modules/base/server/utils/db.ts, client cannot directly import, so mirrored here.
+ * Admin 模块客户端共享类型（镜像服务端 ColumnMeta/TableMeta 的 JSON 形态）
+ * 服务端类型定义在 modules/base/server/utils/db.ts，客户端无法直接 import，故在此镜像。
  */
 
 export interface ColumnMeta {
@@ -53,16 +53,16 @@ export interface ListResult {
 }
 
 export interface MenuItem {
-  /** Leaf nodes have table (links to /dashboard/t/:table); group nodes have no table */
+  /** 叶子节点有 table（链接到 /dashboard/t/:table）；分组节点无 table */
   table?: string
   label: string
   visible: boolean
   order: number
-  /** Custom lucide icon name (e.g. "i-lucide-table"); defaults by table when absent */
+  /** 自定义 lucide 图标名（如 "i-lucide-table"）；缺省时按 table 给默认 */
   icon?: string
-  /** Custom path; defaults to /dashboard/t/{table} when absent */
+  /** 自定义路径；缺省时为 /dashboard/t/{table} */
   to?: string
-  /** Group node children (supports multi-level) */
+  /** 分组节点的子项（支持多层级） */
   children?: MenuItem[]
 }
 

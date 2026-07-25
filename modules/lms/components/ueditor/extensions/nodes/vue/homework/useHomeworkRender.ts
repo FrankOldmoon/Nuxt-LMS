@@ -18,7 +18,7 @@ export function useHomeworkRenderContext() {
 export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRenderEmit) {
     const { t } = useI18n()
     const { courseId, chapterId } = useLmsContext()
-    // Prefer props.courseId (admin reuse scenario), otherwise use useLmsContext's courseId
+    // 优先使用 props.courseId（admin 复用场景），否则用 useLmsContext 的 courseId
     const effectiveCourseId = computed(() => {
         if (props.courseId !== undefined && props.courseId !== null && props.courseId !== '') {
             return Number(props.courseId) || 0
@@ -35,7 +35,7 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
     const homeworkId = computed(() => Number(props.node?.attrs?.content) || 0)
     const isTeacher = computed(() => hasRole('teacher') || hasRole('admin'))
 
-    // Default homework (filled when homeworkId is empty, for easy creation)
+    // 默认作业（homeworkId 为空时填充，便于新建）
     const defaultHomework = reactive({
         name: '',
         code: '',
@@ -65,7 +65,7 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
         },
     })
 
-    // Use default homework when homeworkId is empty; otherwise use API data
+    // homeworkId 为空时使用默认作业；否则使用接口数据
     const homework = ref<any>(defaultHomework)
     watch([fetchedHomework, homeworkId], () => {
         if (!homeworkId.value) {
@@ -75,13 +75,13 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
         }
     }, { immediate: true, flush: 'sync' })
 
-    // Do not show loading state when homeworkId is empty
+    // homeworkId 为空时不显示加载态
     const pending = computed(() => !!homeworkId.value && fetchedPending.value)
 
     const editOpen = ref(false)
     const recordsOpen = ref(false)
 
-    // Student submission state
+    // 学生提交状态
     const submittedContent = ref('')
     const submittedFiles = ref<any[]>([])
     const submitted = ref(false)
@@ -90,13 +90,13 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
     const submitMsg = ref('')
     const submitOk = ref(true)
 
-    // Determine if it's rich text JSON
+    // 判断是否为富文本 JSON
     function isRichDoc(content: any) {
         return content && typeof content === 'object' && !Array.isArray(content) && !!content.type
     }
 
     async function onSubmit() {
-        // Forbid submission when not logged in
+        // 未登录时禁止提交
         if (!isLoggedIn.value) {
             toast.add({ title: t('common.loginRequired'), color: 'warning' })
             return
@@ -119,17 +119,17 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
             submitted.value = true
             submittedFileList.value = files
             submitOk.value = true
-            submitMsg.value = t('homework.submit success')
-            // Post-submit toast hint: success + experience
+            submitMsg.value = t('homework.submitSuccess')
+            // 提交后 toast 提示：成功 + 经验
             const gainedExp = Number(result?.gainedExp) || 0
             toast.add({
-                title: t('homework.submit success'),
+                title: t('homework.submitSuccess'),
                 description: gainedExp > 0 ? t('homework.submitExpGained', { exp: gainedExp }) : undefined,
                 color: 'success',
             })
-            // Report homework completion (submitting means completion)
+            // 上报作业完成（提交即完成）
             chapterTask?.reportNodeDone('homework', homeworkId.value, true)
-            // Notify userCard to refresh (homework submission increases course experience)
+            // 通知 userCard 刷新（作业提交会增加课程经验）
             useUserCard().refresh()
         } catch (err: any) {
             submitOk.value = false
@@ -152,43 +152,43 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
         submitMsg.value = ''
     }
 
-    // On mouse hover (only once) fetch current user's submission record and fill into submission state
+    // 鼠标移入时（仅一次）获取当前用户的提交记录，填充到提交状态
     async function fetchRecord() {
         if (isTeacher.value) return
         if (!homeworkId.value || !effectiveCourseId.value) return
         try {
             const data = await cRequest(`/api/homeworks/record?course_id=${effectiveCourseId.value}&cid=${homeworkId.value}`)
             if (data) {
-                // Fill submitted content
+                // 填充已提交内容
                 if (data.content) {
                     submittedContent.value = data.content
                 }
-                // Fill submitted files
+                // 填充已提交文件
                 if (Array.isArray(data.files) && data.files.length > 0) {
                     submittedFiles.value = [...data.files]
                     submittedFileList.value = [...data.files]
                 }
-                // Mark as submitted if there is content or files
+                // 有内容或文件则标记为已提交
                 if (data.content || (Array.isArray(data.files) && data.files.length > 0)) {
                     submitted.value = true
-                    // Report historical completion state
+                    // 上报历史完成状态
                     chapterTask?.reportNodeDone('homework', homeworkId.value, true)
                 }
             }
         } catch (err) {
-            // Silently ignored (not logged in or no record)
+            // 静默忽略（未登录或无记录）
         }
     }
 
-    // Edit save callback: notify parent component (editor will call updateAttributes)
+    // 编辑保存回调：通知父组件（编辑器中会调用 updateAttributes）
     function onSaved(hw: any) {
-        // No longer calls refresh(): refresh triggers pending=true → loading state flicker,
-        // causing the edit button to be removed from the DOM; when the modal closes, Radix focus falls back to body, causing the document to scroll to the top.
-        // Object.assign has already updated local state with formData immediately, no need to refetch.
+        // 不再调用 refresh()：refresh 会触发 pending=true → loading 态闪烁，
+        // 导致编辑按钮从 DOM 移除，modal 关闭时 Radix focus 回退到 body 造成文档滚动到顶部。
+        // Object.assign 已用表单数据即时更新本地状态，无需重新拉取。
         if (homework.value) {
             Object.assign(homework.value, hw)
         }
-        // Notify index.vue (editor will call updateAttributes to update content attribute)
+        // 通知 index.vue（编辑器中会调用 updateAttributes 更新 content 属性）
         emit('saved', hw)
     }
 

@@ -1,10 +1,10 @@
 /**
- * Chapter-class open access control
+ * 章节班级开放控制
  * POST /api/chapters/classes
  *   body: { chapterId, classes: [{ classId, open }] }
- *   batch upsert class_chapters.open
+ *   批量 upsert class_chapters.open
  *
- * Only teachers/admins can operate
+ * 仅教师/管理员可操作
  */
 import { db, schema } from '@nuxthub/db'
 import { eq, and } from 'drizzle-orm'
@@ -15,21 +15,21 @@ export default eventHandler(async (event) => {
   const body = await readBody(event)
   const { chapterId, classes } = body
   if (!chapterId || !Array.isArray(classes)) {
-    return cResp(null, 'Missing chapterId or classes parameter', false)
+    return cResp(null, '缺少 chapterId 或 classes 参数', false)
   }
 
-  // Permission check
+  // 权限校验
   const chapter = await db
     .select({ courseId: schema.chapters.courseId })
     .from(schema.chapters)
     .where(eq(schema.chapters.id, Number(chapterId)))
     .limit(1)
-  if (!chapter[0]) return cResp(null, 'Chapter not found', false)
+  if (!chapter[0]) return cResp(null, '章节不存在', false)
 
   const canEdit = user.roles.includes('admin') || await isCourseTeacher(user.id, chapter[0].courseId)
-  if (!canEdit) return cResp(null, 'No permission', false)
+  if (!canEdit) return cResp(null, '无权限', false)
 
-  // Upsert one by one
+  // 逐个 upsert
   for (const item of classes) {
     const existing = await db
       .select()
@@ -56,7 +56,7 @@ export default eventHandler(async (event) => {
     }
   }
 
-  // After class open-state changes, notify relevant class students via WS to refresh access permissions
+  // 班级开放状态变更后，通过 WS 通知相关班级的学生刷新访问权限
   const courseId = chapter[0].courseId
   const msg = JSON.stringify({
     type: 'chapterAccessUpdate',

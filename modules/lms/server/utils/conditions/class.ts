@@ -1,7 +1,7 @@
 /**
- * Condition type: class
+ * 条件类型：class
  *
- * Check whether the user belongs to the specified class
+ * 检查用户是否属于指定班级
  */
 import { db, schema } from '@nuxthub/db'
 import { and, eq } from 'drizzle-orm'

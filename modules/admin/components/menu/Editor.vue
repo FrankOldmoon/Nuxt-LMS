@@ -1,5 +1,5 @@
 <template>
-  <!-- Main edit modal: menu tree (navEditor style) -->
+  <!-- 主编辑弹窗：菜单树（navEditor 风格） -->
   <UModal v-model:open="open" :ui="{ content: 'max-w-2xl' }">
     <template #content>
       <div class="p-4 min-w-[560px]">
@@ -9,7 +9,7 @@
         </div>
         <p class="text-xs text-muted mb-3">{{ t('admin.menu.editorHint2') }}</p>
 
-        <!-- Menu tree: collapse/expand + same-level drag -->
+        <!-- 菜单树：折叠/展开 + 同层级拖拽 -->
         <div class="max-h-[55vh] overflow-y-auto pr-1">
           <MenuEditorList
             v-model="local"
@@ -30,7 +30,7 @@
     </template>
   </UModal>
 
-  <!-- Secondary: single menu item edit modal (independent UModal) -->
+  <!-- 二级：单条菜单项编辑弹窗（独立 UModal） -->
   <MenuEditorItemModal
     v-model:open="itemEditOpen"
     :item="editingItem"

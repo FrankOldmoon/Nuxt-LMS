@@ -1,5 +1,5 @@
 /**
- * composables/useFileUploader tests
+ * composables/useFileUploader 测试
  * @see modules/base/composables/useFileUploader.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'

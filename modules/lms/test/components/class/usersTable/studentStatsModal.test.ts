@@ -1,10 +1,10 @@
 /**
- * class/usersTable/studentStatsModal.vue component test
+ * class/usersTable/studentStatsModal.vue 组件测试
  * @see modules/lms/components/class/usersTable/studentStatsModal.vue
  *
- * Student learning data modal: title shows student info + reuses studentStats.vue to render learning stats and radar chart.
- * Depends on useStudentGradesContext() (inject) and useGradesContext() (inject),
- * Internal CourseGradesModalStudentStats only consumes statCards / radarOption.
+ * 学生学习数据弹窗：标题展示学生信息 + 复用 studentStats.vue 渲染学习统计与雷达图。
+ * 依赖 useStudentGradesContext()（inject）与 useGradesContext()（inject），
+ * 内部 CourseGradesModalStudentStats 仅消费 statCards / radarOption。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -20,7 +20,7 @@ const _globalStubs = {
   UModal: { template: '<div v-if="open" class="umodal"><slot name="content" /><slot /></div>', props: ['open', 'ui'] },
   UAvatar: { template: '<span class="avatar">{{ alt || text }}</span>', props: ['src', 'alt', 'text', 'size'] },
   UIcon: { template: '<span class="uicon" />', props: ['name'] },
-  // Also stub studentStats content, avoiding dependency on its internal useGradesContext
+  // 把 studentStats 内容也 stub 出来，避免依赖其内部的 useGradesContext
   CourseGradesModalStudentStats: { template: '<div class="student-stats-stub" />' },
 }
 
@@ -47,7 +47,7 @@ function setupComposables(overrides: any = {}) {
   }
   ;(globalThis as any).useStudentGrades = () => studentCtx
   ;(globalThis as any).provideStudentGrades = vi.fn()
-  // gradesModal compatibility: provideGrades for studentStats.vue internal useGradesContext
+  // gradesModal 兼容：provideGrades 供 studentStats.vue 内部 useGradesContext 使用
   ;(globalThis as any).provideGrades = vi.fn()
   return studentCtx
 }
@@ -116,7 +116,7 @@ describe('class/usersTable/studentStatsModal.vue', () => {
       props: { open: true, userId: 1, classId: 2 },
       global: _globalConfig,
     })
-    // UIcon stub presence means the loading icon exists
+    // UIcon stub 存在即视为加载图标存在
     expect(wrapper.find('.uicon').exists()).toBe(true)
   })
 })

@@ -1,9 +1,9 @@
 /**
- * auth/userProfileForm.vue component tests
+ * auth/userProfileForm.vue 组件测试
  * @see modules/base/components/auth/userProfileForm.vue
  *
- * userProfileForm manages editability, avatar upload, etc. via useUserProfileForm.
- * Uses v-model="form" to receive formData.
+ * userProfileForm 通过 useUserProfileForm 管理可编辑性、头像上传等。
+ * 使用 v-model="form" 接收表单数据。
  */
 import {
   describe, it, expect, beforeEach,
@@ -14,7 +14,7 @@ import {
 
 beforeEach(() => {
   baseBeforeEach()
-  // Test as admin by default, can edit all fields
+  // 默认以 admin 身份测试，可编辑所有字段
   setMockAuthUser(
     { id: 1, username: 'admin', name: 'Admin' },
     [{ code: 'admin', name: 'Admin' }],
@@ -45,7 +45,7 @@ function makeForm(overrides: any = {}) {
 }
 
 describe('auth/userProfileForm.vue', () => {
-  it('使用必填 formModel 渲染', async () => {
+  it('使用必填 form model 渲染', async () => {
     const { default: UserProfileForm } = await import('../../../components/auth/userProfileForm.vue')
     const wrapper = mount(UserProfileForm, {
       props: { modelValue: makeForm({ name: 'Alice' }) },
@@ -95,7 +95,7 @@ describe('auth/userProfileForm.vue', () => {
       global: { ..._globalConfig, stubs: _stubs },
     })
     const inputs = wrapper.findAll('input.uinput')
-    // name field should not be disabled (admin can edit)
+    // name 字段不应 disabled（admin 可编辑）
     const nameInput = inputs.find(i => !i.attributes('disabled'))
     expect(nameInput).toBeTruthy()
   })
@@ -110,7 +110,7 @@ describe('auth/userProfileForm.vue', () => {
       props: { modelValue: makeForm() },
       global: { ..._globalConfig, stubs: _stubs },
     })
-    // student cannot edit general fields → UInput disabled
+    // student 不可编辑 general 字段 → UInput disabled
     const disabledInputs = wrapper.findAll('input[disabled]')
     expect(disabledInputs.length).toBeGreaterThan(0)
   })

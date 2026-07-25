@@ -1,8 +1,8 @@
 /**
- * Course grades: get the total score and sub-item scores of students in the specified class for this course
+ * 课程成绩：获取指定班级在本课程的学生总分及各分项成绩
  * GET /api/courses/grades?courseId=1&classId=2
  *
- * Only returns userId + sub-item scores; student info is merged by the frontend from the useClassUsers cache
+ * 仅返回 userId + 各分项成绩，学生信息由前端从 useClassUsers 缓存合并
  */
 import { db, schema } from '@nuxthub/db'
 import { eq, and, inArray } from 'drizzle-orm'
@@ -12,20 +12,20 @@ export default eventHandler(async (event) => {
   const query = getQuery(event)
   const courseId = Number(query.courseId)
   const classId = Number(query.classId) || 0
-  if (!courseId) return cResp(null, 'Missing courseId', false)
-  if (!classId) return cResp(null, 'Missing classId', false)
+  if (!courseId) return cResp(null, '缺少 courseId', false)
+  if (!classId) return cResp(null, '缺少 classId', false)
 
-  // Extract progress (chapter pass ratio, 0~100) from the records jsonb
+  // 从 records jsonb 中提取 progress（章节通过比，0~100）
   const extractProgress = (records: any): number => {
     if (!records || typeof records !== 'object') return 0
     const p = Number(records.progress)
     return isNaN(p) ? 0 : p
   }
 
-  // Teachers or admins can view all grades; students can only view their own
+  // 教师或管理员可查看所有成绩，学生只能看自己的
   const isTeacher = await isCourseTeacher(user.id, courseId)
   if (!isTeacher && !user.roles.includes('admin')) {
-    // Only return the student's own grades
+    // 学生只返回自己的成绩
     const myGrade = await db
       .select({
         userId: schema.userCourses.userId,
@@ -45,7 +45,7 @@ export default eventHandler(async (event) => {
         eq(schema.userCourses.courseId, courseId),
         eq(schema.userCourses.userId, user.id),
       ))
-    // Attach the course's grading criteria (grade_criteria) for the frontend to convert to grade levels
+    // 附带课程的评分标准（grade_criteria），供前端换算等第
     const courseRow = await db
       .select({ gradeCriteria: schema.courses.gradeCriteria })
       .from(schema.courses)
@@ -71,12 +71,12 @@ export default eventHandler(async (event) => {
     })
   }
 
-  // Get student userIds of this class
+  // 获取该班级学生 userIds
   const classUsers = await getClassUsers(classId, courseId)
   const studentIds = classUsers.filter(u => !u.isTeacher).map(u => u.id)
   if (studentIds.length === 0) return cResp([])
 
-  // Query the grades of these students in this course
+  // 查询这些学生在本课程的成绩
   const rows = await db
     .select({
       userId: schema.userCourses.userId,
@@ -113,7 +113,7 @@ export default eventHandler(async (event) => {
     }))
     .sort((a, b) => b.score - a.score)
 
-  // Attach the course's grading criteria (grade_criteria) for the frontend to convert to grade levels
+  // 附带课程的评分标准（grade_criteria），供前端换算等第
   const courseRow = await db
     .select({ gradeCriteria: schema.courses.gradeCriteria })
     .from(schema.courses)

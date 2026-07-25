@@ -1,5 +1,5 @@
 /**
- * race render timer component test
+ * race render timer 组件测试
  * @see modules/lms/components/ueditor/extensions/nodes/vue/race/render/timer.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

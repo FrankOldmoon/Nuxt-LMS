@@ -1,9 +1,9 @@
 /**
- * auth/loginModal.vue component tests
+ * auth/loginModal.vue 组件测试
  * @see modules/base/components/auth/loginModal.vue
  *
- * loginModal reads allowRegistration via useSiteConfig,
- * internally renders LoginForm / RegisterForm / ForgotPasswordForm based on activeTab.
+ * loginModal 通过 useSiteConfig 读取 allowRegistration，
+ * 内部根据 activeTab 渲染 LoginForm / RegisterForm / ForgotPasswordForm。
  */
 import {
   describe, it, expect, beforeEach,
@@ -67,7 +67,7 @@ describe('auth/loginModal.vue', () => {
       props: { open: true },
       global: { ..._globalConfig, stubs: _stubs },
     })
-    // Only login tab, no register tab
+    // 只有 login tab，没有 register tab
     const tabButtons = wrapper.findAll('button.flex-1')
     expect(tabButtons).toHaveLength(1)
     expect(tabButtons[0].text()).toContain('auth.login')
@@ -80,11 +80,11 @@ describe('auth/loginModal.vue', () => {
       props: { open: true },
       global: { ..._globalConfig, stubs: _stubs },
     })
-    // Click the emit-success button inside the stub login form
+    // 点击 stub login form 内的 emit-success 按钮
     await wrapper.find('.emit-success').trigger('click')
     await flushPromises()
     expect(wrapper.emitted('success')).toBeTruthy()
-    // The modal should close (v-model:open updated to false)
+    // 弹窗应关闭（v-model:open 更新为 false）
     const openEvents = wrapper.emitted('update:open')
     expect(openEvents).toBeTruthy()
     expect(openEvents![openEvents!.length - 1]).toEqual([false])
@@ -97,15 +97,15 @@ describe('auth/loginModal.vue', () => {
       props: { open: true },
       global: { ..._globalConfig, stubs: _stubs },
     })
-    // Switch to register tab
+    // 切换到 register tab
     const tabButtons = wrapper.findAll('button.flex-1')
     const registerTab = tabButtons.find(b => b.text().includes('auth.register'))
     await registerTab!.trigger('click')
     expect(wrapper.find('.stub-register-form').exists()).toBe(true)
-    // Close the modal
+    // 关闭弹窗
     await wrapper.setProps({ open: false })
     await flushPromises()
-    // Reopen, should return to login tab
+    // 重新打开，应回到 login tab
     await wrapper.setProps({ open: true })
     await flushPromises()
     expect(wrapper.find('.stub-login-form').exists()).toBe(true)

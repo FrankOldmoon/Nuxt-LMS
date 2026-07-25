@@ -1,7 +1,7 @@
 import { db, schema } from '@nuxthub/db'
 import { eq } from 'drizzle-orm'
 
-/** Get medals obtained by the current user */
+/** 获取当前用户已获得的奖章 */
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
   const rows = await db

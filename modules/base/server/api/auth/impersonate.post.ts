@@ -1,49 +1,49 @@
 /**
- * Impersonate login (teacher/admin switches to student view)
+ * 模拟登录（教师/管理员切换为学生视角）
  * POST /api/auth/impersonate
  * body: { userId }
  *
- * Generate target user's token and set to cookie, original token saved to cookie for restoration
- * Supports continuous switching: does not overwrite if original_token already exists
- * Verifies via original_token whether the caller is teacher/admin
+ * 生成目标用户的 token 并设置到 cookie，原始 token 保存到 cookie 供恢复
+ * 支持连续切换：已有 original_token 时不覆盖
+ * 通过 original_token 验证调用者是否为教师/管理员
  */
 import { db, schema } from '@nuxthub/db'
 import { eq, and, isNull } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
-  // Permission check: prefer original_token (continuous switching scenario), otherwise check current auth_token
+  // 权限校验：优先检查 original_token（连续切换场景），否则检查当前 auth_token
   const originalToken = getCookie(event, 'original_token')
   const currentToken = getCookie(event, 'auth_token')
 
   let authUserId: number
 
   if (originalToken) {
-    // Already in impersonation mode, verify original identity with original_token
+    // 已在模拟模式，用 original_token 验证原始身份
     const tokenRow = await db
       .select({ userId: schema.tokens.userId })
       .from(schema.tokens)
       .where(and(eq(schema.tokens.name, originalToken), isNull(schema.tokens.deletedAt)))
       .limit(1)
     if (!tokenRow[0]) {
-      throw createError({ statusCode: 401, message: 'Invalid original token' })
+      throw createError({ statusCode: 401, message: '原始 token 无效' })
     }
     authUserId = tokenRow[0].userId
   } else if (currentToken) {
-    // First impersonation, verify identity with current token
+    // 首次模拟，用当前 token 验证身份
     const tokenRow = await db
       .select({ userId: schema.tokens.userId })
       .from(schema.tokens)
       .where(and(eq(schema.tokens.name, currentToken), isNull(schema.tokens.deletedAt)))
       .limit(1)
     if (!tokenRow[0]) {
-      throw createError({ statusCode: 401, message: 'Not authenticated' })
+      throw createError({ statusCode: 401, message: '未认证' })
     }
     authUserId = tokenRow[0].userId
   } else {
-    throw createError({ statusCode: 401, message: 'Not authenticated' })
+    throw createError({ statusCode: 401, message: '未认证' })
   }
 
-  // Verify original user is teacher or admin
+  // 验证原始用户是教师或管理员
   const roleRows = await db
     .select({ code: schema.roles.code })
     .from(schema.userRoles)
@@ -51,16 +51,16 @@ export default defineEventHandler(async (event) => {
     .where(eq(schema.userRoles.userId, authUserId))
   const isPrivileged = roleRows.some(r => r.code === 'teacher' || r.code === 'admin')
   if (!isPrivileged) {
-    throw createError({ statusCode: 403, message: 'No permission: only teacher/admin can switch identity' })
+    throw createError({ statusCode: 403, message: '无权限：仅教师/管理员可切换身份' })
   }
 
   const body = await readBody(event)
   const { userId } = body
   if (!userId) {
-    return cResp(null, 'Missing userId', false)
+    return cResp(null, '缺少 userId', false)
   }
 
-  // Verify target user exists
+  // 验证目标用户存在
   const targetUser = await db
     .select({ id: schema.users.id, name: schema.users.name })
     .from(schema.users)
@@ -68,10 +68,10 @@ export default defineEventHandler(async (event) => {
     .limit(1)
 
   if (!targetUser[0]) {
-    return cResp(null, 'Target user does not exist', false)
+    return cResp(null, '目标用户不存在', false)
   }
 
-  // Only save original token on first impersonation (do not overwrite if original_token exists)
+  // 仅在首次模拟时保存原始 token（已有 original_token 时不覆盖）
   if (!originalToken && currentToken) {
     setCookie(event, 'original_token', currentToken, {
       httpOnly: true,
@@ -82,14 +82,14 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Generate new token for target user
+  // 为目标用户生成新 token
   const tokenStr = generateToken()
   await db.insert(schema.tokens).values({
     name: tokenStr,
     userId: Number(userId),
   })
 
-  // Set new token to cookie
+  // 设置新 token 到 cookie
   setCookie(event, 'auth_token', tokenStr, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -102,5 +102,5 @@ export default defineEventHandler(async (event) => {
     userId: Number(userId),
     name: targetUser[0].name,
     impersonatedBy: authUserId,
-  }, 'Switched to student view')
+  }, '已切换为学生视角')
 })

@@ -1,9 +1,9 @@
 /**
- * chapter/vote-modal.vue component test
+ * chapter/vote-modal.vue 组件测试
  * @see modules/lms/components/chapter/vote-modal.vue
  *
- * Vote modal: teacher creates/views/ends vote; students vote/view results.
- * Depends on useChapterVote(), stubs the composable in tests.
+ * 投票弹窗：教师创建/查看/结束投票；学生投票/查看结果。
+ * 依赖 useChapterVote()，测试中 stub 该 composable。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -164,7 +164,7 @@ describe('chapter/vote-modal.vue', () => {
       props: { open: true, classId: 1, canEdit: false },
       global: _globalConfig,
     })
-    // Option buttons are buttons with label=X/Y
+    // 选项按钮是带 label=X/Y 的 button
     const optBtn = wrapper.findAll('button').find(b => b.text() === 'X')
     await optBtn!.trigger('click')
     expect(ctx.submitVote).toHaveBeenCalledWith(0)

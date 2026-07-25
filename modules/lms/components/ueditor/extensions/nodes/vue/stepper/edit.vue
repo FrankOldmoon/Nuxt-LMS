@@ -1,12 +1,12 @@
 <template>
     <div class="space-y-3">
-        <!-- sidetoSelect -->
+        <!-- 方向选择 -->
         <div class="flex items-center gap-2">
             <span class="text-xs text-muted whitespace-nowrap">{{ t('ueditor.stepperOrientation') }}</span>
             <USelect v-model="editOrientation" :items="orientationOptions" value-key="value" size="xs" class="w-32" />
         </div>
         <USeparator />
-        <!-- stepList：eachitemsstep title(textarea) + description(richEditor) -->
+        <!-- 步骤列表：每个步骤 title(textarea) + description(richEditor) -->
         <div v-for="(step, idx) in editSteps" :key="idx" class="space-y-2 border rounded-md p-2">
             <div class="flex items-start gap-2">
                 <span class="text-xs text-muted w-6 text-right pt-1">{{ idx + 1 }}.</span>
@@ -33,7 +33,7 @@ const emit = defineEmits(['update:config', 'close'])
 const { t } = useI18n()
 
 const editOrientation = ref(props.config?.orientation || 'horizontal')
-// deep clone to avoid directlyModifyParent Component config Reference
+// 深拷贝避免直接修改父组件 config 引用
 const editSteps = ref(JSON.parse(JSON.stringify(props.config?.steps || [
     { title: '', description: '' },
     { title: '', description: '' },
@@ -44,8 +44,8 @@ const orientationOptions = computed(() => [
     { label: t('ueditor.stepperVertical'), value: 'vertical' },
 ])
 
-// real-timeNotificationParent Componentpersist（timer mode：watch + debounce emit）
-// debounce to avoid RichEditor Inputfrequently when updateAttributes
+// 实时通知父组件持久化（timer 模式：watch + 防抖 emit）
+// 防抖避免 RichEditor 输入时频繁 updateAttributes
 let emitTimer = null
 watch([editOrientation, editSteps], () => {
     if (emitTimer) clearTimeout(emitTimer)

@@ -2,7 +2,7 @@
     <div>
         <label class="text-xs text-gray-500 mb-1 block">{{ $t('question.htmlCodeLabel') }}</label>
         <Monaco v-model="form.content" language="html"/>
-        <!-- real-time preview -->
+        <!-- 实时预览 -->
         <div v-if="form.content" class="mt-3">
             <label class="text-xs text-gray-500 mb-1 block">{{ $t('question.htmlPreview') }}</label>
             <div class="border border-gray-200 dark:border-gray-600 rounded overflow-hidden">
@@ -20,8 +20,8 @@ const props = defineProps({
     form: { type: Object, required: true },
 })
 
-// HTML question type：content store originalStart HTML charactersstring
-// answer placeholder [1]，actual correct_rate by iframe postMessage pass in
+// HTML 题型：content 存储原始 HTML 字符串
+// answer 占位 [1]，实际 correct_rate 由 iframe postMessage 传入
 if (!Array.isArray(props.form.answer) || !props.form.answer.length) {
     props.form.answer = [1]
 }

@@ -1,5 +1,5 @@
 /**
- * Unified response wrapper utility tests
+ * 统一响应包装工具测试
  * @see modules/base/server/utils/response.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'

@@ -1,24 +1,24 @@
 /**
- * Image compression utility tests
+ * 图片压缩工具测试
  * @see modules/base/utils/compressImage.ts
  *
- * Under happy-dom, browser-image-compression does not depend on DOM,
- * just mock Image / canvas / worker.
+ * happy-dom 环境下 browser-image-compression 不依赖 DOM，
+ * 用 mock Image / canvas / worker 即可。
  */
 import { describe, it, expect, vi } from 'vitest'
 
-// Mock browser-image-compression: directly return original file (avoid actual WASM loading)
+// 模拟 browser-image-compression：直接返回原文件（避免实际 WASM 加载）
 vi.mock('browser-image-compression', () => {
   return {
     default: vi.fn(async (file: File, _opts: any) => {
-      // Simulate a smaller file after compression
+      // 模拟压缩后的更小文件
       return new File([new Blob(['compressed-data'])], 'compressed.webp', { type: 'image/webp' })
     }),
   }
 })
 
-// Mock global $fetch (nuxt-stubs provides stub)
-// Here no longer injected via nuxt-stubs, use $fetch from nuxt-stubs.ts
+// 模拟全局 $fetch（nuxt-stubs 提供 stub）
+// 这里通过 nuxt-stubs 不再注入，使用 nuxt-stubs.ts 中的 $fetch
 
 describe('utils/compressImage', () => {
   it('compressImage 返回压缩后的 File 对象', async () => {
@@ -26,7 +26,7 @@ describe('utils/compressImage', () => {
     const originalFile = new File([new Blob(['original-data-very-large'])], 'photo.png', { type: 'image/png' })
     const compressed = await compressImage(originalFile)
     expect(compressed).toBeInstanceOf(File)
-    expect(compressed.name).toBe('photo.webp') // renamed to webp
+    expect(compressed.name).toBe('photo.webp') // 重命名为 webp
   })
 
   it('compressImage 接受自定义选项', async () => {
@@ -39,23 +39,23 @@ describe('utils/compressImage', () => {
       fileType: 'image/jpeg',
     })
     expect(result).toBeInstanceOf(File)
-    // When fileType is not webp, do not rename
+    // fileType 不是 webp 时不重命名
     expect(result.name).toBe('test.jpg')
   })
 
   it('压缩后变大时返回原文件', async () => {
-    // Override mock so compressed size > original size
+    // 覆盖 mock 让压缩后 size > 原 size
     const imageCompression = (await import('browser-image-compression')).default
     const originalFn = (imageCompression as any).getMockImplementation()
     ;(imageCompression as any).mockImplementationOnce(async (file: File) => {
-      // Return a file larger than the original
+      // 返回比原文件更大的 file
       const big = new File([new ArrayBuffer(1024 * 1024 * 10)], file.name, { type: file.type })
       return big
     })
     const { compressImage } = await import('../../utils/compressImage')
     const file = new File([new Blob(['x'])], 'a.png', { type: 'image/png' })
     const result = await compressImage(file)
-    expect(result).toBe(file) // return original file
+    expect(result).toBe(file) // 返回原文件
   })
 
   it('压缩失败时返回原文件', async () => {

@@ -1,14 +1,14 @@
 /**
- * lms/recordsModal/homework/index.vue component test
+ * lms/recordsModal/homework/index.vue 组件测试
  * @see modules/lms/components/lms/recordsModal/homework/index.vue
  *
- * Homework record modal: UModal + ClassUsersTable + score input + detail modal
+ * 作业记录弹窗：UModal + ClassUsersTable + 打分输入 + 详情弹窗
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { resetAllStubs, setMockI18n } from '../../../../../../../test/setup/nuxt-stubs'
 
-// mock useHomeworkRecords (local import)
+// mock useHomeworkRecords（本地导入）
 vi.mock('../../../../../components/lms/recordsModal/homework/useHomeworkRecords', () => ({
   useHomeworkRecords: (props: any, emit: any) => {
     const { ref, computed, reactive }: any = globalThis as any

@@ -1,9 +1,9 @@
 /**
- * ai/chatbox/inputBar.vue component test
+ * ai/chatbox/inputBar.vue 组件测试
  * @see modules/lms/components/ai/chatbox/inputBar.vue
  *
- * Input bar: text input + voice input/output buttons + send button.
- * Depends on useChatboxContext() to inject context, stubs the composable to return mock object in tests.
+ * 输入栏：文本输入 + 语音输入/输出按钮 + 发送按钮。
+ * 依赖 useChatboxContext() 注入上下文，测试中 stub 该 composable 返回 mock 对象。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -15,7 +15,7 @@ beforeEach(() => {
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
 })
 
-/** The object returned by mock useChatboxContext */
+/** mock useChatboxContext 返回的对象 */
 function mockChatboxContext(overrides: any = {}) {
   const inputText = ref('')
   const loading = ref(false)
@@ -58,7 +58,7 @@ describe('ai/chatbox/inputBar.vue', () => {
     const { default: InputBar } = await import('../../../../components/ai/chatbox/inputBar.vue')
     const wrapper = mount(InputBar, { global: _globalConfig })
     expect(wrapper.find('input').exists()).toBe(true)
-    // Send button always exists (voice button depends on supported=false, not rendered)
+    // 发送按钮一定存在（语音按钮依赖 supported=false 不渲染）
     expect(wrapper.findAll('button').length).toBeGreaterThanOrEqual(1)
   })
 
@@ -69,7 +69,7 @@ describe('ai/chatbox/inputBar.vue', () => {
       props: { enableVoiceInput: true },
       global: _globalConfig,
     })
-    // Voice input button + send button = 2
+    // 语音输入按钮 + 发送按钮 = 2 个
     expect(wrapper.findAll('button').length).toBe(2)
   })
 
@@ -80,7 +80,7 @@ describe('ai/chatbox/inputBar.vue', () => {
       props: { enableVoiceOutput: true },
       global: _globalConfig,
     })
-    // Voice output button + send button = 2
+    // 语音输出按钮 + 发送按钮 = 2 个
     expect(wrapper.findAll('button').length).toBe(2)
   })
 
@@ -89,7 +89,7 @@ describe('ai/chatbox/inputBar.vue', () => {
     ;(globalThis as any).useChatboxContext = () => ctx
     const { default: InputBar } = await import('../../../../components/ai/chatbox/inputBar.vue')
     const wrapper = mount(InputBar, { global: _globalConfig })
-    // The last button is the send button
+    // 最后一个 button 是发送按钮
     const sendBtn = wrapper.findAll('button').at(-1)!
     await sendBtn.trigger('click')
     expect(ctx.handleSend).toHaveBeenCalled()

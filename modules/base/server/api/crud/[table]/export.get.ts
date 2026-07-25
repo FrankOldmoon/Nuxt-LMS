@@ -1,5 +1,5 @@
 export default eventHandler(async (event) => {
-  // Only admin can export
+  // 仅管理员可导出
   await requireAdmin(event)
 
   const table = validateTable(getRouterParam(event, 'table')!)
@@ -14,7 +14,7 @@ export default eventHandler(async (event) => {
       const parsed = JSON.parse(query.filters)
       if (Array.isArray(parsed)) filters = parsed
     } catch {
-      // Ignore on parse failure
+      // 解析失败忽略
     }
   }
 
@@ -22,7 +22,7 @@ export default eventHandler(async (event) => {
     const rows = await exportTableRows(table, { search, filters, includeDeleted })
     return cResp(rows)
   } catch (error: any) {
-    console.error('Export failed:', error)
-    return cResp(null, error.message || 'Export failed', false)
+    console.error('导出失败:', error)
+    return cResp(null, error.message || '导出失败', false)
   }
 })

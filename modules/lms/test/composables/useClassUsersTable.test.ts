@@ -1,5 +1,5 @@
 /**
- * useClassUsersTable composable test
+ * useClassUsersTable composable 测试
  * @see modules/lms/composables/useClassUsersTable.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -17,7 +17,7 @@ beforeEach(async () => {
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
   setMockLmsContext(1, 0)
   setMockFetchHandler(async () => ({ data: null, success: true, msg: '' }))
-  // useClassUsersTable depends on useClassUsers, useWebSocket, useLmsContext
+  // useClassUsersTable 依赖 useClassUsers, useWebSocket, useLmsContext
   const { useClassUsers } = await import('../../composables/useClassUsers')
   ;(globalThis as any).useClassUsers = () => ({
     classUsers: ref([]),
@@ -190,7 +190,7 @@ describe('composables/useClassUsersTable', () => {
     setMockFetchHandler(async () => ({ data: null, success: true, msg: '' }))
     const { useClassUsersTable } = await import('../../composables/useClassUsersTable')
     const r = useClassUsersTable(makeProps(), { UButton: () => {} })
-    // Default sort by preferName ascending: a(id=2) first → number '1', b(id=1) → number '2'
+    // 默认按 preferName 升序排序：a(id=2) 在前 → number '1'，b(id=1) → number '2'
     r.users.value = [
       { id: 1, name: 'b', preferName: 'b', isTeacher: false },
       { id: 2, name: 'a', preferName: 'a', isTeacher: false },
@@ -239,7 +239,7 @@ describe('composables/useClassUsersTable', () => {
     ]
     await new Promise((resolve) => setTimeout(resolve, 0))
     expect(r.chartData.value.length).toBe(3)
-    expect(r.chartData.value[0].score).toBe(90) // Descending
+    expect(r.chartData.value[0].score).toBe(90) // 降序
   })
 
   it('refresh 调用 fetchClassUsers', async () => {

@@ -1,16 +1,16 @@
 /**
- * Chapter scores: batch query each student's status on question / homework / comment
+ * 章节得分：批量查询每个学生在 question / homework / comment 上的状态
  *
- * Differences from courseProgress/query.ts:
- *  - Targets "all students in a class" (pass in studentIds[])
- *  - Composite primary key: userId + cid
- *  - Returns key in the form "userId:cid", the handler looks up the table accordingly
+ * 与 courseProgress/query.ts 的区别：
+ *  - 面向"班级所有学生"（传入 studentIds[]）
+ *  - 复合主键：userId + cid
+ *  - 返回 key 形如 "userId:cid"，handler 据此查表
  */
 import { db, schema } from '@nuxthub/db'
 import { and, eq, inArray } from 'drizzle-orm'
 import type { ItemStatus } from '../courseProgress/query'
 
-/** Batch query the status of specified students on question cids under a course */
+/** 批量查询某课程下，指定学生在 question cids 上的状态 */
 export async function queryStudentQuestionStatus(
   courseId: number,
   studentIds: number[],
@@ -37,7 +37,7 @@ export async function queryStudentQuestionStatus(
   return map
 }
 
-/** Batch query the status of specified students on homework cids under a course */
+/** 批量查询某课程下，指定学生在 homework cids 上的状态 */
 export async function queryStudentHomeworkStatus(
   courseId: number,
   studentIds: number[],
@@ -57,7 +57,7 @@ export async function queryStudentHomeworkStatus(
   return map
 }
 
-/** Batch query the status of specified students on comment cids under a course */
+/** 批量查询某课程下，指定学生在 comment cids 上的状态 */
 export async function queryStudentCommentStatus(
   courseId: number,
   studentIds: number[],
@@ -77,7 +77,7 @@ export async function queryStudentCommentStatus(
   return map
 }
 
-/** Batch query students' scores + task completion status for a chapter (taskStatus: headingId → whether completed) */
+/** 批量查询学生在某章节的得分 + 任务完成状态（taskStatus: headingId → 是否完成） */
 export async function queryStudentChapterScores(
   chapterId: number,
   studentIds: number[],

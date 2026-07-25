@@ -1,5 +1,5 @@
 /**
- * composables/useSettingsForm tests
+ * composables/useSettingsForm 测试
  * @see modules/base/composables/useSettingsForm.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -11,7 +11,7 @@ import {
   getToastCalls,
 } from '../../../../test/setup/nuxt-stubs'
 
-// useSiteConfig is an auto-import, not exposed in nuxt-stubs, need manual stub
+// useSiteConfig 是 auto-import，未在 nuxt-stubs 中暴露，需手动 stub
 let refreshConfigSpy = vi.fn()
 function stubSiteConfig() {
   refreshConfigSpy = vi.fn()
@@ -71,7 +71,7 @@ describe('composables/useSettingsForm - loadSettings', () => {
     expect(form.value.sitePageSize).toBe(50)
     expect(form.value.siteAllowRegistration).toBe(true)
     expect(form.value.mail.host).toBe('smtp.example.com')
-    // Unreturned keys keep defaults
+    // 未返回的 key 保持默认
     expect(form.value.siteDefaultLocale).toBe('en')
     expect(loading.value).toBe(false)
   })

@@ -7,7 +7,7 @@
 .umo-editor-render-container {
   //width: 100%;
 
-  // Reset default margin/padding of paragraphs and lists (consistent with editor container)
+  // 重置段落和列表的默认 margin/padding（与编辑器容器保持一致）
   p,
   ul,
   ol {
@@ -34,16 +34,15 @@
     //width: 100%;
   }
 
-  // In render mode, allow iframe content to be interactive (scroll/click)
+  // 渲染模式下允许 iframe 内容可交互（滚动/点击）
   .umo-node-iframe iframe {
     pointer-events: auto !important;
   }
 }
 
-// Nuxt dark mode: UMO's own dark variables are attached to [theme-mode=dark],
-// while Nuxt uses the <html>.dark class. The two are not interoperable, so
-// text remains dark in dark mode. Here, under .dark, UMO text variables are
-// bridged to white (no flicker, effective from the first frame).
+// Nuxt 暗黑模式：UMO 自身的暗黑变量挂在 [theme-mode=dark]，
+// 而 Nuxt 用 <html>.dark 类，两者不互通，导致暗黑下文字仍是深色。
+// 这里在 .dark 下把 UMO 文字变量桥接到白色（无闪烁，首帧即生效）。
 
 .dark .umo-editor-render {
     --umo-content-text-color: #fff !important;

@@ -1,7 +1,7 @@
 /**
- * LMS learning activity parameters (question/homework/comment/chapter/quiz)
+ * LMS 学习行为参数（题目/作业/评论/章节/测验）
  *
- * Each activity configures both exp (experience) and coin; the two are logically independent and accumulate separately.
+ * 每种行为同时配置 exp（经验值）和 coin（金币），两者逻辑独立、各自累加。
  */
 export const learningDefaults = {
   question: {
@@ -31,10 +31,10 @@ export const learningDefaults = {
     maxDailyCoin: 20,
   },
   chapter: {
-    // Reward when heading task is completed (hover reading + interactive component all answered correctly)
-    // - headingExp: experience
-    // - headingCoin: coin
-    // - headingScore: course marksScore (used for total score calculation)
+    // heading 任务完成时奖励（hover 阅读 + 互动组件提交全部答对）
+    // - headingExp: 经验值
+    // - headingCoin: 金币
+    // - headingScore: 课程 marksScore（用于总分计算）
     headingExp: 5,
     headingCoin: 5,
     headingScore: 5,
@@ -47,14 +47,14 @@ export const learningDefaults = {
     passBonusCoin: 10,
   },
   /**
-   * Toggles for class danmaku broadcast after submission (controls the behavior of the server
-   * broadcasting danmaku to the class room after questions / homeworks / quizzes / comments are submitted).
+   * 提交后班级弹幕广播开关（控制 questions / homeworks / quizzes / comments 提交后
+   * 服务端向班级房间广播 danmaku 的行为）。
    *
-   * - enableOn{Kind}: independent master switch for each kind
-   * - questionOnlyOnCorrect: whether to also broadcast when the question is answered wrong (default: only broadcast when answered correctly)
-   * - onlyOnReward: only broadcast when exp can be gained this submission (gainedExp > 0).
-   *   For question / homework / quiz, takes effect when the caller passes gainedExp;
-   *   For comment, not constrained by this toggle by default (comments usually gain publishExp/replyExp).
+   * - enableOn{Kind}：每种类型独立的总开关
+   * - questionOnlyOnCorrect：题目答错时是否也广播（默认仅在答对时广播）
+   * - onlyOnReward：仅在本次提交能获得经验时广播（gainedExp > 0）。
+   *   对 question / homework / quiz 由调用方传入 gainedExp 即可生效；
+   *   对 comment 默认不受此开关约束（评论通常都能拿到 publishExp/replyExp）。
    */
   danmaku: {
     enableOnQuestion: true,

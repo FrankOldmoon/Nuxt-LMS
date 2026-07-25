@@ -1,5 +1,5 @@
 /**
- * useChapterBtns composable test
+ * useChapterBtns composable 测试
  * @see modules/lms/composables/useChapterBtns.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -14,7 +14,7 @@ import { ref } from 'vue'
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
-  // useChapterBtns needs setLayout
+  // useChapterBtns 需要 setLayout
   setMockLayoutState({
     setLayout: vi.fn(),
     notifyCourseNavUpdate: vi.fn(),

@@ -8,16 +8,16 @@
       </ULink>
     </template>
 
-    <!-- Center: navigation menu slot -->
+    <!-- 中间：导航菜单插槽 -->
     <slot name="nav" />
 
     <template #right>
-      <!-- Right extension slot -->
+      <!-- 右侧扩展插槽 -->
       <slot name="header-right" />
 
       <UColorModeButton />
 
-      <!-- Notification button -->
+      <!-- 通知按钮 -->
       <UTooltip v-if="isLoggedIn && showNotify" :text="$t('notification.title')" :content="{ side: 'bottom' }">
         <div class="relative">
           <UButton icon="i-lucide-bell" color="neutral" variant="ghost" :aria-label="$t('notification.title')"
@@ -29,7 +29,7 @@
         </div>
       </UTooltip>
 
-      <!-- Message button -->
+      <!-- 消息按钮 -->
       <UTooltip v-if="isLoggedIn && showMsg" :text="$t('message.title')" :content="{ side: 'bottom' }">
         <div class="relative">
           <UButton icon="i-lucide-message-square" color="neutral" variant="ghost" :aria-label="$t('message.title')"
@@ -53,7 +53,7 @@
       </UDropdownMenu>
     </template>
 
-    <!-- Mobile menu content slot -->
+    <!-- 移动端菜单内容插槽 -->
     <template #body>
       <slot name="nav-mobile" />
     </template>
@@ -64,13 +64,13 @@
   <AuthSettingsModal v-model:open="showSettingsModal" />
   <AuthImportUsersModal v-model:open="showImportUsersModal" />
 
-  <!-- Notification modal -->
+  <!-- 通知弹窗 -->
   <LayoutNotificationModal v-model:open="showNotificationModal" />
 
-  <!-- Message modal -->
+  <!-- 消息弹窗 -->
   <LayoutMessageModal v-model:open="showMessageModal" />
 
-  <!-- Drive files modal -->
+  <!-- 网盘文件弹窗 -->
   <FilesMyFilesModal v-model:open="showMyFilesModal" />
 </template>
 

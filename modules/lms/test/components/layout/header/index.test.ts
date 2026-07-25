@@ -1,8 +1,8 @@
 /**
- * layout/header/index.vue component test
+ * layout/header/index.vue 组件测试
  * @see modules/lms/components/layout/header/index.vue
  *
- * Header container: wraps BaseHeader, injects navigation and search.
+ * 页头容器：包裹 BaseHeader，注入导航和搜索。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -14,11 +14,11 @@ beforeEach(() => {
 })
 
 const _globalStubs = {
-  // BaseHeader is imported via explicit import, stubbed as slot pass-through
+  // BaseHeader 通过 explicit import 引入，stub 为 slot 透传
   BaseHeader: {
     template: '<div class="base-header"><slot name="nav" /><slot name="header-right" /><slot name="nav-mobile" /></div>',
   },
-  // LayoutHeaderNav / LayoutSearchModal are Nuxt auto-import components
+  // LayoutHeaderNav / LayoutSearchModal 是 Nuxt auto-import 组件
   LayoutHeaderNav: { template: '<div class="layout-nav" />', props: ['orientation', 'class'] },
   LayoutSearchModal: { template: '<div class="layout-search-modal" />', emits: ['close'] },
   UModal: {

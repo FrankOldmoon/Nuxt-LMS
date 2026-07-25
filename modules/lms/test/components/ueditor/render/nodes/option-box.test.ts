@@ -1,5 +1,5 @@
 /**
- * ueditor/render/nodes/option-box.vue component test
+ * ueditor/render/nodes/option-box.vue 组件测试
  * @see modules/lms/components/ueditor/render/nodes/option-box.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

@@ -1,5 +1,5 @@
 /**
- * managerToolbar component tests
+ * managerToolbar 组件测试
  * @see modules/admin/components/table/managerToolbar.vue
  */
 import { describe, it, expect, beforeEach, mount, baseBeforeEach, _globalStubs, _globalConfig, makeColumn } from './_shared'

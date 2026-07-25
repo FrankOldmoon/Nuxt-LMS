@@ -3,30 +3,30 @@ import { eq, and, isNull, lt } from 'drizzle-orm'
 import { hashPassword } from '../../utils/auth'
 
 /**
- * Forgot password - reset password
+ * 忘记密码 - 重置密码
  * body: { token, newPassword }
  *
- * Flow:
- * 1. Validate token exists and starts with reset_
- * 2. Validate token not expired (within 30 minutes, judged by createdAt)
- * 3. Update user password
- * 4. Delete the token (one-time use)
+ * 流程：
+ * 1. 校验 token 存在且以 reset_ 开头
+ * 2. 校验 token 未过期（30 分钟内，按 createdAt 判断）
+ * 3. 更新用户密码
+ * 4. 删除该 token（一次性）
  */
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const { token, newPassword } = body || {}
 
   if (!token || !newPassword) {
-    return cResp(null, 'Missing token or new password', false)
+    return cResp(null, '缺少 token 或新密码', false)
   }
   if (String(newPassword).length < 6) {
-    return cResp(null, 'New password must be at least 6 characters', false)
+    return cResp(null, '新密码长度至少6位', false)
   }
   if (!String(token).startsWith('reset_')) {
-    return cResp(null, 'Invalid token', false)
+    return cResp(null, '无效的 token', false)
   }
 
-  // Find token
+  // 查找 token
   const tokens = await db
     .select({
       id: schema.tokens.id,
@@ -38,29 +38,29 @@ export default defineEventHandler(async (event) => {
     .limit(1)
 
   if (!tokens[0]) {
-    return cResp(null, 'Token invalid or already used', false)
+    return cResp(null, 'token 无效或已使用', false)
   }
 
-  // Validate expiration (30 minutes)
+  // 校验是否过期（30 分钟）
   const expiresAt = new Date(tokens[0].createdAt.getTime() + 30 * 60 * 1000)
   if (new Date() > expiresAt) {
-    // Delete expired token
+    // 删除过期 token
     await db.update(schema.tokens)
       .set({ deletedAt: new Date() })
       .where(eq(schema.tokens.id, tokens[0].id))
-    return cResp(null, 'Token expired, please request again', false)
+    return cResp(null, 'token 已过期，请重新申请', false)
   }
 
-  // Update password
+  // 更新密码
   const hashedPwd = await hashPassword(String(newPassword))
   await db.update(schema.users)
     .set({ password: hashedPwd })
     .where(eq(schema.users.id, tokens[0].userId))
 
-  // Delete token (one-time use)
+  // 删除 token（一次性）
   await db.update(schema.tokens)
     .set({ deletedAt: new Date() })
     .where(eq(schema.tokens.id, tokens[0].id))
 
-  return cResp(null, 'Password reset successfully')
+  return cResp(null, '密码重置成功')
 })

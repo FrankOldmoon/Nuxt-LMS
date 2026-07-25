@@ -15,10 +15,10 @@
           <AuthSettingsUiSection :form="form" />
           <AuthSettingsMailSection :form="form" />
 
-          <!-- Extension slot: subsequent modules (e.g. lms) can inject additional config editors -->
+          <!-- 扩展 slot：后续模块（如 lms）可注入额外配置编辑器 -->
           <slot name="settings-extra" :on-save="registerSlotSave" :on-reload="loadSettings" />
 
-          <!-- Save button -->
+          <!-- 保存按钮 -->
           <div class="flex justify-end gap-2 pt-4">
             <UButton :label="$t('common.cancel')" color="neutral" variant="ghost" @click="closeModal" />
             <UButton :label="$t('common.save')" color="primary" :loading="saving" @click="saveSettings" />

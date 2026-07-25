@@ -1,7 +1,7 @@
 /**
- * LMS AI assistant default config
+ * LMS AI 助手默认配置
  *
- * ai.llmApiKey / ai.llmApiUrl / ai.model can be overridden by process.env (highest priority in cache.ts).
+ * ai.llmApiKey / ai.llmApiUrl / ai.model 可被 process.env 覆盖（cache.ts 优先级最高）。
  */
 export const aiDefaults = {
   enabled: true,

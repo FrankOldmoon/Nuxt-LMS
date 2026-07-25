@@ -1,9 +1,9 @@
 /**
- * chapter/selectModal/scoreButton.vue component test
+ * chapter/selectModal/scoreButton.vue 组件测试
  * @see modules/lms/components/chapter/selectModal/scoreButton.vue
  *
- * Score adjustment buttons (Popover confirm): delta>0 adds score (green), delta<0 subtracts score (red).
- * Reports via confirm/cancel events.
+ * 加减分按钮（Popover 确认）：delta>0 加分（绿），delta<0 减分（红）。
+ * 通过 confirm/cancel 事件上报。
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -73,7 +73,7 @@ describe('chapter/selectModal/scoreButton.vue', () => {
       props: { delta: 2, selectedCount: 3, saving: false },
       global: _globalConfig,
     })
-    // chapter.scoreConfirm text + score button label shows Math.abs(delta)=2
+    // chapter.scoreConfirm 文案 + 加分按钮 label 显示 Math.abs(delta)=2
     expect(wrapper.text()).toContain('chapter.scoreConfirm')
     expect(wrapper.text()).toContain('2')
   })
@@ -84,7 +84,7 @@ describe('chapter/selectModal/scoreButton.vue', () => {
       props: { delta: 4, selectedCount: 1, saving: false },
       global: _globalConfig,
     })
-    // The content area has two buttons: cancel + save. Save is the last one.
+    // content 区有两个 button：取消 + 保存。保存是最后一个。
     const btns = wrapper.findAll('button')
     await btns[btns.length - 1].trigger('click')
     expect(wrapper.emitted('confirm')).toBeTruthy()
@@ -97,7 +97,7 @@ describe('chapter/selectModal/scoreButton.vue', () => {
       props: { delta: 1, selectedCount: 1, saving: false },
       global: _globalConfig,
     })
-    // The first button in the content area is cancel
+    // content 区第一个 button 是取消
     const btns = wrapper.findAll('button')
     await btns[1].trigger('click')
     expect(wrapper.emitted('cancel')).toBeTruthy()

@@ -1,9 +1,9 @@
 /**
- * formField/jsonField component tests
+ * formField/jsonField 组件测试
  * @see modules/admin/components/table/formField/jsonField.vue
  *
- * UTextarea v-model binds to jsonStrings[col.jsName];
- * Shows error message when jsonErrors[col.jsName] is true
+ * UTextarea v-model 绑定到 jsonStrings[col.jsName]；
+ * jsonErrors[col.jsName] 为 true 时显示错误提示
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -92,7 +92,7 @@ describe('formField/jsonField.vue', () => {
       global: _globalConfig,
     })
     expect(wrapper.text()).toContain('admin.form.invalidJson')
-    // Error message element contains text-error class
+    // 错误提示元素含 text-error 类
     const errEl = wrapper.find('.text-error')
     expect(errEl.exists()).toBe(true)
   })

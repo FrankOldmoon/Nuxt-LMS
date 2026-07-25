@@ -4,7 +4,7 @@
             <div class="p-6 space-y-4">
                 <h3 class="text-lg font-semibold">{{ $t('coursePanel.leaderboard') }}</h3>
 
-                <!-- MineRanking -->
+                <!-- 我的排名 -->
                 <div v-if="myRank" class="p-3 bg-primary/10 rounded-lg flex items-center gap-3">
                     <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">
                         {{ myRank.rank }}
@@ -23,7 +23,7 @@
                     {{ $t('common.loading') }}
                 </div>
 
-                <!-- Leaderboard table (student/group tab + chart) -->
+                <!-- 排行榜表格（学生/小组 Tab + 图表） -->
                 <ClassUsersTable v-else :rows="tableRows" :class-id="Number(props.classId)"
                     :course-id="Number(props.courseId)" :hide-actions="true" :hide-teachers="true"
                     :hide-number="true" :default-sort="[{ id: 'score', desc: true }]"

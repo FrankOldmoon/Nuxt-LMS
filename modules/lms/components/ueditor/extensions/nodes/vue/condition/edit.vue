@@ -1,5 +1,5 @@
 <template>
-    <!-- itemsconditionList -->
+    <!-- 条件列表 -->
     <div class="space-y-2">
         <div v-for="(cond, idx) in editConditions" :key="idx" class="flex items-center gap-2">
             <USelect v-model="cond.type" :items="conditionTypes" size="sm" class="w-32" />

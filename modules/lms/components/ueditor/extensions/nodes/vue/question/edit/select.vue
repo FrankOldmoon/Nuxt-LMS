@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- AnswerPreview -->
+    <!-- 答案预览 -->
     <label class="text-xs text-gray-500 mb-1 block">{{ selectHintText }}</label>
     <div v-if="parsedAnswers.length" class="flex flex-wrap gap-2 mb-3">
       <div
@@ -16,7 +16,7 @@
       {{ $t('question.selectPlaceholderHint') }}
     </div>
 
-    <!-- optionitemsSettings -->
+    <!-- 选项设置 -->
     <label class="text-xs text-gray-500 mb-1 block">{{ $t('question.optionsLabel') }}</label>
     <UInputTags v-model="form.options" :placeholder="$t('question.optionPlaceholder')" :add-text="$t('question.addOption')" />
     <p class="text-xs text-gray-400 mt-1">{{ $t('question.optionsHint') }}</p>
@@ -32,16 +32,16 @@ const { t } = useI18n()
 
 const selectHintText = computed(() => t('question.selectAnswerHint'))
 
-// DefaultInitialize options
+// 默认初始化 options
 if (!Array.isArray(props.form.options)) {
   props.form.options = []
 }
 
-// from content MiddleextractAnswer（select nodePoint attrs.content）
+// 从 content 中提取答案（select 节点的 attrs.content）
 const parsedAnswers = computed(() => {
   const content = props.form.content
   if (typeof content === 'string') {
-    // Plain Textformat：from ||answer|| MiddleextractAnswer
+    // 纯文本格式：从 ||answer|| 中提取答案
     const matches = content.match(/\|\|(.+?)\|\|/g)
     if (!matches) return []
     return matches.map(m => m.replace(/^\|\||\|\|$/g, '').trim())
@@ -51,7 +51,7 @@ const parsedAnswers = computed(() => {
   return []
 })
 
-// Syncto form.answer
+// 同步到 form.answer
 watch(parsedAnswers, (answers) => {
   props.form.answer = answers
 }, { immediate: true })
@@ -60,7 +60,7 @@ function extractAnswersFromDoc(node) {
   const answers = []
   if (!node) return answers
 
-  // select nodePoint：extract attrs.content asAnswer
+  // select 节点：提取 attrs.content 作为答案
   if (node.type === 'select' && node.attrs?.content) {
     answers.push(node.attrs.content)
   }

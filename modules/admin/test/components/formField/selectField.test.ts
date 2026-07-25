@@ -1,8 +1,8 @@
 /**
- * formField/selectField component tests
+ * formField/selectField 组件测试
  * @see modules/admin/components/table/formField/selectField.vue
  *
- * USelect v-model binds to form[col.jsName], items come from col.enumValues
+ * USelect v-model 绑定到 form[col.jsName]，items 来自 col.enumValues
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

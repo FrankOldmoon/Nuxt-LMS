@@ -1,8 +1,8 @@
 /**
- * auth/settings/modal.vue component tests
+ * auth/settings/modal.vue 组件测试
  * @see modules/base/components/auth/settings/modal.vue
  *
- * settings/modal manages state via useSettingsForm, internally renders 5 section child components.
+ * settings/modal 通过 useSettingsForm 管理状态，内部渲染 5 个 section 子组件。
  */
 import {
   describe, it, expect, beforeEach,

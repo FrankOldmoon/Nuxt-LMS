@@ -1,8 +1,8 @@
 /**
- * lms/configEditor/danmakuSection.vue component test
+ * lms/configEditor/danmakuSection.vue 组件测试
  * @see modules/lms/components/lms/configEditor/danmakuSection.vue
  *
- * Class danmaku broadcast config after submit: 6 switches
+ * 提交后班级弹幕广播配置：6 个开关
  * - enableOnQuestion / enableOnHomework / enableOnQuiz / enableOnComment
  * - questionOnlyOnCorrect / onlyOnReward
  */
@@ -102,7 +102,7 @@ describe('lms/configEditor/danmakuSection.vue', () => {
     const config = setupContext()
     const { default: DanmakuSection } = await import('../../../../components/lms/configEditor/danmakuSection.vue')
     const wrapper = mount(DanmakuSection, { global: _globalConfig })
-    // The 5th switch is questionOnlyOnCorrect
+    // 第 5 个开关是 questionOnlyOnCorrect
     const checkbox = wrapper.findAll('.uswitch input')[4]
     await checkbox.setValue(false)
     expect(config.danmaku.questionOnlyOnCorrect).toBe(false)
@@ -112,7 +112,7 @@ describe('lms/configEditor/danmakuSection.vue', () => {
     const config = setupContext()
     const { default: DanmakuSection } = await import('../../../../components/lms/configEditor/danmakuSection.vue')
     const wrapper = mount(DanmakuSection, { global: _globalConfig })
-    // The 6th switch is onlyOnReward
+    // 第 6 个开关是 onlyOnReward
     const checkbox = wrapper.findAll('.uswitch input')[5]
     await checkbox.setValue(false)
     expect(config.danmaku.onlyOnReward).toBe(false)

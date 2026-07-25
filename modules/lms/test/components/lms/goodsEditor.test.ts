@@ -1,15 +1,15 @@
 /**
- * lms/goodsEditor.vue component test
+ * lms/goodsEditor.vue 组件测试
  * @see modules/lms/components/lms/goodsEditor.vue
  *
- * Goods editor: global/course title + list + add/delete/save
+ * 商品编辑器：全局/课程标题 + 列表 + 新增/删除/保存
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { ref } from 'vue'
 import { resetAllStubs, setMockI18n } from '../../../../../test/setup/nuxt-stubs'
 
-// Mutable mock holder — vi.hoisted ensures initialization before vi.mock registration
+// 可变 mock holder — vi.hoisted 保证在 vi.mock 注册之前初始化
 const _editorMock = vi.hoisted(() => ({ current: null as any }))
 
 vi.mock('../../../components/lms/useGoodsEditor', () => ({
@@ -159,12 +159,12 @@ describe('lms/goodsEditor.vue', () => {
       global: _globalConfig,
     })
     await flushPromises()
-    // 1 product → 6 UInputs (name/icon/description/price/sellPrice/stock)
+    // 1 个商品 → 6 个 UInput（name/icon/description/price/sellPrice/stock）
     const inputs = wrapper.findAll('.uinput')
     expect(inputs.length).toBe(6)
-    // The first input is the product name
+    // 第一个输入框是商品名称
     expect(inputs[0].attributes('value')).toBe('Homework Pass')
-    // Delete button exists (located via icon data attribute)
+    // 删除按钮存在（通过 icon 数据属性定位）
     expect(wrapper.find('[data-icon="i-lucide-trash-2"]').exists()).toBe(true)
   })
 

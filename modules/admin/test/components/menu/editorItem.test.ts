@@ -1,8 +1,8 @@
 /**
- * menu/EditorItem.vue component tests
+ * menu/EditorItem.vue 组件测试
  * @see modules/admin/components/menu/EditorItem.vue
  *
- * Menu editor single row: collapse/expand + drag handle + label preview + visibility toggle + action buttons
+ * 菜单编辑器单行：折叠/展开 + 拖拽手柄 + 标签预览 + 可见开关 + 操作按钮
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -62,7 +62,7 @@ describe('menu/EditorItem.vue', () => {
       props: { item: sampleItem, index: 0, maxDepth: 2, hasChildren: true },
       global: _globalConfig,
     })
-    // The collapse button is a <button> element (with title attribute)
+    // 折叠按钮是 <button> 元素（带 title 属性）
     const collapseBtn = wrapper.find('button[title]')
     expect(collapseBtn.exists()).toBe(true)
   })
@@ -73,7 +73,7 @@ describe('menu/EditorItem.vue', () => {
       props: { item: sampleItem, index: 0, maxDepth: 2, hasChildren: false },
       global: _globalConfig,
     })
-    // When no children, the collapse button position is a <span class="shrink-0 w-4" />
+    // 无子节点时折叠按钮位置是 <span class="shrink-0 w-4" />
     const spacer = wrapper.find('span.shrink-0.w-4')
     expect(spacer.exists()).toBe(true)
   })
@@ -84,7 +84,7 @@ describe('menu/EditorItem.vue', () => {
       props: { item: sampleItem, index: 0, maxDepth: 2 },
       global: _globalConfig,
     })
-    // The label preview is the second <button> (flex-1 min-w-0 text-left truncate)
+    // 标签预览是第二个 <button>（flex-1 min-w-0 text-left truncate）
     const labelBtn = wrapper.find('button.flex-1')
     await labelBtn.trigger('click')
     expect(wrapper.emitted('openEdit')).toBeTruthy()

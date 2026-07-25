@@ -1,4 +1,4 @@
-// Tiptap standard node type definitions
+// Tiptap 标准节点类型定义
 interface TiptapMark {
   type: string;
   attrs?: Record<string, any>;
@@ -18,18 +18,18 @@ interface InlinePattern {
 }
 
 /**
- * Parse ```question {json}``` fence content into a vue node.
- * Returns null if JSON is invalid (caller degrades to codeBlock to preserve raw content).
+ * 解析 ```question {json}``` 围栏内容为 vue 节点。
+ * JSON 无效时返回 null（调用方降级为 codeBlock 保留原始内容）。
  */
 function parseQuestionFence(raw: string): TiptapNode | null {
   const text = raw.trim();
   if (!text) return null;
-  // Fault tolerance: remove possible extra markdown wrapping
+  // 容错：去除可能的多余 markdown 包裹
   let cleaned = text;
   if (cleaned.startsWith('```')) {
     cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?\s*```\s*$/, '');
   }
-  // Extract content between the first { and the last }, ignoring extra text before/after
+  // 提取第一个 { 到最后一个 } 之间的内容，忽略前后多余文字
   const start = cleaned.indexOf('{');
   const end = cleaned.lastIndexOf('}');
   if (start !== -1 && end !== -1 && end > start) {
@@ -50,17 +50,17 @@ function parseQuestionFence(raw: string): TiptapNode | null {
 }
 
 /**
- * Build the TipTap node corresponding to a code fence:
- * - question language → parse as vue node (skip if JSON is invalid, do not degrade to codeBlock,
- *   to avoid rendering incomplete JSON as codeBlock during streaming; once streaming completes and JSON is intact, question render displays normally)
- * - other languages → codeBlock
- * Returns null to skip this fence (caller does not push to blocks)
+ * 构建代码围栏对应的 TipTap 节点：
+ * - question 语言 → 解析为 vue 节点（JSON 无效时跳过，不降级为 codeBlock，
+ *   避免流式中途将残缺 JSON 以 codeBlock 形式渲染出来；流式完成后 JSON 完整即正常渲染 question render）
+ * - 其他语言 → codeBlock
+ * 返回 null 表示跳过该围栏（调用方不 push 到 blocks）
  */
 function buildFenceBlock(lang: string, raw: string): TiptapNode | null {
   if (lang === 'question') {
     const vueNode = parseQuestionFence(raw);
     if (vueNode) return vueNode;
-    // question fence JSON is invalid (e.g., incomplete during streaming): skip, do not degrade to codeBlock
+    // question 围栏 JSON 无效（如流式中途不完整）：跳过，不降级为 codeBlock
     return null;
   }
   return {
@@ -71,16 +71,16 @@ function buildFenceBlock(lang: string, raw: string): TiptapNode | null {
 }
 
 /**
- * Convert Markdown to Tiptap JSON format (TypeScript version)
- * Added support for {{xxx}} placeholder syntax → converts to inputs node (discards content inside braces)
- * Added support for ```question {json}``` fence → converts to vue node (content is the parsed JSON object)
+ * Markdown 转 Tiptap JSON 格式（TypeScript 版）
+ * 新增支持 {{xxx}} 占位符语法 → 转为 inputs 节点（丢弃括号内内容）
+ * 新增支持 ```question {json}``` 围栏 → 转为 vue 节点（content 为解析后的 JSON 对象）
  */
 export function markdownToTiptap(markdown: string): TiptapNode {
-  // Preprocess: normalize line breaks
+  // 预处理：统一换行符
   const text = markdown.replace(/\r\n/g, '\n').trim();
   if (!text) return { type: 'doc', content: [] };
 
-  // Determine whether a line is the start of a block-level element
+  // 判断一行是否为块级元素起始
   function isBlockStart(line: string): boolean {
     return /^```/.test(line)
       || /^#{1,6}\s+/.test(line)
@@ -91,14 +91,14 @@ export function markdownToTiptap(markdown: string): TiptapNode {
       || /^\$\$/.test(line);
   }
 
-  // Parse inline elements
+  // 解析行内元素
   function parseInline(str: string): TiptapNode[] {
     const nodes: TiptapNode[] = [];
     let remaining = str;
 
-    // Inline syntax regexes (in priority order from high to low)
+    // 行内语法正则（优先级从高到低）
     const inlinePatterns: InlinePattern[] = [
-      // {{xxx}} placeholder → inputs node (highest priority, to avoid conflicts with other syntax)
+      // {{xxx}} 占位符 → inputs 节点（优先级最高，避免和其他语法冲突）
       {
         regex: /^\{\{(.*?)\}\}/,
         handler: () => ({
@@ -106,7 +106,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
           attrs: { content: '' }
         })
       },
-      // ||content|| → select node (inline dropdown selection)
+      // ||content|| → select 节点（inline 下拉选择）
       {
         regex: /^\|\|(.+?)\|\|/,
         handler: (match) => ({
@@ -114,8 +114,8 @@ export function markdownToTiptap(markdown: string): TiptapNode {
           attrs: { content: match[1].trim() }
         })
       },
-      // Inline math formula $...$ (content must not contain $ or newlines; does not match $$ which starts a block formula)
-      // Requires non-whitespace characters immediately adjacent to $ on both sides, to avoid mistaking $ in "price $5 to $10" as a formula
+      // 行内数学公式 $...$（内容不含 $ 和换行；不匹配 $$ 开头的块级公式）
+      // 要求紧贴 $ 的两侧为非空白字符，避免 "价格 $5 到 $10" 中的 $ 被误判为公式
       {
         regex: /^\$(\S(?:[^$\n]*\S)?)\$/,
         handler: (match) => ({
@@ -123,7 +123,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
           attrs: { latex: match[1] }
         })
       },
-      // Image ![alt](url "title")
+      // 图片 ![alt](url "title")
       {
         regex: /^!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/,
         handler: (match) => ({
@@ -135,7 +135,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
           }
         })
       },
-      // Link [text](url "title")
+      // 链接 [text](url "title")
       {
         regex: /^\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/,
         handler: (match) => {
@@ -152,7 +152,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
           });
         }
       },
-      // Inline code `code`
+      // 行内代码 `code`
       {
         regex: /^`([^`]+)`/,
         handler: (match) => ({
@@ -161,7 +161,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
           marks: [{ type: 'code' }]
         })
       },
-      // Bold italic ***text***
+      // 粗斜体 ***text***
       {
         regex: /^\*\*\*([^*]+)\*\*\*/,
         handler: (match) => {
@@ -175,7 +175,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
           });
         }
       },
-      // Bold **text**
+      // 粗体 **text**
       {
         regex: /^\*\*([^*]+)\*\*/,
         handler: (match) => {
@@ -189,7 +189,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
           });
         }
       },
-      // Bold __text__
+      // 粗体 __text__
       {
         regex: /^__([^_]+)__/,
         handler: (match) => {
@@ -203,7 +203,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
           });
         }
       },
-      // Italic *text*
+      // 斜体 *text*
       {
         regex: /^\*([^*]+)\*/,
         handler: (match) => {
@@ -217,7 +217,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
           });
         }
       },
-      // Italic _text_
+      // 斜体 _text_
       {
         regex: /^_([^_]+)_/,
         handler: (match) => {
@@ -231,7 +231,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
           });
         }
       },
-      // Strikethrough ~~text~~
+      // 删除线 ~~text~~
       {
         regex: /^~~([^~]+)~~/,
         handler: (match) => {
@@ -245,7 +245,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
           });
         }
       },
-      // Hard break (two spaces at end of line)
+      // 硬换行（行尾两个空格）
       {
         regex: /^  $/,
         handler: () => ({ type: 'hardBreak' })
@@ -270,7 +270,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
         }
       }
 
-      // Plain text
+      // 普通文本
       if (!matched) {
         const specialIndex = remaining.search(/[!`*_~\[{|$]/);
         if (specialIndex === -1) {
@@ -289,7 +289,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
     return nodes;
   }
 
-  // Parse block-level elements
+  // 解析块级元素
   function parseBlocks(mdText: string): TiptapNode[] {
     const lines = mdText.split('\n');
     const blocks: TiptapNode[] = [];
@@ -297,18 +297,18 @@ export function markdownToTiptap(markdown: string): TiptapNode {
     let inCodeBlock = false;
     let codeContent: string[] = [];
     let codeLang = '';
-    // Number of backticks in the opening fence (CommonMark: closing fence must have at least as many)
+    // 开围栏的反引号数量（CommonMark：闭围栏须至少同等数量）
     let codeFenceLen = 0;
 
     while (i < lines.length) {
       const line = lines[i];
 
-      // Code block handling: supports 3+ backtick fences (e.g., ````doc ... ````)
-      // A 4-backtick fence allows containing 3-backtick question blocks without conflict
+      // 代码块处理：支持 3+ 反引号围栏（如 ````doc ... ````）
+      // 4 反引号围栏允许内部包含 3 反引号 question 块而不冲突
       const fenceMatch = line.match(/^(`{3,})(\w*)$/);
       if (fenceMatch) {
         if (!inCodeBlock) {
-          // Opening fence
+          // 开启围栏
           inCodeBlock = true;
           codeLang = fenceMatch[2] || '';
           codeFenceLen = fenceMatch[1].length;
@@ -316,7 +316,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
           i++;
           continue;
         } else if (fenceMatch[1].length >= codeFenceLen) {
-          // Closing fence: enough backticks
+          // 关闭围栏：反引号数量足够
           const fenceBlock = buildFenceBlock(codeLang, codeContent.join('\n'));
           if (fenceBlock) blocks.push(fenceBlock);
           inCodeBlock = false;
@@ -324,7 +324,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
           i++;
           continue;
         }
-        // Not enough backticks (e.g., a 3-backtick line inside a 4-backtick fence), treat as code content, falls through to the inCodeBlock branch below
+        // 反引号数量不足（如 4 围栏内的 3 反引号行），视为代码内容，落入下方 inCodeBlock 分支
       }
 
       if (inCodeBlock) {
@@ -333,9 +333,9 @@ export function markdownToTiptap(markdown: string): TiptapNode {
         continue;
       }
 
-      // Block-level math formula $$...$$ (single-line or multi-line)
+      // 块级数学公式 $$...$$（单行或多行）
       if (/^\$\$/.test(line)) {
-        // Single-line form: $$ latex $$
+        // 单行形式：$$ latex $$
         const single = line.match(/^\$\$(.+)\$\$\s*$/);
         if (single) {
           blocks.push({
@@ -345,7 +345,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
           i++;
           continue;
         }
-        // Multi-line form: starts with $$, collect until a line containing $$
+        // 多行形式：$$ 开头，收集到包含 $$ 的行
         const mathLines: string[] = [];
         const afterOpen = line.replace(/^\$\$/, '');
         if (afterOpen.trim()) mathLines.push(afterOpen);
@@ -369,20 +369,20 @@ export function markdownToTiptap(markdown: string): TiptapNode {
         continue;
       }
 
-      // Skip empty lines
+      // 空行跳过
       if (line.trim() === '') {
         i++;
         continue;
       }
 
-      // Horizontal rule
+      // 分隔线
       if (/^---+$/.test(line.trim())) {
         blocks.push({ type: 'horizontalRule' });
         i++;
         continue;
       }
 
-      // Heading
+      // 标题
       const headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
       if (headingMatch) {
         blocks.push({
@@ -394,7 +394,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
         continue;
       }
 
-      // Blockquote
+      // 引用块
       if (/^>\s?/.test(line)) {
         const quoteLines: string[] = [];
         while (i < lines.length && /^>\s?/.test(lines[i])) {
@@ -408,7 +408,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
         continue;
       }
 
-      // Unordered list
+      // 无序列表
       if (/^[-*+]\s+/.test(line)) {
         const items: TiptapNode[] = [];
         while (i < lines.length && /^[-*+]\s+/.test(lines[i])) {
@@ -423,7 +423,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
         continue;
       }
 
-      // Ordered list
+      // 有序列表
       if (/^\d+\.\s+/.test(line)) {
         const items: TiptapNode[] = [];
         while (i < lines.length && /^\d+\.\s+/.test(lines[i])) {
@@ -438,7 +438,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
         continue;
       }
 
-      // Plain paragraph (collect consecutive non-block-level non-empty lines)
+      // 普通段落（收集连续非块级非空行）
       const paraLines: string[] = [];
       while (
         i < lines.length
@@ -448,8 +448,8 @@ export function markdownToTiptap(markdown: string): TiptapNode {
         paraLines.push(lines[i]);
         i++;
       }
-      // Safety net: if the current line is recognized by isBlockStart but not consumed by a preceding handler
-      // (e.g., unsupported fence syntax), force-consume that line as paragraph content to avoid an infinite loop
+      // 安全网：如果当前行被 isBlockStart 识别但未被前面的处理器消费
+      // （如不支持的围栏语法），强制将该行作为段落内容消费，避免无限循环
       if (paraLines.length === 0 && i < lines.length) {
         paraLines.push(lines[i]);
         i++;
@@ -460,7 +460,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
       });
     }
 
-    // During streaming, an unclosed code block may appear: output accumulated content too, to avoid content loss
+    // 流式期间可能出现未闭合的代码块：把已累积的内容也输出，避免内容丢失
     if (inCodeBlock) {
       const fenceBlock = buildFenceBlock(codeLang, codeContent.join('\n'));
       if (fenceBlock) blocks.push(fenceBlock);

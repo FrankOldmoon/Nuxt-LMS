@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- Drag and drop upload area -->
+    <!-- 拖拽上传区域 -->
     <FormInputFileDropzone
       :multiple="multiple"
       :placeholder="placeholder"
@@ -9,7 +9,7 @@
       @drive-open="driveOpen = true"
     />
 
-    <!-- Drive file selection modal -->
+    <!-- 网盘文件选择弹窗 -->
     <FilesMyFilesModal
       v-model:open="driveOpen"
       picker
@@ -17,7 +17,7 @@
       @confirm="onDriveConfirm"
     />
 
-    <!-- Upload list -->
+    <!-- 上传列表 -->
     <FormInputFileList :files="fileList" @remove="removeFile" />
   </div>
 </template>

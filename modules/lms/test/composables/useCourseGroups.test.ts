@@ -1,5 +1,5 @@
 /**
- * useCourseGroups composable test
+ * useCourseGroups composable 测试
  * @see modules/lms/composables/useCourseGroups.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -18,18 +18,18 @@ beforeEach(async () => {
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
   setMockFetchHandler(async () => ({ data: null, success: true, msg: '' }))
   clearToastCalls()
-  // Override useAuth stub to include user (source destructure automatically obtains)
+  // 覆盖 useAuth 桩以包含 user（源码 destructure 自动获得）
   const baseUseAuth = (globalThis as any).useAuth
   ;(globalThis as any).useAuth = () => {
     const base = baseUseAuth()
     return { ...base }
   }
-  // Stub useAuthLms (auto-import from lms)
+  // 桩 useAuthLms（auto-import from lms）
   ;(globalThis as any).useAuthLms = () => ({
     isCourseTeacher: (cid: number) => cid === 5,
     isCourseEditor: (cid: number) => cid === 5,
   })
-  // Stub useClassUsers (auto-import from lms)
+  // 桩 useClassUsers（auto-import from lms）
   const studentsRef = ref<any[]>([])
   ;(globalThis as any).useClassUsers = () => ({
     students: studentsRef,
@@ -38,7 +38,7 @@ beforeEach(async () => {
   ;(globalThis as any).__studentsRef = studentsRef
 })
 
-/** Construct fake DragEvent */
+/** 构造假 DragEvent */
 function makeDragEvent(): any {
   return {
     dataTransfer: { effectAllowed: '' },
@@ -186,7 +186,7 @@ describe('composables/useCourseGroups', () => {
     const r = useCourseGroups({ courseId: 1, classId: 1 }, isOpen)
     r.ungrouped.value = [{ userId: 1, name: 'a' }]
     const dropEvent = makeDragEvent()
-    // Does not call onDragStart, dragData is null
+    // 不调用 onDragStart，dragData 为 null
     r.onDrop(dropEvent, 'g1')
     expect(r.ungrouped.value.length).toBe(1)
   })
@@ -281,10 +281,10 @@ describe('composables/useCourseGroups', () => {
     const r = useCourseGroups({ courseId: 1, classId: 1 }, isOpen)
     isOpen.value = true
     await new Promise((resolve) => setTimeout(resolve, 0))
-    // After buildGroups, team1 group should exist
+    // buildGroups 后应有 team1 分组
     expect(r.groupData.value.team1).toBeDefined()
     expect(r.groupData.value.team1.length).toBe(2)
-    // Group leaders (c_ prefix) come first
+    // 组长（c_ 前缀）在前面
     expect(r.groupData.value.team1[0]._isLeader).toBe(true)
     expect(r.groupData.value.team1[0].userId).toBe(1)
     expect(r.groupData.value.team1[1]._isLeader).toBe(false)

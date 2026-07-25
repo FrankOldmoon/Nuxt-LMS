@@ -1,7 +1,7 @@
 import { db, schema } from '@nuxthub/db'
 import { sql, isNull, gte, and } from 'drizzle-orm'
 
-/** Count non-soft-deleted rows in a single table */
+/** 统计单表未软删除行数 */
 async function countTable(table: any): Promise<number> {
   const rows = await db
     .select({ count: sql`count(*)`.as('count') })
@@ -10,9 +10,9 @@ async function countTable(table: any): Promise<number> {
   return Number(rows[0]?.count ?? 0)
 }
 
-/** Dashboard statistics data */
+/** 仪表盘统计数据 */
 export async function getDashboardStats() {
-  // Main table row count statistics
+  // 主要表行数统计
   const counts = {
     users: await countTable(schema.users),
     courses: await countTable(schema.courses),
@@ -25,7 +25,7 @@ export async function getDashboardStats() {
     classes: await countTable(schema.classes),
   }
 
-  // New users in last 7 / 30 days
+  // 近 7 / 30 天新增用户
   const now = new Date()
   const d7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
   const d30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
@@ -41,7 +41,7 @@ export async function getDashboardStats() {
       .where(and(isNull(schema.users.deletedAt), gte(schema.users.createdAt, d30))),
   ])
 
-  // User growth in last 30 days (aggregated by day)
+  // 近 30 天用户增长（按天聚合）
   const growthRows = await db
     .select({
       date: sql<string>`to_char(${schema.users.createdAt}::date, 'YYYY-MM-DD')`.as('date'),
@@ -52,7 +52,7 @@ export async function getDashboardStats() {
     .groupBy(sql`${schema.users.createdAt}::date`)
     .orderBy(sql`${schema.users.createdAt}::date`)
 
-  // Role distribution
+  // 角色分布
   const roleRows = await db
     .select({
       name: schema.roles.name,

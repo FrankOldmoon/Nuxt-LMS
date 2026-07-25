@@ -1,15 +1,15 @@
 /**
- * LMS other business endpoint tests
+ * LMS 其它业务端点测试
  * @see modules/lms/server/api/{classes,homeworks,races,questions,lms-config}/*.ts
  *
- * Coverage:
- * - classes/{add,list,mine,update,users.get,users.post}   6
- * - homeworks/{add,batch,update,submit,score,record.get,records.get,show} 8
- * - races/{show,state.get,state.post}                       3
- * - questions/wrong-list.get.ts                            1
- * - lms-config/update.post.ts                              1
+ * 覆盖：
+ * - classes/{add,list,mine,update,users.get,users.post}   6 个
+ * - homeworks/{add,batch,update,submit,score,record.get,records.get,show} 8 个
+ * - races/{show,state.get,state.post}                       3 个
+ * - questions/wrong-list.get.ts                            1 个
+ * - lms-config/update.post.ts                              1 个
  *
- * submit.post.ts internally uses withSubmitHandler, this file simplifies the wrapper via vi.mock
+ * submit.post.ts 内部使用 withSubmitHandler，本文件通过 vi.mock 简化包装
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
@@ -34,7 +34,7 @@ const _mockSchema: any = {
 }
 vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
 
-// mock submit handler — directly execute the inner function
+// mock submit handler — 直接执行内部函数
 vi.mock('../../server/utils/submit/handler', () => ({
   withSubmitHandler: (_label: string, fn: any) => fn,
 }))
@@ -48,8 +48,8 @@ beforeEach(() => {
   })
   installLmsAutoImports()
   clearWsBroadcasts()
-  // Default orderBy chain: returns an orderBy function, which returns Promise<[]>
-  // This way .where().orderBy() or .from().where().orderBy() chains can be resolved
+  // 默认 orderBy 链：返回 orderBy 函数，orderBy 又返回 Promise<[]>
+  // 这样 .where().orderBy() 或 .from().where().orderBy() 链都能解析
   _mockDb.orderBy = vi.fn().mockResolvedValue([])
 })
 
@@ -216,7 +216,7 @@ describe('API: homeworks/add', () => {
 
   it('教师新增作业成功', async () => {
     setMockAuthState({ id: 1, username: 't', name: 't', roles: ['teacher'], permissions: [] })
-    // chain: where().orderBy().limit(1) → returns max cid
+    // chain: where().orderBy().limit(1) → 返回 max cid
     _mockDb.where = vi.fn().mockReturnValue({
       orderBy: vi.fn().mockReturnValue({
         limit: vi.fn().mockResolvedValueOnce([{ cid: 3 }]),
@@ -468,8 +468,8 @@ describe('API: questions/wrong-list.get', () => {
 
   it('返回错题列表（无错题）', async () => {
     setMockAuthState({ id: 1, username: 's', name: 's', roles: ['student'], permissions: [] })
-    // 1st where: count query → total = 0
-    // 2nd where: list query (wrong list) → returns empty (length 0 → early return)
+    // 第 1 次 where: count 查询 → total = 0
+    // 第 2 次 where: list 查询（错误列表） → 返回空（长度 0 → 早返回）
     let whereCall = 0
     _mockDb.where = vi.fn().mockImplementation(() => {
       whereCall++
@@ -534,7 +534,7 @@ describe('API: lms-config/update', () => {
 
   it('成功更新并广播 lms-config-changed', async () => {
     setMockAuthState({ id: 1, username: 'a', name: 'a', roles: ['admin'], permissions: [] })
-    // reloadLmsConfig calls db.select().from().where() to return config rows
+    // reloadLmsConfig 调用 db.select().from().where() 返回 configs 行
     _mockDb.where = vi.fn().mockResolvedValueOnce([])
     const handler = (await import('../../server/api/lms-config/update.post')).default
     const r = await handler(makeEvent({ body: { ai: { mode: 'api', model: 'gpt-4' } } }))

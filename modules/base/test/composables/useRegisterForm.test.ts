@@ -1,5 +1,5 @@
 /**
- * composables/useRegisterForm tests
+ * composables/useRegisterForm 测试
  * @see modules/base/composables/useRegisterForm.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -35,7 +35,7 @@ describe('composables/useRegisterForm - handleRegister 校验', () => {
     const { useRegisterForm } = await import('../../composables/useRegisterForm')
     const { handleRegister, loading } = useRegisterForm(() => {}, () => {})
     await handleRegister()
-    // No fetch triggered, loading unchanged
+    // 没有触发 fetch，loading 没有变化
     expect(loading.value).toBe(false)
   })
 

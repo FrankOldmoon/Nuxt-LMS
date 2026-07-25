@@ -1,8 +1,8 @@
 /**
- * IdeToolbar component tests
+ * IdeToolbar 组件测试
  * @see modules/base/components/ide/toolbar.vue
  *
- * Top toolbar: language selection + run/clear buttons + ready status badge
+ * 顶部工具栏：语言选择 + 运行/清空按钮 + 就绪状态徽标
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -17,7 +17,7 @@ beforeEach(() => {
   })
 })
 
-// Globally mock NuxtUI components
+// 全局 mock NuxtUI 组件
 const _globalStubs = {
   UIcon: { template: '<span class="icon" />', props: ['name'] },
   UBadge: {
@@ -82,7 +82,7 @@ describe('ide/toolbar.vue', () => {
       global: _globalConfig,
     })
     expect(wrapper.text()).toContain('ide.ready')
-    // success badge renders
+    // success 徽标渲染
     const badge = wrapper.find('.badge')
     expect(badge.exists()).toBe(true)
   })
@@ -129,7 +129,7 @@ describe('ide/toolbar.vue', () => {
       global: _globalConfig,
     })
     const buttons = wrapper.findAll('.btn')
-    // The first button is the run button (with ide.run text)
+    // 第一个按钮是运行按钮（带 ide.run 文案）
     const runBtn = buttons.find((b) => b.text().includes('ide.run'))!
     await runBtn.trigger('click')
     expect(wrapper.emitted('run')).toBeTruthy()
@@ -163,9 +163,9 @@ describe('ide/toolbar.vue', () => {
       },
       global: _globalConfig,
     })
-    // Verify initial lang prop
+    // 验证初始 lang prop
     expect(wrapper.props('lang')).toBe('python')
-    // Update lang prop
+    // 更新 lang prop
     await wrapper.setProps({ lang: 'javascript' })
     expect(wrapper.props('lang')).toBe('javascript')
   })

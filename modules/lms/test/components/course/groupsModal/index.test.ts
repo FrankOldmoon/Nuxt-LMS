@@ -1,8 +1,8 @@
 /**
- * course/groupsModal/index.vue component test
+ * course/groupsModal/index.vue 组件测试
  * @see modules/lms/components/course/groupsModal/index.vue
  *
- * Group modal: members/chat/file tabs
+ * 分组弹窗：成员/聊天/文件 Tab
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

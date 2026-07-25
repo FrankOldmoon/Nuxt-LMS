@@ -2,7 +2,7 @@
   <UModal v-model:open="open">
     <template #content>
       <div class="p-4 space-y-4">
-        <!-- Teacher：Hairraise/manage quick answer -->
+        <!-- 教师：发起/管理抢答 -->
         <template v-if="canEdit">
           <template v-if="!qaActive">
             <h3 class="text-base font-semibold">{{ $t('chapter.quickAnswer') }}</h3>
@@ -25,7 +25,7 @@
           </template>
         </template>
 
-        <!-- Student：quick answer -->
+        <!-- 学生：抢答 -->
         <template v-else>
           <template v-if="qaActive && !qaWinner">
             <h3 class="text-base font-semibold">{{ $t('chapter.quickAnswer') }}</h3>

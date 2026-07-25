@@ -5,7 +5,7 @@ export function useAside() {
   const { isCourseEditor } = useAuthLms()
   const nav = useSidebarNav()
   const { navigation, courseId, refresh, courseApiUrl } = nav
-  // lms extensionField，doc environmentDowncancan undefined，makeusecanoptional chain protection
+  // lms 扩展字段，doc 环境下可能为 undefined，使用可选链保护
   const accessibleChapterIds: ComputedRef<Set<number>> | undefined = (nav as any).accessibleChapterIds
   const passedChapterIds: ComputedRef<Set<number>> | undefined = (nav as any).passedChapterIds
 
@@ -14,7 +14,7 @@ export function useAside() {
   const contentPickerOpen = ref(false)
   const classModalOpen = ref(false)
 
-  // listenNavigationVersion change，ClearCacheandRefresh
+  // 监听导航版本变化，清除缓存并刷新
   watch(courseNavVersion, () => {
     const nuxtApp = useNuxtApp()
     const key = courseApiUrl.value
@@ -33,23 +33,23 @@ export function useAside() {
     await refresh()
   }
 
-  // PermissionsandLoginStatus
+  // 权限与登录状态
   const canEditCourse = computed(() => hasRole('admin') || isCourseEditor(Number(courseId.value)))
   const isLoggedIn = computed(() => !!user.value)
   const selectedClassName = computed(() => user.value?.defaultClass?.name || '')
 
-  // lms specific：withNumberFrontprefixNavigation（for CourseBtns etc.makeuse）
+  // lms 专属：带序号前缀的导航（供 CourseBtns 等使用）
   const indexedNavigation = computed(() => {
     return indexNavItems(navigation.value, '', true)
   })
 
-  // -------------- NavigationitemsConvertlogic --------------
-  // DefaultConvert：lms mode downAutoaddUpNumber、Lock、Completemark；Elsedirectly pass through
+  // -------------- 导航项转换逻辑 --------------
+  // 默认转换：lms 模式下自动加上序号、锁定、完成标记；否则直接透传
   const navItems = computed(() => {
     return transformNavItems(navigation.value)
   })
 
-  // recursively markCompletedChapter
+  // 递归标记已完成章节
   function markPassed(items: any[]): any[] {
     return items.map((item) => {
       const newItem: any = { ...item }
@@ -72,7 +72,7 @@ export function useAside() {
     return markPassed(base as any[])
   }
 
-  // recursively mark unOnputChapter disabled
+  // 递归标记未开放章节为 disabled
   function markNavDisabled(items: any[]): any[] {
     return items.map((item) => {
       const newItem: any = { ...item }
@@ -90,7 +90,7 @@ export function useAside() {
     })
   }
 
-  // calculateFirstitemsTagandLink
+  // 计算首项标签和链接
   const firstNavLabel = computed(() => navItems.value[0]?.label ?? '')
   const courseHomeUrl = computed(() => navItems.value[0]?.to ?? `/course/${courseId.value}`)
   const restNavItems = computed(() => navItems.value.slice(1))
@@ -98,6 +98,6 @@ export function useAside() {
   return {
     courseId, indexedNavigation, isLoggedIn, selectedClassName,
     classModalOpen, canEditCourse, contentPickerOpen, courseHomeUrl,
-    firstNavLabel, navigation, handle saved, restNavItems,
+    firstNavLabel, navigation, handleSaved, restNavItems,
   }
 }

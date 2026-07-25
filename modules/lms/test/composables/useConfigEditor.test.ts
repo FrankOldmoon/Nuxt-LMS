@@ -1,5 +1,5 @@
 /**
- * useConfigEditor composable test
+ * useConfigEditor composable 测试
  * @see modules/lms/composables/useConfigEditor.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -34,7 +34,7 @@ describe('composables/useConfigEditor', () => {
     expect(config.courseList).toBeDefined()
     expect(config.chapterPage).toBeDefined()
     expect(config.storage).toBeDefined()
-    // Danmaku broadcast config default values
+    // 弹幕广播配置默认值
     expect(config.danmaku).toBeDefined()
     expect(config.danmaku.enableOnQuestion).toBe(true)
     expect(config.danmaku.enableOnHomework).toBe(true)
@@ -84,7 +84,7 @@ describe('composables/useConfigEditor', () => {
     await new Promise((resolve) => setTimeout(resolve, 0))
     expect(config.ai.mode).toBe('ollama')
     expect(config.ai.model).toBe('llama3')
-    // Uncovered fields retain default values
+    // 未覆盖的字段保留默认值
     expect(config.ai.enabled).toBe(true)
   })
 
@@ -107,7 +107,7 @@ describe('composables/useConfigEditor', () => {
     const data = getConfig()
     expect(data.ai).toBeDefined()
     data.ai.mode = 'modified'
-    expect(config.ai.mode).toBe('api') // Original not modified
+    expect(config.ai.mode).toBe('api') // 原始未被修改
   })
 
   it('getConfig hideCourse=true 时删除 course 字段', async () => {

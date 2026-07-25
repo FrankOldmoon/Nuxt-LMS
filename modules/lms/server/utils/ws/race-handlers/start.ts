@@ -1,5 +1,5 @@
 /**
- * raceStart: initialize raceStates[pin] and broadcast raceStart
+ * raceStart：初始化 raceStates[pin] 并广播 raceStart
  */
 import { raceStates, broadcastToRace } from '../state'
 

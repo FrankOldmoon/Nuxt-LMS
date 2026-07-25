@@ -1,11 +1,11 @@
 /**
- * Browser E2E simulation test: component + composable integration
+ * 模拟浏览器 E2E 测试：组件 + composable 集成
  *
- * This test uses happy-dom as the browser environment to simulate a user's real operations on the front-end page:
- * - Mount Vue components
- * - Trigger user events
- * - Call composables to process data
- * - Verify component responses
+ * 此测试使用 happy-dom 作为浏览器环境，模拟用户在前端页面的实际操作：
+ * - 挂载 Vue 组件
+ * - 触发用户事件
+ * - 调用 composables 处理数据
+ * - 验证组件响应
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -23,7 +23,7 @@ beforeEach(() => {
 
 describe('E2E: 登录流程模拟', () => {
   it('完整登录流程：mock 后端响应 → useAuth 获取用户', async () => {
-    // 1. Simulate backend responses
+    // 1. 模拟后端响应
     setMockAuthUser(
       { id: 1, username: 'alice', name: 'Alice' },
       [{ code: 'admin', name: 'Admin' }],
@@ -101,7 +101,7 @@ describe('E2E: 状态管理（useState 切换）', () => {
     const { useState } = await import('../setup/nuxt-stubs')
     const a = useState('my-key', () => 0)
     const b = useState('my-key', () => 0)
-    expect(a).toBe(b) // same reference
+    expect(a).toBe(b) // 同一引用
     a.value = 42
     expect(b.value).toBe(42)
   })
@@ -138,7 +138,7 @@ describe('E2E: WebSocket 消息处理', () => {
     expect(count).toBe(1)
     unsub()
     dispatchWsHandler('event', null)
-    expect(count).toBe(1) // already unsubscribed
+    expect(count).toBe(1) // 已退订
   })
 
   it('多个 handler 都能收到同一事件', async () => {
@@ -155,22 +155,22 @@ describe('E2E: WebSocket 消息处理', () => {
 
 describe('E2E: 组件导入与基础验证', () => {
   it('btn-confirm 组件路径存在', () => {
-    // Note: the e2e project has no @vue/test-utils vue plugin, so .vue components are not mounted here
-    // Component mount behavior is covered by the components project tests
+    // 注意：e2e 项目无 @vue/test-utils 的 vue 插件，不在此 mount .vue 组件
+    // 组件 mount 行为在 components 项目测试
     expect(true).toBe(true)
   })
 })
 
 describe('E2E: LMS 章节学习流程模拟', () => {
   it('学生登录 → 访问课程 → 提交问题 → 记录积分', async () => {
-    // 1. Simulate login
+    // 1. 模拟登录
     setMockAuthUser(
       { id: 1, username: 'student1', name: '学生1', classId: 1 },
       [{ code: 'student', name: 'Student' }],
       []
     )
     setMockFetchHandler(async (url, opts: any) => {
-      // me endpoint: returns user data
+      // me 端点：返回 user data
       if (url === '/api/auth/me') {
         return {
           data: {
@@ -182,7 +182,7 @@ describe('E2E: LMS 章节学习流程模拟', () => {
           msg: '',
         }
       }
-      // Submit question
+      // 提交题目
       if (url === '/api/questions/submit' && opts.method === 'POST') {
         return {
           data: { correct: true, exp: 7, totalExp: 100 },
@@ -199,7 +199,7 @@ describe('E2E: LMS 章节学习流程模拟', () => {
 
     expect(auth.user.value?.classId).toBe(1)
 
-    // 2. Simulate submission flow
+    // 2. 模拟提交流程
     const { cRequest } = await import('../setup/nuxt-stubs')
     const result = await cRequest('/api/questions/submit', {
       method: 'POST',
@@ -314,14 +314,14 @@ describe('E2E: 站点配置实时更新', () => {
       return { data: null, success: true, msg: '' }
     })
 
-    // 1. Client subscribes to site-config-changed
+    // 1. 客户端订阅 site-config-changed
     let receivedTitle: string | null = null
     const { registerWsHandler, dispatchWsHandler } = await import('../setup/nuxt-stubs')
     registerWsHandler('site-config-changed', () => {
       receivedTitle = 'Updated Title'
     })
 
-    // 2. Simulate server push
+    // 2. 模拟服务端推送
     dispatchWsHandler('site-config-changed', { newTitle: 'Updated Title' })
     expect(receivedTitle).toBe('Updated Title')
   })

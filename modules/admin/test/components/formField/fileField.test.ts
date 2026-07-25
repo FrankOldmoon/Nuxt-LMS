@@ -1,8 +1,8 @@
 /**
- * formField/fileField component tests
+ * formField/fileField 组件测试
  * @see modules/admin/components/table/formField/fileField.vue
  *
- * Nests FormInputFile child component; shows file link list when form[col.jsName] is a non-empty array
+ * 嵌套 FormInputFile 子组件；form[col.jsName] 为非空数组时展示文件链接列表
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -17,7 +17,7 @@ beforeEach(() => {
   })
 })
 
-// Stub FormInputFile child component (Nuxt auto-imported component name)
+// 桩 FormInputFile 子组件（Nuxt 自动导入的组件名）
 const _globalStubs = {
   FormInputFile: {
     template: '<div class="form-input-file"><input type="text" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" /></div>',

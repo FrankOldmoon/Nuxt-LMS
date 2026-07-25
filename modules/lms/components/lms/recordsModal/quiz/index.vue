@@ -6,7 +6,7 @@
 
                 <ClassUsersTable :rows="rows" :loading="pending" :extra-columns="extraColumns"
                     :hide-actions="true" :hide-teachers="true" :default-sort="defaultSort">
-                    <!-- Scorecolumns -->
+                    <!-- 得分列 -->
                     <template #score-cell="{ row }">
                         <div class="flex items-center gap-2">
                             <template v-if="row.original.record">
@@ -18,23 +18,23 @@
                             <span v-else class="text-xs text-gray-400">-</span>
                         </div>
                     </template>
-                    <!-- Submittimescountcolumns -->
+                    <!-- 提交次数列 -->
                     <template #submitCount-cell="{ row }">
                         <span v-if="row.original.record" class="text-xs">
                             {{ row.original.record.submitCount || 0 }}
                         </span>
                         <span v-else class="text-xs text-gray-400">-</span>
                     </template>
-                    <!-- Accuracy Ratecolumns -->
+                    <!-- 正确率列 -->
                     <template #correctRate-cell="{ row }">
                         <div v-if="row.original.record" class="flex items-center gap-1">
                             <UIcon :name="rateIcon(row.original.record)" class="w-3.5 h-3.5 shrink-0"
-                                :class="rateIcon Class(row.original.record)" />
+                                :class="rateIconClass(row.original.record)" />
                             <span class="text-xs">{{ formatRate(row.original.record) }}</span>
                         </div>
                         <span v-else class="text-xs text-gray-400">-</span>
                     </template>
-                    <!-- per question answeringStatuscolumns（dynamic slot） -->
+                    <!-- 每道题的答题状态列（动态 slot） -->
                     <template v-for="q in questions" :key="q.id" #[`q${q.id}-cell`]="{ row }">
                         <div v-if="getQuestionRecord(row.original, q.id)" class="flex items-center justify-center">
                             <UIcon :name="getQuestionRecord(row.original, q.id).rate > 0
@@ -59,7 +59,7 @@ const props = defineProps({
     courseId: { type: Number, default: 0 },
     cid: { type: Number, default: 0 },
     quizPoint: { type: Number, default: 100 },
-    /** quiz Question List：[{ id, point }] */
+    /** quiz 题目列表：[{ id, point }] */
     questions: { type: Array, default: () => [] },
 })
 
@@ -67,6 +67,6 @@ const emit = defineEmits(['update:modelValue'])
 
 const {
     open, rows, pending, extraColumns, defaultSort,
-    getQuestionRecord, scoreClass, formatRate, rateIcon, rateIcon Class,
+    getQuestionRecord, scoreClass, formatRate, rateIcon, rateIconClass,
 } = useQuizRecords(props, emit)
 </script>

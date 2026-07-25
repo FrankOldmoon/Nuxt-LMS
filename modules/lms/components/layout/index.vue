@@ -4,14 +4,14 @@
   <UMain>
     <UContainer>
       <UPage>
-        <!-- Left sidebar: content navigation (only shown on chapter pages) -->
+        <!-- 左侧边栏：内容导航（仅章节页显示） -->
         <template v-if="showSidebar" #left>
           <UPageAside style="padding-top: 0px">
             <LayoutAside />
           </UPageAside>
         </template>
 
-        <!-- Middle: main content area -->
+        <!-- 中间：主内容区 -->
         <LayoutMain>
           <slot />
         </LayoutMain>

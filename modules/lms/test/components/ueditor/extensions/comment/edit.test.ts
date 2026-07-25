@@ -1,5 +1,5 @@
 /**
- * comment edit component test
+ * comment edit 组件测试
  * @see modules/lms/components/ueditor/extensions/nodes/vue/comment/edit.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

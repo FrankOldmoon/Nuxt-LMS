@@ -1,8 +1,8 @@
 /**
- * formField/numberField component tests
+ * formField/numberField 组件测试
  * @see modules/admin/components/table/formField/numberField.vue
  *
- * UInput type="number" + v-model.number binds to form[col.jsName]
+ * UInput type="number" + v-model.number 绑定到 form[col.jsName]
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -19,7 +19,7 @@ beforeEach(() => {
 
 const _globalStubs = {
   UInput: {
-    // Simulate v-model.number behavior: convert input value via Number() then emit
+    // 模拟 v-model.number 行为：将输入值通过 Number() 转换后 emit
     template: '<input type="number" :value="modelValue" @input="$emit(\'update:modelValue\', Number($event.target.value))" />',
     props: ['modelValue', 'type', 'placeholder', 'icon', 'size'],
   },
@@ -82,7 +82,7 @@ describe('formField/numberField.vue', () => {
       global: _globalConfig,
     })
     const input = wrapper.find('input')
-    // undefined displays as empty
+    // undefined 显示为空
     expect((input.element as HTMLInputElement).value).toBe('')
   })
 

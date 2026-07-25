@@ -9,7 +9,7 @@ export interface TocLink {
 export function useList(props: { links?: TocLink[] }) {
   const activeId = ref<string | null>(null)
 
-  // injectChapterTaskUpDowntext（onlyChapterpageExist，Coursepage null）
+  // 注入章节任务上下文（仅章节页存在，课程页为 null）
   const chapterTask = useChapterTask()
 
   function isDone(id: string): boolean {
@@ -17,7 +17,7 @@ export function useList(props: { links?: TocLink[] }) {
   }
 
   /**
-   * willnested toc links flatten，usein IntersectionObserver listen
+   * 将嵌套的 toc links 扁平化，用于 IntersectionObserver 监听
    */
   function flatten(links: TocLink[] = []): { id: string }[] {
     return links.flatMap((link) => [

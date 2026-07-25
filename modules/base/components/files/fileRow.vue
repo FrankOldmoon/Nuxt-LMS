@@ -16,14 +16,14 @@
     <td class="py-2 px-2 text-gray-500">{{ formatFileDate(f.createdAt) }}</td>
     <td class="py-2 pl-2">
       <div class="flex items-center justify-end gap-1">
-        <!-- Selector mode -->
+        <!-- 选择器模式 -->
         <template v-if="picker">
           <UButton v-if="!multiple" icon="i-lucide-check" color="primary" variant="soft" size="xs"
             :label="t('common.select')" @click="pickFile(f)" />
           <UCheckbox v-else :model-value="selectedIds.has(f.id)"
             @update:model-value="(v: any) => toggleSelect(f, !!v)" />
         </template>
-        <!-- Management mode -->
+        <!-- 管理模式 -->
         <template v-else>
           <UTooltip v-if="renamingId !== f.id" :text="t('common.edit')">
             <UButton icon="i-lucide-pencil" color="neutral" variant="ghost" size="xs"
@@ -35,7 +35,7 @@
             <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="xs"
               @click="cancelRename" />
           </template>
-          <!-- Image type: show preview on hover -->
+          <!-- 图片类型：hover 时显示预览 -->
           <UPopover v-if="isImageFile(f)" mode="hover" :content="{ align: 'center', side: 'left' }">
             <UButton icon="i-lucide-eye" color="neutral" variant="ghost" size="xs"
               @click="preview(f)" />
@@ -44,7 +44,7 @@
                 class="max-w-xs max-h-80 object-contain rounded" loading="lazy" />
             </template>
           </UPopover>
-          <!-- Other types: click to preview -->
+          <!-- 其他类型：点击预览 -->
           <UTooltip v-else :text="t('myFiles.preview')">
             <UButton icon="i-lucide-eye" color="neutral" variant="ghost" size="xs"
               @click="preview(f)" />
@@ -84,6 +84,6 @@ defineProps<{
 
 const { t } = useI18n()
 
-/** Local renameValue proxy (v-model two-way sync to parent component) */
+/** 本地 renameValue 代理（v-model 双向同步到父组件） */
 const renameValue = defineModel<string>('renameValue', { default: '' })
 </script>

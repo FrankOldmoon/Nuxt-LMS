@@ -1,5 +1,5 @@
 /**
- * inputs/node-view component test (TipTap node-view)
+ * inputs/node-view 组件测试 (TipTap node-view)
  * @see modules/lms/components/ueditor/extensions/nodes/inputs/node-view.vue
  *
  * Simple UInput binding with NodeViewWrapper + nodeViewProps

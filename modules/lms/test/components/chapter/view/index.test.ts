@@ -1,9 +1,9 @@
 /**
- * chapter/view/index.vue component test
+ * chapter/view/index.vue 组件测试
  * @see modules/lms/components/chapter/view/index.vue
  *
- * Chapter detail view: title + content + AI notes + prev/next chapter navigation + TOC + AI assistant.
- * Depends on useChapterView(), stubs the composable in tests. focus: mount + props render branches.
+ * 章节详情视图：标题 + 内容 + AI 笔记 + 上/下章导航 + 目录 + AI 助教。
+ * 依赖 useChapterView()，测试中 stub 该 composable。focus：mount + props 渲染分支。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

@@ -1,5 +1,5 @@
 /**
- * composables/useNotifications tests
+ * composables/useNotifications 测试
  * @see modules/base/composables/useNotifications.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -41,7 +41,7 @@ describe('composables/useNotifications - watch isOpen', () => {
     const { page, list } = useNotifications(isOpen)
     page.value = 5
     isOpen.value = true
-    await nextTick() // watch(isOpen) callback executes asynchronously (reset page=1 + refresh)
+    await nextTick() // watch(isOpen) 回调异步执行（重置 page=1 + refresh）
     expect(page.value).toBe(1)
     await vi.waitFor(() => {
       expect(list.value).not.toBeNull()

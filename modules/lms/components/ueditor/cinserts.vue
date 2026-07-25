@@ -8,13 +8,13 @@
         </UDropdownMenu>
     </div>
 
-    <!-- Markdown Modal -->
+    <!-- Markdown 弹窗 -->
     <UeditorInsertMarkdown :editor="editor" v-model="markdownOpen" />
 
-    <!-- HTML Modal -->
+    <!-- HTML 弹窗 -->
     <UeditorInsertHtml :editor="editor" v-model="htmlOpen" />
 
-    <!-- Content Picker -->
+    <!-- 内容选择器 -->
     <UeditorContentPicker v-model="pickerOpen" :type="pickerType" @confirm="onPickerConfirm" />
 </template>
 

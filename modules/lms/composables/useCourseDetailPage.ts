@@ -1,13 +1,13 @@
 import type { ComputedRef, Ref } from 'vue'
 
 /**
- * Course detail page shared logic (generic for doc / lms)
+ * 课程详情页共享逻辑（doc / lms 通用）
  *
- * Extracted from pages/course/[id]/index.vue, eliminates script duplication between doc and lms.
- * doc calls with /api/courses/show, lms calls with /api/courses/show.
+ * 提取自 pages/course/[id]/index.vue，消除 doc 与 lms 之间的 script 双改。
+ * doc 调用时传 /api/courses/show，lms 调用时传 /api/courses/show。
  *
- * lms can extend the return value with chapterTree (add accessible/isPass),
- * firstChapterUrl (exclude inaccessible chapters), progressPercent, button config, etc.
+ * lms 可在返回值基础上扩展 chapterTree（加 accessible/isPass）、
+ * firstChapterUrl（排除不可访问章节）、progressPercent、按钮配置等。
  */
 export function useCourseDetailPage(courseId: ComputedRef<string>, apiUrl: ComputedRef<string>) {
   const { courseNavVersion, notifyCourseNavUpdate } = useLayoutState()
@@ -32,7 +32,7 @@ export function useCourseDetailPage(courseId: ComputedRef<string>, apiUrl: Compu
     return Object.keys(course.value.content).length > 0
   })
 
-  // Base chapterTree (id/label/to, without accessible/isPass — lms can extend)
+  // 基础 chapterTree（id/label/to，不含 accessible/isPass — lms 可扩展）
   interface ChapterNode {
     id: number | string
     label: string
@@ -71,7 +71,7 @@ export function useCourseDetailPage(courseId: ComputedRef<string>, apiUrl: Compu
     return first?.to
   })
 
-  // Refresh when course nav version changes (parameterized key, adapts to doc/lms different API URLs)
+  // 课程导航版本变化时刷新（参数化 key，适配 doc/lms 不同 API URL）
   watch(courseNavVersion, () => {
     const nuxtApp = useNuxtApp()
     const key = apiUrl.value
@@ -82,7 +82,7 @@ export function useCourseDetailPage(courseId: ComputedRef<string>, apiUrl: Compu
     refreshNav()
   })
 
-  // Course export
+  // 课程导出
   const exporting = ref(false)
   async function exportCourse() {
     if (!courseId.value || exporting.value) return
@@ -113,7 +113,7 @@ export function useCourseDetailPage(courseId: ComputedRef<string>, apiUrl: Compu
     }
   }
 
-  // Refresh data after saving nav/course
+  // 保存导航/课程后刷新数据
   async function handleSaved() {
     const nuxtApp = useNuxtApp()
     const key = apiUrl.value
@@ -125,7 +125,7 @@ export function useCourseDetailPage(courseId: ComputedRef<string>, apiUrl: Compu
     notifyCourseNavUpdate()
   }
 
-  // ===== Teacher management =====
+  // ===== 教师管理 =====
   const teachersModalOpen = ref(false)
   const membersRef = ref<{ loadMembers: () => Promise<void> } | null>(null)
   const canManageTeachers = computed(() => hasRole('admin') && !!useRuntimeConfig().public.moduleLms)
@@ -134,7 +134,7 @@ export function useCourseDetailPage(courseId: ComputedRef<string>, apiUrl: Compu
     if (val) {
       nextTick(() => membersRef.value?.loadMembers())
     } else {
-      // Refresh course data after closing modal to update teacher list
+      // 关闭弹窗后刷新课程数据以更新教师列表
       handleSaved()
     }
   })

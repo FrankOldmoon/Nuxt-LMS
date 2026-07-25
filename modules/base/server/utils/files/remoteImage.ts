@@ -1,15 +1,15 @@
 /**
- * File storage utility: remote image download + compression
+ * 文件存储工具：远程图片下载 + 压缩
  *
- * Extracted separately so that:
- * 1. unit tests can run independently (no fs / multipart needed)
- * 2. handler main flow stays thin
+ * 单独抽出以便：
+ * 1. unit test 可独立测试（无需 fs / multipart）
+ * 2. handler 主流程保持薄
  */
 import sharp from 'sharp'
 
 /**
- * Download remote image, compress to webp quality=85 using sharp
- * In server environment, global $fetch is available, no import needed
+ * 下载远程图片，使用 sharp 压缩为 webp quality=85
+ * 服务端环境下全局 $fetch 可用，无需 import
  */
 export async function downloadAndCompressImageToWebp(remoteUrl: string) {
   const arrayBuffer = await $fetch<ArrayBuffer>(remoteUrl, {

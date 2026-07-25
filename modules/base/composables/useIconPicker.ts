@@ -3,7 +3,7 @@ import lucideJson from '@iconify-json/lucide/icons.json'
 const allLucideIcons = Object.keys(lucideJson.icons)
 
 /**
- * Icon picker: search + pagination + selection
+ * 图标选择器：搜索 + 分页 + 选择
  */
 export function useIconPicker(
   modelValue: () => string,

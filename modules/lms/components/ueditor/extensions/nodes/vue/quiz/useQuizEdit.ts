@@ -27,7 +27,7 @@ export function useQuizEdit(props: QuizEditProps, emit: QuizEditEmit) {
         return ctxCourseId.value
     })
 
-    // provide tochild tree（replaceOld setEditableMeta temporarySettings/alsooriginal）
+    // provide 给子树（替代旧的 setEditableMeta 临时设置/还原）
     provideLmsCourseId(effectiveCourseId)
 
     const isModal = computed(() => props.modelValue !== undefined)
@@ -119,7 +119,7 @@ export function useQuizEdit(props: QuizEditProps, emit: QuizEditEmit) {
                 emit('saved', { ...form.value, cid: result.cid, point: totalPoint.value })
             }
             saveOk.value = true
-            saveMsg.value = t('quiz.save success')
+            saveMsg.value = t('quiz.saveSuccess')
             if (isModal.value) {
                 open.value = false
             }
@@ -131,7 +131,7 @@ export function useQuizEdit(props: QuizEditProps, emit: QuizEditEmit) {
         }
     }
 
-    // ── JSON originalStartDataEditeditor（Highlevel） ──
+    // ── JSON 原始数据编辑器（高级） ──
     const showJsonEditor = ref(false)
     const jsonText = ref('')
     const jsonError = ref('')
@@ -180,7 +180,7 @@ export function useQuizEdit(props: QuizEditProps, emit: QuizEditEmit) {
         }
     })
 
-    // Modal mode：ModalOpenwhenInitialize form
+    // Modal 模式：弹窗打开时初始化 form
     watch(open, (val) => {
         if (val) initForm()
         else {
@@ -189,7 +189,7 @@ export function useQuizEdit(props: QuizEditProps, emit: QuizEditEmit) {
         }
     }, { immediate: true })
 
-    // Insideinline mode：ComponentLoadwhenInitialize form
+    // 内联模式：组件加载时初始化 form
     watch(() => props.quiz, () => {
         if (!isModal.value) initForm()
     }, { immediate: true })

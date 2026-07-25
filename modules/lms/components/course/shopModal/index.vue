@@ -2,7 +2,7 @@
   <UModal v-model:open="open" :ui="{ content: 'sm:max-w-3xl' }">
     <template #content>
       <div class="p-6 space-y-4">
-        <!-- Header: title + coin balance -->
+        <!-- 头部：标题 + 金币余额 -->
         <div class="flex items-center justify-between">
           <h3 class="text-lg font-semibold">{{ $t('shop.title') }}</h3>
           <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-elevated">
@@ -17,10 +17,10 @@
         </div>
 
         <div v-else>
-          <!-- Tab switch: shop / backpack -->
+          <!-- Tab 切换：商店 / 背包 -->
           <UTabs v-model="activeTab" :items="tabItems" class="mb-4" />
 
-          <!-- Shop tab -->
+          <!-- 商店 Tab -->
           <div v-show="activeTab === 'shop'" class="space-y-3 max-h-[55vh] overflow-y-auto">
             <p v-if="!goods.length" class="text-center py-8 text-muted text-sm">{{ $t('shop.emptyShop') }}</p>
             <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -63,7 +63,7 @@
             </div>
           </div>
 
-          <!-- Backpack tab -->
+          <!-- 背包 Tab -->
           <div v-show="activeTab === 'bag'" class="space-y-3 max-h-[55vh] overflow-y-auto">
             <p v-if="!bags.length" class="text-center py-8 text-muted text-sm">{{ $t('shop.emptyBag') }}</p>
             <div v-else class="space-y-2">

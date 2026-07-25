@@ -1,5 +1,5 @@
 /**
- * Monaco Editor: CDN loading + initialization + formatting
+ * Monaco Editor：CDN 加载 + 初始化 + 格式化
  */
 export function useMonacoEditor(
   modelValue: () => string,
@@ -61,7 +61,7 @@ export function useMonacoEditor(
         const newValue = editor.getValue()
         onUpdate(newValue)
       }
-    } catch (_) { /* Some languages have no formatter, silently ignore */ }
+    } catch (_) { /* 某些语言没有格式化器，静默忽略 */ }
   }
 
   async function initEditor() {

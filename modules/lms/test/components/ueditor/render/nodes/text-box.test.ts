@@ -1,5 +1,5 @@
 /**
- * ueditor/render/nodes/text-box.vue component test
+ * ueditor/render/nodes/text-box.vue 组件测试
  * @see modules/lms/components/ueditor/render/nodes/text-box.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

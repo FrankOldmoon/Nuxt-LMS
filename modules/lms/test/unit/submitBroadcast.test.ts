@@ -1,17 +1,17 @@
 /**
- * submitBroadcast unit test
+ * submitBroadcast 单元测试
  * @see modules/lms/server/utils/ws/submitBroadcast.ts
  *
- * Coverage:
- * - per-kind master switch (enableOn{Kind})
- * - questionOnlyOnCorrect: do not broadcast when question is answered incorrectly
- * - onlyOnReward: do not broadcast when gainedExp=0
- * - text generation (kind + isCorrect / isPassed / score)
- * - end-to-end: only actually calls broadcastToClass when all rules pass
+ * 覆盖：
+ * - per-kind 总开关（enableOn{Kind}）
+ * - questionOnlyOnCorrect：答错题目不广播
+ * - onlyOnReward：gainedExp=0 时不广播
+ * - 文本生成（kind + isCorrect / isPassed / score）
+ * - 端到端：仅当所有规则通过时才真正调用 broadcastToClass
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-// Declare in advance with vi.hoisted (vi.mock will be hoisted to the top)
+// 用 vi.hoisted 提前声明（vi.mock 会被提升到顶部）
 const mocks = vi.hoisted(() => {
   const _mockDb = {
     select: vi.fn().mockReturnThis(),
@@ -28,7 +28,7 @@ const mocks = vi.hoisted(() => {
 
 vi.mock('@nuxthub/db', () => ({ db: mocks._mockDb, schema: mocks._mockSchema }))
 
-// Intercept broadcastToClass to record calls
+// 拦截 broadcastToClass 记录调用
 vi.mock('../../server/utils/ws/state', () => ({
   broadcastToClass: (classId: number, msg: string) => {
     mocks._broadcastCalls.push({ classId, msg })
@@ -46,14 +46,14 @@ beforeEach(() => {
   resetAllStubs()
   mocks._broadcastCalls.length = 0
   vi.clearAllMocks()
-  // Default user context: classId=5, name=alice
+  // 默认 user 上下文：classId=5, name=alice
   mocks._mockDb.limit.mockResolvedValue([{
     classId: 5,
     name: 'alice',
     preferName: '',
     username: 'alice01',
   }])
-  // Reset lms config to default (including danmaku section)
+  // 重置 lms config 为默认（含 danmaku 段）
   setMockLmsConfig({
     question: { submitExp: 2 },
     homework: { submitExp: 5 },
@@ -127,7 +127,7 @@ describe('submitBroadcast: questionOnlyOnCorrect', () => {
 
 describe('submitBroadcast: onlyOnReward', () => {
   it('question gainedExp=0 → 不广播（即使答对）', async () => {
-    // Correct but exceeds maxSubmitCount, gainedExp=0
+    // 答对但超过 maxSubmitCount 后 gainedExp=0
     await broadcastSubmitDanmaku({ userId: 1, kind: 'question', isCorrect: true, gainedExp: 0 })
     expect(mocks._broadcastCalls).toHaveLength(0)
   })

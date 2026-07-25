@@ -1,11 +1,11 @@
 /**
- * Get the current logged-in user's total score, exp, and the score of the specified chapter in this course
+ * 获取当前登录用户在本课程的总分、经验值，以及指定章节的得分
  * GET /api/courses/me?courseId=1[&chapterId=2]
  *
- * Lightweight endpoint, dedicated to userCard and other positions that need real-time refresh of score/exp:
- * - No classId required, directly query userCourses by userId + courseId
- * - When chapterId is provided, also returns the score of that chapter (userChapters)
- * - Does not query task completion, convenient for high-frequency calls after answering questions/submitting homework
+ * 轻量接口，专供 userCard 等需要实时刷新积分/经验的位置使用：
+ * - 无需 classId，直接按 userId + courseId 查 userCourses
+ * - 提供 chapterId 时顺带返回该章节的分数（userChapters）
+ * - 不查任务完成情况，便于答题/交作业后高频调用
  */
 import { db, schema } from '@nuxthub/db'
 import { eq, and } from 'drizzle-orm'
@@ -20,7 +20,7 @@ export default eventHandler(async (event) => {
     return cResp({ courseScore: 0, exp: 0, coin: 0, chapterScore: null })
   }
 
-  // Course total score + exp
+  // 课程总分 + 经验值
   const courseRows = await db
     .select({
       score: schema.userCourses.score,
@@ -36,10 +36,10 @@ export default eventHandler(async (event) => {
 
   const courseRow = courseRows[0]
 
-  // Chapter score (only returned when chapterId is specified)
+  // 章节分数（仅在指定 chapterId 时返回）
   let chapterScore: number | null = null
   if (chapterId) {
-    // Verify the chapter actually belongs to this course, to prevent unauthorized reading of chapter scores from other courses
+    // 校验章节确实属于该课程，防止越权读取其他课程的章节分数
     const chapter = await db
       .select({ id: schema.chapters.id })
       .from(schema.chapters)

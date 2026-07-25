@@ -1,8 +1,8 @@
 /**
- * formField/textField component tests
+ * formField/textField 组件测试
  * @see modules/admin/components/table/formField/textField.vue
  *
- * Simple UInput wrapper: v-model binds to form[col.jsName]
+ * 简单的 UInput 包装：v-model 绑定到 form[col.jsName]
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -69,7 +69,7 @@ describe('formField/textField.vue', () => {
     })
     const input = wrapper.find('input')
     await input.setValue('new-value')
-    // v-model binds to form[col.jsName], should directly update form.title
+    // v-model 绑定到 form[col.jsName]，应直接更新 form.title
     expect(form.title).toBe('new-value')
   })
 

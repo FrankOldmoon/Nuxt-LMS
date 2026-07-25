@@ -1,5 +1,5 @@
 /**
- * useCourseView composable test
+ * useCourseView composable 测试
  * @see modules/lms/composables/useCourseView.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -70,7 +70,7 @@ describe('composables/useCourseView', () => {
     await nextTick()
     closeTeachersModal()
     expect(teachersModalOpen.value).toBe(false)
-    // watch(teachersModalOpen) emits saved when val=false (flush:'pre' needs nextTick)
+    // watch(teachersModalOpen) 在 val=false 时 emit saved（flush:'pre' 需要 nextTick）
     await vi.waitFor(() => {
       expect(savedEmitted).toBe(true)
     })

@@ -1,13 +1,12 @@
 import { db, schema } from "@nuxthub/db"
-import { eq, and } from "drizzle-orm"  // Only need to import eq and and
+import { eq, and } from "drizzle-orm"  // 仅需导入 eq 和 and
 
-// Simple encryption key (not for public exposure, only for light obfuscation)
+// 简单加密密钥（不对外公开，仅做轻度混淆）
 const ENC_KEY = 'lms_q_a_2026'
 
 /**
- * Simple string encryption: XOR + Base64
- * Non-string values (numbers, etc.) are converted to string first,
- * and the frontend will convert them back when decrypting
+ * 对字符串进行简单加密：XOR + Base64
+ * 非字符串值（数字等）先转字符串，解密时由前端自行转换
  */
 function encryptValue(val: any): string {
   const str = String(val)
@@ -15,7 +14,7 @@ function encryptValue(val: any): string {
   for (let i = 0; i < str.length; i++) {
     result += String.fromCharCode(str.charCodeAt(i) ^ ENC_KEY.charCodeAt(i % ENC_KEY.length))
   }
-  // Base64 encoding (compatible with Chinese characters, convert to UTF-8 first)
+  // Base64 编码（兼容中文，先转 UTF-8 再编码）
   const utf8 = unescape(encodeURIComponent(result))
   let binary = ''
   for (let i = 0; i < utf8.length; i++) {
@@ -27,10 +26,10 @@ function encryptValue(val: any): string {
 export default eventHandler(async (event) => {
   const { course_id, cid } = getQuery(event)
   if (!course_id || !cid) {
-    return cResp(null, 'Missing id parameter', false)
+    return cResp(null, '缺少 id 参数', false)
   }
 
-  // Get questions table from schema (adjust according to actual export structure)
+  // 从 schema 中获取 questions 表（根据实际导出结构调整）
   const { questions } = schema
 
   const data = await db.query.questions.findFirst({
@@ -40,7 +39,7 @@ export default eventHandler(async (event) => {
     )
   })
 
-  // Encrypt the answer array to prevent the correct answer from being directly read from frontend source
+  // 对 answer 数组加密，防止直接从前端源码查看正确答案
   if (data && Array.isArray(data.answer)) {
     data.answer = data.answer.map((ans: any) => 'enc:' + encryptValue(ans))
   }

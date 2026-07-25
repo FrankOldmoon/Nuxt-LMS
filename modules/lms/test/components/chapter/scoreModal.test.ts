@@ -1,10 +1,10 @@
 /**
- * chapter/scoreModal.vue component test
+ * chapter/scoreModal.vue 组件测试
  * @see modules/lms/components/chapter/scoreModal.vue
  *
- * Chapter score modal: class student score table + task points + progress bar.
- * Depends on useChapterScore(), stubs the composable in tests. TaskDot/TaskModal explicitly imported,
- * Stub by component name in tests.
+ * 章节得分弹窗：班级学生得分表 + 任务点 + 进度条。
+ * 依赖 useChapterScore()，测试中 stub 该 composable。TaskDot/TaskModal 显式 import，
+ * 测试中按组件名 stub。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

@@ -2,7 +2,7 @@
     <div class="p-2">
         <Edit v-if="showConfig" :config="config" @update:config="onConfigChange" @close="showConfig = false" />
     </div>
-    <!-- Preview/Editarea（Start and end show，interactiveEdit tab Content） -->
+    <!-- 预览/编辑区（始终显示，交互式编辑 tab 内容） -->
     <div class="vue-node-body">
         <UTabs :items="tabItems" class="p-3">
             <template #content="{ item }">
@@ -44,7 +44,7 @@ function onConfigChange(newConfig) {
     props.updateAttributes({ content: JSON.stringify(newConfig) })
 }
 
-// RichEditor Contentwhen changesAuto saveto node attrs（debounce）
+// RichEditor 内容变化时自动保存到 node attrs（防抖）
 let saveTimer = null
 watch(tabItems, () => {
     if (saveTimer) clearTimeout(saveTimer)

@@ -28,7 +28,7 @@ const allContent = computed(() => props.node.content || [])
 const attrs = computed(() => props.node.attrs || {})
 const isOpen = ref(attrs.value.open || false)
 
-// separate summary and content
+// 分离 summary 和 content
 const summaryNodes = computed(() =>
   allContent.value.filter((c) => c.type === 'detailsSummary'),
 )

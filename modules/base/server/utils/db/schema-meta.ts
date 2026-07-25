@@ -2,7 +2,7 @@ import { schema } from "@nuxthub/db"
 import { isTable, getTableColumns } from "drizzle-orm"
 import { getTable } from "./_helpers"
 
-/** Metadata / list query / filter types */
+/** 元数据 / 列表查询 / 筛选 类型 */
 export type ColumnMeta = {
   name: string; jsName: string
   dataType: string; columnType: string
@@ -30,7 +30,7 @@ export type ListResult = {
   data: any[]; total: number; page: number; pageSize: number
   columns: ColumnMeta[]; meta: TableMeta
 }
-/** English pluralization (covers all table name cases in schema) */
+/** 英文复数化（覆盖 schema 内所有表名情况） */
 function pluralize(word: string): string {
   if (!word) return word
   const lower = word.toLowerCase()
@@ -38,14 +38,14 @@ function pluralize(word: string): string {
   if (/[^aeiou]y$/.test(lower)) return word.slice(0, -1) + 'ies'
   return word + 's'
 }
-/** Known FK label column overrides (tables without a name column) */
+/** 已知 FK 标签列覆盖（无 name 列的表） */
 const FK_LABEL_OVERRIDES: Record<string, string> = {
   users: 'name', classes: 'name', courses: 'name', chapters: 'name',
   roles: 'name', permissions: 'name', categories: 'name', files: 'name',
   tokens: 'name', medals: 'name',
 }
 const LABEL_CANDIDATES = ['name', 'title', 'code', 'username']
-/** All table names (jsName) in schema, excluding withTimestamps / *Relations and other non-table exports */
+/** schema 中所有表名（jsName），排除 withTimestamps / *Relations 等非表导出 */
 export function getSchemaTables(): string[] {
   const tables: string[] = []
   for (const [key, value] of Object.entries(schema)) {
@@ -53,7 +53,7 @@ export function getSchemaTables(): string[] {
   }
   return tables.sort()
 }
-/** Build single column metadata */
+/** 构造单列元数据 */
 function buildColumnMeta(jsName: string, col: any): ColumnMeta {
   const meta: ColumnMeta = {
     name: col.name, jsName,
@@ -66,7 +66,7 @@ function buildColumnMeta(jsName: string, col: any): ColumnMeta {
   if (col.enumValues && col.enumValues.length) meta.enumValues = col.enumValues
   return meta
 }
-/** Table metadata: column definitions, primary key detection, FK heuristic detection, label column */
+/** 表元数据：列定义、主键判断、FK 启发式检测、标签列 */
 export function getTableMeta(tableName: string): TableMeta {
   const table = getTable(tableName)
   const cols = getTableColumns(table) as Record<string, any>
@@ -88,7 +88,7 @@ export function getTableMeta(tableName: string): TableMeta {
   for (const c of LABEL_CANDIDATES) { if (c in cols) { labelColumn = c; break } }
   return { name: tableName, hasId, compositePk, columns, labelColumn, readOnly: compositePk }
 }
-/** FK map { [jsName]: { table, labelColumn } } */
+/** FK 映射 { [jsName]: { table, labelColumn } } */
 export function getFkMap(tableName: string): Record<string, { table: string; labelColumn: string }> {
   const meta = getTableMeta(tableName)
   const map: Record<string, { table: string; labelColumn: string }> = {}

@@ -1,17 +1,17 @@
 /**
- * Learning progress: batch query the user's completion status on each item
+ * 学习进度：批量查询用户在各 item 上的完成状态
  *
- * Input: user id + course id + questionIds / homeworkIds / commentIds of all chapters in the course
- * Output: 3 Maps<cid, 'done' | 'partial' | 'todo'>
- *  - question: rate >= 1 → done; 0 < rate < 1 → partial
- *  - homework / comment: record exists → done
+ * 输入：用户 id + 课程 id + 该课程下所有章节的 questionIds / homeworkIds / commentIds
+ * 输出：3 个 Map<cid, 'done' | 'partial' | 'todo'>
+ *  - question: rate >= 1 → done；0 < rate < 1 → partial
+ *  - homework / comment: 存在记录 → done
  */
 import { db, schema } from '@nuxthub/db'
 import { eq, and, inArray } from 'drizzle-orm'
 
 export type ItemStatus = 'done' | 'partial' | 'todo'
 
-/** Batch query question completion, correct rate=1 → done; >0 → partial */
+/** 批量查询题目完成情况，正确率=1 → done；>0 → partial */
 export async function queryQuestionStatus(
   userId: number,
   courseId: number,
@@ -34,7 +34,7 @@ export async function queryQuestionStatus(
   return map
 }
 
-/** Batch query homework submission (only need to check existence) */
+/** 批量查询作业提交情况（仅需判断存在） */
 export async function queryHomeworkStatus(
   userId: number,
   courseId: number,
@@ -54,7 +54,7 @@ export async function queryHomeworkStatus(
   return map
 }
 
-/** Batch query comment interaction */
+/** 批量查询评论互动情况 */
 export async function queryCommentStatus(
   userId: number,
   courseId: number,
@@ -74,7 +74,7 @@ export async function queryCommentStatus(
   return map
 }
 
-/** Batch query user's chapter scores + pass status */
+/** 批量查询用户章节得分 + 通过状态 */
 export async function queryUserChapterScores(
   userId: number,
   chapterIds: number[],

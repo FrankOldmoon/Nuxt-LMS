@@ -1,5 +1,5 @@
 /**
- * ws/class composable test
+ * ws/class composable 测试
  * @see modules/lms/composables/ws/class.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'

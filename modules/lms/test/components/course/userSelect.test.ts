@@ -1,8 +1,8 @@
 /**
- * course/userSelect.vue component test
+ * course/userSelect.vue 组件测试
  * @see modules/lms/components/course/userSelect.vue
  *
- * User selector: select student identity to switch view (teacher feature)
+ * 用户选择器：选择学生身份切换查看（教师功能）
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'

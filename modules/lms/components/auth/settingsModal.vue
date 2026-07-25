@@ -1,17 +1,17 @@
 <template>
   <!--
-    lms ModuleSettingsModalwrapComponent（only lms Enablewhenmakeuse）
-    - wrap base  <AuthSettingsModal>
-    - Pass lms-config slot inject <LmsConfigEditor>
-    - Pass on-save Callback"Submit lms_config" async FunctionRegisterto base
+    lms 模块设置弹窗包装组件（仅 lms 启用时使用）
+    - 包裹 base 的 <AuthSettingsModal>
+    - 通过 lms-config slot 注入 <LmsConfigEditor>
+    - 通过 on-save 回调把"提交 lms_config"的 async 函数注册到 base
   -->
   <AuthSettingsModal v-model:open="isOpen">
-    <template #settings-extra="{ on save }">
+    <template #settings-extra="{ onSave }">
       <div v-if="loading" class="flex justify-center py-4">
         <UIcon name="i-lucide-loader-circle" class="size-5 animate-spin text-muted" />
       </div>
       <LmsConfigEditor v-show="!loading" ref="editorRef" v-model="lmsConfig" />
-      <span v-if="!loading" hidden>{{ on save(submitLmsConfig) }}</span>
+      <span v-if="!loading" hidden>{{ onSave(submitLmsConfig) }}</span>
     </template>
   </AuthSettingsModal>
 </template>
@@ -19,13 +19,13 @@
 <script setup lang="ts">
 import AuthSettingsModal from '../../../base/components/auth/settings/modal.vue'
 /**
- * lms wrap settingsModal
+ * lms 包装 settingsModal
  *
- * OffKeyPoint：
- * - nothenRender site_config / email UI（by base Complete）
- * - only responsible lms-config slot Middledisplay LmsConfigEditor
- * - Pass slotProps.on save "Submit lms_config" async FunctionRegisterto base
- * - RegisterCallback lmsConfig / editorRef thenstateBackimmediatelythat isCall
+ * 关键点：
+ * - 不再渲染 site_config / 邮件 UI（由 base 完成）
+ * - 仅负责在 lms-config slot 中展示 LmsConfigEditor
+ * - 通过 slotProps.onSave 把"提交 lms_config"的 async 函数注册到 base
+ * - 注册的回调在 lmsConfig / editorRef 就绪后立即调用
  */
 const isOpen = defineModel<boolean>('open', { default: false })
 
@@ -50,14 +50,14 @@ async function loadLmsConfig() {
 }
 
 /**
- * Async function that actually submits lms_config
- * Calls LmsConfigEditor.getConfig() to get the final object, deep-merges into storage
+ * 实际提交 lms_config 的异步函数
+ * 调 LmsConfigEditor.getConfig() 获取最终对象，deep-merge 入库
  */
 async function submitLmsConfig(): Promise<void> {
   if (!editorRef.value) return
   const data = editorRef.value.getConfig() || {}
-  // /api/lms-config/update ServiceserverYes deep-merge，ThisInsidewholeitems config pass tothat iscan
-  // （path original /api/config/update，and base Modulesamename conflict，base firstRegisterwilloverlay lms routeby）
+  // /api/lms-config/update 服务端是 deep-merge，这里把整个 config 传过去即可
+  // （路径原为 /api/config/update，与 base 模块同名冲突，base 先注册会覆盖 lms 路由）
   await cRequest('/api/lms-config/update', {
     method: 'POST',
     body: data,
@@ -65,8 +65,8 @@ async function submitLmsConfig(): Promise<void> {
 }
 
 /**
- * Register submitLmsConfig to base's slotSaveHandler.
- * When Vue 3 renders the slot, slotProps.on save is a function reference,
- * calling it directly in the template registers it to base.
+ * 把 submitLmsConfig 注册到 base 的 slotSaveHandler。
+ * Vue 3 slot 渲染时，slotProps.onSave 是一个函数引用，
+ * 在模板里直接调用即可把它注册到 base。
  */
 </script>

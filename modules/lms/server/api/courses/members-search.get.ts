@@ -1,4 +1,4 @@
-/** Search users (fuzzy match by username or name) */
+/** 搜索用户（按用户名或姓名模糊匹配） */
 export default eventHandler(async (event) => {
   const courseId = Number(getQuery(event).courseId)
   if (courseId) {

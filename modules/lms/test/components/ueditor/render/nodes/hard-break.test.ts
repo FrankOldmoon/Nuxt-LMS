@@ -1,5 +1,5 @@
 /**
- * ueditor/render/nodes/hard-break.vue component test
+ * ueditor/render/nodes/hard-break.vue 组件测试
  * @see modules/lms/components/ueditor/render/nodes/hard-break.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

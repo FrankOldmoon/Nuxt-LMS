@@ -2,18 +2,18 @@ import { db, schema } from "@nuxthub/db";
 import { asc, eq, and, isNull, sql, inArray, or } from "drizzle-orm";
 
 export default eventHandler(async (event) => {
-  // Query all categories (ordered by order)
+  // 查询所有分类（按 order 排序）
   const categories = await db.query.categories.findMany({
     orderBy: [asc(schema.categories.order)],
   });
 
-  // Query all courses (with chapter relation, used to count chapters)
-  // Course ordering is controlled by the category's orders field; the frontend sorts by category.orders
+  // 查询所有课程（带章节关系，用于计算章节数）
+  // 课程排序由分类的 orders 字段控制，前端按 category.orders 排序
   const courses = await db.query.courses.findMany({
     with: { chapters: true },
   });
 
-  // Query teachers/editors for all courses
+  // 查询所有课程的教师/编辑者
   const courseIds = courses.map(c => c.id)
   const allMembers = courseIds.length > 0
     ? await db
@@ -50,12 +50,12 @@ export default eventHandler(async (event) => {
     })
   }
 
-  // Query site configuration
+  // 查询网站配置
   const siteConfig = await db.query.configs.findFirst({
     where: eq(schema.configs.id, 'site_config'),
   });
 
-  // Unread count (only meaningful for logged-in users; returns 0 for guests)
+  // 未读计数（登录用户才有意义，未登录返回 0）
   let notifyUnread = 0
   let msgUnread = 0
   const user = await getCurrentUser(event)

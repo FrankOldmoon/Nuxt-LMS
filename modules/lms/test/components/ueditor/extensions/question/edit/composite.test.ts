@@ -1,9 +1,9 @@
 /**
- * composite edit component test (edit)
+ * composite 编辑组件测试 (edit)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/edit/composite.vue
  *
- * composite.vue uses useCompositeEdit composable, sub-question list stored in form.content array
- * useCompositeEdit imports all sub-editors (single/judge/multiple/...), needs to stub richEditor etc.
+ * composite.vue 使用 useCompositeEdit composable，子题列表存储在 form.content 数组
+ * useCompositeEdit 导入所有子编辑器（single/judge/multiple/...），需 stub richEditor 等
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -41,7 +41,7 @@ describe('question/edit/composite.vue', () => {
       props: { form },
       global: { stubs: _globalStubs, mocks: _mocks },
     })
-    // When the list is empty, should show compositeEmpty hint
+    // 空列表时应显示 compositeEmpty 提示
     expect(wrapper.text()).toContain('question.compositeEmpty')
   })
 
@@ -63,7 +63,7 @@ describe('question/edit/composite.vue', () => {
       props: { form },
       global: { stubs: _globalStubs, mocks: _mocks },
     })
-    // Should render 2 sub-questions (each with a name input)
+    // 应渲染 2 个子题（每个有 name input）
     const inputs = wrapper.findAll('input')
     expect(inputs.length).toBeGreaterThanOrEqual(2)
   })
@@ -86,7 +86,7 @@ describe('question/edit/composite.vue', () => {
       props: { form },
       global: { stubs: _globalStubs, mocks: _mocks },
     })
-    // totalPoint = 3 + 2 = 5, synced to form.point
+    // totalPoint = 3 + 2 = 5，同步到 form.point
     expect(form.point).toBe(5)
   })
 })

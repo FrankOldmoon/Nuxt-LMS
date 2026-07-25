@@ -15,10 +15,10 @@ import MatchRender from './match.vue'
 export function useSubQuestion(props: any, emit: (event: string, ...args: any[]) => void) {
   const { t } = useI18n()
 
-  // unique ID usein DOM Query（fill/select needuseto [data-question-id]）
+  // 唯一 ID 用于 DOM 查询（fill/select 需要用到 [data-question-id]）
   const uniqueId = computed(() => 90000 + props.index)
 
-  // localGround question Object（deep clonechild question，independently manage record）
+  // 本地 question 对象（深拷贝子题，独立管理 record）
   const localQuestion = ref<any>({})
 
   function initLocal() {
@@ -29,21 +29,21 @@ export function useSubQuestion(props: any, emit: (event: string, ...args: any[])
   }
   initLocal()
 
-  // Sonwhen question changesHeavyNewInitialize
+  // 子题变化时重新初始化
   watch(() => props.subQuestion, () => {
     initLocal()
   }, { deep: true })
 
-  // localGroundStatus
+  // 本地状态
   const submitted = ref(false)
   const isCorrect = ref(false)
   const fromRecord = ref(false)
 
-  provide('question submitted', submitted)
+  provide('questionSubmitted', submitted)
   provide('questionIsCorrect', isCorrect)
   provide('questionFromRecord', fromRecord)
 
-  // Render ComponentMap
+  // 渲染组件映射
   const componentMap: Record<string, any> = {
     single: SingleRender, judge: JudgeRender, multiple: MultipleRender,
     fill: FillRender, select: SelectRender, sort: SortRender,
@@ -66,14 +66,14 @@ export function useSubQuestion(props: any, emit: (event: string, ...args: any[])
     return labels[props.subQuestion.type] || props.subQuestion.type
   })
 
-  // listen record change，NotificationParent Component
+  // 监听 record 变化，通知父组件
   watch(() => localQuestion.value?.record, (record: any) => {
     if (Array.isArray(record)) {
       emit('answer-change', [...record])
     }
   }, { deep: true })
 
-  // formatAnswerShow
+  // 格式化答案显示
   const formattedAnswer = computed(() => {
     const answer = props.subQuestion.answer || []
     const type = props.subQuestion.type
@@ -86,7 +86,7 @@ export function useSubQuestion(props: any, emit: (event: string, ...args: any[])
     return answer.join(', ')
   })
 
-  // exposeMethod
+  // 暴露方法
   function submit() {
     if (!renderRef.value) return null
     const result = renderRef.value.submit()
@@ -105,7 +105,7 @@ export function useSubQuestion(props: any, emit: (event: string, ...args: any[])
     renderRef.value?.fillCorrectAnswer()
   }
 
-  // Settings record（useinbackfill）：noSettings submitted，byCompositecontrol whenShowjudge
+  // 设置 record（用于回填）：不设置 submitted，由复合题控制何时显示判断
   function setRecord(record: any[]) {
     if (Array.isArray(record) && record.length > 0) {
       localQuestion.value.record = [...record]
@@ -115,7 +115,7 @@ export function useSubQuestion(props: any, emit: (event: string, ...args: any[])
     }
   }
 
-  // by Parent Componentcontrol judgmentShow
+  // 由父组件控制判断显示
   function applyJudgment() {
     submitted.value = true
   }

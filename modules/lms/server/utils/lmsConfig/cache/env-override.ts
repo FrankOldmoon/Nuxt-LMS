@@ -1,11 +1,11 @@
 /**
- * AI config env variable override
+ * AI 配置 env 变量覆盖
  *
- * Priority: DB storage < process.env (highest)
- * Called at the end of reloadLmsConfig to ensure the three sensitive ai.* fields follow .env.
+ * 优先级：DB 存储 < process.env（最高）
+ * 在 reloadLmsConfig 末尾调用，确保 ai.* 三个敏感字段以 .env 为准。
  */
 
-/** Apply env overrides to the unflattened cfg.ai */
+/** 将 env 覆盖应用到已 unflatten 的 cfg.ai 上 */
 export function applyEnvOverride(cfg: any): void {
   const env = process.env
   if (!cfg.ai) cfg.ai = {}

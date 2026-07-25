@@ -1,16 +1,16 @@
 /**
- * Quiz submission
+ * 测验提交
  * POST /api/quizzes/submit
  * body: { course_id, quiz_cid, records, start_only? }
  *
- * Two modes:
- *  - start_only: only records the start time (does not calculate score)
- *  - Normal submission: calculate score + anti-abuse exp + write userQuizzes + update quiz.submitCount + check medals
+ * 两种模式：
+ *  - start_only: 仅记录开始时间（不计算分数）
+ *  - 正常提交: 计算分数 + 防刷发经验 + 写 userQuizzes + 更新 quiz.submitCount + 检查奖章
  *
- * Exp anti-abuse (see utils/quizSubmit/score.calcQuizExp for details):
- *  - Submitting an already-passed quiz again: gainedExp=0
- *  - First pass: submitExp + passBonusExp
- *  - First non-pass: submitExp
+ * 经验值防刷（详见 utils/quizSubmit/score.calcQuizExp）：
+ *  - 已及格过的测验再次提交：gainedExp=0
+ *  - 首次及格：submitExp + passBonusExp
+ *  - 首次不及格：submitExp
  */
 import { db, schema } from '@nuxthub/db'
 import { and, eq } from 'drizzle-orm'
@@ -24,18 +24,18 @@ export default eventHandler(async (event) => {
   const body = await readBody(event)
   const { course_id, quiz_cid, records, start_only } = body
   if (!course_id || !quiz_cid) {
-    return cResp(null, 'Missing course_id or quiz_cid parameter', false)
+    return cResp(null, '缺少 course_id 或 quiz_cid 参数', false)
   }
   const courseId = Number(course_id)
   const quizCid = Number(quiz_cid)
 
-  // 1. Find quiz config
+  // 1. 查找测验配置
   const quiz = await db.query.quizzes.findFirst({
     where: and(eq(schema.quizzes.courseId, courseId), eq(schema.quizzes.cid, quizCid)),
   })
-  if (!quiz) return cResp(null, 'Quiz does not exist', false)
+  if (!quiz) return cResp(null, '测验不存在', false)
 
-  // 2. Find existing record
+  // 2. 查找已有记录
   const existing = await db.query.userQuizzes.findFirst({
     where: and(
       eq(schema.userQuizzes.userId, user.id),
@@ -44,20 +44,20 @@ export default eventHandler(async (event) => {
     ),
   })
 
-  // 3. start_only mode
+  // 3. start_only 模式
   if (start_only) {
     const r = await handleQuizStartOnly(user.id, courseId, quizCid, existing)
     return cResp({ startedAt: r.startedAt })
   }
 
-  // 4. Submit count limit
+  // 4. 提交次数限制
   const submitLimit = quiz.submitLimit || 1
   const currentCount = existing?.submitCount || 0
   if (currentCount >= submitLimit) {
-    return cResp(null, 'Maximum number of submissions reached', false)
+    return cResp(null, '已达到最大提交次数', false)
   }
 
-  // 5. Calculate score + exp
+  // 5. 计算分数 + 经验
   const { totalScore, correctCount } = calcQuizScore(records)
   const config = await getCourseLmsConfig(courseId)
   const qConfig = config.quiz
@@ -68,7 +68,7 @@ export default eventHandler(async (event) => {
   const newSubmitCount = currentCount + 1
   const now = new Date()
 
-  // 6. Write userQuizzes (take the highest score)
+  // 6. 写 userQuizzes（取最高分）
   if (existing) {
     const bestScore = Math.max(existingBestScore!, totalScore)
     await updateUserQuizBestScore({
@@ -79,7 +79,7 @@ export default eventHandler(async (event) => {
     await insertUserQuiz({ userId: user.id, courseId, quizCid, records, totalScore, now })
   }
 
-  // 7. Update userCourses.quizScore (highest score mode) + medals
+  // 7. 更新 userCourses.quizScore（最高分模式）+ 奖章
   const finalScore = existing ? Math.max(existingBestScore!, totalScore) : totalScore
   await notifyCourseProgressMax({
     userId: user.id,
@@ -90,10 +90,10 @@ export default eventHandler(async (event) => {
     coin: gainedCoin,
   })
 
-  // 8. Update quiz global count
+  // 8. 更新测验全局计数
   await incrementQuizSubmitCount(courseId, quizCid, quiz.submitCount)
 
-  // 9. Broadcast danmaku to the class room (fire-and-forget, does not affect response)
+  // 9. 向班级房间广播 danmaku（fire-and-forget，不影响响应）
   void broadcastSubmitDanmaku({
     userId: user.id,
     kind: 'quiz',

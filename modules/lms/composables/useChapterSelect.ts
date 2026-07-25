@@ -1,12 +1,12 @@
 /**
- * Chapter student selection modal logic
+ * 章节学生选择弹窗逻辑
  *
- * - selectedIds: currently selected student ids
- * - randomSelect: lottery-style random flashing highlight of N students
- * - adjustScore: batch add/subtract score for selected students (POST /api/courses/marks)
+ * - selectedIds：当前选中的学生 id
+ * - randomSelect：抽奖式随机闪烁高亮 N 个学生
+ * - adjustScore：对选中学生批量加减分（POST /api/courses/marks）
  *
- * Student data comes from the global useClassUsers() (cached by classId + courseId).
- * isOpen is passed in from timerModal via v-model:open; load data onOpen, reset on close.
+ * 学生数据来自全局 useClassUsers()（按 classId + courseId 缓存）。
+ * isOpen 由 timerModal 通过 v-model:open 传入；打开时加载数据，关闭时复位。
  */
 export function useChapterSelect(
   props: { courseId: number; classId: number },
@@ -23,7 +23,7 @@ export function useChapterSelect(
   const randomCount = ref(1)
   const customScore = ref<number>(10)
 
-  // Close all open UPopovers (after clicking confirm / cancel)
+  // 关闭所有打开的 UPopover（点击确认 / 取消后）
   function closePopovers() {
     document.querySelectorAll('[data-state="open"][role="dialog"]').forEach(el => {
       ;(el as HTMLElement).click()
@@ -54,7 +54,7 @@ export function useChapterSelect(
     const count = Math.min(randomCount.value || 1, students.value.length)
     const allIds = students.value.map(s => s.id)
 
-    // Fast random flashing, simulating lottery animation
+    // 快速随机闪烁，模拟抽奖动画
     let ticks = 0
     const maxTicks = 20
     randomTimer = setInterval(() => {
@@ -99,7 +99,7 @@ export function useChapterSelect(
     try {
       await fetchUsers(props.classId, props.courseId)
     } catch (e) {
-      console.error('Failed to load students', e)
+      console.error('加载学生失败', e)
     } finally {
       loading.value = false
     }

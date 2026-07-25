@@ -15,7 +15,7 @@ export function useMessagesContext(): MessagesContext {
 }
 
 /**
- * Message center: conversation list + search + message send/receive + WebSocket real-time
+ * 消息中心：会话列表 + 搜索 + 消息收发 + WebSocket 实时
  */
 export function useMessages(isOpen: Ref<boolean>) {
   const { t } = useI18n()
@@ -32,7 +32,7 @@ export function useMessages(isOpen: Ref<boolean>) {
   const sending = ref(false)
   const msgContainer = ref<HTMLElement | null>(null)
 
-  // Search
+  // 搜索
   const searchKeyword = ref('')
   const searchResults = ref<any[]>([])
   let searchTimer: any = null
@@ -134,7 +134,7 @@ export function useMessages(isOpen: Ref<boolean>) {
     }
   })
 
-  // WebSocket real-time messages
+  // WebSocket 实时消息
   registerWsHandler('message', (data: any) => {
     const msg = data.message
     if (!msg) return

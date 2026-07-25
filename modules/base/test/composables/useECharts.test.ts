@@ -1,5 +1,5 @@
 /**
- * composables/useECharts tests
+ * composables/useECharts 测试
  * @see modules/base/composables/useECharts.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -10,7 +10,7 @@ beforeEach(() => {
   resetAllStubs()
 })
 
-// Create noop argument functions
+// 创建 noop 的参数函数
 function noop() { return undefined as any }
 function makeArgs(overrides: Partial<Record<string, () => any>> = {}) {
   const defaults = {

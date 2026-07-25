@@ -6,13 +6,13 @@
                 <ContentPickerPreviewArea />
                 <ContentPickerFooter />
             </div>
-            <!-- Edit Modal -->
+            <!-- 编辑弹窗 -->
             <QuestionEdit v-if="editType === 'question'" v-model="editOpen" :question-id="editId" :question="editData" @saved="onEditSaved" />
             <HomeworkEdit v-if="editType === 'homework'" v-model="editOpen" :homework-id="editId" :homework="editData" @saved="onEditSaved" />
             <CommentEdit v-if="editType === 'comment'" v-model="editOpen" :comment-id="editId" :comment="editData" @saved="onEditSaved" />
             <QuizEdit v-if="editType === 'quiz'" v-model="editOpen" :quiz-id="editId" :quiz="editData" @saved="onEditSaved" />
             <component v-if="moduleLms && editType === 'race' && RaceEdit" :is="RaceEdit" v-model="editOpen" :race-id="editId" :race="editData" @saved="onEditSaved" />
-            <!-- ImportModal -->
+            <!-- 导入弹窗 -->
             <ContentPickerImportModal />
         </template>
     </UModal>

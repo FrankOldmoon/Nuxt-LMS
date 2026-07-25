@@ -1,6 +1,6 @@
 /**
- * Real-time record answer to question.record (called immediately when user selects/inputs)
- * record only stores answer array, e.g. [1], [2,3], ["122","444"]
+ * 实时记录作答到 question.record（用户选择/输入时立即调用）
+ * record 只存答案数组，如 [1]、[2,3]、["122","444"]
  */
 export function recordAnswer(question: any, userAnswer: string[] | number[]) {
   if (!question) return
@@ -11,28 +11,28 @@ export function recordAnswer(question: any, userAnswer: string[] | number[]) {
 
 }
 
-// ====================== Answer encryption/decryption ======================
+// ====================== 答案加密/解密 ======================
 
-// Key consistent with backend
+// 与后端一致的密钥
 const ENC_KEY = 'lms_q_a_2026'
 
 /**
- * Decrypt backend-encrypted answer value
- * Format 'enc:base64string', decrypted to original value (string)
- * Non-encrypted values (not starting with 'enc:') return as-is
+ * 解密后端加密的答案值
+ * 格式 'enc:base64string'，解密为原始值（字符串）
+ * 非加密值（不以 'enc:' 开头）直接返回原值
  */
 export function decryptValue(val: any): any {
   if (typeof val !== 'string' || !val.startsWith('enc:')) return val
   const encStr = val.slice(4)
   try {
-    // Base64 decode → URI decode → XOR decrypt
+    // Base64 解码 → URI 解码 → XOR 解密
     const binary = atob(encStr)
     const decoded = decodeURIComponent(escape(binary))
     let result = ''
     for (let i = 0; i < decoded.length; i++) {
       result += String.fromCharCode(decoded.charCodeAt(i) ^ ENC_KEY.charCodeAt(i % ENC_KEY.length))
     }
-    // Restore original type: pure numeric string back to number
+    // 还原原始类型：纯数字字符串转回 number
     if (result !== '' && !isNaN(Number(result))) {
       return Number(result)
     }
@@ -43,7 +43,7 @@ export function decryptValue(val: any): any {
 }
 
 /**
- * Decrypt entire answer array (in-place or return new array)
+ * 解密整个 answer 数组（原地或返回新数组）
  */
 export function decryptAnswer(answer: any[]): any[] {
   if (!Array.isArray(answer)) return answer
@@ -51,10 +51,10 @@ export function decryptAnswer(answer: any[]): any[] {
 }
 
 /**
- * Compute score ratio (0 ~ 1) in real-time based on record
- * - single/judge: all correct 1, otherwise 0
- * - multiple: correct selections - wrong selections, then divided by total answer count, min 0
- * - fill: correct blanks / total blanks
+ * 根据 record 实时计算得分比（0 ~ 1）
+ * - single/judge: 全对 1，否则 0
+ * - multiple: 正确选中数 - 错误选中数，再除以答案总数，下限 0
+ * - fill: 答对空数 / 总空数
  */
 export function computeCorrectRate(question: any): number {
   if (!question || !question.answer || !Array.isArray(question.answer)) return 0
@@ -69,9 +69,9 @@ export function computeCorrectRate(question: any): number {
   }
   if (type === 'multiple') {
     if (!answer.length) return 0
-    const match ing = record.filter((r: any) => answer.includes(r)).length
+    const matching = record.filter((r: any) => answer.includes(r)).length
     const wrong = record.filter((r: any) => !answer.includes(r)).length
-    return Math.max(0, (match ing - wrong) / answer.length)
+    return Math.max(0, (matching - wrong) / answer.length)
   }
   if (type === 'fill' || type === 'select') {
     if (!answer.length) return 0
@@ -79,7 +79,7 @@ export function computeCorrectRate(question: any): number {
     const correct = answer.filter((ans: any, i: number) => {
       const userVal = String(record[i] || '').trim()
       const correctVal = String(ans).trim()
-      // Fill-in-the-blank supports regex match ing
+      // 填空题支持正则表达式匹配
       if (type === 'fill' && options[i] === 'regex') {
         try {
           return new RegExp(correctVal).test(userVal)
@@ -107,11 +107,11 @@ export function computeCorrectRate(question: any): number {
     return correct / answer.length
   }
   if (type === 'html') {
-    // HTML question: record[0] stores correct_rate (0~1) from iframe
+    // HTML 题：record[0] 存储 iframe 传来的 correct_rate (0~1)
     return Math.max(0, Math.min(1, Number(record[0]) || 0))
   }
   if (type === 'short-answer') {
-    // Short answer: answer[0] is a regex, record[0] is user input
+    // 简答题：answer[0] 是正则表达式，record[0] 是用户输入
     if (!answer.length) return 0
     try {
       const re = new RegExp(answer[0])
@@ -121,21 +121,21 @@ export function computeCorrectRate(question: any): number {
     }
   }
   if (type === 'match') {
-    // Match question: answer[i] = i (left[i] connects to right[i]), record[i] = rightOriginalIndex
+    // 连线题：answer[i] = i（left[i] 连 right[i]），record[i] = rightOriginalIndex
     if (!answer.length) return 0
     const correct = answer.filter((_: any, i: number) => Number(record[i]) === Number(answer[i])).length
     return correct / answer.length
   }
   if (type === 'composite') {
-    // Composite question: record is sub-question record array [[ans1], [ans2], ...], content is sub-question array
-    const sub-questions = question.content
-    if (!Array.isArray(sub-questions) || !sub-questions.length) return 0
+    // 大题：record 是子题记录数组 [[ans1], [ans2], ...]，content 是子题数组
+    const subQuestions = question.content
+    if (!Array.isArray(subQuestions) || !subQuestions.length) return 0
     let totalPoint = 0
     let correctPoint = 0
-    sub-questions.forEach((sub: any, i: number) => {
+    subQuestions.forEach((sub: any, i: number) => {
       const subRecord = Array.isArray(record[i]) ? record[i] : []
-      const sub-question = { ...sub, record: subRecord }
-      const rate = computeCorrectRate(sub-question)
+      const subQuestion = { ...sub, record: subRecord }
+      const rate = computeCorrectRate(subQuestion)
       const pt = Number(sub.point) || 0
       totalPoint += pt
       correctPoint += rate * pt
@@ -143,29 +143,29 @@ export function computeCorrectRate(question: any): number {
     return totalPoint > 0 ? correctPoint / totalPoint : 0
   }
   if (type === 'video') {
-    // Video question: both conditions must be met to be correct
-    // 1) watchedRatio >= 0.95 (video watched ≥ 95%)
-    // 2) All sub-questions answered correctly (subRecords[cid].correct === true)
-    // record[0] form: { watchedRatio: 0~1, subRecords: { cid: { correct: bool } } }
+    // 视频题：同时满足才正确
+    // 1) watchedRatio >= 0.95（视频已观看 ≥ 95%）
+    // 2) 所有子题答对（subRecords[cid].correct === true）
+    // record[0] 形式：{ watchedRatio: 0~1, subRecords: { cid: { correct: bool } } }
     const rec = Array.isArray(record) && record.length > 0 ? (record[0] || {}) : {}
     const watchedRatio = Math.max(0, Math.min(1, Number(rec.watchedRatio) || 0))
     const subRecords = (rec.subRecords && typeof rec.subRecords === 'object') ? rec.subRecords : {}
     const opts = question.options
-    const sub-questions = (opts && typeof opts === 'object' && !Array.isArray(opts) && Array.isArray(opts.questions))
+    const subQuestions = (opts && typeof opts === 'object' && !Array.isArray(opts) && Array.isArray(opts.questions))
       ? opts.questions
       : []
-    if (sub-questions.length === 0) {
-      // When there are no sub-questions, just finishing the video counts as pass
+    if (subQuestions.length === 0) {
+      // 无子题时，只要视频看完就算通过
       return watchedRatio >= 0.95 ? 1 : 0
     }
-    const allCorrect = sub-questions.every((q: any) => {
+    const allCorrect = subQuestions.every((q: any) => {
       const cid = Number(q.cid) || 0
       return cid > 0 && subRecords[cid]?.correct === true
     })
     return (allCorrect && watchedRatio >= 0.95) ? 1 : 0
   }
   if (type === 'evaluation') {
-    // Evaluation question: record[0] stores { progress: 0~1, passed: bool, messages: [...] }
+    // 评价题：record[0] 存储 { progress: 0~1, passed: bool, messages: [...] }
     const rec = Array.isArray(record) && record.length > 0 ? (record[0] || {}) : {}
     return Math.max(0, Math.min(1, Number(rec.progress) || 0))
   }
@@ -173,8 +173,8 @@ export function computeCorrectRate(question: any): number {
 }
 
 /**
- * Submit question answer to backend (only handles API call, record is recorded in real-time by recordAnswer)
- * On success, increment userCard refresh trigger to update sidebar points/experience immediately
+ * 提交题目答案到后端（只负责 API 调用，record 由 recordAnswer 实时记录）
+ * 成功后自增 userCard 刷新触发器，让侧栏的积分/经验立即更新
  */
 export async function submitQuestion(params: {
   questionId: number
@@ -185,7 +185,7 @@ export async function submitQuestion(params: {
   chapterId?: number
   point?: number
 }) {
-  // When questionId is 0 (sub-question in composite), skip API call
+  // questionId 为 0 时（大题中的子题），跳过 API 调用
   if (!params.questionId) return
   try {
     await cRequest('/api/questions/submit', {
@@ -200,15 +200,15 @@ export async function submitQuestion(params: {
         point: params.point,
       },
     })
-    // Notify userCard to refresh (question submission increases course/chapter points and experience)
+    // 通知 userCard 刷新（题目提交会增加课程/章节积分与经验）
     useUserCard().refresh()
   } catch {
-    // API not yet implemented, silently ignored
+    // 接口暂未实现，静默忽略
   }
 }
 
 /**
- * Determine if content is Tiptap rich text JSON (object with type + content fields)
+ * 判断内容是否为 Tiptap 富文本 JSON（有 type + content 字段的对象）
  */
 export function isRichDoc(content: any): boolean {
   return content && typeof content === 'object' && !Array.isArray(content) && !!content.type

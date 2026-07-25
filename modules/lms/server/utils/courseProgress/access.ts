@@ -1,8 +1,8 @@
 /**
- * Learning progress: chapter accessibility calculation
+ * 学习进度：章节可访问性计算
  *
- * Teachers/admins: all chapters are accessible
- * Regular users: isOpen=true or user's class classChapters.open=true
+ * 教师/管理员：所有章节都可访问
+ * 普通用户：isOpen=true 或用户班级 classChapters.open=true
  */
 import { db, schema } from '@nuxthub/db'
 import { eq, and, inArray } from 'drizzle-orm'
@@ -10,7 +10,7 @@ import { eq, and, inArray } from 'drizzle-orm'
 type ChapterLite = { id: number; isOpen: boolean }
 
 /**
- * Calculate the set of course chapters accessible to the specified user
+ * 计算指定用户对课程章节的可访问集合
  */
 export async function computeChapterAccessibility(
   user: { id: number; roles?: string[] },
@@ -27,12 +27,12 @@ export async function computeChapterAccessibility(
     return accessible
   }
 
-  // 1. Chapters with isOpen=true
+  // 1. isOpen=true 的章节
   for (const ch of chapters) {
     if (ch.isOpen) accessible.add(ch.id)
   }
 
-  // 2. Chapters opened by the user's class
+  // 2. 用户班级 open 的章节
   const userClassRows = await db
     .select({ classId: schema.userClasses.classId })
     .from(schema.userClasses)

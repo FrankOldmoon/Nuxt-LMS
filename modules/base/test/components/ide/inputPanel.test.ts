@@ -1,8 +1,8 @@
 /**
- * IdeInputPanel component tests
+ * IdeInputPanel 组件测试
  * @see modules/base/components/ide/inputPanel.vue
  *
- * Input panel: textarea for users to input stdin
+ * 输入面板：textarea 供用户输入 stdin
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'

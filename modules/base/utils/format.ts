@@ -1,20 +1,20 @@
 /**
- * Formatting utility functions
+ * 格式化工具函数
  */
 
 /**
- * Convert time string returned by database to local Date
- * Postgres timestamp (without timezone) returns ISO string with Z suffix which would be mistakenly treated as UTC,
- * here we remove the Z suffix so it is parsed as local timezone
+ * 将数据库返回的时间字符串转为本地 Date
+ * Postgres timestamp（不带时区）返回的 ISO 字符串带 Z 后缀会被误当成 UTC，
+ * 这里去掉 Z 后缀使其按本地时区解析
  */
 function parseLocalTime(time?: string | null): Date | null {
   if (!time) return null
-  // Remove trailing Z (UTC marker) so new Date parses as local timezone
+  // 去掉末尾的 Z（UTC 标记），让 new Date 按本地时区解析
   const normalized = time.endsWith('Z') ? time.slice(0, -1) : time
   return new Date(normalized)
 }
 
-/** Format time as a local readable string (follows user locale) */
+/** 格式化时间为本地可读字符串（跟随用户 locale） */
 export function formatTime(time?: string | null): string {
   const d = parseLocalTime(time)
   if (!d || isNaN(d.getTime())) return ''
@@ -27,7 +27,7 @@ export function formatTime(time?: string | null): string {
   })
 }
 
-/** Format date as local short date */
+/** 格式化日期为本地短日期 */
 export function formatDate(time?: string | null): string {
   const d = parseLocalTime(time)
   if (!d || isNaN(d.getTime())) return ''

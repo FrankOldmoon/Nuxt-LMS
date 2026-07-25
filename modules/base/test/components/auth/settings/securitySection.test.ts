@@ -1,5 +1,5 @@
 /**
- * auth/settings/securitySection.vue component tests
+ * auth/settings/securitySection.vue 组件测试
  * @see modules/base/components/auth/settings/securitySection.vue
  */
 import {

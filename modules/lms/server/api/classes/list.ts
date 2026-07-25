@@ -4,7 +4,7 @@ import { eq, and, isNull } from 'drizzle-orm'
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
 
-  // admin returns all classes
+  // admin 返回所有班级
   if (user.roles.includes('admin')) {
     const data = await db
       .select({ id: schema.classes.id, name: schema.classes.name, code: schema.classes.code })
@@ -14,7 +14,7 @@ export default eventHandler(async (event) => {
     return cResp(data)
   }
 
-  // Non-admin only returns classes where user_classes.is_teacher=true
+  // 非 admin 只返回 user_classes 中 is_teacher=true 的班级
   const data = await db
     .select({ id: schema.classes.id, name: schema.classes.name, code: schema.classes.code })
     .from(schema.userClasses)

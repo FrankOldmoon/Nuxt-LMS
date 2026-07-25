@@ -24,10 +24,10 @@
         </div>
 
         <div v-show="!loading" class="space-y-4">
-          <!-- Course content editing -->
+          <!-- 课程内容编辑 -->
           <USeparator :label="$t('courseEditor.content')" class="my-4" />
           <richEditor v-model="contentJson" :lock-id="lockId" />
-          <!-- Basic info -->
+          <!-- 基础信息 -->
           <UFormField :label="$t('courseEditor.name')" class="w-full">
             <UInput v-model="form.name" :placeholder="$t('courseEditor.namePlaceholder')" class="w-full" />
           </UFormField>
@@ -38,23 +38,23 @@
             <UInputTags v-model="form.tags" :placeholder="$t('courseEditor.tagsPlaceholder')" class="w-full" />
           </UFormField>
 
-          <!-- Config editor -->
-          <CourseEditorConfigForm ref="config formRef" />
+          <!-- config 编辑 -->
+          <CourseEditorConfigForm ref="configFormRef" />
 
-          <!-- Teacher/editor management (admin only) -->
+          <!-- 教师/编辑者管理（仅管理员可见） -->
           <CourseEditorMembersManager
             v-if="hasRole('admin')"
             ref="membersRef"
             :course-id="props.courseId"
           />
 
-          <!-- Course-specific product management (visible to teachers/admins) -->
+          <!-- 课程专属商品管理（教师/管理员可见） -->
           <LmsGoodsEditor v-if="canEdit" :course-id="props.courseId" />
 
-          <!-- Global product management (visible to admins only) -->
+          <!-- 全局商品管理（仅管理员可见） -->
           <LmsGoodsEditor v-if="hasRole('admin')" :course-id="0" />
 
-          <!-- Bottom buttons -->
+          <!-- 底部按钮 -->
           <div class="flex justify-end gap-2 pt-4">
             <UButton :label="$t('common.cancel')" color="neutral" variant="ghost" @click="closeModal" />
             <UButton :label="$t('common.save')" color="primary" :loading="saving" @click="save" />
@@ -84,7 +84,7 @@ const {
   lockId,
   form,
   contentJson,
-  config formRef,
+  configFormRef,
   membersRef,
   openModal,
   closeModal,

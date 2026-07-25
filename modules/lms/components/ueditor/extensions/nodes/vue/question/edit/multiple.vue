@@ -6,22 +6,22 @@
     </div>
     <div class="space-y-2">
       <div v-for="(opt, idx) in form.options" :key="idx" class="flex items-start gap-2">
-        <!-- Checkbox SelectCorrectAnswer -->
+        <!-- Checkbox 选择正确答案 -->
         <UCheckbox
           :model-value="isAnswer(idx)"
           class="mt-2 shrink-0"
           @change="toggleAnswer(idx)"
         />
-        <!-- optionitemsContent -->
+        <!-- 选项内容 -->
         <div class="flex-1">
           <richEditor v-model="form.options[idx]" />
         </div>
-        <!-- Delete -->
+        <!-- 删除 -->
         <UButton variant="ghost" size="2xs" color="red" icon="i-heroicons-x-mark" class="mt-2 shrink-0" @click="removeOption(idx)" />
       </div>
     </div>
     <div v-if="!form.options.length" class="text-xs text-gray-400 py-2 text-center">
-      {{ $t('question.no options') }}
+      {{ $t('question.noOptions') }}
     </div>
   </div>
 </template>
@@ -31,7 +31,7 @@ const props = defineProps({
   form: { type: Object, required: true },
 })
 
-// Default 4 itemsEmptyoptionitems
+// 默认 4 个空选项
 if (!props.form.options?.length) {
   props.form.options = ['', '', '', '']
 }
@@ -48,7 +48,7 @@ function toggleAnswer(idx) {
   const pos = ans.indexOf(idx)
   if (pos > -1) ans.splice(pos, 1)
   else ans.push(idx)
-  // by selecteditemsIndexAscendingSort
+  // 按选项索引升序排序
   props.form.answer = ans.sort((a, b) => a - b)
 }
 

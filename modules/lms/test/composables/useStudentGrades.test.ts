@@ -1,12 +1,12 @@
 /**
- * useStudentGrades composable test
+ * useStudentGrades composable 测试
  * @see modules/lms/composables/useStudentGrades.ts
  *
- * Coverage:
- * - initial state: empty stats / empty score
- * - open=true triggers loadData: parallel requests for stats and grades
- * - when userId is not found in the grades array, score remains 0
- * - pending toggles during loading
+ * 覆盖：
+ * - 初始状态：空 stats / 空 score
+ * - open=true 触发 loadData：并行请求 stats 和 grades
+ * - 当 grades 数组中找不到 userId 时，score 保持 0
+ * - 加载过程中 pending 切换
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ref } from 'vue'

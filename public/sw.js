@@ -1,7 +1,7 @@
 /**
- * Self-unregistering Service Worker
- * Clears the sw.js registration left by old app versions
- * The browser auto-unregisters the Service Worker after loading this file and stops requesting /sw.js
+ * 自注销 Service Worker
+ * 用于清除旧版本应用残留的 sw.js 注册
+ * 浏览器加载此文件后会自动注销 Service Worker，之后不再请求 /sw.js
  */
 self.addEventListener('install', () => {
   self.skipWaiting()

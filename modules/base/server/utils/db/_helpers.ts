@@ -1,16 +1,16 @@
 import { schema } from "@nuxthub/db"
 
 /**
- * Validate that the table name is defined in schema, throw error if invalid
+ * 校验表名是否在 schema 中定义，无效则抛出错误
  */
 export function validateTable(tableName: string | undefined): string {
   if (!tableName || !(tableName in schema)) {
-    throw createError({ statusCode: 400, message: `Invalid table name: ${tableName}` })
+    throw createError({ statusCode: 400, message: `无效的表名: ${tableName}` })
   }
   return tableName
 }
 
-/** Get the definition of the specified table in schema (private helper, for internal use by db/ sub-files) */
+/** 获取 schema 中指定表的定义（私有 helper，供 db/ 子文件内部使用） */
 export function getTable(tableName: string) {
   return (schema as any)[tableName]
 }

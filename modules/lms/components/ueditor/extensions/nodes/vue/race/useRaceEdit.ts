@@ -27,13 +27,13 @@ export function useRaceEdit(props: RaceEditProps, emit: RaceEditEmit) {
         return ctxCourseId.value
     })
 
-    // provide tochild tree（replaceOld setEditableMeta temporarySettings/alsooriginal）
+    // provide 给子树（替代旧的 setEditableMeta 临时设置/还原）
     provideLmsCourseId(effectiveCourseId)
 
-    // judgeYesNo Modal mode（Has modelValue prop）
+    // 判断是否为 Modal 模式（有 modelValue prop）
     const isModal = computed(() => props.modelValue !== undefined)
 
-    // Modal mode open Status
+    // Modal 模式的 open 状态
     const open = computed({
         get: () => props.modelValue,
         set: (v: boolean) => emit('update:modelValue', v),
@@ -87,14 +87,14 @@ export function useRaceEdit(props: RaceEditProps, emit: RaceEditEmit) {
         saveMsg.value = ''
         try {
             if (props.raceId) {
-                // Existing race: update
+                // 已有竞赛：更新
                 await cRequest('/api/races/update', {
                     method: 'POST',
                     body: { id: props.raceId, course_id: effectiveCourseId.value, ...form.value },
                 })
                 emit('saved', { ...form.value, cid: props.raceId })
             } else {
-                // New race: add and get cid back
+                // 新竞赛：新增并拿回 cid
                 const result = await cRequest('/api/races/add', {
                     method: 'POST',
                     body: { course_id: effectiveCourseId.value, ...form.value },
@@ -102,9 +102,9 @@ export function useRaceEdit(props: RaceEditProps, emit: RaceEditEmit) {
                 emit('saved', { ...form.value, cid: result.cid })
             }
             saveOk.value = true
-            saveMsg.value = t('race.save success')
+            saveMsg.value = t('race.saveSuccess')
             originalData = JSON.parse(JSON.stringify(form.value))
-            // Modal mode: close modal
+            // Modal 模式：关闭弹窗
             if (isModal.value) {
                 open.value = false
             }
@@ -116,7 +116,7 @@ export function useRaceEdit(props: RaceEditProps, emit: RaceEditEmit) {
         }
     }
 
-    // ── JSON raw data editor (advanced) ──
+    // ── JSON 原始数据编辑器（高级） ──
     const showJsonEditor = ref(false)
     const jsonText = ref('')
     const jsonError = ref('')
@@ -165,7 +165,7 @@ export function useRaceEdit(props: RaceEditProps, emit: RaceEditEmit) {
         }
     })
 
-    // Modal mode: initialize form when modal opens
+    // Modal 模式：弹窗打开时初始化 form
     watch(open, (val) => {
         if (val) initForm()
         else {
@@ -174,7 +174,7 @@ export function useRaceEdit(props: RaceEditProps, emit: RaceEditEmit) {
         }
     }, { immediate: true })
 
-    // Inline mode: initialize form when component loads
+    // 内联模式：组件加载时初始化 form
     watch(() => props.race, () => {
         if (!isModal.value) initForm()
     }, { immediate: true })

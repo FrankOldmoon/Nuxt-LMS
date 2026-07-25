@@ -6,10 +6,10 @@ const ADMIN = 'admin'
 const TEACHER = 'teacher'
 
 /**
- * Get user's drive quota limit (bytes).
- * - admin unlimited, returns Infinity
+ * 获取用户网盘配额上限（字节）。
+ * - admin 不限，返回 Infinity
  * - teacher: driveQuota * teacherDriveMultiplier
- * - other: driveQuota
+ * - 其他: driveQuota
  */
 export async function getDriveQuota(user: { id: number; roles: string[] }): Promise<number> {
   if (user.roles.includes(ADMIN)) return Infinity
@@ -22,7 +22,7 @@ export async function getDriveQuota(user: { id: number; roles: string[] }): Prom
 }
 
 /**
- * Get user's used drive space (sum of size of all non-deleted files)
+ * 获取用户已用网盘空间（所有未删除文件 size 之和）
  */
 export async function getDriveUsed(userId: number): Promise<number> {
   const rows = await db
@@ -33,8 +33,8 @@ export async function getDriveUsed(userId: number): Promise<number> {
 }
 
 /**
- * Check whether uploading a file of the specified size would exceed the quota.
- * Returns { ok, quota, used, after }.
+ * 检查上传指定大小的文件是否会超出配额。
+ * 返回 { ok, quota, used, after }。
  */
 export async function checkDriveSpace(
   user: { id: number; roles: string[] },

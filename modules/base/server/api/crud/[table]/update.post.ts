@@ -1,5 +1,5 @@
 export default eventHandler(async (event) => {
-  // Only admin can update
+  // 仅管理员可更新
   await requireAdmin(event)
 
   const table = validateTable(getRouterParam(event, 'table')!)
@@ -7,14 +7,14 @@ export default eventHandler(async (event) => {
   const { id, ...setData } = body
 
   if (!id) {
-    return cResp(null, 'Missing id parameter', false)
+    return cResp(null, '缺少 id 参数', false)
   }
 
   try {
     const result = await updateTable(table, Number(id), setData)
     return cResp(result)
   } catch (error: any) {
-    console.error('Update failed:', error)
-    return cResp(null, error.message || 'Update failed', false)
+    console.error('更新失败:', error)
+    return cResp(null, error.message || '更新失败', false)
   }
 })

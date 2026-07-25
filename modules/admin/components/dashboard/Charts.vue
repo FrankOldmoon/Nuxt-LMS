@@ -1,6 +1,6 @@
 <template>
   <div class="grid lg:grid-cols-2 gap-4">
-    <!-- User growth (line) -->
+    <!-- 用户增长（折线） -->
     <div class="p-3 rounded-lg border border-default bg-default">
       <ClientOnly>
         <Chart :option="growthOption" :height="320" />
@@ -10,7 +10,7 @@
       </ClientOnly>
     </div>
 
-    <!-- Role distribution (pie) -->
+    <!-- 角色分布（饼） -->
     <div class="p-3 rounded-lg border border-default bg-default">
       <ClientOnly>
         <Chart :option="roleOption" :height="320" />
@@ -20,7 +20,7 @@
       </ClientOnly>
     </div>
 
-    <!-- Content distribution (bar) -->
+    <!-- 内容分布（柱） -->
     <div class="p-3 rounded-lg border border-default bg-default lg:col-span-2">
       <ClientOnly>
         <Chart :option="contentOption" :height="320" />
@@ -43,7 +43,7 @@ const props = defineProps<{
   } | null
 }>()
 
-// User growth (line)
+// 用户增长（折线）
 const growthOption = computed(() => ({
   title: { text: t('admin.stats.userGrowth'), left: 'center' },
   tooltip: { trigger: 'axis' },
@@ -64,7 +64,7 @@ const growthOption = computed(() => ({
   ],
 }))
 
-// Role distribution (pie)
+// 角色分布（饼）
 const roleOption = computed(() => ({
   title: { text: t('admin.stats.roleDistribution'), left: 'center' },
   tooltip: { trigger: 'item' },
@@ -77,7 +77,7 @@ const roleOption = computed(() => ({
   ],
 }))
 
-// Content distribution (bar)
+// 内容分布（柱）
 const contentOption = computed(() => {
   const c = props.stats?.counts ?? {}
   const keys = ['courses', 'chapters', 'questions', 'homeworks', 'quizzes', 'races', 'comments']

@@ -1,19 +1,19 @@
 import { inject, provide, type InjectionKey, type Ref } from 'vue'
 
 /**
- * Single student learning data composable (student/teacher side share the same context shape)
+ * 单个学生的学习数据 composable（学生端 / 教师端共用同一上下文形状）
  *
- * Compatible with useCourseGrades / useGradesContext:
- * - useStudentGradesContext() exposes statCards / radarOption
- * - Keeps the same shape as useGradesContext() in studentStats.vue
- *   → Allows studentStats.vue to be reused under different provide sources
+ * 与 useCourseGrades / useGradesContext 兼容：
+ * - useStudentGradesContext() 暴露 statCards / radarOption
+ * - 与 studentStats.vue 内 useGradesContext() 的形状保持一致
+ *   → 让 studentStats.vue 能在不同 provide 源下被复用
  *
- * Data sources:
- * - /api/courses/grades?courseId&classId   → The student's scores for each item (for radar chart)
- * - /api/courses/stats?courseId&userId    → The student's behavior statistics (for stat cards)
+ * 数据源：
+ * - /api/courses/grades?courseId&classId   → 该学生各项分数（用于雷达图）
+ * - /api/courses/stats?courseId&userId    → 该学生行为统计（用于统计卡片）
  *
- * Authorization:
- * - /api/courses/stats checks course teacher/admin permissions for userId that is not the current user
+ * 鉴权：
+ * - /api/courses/stats 会对非自己的 userId 校验课程教师/管理员权限
  */
 const StudentGradesKey = Symbol('StudentGrades') as InjectionKey<ReturnType<typeof useStudentGrades>>
 
@@ -28,9 +28,9 @@ export function useStudentGradesContext() {
 }
 
 /**
- * Single student learning data context
- * @param props Course id + student userId
- * @param isOpen Modal open state (for lazy loading)
+ * 单个学生的学习数据上下文
+ * @param props 课程 id + 学生 userId
+ * @param isOpen 弹窗打开状态（用于懒加载）
  */
 export function useStudentGrades(
   props: { courseId: number | string; userId: number | string; classId?: number | string },
@@ -40,7 +40,7 @@ export function useStudentGrades(
 
   const pending = ref(false)
   const stats = ref({ questionCount: 0, homeworkCount: 0, quizCount: 0, raceCount: 0, commentCount: 0 })
-  // The student's scores for this course (filtered by userId)
+  // 该学生该课程的成绩（按 userId 过滤）
   const score = ref({
     questionScore: 0,
     homeworkScore: 0,
@@ -59,7 +59,7 @@ export function useStudentGrades(
     { label: t('coursePanel.comment'), value: stats.value.commentCount },
   ])
 
-  // Radar chart: same shape as useGradesContext().radarOption in studentStats.vue
+  // 雷达图：与 studentStats.vue 中 useGradesContext().radarOption 形状一致
   const radarOption = computed(() => {
     const dims = [
       { name: t('coursePanel.questionScore'), value: Number(score.value.questionScore) || 0 },
@@ -97,7 +97,7 @@ export function useStudentGrades(
     if (!courseId || !userId) return
     pending.value = true
     try {
-      // Load in parallel: behavior stats + grades (grades are provided by /api/courses/grades, including each item score)
+      // 并行加载：行为统计 + 成绩（成绩由 /api/courses/grades 提供，含各项分）
       const statsUrl = `/api/courses/stats?courseId=${courseId}&userId=${userId}`
       const gradesUrl = classId
         ? `/api/courses/grades?courseId=${courseId}&classId=${classId}`
@@ -107,7 +107,7 @@ export function useStudentGrades(
         cRequest(gradesUrl).catch(() => null),
       ])
       if (statsResp) stats.value = { ...stats.value, ...statsResp }
-      // The grades API may return an array or { grades, gradeCriteria }
+      // grades 接口可能返回数组或 { grades, gradeCriteria }
       const gradesArr = Array.isArray(gradesResp) ? gradesResp : (gradesResp?.grades ?? [])
       const mine = gradesArr.find((g: any) => Number(g.userId) === userId)
       if (mine) {
@@ -122,7 +122,7 @@ export function useStudentGrades(
         }
       }
     } catch (e) {
-      console.error('Failed to load student learning data', e)
+      console.error('加载学生学习数据失败', e)
     } finally {
       pending.value = false
     }

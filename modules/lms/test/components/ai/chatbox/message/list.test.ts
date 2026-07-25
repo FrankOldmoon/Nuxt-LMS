@@ -1,9 +1,9 @@
 /**
- * ai/chatbox/message/list.vue component test
+ * ai/chatbox/message/list.vue 组件测试
  * @see modules/lms/components/ai/chatbox/message/list.vue
  *
- * Message list: iterates messages to render Item, shows "thinking" placeholder when loading.
- * Depends on useChatboxContext() to inject context, stubs the composable in tests.
+ * 消息列表：遍历 messages 渲染 Item，loading 时显示"思考中"占位。
+ * 依赖 useChatboxContext() 注入上下文，测试中 stub 该 composable。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -45,7 +45,7 @@ describe('ai/chatbox/message/list.vue', () => {
     const wrapper = mount(MsgList, { global: _globalConfig })
     expect(wrapper.exists()).toBe(true)
     expect(wrapper.findAll('.msg-item').length).toBe(0)
-    // loading=false does not show thinking placeholder
+    // loading=false 不显示思考中占位
     expect(wrapper.text()).not.toContain('ueditor.aichatThinking')
   })
 

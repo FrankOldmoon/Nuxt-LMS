@@ -1,5 +1,5 @@
 /**
- * composables/useIde tests
+ * composables/useIde 测试
  * @see modules/base/composables/useIde.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -75,7 +75,7 @@ describe('composables/useIde - code 变化触发 onUpdate', () => {
     const calls: string[] = []
     const { code } = useIde(() => undefined, () => 'python', (v) => calls.push(v))
     code.value = 'print(99)'
-    await nextTick() // watch(code) callback executes asynchronously
+    await nextTick() // watch(code) 回调异步执行
     expect(calls).toContain('print(99)')
   })
 })

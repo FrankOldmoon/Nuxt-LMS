@@ -2,9 +2,9 @@ import { db, schema } from '@nuxthub/db'
 import { eq, and, count, sql } from 'drizzle-orm'
 import type { UserMetrics } from './types'
 
-/** Collect all metrics for a user under a course */
+/** 收集用户在某课程下的全部指标 */
 export async function collectUserMetrics(userId: number, courseId: number): Promise<UserMetrics> {
-  // userCourses base scores
+  // userCourses 基础分数
   const uc = await db
     .select({
       score: schema.userCourses.score,
@@ -21,28 +21,28 @@ export async function collectUserMetrics(userId: number, courseId: number): Prom
 
   const row: any = uc[0] || {}
   const exp = Number(row.exp) || 0
-  // Level formula: 50*(l-1)*l <= exp -> l = floor((1 + sqrt(1 + 8*exp/100)) / 2)
+  // 等级公式：50*(l-1)*l <= exp → l = floor((1 + sqrt(1 + 8*exp/100)) / 2)
   const level = Math.max(1, Math.floor((1 + Math.sqrt(1 + (8 * exp) / 100)) / 2))
 
-  // Number of questions answered (userQuestions by userId + courseId)
+  // 做题数（userQuestions 按 userId + courseId）
   const qCount = await db
     .select({ c: count() })
     .from(schema.userQuestions)
     .where(and(eq(schema.userQuestions.userId, userId), eq(schema.userQuestions.courseId, courseId)))
 
-  // Number of homework submissions
+  // 作业提交数
   const hCount = await db
     .select({ c: count() })
     .from(schema.userHomeworks)
     .where(and(eq(schema.userHomeworks.userId, userId), eq(schema.userHomeworks.courseId, courseId)))
 
-  // Number of comments
+  // 评论数
   const cCount = await db
     .select({ c: count() })
     .from(schema.userComments)
     .where(and(eq(schema.userComments.userId, userId), eq(schema.userComments.courseId, courseId)))
 
-  // Number of chapters passed: first get all chapter ids of the course, then count userChapters.isPass
+  // 章节通过数：先查该课程所有章节 id，再统计 userChapters.isPass
   const chapterIds = await db
     .select({ id: schema.chapters.id })
     .from(schema.chapters)

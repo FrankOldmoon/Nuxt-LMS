@@ -1,5 +1,5 @@
 /**
- * useWebSocket composable test
+ * useWebSocket composable 测试
  * @see modules/lms/composables/useWebSocket.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -12,7 +12,7 @@ import {
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
-  // useWebSocket needs complete useWsConnection (including joinRoom/leaveRoom etc.)
+  // useWebSocket 需要完整的 useWsConnection（含 joinRoom/leaveRoom 等）
   ;(globalThis as any).useWsConnection = () => ({
     ws: ref(null),
     wsConnected: ref(false),

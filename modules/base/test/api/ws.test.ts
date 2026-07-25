@@ -1,15 +1,15 @@
 /**
- * Base WebSocket endpoint tests
+ * Base WebSocket 端点测试
  * @see modules/base/server/api/ws.ts
  *
- * Strategy: defineWebSocketHandler stub passes through config object (nuxt-stubs already defined),
- * directly call handler.open/message/close to verify state and send calls.
+ * 策略：defineWebSocketHandler 桩透传配置对象（nuxt-stubs 已定义），
+ * 直接调用 handler.open/message/close 验证状态与 send 调用。
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 
 import { makeMockPeer } from '../../../../test/setup/db-helpers'
 import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'
-// base ws.ts explicitly imports real ws/state + ws/registry, tests also use real modules to verify state
+// base ws.ts 显式 import 真实 ws/state + ws/registry，测试也用真实模块验证状态
 import { rooms, userPeers as realUserPeers, joinRoom } from '../../server/utils/ws/state'
 import { registerWsServerHandler, registerWsServerCleanup } from '../../server/utils/ws/registry'
 
@@ -19,12 +19,12 @@ beforeEach(() => {
   rooms.clear()
 })
 
-/** Construct a mock WebSocket message */
+/** 构造一个 mock WebSocket 消息 */
 function mockMessage(obj: any) {
   return { text: () => JSON.stringify(obj) } as any
 }
 
-/** Extract sent JSON messages from peer.send mock */
+/** 从 peer.send mock 中提取已发送的 JSON 消息 */
 function sendsOf(peer: any): any[] {
   return peer.send.mock.calls.map((c: any[]) => JSON.parse(c[0]))
 }
@@ -40,24 +40,24 @@ describe('API: base/ws', () => {
   it('open 时 trackPeer 注册活跃连接', () => {
     const peer = makeMockPeer()
     handler.open(peer)
-    // trackPeer is a no-op stub (base ws/state's allPeers is module-private),
-    // but open should not throw
+    // trackPeer 是 no-op 桩（base ws/state 的 allPeers 是模块私有），
+    // 但 open 不应抛错
     expect(peer.send).not.toHaveBeenCalled()
   })
 
   it('close 时清理用户级连接和房间', () => {
     const peer = makeMockPeer({ userId: 100 })
-    // Simulate state after registerUser
+    // 模拟 registerUser 后的状态
     realUserPeers.set(100, new Set([peer]))
     peer._userId = 100
-    // Simulate join room
+    // 模拟 join room
     joinRoom('room-1', peer)
     expect(rooms.get('room-1')?.has(peer)).toBe(true)
 
     handler.close(peer)
-    // User connection cleaned up
+    // 用户连接被清理
     expect(realUserPeers.get(100)?.has(peer) ?? false).toBe(false)
-    // Room cleaned up
+    // 房间被清理
     expect(rooms.get('room-1')?.has(peer) ?? false).toBe(false)
   })
 
@@ -123,12 +123,12 @@ describe('API: base/ws', () => {
     expect(sendsOf(peer)).toHaveLength(0)
   })
 
-  // ====================== Delegate handler ======================
+  // ====================== 委托 handler ======================
 
   it('未知 type 委托给 runWsServerHandlers（无注册 handler 时不报错）', () => {
     const peer = makeMockPeer()
     handler.message(peer, mockMessage({ type: 'custom-action', data: 'x' }))
-    // No registered handler → runWsServerHandlers returns false, no throw
+    // 无注册 handler → runWsServerHandlers 返回 false，不抛错
     expect(sendsOf(peer)).toHaveLength(0)
   })
 
@@ -161,7 +161,7 @@ describe('API: base/ws', () => {
     expect(calls).toEqual(['recovered'])
   })
 
-  // ====================== close cleanup delegation ======================
+  // ====================== close 清理委托 ======================
 
   it('close 时调用注册的 cleanup 函数', () => {
     const cleanedPeers: any[] = []
@@ -171,7 +171,7 @@ describe('API: base/ws', () => {
     expect(cleanedPeers).toContain(peer)
   })
 
-  // ====================== Error handling ======================
+  // ====================== 错误处理 ======================
 
   it('invalid JSON 推送 error 消息', () => {
     const peer = makeMockPeer()

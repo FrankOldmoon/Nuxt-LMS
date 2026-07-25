@@ -22,7 +22,7 @@ meta.icon = 'i-lucide-steps'
 meta.hasSettings = true
 meta.title = t('ueditor.stepper')
 
-const default config = () => ({
+const defaultConfig = () => ({
     orientation: 'horizontal',
     steps: [
         { title: '', description: '' },
@@ -35,7 +35,7 @@ const parseConfig = () => {
         const raw = props.node.attrs.content
         if (raw) return JSON.parse(raw)
     } catch (_) { /* noop */ }
-    return default config()
+    return defaultConfig()
 }
 
 const config = ref(parseConfig())

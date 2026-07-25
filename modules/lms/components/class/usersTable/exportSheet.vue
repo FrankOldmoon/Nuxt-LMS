@@ -39,17 +39,17 @@ function close() {
     open.value = false
 }
 
-// tryGetScoreUpDowntext（useincalculate grade/total etc.derivecolumns）
-// nonScoreModalUpDowntextDowninject null，grade/total columnswillkeepEmpty
+// 尝试获取成绩上下文（用于计算 grade/total 等派生列）
+// 非成绩弹窗上下文下注入为 null，grade/total 列将留空
 let computeGrade: ((row: any) => { letter: string; finalScore: number }) | null = null
 try {
     const gradesCtx = useGradesContext()
     computeGrade = gradesCtx.computeGrade
 } catch {
-    // noScoreModalUpDowntextMiddle
+    // 不在成绩弹窗上下文中
 }
 
-// BuildExportcolumns：standardcolumns（respectHeavy hide flag）+ extraOutsidecolumns
+// 构建导出列：标准列（尊重 hide 标志）+ 额外列
 const exportColumns = computed(() => {
     const cols: { key: string, label: string }[] = []
     if (!hideNumber()) {
@@ -69,7 +69,7 @@ const exportColumns = computed(() => {
 
 const headers = computed(() => exportColumns.value.map(c => c.label))
 
-// GetcellValue：grade/total calculatecolumns，itsrest directly takeField
+// 获取单元格值：grade/total 为计算列，其余直接取字段
 function getCellValue(s: any, key: string): any {
     if (key === 'grade' && computeGrade) {
         return computeGrade(s).letter
@@ -80,7 +80,7 @@ function getCellValue(s: any, key: string): any {
     return s[key]
 }
 
-// Build initialData：eachlinesoneitems { colIdx: { v: value } } Object，Line Numberfrom 1 Start（0 YesTable Header）
+// 构建 initialData：每行一个 { colIdx: { v: value } } 对象，行号从 1 开始（0 是表头）
 const initialData = computed(() => {
     const data: Record<number, Record<number, { v: any }>> = {}
     students.value.forEach((s: any, rIdx) => {
@@ -98,7 +98,7 @@ const initialData = computed(() => {
     return data
 })
 
-// ========== SheetJS (xlsx) CDN Load ==========
+// ========== SheetJS (xlsx) CDN 加载 ==========
 function loadXlsxScript(url: string): Promise<boolean> {
     return new Promise((resolve) => {
         if ((window as any).XLSX) { resolve(true); return }
@@ -127,12 +127,12 @@ async function downloadXlsx() {
         const ok = await loadXlsxScript(XLSX_CDN)
         const XLSX = (window as any).XLSX
         if (!ok || !XLSX) {
-            // CDN Failed to load，fallbackto CSV
+            // CDN 加载失败，回退到 CSV
             downloadCsv()
             return
         }
 
-        // priorityfrom Sheet ReadData（UsercancanalreadyEdit），ElseuseoriginalStart students Data
+        // 优先从 Sheet 读取数据（用户可能已编辑），否则用原始 students 数据
         let rowsData: any[][] = []
         if (sheetRef.value) {
             const raw = sheetRef.value.getRows() as any[][]
@@ -147,7 +147,7 @@ async function downloadXlsx() {
             )
         }
 
-        // Build AOA（ArrayArray）andExport xlsx
+        // 构建 AOA（数组数组）并导出 xlsx
         const aoa = [headers.value, ...rowsData]
         const ws = XLSX.utils.aoa_to_sheet(aoa)
         const wb = XLSX.utils.book_new()

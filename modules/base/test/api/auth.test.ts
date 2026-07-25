@@ -1,8 +1,8 @@
 /**
- * Auth API endpoint tests
+ * Auth API 端点测试
  * @see modules/base/server/api/auth/*.ts
  *
- * Call handler functions directly by mocking @nuxthub/db
+ * 通过 mock @nuxthub/db 直接调用 handler 函数
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
@@ -52,7 +52,7 @@ beforeEach(() => {
   clearMockCookies()
 })
 
-/** Construct a mock H3 event object */
+/** 模拟一个 H3 event 对象 */
 function makeEvent(opts: { cookies?: Record<string, any>; body?: any; query?: Record<string, any> } = {}) {
   return {
     cookies: opts.cookies || {},
@@ -61,7 +61,7 @@ function makeEvent(opts: { cookies?: Record<string, any>; body?: any; query?: Re
   } as any
 }
 
-/** Reset db mock to chainable calls */
+/** 重置 db mock 为链式调用 */
 function resetDbChain() {
   _mockDb.select = vi.fn().mockReturnThis()
   _mockDb.selectDistinct = vi.fn().mockReturnThis()
@@ -87,10 +87,10 @@ describe('API: auth/me.get', () => {
 
   it('有效 token 返回用户/角色/权限', async () => {
     resetDbChain()
-    // 1. token query (select)
-    // 2. user query (select)
-    // 3. role query (select + innerJoin once)
-    // 4. permission query (selectDistinct + innerJoin twice)
+    // 1. token 查询 (select)
+    // 2. user 查询 (select)
+    // 3. role 查询 (select + innerJoin once)
+    // 4. permission 查询 (selectDistinct + innerJoin twice)
     const roleRows: any[] = [{ code: 'admin', name: 'Admin' }]
     const permRows: any[] = [{ code: 'read', name: 'Read' }]
     let callIndex = 0
@@ -411,7 +411,7 @@ describe('API: auth/reset-password.post', () => {
   })
 
   it('token 已过期返回失败并软删除 token', async () => {
-    const expired = new Date(Date.now() - 60 * 60 * 1000) // 1 hour ago
+    const expired = new Date(Date.now() - 60 * 60 * 1000) // 1 小时前
     _mockDb.limit = vi.fn().mockResolvedValue([{ id: 1, userId: 1, createdAt: expired }])
     const handler = (await import('../../server/api/auth/reset-password.post')).default
     const result = await handler(makeEvent({ body: { token: 'reset_expired', newPassword: 'newpass123' } }))
@@ -421,7 +421,7 @@ describe('API: auth/reset-password.post', () => {
   })
 
   it('token 有效则重置密码成功', async () => {
-    const recent = new Date() // just created
+    const recent = new Date() // 刚创建
     _mockDb.limit = vi.fn().mockResolvedValue([{ id: 1, userId: 1, createdAt: recent }])
     const handler = (await import('../../server/api/auth/reset-password.post')).default
     const result = await handler(makeEvent({ body: { token: 'reset_valid', newPassword: 'newpass123' } }))
@@ -432,10 +432,10 @@ describe('API: auth/reset-password.post', () => {
 })
 
 describe('API: auth/impersonate.post', () => {
-  /** impersonate has 3 db queries: token / roles / target user
-   *  token and target user go through select().from().where().limit()
-   *  roles go through select().from().innerJoin().where() (no limit)
-   *  Use callIndex to distinguish each select call */
+  /** impersonate 有 3 条 db 查询：token / roles / target user
+   *  token 与 target user 走 select().from().where().limit()
+   *  roles 走 select().from().innerJoin().where()（无 limit）
+   *  用 callIndex 区分每次 select 调用 */
   function setupImpersonateDb(opts: { tokenRows?: any[]; roleRows?: any[]; targetRows?: any[] }) {
     let callIndex = 0
     const tokenRows = opts.tokenRows ?? [{ userId: 1 }]
@@ -500,7 +500,7 @@ describe('API: auth/impersonate.post', () => {
     expect(result.data.userId).toBe(2)
     expect(result.data.impersonatedBy).toBe(1)
     expect(event.cookies.auth_token).toMatch(/^[0-9a-f]{64}$/)
-    expect(event.cookies.original_token).toBe('valid') // save original token
+    expect(event.cookies.original_token).toBe('valid') // 保存原始 token
     expect(_mockDb.insert).toHaveBeenCalled()
   })
 
@@ -510,7 +510,7 @@ describe('API: auth/impersonate.post', () => {
     const event = makeEvent({ cookies: { auth_token: 'current', original_token: 'original' }, body: { userId: 3 } })
     const result = await handler(event)
     expect(result.success).toBe(true)
-    expect(event.cookies.original_token).toBe('original') // do not overwrite
+    expect(event.cookies.original_token).toBe('original') // 不覆盖
     expect(event.cookies.auth_token).toMatch(/^[0-9a-f]{64}$/)
   })
 })
@@ -541,7 +541,7 @@ describe('API: auth/me.put', () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
     const handler = (await import('../../server/api/auth/me.put')).default
     const result = await handler(makeEvent({ body: { password: 'hack', id: 999 } }))
-    expect(result.success).toBe(false) // Only non-whitelist fields → no updatable fields
+    expect(result.success).toBe(false) // 只有非白名单字段 → 没有可更新字段
   })
 })
 

@@ -1,10 +1,10 @@
 /**
- * Manager import/export modal orchestration
+ * Manager 导入/导出弹窗编排
  *
- * Manages importOpen / exportOpen / exportRows / exporting state,
- * encapsulates onImport (fetch + toast) and openExport (fetch then open modal).
+ * 管理 importOpen / exportOpen / exportRows / exporting 状态，
+ * 封装 onImport（拉取 + toast）与 openExport（拉取后开弹窗）。
  *
- * Caller passes importRows / fetchExportRows returned by useAdminTable.
+ * 调用方传入 useAdminTable 返回的 importRows / fetchExportRows。
  */
 export function useManagerIo(
   importRows: (rows: Record<string, any>[]) => Promise<{ inserted: number; errors: any[] }>,

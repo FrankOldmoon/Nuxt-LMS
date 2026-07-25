@@ -1,9 +1,9 @@
 /**
- * ai/chatbox/message/item.vue component test
+ * ai/chatbox/message/item.vue 组件测试
  * @see modules/lms/components/ai/chatbox/message/item.vue
  *
- * Single message: avatar + thinking process collapse + message content + read aloud button.
- * Depends on useChatboxContext() to inject context, stubs the composable in tests.
+ * 单条消息：头像 + 思考过程折叠 + 消息内容 + 朗读按钮。
+ * 依赖 useChatboxContext() 注入上下文，测试中 stub 该 composable。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -69,7 +69,7 @@ describe('ai/chatbox/message/item.vue', () => {
       global: _globalConfig,
     })
     expect(wrapper.text()).toContain('ueditor.aichatReasoning')
-    // Collapsed state does not directly show reasoning text (v-if=_reasoningExpanded)
+    // 折叠状态不直接显示 reasoning 文本（v-if=_reasoningExpanded）
     expect(wrapper.text()).not.toContain('思考中...')
   })
 
@@ -108,7 +108,7 @@ describe('ai/chatbox/message/item.vue', () => {
       },
       global: _globalConfig,
     })
-    // The thinking process title is a div with cursor-pointer, click it
+    // 思考过程标题是带 cursor-pointer 的 div，点击它
     const clickable = wrapper.find('.cursor-pointer')
     await clickable.trigger('click')
     expect(ctx.toggleReasoning).toHaveBeenCalledWith(2)

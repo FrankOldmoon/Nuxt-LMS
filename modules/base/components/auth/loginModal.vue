@@ -2,7 +2,7 @@
   <UModal v-model:open="isOpen" :ui="{ content: 'sm:max-w-md' }">
     <template #content>
       <div class="p-6">
-        <!-- Tab switch -->
+        <!-- Tab 切换 -->
         <div class="flex gap-1 p-1 bg-(--ui-bg-muted) rounded-lg mb-6">
           <button
             :class="[
@@ -29,7 +29,7 @@
           </button>
         </div>
 
-        <!-- Login form -->
+        <!-- 登录表单 -->
         <AuthLoginForm
           v-if="activeTab === 'login'"
           @success="onSuccess"
@@ -37,14 +37,14 @@
           @switch-to-forgot-password="activeTab = 'forgotPassword'"
         />
 
-        <!-- Registration form -->
+        <!-- 注册表单 -->
         <AuthRegisterForm
           v-if="activeTab === 'register' && allowRegistration"
           @success="onSuccess"
           @switch-to-login="activeTab = 'login'"
         />
 
-        <!-- Forgot password form -->
+        <!-- 忘记密码表单 -->
         <AuthForgotPasswordForm
           v-if="activeTab === 'forgotPassword'"
           @switch-to-login="activeTab = 'login'"
@@ -63,7 +63,7 @@ const emit = defineEmits<{
   success: []
 }>()
 
-// Reset tab on close
+// 关闭时重置 tab
 watch(isOpen, (val) => {
   if (!val) {
     activeTab.value = 'login'

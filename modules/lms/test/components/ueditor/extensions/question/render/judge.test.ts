@@ -1,5 +1,5 @@
 /**
- * judge component test (render)
+ * judge 组件测试 (render)
  * @see modules/lms/components/ueditor/extensions/nodes/vue/question/render/judge.vue
  */
 import { describe, it, expect, beforeEach } from 'vitest'

@@ -4,37 +4,37 @@ import { buildLmsConfigPairs } from '../../utils/lmsConfig/migration'
 import { reloadLmsConfig, getLmsConfigSync } from '../../utils/lmsConfig/cache'
 
 /**
- * Update LMS config (flatten and write lms:* rows, then refresh the cache)
+ * 更新 LMS 配置（拍平写入 lms:* 行，并刷新缓存）
  *
- * Path: POST /api/lms-config/update
- * (The original /api/config/update path conflicted with the base module and was overridden, migrated to an independent path)
+ * 路径：POST /api/lms-config/update
+ * （原 /api/config/update 路径与 base 模块冲突被覆盖，已迁移到独立路径）
  *
- * body: tree object (consistent with the original lmsConfig tree structure, for frontend settingsModal reuse)
- * Actions:
- *   1. Flatten body into a lms:section.key list
- *   2. Upsert each row into the configs table
- *   3. reloadLmsConfig() to refresh the in-memory cache
- *   4. WS broadcast 'lms-config-changed' to notify the frontend useAiConfig / useLmsPublicConfig etc. to auto refresh
+ * body: 树形对象（与原 lmsConfig 树形结构一致，便于前端 settingsModal 复用）
+ * 动作：
+ *   1. 拍平 body 为 lms:section.key 列表
+ *   2. 逐行 upsert 到 configs 表
+ *   3. reloadLmsConfig() 刷新内存缓存
+ *   4. WS 广播 'lms-config-changed' 通知前端 useAiConfig / useLmsPublicConfig 等自动 refresh
  *
- * Note: This endpoint keeps the tree input (compatible with existing settingsModal / LmsConfigEditor),
- *       no frontend adaptation needed. If the frontend already has a flattened lms:* object, use /api/config/update-batch instead.
+ * 注意：本端点保留树形入参（兼容现有 settingsModal / LmsConfigEditor），
+ *       不需要前端适配。如前端已有 lms:* 拍平对象可改用 /api/config/update-batch。
  */
 export default eventHandler(async (event) => {
   await requireRole(event, ['teacher', 'admin'])
 
   const body = await readBody(event)
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return cResp(null, 'Invalid config format', false)
+    return cResp(null, '配置格式无效', false)
   }
 
   try {
-    // 1. Flatten into { 'lms:section.key': value } list
+    // 1. 拍平为 { 'lms:section.key': value } 列表
     const pairs = buildLmsConfigPairs(body)
     if (!pairs.length) {
       return cResp(getLmsConfigSync())
     }
 
-    // 2. Upsert each row
+    // 2. 逐行 upsert
     for (const { key, value } of pairs) {
       await db
         .insert(schema.configs)
@@ -45,15 +45,15 @@ export default eventHandler(async (event) => {
         })
     }
 
-    // 3. Refresh the in-memory cache
+    // 3. 刷新内存缓存
     await reloadLmsConfig()
 
-    // 4. WS broadcast: all online clients useAiConfig/useLmsPublicConfig auto refresh
+    // 4. WS 广播：所有在线客户端 useAiConfig/useLmsPublicConfig 自动 refresh
     broadcastToAll({ type: 'lms-config-changed' })
 
     return cResp(getLmsConfigSync())
   } catch (error: any) {
-    console.error('[lms_config] Update failed', error)
-    return cResp(null, error.message || 'Update failed', false)
+    console.error('[lms_config] 更新失败', error)
+    return cResp(null, error.message || '更新失败', false)
   }
 })

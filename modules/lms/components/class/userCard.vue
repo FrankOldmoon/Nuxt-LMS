@@ -1,6 +1,6 @@
 <template>
   <UCard v-if="user" :ui="{ body: 'p-3 sm:p-4', root: 'rounded-lg' }">
-    <!-- User basic info: avatar / name / roll number -->
+    <!-- 用户基本信息：头像 / 姓名 / 学号 -->
     <div class="flex items-center gap-3">
       <UAvatar
         :src="user.avatarImg || undefined"
@@ -15,10 +15,10 @@
         <div v-if="user.rollNumber" class="text-xs text-muted truncate font-mono mt-0.5">
           {{ user.rollNumber }}
         </div>
-        <!-- Earned medals -->
+        <!-- 已获得的奖章 -->
         <div v-if="myMedals.length" class="flex flex-wrap gap-1 mt-1">
           <UTooltip v-for="medal in myMedals" :key="medal.medalId"
-            :text="`${medal.name}: ${medal.content?.description || ''}`">
+            :text="`${medal.name}：${medal.content?.description || ''}`">
             <UIcon :name="medal.content?.icon || 'i-lucide-award'"
               :class="medalIconColor(medal.content?.color)" class="size-4" />
           </UTooltip>
@@ -26,7 +26,7 @@
       </div>
     </div>
 
-    <!-- Level + experience (only shown in course context) -->
+    <!-- 等级 + 经验（仅在课程上下文中显示） -->
     <div v-if="hasCourse" class="mt-3 pt-3 border-t border-default">
       <div class="flex items-center justify-between mb-1.5">
         <div class="flex items-center gap-1.5">
@@ -45,7 +45,7 @@
       </div>
     </div>
 
-    <!-- Score info -->
+    <!-- 积分信息 -->
     <div v-if="hasCourse" class="mt-3 pt-3 border-t border-default space-y-1.5 text-sm">
       <div class="flex items-center justify-between">
         <span class="flex items-center gap-1.5 text-muted">
