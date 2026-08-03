@@ -23,7 +23,7 @@ export default eventHandler(async (event) => {
       for (const item of courseUpdates) {
         if (item.name) {
           await db.update(schema.courses)
-            .set({ name: item.name, updatedAt: new Date() })
+            .set({ name: item.name, categoryId: Number(id), updatedAt: new Date() })
             .where(eq(schema.courses.id, item.id))
         }
       }
