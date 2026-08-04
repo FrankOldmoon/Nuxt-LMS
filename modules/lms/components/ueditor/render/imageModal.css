@@ -15,19 +15,27 @@
     cursor: pointer;
 }
 
-/* ===== 覆盖层 UI：默认隐藏，hover 后显示 ===== */
+/* ===== 覆盖层 UI：工具栏/导航默认隐藏，hover 后显示 ===== */
 .image-modal-toolbar,
-.image-modal-nav,
-.image-modal-thumbs {
+.image-modal-nav {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s;
 }
 .image-modal-overlay:hover .image-modal-toolbar,
-.image-modal-overlay:hover .image-modal-nav,
-.image-modal-overlay:hover .image-modal-thumbs {
+.image-modal-overlay:hover .image-modal-nav {
     opacity: 1;
     pointer-events: auto;
+}
+
+/* 底部缩略图：仅当鼠标 hover 到该区域时才显示 */
+.image-modal-thumbs {
+    opacity: 0;
+    pointer-events: auto;
+    transition: opacity 0.2s;
+}
+.image-modal-thumbs:hover {
+    opacity: 1;
 }
 
 /* 顶部工具栏 */
