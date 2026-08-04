@@ -1,6 +1,6 @@
 <template>
   <div class="umo-node-view" :style="nodeStyle" data-node-view-wrapper="">
-    <div class="umo-node-container umo-node-video">
+    <div class="umo-node-container">
       <video
         :src="attrs.src"
         controls
