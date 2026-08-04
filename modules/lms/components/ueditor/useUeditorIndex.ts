@@ -90,7 +90,9 @@ export function useUeditorIndex(props: any, json: any) {
     // editor 创建后，将 cinserts 移动到工具栏最前面并显示
     const onCreated = () => {
         nextTick(() => {
-            injectCinserts()
+            setTimeout(() => {
+                injectCinserts()
+            }, 1000);
             if (isReadonly.value) {
                 editorRef.value?.useEditor()?.setEditable(false)
             }
