@@ -1,4 +1,4 @@
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, onBeforeUnmount } from 'vue'
 import extensions from './extensions'
 
 export interface UeditorIndexProps {
@@ -46,6 +46,30 @@ export function useUeditorIndex(props: any, json: any) {
     const editorRef = ref<any>(null)
     const tiptapEditor = ref<any>(null)
     const cinsertsWrapper = ref<any>(null)
+    // 控制 cinsert 是否显示（避免 v-show 在重渲染时把 wrapper 重新隐藏）
+    const cinsertsShown = ref(false)
+
+    // 监听工具栏刷新：umo-editor 每次更新都会重建 .umo-ribbon-container
+    // （元素会被整体替换而非仅子节点变化），故监听稳定的 body，
+    // 每次变化后重新查询 ribbon 并重新注入，避免 cinsert 消失
+    let ribbonObserver: MutationObserver | null = null
+    function setupRibbonObserver() {
+        const ribbon = document.querySelector('.umo-ribbon-container')
+        if (!ribbon) {
+            setTimeout(setupRibbonObserver, 200)
+            return
+        }
+        if (ribbonObserver) return
+        ribbonObserver = new MutationObserver(() => {
+            injectCinserts()
+        })
+        ribbonObserver.observe(document.body, { childList: true, subtree: true })
+    }
+
+    onBeforeUnmount(() => {
+        ribbonObserver?.disconnect()
+        ribbonObserver = null
+    })
 
     const options = computed(() => ({
         document: {
@@ -92,6 +116,7 @@ export function useUeditorIndex(props: any, json: any) {
         nextTick(() => {
             setTimeout(() => {
                 injectCinserts()
+                setupRibbonObserver()
             }, 1000);
             if (isReadonly.value) {
                 editorRef.value?.useEditor()?.setEditable(false)
@@ -150,15 +175,15 @@ export function useUeditorIndex(props: any, json: any) {
             return
         }
 
-        // 如果已经注入过则跳过
-        if (ribbon.querySelector('.cinserts-injected')) return
-
-        // 将 cinsertsWrapper 移动到工具栏最前面
         const wrapper = cinsertsWrapper.value
         if (!wrapper) return
-        wrapper.classList.add('cinserts-injected')
+
+        // 每次重新确保显示并置于工具栏最前面，防止 ribbon 重建后 cinsert 消失
         wrapper.style.display = ''
-        ribbon.insertBefore(wrapper, ribbon.firstChild)
+        cinsertsShown.value = true
+        if (!ribbon.contains(wrapper)) {
+            ribbon.insertBefore(wrapper, ribbon.firstChild)
+        }
     }
 
     const onChanged = () => {
@@ -179,6 +204,7 @@ export function useUeditorIndex(props: any, json: any) {
         editorRef,
         tiptapEditor,
         cinsertsWrapper,
+        cinsertsShown,
         options,
         onCreated,
         onPaste,

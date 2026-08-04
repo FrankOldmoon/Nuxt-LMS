@@ -2,7 +2,7 @@
     <client-only>
         <umo-editor v-bind="options" ref="editorRef" @changed="onChanged" @created="onCreated" @paste="onPaste">
         </umo-editor>
-        <div ref="cinsertsWrapper" v-show="false">
+        <div ref="cinsertsWrapper" v-show="cinsertsShown">
             <Cinserts v-if="canInsert" :editor="editorRef" />
         </div>
 
@@ -52,6 +52,7 @@ const {
     editorRef,
     tiptapEditor,
     cinsertsWrapper,
+    cinsertsShown,
     options,
     onCreated,
     onPaste,
