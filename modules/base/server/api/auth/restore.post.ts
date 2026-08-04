@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
   // 恢复原始 token
   setCookie(event, 'auth_token', originalToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: getRequestProtocol(event) === 'https',
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 7, // 7 天
     path: '/',

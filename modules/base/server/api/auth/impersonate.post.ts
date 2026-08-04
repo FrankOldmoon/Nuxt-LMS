@@ -75,7 +75,7 @@ export default defineEventHandler(async (event) => {
   if (!originalToken && currentToken) {
     setCookie(event, 'original_token', currentToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: getRequestProtocol(event) === 'https',
       sameSite: 'lax',
       maxAge: 60 * 60,
       path: '/',
@@ -92,7 +92,7 @@ export default defineEventHandler(async (event) => {
   // 设置新 token 到 cookie
   setCookie(event, 'auth_token', tokenStr, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: getRequestProtocol(event) === 'https',
     sameSite: 'lax',
     maxAge: 60 * 60,
     path: '/',

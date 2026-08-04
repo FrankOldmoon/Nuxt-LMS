@@ -26,7 +26,7 @@ const nodeStyle = computed(() => computeAtomNodeStyle(attrs.value))
 const videoStyle = computed(() => ({
   display: 'block',
   maxWidth: '100%',
-  width: attrs.value.width ? `${attrs.value.width}px` : '100%',
+  width: '100%',
   height: attrs.value.height ? `${attrs.value.height}px` : 'auto',
   borderRadius: 'var(--umo-radius)',
 }))
