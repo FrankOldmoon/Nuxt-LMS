@@ -21,7 +21,6 @@ const MIME_TYPES: Record<string, string> = {
 }
 
 export default eventHandler(async (event) => {
-  await requireAuth(event)
 
   const pathname = getQuery(event).pathname as string
   if (!pathname) {
