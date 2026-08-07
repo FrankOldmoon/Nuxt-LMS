@@ -1,13 +1,13 @@
 <template>
     <div class="relative w-full">
-        <UModal v-model:open="isModalOpen" fullscreen scrollable>
+        <UModal v-model:open="isModalOpen" fullscreen>
             <UButton v-show="false" />
             <template #body>
-                <div class="p-6 space-y-4 min-w-[700px]">
-                    <h2 class="text-lg font-semibold">{{ t('richEditor.title') }}</h2>
-                    <ueditor v-model="editJson" :pasteable="pasteable" class="min-h-[300px] border rounded-md" />
+                <div class="p-6 space-y-4 h-full">
+                    <ueditor v-model="editJson" :pasteable="pasteable"/>
                     <div class="flex justify-end gap-2">
-                        <UButton variant="soft" @click="() => { isModalOpen = false }">{{ t('common.cancel') }}</UButton>
+                        <UButton variant="soft" @click="() => { isModalOpen = false }">{{ t('common.cancel') }}
+                        </UButton>
                         <UButton color="primary" @click="saveJson">{{ t('common.save') }}</UButton>
                     </div>
                 </div>
@@ -27,11 +27,10 @@
             <ueditorRender :json="model" />
             <div class="absolute top-0 right-0 flex items-center gap-1 z-10">
                 <UButton icon="i-heroicons-pencil-square" variant="ghost" size="sm"
-                    class="opacity-50 hover:opacity-100 transition-opacity"
-                    :aria-label="t('richEditor.openEditor')" @click="openEditor" />
+                    class="opacity-50 hover:opacity-100 transition-opacity" :aria-label="t('richEditor.openEditor')"
+                    @click="openEditor" />
                 <UButton v-if="allowTextMode" icon="i-heroicons-book-open" variant="ghost" size="sm"
-                    class="opacity-50 hover:opacity-100 transition-opacity"
-                    :aria-label="t('richEditor.switchToText')"
+                    class="opacity-50 hover:opacity-100 transition-opacity" :aria-label="t('richEditor.switchToText')"
                     @click="switchToTextMode" />
             </div>
         </div>
