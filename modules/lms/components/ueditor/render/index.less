@@ -4,15 +4,39 @@
   min-height: 100% !important
 }
 
-.umo-editor-render-container {
-  //width: 100%;
-
-  // 重置段落和列表的默认 margin/padding（与编辑器容器保持一致）
-  p,
+// 渲染模式列表样式
+// Tailwind preflight 把 ul/ol 的 padding 与 list-style 清零；渲染又用原生 <ul>/<ol>，
+// 与编辑器的自定义 .umo-list-item 不同，需在此恢复缩进与编号。
+.umo-editor-render {
+  p {
+    margin: 0;
+  }
+  // 恢复列表缩进：padding-inline-start 给数字/圆点留位，否则标记符挤到左边缘、内容不缩进
   ul,
   ol {
     margin: 0;
-    padding: 0;
+    padding-inline-start: 1.5em;
+  }
+  // 十进制有序列表：用 CSS 计数器实现层级编号（1. / 2.1. / 2.2.），与编辑器一致
+  ol[data-type='decimal'] {
+    list-style: none;
+    counter-reset: olc;
+  }
+  ol[data-type='decimal'] > li {
+    counter-increment: olc;
+    position: relative;
+  }
+  ol[data-type='decimal'] > li::before {
+    content: counters(olc, ".") ". ";
+    position: absolute;
+    right: 100%;
+    margin-right: 0.4em;
+    white-space: nowrap;
+    color: inherit;
+  }
+  // 任务列表：无项目符号（复选框由 task-item 渲染）
+  ul[data-type='taskList'] {
+    list-style: none;
   }
 }
 

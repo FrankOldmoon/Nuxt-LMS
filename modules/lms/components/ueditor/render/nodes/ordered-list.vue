@@ -1,6 +1,6 @@
 <template>
   <ol
-    :style="`list-style-type: ${listType}`"
+    :style="listType !== 'decimal' ? `list-style-type: ${listType}` : undefined"
     :data-type="listType"
     :data-start="startAttr"
   >
