@@ -12,10 +12,31 @@ export function useVfilesEdit(props: VfilesEditProps, emit: (event: string, ...a
 
     function rebuildEditItems() {
         editItems.value = []
+        // 先扫描已有数值 id（形如 n0、n1）的最大序号，避免新增项与旧 id 冲突
+        let maxNum = -1
+        function scanMax(items) {
+            for (const item of items) {
+                if (item.id) {
+                    const m = /^n(\d+)$/.exec(item.id)
+                    if (m && m[1]) maxNum = Math.max(maxNum, parseInt(m[1], 10))
+                }
+                if (item.children && item.children.length) scanMax(item.children)
+            }
+        }
+        scanMax(props.config?.items || [])
+        if (maxNum + 1 > idCounter) idCounter = maxNum + 1
+
+        // 重建时对缺失或重复的 id 重新生成，确保唯一
+        const seenIds = new Set()
         function walk(items, depth) {
             for (const item of items) {
+                let id = item.id
+                if (!id || seenIds.has(id)) {
+                    id = `n${idCounter++}`
+                }
+                seenIds.add(id)
                 editItems.value.push({
-                    id: item.id || `n${idCounter++}`,
+                    id,
                     label: item.label || '',
                     type: item.type || 'file',
                     content: item.content || '',

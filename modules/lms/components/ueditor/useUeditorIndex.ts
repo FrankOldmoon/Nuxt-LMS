@@ -75,7 +75,6 @@ export function useUeditorIndex(props: any, json: any) {
         document: {
             content: json.value,
         },
-        height: '600px',
         contentType: 'markdown',
         readonly: isReadonly.value,
         extensions,

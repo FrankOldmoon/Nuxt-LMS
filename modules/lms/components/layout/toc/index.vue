@@ -46,11 +46,11 @@
     </div>
     <!-- 页面内容编辑器（管理员或课程编辑者可见） -->
     <div v-if="canEditContent" class="flex flex-col gap-3 pt-4 mt-4 border-t border-default">
-      <UModal v-model:open="editModalOpen" fullscreen scrollable>
+      <UModal v-model:open="editModalOpen" fullscreen>
         <UButton icon="i-lucide-edit" color="primary" size="sm" :label="$t('layout.editPage')" class="justify-start" />
 
         <template #body>
-          <div class="p-4 min-w-[480px]">
+          <div class="p-4 h-full">
             <ueditor v-model="chapterContent" :save-handler="handleSave" :lock-id="lockId" ref="ueditorRef" :show-insert="true" />
           </div>
         </template>
