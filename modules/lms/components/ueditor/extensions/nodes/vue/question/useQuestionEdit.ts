@@ -102,24 +102,35 @@ export function useQuestionEdit(props: QuestionEditProps, emit: QuestionEditEmit
     async function copyCurrentPrompt() {
         const text = currentTypePrompt.value
         if (!text) return
-        try {
-            if (navigator?.clipboard?.writeText) {
+        let ok = false
+        if (navigator?.clipboard?.writeText) {
+            try {
                 await navigator.clipboard.writeText(text)
-            } else {
+                ok = true
+            } catch {
+                // 非安全上下文（非 HTTPS）或权限不足，降级到 execCommand
+            }
+        }
+        if (!ok) {
+            try {
                 const ta = document.createElement('textarea')
                 ta.value = text
                 ta.style.position = 'fixed'
                 ta.style.opacity = '0'
                 document.body.appendChild(ta)
                 ta.select()
-                document.execCommand('copy')
+                ok = document.execCommand('copy')
                 document.body.removeChild(ta)
+            } catch {
+                ok = false
             }
+        }
+        if (ok) {
             copyCopied.value = true
             toast.add({ title: t('question.typePromptCopied'), color: 'success' })
             if (copyCopiedTimer) clearTimeout(copyCopiedTimer)
             copyCopiedTimer = setTimeout(() => { copyCopied.value = false }, 1500)
-        } catch {
+        } else {
             toast.add({ title: t('question.typePromptCopyFailed'), color: 'error' })
         }
     }

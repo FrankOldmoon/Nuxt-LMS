@@ -81,12 +81,31 @@ export function useAsr() {
   const handleCopy = async () => {
     if (!finalTranscript.value) return
 
-    try {
-      await navigator.clipboard.writeText(finalTranscript.value)
-      // 可选：显示复制成功提示
-    } catch (e) {
-      error.value = '复制失败'
+    const text = finalTranscript.value
+    let ok = false
+    if (navigator?.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(text)
+        ok = true
+      } catch {
+        // 非安全上下文（非 HTTPS）或权限不足，降级到 execCommand
+      }
     }
+    if (!ok) {
+      try {
+        const ta = document.createElement('textarea')
+        ta.value = text
+        ta.style.position = 'fixed'
+        ta.style.opacity = '0'
+        document.body.appendChild(ta)
+        ta.select()
+        ok = document.execCommand('copy')
+        document.body.removeChild(ta)
+      } catch {
+        ok = false
+      }
+    }
+    if (!ok) error.value = '复制失败'
   }
 
   return {

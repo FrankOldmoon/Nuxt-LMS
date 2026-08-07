@@ -248,12 +248,31 @@ export function useContentPicker(props: ContentPickerProps, emit: ContentPickerE
     }
 
     async function copyPrompt() {
-        try {
-            await navigator.clipboard.writeText(allPrompts())
-            toast.add({ title: t('common.copied'), color: 'success' })
-        } catch {
-            toast.add({ title: t('common.copyFailed'), color: 'error' })
+        const text = allPrompts()
+        let ok = false
+        if (navigator?.clipboard?.writeText) {
+            try {
+                await navigator.clipboard.writeText(text)
+                ok = true
+            } catch {
+                // 非安全上下文（非 HTTPS）或权限不足，降级到 execCommand
+            }
         }
+        if (!ok) {
+            try {
+                const ta = document.createElement('textarea')
+                ta.value = text
+                ta.style.position = 'fixed'
+                ta.style.opacity = '0'
+                document.body.appendChild(ta)
+                ta.select()
+                ok = document.execCommand('copy')
+                document.body.removeChild(ta)
+            } catch {
+                ok = false
+            }
+        }
+        toast.add({ title: ok ? t('common.copied') : t('common.copyFailed'), color: ok ? 'success' : 'error' })
     }
 
     function exportItems() {

@@ -55,17 +55,34 @@ describe('composables/useAsr', () => {
     expect(writeText).toHaveBeenCalledWith('hello world')
   })
 
-  it('handleCopy clipboard 抛错时设置 error', async () => {
+  it('handleCopy clipboard 抛错且降级也失败时设置 error', async () => {
     const writeText = vi.fn().mockRejectedValue(new Error('denied'))
     Object.defineProperty(globalThis.navigator, 'clipboard', {
       value: { writeText },
       configurable: true,
     })
+    Object.defineProperty(document, 'execCommand', { value: vi.fn().mockReturnValue(false), configurable: true })
     const { useAsr } = await import('../../composables/useAsr')
     const r = useAsr()
     r.finalTranscript.value = 'hello'
     await r.handleCopy()
     expect(r.error.value).toBe('复制失败')
+  })
+
+  it('handleCopy 非安全上下文（clipboard 不可用）时降级到 execCommand', async () => {
+    // 模拟非 HTTPS 等 insecure context：clipboard 不存在
+    Object.defineProperty(globalThis.navigator, 'clipboard', {
+      value: undefined,
+      configurable: true,
+    })
+    const execSpy = vi.fn().mockReturnValue(true)
+    Object.defineProperty(document, 'execCommand', { value: execSpy, configurable: true })
+    const { useAsr } = await import('../../composables/useAsr')
+    const r = useAsr()
+    r.finalTranscript.value = 'hello'
+    await r.handleCopy()
+    expect(execSpy).toHaveBeenCalledWith('copy')
+    expect(r.error.value).toBe('')
   })
 
   it('languageMap 是一个对象', async () => {
