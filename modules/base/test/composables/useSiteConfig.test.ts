@@ -20,6 +20,7 @@ describe('composables/useSiteConfig - 派生 computed', () => {
     const cfg = useSiteConfig()
     expect(cfg.siteTitle.value).toBe('AI LMS')
     expect(cfg.logo.value).toBe('')
+    expect(cfg.favicon.value).toBe('/favicon.ico')
     expect(cfg.allowRegistration.value).toBe(false)
     expect(cfg.showNotify.value).toBe(true)
     expect(cfg.showMsg.value).toBe(true)

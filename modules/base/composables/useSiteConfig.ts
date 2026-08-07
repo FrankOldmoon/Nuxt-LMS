@@ -37,6 +37,7 @@ export function useSiteConfig() {
   // 派生 computed（从同一份数据计算，无额外网络请求）
   const siteTitle = computed(() => config.value?.siteTitle || 'AI LMS')
   const logo = computed(() => config.value?.siteLogo || '')
+  const favicon = computed(() => config.value?.siteFavicon || '/favicon.ico')
   const allowRegistration = computed(() => config.value?.allowRegistration ?? false)
   const showNotify = computed(() => config.value?.showNotify ?? true)
   const showMsg = computed(() => config.value?.showMsg ?? true)
@@ -65,6 +66,7 @@ export function useSiteConfig() {
   return {
     siteTitle,
     logo,
+    favicon,
     allowRegistration,
     showNotify,
     showMsg,
