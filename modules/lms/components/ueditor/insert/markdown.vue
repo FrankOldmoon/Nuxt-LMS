@@ -1,6 +1,5 @@
 <template>
-    <UModal title="Modal with title" v-model:open="open"  fullscreen scrollable>
-        
+    <UModal title="Modal with title" v-model:open="open"  fullscreen>
         <template #body>
             <div class="flex flex-col gap-4 p-4">
                 <h3 class="text-lg font-semibold">{{ $t('ueditor.markdown.title') }}</h3>
@@ -32,11 +31,9 @@ const insertContent = () => {
     if (!inputText.value.trim()) return
 
     const json = props.editor.useEditor().markdown.parse(inputText.value)
-    console.log({ json })
+    // console.log({ json })
     props.editor.insertContent(json)
-
-    // 清空输入，Modal 会在操作后自动关闭（如果点击了插入按钮会触发 close）
-    // 若需要强制关闭，可通过 ref 调用 Modal 实例的方法，但通常点击操作后 Modal 会关闭
+    open.value = false
     inputText.value = ''
 }
 </script>

@@ -1,5 +1,5 @@
 <template>
-    <UModal title="Modal with title" v-model:open="open" fullscreen scrollable>
+    <UModal title="Modal with title" v-model:open="open" fullscreen>
         <template #body>
             <div class="flex flex-col gap-4 p-4">
                 <h3 class="text-lg font-semibold">{{ $t('ueditor.html.title') }}</h3>
@@ -42,5 +42,6 @@ const insertContent = () => {
         editor.chain().focus().setContent(inputText.value).run()
     }
     open.value = false
+    inputText.value = ''
 }
 </script>
