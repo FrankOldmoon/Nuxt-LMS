@@ -169,6 +169,10 @@ export function computeCorrectRate(question: any): number {
     const rec = Array.isArray(record) && record.length > 0 ? (record[0] || {}) : {}
     return Math.max(0, Math.min(1, Number(rec.progress) || 0))
   }
+  if (type === 'oj') {
+    // OJ 题：record[0]=1 表示已通过（由 record.get.ts 调 getOjStatus 写入），否则 0
+    return Number(record[0]) === 1 ? 1 : 0
+  }
   return 0
 }
 

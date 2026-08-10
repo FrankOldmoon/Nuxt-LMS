@@ -34,8 +34,8 @@
                     <span class="text-xs text-gray-400 font-mono">{{ scoreDisplay }}</span>
                 </div>
             </div>
-            <!-- 题目内容（html/composite 题型由组件内部处理） -->
-            <div v-if="question?.type !== 'html' && question?.type !== 'composite'" class="prose prose-sm dark:prose-invert max-w-none">
+            <!-- 题目内容（html/composite/oj 题型由组件内部处理） -->
+            <div v-if="question?.type !== 'html' && question?.type !== 'composite' && question?.type !== 'oj'" class="prose prose-sm dark:prose-invert max-w-none">
                 <ueditorRender :json="question.content" />
             </div>
             <!-- 题型特定渲染 -->

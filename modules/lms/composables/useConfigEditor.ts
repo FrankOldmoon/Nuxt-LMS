@@ -49,6 +49,8 @@ export function useConfigEditor(props: ConfigEditorProps, emit: (e: 'update:mode
       questionOnlyOnCorrect: true,
       onlyOnReward: true,
     },
+    // OJ 在线评测平台基址（fetchOj / getOjStatus 拼接地址用）
+    oj: { url: 'http://10.22.99.130' },
   }
 
   const aiModeOpts = computed(() => [

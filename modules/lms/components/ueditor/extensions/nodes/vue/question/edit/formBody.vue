@@ -10,7 +10,7 @@
     </div>
 
     <!-- ========== 公共 UI：题目内容 ========== -->
-    <div v-if="form?.type !== 'html' && form?.type !== 'composite'">
+    <div v-if="form?.type !== 'html' && form?.type !== 'composite' && form?.type !== 'oj'">
         <label class="text-xs text-gray-500 mb-1 block">{{ t('question.contentLabel') }}</label>
         <richEditor v-model="form.content" />
     </div>

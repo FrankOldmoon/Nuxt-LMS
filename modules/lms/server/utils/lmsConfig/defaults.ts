@@ -16,6 +16,7 @@ import { raceDefaults } from './defaults/race'
 import { uiDefaults } from './defaults/ui'
 import { userDefaults } from './defaults/user'
 import { aiDefaults } from './defaults/ai'
+import { ojDefaults } from './defaults/oj'
 
 export const DEFAULT_LMS_CONFIG = {
   ...learningDefaults,
@@ -23,4 +24,5 @@ export const DEFAULT_LMS_CONFIG = {
   ...uiDefaults,
   ...userDefaults,
   ai: aiDefaults,
+  oj: ojDefaults,
 }

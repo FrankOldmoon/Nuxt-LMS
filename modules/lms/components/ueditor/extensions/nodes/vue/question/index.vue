@@ -14,6 +14,7 @@
 import { ref, computed, inject, reactive, watch } from 'vue'
 import Render from './render.vue'
 import Edit from './edit.vue'
+const { t } = useI18n()
 
 const props = defineProps({
   node: Object,
@@ -26,7 +27,7 @@ const meta = inject('nodeViewMeta', reactive({ title: '', icon: '', hasSettings:
 
 // 设置组件元信息（告知 node-view 显示设置按钮）
 if (meta) {
-  meta.title = '题目'
+  meta.title = t('question.label')
   meta.icon = 'i-lucide-circle-help'
   meta.hasSettings = true
 }

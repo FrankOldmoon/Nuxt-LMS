@@ -8,7 +8,7 @@
                 {{ tag }}
             </span>
         </div>
-        <div class="flex gap-2 ml-auto">
+        <div v-if="question.type !== 'oj'" class="flex gap-2 ml-auto">
             <UButton variant="soft" size="sm" :disabled="!hasAnswer" @click="onReset">
                 {{ t('common.reset') }}
             </UButton>

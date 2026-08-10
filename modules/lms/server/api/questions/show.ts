@@ -39,6 +39,22 @@ export default eventHandler(async (event) => {
     )
   })
 
+  // OJ 题型：content 存的是 pid，用 fetchOj 拉取题目内容替换 content 供前端展示；
+  // 同时把 pid 放入 options，供编辑回填与渲染「前往 OJ」链接使用。
+  if (data && data.type === 'oj') {
+    const pid = String(data.content || '')
+    if (pid) {
+      const opts: any = data.options
+      if (!opts || typeof opts !== 'object' || Array.isArray(opts) || !opts.pid) {
+        data.options = { pid }
+      }
+      try {
+        const ojContent = await fetchOj(pid)
+        if (ojContent != null) data.content = ojContent
+      } catch { /* OJ 拉取失败时保留原始 content（pid） */ }
+    }
+  }
+
   // 对 answer 数组加密，防止直接从前端源码查看正确答案
   if (data && Array.isArray(data.answer)) {
     data.answer = data.answer.map((ans: any) => 'enc:' + encryptValue(ans))

@@ -13,6 +13,7 @@ import MatchEditor from './edit/match.vue'
 import CompositeEditor from './edit/composite.vue'
 import VideoEditor from './edit/video.vue'
 import EvaluationEditor from './edit/evaluation.vue'
+import OjEditor from './edit/oj.vue'
 import AiGenerator from './edit/ai-generator.vue'
 import { promptFor } from './edit/prompts.js'
 
@@ -60,13 +61,14 @@ export function useQuestionEdit(props: QuestionEditProps, emit: QuestionEditEmit
         { label: t('question.typeComposite'), value: 'composite' },
         { label: t('question.typeVideo'), value: 'video' },
         { label: t('question.typeEvaluation'), value: 'evaluation' },
+        { label: t('question.typeOj'), value: 'oj' },
     ])
 
     const componentMap: Record<string, any> = {
         single: SingleEditor, judge: JudgeEditor, multiple: MultipleEditor, fill: FillEditor,
         select: SelectEditor, sort: SortEditor, classify: ClassifyEditor, puzzle: PuzzleEditor,
         html: HtmlEditor, 'short-answer': ShortAnswerEditor, match: MatchEditor,
-        composite: CompositeEditor, video: VideoEditor, evaluation: EvaluationEditor,
+        composite: CompositeEditor, video: VideoEditor, evaluation: EvaluationEditor, oj: OjEditor,
     }
     const typeComponent = computed(() => componentMap[form.value?.type] || null)
 
@@ -229,6 +231,7 @@ export function useQuestionEdit(props: QuestionEditProps, emit: QuestionEditEmit
             case 'composite': form.value.options = []; form.value.answer = []; form.value.content = []; break
             case 'video': form.value.options = { src: '', questions: [] }; form.value.answer = []; form.value.content = ''; break
             case 'evaluation': form.value.options = { goal: '', threshold: 0.8 }; form.value.answer = []; form.value.content = ''; break
+            case 'oj': form.value.options = { pid: '' }; form.value.answer = []; form.value.content = ''; break
         }
     }
 

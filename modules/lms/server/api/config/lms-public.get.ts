@@ -26,6 +26,7 @@ const PUBLIC_KEYS = [
   'courseBtns',
   'user',
   'chapter.passScore',
+  'oj',
   'ai.enabled',
   'ai.mode',
   'ai.model',

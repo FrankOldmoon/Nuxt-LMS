@@ -40,6 +40,7 @@ const _globalStubs = {
   LmsConfigEditorSwitchSections: { template: '<div class="switch-sections" />' },
   LmsConfigEditorDanmakuSection: { template: '<div class="danmaku-section" />' },
   LmsConfigEditorGridSections: { template: '<div class="grid-sections" />' },
+  LmsConfigEditorOjSection: { template: '<div class="oj-section" />' },
 }
 
 const _globalConfig = {

@@ -38,6 +38,7 @@ export function useLmsPublicConfig() {
   const courseBtns = computed(() => config.value?.courseBtns || {})
   const user = computed(() => config.value?.user || {})
   const ai = computed(() => config.value?.ai || {})
+  const oj = computed(() => config.value?.oj || { url: 'http://10.22.99.130' })
 
   // 客户端：订阅服务端 lms-config-changed 广播，自动 refresh
   if (import.meta.client && !_wsHandlerRegistered) {
@@ -65,6 +66,7 @@ export function useLmsPublicConfig() {
     courseBtns,
     user,
     ai,
+    oj,
     // 手动刷新（与 useSiteConfig 一致：通过 key 触发 useFetch refresh）
     refresh: () => refreshNuxtData('lms-public-config-singleton-fetch'),
   }

@@ -14,6 +14,7 @@ import MatchRender from './render/match.vue'
 import CompositeRender from './render/composite.vue'
 import VideoRender from './render/video.vue'
 import EvaluationRender from './render/evaluation.vue'
+import OjRender from './render/oj.vue'
 
 export interface QuestionRenderProps {
     node?: any
@@ -66,6 +67,7 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
         classify: t('question.typeClassify'), puzzle: t('question.typePuzzle'), html: t('question.typeHtml'),
         'short-answer': t('question.typeShortAnswer'), match: t('question.typeMatch'),
         composite: t('question.typeComposite'), video: t('question.typeVideo'), evaluation: t('question.typeEvaluation'),
+        oj: t('question.typeOj'),
     }))
 
     // 题型 → 渲染组件
@@ -73,7 +75,7 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
         single: SingleRender, judge: JudgeRender, multiple: MultipleRender, fill: FillRender,
         select: SelectRender, sort: SortRender, classify: ClassifyRender, puzzle: PuzzleRender,
         html: HtmlRender, 'short-answer': ShortAnswerRender, match: MatchRender,
-        composite: CompositeRender, video: VideoRender, evaluation: EvaluationRender,
+        composite: CompositeRender, video: VideoRender, evaluation: EvaluationRender, oj: OjRender,
     }
     const renderComponent = computed(() => componentMap[question.value?.type] || null)
     const renderRef = ref<any>(null)
@@ -133,6 +135,10 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
             const opts = question.value.options || {}
             const threshold = (opts && typeof opts === 'object' && !Array.isArray(opts) && typeof opts.threshold === 'number') ? opts.threshold : 0.8
             return [`${t('question.evaluationThresholdLabel')}: ${Math.round(threshold * 100)}%`]
+        } else if (type === 'oj') {
+            const opts = question.value.options || {}
+            const pid = (opts && typeof opts === 'object' && !Array.isArray(opts)) ? opts.pid : ''
+            return [pid ? `${t('question.ojPidLabel')}: ${pid}` : t('question.ojDeterminedByOj')]
         } else {
             const options = question.value.options || []
             return answer.map((ans: any, idx: number) => options[idx] === 'regex' ? `${ans} (${t('question.fillRegex')})` : String(ans))
