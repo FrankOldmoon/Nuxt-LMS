@@ -51,6 +51,13 @@ describe('composables/useFileUploader - fileList & addUrl', () => {
     addUrl('https://example.com/path/')
     expect(fileList.value[0].name).toBe('file')
   })
+
+  it('addUrl 从 /api/files/serve?pathname= 解析真实文件名', async () => {
+    const { useFileUploader } = await import('../../composables/useFileUploader')
+    const { fileList, addUrl } = useFileUploader(() => false, () => {})
+    addUrl('/api/files/serve?pathname=221%2F2.md')
+    expect(fileList.value[0].name).toBe('2.md')
+  })
 })
 
 describe('composables/useFileUploader - removeFile', () => {

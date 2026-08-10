@@ -7,12 +7,13 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { resetAllStubs, setMockI18n } from '../../../../../test/setup/nuxt-stubs'
-import { useFileUploader } from '../../../composables/useFileUploader'
+import { useFileUploader, getFileNameFromUrl } from '../../../composables/useFileUploader'
 
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
   ;(globalThis as any).useFileUploader = useFileUploader
+  ;(globalThis as any).getFileNameFromUrl = getFileNameFromUrl
 })
 
 const _globalStubs = {

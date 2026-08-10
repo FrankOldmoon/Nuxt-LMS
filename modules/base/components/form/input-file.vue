@@ -42,4 +42,20 @@ const {
   () => props.multiple,
   (val) => emit('update:modelValue', val),
 )
+
+// 同步外部 modelValue（如已加载的历史提交文件）到 fileList
+// 避免外部已存在的文件不显示，以及新上传时把历史文件覆盖丢失
+watch(() => props.modelValue, (val) => {
+  const urls = Array.isArray(val) ? val : (val ? [val] : [])
+  const urlSet = new Set(urls.filter(Boolean))
+  // 移除已不在 modelValue 中的 success 项（保留 uploading/error 项，避免打断进行中的上传）
+  fileList.value = fileList.value.filter(f => f.status !== 'success' || urlSet.has(f.url))
+  // 补充 modelValue 中存在但 fileList 缺失的项
+  const existing = new Set(fileList.value.map(f => f.url).filter(Boolean))
+  for (const url of urls) {
+    if (url && !existing.has(url)) {
+      fileList.value.push({ name: getFileNameFromUrl(url), size: 0, status: 'success', url })
+    }
+  }
+}, { immediate: true, deep: true })
 </script>

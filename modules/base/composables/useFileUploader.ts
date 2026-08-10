@@ -14,12 +14,12 @@ export function useFileUploader(
   }
 
   async function uploadSingleFile(file: File) {
-    const fileItem = {
+    const fileItem = reactive({
       name: file.name,
       size: file.size,
       status: 'uploading',
       url: '',
-    }
+    })
     fileList.value.push(fileItem)
 
     try {
@@ -48,9 +48,8 @@ export function useFileUploader(
   }
 
   function addUrl(url: string) {
-    const name = url.split('/').pop()?.split('?')[0] || 'file'
     fileList.value.push({
-      name: decodeURIComponent(name),
+      name: getFileNameFromUrl(url),
       size: 0,
       status: 'success',
       url,
@@ -118,4 +117,21 @@ const ICON_MAP: Record<string, string> = {
 export function getFileIcon(filename: string): string {
   const ext = filename.split('.').pop()?.toLowerCase()
   return (ext && ICON_MAP[ext]) || 'i-heroicons-document'
+}
+
+/** 从 URL 解析文件名：支持 /api/files/serve?pathname=221%2F2.md 与普通路径 URL */
+export function getFileNameFromUrl(url: string): string {
+  try {
+    const u = new URL(url, 'http://x')
+    // 优先用 pathname query 参数（/api/files/serve?pathname=221%2F2.md → 2.md）
+    const pathnameParam = u.searchParams.get('pathname')
+    if (pathnameParam) {
+      return pathnameParam.split('/').pop() || pathnameParam || 'file'
+    }
+    // 否则取路径最后一段（解码）
+    const seg = u.pathname.split('/').pop() || ''
+    return seg ? decodeURIComponent(seg) : 'file'
+  } catch {
+    return url.split('/').pop()?.split('?')[0] || 'file'
+  }
 }
