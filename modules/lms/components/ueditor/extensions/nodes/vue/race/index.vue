@@ -14,6 +14,7 @@ import { inject, ref, computed, reactive, watch } from 'vue'
 import { nodeViewProps } from '@tiptap/vue-3'
 import Render from './render.vue'
 import Edit from './edit.vue'
+const { t } = useI18n()
 
 const props = defineProps(nodeViewProps)
 
@@ -25,7 +26,7 @@ const meta = inject('nodeViewMeta', reactive({ title: '', icon: '', hasSettings:
 
 // 设置组件元信息（告知 node-view 显示设置按钮）
 if (meta) {
-    meta.title = '竞赛'
+    meta.title = t('race.label')
     meta.icon = 'i-lucide-trophy'
     meta.hasSettings = true
 }
