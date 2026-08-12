@@ -69,6 +69,16 @@ describe('utils/compressImage', () => {
     expect(result).toBe(file)
   })
 
+  it('GIF 跳过压缩返回原文件', async () => {
+    const imageCompression = (await import('browser-image-compression')).default
+    ;(imageCompression as any).mockClear()
+    const { compressImage } = await import('../../utils/compressImage')
+    const file = new File([new Blob(['gif-data'])], 'a.gif', { type: 'image/gif' })
+    const result = await compressImage(file)
+    expect(result).toBe(file) // 原文件直接返回
+    expect((imageCompression as any)).not.toHaveBeenCalled() // 未调用压缩
+  })
+
   it('compressAndUpload 上传成功返回 url', async () => {
     const { compressAndUpload } = await import('../../utils/compressImage')
     const { setMockFetchHandler, resetAllStubs } = await import('../../../../test/setup/nuxt-stubs')

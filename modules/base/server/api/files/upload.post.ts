@@ -13,6 +13,7 @@ import { formatBytes } from '../../../utils/fileUtils'
 import { UploadError, resolveUploadSource } from '../../utils/upload/parse'
 import { validateUpload, buildDedupWhere } from '../../utils/upload/validate'
 import { persistUploadedFile, sha256Hex } from '../../utils/upload/persist'
+import { compressGifBuffer } from '../../utils/files/remoteImage'
 
 const UPLOAD_ROOT = './storage/'
 
@@ -28,7 +29,15 @@ export default eventHandler(async (event) => {
     if (e instanceof UploadError && e.code === 'empty') return cResp(null, e.message, false)
     return cResp(null, `远程图片获取失败：${e?.message || e}`, false)
   }
-  const { buffer, originalName, ext, fileType, group } = source
+  let { buffer, originalName, ext, fileType, group } = source
+
+  // 1.5 GIF → animated webp 转码（保留动画，变大/失败回退原 GIF）
+  if (ext === '.gif' || fileType === 'image/gif') {
+    const r = await compressGifBuffer(buffer)
+    buffer = r.buffer
+    ext = r.ext
+    fileType = r.mimeType
+  }
 
   // 2. 校验（大小 + 后缀）
   try {

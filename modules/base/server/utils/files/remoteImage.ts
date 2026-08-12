@@ -7,8 +7,35 @@
  */
 import sharp from 'sharp'
 
+/** 通过 magic number 判断 buffer 是否为 GIF（GIF87a / GIF89a） */
+function isGifBuffer(buf: Buffer): boolean {
+  if (buf.length < 6) return false
+  const sig = buf.subarray(0, 6).toString('ascii')
+  return sig === 'GIF87a' || sig === 'GIF89a'
+}
+
+/**
+ * 将 GIF 转为 animated webp（保留动画）
+ * 压缩后变大或转码失败则回退原 GIF
+ * @returns { buffer, ext, mimeType }；非 GIF 原样返回
+ */
+export async function compressGifBuffer(buffer: Buffer): Promise<{ buffer: Buffer; ext: string; mimeType: string }> {
+  const fallback = { buffer, ext: '.gif', mimeType: 'image/gif' }
+  if (!isGifBuffer(buffer)) return fallback
+  try {
+    const webpBuffer = await sharp(buffer, { animated: true })
+      .webp({ quality: 85 })
+      .toBuffer()
+    if (webpBuffer.length >= buffer.length) return fallback
+    return { buffer: webpBuffer, ext: '.webp', mimeType: 'image/webp' }
+  } catch {
+    return fallback
+  }
+}
+
 /**
  * 下载远程图片，使用 sharp 压缩为 webp quality=85
+ * GIF 转为 animated webp（保留动画），变大/失败回退原 GIF
  * 服务端环境下全局 $fetch 可用，无需 import
  */
 export async function downloadAndCompressImageToWebp(remoteUrl: string) {
@@ -20,12 +47,24 @@ export async function downloadAndCompressImageToWebp(remoteUrl: string) {
   })
 
   const originBuffer = Buffer.from(arrayBuffer)
+  const urlObj = new URL(remoteUrl)
+  const originNameRaw = urlObj.pathname.split('/').pop() || 'image'
+
+  // GIF：转 animated webp（保留动画），变大/失败回退原 GIF
+  if (isGifBuffer(originBuffer)) {
+    const r = await compressGifBuffer(originBuffer)
+    return {
+      buffer: r.buffer,
+      originalExt: r.ext,
+      originalFilename: originNameRaw,
+      mimeType: r.mimeType,
+    }
+  }
+
   const webpBuffer = await sharp(originBuffer)
     .webp({ quality: 85 })
     .toBuffer()
 
-  const urlObj = new URL(remoteUrl)
-  const originNameRaw = urlObj.pathname.split('/').pop() || 'image'
   return {
     buffer: webpBuffer,
     originalExt: '.webp',

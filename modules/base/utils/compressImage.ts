@@ -28,6 +28,11 @@ const DEFAULT_OPTIONS: CompressOptions = {
  * @returns 压缩后的 File 对象（如果压缩失败或变大则返回原文件）
  */
 export async function compressImage(file: File, options?: CompressOptions): Promise<File> {
+    // GIF 保持原格式不压缩（避免丢失动画）
+    if (file.type === 'image/gif') {
+        return file
+    }
+
     const mergedOptions = { ...DEFAULT_OPTIONS, ...options }
 
     const compressionOptions = {

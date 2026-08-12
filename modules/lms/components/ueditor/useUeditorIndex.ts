@@ -129,29 +129,51 @@ export function useUeditorIndex(props: any, json: any) {
         })
     }
 
-    const traverse = (node: any, cb: any = null) => {
-        if (cb) {
-            cb(node);
-        }
-        if (node && node.content && Array.isArray(node.content)) {
-            node.content.forEach((n: any, index: number) => traverse(node.content[index], cb));
-        }
-    };
-
     const uploadImages = async () => {
-        traverse(editorRef.value.getJSON(), async (node: any) => {
-            //console.log({ node })
-            if (node && node.type === "image") {
-                if (node.attrs.src.startsWith("http") || node.attrs.src.startsWith("data:")) {
-                    const res = await $fetch('/api/files/upload', {
-                        method: 'POST',
-                        body: { url: node.attrs.src },
-                    })
-                    node.attrs.src = res.data.url;
-                    node.attrs.id = res.data.id;
+        const editor = editorRef.value?.useEditor?.()
+        if (!editor) return
+
+        // 收集需要上传的远程/内联图片（pos + src）
+        const targets: { pos: number; src: string }[] = []
+        editor.state.doc.descendants((node: any, pos: number) => {
+            if (node.type.name === 'image') {
+                const src = node.attrs?.src
+                if (typeof src === 'string' && (src.startsWith('http') || src.startsWith('data:'))) {
+                    targets.push({ pos, src })
                 }
             }
-        });
+            return true
+        })
+        if (!targets.length) return
+
+        // 并发上传（按 src 去重），单张失败不阻塞其他
+        const srcToResult = new Map<string, { url: string; id: any }>()
+        await Promise.all(Array.from(new Set(targets.map(t => t.src))).map(async (src) => {
+            try {
+                const res = await $fetch<{ data: { url: string; id: any } }>('/api/files/upload', {
+                    method: 'POST',
+                    body: { url: src },
+                })
+                if (res?.data?.url) srcToResult.set(src, { url: res.data.url, id: res.data.id })
+            } catch { /* noop */ }
+        }))
+        if (!srcToResult.size) return
+
+        // 用 transaction 真正更新编辑器中的 image 节点
+        // （直接改 getJSON() 副本不会反映到视图，会导致 img 仍加载远程 URL 触发 CORS）
+        const tr = editor.state.tr
+        let updated = 0
+        editor.state.doc.descendants((node: any, pos: number) => {
+            if (node.type.name === 'image') {
+                const mapped = srcToResult.get(node.attrs?.src)
+                if (mapped) {
+                    tr.setNodeMarkup(pos, undefined, { src: mapped.url, id: mapped.id })
+                    updated++
+                }
+            }
+            return true
+        })
+        if (updated > 0) editor.view.dispatch(tr)
     }
 
     const onPaste = async (content: any) => {
