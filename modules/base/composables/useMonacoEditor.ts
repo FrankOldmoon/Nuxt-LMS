@@ -1,6 +1,68 @@
 /**
  * Monaco Editor：CDN 加载 + 初始化 + 格式化
  */
+const CDN_BASE = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs'
+
+// 进行中的脚本加载 Promise，避免并发实例重复加载 / 在脚本未执行完就 resolve
+const scriptLoadPromises = new Map<string, Promise<void>>()
+
+// Monaco 全局加载 Promise（单例），保证 AMD loader 引导流程只执行一次
+let monacoLoadPromise: Promise<any> | null = null
+
+function loadScript(url: string): Promise<void> {
+  if (scriptLoadPromises.has(url)) return scriptLoadPromises.get(url)!
+
+  const promise = new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector(`script[src="${url}"]`) as HTMLScriptElement | null
+    if (existing) {
+      // 标签已存在：若已加载完成直接 resolve，否则等待其 onload（修复竞态）
+      if (existing.dataset.loaded === 'true') {
+        resolve()
+        return
+      }
+      existing.addEventListener('load', () => resolve())
+      existing.addEventListener('error', () => reject(new Error(`Failed to load ${url}`)))
+      return
+    }
+    const script = document.createElement('script')
+    script.src = url
+    script.onload = () => {
+      script.dataset.loaded = 'true'
+      resolve()
+    }
+    script.onerror = () => reject(new Error(`Failed to load ${url}`))
+    document.head.appendChild(script)
+  })
+  scriptLoadPromises.set(url, promise)
+  return promise
+}
+
+function loadMonaco(): Promise<any> {
+  if (monacoLoadPromise) return monacoLoadPromise
+
+  monacoLoadPromise = (async () => {
+    if ((window as any).monaco) return (window as any).monaco
+
+    await loadScript(`${CDN_BASE}/loader.js`)
+
+    const req = (window as any).require
+    if (!req || typeof req.config !== 'function') {
+      throw new Error('Monaco AMD loader 未能注册 window.require')
+    }
+
+    return new Promise((resolve) => {
+      req.config({ paths: { vs: CDN_BASE } })
+      req(['vs/editor/editor.main'], () => {
+        resolve((window as any).monaco)
+      })
+    })
+  })()
+
+  // 失败时清空缓存以便后续可重试
+  monacoLoadPromise.catch(() => { monacoLoadPromise = null })
+  return monacoLoadPromise
+}
+
 export function useMonacoEditor(
   modelValue: () => string,
   language: () => string,
@@ -15,39 +77,6 @@ export function useMonacoEditor(
   const editorContainer = ref<HTMLElement | null>(null)
   let editor: any = null
   let monaco: any = null
-
-  const CDN_BASE = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs'
-
-  function loadScript(url: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (document.querySelector(`script[src="${url}"]`)) {
-        resolve()
-        return
-      }
-      const script = document.createElement('script')
-      script.src = url
-      script.onload = () => resolve()
-      script.onerror = reject
-      document.head.appendChild(script)
-    })
-  }
-
-  async function loadMonaco(): Promise<any> {
-    if ((window as any).monaco) {
-      monaco = (window as any).monaco
-      return monaco
-    }
-
-    await loadScript(`${CDN_BASE}/loader.js`)
-
-    return new Promise((resolve) => {
-      ;(window as any).require.config({ paths: { vs: CDN_BASE } })
-      ;(window as any).require(['vs/editor/editor.main'], () => {
-        monaco = (window as any).monaco
-        resolve(monaco)
-      })
-    })
-  }
 
   async function formatEditorCode() {
     if (!editor || !monaco || !autoFormat()) return
@@ -65,7 +94,7 @@ export function useMonacoEditor(
   }
 
   async function initEditor() {
-    await loadMonaco()
+    monaco = await loadMonaco()
 
     editor = monaco.editor.create(editorContainer.value, {
       value: modelValue(),

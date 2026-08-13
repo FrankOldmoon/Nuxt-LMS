@@ -262,6 +262,7 @@
     "needLms": "Chatroom requires the LMS module to be enabled"
   },
   "question": {
+    "label": "Question",
     "loading": "Loading question data...",
     "notFound": "Question data not found",
     "namePlaceholder": "Question Name",
@@ -1094,6 +1095,7 @@
     "show": "Show",
     "hide": "Hide",
     "stop": "Stop",
-    "unsaved": "Unsaved"
+    "unsaved": "Unsaved",
+    "fullscreen": "Fullscreen"
   }
 }

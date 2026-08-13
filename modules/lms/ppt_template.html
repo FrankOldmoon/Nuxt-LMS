@@ -1,0 +1,2163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Image Processing for AI Vision</title>
+
+
+    <!-- =========================================================
+       REVEAL.JS
+       ========================================================= -->
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/highlight/monokai.css">
+
+
+    <!-- =========================================================
+       TAILWIND CSS
+       ========================================================= -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+
+        tailwind.config = {
+
+            theme: {
+
+                extend: {
+
+                    colors: {
+
+                        presentation: {
+
+                            primary: "#4f46e5",
+
+                            secondary: "#06b6d4",
+
+                            accent: "#f59e0b"
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    </script>
+
+
+    <!-- =========================================================
+       AI GENERATION RULES
+       =========================================================
+
+       IMPORTANT:
+
+       This presentation is an INTERACTIVE HTML PRESENTATION.
+
+       It is NOT a traditional static PowerPoint.
+
+       Every slide should contain at least ONE interactive
+       element whenever educationally appropriate.
+
+       =========================================================
+
+       INTERACTION PRIORITY
+       ---------------------------------------------------------
+
+       1. Click
+       2. Toggle
+       3. Slider
+       4. Drag
+       5. Input
+       6. Hover
+       7. Animation
+
+       Prefer interactions that directly teach the concept.
+
+       =========================================================
+
+       INTERACTIVE ELEMENT RULE
+       ---------------------------------------------------------
+
+       Every normal teaching slide should contain at least
+       one element that the learner can interact with.
+
+       Examples:
+
+           button
+           card
+           tab
+           toggle
+           slider
+           checkbox
+           radio
+           input
+           draggable element
+           clickable image
+           clickable diagram
+
+       =========================================================
+
+       FEEDBACK RULE
+       ---------------------------------------------------------
+
+       Every interaction should preferably produce feedback.
+
+       Examples:
+
+           text changes
+           number changes
+           color changes
+           image changes
+           progress changes
+           explanation appears
+           correct / incorrect appears
+           animation starts
+
+       Avoid buttons that only say:
+
+           "Click me"
+
+       without producing meaningful feedback.
+
+       =========================================================
+
+       EDUCATIONAL INTERACTION
+       ---------------------------------------------------------
+
+       Interaction should help students:
+
+           explore
+           compare
+           predict
+           experiment
+           classify
+           discover
+           test
+           reflect
+
+       =========================================================
+
+       NO STATIC SLIDES
+       ---------------------------------------------------------
+
+       Avoid slides containing only:
+
+           title
+           paragraph
+           bullet list
+
+       Convert static information into:
+
+           cards
+           tabs
+           clickable steps
+           interactive diagrams
+           quizzes
+           comparisons
+           simulations
+
+       =========================================================
+
+       SELF-CONTAINED
+       ---------------------------------------------------------
+
+       All interactions should work inside the HTML file.
+
+       Use:
+
+           HTML
+           Tailwind CSS
+           vanilla JavaScript
+
+       Avoid unnecessary external JavaScript libraries.
+
+       =========================================================
+
+       REVEAL.JS SAFETY
+       ---------------------------------------------------------
+
+       Interactive controls must not accidentally trigger
+       Reveal.js slide navigation.
+
+       Use:
+
+           event.stopPropagation()
+
+       for important interactive controls.
+
+       =========================================================
+
+       LONG CONTENT
+       ---------------------------------------------------------
+
+       Prefer splitting content into multiple slides.
+
+       If necessary:
+
+           max-h-[560px]
+           overflow-y-auto
+
+       Never create page-level scrolling.
+
+       =========================================================
+
+       SLIDE SIZE
+       ---------------------------------------------------------
+
+       1280 × 720
+
+       16:9
+
+       =========================================================
+  -->
+
+
+</head>
+
+
+<body class="w-full h-screen overflow-hidden bg-white">
+
+
+    <div class="reveal">
+
+        <div class="slides">
+
+
+            <!-- =====================================================
+           SLIDE 1
+           INTERACTION: START BUTTON
+           ===================================================== -->
+
+            <section>
+
+                <div class="
+          w-full
+          h-full
+          flex
+          flex-col
+          items-center
+          justify-center
+          text-center
+        ">
+
+                    <p class="
+            text-lg
+            font-semibold
+            uppercase
+            tracking-widest
+            text-indigo-600
+            mb-5
+          ">
+                        AI Vision
+                    </p>
+
+                    <h1 class="
+            text-6xl
+            font-bold
+            text-gray-900
+          ">
+                        Image Processing
+                    </h1>
+
+                    <p class="
+            mt-5
+            text-2xl
+            text-gray-500
+          ">
+                        How Images Become Useful to AI
+                    </p>
+
+
+                    <button id="startButton" onclick="
+              event.stopPropagation();
+
+              document
+                .getElementById('startMessage')
+                .classList.remove('hidden');
+
+              this.classList.add('hidden');
+            " class="
+              mt-10
+              px-8
+              py-4
+              rounded-2xl
+              bg-indigo-600
+              text-white
+              text-xl
+              font-semibold
+              hover:bg-indigo-700
+              transition
+              cursor-pointer
+            ">
+                        Start Exploring →
+                    </button>
+
+
+                    <p id="startMessage" class="
+              hidden
+              mt-8
+              text-xl
+              text-indigo-600
+              font-semibold
+            ">
+                        Great! Let's explore how AI sees images.
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================================
+           SLIDE 2
+           INTERACTION: CLICK CARDS
+           ===================================================== -->
+
+            <section>
+
+                <div class="
+          w-full
+          h-full
+          flex
+          flex-col
+          justify-center
+          px-16
+        ">
+
+                    <h2 class="
+            text-4xl
+            font-bold
+            text-gray-900
+            mb-4
+          ">
+                        Why Does Image Processing Matter?
+                    </h2>
+
+                    <p class="
+            text-xl
+            text-gray-500
+            mb-8
+          ">
+                        Click each idea to discover what image processing does.
+                    </p>
+
+
+                    <div class="
+            grid
+            grid-cols-3
+            gap-6
+          ">
+
+
+                        <button onclick="
+                event.stopPropagation();
+
+                document.getElementById('qualityInfo')
+                  .classList.toggle('hidden');
+              " class="
+                text-left
+                rounded-2xl
+                border
+                border-gray-200
+                bg-gray-100
+                p-7
+                hover:shadow-lg
+                transition
+                cursor-pointer
+              ">
+
+                            <div class="text-4xl mb-4">
+                                🔍
+                            </div>
+
+                            <h3 class="
+                text-2xl
+                font-bold
+                text-indigo-600
+              ">
+                                Improve Quality
+                            </h3>
+
+                            <p id="qualityInfo" class="
+                  hidden
+                  mt-4
+                  text-lg
+                  text-gray-600
+                ">
+                                Noise can be reduced and important details
+                                can become easier to see.
+                            </p>
+
+                        </button>
+
+
+                        <button onclick="
+                event.stopPropagation();
+
+                document.getElementById('featureInfo')
+                  .classList.toggle('hidden');
+              " class="
+                text-left
+                rounded-2xl
+                border
+                border-gray-200
+                bg-gray-100
+                p-7
+                hover:shadow-lg
+                transition
+                cursor-pointer
+              ">
+
+                            <div class="text-4xl mb-4">
+                                🎯
+                            </div>
+
+                            <h3 class="
+                text-2xl
+                font-bold
+                text-cyan-600
+              ">
+                                Highlight Features
+                            </h3>
+
+                            <p id="featureInfo" class="
+                  hidden
+                  mt-4
+                  text-lg
+                  text-gray-600
+                ">
+                                Processing can make edges, shapes and
+                                patterns easier for AI to detect.
+                            </p>
+
+                        </button>
+
+
+                        <button onclick="
+                event.stopPropagation();
+
+                document.getElementById('dataInfo')
+                  .classList.toggle('hidden');
+              " class="
+                text-left
+                rounded-2xl
+                border
+                border-gray-200
+                bg-gray-100
+                p-7
+                hover:shadow-lg
+                transition
+                cursor-pointer
+              ">
+
+                            <div class="text-4xl mb-4">
+                                🧠
+                            </div>
+
+                            <h3 class="
+                text-2xl
+                font-bold
+                text-amber-500
+              ">
+                                Prepare Data
+                            </h3>
+
+                            <p id="dataInfo" class="
+                  hidden
+                  mt-4
+                  text-lg
+                  text-gray-600
+                ">
+                                Images can be resized, normalized and
+                                transformed into suitable model input.
+                            </p>
+
+                        </button>
+
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================================
+           SLIDE 3
+           INTERACTION: HUMAN VS COMPUTER
+           ===================================================== -->
+
+            <section>
+
+                <div class="
+          w-full
+          h-full
+          flex
+          flex-col
+          justify-center
+          px-16
+        ">
+
+                    <h2 class="
+            text-4xl
+            font-bold
+            text-gray-900
+            mb-8
+          ">
+                        What Does AI See?
+                    </h2>
+
+
+                    <div class="
+            grid
+            grid-cols-2
+            gap-8
+          ">
+
+
+                        <button onclick="
+                event.stopPropagation();
+
+                document.getElementById('visionResult')
+                  .innerHTML =
+                  'Humans naturally recognize objects, colors, shapes and meaning.';
+              " class="
+                rounded-2xl
+                bg-gray-900
+                p-10
+                text-white
+                hover:scale-[1.02]
+                transition
+                cursor-pointer
+              ">
+
+                            <div class="text-6xl mb-5">
+                                👁️
+                            </div>
+
+                            <h3 class="
+                text-3xl
+                font-bold
+                mb-4
+              ">
+                                Human
+                            </h3>
+
+                            <p class="text-xl text-gray-300">
+                                Click to see how humans interpret an image.
+                            </p>
+
+                        </button>
+
+
+                        <button onclick="
+                event.stopPropagation();
+
+                document.getElementById('visionResult')
+                  .innerHTML =
+                  'Computers represent images as numerical pixel values.';
+              " class="
+                rounded-2xl
+                bg-indigo-50
+                border
+                border-indigo-200
+                p-10
+                hover:scale-[1.02]
+                transition
+                cursor-pointer
+              ">
+
+                            <div class="
+                text-5xl
+                font-mono
+                text-indigo-600
+                mb-5
+              ">
+                                128 64 255
+                            </div>
+
+                            <h3 class="
+                text-3xl
+                font-bold
+                text-gray-900
+                mb-4
+              ">
+                                Computer
+                            </h3>
+
+                            <p class="
+                text-xl
+                text-gray-600
+              ">
+                                Click to see how computers represent an image.
+                            </p>
+
+                        </button>
+
+
+                    </div>
+
+
+                    <div id="visionResult" class="
+              mt-8
+              text-center
+              text-xl
+              font-semibold
+              text-indigo-600
+              min-h-[40px]
+            ">
+                        Choose Human or Computer.
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================================
+           SLIDE 4
+           INTERACTION: RGB PIXEL EXPLORER
+           ===================================================== -->
+
+            <section>
+
+                <div class="
+          w-full
+          h-full
+          flex
+          flex-col
+          justify-center
+          px-16
+        ">
+
+                    <h2 class="
+            text-4xl
+            font-bold
+            text-gray-900
+            mb-3
+          ">
+                        Explore a Pixel
+                    </h2>
+
+                    <p class="
+            text-lg
+            text-gray-500
+            mb-7
+          ">
+                        Move the sliders and watch the pixel change.
+                    </p>
+
+
+                    <div class="
+            grid
+            grid-cols-2
+            gap-12
+            items-center
+          ">
+
+
+                        <div id="pixelPreview" class="
+                w-64
+                h-64
+                mx-auto
+                rounded-3xl
+                border-4
+                border-gray-200
+                shadow-xl
+              "></div>
+
+
+                        <div class="
+              space-y-6
+            ">
+
+
+                            <div>
+
+                                <div class="
+                  flex
+                  justify-between
+                  text-lg
+                  font-semibold
+                ">
+
+                                    <span>
+                                        Red
+                                    </span>
+
+                                    <span id="redValue">
+                                        128
+                                    </span>
+
+                                </div>
+
+                                <input id="redSlider" type="range" min="0" max="255" value="128" class="w-full"
+                                    oninput="updatePixel()" onclick="event.stopPropagation()">
+
+                            </div>
+
+
+                            <div>
+
+                                <div class="
+                  flex
+                  justify-between
+                  text-lg
+                  font-semibold
+                ">
+
+                                    <span>
+                                        Green
+                                    </span>
+
+                                    <span id="greenValue">
+                                        128
+                                    </span>
+
+                                </div>
+
+                                <input id="greenSlider" type="range" min="0" max="255" value="128" class="w-full"
+                                    oninput="updatePixel()" onclick="event.stopPropagation()">
+
+                            </div>
+
+
+                            <div>
+
+                                <div class="
+                  flex
+                  justify-between
+                  text-lg
+                  font-semibold
+                ">
+
+                                    <span>
+                                        Blue
+                                    </span>
+
+                                    <span id="blueValue">
+                                        128
+                                    </span>
+
+                                </div>
+
+                                <input id="blueSlider" type="range" min="0" max="255" value="128" class="w-full"
+                                    oninput="updatePixel()" onclick="event.stopPropagation()">
+
+                            </div>
+
+
+                            <div id="rgbResult" class="
+                  rounded-xl
+                  bg-gray-100
+                  p-4
+                  text-center
+                  font-mono
+                  text-lg
+                ">
+                                RGB(128, 128, 128)
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================================
+           SLIDE 5
+           INTERACTION: IMAGE PROCESSING PIPELINE
+           ===================================================== -->
+
+            <section>
+
+                <div class="
+          w-full
+          h-full
+          flex
+          flex-col
+          justify-center
+          px-16
+        ">
+
+                    <h2 class="
+            text-4xl
+            font-bold
+            text-gray-900
+            mb-3
+          ">
+                        Build the AI Vision Pipeline
+                    </h2>
+
+                    <p class="
+            text-lg
+            text-gray-500
+            mb-8
+          ">
+                        Click each step to understand what happens.
+                    </p>
+
+
+                    <div class="
+            flex
+            items-center
+            justify-center
+            gap-4
+            flex-wrap
+          ">
+
+
+                        <button onclick="
+                event.stopPropagation();
+
+                showPipeline(
+                  'Camera',
+                  'The camera captures raw visual information.'
+                );
+              " class="
+                px-6
+                py-5
+                rounded-2xl
+                bg-gray-100
+                border
+                border-gray-200
+                text-xl
+                font-semibold
+                hover:shadow-lg
+              ">
+                            📷 Camera
+                        </button>
+
+
+                        <span class="text-3xl text-indigo-600">
+                            →
+                        </span>
+
+
+                        <button onclick="
+                event.stopPropagation();
+
+                showPipeline(
+                  'Processing',
+                  'The image can be resized, cropped, filtered or normalized.'
+                );
+              " class="
+                px-6
+                py-5
+                rounded-2xl
+                bg-indigo-50
+                border
+                border-indigo-200
+                text-xl
+                font-semibold
+                hover:shadow-lg
+              ">
+                            🛠️ Processing
+                        </button>
+
+
+                        <span class="text-3xl text-indigo-600">
+                            →
+                        </span>
+
+
+                        <button onclick="
+                event.stopPropagation();
+
+                showPipeline(
+                  'AI Model',
+                  'The model analyzes numerical patterns in the image.'
+                );
+              " class="
+                px-6
+                py-5
+                rounded-2xl
+                bg-cyan-50
+                border
+                border-cyan-200
+                text-xl
+                font-semibold
+                hover:shadow-lg
+              ">
+                            🧠 AI Model
+                        </button>
+
+
+                        <span class="text-3xl text-indigo-600">
+                            →
+                        </span>
+
+
+                        <button onclick="
+                event.stopPropagation();
+
+                showPipeline(
+                  'Prediction',
+                  'The system produces a result such as a label or detected object.'
+                );
+              " class="
+                px-6
+                py-5
+                rounded-2xl
+                bg-amber-50
+                border
+                border-amber-200
+                text-xl
+                font-semibold
+                hover:shadow-lg
+              ">
+                            🎯 Result
+                        </button>
+
+
+                    </div>
+
+
+                    <div id="pipelineResult" class="
+              mt-10
+              min-h-[100px]
+              rounded-2xl
+              bg-gray-100
+              p-7
+              text-center
+            ">
+
+                        <p class="
+              text-xl
+              text-gray-500
+            ">
+                            Click a pipeline step.
+                        </p>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================================
+           SLIDE 6
+           INTERACTION: RESIZE SIMULATION
+           ===================================================== -->
+
+            <section>
+
+                <div class="
+          w-full
+          h-full
+          flex
+          flex-col
+          justify-center
+          px-16
+        ">
+
+                    <h2 class="
+            text-4xl
+            font-bold
+            text-gray-900
+            mb-3
+          ">
+                        Why Do We Resize Images?
+                    </h2>
+
+                    <p class="
+            text-lg
+            text-gray-500
+            mb-8
+          ">
+                        Change the image size and observe the effect.
+                    </p>
+
+
+                    <div class="
+            grid
+            grid-cols-2
+            gap-10
+            items-center
+          ">
+
+
+                        <div class="
+              flex
+              items-center
+              justify-center
+              h-80
+              bg-gray-100
+              rounded-2xl
+            ">
+
+                            <div id="resizeBox" class="
+                  w-48
+                  h-48
+                  bg-indigo-500
+                  rounded-2xl
+                  flex
+                  items-center
+                  justify-center
+                  text-white
+                  text-xl
+                  font-bold
+                  transition-all
+                ">
+                                Image
+                            </div>
+
+                        </div>
+
+
+                        <div>
+
+                            <label class="
+                block
+                text-xl
+                font-semibold
+                mb-4
+              ">
+                                Image Size
+                            </label>
+
+                            <input id="sizeSlider" type="range" min="80" max="280" value="180" class="w-full"
+                                oninput="updateSize()" onclick="event.stopPropagation()">
+
+                            <div class="
+                mt-5
+                rounded-xl
+                bg-gray-100
+                p-5
+                text-center
+              ">
+
+                                <span id="sizeValue" class="
+                    text-3xl
+                    font-bold
+                    text-indigo-600
+                  ">
+                                    180 × 180
+                                </span>
+
+                                <p class="
+                  mt-3
+                  text-gray-600
+                ">
+                                    AI models often require a fixed input size.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================================
+           SLIDE 7
+           INTERACTION: BEFORE / AFTER
+           ===================================================== -->
+
+            <section>
+
+                <div class="
+          w-full
+          h-full
+          flex
+          flex-col
+          justify-center
+          px-16
+        ">
+
+                    <h2 class="
+            text-4xl
+            font-bold
+            text-gray-900
+            mb-8
+          ">
+                        Processing Can Reveal Information
+                    </h2>
+
+
+                    <div class="
+            grid
+            grid-cols-2
+            gap-8
+          ">
+
+
+                        <button id="beforeButton" onclick="
+                event.stopPropagation();
+
+                document.getElementById('beforeImage')
+                  .classList.remove('hidden');
+
+                document.getElementById('afterImage')
+                  .classList.add('hidden');
+              " class="
+                h-72
+                rounded-2xl
+                bg-gray-800
+                text-white
+                text-3xl
+                font-bold
+                hover:scale-[1.02]
+                transition
+              ">
+                            Before Processing
+                        </button>
+
+
+                        <button id="afterButton" onclick="
+                event.stopPropagation();
+
+                document.getElementById('beforeImage')
+                  .classList.add('hidden');
+
+                document.getElementById('afterImage')
+                  .classList.remove('hidden');
+              " class="
+                h-72
+                rounded-2xl
+                bg-indigo-100
+                text-indigo-700
+                text-3xl
+                font-bold
+                hover:scale-[1.02]
+                transition
+              ">
+                            After Processing
+                        </button>
+
+
+                    </div>
+
+
+                    <div class="
+            mt-7
+            text-center
+            min-h-[60px]
+          ">
+
+                        <p id="beforeImage" class="
+                text-xl
+                text-gray-600
+              ">
+                            The raw image may contain noise,
+                            poor contrast or unnecessary information.
+                        </p>
+
+
+                        <p id="afterImage" class="
+                hidden
+                text-xl
+                text-indigo-600
+                font-semibold
+              ">
+                            Processing can make useful patterns
+                            easier for an AI model to detect.
+                        </p>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================================
+           SLIDE 8
+           INTERACTION: QUIZ
+           ===================================================== -->
+
+            <section>
+
+                <div class="
+          w-full
+          h-full
+          flex
+          flex-col
+          items-center
+          justify-center
+          text-center
+          px-16
+        ">
+
+                    <p class="
+            text-lg
+            uppercase
+            tracking-widest
+            text-indigo-600
+            font-semibold
+            mb-5
+          ">
+                        Quick Challenge
+                    </p>
+
+
+                    <h2 class="
+            text-4xl
+            font-bold
+            text-gray-900
+            max-w-4xl
+          ">
+                        Why might an AI system resize an image?
+                    </h2>
+
+
+                    <div class="
+            grid
+            grid-cols-2
+            gap-5
+            mt-10
+            w-full
+            max-w-4xl
+          ">
+
+
+                        <button onclick="
+                event.stopPropagation();
+
+                quizAnswer(false, this);
+              " class="
+                p-6
+                rounded-2xl
+                bg-gray-100
+                hover:bg-gray-200
+                text-xl
+              ">
+                            To make every image the same input size
+                        </button>
+
+
+                        <button onclick="
+                event.stopPropagation();
+
+                quizAnswer(true, this);
+              " class="
+                p-6
+                rounded-2xl
+                bg-gray-100
+                hover:bg-gray-200
+                text-xl
+              ">
+                            To make the model easier to use consistently
+                        </button>
+
+
+                        <button onclick="
+                event.stopPropagation();
+
+                quizAnswer(false, this);
+              " class="
+                p-6
+                rounded-2xl
+                bg-gray-100
+                hover:bg-gray-200
+                text-xl
+              ">
+                            To turn every image into black and white
+                        </button>
+
+
+                        <button onclick="
+                event.stopPropagation();
+
+                quizAnswer(false, this);
+              " class="
+                p-6
+                rounded-2xl
+                bg-gray-100
+                hover:bg-gray-200
+                text-xl
+              ">
+                            To remove all pixels
+                        </button>
+
+
+                    </div>
+
+
+                    <div id="quizResult" class="
+              mt-7
+              text-xl
+              font-semibold
+              min-h-[40px]
+            "></div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================================
+           SLIDE 9
+           INTERACTION: APPLICATION SELECTOR
+           ===================================================== -->
+
+            <section>
+
+                <div class="
+          w-full
+          h-full
+          flex
+          flex-col
+          justify-center
+          px-16
+        ">
+
+                    <h2 class="
+            text-4xl
+            font-bold
+            text-gray-900
+            mb-3
+          ">
+                        Where Is It Used?
+                    </h2>
+
+                    <p class="
+            text-lg
+            text-gray-500
+            mb-8
+          ">
+                        Select an AI vision application.
+                    </p>
+
+
+                    <div class="
+            flex
+            gap-4
+            flex-wrap
+          ">
+
+
+                        <button onclick="
+                event.stopPropagation();
+
+                showApplication(
+                  'Face Recognition',
+                  'Images can be cropped, aligned and normalized before the system compares facial features.'
+                );
+              " class="
+                px-6
+                py-4
+                rounded-xl
+                bg-gray-100
+                hover:bg-indigo-100
+                text-lg
+                font-semibold
+              ">
+                            👤 Face Recognition
+                        </button>
+
+
+                        <button onclick="
+                event.stopPropagation();
+
+                showApplication(
+                  'Object Detection',
+                  'Processing helps prepare visual data before the model identifies objects and their locations.'
+                );
+              " class="
+                px-6
+                py-4
+                rounded-xl
+                bg-gray-100
+                hover:bg-cyan-100
+                text-lg
+                font-semibold
+              ">
+                            🚗 Object Detection
+                        </button>
+
+
+                        <button onclick="
+                event.stopPropagation();
+
+                showApplication(
+                  'Medical Imaging',
+                  'Contrast enhancement and noise reduction can make important structures easier to analyze.'
+                );
+              " class="
+                px-6
+                py-4
+                rounded-xl
+                bg-gray-100
+                hover:bg-amber-100
+                text-lg
+                font-semibold
+              ">
+                            🏥 Medical Imaging
+                        </button>
+
+
+                        <button onclick="
+                event.stopPropagation();
+
+                showApplication(
+                  'Autonomous Systems',
+                  'Cameras provide visual information that must be processed before AI makes decisions.'
+                );
+              " class="
+                px-6
+                py-4
+                rounded-xl
+                bg-gray-100
+                hover:bg-indigo-100
+                text-lg
+                font-semibold
+              ">
+                            🚘 Autonomous Systems
+                        </button>
+
+
+                    </div>
+
+
+                    <div id="applicationResult" class="
+              mt-8
+              rounded-2xl
+              bg-gray-100
+              p-8
+              min-h-[130px]
+            ">
+
+                        <p class="
+              text-xl
+              text-gray-500
+              text-center
+            ">
+                            Select an application to learn more.
+                        </p>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================================
+           SLIDE 10
+           INTERACTION: SORTING
+           ===================================================== -->
+
+            <section>
+
+                <div class="
+          w-full
+          h-full
+          flex
+          flex-col
+          justify-center
+          px-16
+        ">
+
+                    <h2 class="
+            text-4xl
+            font-bold
+            text-gray-900
+            mb-3
+          ">
+                        What Comes First?
+                    </h2>
+
+                    <p class="
+            text-lg
+            text-gray-500
+            mb-8
+          ">
+                        Click the steps in the correct order.
+                    </p>
+
+
+                    <div id="orderContainer" class="
+              flex
+              justify-center
+              gap-5
+              flex-wrap
+            ">
+
+                        <button data-order="3" onclick="selectOrder(this)" class="
+                px-7
+                py-5
+                rounded-2xl
+                bg-gray-100
+                text-xl
+                font-semibold
+              ">
+                            AI Prediction
+                        </button>
+
+
+                        <button data-order="1" onclick="selectOrder(this)" class="
+                px-7
+                py-5
+                rounded-2xl
+                bg-gray-100
+                text-xl
+                font-semibold
+              ">
+                            Capture Image
+                        </button>
+
+
+                        <button data-order="2" onclick="selectOrder(this)" class="
+                px-7
+                py-5
+                rounded-2xl
+                bg-gray-100
+                text-xl
+                font-semibold
+              ">
+                            Process Image
+                        </button>
+
+                    </div>
+
+
+                    <div id="orderResult" class="
+              mt-8
+              text-center
+              text-xl
+              font-semibold
+              min-h-[40px]
+            "></div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================================
+           SLIDE 11
+           INTERACTION: KEY TAKEAWAYS
+           ===================================================== -->
+
+            <section>
+
+                <div class="
+          w-full
+          h-full
+          flex
+          flex-col
+          justify-center
+          px-16
+        ">
+
+                    <h2 class="
+            text-4xl
+            font-bold
+            text-gray-900
+            mb-3
+          ">
+                        What Have You Learned?
+                    </h2>
+
+                    <p class="
+            text-lg
+            text-gray-500
+            mb-8
+          ">
+                        Click each idea to reveal the key point.
+                    </p>
+
+
+                    <div class="
+            grid
+            grid-cols-2
+            gap-6
+          ">
+
+
+                        <button onclick="
+                event.stopPropagation();
+
+                this.querySelector('.answer')
+                  .classList.toggle('hidden');
+              " class="
+                text-left
+                p-7
+                rounded-2xl
+                bg-indigo-50
+                border
+                border-indigo-200
+              ">
+
+                            <h3 class="
+                text-2xl
+                font-bold
+                text-indigo-600
+              ">
+                                Pixels
+                            </h3>
+
+                            <p class="
+                  answer
+                  hidden
+                  mt-4
+                  text-lg
+                  text-gray-700
+                ">
+                                Images are numerical data made from pixels.
+                            </p>
+
+                        </button>
+
+
+                        <button onclick="
+                event.stopPropagation();
+
+                this.querySelector('.answer')
+                  .classList.toggle('hidden');
+              " class="
+                text-left
+                p-7
+                rounded-2xl
+                bg-cyan-50
+                border
+                border-cyan-200
+              ">
+
+                            <h3 class="
+                text-2xl
+                font-bold
+                text-cyan-600
+              ">
+                                Processing
+                            </h3>
+
+                            <p class="
+                  answer
+                  hidden
+                  mt-4
+                  text-lg
+                  text-gray-700
+                ">
+                                Processing transforms visual data into a
+                                more useful form.
+                            </p>
+
+                        </button>
+
+
+                        <button onclick="
+                event.stopPropagation();
+
+                this.querySelector('.answer')
+                  .classList.toggle('hidden');
+              " class="
+                text-left
+                p-7
+                rounded-2xl
+                bg-amber-50
+                border
+                border-amber-200
+              ">
+
+                            <h3 class="
+                text-2xl
+                font-bold
+                text-amber-600
+              ">
+                                AI Vision
+                            </h3>
+
+                            <p class="
+                  answer
+                  hidden
+                  mt-4
+                  text-lg
+                  text-gray-700
+                ">
+                                AI models analyze processed visual information
+                                to recognize patterns and make predictions.
+                            </p>
+
+                        </button>
+
+
+                        <button onclick="
+                event.stopPropagation();
+
+                this.querySelector('.answer')
+                  .classList.toggle('hidden');
+              " class="
+                text-left
+                p-7
+                rounded-2xl
+                bg-green-50
+                border
+                border-green-200
+              ">
+
+                            <h3 class="
+                text-2xl
+                font-bold
+                text-green-600
+              ">
+                                The Big Idea
+                            </h3>
+
+                            <p class="
+                  answer
+                  hidden
+                  mt-4
+                  text-lg
+                  text-gray-700
+                ">
+                                Good AI vision begins with useful visual data.
+                            </p>
+
+                        </button>
+
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================================
+           SLIDE 12
+           INTERACTION: FINAL CHALLENGE
+           ===================================================== -->
+
+            <section>
+
+                <div class="
+          w-full
+          h-full
+          flex
+          flex-col
+          items-center
+          justify-center
+          text-center
+          px-16
+        ">
+
+                    <p class="
+            text-lg
+            uppercase
+            tracking-widest
+            text-indigo-600
+            font-semibold
+            mb-5
+          ">
+                        Final Challenge
+                    </p>
+
+
+                    <h2 class="
+            text-5xl
+            font-bold
+            text-gray-900
+            max-w-5xl
+          ">
+                        You are building an AI camera.
+                    </h2>
+
+
+                    <p class="
+            mt-6
+            text-2xl
+            text-gray-500
+          ">
+                        What image processing steps would you add before the AI model?
+                    </p>
+
+
+                    <button onclick="
+              event.stopPropagation();
+
+              document
+                .getElementById('finalAnswer')
+                .classList.toggle('hidden');
+            " class="
+              mt-10
+              px-8
+              py-4
+              rounded-2xl
+              bg-indigo-600
+              text-white
+              text-xl
+              font-semibold
+              hover:bg-indigo-700
+            ">
+                        Reveal an Example
+                    </button>
+
+
+                    <div id="finalAnswer" class="
+              hidden
+              mt-8
+              max-w-4xl
+              rounded-2xl
+              bg-gray-100
+              p-7
+            ">
+
+                        <p class="
+              text-xl
+              text-gray-700
+            ">
+                            A possible pipeline is:
+                        </p>
+
+                        <p class="
+              mt-4
+              text-2xl
+              font-bold
+              text-indigo-600
+            ">
+                            Resize → Normalize → Improve Quality → AI Model
+                        </p>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+       REVEAL.JS
+       ========================================================= -->
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js">
+    </script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/highlight/highlight.js">
+    </script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js">
+    </script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/zoom/zoom.js">
+    </script>
+
+
+    <!-- =========================================================
+       INTERACTION LOGIC
+       ========================================================= -->
+
+    <script>
+
+        /* =========================================================
+           PIXEL EXPLORER
+           ========================================================= */
+
+        function updatePixel() {
+
+            const r =
+                document.getElementById("redSlider").value;
+
+            const g =
+                document.getElementById("greenSlider").value;
+
+            const b =
+                document.getElementById("blueSlider").value;
+
+
+            document.getElementById("redValue").textContent = r;
+
+            document.getElementById("greenValue").textContent = g;
+
+            document.getElementById("blueValue").textContent = b;
+
+
+            document.getElementById("pixelPreview").style.backgroundColor =
+                `rgb(${r}, ${g}, ${b})`;
+
+
+            document.getElementById("rgbResult").textContent =
+                `RGB(${r}, ${g}, ${b})`;
+
+        }
+
+
+        /* =========================================================
+           PIPELINE
+           ========================================================= */
+
+        function showPipeline(title, description) {
+
+            document
+                .getElementById("pipelineResult")
+                .innerHTML = `
+
+          <h3 class="
+            text-2xl
+            font-bold
+            text-indigo-600
+            mb-3
+          ">
+            ${title}
+          </h3>
+
+          <p class="
+            text-xl
+            text-gray-700
+          ">
+            ${description}
+          </p>
+
+        `;
+
+        }
+
+
+        /* =========================================================
+           RESIZE
+           ========================================================= */
+
+        function updateSize() {
+
+            const size =
+                document.getElementById("sizeSlider").value;
+
+
+            const box =
+                document.getElementById("resizeBox");
+
+
+            box.style.width = `${size}px`;
+
+            box.style.height = `${size}px`;
+
+
+            document.getElementById("sizeValue").textContent =
+                `${size} × ${size}`;
+
+        }
+
+
+        /* =========================================================
+           QUIZ
+           ========================================================= */
+
+        function quizAnswer(correct, button) {
+
+            const result =
+                document.getElementById("quizResult");
+
+
+            if (correct) {
+
+                result.textContent =
+                    "✓ Correct! Consistent input sizes make model processing easier.";
+
+                result.className =
+                    "mt-7 text-xl font-semibold text-green-600 min-h-[40px]";
+
+                button.classList.add(
+                    "ring-4",
+                    "ring-green-300"
+                );
+
+            } else {
+
+                result.textContent =
+                    "Try again. Think about what an AI model expects as input.";
+
+                result.className =
+                    "mt-7 text-xl font-semibold text-red-600 min-h-[40px]";
+
+            }
+
+        }
+
+
+        /* =========================================================
+           APPLICATION
+           ========================================================= */
+
+        function showApplication(title, description) {
+
+            document
+                .getElementById("applicationResult")
+                .innerHTML = `
+
+          <h3 class="
+            text-2xl
+            font-bold
+            text-indigo-600
+            mb-3
+          ">
+            ${title}
+          </h3>
+
+          <p class="
+            text-xl
+            text-gray-700
+          ">
+            ${description}
+          </p>
+
+        `;
+
+        }
+
+
+        /* =========================================================
+           ORDERING ACTIVITY
+           ========================================================= */
+
+        let selectedOrder = [];
+
+
+        function selectOrder(button) {
+
+            const order =
+                button.dataset.order;
+
+
+            if (selectedOrder.includes(order)) {
+                return;
+            }
+
+
+            selectedOrder.push(order);
+
+
+            button.classList.add(
+                "ring-4",
+                "ring-indigo-300"
+            );
+
+
+            button.textContent =
+                `${selectedOrder.length}. ${button.textContent}`;
+
+
+            if (selectedOrder.length === 3) {
+
+                const result =
+                    document.getElementById("orderResult");
+
+
+                if (
+                    selectedOrder.join("") === "123"
+                ) {
+
+                    result.textContent =
+                        "✓ Correct! Capture → Process → Predict.";
+
+                    result.className =
+                        "mt-8 text-center text-xl font-semibold text-green-600 min-h-[40px]";
+
+                } else {
+
+                    result.textContent =
+                        "Not quite. Think about what must happen before AI can make a prediction.";
+
+                    result.className =
+                        "mt-8 text-center text-xl font-semibold text-red-600 min-h-[40px]";
+
+                }
+
+            }
+
+        }
+
+
+        /* =========================================================
+           INITIALIZE PIXEL
+           ========================================================= */
+
+        updatePixel();
+
+
+        /* =========================================================
+           REVEAL.JS
+           ========================================================= */
+
+        Reveal.initialize({
+
+            width: 1280,
+
+            height: 720,
+
+            margin: 0.04,
+
+            minScale: 0.2,
+
+            maxScale: 2.0,
+
+            controls: true,
+
+            controlsLayout: "bottom-right",
+
+            progress: true,
+
+            slideNumber: true,
+
+            hash: true,
+
+            history: true,
+
+            overview: true,
+
+            keyboard: true,
+
+            touch: true,
+
+            center: true,
+
+            transition: "slide",
+
+            backgroundTransition: "fade",
+
+            plugins: [
+
+                RevealHighlight,
+
+                RevealNotes,
+
+                RevealZoom
+
+            ]
+
+        });
+
+    </script>
+
+
+</body>
+
+</html>
