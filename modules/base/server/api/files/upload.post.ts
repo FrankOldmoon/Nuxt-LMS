@@ -9,12 +9,6 @@
  * 流程：解析来源 → 校验 → 配额 → 哈希+查重 → 落盘写库
  */
 import { db } from '@nuxthub/db'
-import { formatBytes } from '../../../utils/fileUtils'
-import { UploadError, resolveUploadSource } from '../../utils/upload/parse'
-import { validateUpload, buildDedupWhere } from '../../utils/upload/validate'
-import { persistUploadedFile, sha256Hex } from '../../utils/upload/persist'
-import { compressGifBuffer } from '../../utils/files/remoteImage'
-
 const UPLOAD_ROOT = './storage/'
 
 export default eventHandler(async (event) => {

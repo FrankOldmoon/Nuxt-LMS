@@ -1,3 +1,5 @@
+import { db, schema } from '@nuxthub/db'
+import { eq } from 'drizzle-orm'
 import { resolve, extname, basename } from 'node:path'
 import { createReadStream, access } from 'node:fs'
 import { sendStream, setResponseHeader, createError } from 'h3'
@@ -19,6 +21,20 @@ const MIME_TYPES: Record<string, string> = {
   '.mp4': 'video/mp4', '.webm': 'video/webm',
   '.zip': 'application/zip', '.rar': 'application/vnd.rar', '.7z': 'application/x-7z-compressed',
 }
+
+// 文本 / 代码文件：浏览器直接点击时以文本预览（而非触发下载）
+// 这些扩展名若走默认 application/octet-stream 或 application/javascript 会被下载，统一覆盖为 text/plain
+const TEXT_PREVIEW_EXTS = new Set([
+  '.txt', '.md', '.markdown', '.log', '.csv', '.tsv',
+  '.js', '.mjs', '.cjs', '.ts', '.jsx', '.tsx',
+  '.json', '.json5', '.css', '.scss', '.less', '.sass',
+  '.html', '.htm', '.xml', '.yaml', '.yml', '.toml', '.ini', '.conf', '.cfg', '.env', '.properties',
+  '.py', '.java', '.c', '.cpp', '.cc', '.cxx', '.h', '.hpp', '.hxx',
+  '.go', '.rs', '.rb', '.php', '.swift', '.kt', '.kts', '.dart', '.lua', '.r', '.scala', '.groovy',
+  '.sh', '.bash', '.zsh', '.fish', '.bat', '.cmd', '.ps1',
+  '.sql', '.graphql', '.gql', '.proto',
+  '.vue', '.svelte', '.astro',
+])
 
 export default eventHandler(async (event) => {
 
@@ -44,8 +60,13 @@ export default eventHandler(async (event) => {
   }
 
   const ext = extname(safePathname).toLowerCase()
-  const fileName = basename(safePathname)
-  const contentType = MIME_TYPES[ext] || 'application/octet-stream'
+  // 查询数据库获取原始文件名用于下载（DB.path 形如 /{dayDir}/{id}.ext，与 '/' + safePathname 对齐）
+  const file = await db.query.files.findFirst({ where: eq(schema.files.path, '/' + safePathname) })
+  const fileName = file?.name || basename(safePathname)
+  // 文本/代码文件统一以纯文本预览，避免 application/octet-stream / application/javascript 触发下载
+  const contentType = TEXT_PREVIEW_EXTS.has(ext)
+    ? 'text/plain; charset=utf-8'
+    : (MIME_TYPES[ext] || 'application/octet-stream')
   setResponseHeader(event, 'Content-Type', contentType)
   // 上传文件内容不变，缓存一年
   setResponseHeader(event, 'Cache-Control', 'public, max-age=31536000, immutable')
