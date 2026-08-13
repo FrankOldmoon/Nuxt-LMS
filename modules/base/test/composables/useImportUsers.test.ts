@@ -17,10 +17,10 @@ beforeEach(() => {
 })
 
 describe('composables/useImportUsers - 常量与初始状态', () => {
-  it('HEADERS 包含 7 个列', async () => {
+  it('HEADERS 包含 5 个列', async () => {
     const { useImportUsers } = await import('../../composables/useImportUsers')
     const { HEADERS } = useImportUsers(ref(false))
-    expect(HEADERS).toEqual(['username', 'email', 'name', 'prefer_name', 'english_name', 'password', 'class'])
+    expect(HEADERS).toEqual(['username', 'email', 'name', 'password', 'class'])
   })
 
   it('COL_WIDTHS 包含各列宽度', async () => {
@@ -28,7 +28,7 @@ describe('composables/useImportUsers - 常量与初始状态', () => {
     const { COL_WIDTHS } = useImportUsers(ref(false))
     expect(COL_WIDTHS[0]).toBe(110)
     expect(COL_WIDTHS[1]).toBe(180)
-    expect(COL_WIDTHS[6]).toBe(100)
+    expect(COL_WIDTHS[4]).toBe(100)
   })
 
   it('importing/importMsg/importOk 初始值', async () => {
@@ -68,7 +68,7 @@ describe('composables/useImportUsers - doImport 成功', () => {
       const resetSpy = vi.fn()
       const { sheetRef, doImport, importOk, importMsg, importing } = useImportUsers(ref(false))
       sheetRef.value = {
-        getRows: () => [['alice', 'a@x.com', 'Alice', 'Al', 'A', 'pwd', 'C1']],
+        getRows: () => [['alice', 'a@x.com', 'Alice', 'pwd', 'C1']],
         reset: resetSpy,
       }
       const p = doImport()
@@ -96,12 +96,12 @@ describe('composables/useImportUsers - doImport 成功', () => {
     const { useImportUsers } = await import('../../composables/useImportUsers')
     const { sheetRef, doImport } = useImportUsers(ref(false))
     sheetRef.value = {
-      getRows: () => [['u1', 'e1', 'n1', 'p1', 'en1', 'pw1', 'c1']],
+      getRows: () => [['u1', 'e1', 'n1', 'pw1', 'c1']],
       reset: () => {},
     }
     await doImport()
     expect(capturedBody.users).toEqual([
-      { username: 'u1', email: 'e1', name: 'n1', prefer_name: 'p1', english_name: 'en1', password: 'pw1', class: 'c1' },
+      { username: 'u1', email: 'e1', name: 'n1', password: 'pw1', class: 'c1' },
     ])
   })
 })

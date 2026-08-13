@@ -63,7 +63,7 @@ describe('composables/useClassUsersTable', () => {
     const r = useClassUsersTable(makeProps(), { UButton: () => {} })
     expect(r.users.value).toEqual([])
     expect(r.pending.value).toBe(false)
-    expect(r.sorting.value).toEqual([{ id: 'preferName', desc: false }])
+    expect(r.sorting.value).toEqual([{ id: 'name', desc: false }])
     expect(r.activeTab.value).toBe('students')
   })
 
@@ -111,14 +111,14 @@ describe('composables/useClassUsersTable', () => {
     expect(r.onlineMap[7]).toBe(true)
   })
 
-  it('columns 包含 name/preferName/rollNumber', async () => {
+  it('columns 包含 name/rollNumber', async () => {
     const { useClassUsersTable } = await import('../../composables/useClassUsersTable')
     const r = useClassUsersTable(makeProps(), { UButton: () => {} })
     const cols = r.columns.value
     const ids = cols.map((c: any) => c.id || c.accessorKey)
     expect(ids).toContain('name')
-    expect(ids).toContain('preferName')
     expect(ids).toContain('rollNumber')
+    expect(ids).not.toContain('preferName')
   })
 
   it('hideNumber=true 时不包含 number 列', async () => {
@@ -190,10 +190,10 @@ describe('composables/useClassUsersTable', () => {
     setMockFetchHandler(async () => ({ data: null, success: true, msg: '' }))
     const { useClassUsersTable } = await import('../../composables/useClassUsersTable')
     const r = useClassUsersTable(makeProps(), { UButton: () => {} })
-    // 默认按 preferName 升序排序：a(id=2) 在前 → number '1'，b(id=1) → number '2'
+    // 默认按 name 升序排序：a(id=2) 在前 → number '1'，b(id=1) → number '2'
     r.users.value = [
-      { id: 1, name: 'b', preferName: 'b', isTeacher: false },
-      { id: 2, name: 'a', preferName: 'a', isTeacher: false },
+      { id: 1, name: 'b', isTeacher: false },
+      { id: 2, name: 'a', isTeacher: false },
     ]
     await new Promise((resolve) => setTimeout(resolve, 0))
     await r.autoFillNumbers()

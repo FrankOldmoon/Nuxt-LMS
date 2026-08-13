@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Browser Recorder - Audio &amp; Camera</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --panel-2: #273449;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --success: #10b981;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .subtitle {
+      color: var(--muted);
+      margin: 0 0 24px;
+      font-size: 14px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 880px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .card h2 {
+      margin: 0;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--panel-2);
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .preview {
+      width: 100%;
+      background: #000;
+      border-radius: 10px;
+      aspect-ratio: 16 / 9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 13px;
+      overflow: hidden;
+    }
+    .preview video, .preview audio {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    button {
+      flex: 1;
+      min-width: 110px;
+      padding: 11px 14px;
+      border: none;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.05s;
+      color: #fff;
+    }
+    button:active { transform: translateY(1px); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-record { background: var(--accent); }
+    .btn-record:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-stop { background: var(--danger); }
+    .btn-stop:hover:not(:disabled) { background: var(--danger-hover); }
+    .btn-download { background: var(--success); }
+    .btn-download:hover:not(:disabled) { background: #059669; }
+    .status {
+      font-size: 13px;
+      color: var(--muted);
+      min-height: 20px;
+    }
+    .status.live { color: var(--danger); }
+    .status.ready { color: var(--success); }
+    .timer {
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+    }
+    .rec-dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--danger);
+      margin-right: 6px;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    .footer {
+      margin-top: 24px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    a.download-link {
+      color: var(--success);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    a.download-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Browser Recorder</h1>
+  <p class="subtitle">Record audio (WAV) and camera video directly in your browser. No uploads, everything stays on your device.</p>
+
+  <div class="grid">
+    <!-- Audio Recorder -->
+    <section class="card">
+      <h2>Audio Recorder <span class="badge">WAV</span></h2>
+      <div class="preview" id="audioPreview">
+        <span>Audio preview will appear here</span>
+      </div>
+      <div class="controls">
+        <button class="btn-record" id="audioRecordBtn">Start Recording</button>
+        <button class="btn-stop" id="audioStopBtn" disabled>Stop</button>
+        <button class="btn-download" id="audioDownloadBtn" disabled>Download</button>
+      </div>
+      <div class="status" id="audioStatus">Ready</div>
+    </section>
+
+    <!-- Camera Recorder -->
+    <section class="card">
+      <h2>Camera Recorder <span class="badge">MP4</span></h2>
+      <div class="preview" id="cameraPreview">
+        <span>Camera preview will appear here</span>
+      </div>
+      <div class="controls">
+        <button class="btn-record" id="cameraRecordBtn">Start Recording</button>
+        <button class="btn-stop" id="cameraStopBtn" disabled>Stop</button>
+        <button class="btn-download" id="cameraDownloadBtn" disabled>Download</button>
+      </div>
+      <div class="status" id="cameraStatus">Ready</div>
+    </section>
+  </div>
+
+  <div class="footer">
+    All processing happens locally in your browser. Grant microphone/camera permission when prompted.
+  </div>
+
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+  <script>
+    // ===== Helpers =====
+    function pad(n) { return n.toString().padStart(2, '0'); }
+    function formatTime(ms) {
+      const s = Math.floor(ms / 1000);
+      return `${pad(Math.floor(s / 60))}:${pad(s % 60)}`;
+    }
+    function timestamp() {
+      const d = new Date();
+      return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+    }
+    function extForMime(mime) {
+      if (!mime) return 'webm';
+      if (mime.includes('mp4')) return 'mp4';
+      if (mime.includes('ogg')) return 'ogv';
+      return 'webm';
+    }
+
+    // ===== WAV Encoder =====
+    // Captures PCM frames via AudioContext and encodes a 16-bit PCM WAV blob.
+    class WavRecorder {
+      constructor() {
+        this.audioContext = null;
+        this.stream = null;
+        this.processor = null;
+        this.source = null;
+        this.chunks = [];
+        this.sampleRate = 44100;
+        this.recording = false;
+      }
+
+      async start() {
+        this.stream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true }
+        });
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        this.sampleRate = this.audioContext.sampleRate;
+        this.source = this.audioContext.createMediaStreamSource(this.stream);
+        // Use ScriptProcessor for broad browser compatibility.
+        this.processor = this.audioContext.createScriptProcessor(4096, 1, 1);
+        this.chunks = [];
+
+        this.processor.onaudioprocess = (e) => {
+          if (!this.recording) return;
+          const input = e.inputBuffer.getChannelData(0);
+          // Copy because the buffer is reused.
+          this.chunks.push(new Float32Array(input));
+        };
+
+        this.source.connect(this.processor);
+        this.processor.connect(this.audioContext.destination);
+        this.recording = true;
+      }
+
+      stop() {
+        this.recording = false;
+        if (this.processor) this.processor.disconnect();
+        if (this.source) this.source.disconnect();
+        if (this.stream) this.stream.getTracks().forEach(t => t.stop());
+        if (this.audioContext) this.audioContext.close();
+      }
+
+      getBlob() {
+        const length = this.chunks.reduce((acc, c) => acc + c.length, 0);
+        const flat = new Float32Array(length);
+        let offset = 0;
+        for (const c of this.chunks) {
+          flat.set(c, offset);
+          offset += c.length;
+        }
+        return this.encodeWav(flat, this.sampleRate);
+      }
+
+      encodeWav(samples, sampleRate) {
+        const buffer = new ArrayBuffer(44 + samples.length * 2);
+        const view = new DataView(buffer);
+        const writeString = (offset, str) => {
+          for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+        };
+        writeString(0, 'RIFF');
+        view.setUint32(4, 36 + samples.length * 2, true);
+        writeString(8, 'WAVE');
+        writeString(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true); // PCM
+        view.setUint16(22, 1, true); // mono
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * 2, true);
+        view.setUint16(32, 2, true);
+        view.setUint16(34, 16, true);
+        writeString(36, 'data');
+        view.setUint32(40, samples.length * 2, true);
+        let offset = 44;
+        for (let i = 0; i < samples.length; i++, offset += 2) {
+          const s = Math.max(-1, Math.min(1, samples[i]));
+          view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+        }
+        return new Blob([view], { type: 'audio/wav' });
+      }
+    }
+
+    // ===== Audio Recorder UI =====
+    (function setupAudio() {
+      const recordBtn = document.getElementById('audioRecordBtn');
+      const stopBtn = document.getElementById('audioStopBtn');
+      const downloadBtn = document.getElementById('audioDownloadBtn');
+      const statusEl = document.getElementById('audioStatus');
+      const preview = document.getElementById('audioPreview');
+
+      let recorder = null;
+      let lastUrl = null;
+      let timerInterval = null;
+      let startTime = 0;
+
+      function setStatus(text, cls) {
+        statusEl.textContent = text;
+        statusEl.className = 'status ' + (cls || '');
+      }
+
+      function clearPreview() {
+        preview.innerHTML = '<span>Audio preview will appear here</span>';
+      }
+
+      recordBtn.addEventListener('click', async () => {
+        try {
+          recorder = new WavRecorder();
+          await recorder.start();
+          recordBtn.disabled = true;
+          stopBtn.disabled = false;
+          downloadBtn.disabled = true;
+          startTime = Date.now();
+          setStatus('Recording...', 'live');
+          timerInterval = setInterval(() => {
+            setStatus(`<span class="rec-dot"></span>Recording <span class="timer">${formatTime(Date.now() - startTime)}</span>`, 'live');
+          }, 250);
+          clearPreview();
+        } catch (err) {
+          setStatus('Error: ' + err.message);
+          recorder = null;
+        }
+      });
+
+      stopBtn.addEventListener('click', () => {
+        if (!recorder) return;
+        clearInterval(timerInterval);
+        recorder.stop();
+        const blob = recorder.getBlob();
+        if (lastUrl) URL.revokeObjectURL(lastUrl);
+        lastUrl = URL.createObjectURL(blob);
+        preview.innerHTML = '';
+        const audio = document.createElement('audio');
+        audio.controls = true;
+        audio.src = lastUrl;
+        preview.appendChild(audio);
+        downloadBtn.disabled = false;
+        recordBtn.disabled = false;
+        stopBtn.disabled = true;
+        setStatus(`Ready (${(blob.size / 1024).toFixed(1)} KB, ${recorder.sampleRate} Hz)`, 'ready');
+        recorder = null;
+      });
+
+      downloadBtn.addEventListener('click', () => {
+        if (!lastUrl) return;
+        const a = document.createElement('a');
+        a.href = lastUrl;
+        a.download = `recording_audio_${timestamp()}.wav`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      });
+    })();
+
+    // ===== Camera Recorder UI =====
+    (function setupCamera() {
+      const recordBtn = document.getElementById('cameraRecordBtn');
+      const stopBtn = document.getElementById('cameraStopBtn');
+      const downloadBtn = document.getElementById('cameraDownloadBtn');
+      const statusEl = document.getElementById('cameraStatus');
+      const preview = document.getElementById('cameraPreview');
+
+      let mediaRecorder = null;
+      let stream = null;
+      let chunks = [];
+      let lastBlob = null;
+      let lastUrl = null;
+      let timerInterval = null;
+      let startTime = 0;
+
+      function setStatus(text, cls) {
+        statusEl.innerHTML = text;
+        statusEl.className = 'status ' + (cls || '');
+      }
+
+      function showInPreview(blob) {
+        if (lastUrl) URL.revokeObjectURL(lastUrl);
+        lastBlob = blob;
+        lastUrl = URL.createObjectURL(blob);
+        preview.innerHTML = '';
+        const video = document.createElement('video');
+        video.controls = true;
+        video.src = lastUrl;
+        preview.appendChild(video);
+      }
+
+      // Prefer native MP4 (Safari); fall back to WebM and transcode on stop.
+      function pickMime(list) {
+        for (const c of list) {
+          if (window.MediaRecorder && MediaRecorder.isTypeSupported(c)) return c;
+        }
+        return '';
+      }
+      const MP4_MIMES = [
+        'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+        'video/mp4;codecs=h264,aac',
+        'video/mp4'
+      ];
+      const WEBM_MIMES = [
+        'video/webm;codecs=vp9,opus',
+        'video/webm;codecs=vp8,opus',
+        'video/webm;codecs=vp9',
+        'video/webm;codecs=vp8',
+        'video/webm'
+      ];
+      const recordMime = pickMime(MP4_MIMES) || pickMime(WEBM_MIMES) || '';
+
+      if (!window.MediaRecorder || !recordMime) {
+        setStatus('MediaRecorder not supported in this browser');
+        recordBtn.disabled = true;
+      }
+
+      // ===== ffmpeg.wasm for MP4 transcoding (lazy loaded) =====
+      let ffmpegInstance = null;
+      async function getFfmpeg() {
+        if (!ffmpegInstance) {
+          if (!window.FFmpeg) throw new Error('ffmpeg.min.js failed to load (check network)');
+          ffmpegInstance = FFmpeg.createFFmpeg({
+            log: false,
+            corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'
+          });
+          await ffmpegInstance.load();
+        }
+        return ffmpegInstance;
+      }
+
+      async function transcodeToMp4(blob, srcExt) {
+        const ffmpeg = await getFfmpeg();
+        const inputName = `input.${srcExt}`;
+        const outputName = 'output.mp4';
+        ffmpeg.FS('writeFile', inputName, new Uint8Array(await blob.arrayBuffer()));
+        await ffmpeg.run(
+          '-i', inputName,
+          '-c:v', 'libx264',
+          '-preset', 'fast',
+          '-crf', '23',
+          '-c:a', 'aac',
+          '-b:a', '128k',
+          '-movflags', '+faststart',
+          outputName
+        );
+        const data = ffmpeg.FS('readFile', outputName);
+        return new Blob([data.buffer], { type: 'video/mp4' });
+      }
+
+      recordBtn.addEventListener('click', async () => {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+            audio: true
+          });
+          preview.innerHTML = '';
+          const video = document.createElement('video');
+          video.autoplay = true;
+          video.muted = true;
+          video.playsInline = true;
+          video.srcObject = stream;
+          preview.appendChild(video);
+
+          mediaRecorder = recordMime
+            ? new MediaRecorder(stream, { mimeType: recordMime })
+            : new MediaRecorder(stream);
+          chunks = [];
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) chunks.push(e.data);
+          };
+          mediaRecorder.start();
+          recordBtn.disabled = true;
+          stopBtn.disabled = false;
+          downloadBtn.disabled = true;
+          startTime = Date.now();
+          timerInterval = setInterval(() => {
+            setStatus(`<span class="rec-dot"></span>Recording <span class="timer">${formatTime(Date.now() - startTime)}</span>`, 'live');
+          }, 250);
+        } catch (err) {
+          setStatus('Error: ' + err.message);
+          if (stream) stream.getTracks().forEach(t => t.stop());
+          stream = null;
+        }
+      });
+
+      stopBtn.addEventListener('click', () => {
+        if (!mediaRecorder) return;
+        clearInterval(timerInterval);
+        // Capture state before nulling — onstop fires asynchronously.
+        const recorderRef = mediaRecorder;
+        const collectedChunks = chunks;
+        const usedMime = recordMime || recorderRef.mimeType || 'video/webm';
+        const isMp4 = usedMime.includes('mp4');
+
+        recorderRef.onstop = async () => {
+          recordBtn.disabled = false;
+          stopBtn.disabled = true;
+          const rawBlob = new Blob(collectedChunks, { type: usedMime });
+
+          if (isMp4) {
+            // Native MP4 — ready to download immediately.
+            showInPreview(rawBlob);
+            downloadBtn.disabled = false;
+            setStatus(`Ready (${(rawBlob.size / 1024).toFixed(1)} KB, MP4)`, 'ready');
+            return;
+          }
+
+          // WebM source — transcode to MP4 automatically.
+          try {
+            setStatus('Loading ffmpeg.wasm (first run downloads ~25 MB)...');
+            setStatus('Converting to MP4, please wait...');
+            const mp4Blob = await transcodeToMp4(rawBlob, extForMime(usedMime));
+            showInPreview(mp4Blob);
+            downloadBtn.disabled = false;
+            setStatus(`Ready (${(mp4Blob.size / 1024).toFixed(1)} KB, MP4)`, 'ready');
+          } catch (err) {
+            // Fall back to the original WebM so the user still gets something.
+            showInPreview(rawBlob);
+            downloadBtn.disabled = false;
+            setStatus('MP4 conversion failed, falling back to WebM: ' + err.message);
+          }
+        };
+        recorderRef.stop();
+        if (stream) stream.getTracks().forEach(t => t.stop());
+        mediaRecorder = null;
+        stream = null;
+      });
+
+      downloadBtn.addEventListener('click', () => {
+        if (!lastUrl || !lastBlob) return;
+        const a = document.createElement('a');
+        a.href = lastUrl;
+        a.download = `recording_camera_${timestamp()}.mp4`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -40,10 +40,7 @@ export function useCourseMembersManager(props: { courseId: number }) {
       const data = await cRequest<LmsSearchUser[]>(
         `/api/courses/members-search?courseId=${props.courseId}&keyword=${encodeURIComponent(keyword)}`,
       )
-      searchResults.value = (data || []).filter((u) => {
-        const m = members.value.find((m) => m.userId === u.id)
-        return !m || !(m.isTeacher && m.isEditor)
-      })
+      searchResults.value = data || []
     } catch {
       searchResults.value = []
     }
@@ -57,10 +54,6 @@ export function useCourseMembersManager(props: { courseId: number }) {
         body: { courseId: props.courseId, userId, role, action: 'add' },
       })
       await loadMembers()
-      searchResults.value = searchResults.value.filter((u) => {
-        const m = members.value.find((m) => m.userId === u.id)
-        return !m || !(m.isTeacher && m.isEditor)
-      })
       toast.add({ title: t('courseEditor.memberAdded'), color: 'success' })
     } catch (e: any) {
       toast.add({ title: e.message || t('courseEditor.memberUpdateFailed'), color: 'error' })

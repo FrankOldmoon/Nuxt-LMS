@@ -87,13 +87,13 @@ describe('composables/useCourseMembersManager', () => {
     expect(r.searchResults.value).toEqual([])
   })
 
-  it('searchUsers 关键字有效时返回结果并过滤已是 teacher+editor 的', async () => {
+  it('searchUsers 关键字有效时返回全部结果（已是 teacher+editor 的也显示，按钮禁用）', async () => {
     setMockFetchHandler(async (url) => {
       if (url.includes('/api/courses/members-search')) {
         return {
           data: [
             { id: 10, name: 'alice' },
-            { id: 20, name: 'bob' }, // 已是 teacher+editor，应过滤掉
+            { id: 20, name: 'bob' }, // 已是 teacher+editor，仍显示但按钮禁用
             { id: 30, name: 'carol' },
           ],
           success: true,
@@ -114,8 +114,8 @@ describe('composables/useCourseMembersManager', () => {
     await r.loadMembers()
     r.memberSearchKeyword.value = 'a'
     await r.searchUsers()
-    expect(r.searchResults.value).toHaveLength(2)
-    expect(r.searchResults.value.map((u: any) => u.id)).toEqual([10, 30])
+    expect(r.searchResults.value).toHaveLength(3)
+    expect(r.searchResults.value.map((u: any) => u.id)).toEqual([10, 20, 30])
   })
 
   it('addMember 成功后重新 loadMembers 并刷新 searchResults', async () => {
@@ -143,7 +143,7 @@ describe('composables/useCourseMembersManager', () => {
     expect(addCalled).toBe(true)
     expect(membersCallCount).toBeGreaterThanOrEqual(1)
     expect(r.memberUpdating.value).toBeNull()
-    // addMember 之后 searchResults 仍保留全部：5 现在是 teacher 但不是 editor，仍可被加为 editor
+    // addMember 之后 searchResults 保持不变（不再过滤，按钮禁用由 MemberSearchRow 处理）
     expect(r.searchResults.value).toHaveLength(2)
   })
 

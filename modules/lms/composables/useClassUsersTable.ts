@@ -64,7 +64,7 @@ export function useClassUsersTable(
   const users = ref<any[]>([])
   const _pending = ref(false)
   const pending = computed(() => props.loading ?? _pending.value)
-  const sorting = ref(props.defaultSort ?? [{ id: 'preferName', desc: false }])
+  const sorting = ref(props.defaultSort ?? [{ id: 'name', desc: false }])
 
   const teachers = computed(() => users.value.filter((u) => u.isTeacher === true))
   const students = computed(() => users.value.filter((u) => u.isTeacher !== true))
@@ -438,7 +438,6 @@ export function useClassUsersTable(
     }
     cols.push(
       { accessorKey: 'name', header: sortableHeader(t('classSelector.colName')) },
-      { accessorKey: 'preferName', header: sortableHeader(t('classSelector.colPreferName')) },
       { accessorKey: 'rollNumber', header: sortableHeader(t('classSelector.colRollNumber')) },
     )
     if (!props.hideActions) {

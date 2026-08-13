@@ -1,7 +1,7 @@
 import type { Ref } from 'vue'
 
-const HEADERS = ['username', 'email', 'name', 'prefer_name', 'english_name', 'password', 'class']
-const COL_WIDTHS = { 0: 110, 1: 180, 2: 100, 3: 110, 4: 120, 5: 120, 6: 100 }
+const HEADERS = ['username', 'email', 'name', 'password', 'class']
+const COL_WIDTHS = { 0: 110, 1: 180, 2: 100, 3: 120, 4: 100 }
 
 /**
  * 批量导入用户：读取表格 + 导入
@@ -36,10 +36,8 @@ export function useImportUsers(isOpen: Ref<boolean>) {
       username: values[0],
       email: values[1],
       name: values[2],
-      prefer_name: values[3],
-      english_name: values[4],
-      password: values[5],
-      class: values[6],
+      password: values[3],
+      class: values[4],
     }))
 
     importing.value = true

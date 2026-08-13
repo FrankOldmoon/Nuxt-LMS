@@ -924,7 +924,12 @@
     "imageOnly": "Only image files are allowed",
     "imageTooLarge": "Image size cannot exceed 5MB",
     "uploadFailed": "Upload failed",
-    "content": "Course Content"
+    "content": "Course Content",
+    "tabContent": "Content",
+    "tabBasic": "Basic Info",
+    "tabConfig": "Display",
+    "tabMembers": "Members",
+    "tabGoods": "Goods"
   },
   "courseData": {
     "editor": "Content Manager",

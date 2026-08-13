@@ -1,5 +1,5 @@
 <template>
-    <UModal v-model:open="isOpen" scrollable fullscreen>
+    <UModal v-model:open="isOpen" fullscreen>
         <template #content>
             <div class="flex flex-col" style="height: 75vh;">
                 <!-- 标题栏 -->
@@ -18,7 +18,7 @@
                 <!-- 提示 -->
                 <div class="px-4 pb-2 text-xs text-gray-400">
                     {{ t('importUsers.requiredColumns') }}: username, email, class &nbsp;|&nbsp;
-                    {{ t('importUsers.optionalColumns') }}: name, prefer_name, english_name, password ({{ t('importUsers.passwordDefault') }})
+                    {{ t('importUsers.optionalColumns') }}: name, password ({{ t('importUsers.passwordDefault') }})
                 </div>
 
                 <!-- Univer 表格组件 -->

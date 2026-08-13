@@ -30,24 +30,19 @@
 
     <!-- 搜索并添加成员 -->
     <UFormField :label="$t('courseEditor.addMember')" class="w-full">
-      <UInput
-        v-model="memberSearchKeyword"
-        :placeholder="$t('courseEditor.searchPlaceholder')"
-        icon="i-lucide-search"
-        class="w-full"
-      />
-      <div v-if="searchResults.length" class="mt-2 space-y-1 max-h-40 overflow-y-auto">
-        <MemberSearchRow v-for="u in searchResults" :key="u.id" :user="u"
-          :updating="memberUpdating === u.id"
-          :is-teacher="isMemberRole(u.id, 'teacher')"
-          :is-editor="isMemberRole(u.id, 'editor')"
-          @add="addMember" />
-      </div>
+      <UInput v-model="memberSearchKeyword" :placeholder="$t('courseEditor.searchPlaceholder')" icon="i-lucide-search"
+        class="w-full" />
     </UFormField>
+    <div v-if="searchResults.length" class="mt-2 space-y-1 min-h-4 max-h-40 overflow-y-auto">
+      <MemberSearchRow v-for="u in searchResults" :key="u.id" :user="u" :updating="memberUpdating === u.id"
+        :is-teacher="isMemberRole(u.id, 'teacher')" :is-editor="isMemberRole(u.id, 'editor')" @add="addMember" />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import MemberSearchRow from './memberSearchRow.vue'
+import MemberRow from './memberRow.vue'
 const props = defineProps<{
   courseId: number
 }>()
@@ -56,6 +51,5 @@ const {
   memberSearchKeyword, searchResults, memberUpdating,
   teachers, editors, isMemberRole, loadMembers, addMember, removeMember,
 } = useCourseMembersManager(props)
-
 defineExpose({ loadMembers })
 </script>

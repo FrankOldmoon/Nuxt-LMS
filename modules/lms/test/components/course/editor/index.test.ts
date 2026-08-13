@@ -51,6 +51,7 @@ const _globalStubs = {
     props: ['label'],
   },
   USeparator: { template: '<div class="useparator" />', props: ['label'] },
+  UTabs: { template: '<div class="utabs"><slot /></div>', props: ['modelValue', 'items'] },
   richEditor: { template: '<div class="rich-editor" />', props: ['modelValue', 'lockId'] },
   CourseEditorConfigForm: { template: '<div class="config-form" />' },
   CourseEditorMembersManager: { template: '<div class="members-manager" />' },
