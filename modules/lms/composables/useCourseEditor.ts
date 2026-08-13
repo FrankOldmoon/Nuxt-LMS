@@ -7,7 +7,8 @@ export function useCourseEditor(
 ) {
   const { t } = useI18n()
   const toast = useToast()
-  const { hasRole, isCourseEditor } = useAuth()
+  const { hasRole } = useAuth()
+  const { isCourseEditor } = useAuthLms()
 
   const open = ref(false)
   const loading = ref(false)

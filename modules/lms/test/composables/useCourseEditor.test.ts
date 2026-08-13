@@ -15,16 +15,11 @@ import { ref } from 'vue'
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
-  // 覆盖 useAuth 桩以包含 isCourseEditor
-  const baseUseAuth = (globalThis as any).useAuth
-  ;(globalThis as any).useAuth = () => {
-    const base = baseUseAuth()
-    return {
-      ...base,
-      isCourseEditor: (cid: number) => cid === 5,
-      isCourseTeacher: (cid: number) => cid === 5,
-    }
-  }
+  // 桩 useAuthLms（auto-import from lms）
+  ;(globalThis as any).useAuthLms = () => ({
+    isCourseEditor: (cid: number) => cid === 5,
+    isCourseTeacher: (cid: number) => cid === 5,
+  })
 })
 
 describe('composables/useCourseEditor', () => {
