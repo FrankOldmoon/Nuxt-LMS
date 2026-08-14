@@ -13,10 +13,15 @@ const _mockDb = {
   returning: vi.fn(),
   update: vi.fn().mockReturnThis(),
   set: vi.fn().mockReturnThis(),
-  where: vi.fn(),
+  where: vi.fn().mockResolvedValue([]),
+  select: vi.fn().mockReturnThis(),
+  from: vi.fn().mockReturnThis(),
+  onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
 }
 const _mockSchema = {
-  users: { id: 'id', username: 'username', email: 'email', password: 'password', name: 'name' },
+  users: { id: 'id', username: 'username', email: 'email', password: 'password', name: 'name', deletedAt: 'deletedAt' },
+  classes: { id: 'id', name: 'name', deletedAt: 'deletedAt' },
+  userClasses: {},
 }
 vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
 
@@ -31,7 +36,10 @@ beforeEach(() => {
   _mockDb.returning = vi.fn()
   _mockDb.update = vi.fn().mockReturnThis()
   _mockDb.set = vi.fn().mockReturnThis()
-  _mockDb.where = vi.fn()
+  _mockDb.where = vi.fn().mockResolvedValue([])
+  _mockDb.select = vi.fn().mockReturnThis()
+  _mockDb.from = vi.fn().mockReturnThis()
+  _mockDb.onConflictDoNothing = vi.fn().mockResolvedValue(undefined)
 })
 
 function makeEvent(opts: { query?: Record<string, any>; body?: any } = {}) {
@@ -160,8 +168,71 @@ describe('API: users/import.post', () => {
     await handler(makeEvent({
       body: { users: [{ username: 'alice', email: 'alice@test.com' }] },
     }))
-    // hashPassword 应被调用（默认密码 REDACTED）
+    // hashPassword 应被调用（默认密码 123abc）
     expect(globalThis.hashPassword).toBeDefined()
+  })
+
+  it('批次内 username 重复时返回错误且不插入', async () => {
+    setMockAuthState({ id: 1, username: 'admin', name: 'Admin', roles: ['admin'], permissions: [] })
+    const handler = (await import('../../server/api/users/import.post')).default
+    const result = await handler(makeEvent({
+      body: { users: [
+        { username: 'alice', email: 'a1@test.com' },
+        { username: 'alice', email: 'a2@test.com' },
+      ] },
+    }))
+    expect(result.success).toBe(false)
+    expect(result.data.errors[0]).toContain('重复')
+    expect(_mockDb.insert).not.toHaveBeenCalled()
+  })
+
+  it('库内 username 已存在时返回错误且不插入', async () => {
+    setMockAuthState({ id: 1, username: 'admin', name: 'Admin', roles: ['admin'], permissions: [] })
+    // select(users).where() 返回已存在的 username
+    _mockDb.where.mockResolvedValueOnce([{ username: 'alice', email: 'other@test.com' }])
+    const handler = (await import('../../server/api/users/import.post')).default
+    const result = await handler(makeEvent({
+      body: { users: [{ username: 'alice', email: 'alice@test.com' }] },
+    }))
+    expect(result.success).toBe(false)
+    expect(result.data.errors[0]).toContain('alice')
+    expect(result.data.errors[0]).toContain('已存在')
+    expect(_mockDb.insert).not.toHaveBeenCalled()
+  })
+
+  it('DB 插入异常时返回失败而非 500', async () => {
+    setMockAuthState({ id: 1, username: 'admin', name: 'Admin', roles: ['admin'], permissions: [] })
+    _mockDb.returning.mockRejectedValue(new Error('unique violation'))
+    const handler = (await import('../../server/api/users/import.post')).default
+    const result = await handler(makeEvent({
+      body: { users: [{ username: 'alice', email: 'alice@test.com' }] },
+    }))
+    expect(result.success).toBe(false)
+    expect(result.data.errors[0]).toContain('unique violation')
+  })
+
+  it('有 class 时创建班级并关联 userClasses、回填 classId', async () => {
+    setMockAuthState({ id: 1, username: 'admin', name: 'Admin', roles: ['admin'], permissions: [] })
+    // select 链：第1次 users 查重返回 []，第2次 classes 查找返回 []
+    _mockDb.where
+      .mockResolvedValueOnce([])   // users 查重
+      .mockResolvedValueOnce([])   // classes 查找
+    // users insert 返回新用户，classes insert 返回新建班级
+    _mockDb.returning
+      .mockResolvedValueOnce([{ id: 7 }])
+      .mockResolvedValueOnce([{ id: 100, name: '高一(1)班' }])
+    const handler = (await import('../../server/api/users/import.post')).default
+    const result = await handler(makeEvent({
+      body: { users: [{ username: 'alice', email: 'alice@test.com', class: '高一(1)班' }] },
+    }))
+    expect(result.success).toBe(true)
+    expect(result.data.count).toBe(1)
+    // 插入了 users / classes / userClasses 三次
+    expect(_mockDb.insert).toHaveBeenCalledTimes(3)
+    // 关联 userClasses（onConflictDoNothing 被调用）
+    expect(_mockDb.onConflictDoNothing).toHaveBeenCalled()
+    // 回填 classId（update 被调用）
+    expect(_mockDb.update).toHaveBeenCalled()
   })
 })
 
