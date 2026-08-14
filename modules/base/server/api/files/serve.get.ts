@@ -70,10 +70,13 @@ export default eventHandler(async (event) => {
   setResponseHeader(event, 'Content-Type', contentType)
   // 上传文件内容不变，缓存一年
   setResponseHeader(event, 'Cache-Control', 'public, max-age=31536000, immutable')
+  // ASCII 兜底文件名：去除非 ASCII 与双引号/控制字符，避免 header 出现非 ASCII 触发 ERR_INVALID_CHAR
+  // filename* 用 RFC 5987 百分号编码保留完整 UTF-8 原名
+  const asciiName = fileName.replace(/[^\x20-\x7E]/g, '').replace(/"/g, '').trim() || 'file'
   setResponseHeader(
     event,
     'Content-Disposition',
-    `inline; filename="${fileName}"; filename*=UTF-8''${encodeURIComponent(fileName)}`,
+    `inline; filename="${asciiName}"; filename*=UTF-8''${encodeURIComponent(fileName)}`,
   )
 
   const stream = createReadStream(absolutePath)

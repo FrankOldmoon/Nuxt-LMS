@@ -8,6 +8,7 @@ export function useImageCropper(
   aspectRatio: () => number | null | undefined,
   stencilType: () => 'circle' | 'rectangle' | undefined,
   onUploaded: (url: string) => void,
+  outputSize?: () => { width: number; height: number } | null | undefined,
 ) {
   const internalOpen = ref(false)
   const imageSrc = ref<string | null>(null)
@@ -44,9 +45,10 @@ export function useImageCropper(
     uploading.value = true
     try {
       const { canvas } = cropperRef.value.getResult()
+      const finalCanvas = applyOutputSize(canvas, outputSize?.() ?? null)
 
       const blob = await new Promise<Blob>((resolve) => {
-        canvas.toBlob(resolve, 'image/webp', 0.8)
+        finalCanvas.toBlob(resolve, 'image/webp', 0.8)
       })
 
       const webpName = originalFile.value.name.replace(/\.(png|jpg|jpeg|gif|bmp|webp)$/i, '.webp')
@@ -78,4 +80,23 @@ export function useImageCropper(
     stencil, stencilProps,
     setImage, close, handleCrop,
   }
+}
+
+/**
+ * 将裁剪结果 canvas 缩放到指定尺寸（如头像 128x128）；不传 size 则原样返回
+ */
+function applyOutputSize(
+  src: HTMLCanvasElement,
+  size: { width: number; height: number } | null | undefined,
+): HTMLCanvasElement {
+  if (!size) return src
+  const target = document.createElement('canvas')
+  target.width = size.width
+  target.height = size.height
+  const ctx = target.getContext('2d')
+  if (!ctx) return src
+  ctx.imageSmoothingEnabled = true
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(src, 0, 0, size.width, size.height)
+  return target
 }

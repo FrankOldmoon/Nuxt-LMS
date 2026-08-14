@@ -32,7 +32,8 @@ const _globalStubs = {
     props: ['open'],
   },
   TableImageCropperTrigger: {
-    template: '<button class="cropper-trigger" @click="$emit(\'uploaded\', \'https://cropped.example.com/x.png\')"><slot /></button>',
+    template: '<button class="cropper-trigger" :data-stencil="stencilType" :data-output="JSON.stringify(outputSize)" @click="$emit(\'uploaded\', \'https://cropped.example.com/x.png\')"><slot /></button>',
+    props: ['stencilType', 'outputSize'],
     emits: ['uploaded'],
   },
 }
@@ -123,5 +124,27 @@ describe('formField/imageCropperField.vue', () => {
       global: _globalConfig,
     })
     expect(wrapper.find('.modal').exists()).toBe(true)
+  })
+
+  it('avatar 列触发圆形裁剪 + 128x128 输出', async () => {
+    const { default: ImageCropperField } = await import('../../../components/table/formField/imageCropperField.vue')
+    const wrapper = mount(ImageCropperField, {
+      props: { col: makeCol({ jsName: 'avatarImg' }), form: { avatarImg: '' } },
+      global: _globalConfig,
+    })
+    const trigger = wrapper.find('.cropper-trigger')
+    expect(trigger.attributes('data-stencil')).toBe('circle')
+    expect(trigger.attributes('data-output')).toBe(JSON.stringify({ width: 128, height: 128 }))
+  })
+
+  it('非 avatar 列保持矩形 + 原尺寸', async () => {
+    const { default: ImageCropperField } = await import('../../../components/table/formField/imageCropperField.vue')
+    const wrapper = mount(ImageCropperField, {
+      props: { col: makeCol({ jsName: 'coverImg' }), form: { coverImg: '' } },
+      global: _globalConfig,
+    })
+    const trigger = wrapper.find('.cropper-trigger')
+    expect(trigger.attributes('data-stencil')).toBe('rectangle')
+    expect(trigger.attributes('data-output')).toBe('null')
   })
 })

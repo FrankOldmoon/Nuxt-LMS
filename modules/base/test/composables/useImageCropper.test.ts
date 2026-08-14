@@ -162,4 +162,31 @@ describe('composables/useImageCropper - handleCrop', () => {
     const croppedFile = capturedFormData.get('files')
     expect(croppedFile.name).toBe('photo.webp')
   })
+
+  it('设置 outputSize 时将 canvas 缩放到目标尺寸', async () => {
+    setMockFetchHandler(async () => ({ data: { url: 'http://cdn/128.webp' }, success: true, msg: '' }))
+    const drawImage = vi.fn()
+    const targetCanvas = {
+      width: 0,
+      height: 0,
+      getContext: () => ({ imageSmoothingEnabled: false, imageSmoothingQuality: 'high', drawImage }),
+      toBlob: (cb: (b: Blob) => void) => cb(new Blob(['webp'], { type: 'image/webp' })),
+    }
+    const srcCanvas = { toBlob: (cb: (b: Blob) => void) => cb(new Blob(['orig'])) }
+    const createSpy = vi.spyOn(document, 'createElement').mockReturnValue(targetCanvas as any)
+    const { useImageCropper } = await import('../../composables/useImageCropper')
+    const { setImage, handleCrop, cropperRef } = useImageCropper(
+      () => 1,
+      () => 'circle',
+      () => {},
+      () => ({ width: 128, height: 128 }),
+    )
+    setImage(new File(['x'], 'a.jpg', { type: 'image/jpeg' }))
+    cropperRef.value = { getResult: () => ({ canvas: srcCanvas }) }
+    await handleCrop()
+    expect(targetCanvas.width).toBe(128)
+    expect(targetCanvas.height).toBe(128)
+    expect(drawImage).toHaveBeenCalledWith(srcCanvas, 0, 0, 128, 128)
+    createSpy.mockRestore()
+  })
 })

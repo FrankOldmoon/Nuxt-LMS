@@ -21,7 +21,7 @@
 
     <!-- 图片裁剪弹窗 -->
     <FormImageCropperModal ref="cropperRef" :title="$t('profile.cropAvatar')" :aspect-ratio="1"
-      stencil-type="circle" @uploaded="onCropped" />
+      stencil-type="circle" :output-size="{ width: 128, height: 128 }" @uploaded="onCropped" />
 
     <UFormField :label="$t('profile.name')" class="w-full">
       <UInput v-model="form.name" :placeholder="$t('profile.namePlaceholder')" class="w-full"

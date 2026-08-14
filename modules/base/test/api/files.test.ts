@@ -33,7 +33,7 @@ vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
 // h3: download/serve 显式 import sendStream/setResponseHeader/createError
 vi.mock('h3', () => ({
   sendStream: async (_e: any, s: any) => s,
-  setResponseHeader: () => {},
+  setResponseHeader: vi.fn(() => {}),
   createError: (opts: any) => {
     const err = new Error(opts.message || opts.statusMessage || 'Error')
     ;(err as any).statusCode = opts.statusCode ?? 500
@@ -415,6 +415,25 @@ describe('API: files/serve.get', () => {
     const handler = (await import('../../server/api/files/serve.get')).default
     const result = await handler(makeEvent(undefined, { pathname: 'dir/1.png' }))
     expect(result).toBe('mock-stream')
+  })
+
+  it('中文文件名：Content-Disposition 全 ASCII，不触发 ERR_INVALID_CHAR', async () => {
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    const { db } = await import('@nuxthub/db')
+    vi.mocked(db.query.files.findFirst).mockResolvedValue({ id: 1, name: '中文.png', path: '/dir/1.png' } as any)
+    const h3 = await import('h3')
+    const spy = vi.mocked(h3.setResponseHeader)
+    const handler = (await import('../../server/api/files/serve.get')).default
+    await handler(makeEvent(undefined, { pathname: 'dir/1.png' }))
+    const cdCall = spy.mock.calls.find((c: any[]) => c[1] === 'Content-Disposition')
+    expect(cdCall).toBeTruthy()
+    const value = String(cdCall![2])
+    // 整个 header 值只含 ASCII（避免 Node setHeader 的 ERR_INVALID_CHAR）
+    expect(value).toMatch(/^[\x00-\x7F]*$/)
+    // filename* 含 RFC 5987 编码的完整原名
+    expect(value).toContain("filename*=UTF-8''")
+    // filename="..." 兜底部分不含非 ASCII
+    expect(value).not.toMatch(/filename="[^"]*[\u0080-\uFFFF]/)
   })
 })
 

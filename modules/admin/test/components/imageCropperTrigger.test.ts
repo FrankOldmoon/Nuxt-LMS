@@ -10,8 +10,8 @@ const _stubs = {
   ..._globalStubs,
   FormImageCropperModal: {
     name: 'FormImageCropperModal',
-    template: '<div class="cropper-modal" :data-stencil="stencilType" :data-aspect="aspectRatio"><slot /></div>',
-    props: ['title', 'stencilType', 'aspectRatio'],
+    template: '<div class="cropper-modal" :data-stencil="stencilType" :data-aspect="aspectRatio" :data-output="JSON.stringify(outputSize)"><slot /></div>',
+    props: ['title', 'stencilType', 'aspectRatio', 'outputSize'],
     emits: ['uploaded', 'close'],
   },
 }
@@ -73,6 +73,25 @@ describe('table/ImageCropperTrigger.vue', () => {
       global: _config,
     })
     expect(wrapper.props('aspectRatio')).toBeCloseTo(16 / 9, 5)
+  })
+
+  it('默认 outputSize 为 null', async () => {
+    const { default: ImageCropperTrigger } = await import('../../components/table/ImageCropperTrigger.vue')
+    const wrapper = mount(ImageCropperTrigger, {
+      global: _config,
+    })
+    const cropper = wrapper.find('.cropper-modal')
+    expect(cropper.attributes('data-output')).toBe('null')
+  })
+
+  it('接受 outputSize prop 并透传给 FormImageCropperModal', async () => {
+    const { default: ImageCropperTrigger } = await import('../../components/table/ImageCropperTrigger.vue')
+    const wrapper = mount(ImageCropperTrigger, {
+      props: { outputSize: { width: 128, height: 128 } },
+      global: _config,
+    })
+    const cropper = wrapper.find('.cropper-modal')
+    expect(cropper.attributes('data-output')).toBe(JSON.stringify({ width: 128, height: 128 }))
   })
 
   it('点击触发按钮调用 file input.click()', async () => {

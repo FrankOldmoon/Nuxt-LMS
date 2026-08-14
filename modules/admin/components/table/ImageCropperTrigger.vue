@@ -23,6 +23,7 @@
     :title="$t('admin.form.cropImage')"
     :stencil-type="stencilType"
     :aspect-ratio="aspectRatio"
+    :output-size="outputSize"
     @uploaded="onUploaded"
     @close="onClose"
   />
@@ -43,9 +44,12 @@ const props = withDefaults(defineProps<{
   stencilType?: 'circle' | 'rectangle'
   /** 固定宽高比（不传则自由比例） */
   aspectRatio?: number | null
+  /** 输出固定尺寸（如头像 128x128）；不传则保留裁剪区域原尺寸 */
+  outputSize?: { width: number; height: number } | null
 }>(), {
   stencilType: 'rectangle',
   aspectRatio: 1,
+  outputSize: null,
 })
 
 const emit = defineEmits<{

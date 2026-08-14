@@ -9,7 +9,11 @@
         class="cursor-pointer"
         @click="previewImage = true"
       />
-      <TableImageCropperTrigger @uploaded="(url: string) => { form[col.jsName] = url }" />
+      <TableImageCropperTrigger
+        :stencil-type="isAvatar ? 'circle' : 'rectangle'"
+        :output-size="isAvatar ? { width: 128, height: 128 } : null"
+        @uploaded="(url: string) => { form[col.jsName] = url }"
+      />
     </div>
     <UModal v-model:open="previewImage">
       <template #content>
@@ -21,6 +25,8 @@
 
 <script setup lang="ts">
 import type { ColumnMeta } from '../../../utils/types'
-defineProps<{ col: ColumnMeta; form: Record<string, any> }>()
+const props = defineProps<{ col: ColumnMeta; form: Record<string, any> }>()
 const previewImage = ref(false)
+// 头像类列名（avatar/head）使用圆形裁剪 + 128x128 输出；其余图片列保持矩形原尺寸
+const isAvatar = computed(() => /avatar|head/i.test(props.col.jsName))
 </script>

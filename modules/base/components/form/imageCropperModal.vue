@@ -31,6 +31,8 @@ const props = defineProps<{
     title?: string
     aspectRatio?: number | null // null= 自由比例，number=固定比例
     stencilType?: 'circle' | 'rectangle'
+    /** 输出固定尺寸（如头像 128x128）；不传则保留裁剪区域原尺寸 */
+    outputSize?: { width: number; height: number } | null
 }>()
 
 const emit = defineEmits<{
@@ -47,6 +49,7 @@ const {
     () => props.aspectRatio,
     () => props.stencilType,
     (url) => emit('uploaded', url),
+    () => props.outputSize,
 )
 
 function close() {
