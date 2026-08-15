@@ -1,5 +1,5 @@
 import { db, schema } from '@nuxthub/db'
-import { eq } from 'drizzle-orm'
+import { eq, and, isNull, ne } from 'drizzle-orm'
 import { hashPassword, verifyPassword } from '../../utils/auth'
 
 /**
@@ -43,6 +43,16 @@ export default defineEventHandler(async (event) => {
   await db.update(schema.users)
     .set({ password: hashedPwd })
     .where(eq(schema.users.id, authUser.id))
+
+  // 失效该用户所有其他会话（保留当前会话）
+  const currentToken = getCookie(event, 'auth_token')
+  await db.update(schema.tokens)
+    .set({ deletedAt: new Date() })
+    .where(and(
+      eq(schema.tokens.userId, authUser.id),
+      isNull(schema.tokens.deletedAt),
+      ne(schema.tokens.name, currentToken || ''),
+    ))
 
   return cResp(null, '密码修改成功')
 })

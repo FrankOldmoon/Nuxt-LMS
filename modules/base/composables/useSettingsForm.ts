@@ -19,7 +19,7 @@ const DEFAULTS = {
   siteDefaultUserRole: 'student',
   sitePasswordMinLength: 6,
   siteSessionMaxAge: 604800,
-  siteLoginMaxAttempts: 0,
+  siteLoginMaxAttempts: 5,
   siteLoginLockoutMinutes: 15,
   siteDriveQuota: 1073741824,
   siteTeacherDriveMultiplier: 1,

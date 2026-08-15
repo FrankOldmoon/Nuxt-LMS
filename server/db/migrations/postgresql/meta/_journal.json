@@ -8,6 +8,13 @@
       "when": 1785740629515,
       "tag": "0000_mighty_bishop",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786756428591,
+      "tag": "0001_login_brute_force_protection",
+      "breakpoints": true
     }
   ]
 }

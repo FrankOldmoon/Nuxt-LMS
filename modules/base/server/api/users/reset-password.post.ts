@@ -1,5 +1,5 @@
 import { db, schema } from "@nuxthub/db"
-import { eq } from "drizzle-orm"
+import { eq, and, isNull } from "drizzle-orm"
 
 export default eventHandler(async (event) => {
   await requireRole(event, ['teacher', 'admin'])
@@ -16,6 +16,14 @@ export default eventHandler(async (event) => {
     await db.update(schema.users).set({
       password: hashedPwd,
     }).where(eq(schema.users.id, Number(user_id)))
+
+    // 失效该用户所有会话（强制重新登录）
+    await db.update(schema.tokens)
+      .set({ deletedAt: new Date() })
+      .where(and(
+        eq(schema.tokens.userId, Number(user_id)),
+        isNull(schema.tokens.deletedAt),
+      ))
 
     return cResp({ reset: true })
   } catch (error: any) {

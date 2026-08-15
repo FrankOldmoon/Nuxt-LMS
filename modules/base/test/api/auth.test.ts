@@ -25,7 +25,7 @@ const _mockDb = {
 }
 const _mockSchema = {
   tokens: { id: 'id', name: 'name', userId: 'userId', deletedAt: 'deletedAt', createdAt: 'createdAt' },
-  users: { id: 'id', username: 'username', name: 'name', password: 'password', email: 'email', avatarImg: 'avatarImg', preferName: 'preferName', englishName: 'englishName', gender: 'gender', rollNumber: 'rollNumber', classId: 'classId', telephone: 'telephone', defaultClass: 'defaultClass', defaultLocale: 'defaultLocale', loginAt: 'loginAt', loginIp: 'loginIp' },
+  users: { id: 'id', username: 'username', name: 'name', password: 'password', email: 'email', avatarImg: 'avatarImg', preferName: 'preferName', englishName: 'englishName', gender: 'gender', rollNumber: 'rollNumber', classId: 'classId', telephone: 'telephone', defaultClass: 'defaultClass', defaultLocale: 'defaultLocale', loginAt: 'loginAt', loginIp: 'loginIp', failedAttempts: 'failedAttempts', lockedUntil: 'lockedUntil' },
   roles: { id: 'id', code: 'code', name: 'name', deletedAt: 'deletedAt' },
   userRoles: { userId: 'userId', roleId: 'roleId' },
   permissions: { id: 'id', code: 'code', name: 'name' },
@@ -181,7 +181,7 @@ describe('API: auth/login.post', () => {
     const { hashPassword } = await import('../../server/utils/auth')
     const hashed = await hashPassword('correct-pwd')
     _mockDb.limit = vi.fn().mockResolvedValue([
-      { id: 1, username: 'alice', name: 'Alice', password: hashed, email: 'a@b.c', avatarImg: null },
+      { id: 1, username: 'alice', name: 'Alice', password: hashed, email: 'a@b.c', avatarImg: null, failedAttempts: 0, lockedUntil: null },
     ])
     const handler = (await import('../../server/api/auth/login.post')).default
     const event = makeEvent({ body: { username: 'alice', password: 'correct-pwd' } })
@@ -190,6 +190,110 @@ describe('API: auth/login.post', () => {
     expect(result.data.user.username).toBe('alice')
     expect(result.data.token).toMatch(/^[0-9a-f]{64}$/)
     expect(event.cookies.auth_token).toBe(result.data.token)
+  })
+})
+
+describe('API: auth/login.post 暴力破解防护', () => {
+  beforeEach(() => {
+    resetDbChain()
+    setMockConfigStore({
+      'site:loginMaxAttempts': 3,
+      'site:loginLockoutMinutes': 15,
+    })
+  })
+
+  it('账号锁定时返回锁定提示', async () => {
+    const { hashPassword } = await import('../../server/utils/auth')
+    const hashed = await hashPassword('correct-pwd')
+    _mockDb.limit = vi.fn().mockResolvedValue([{
+      id: 1, username: 'alice', name: 'Alice', password: hashed,
+      email: 'a@b.c', avatarImg: null,
+      failedAttempts: 0,
+      lockedUntil: new Date(Date.now() + 10 * 60 * 1000), // 10 分钟后
+    }])
+    const handler = (await import('../../server/api/auth/login.post')).default
+    const result = await handler(makeEvent({ body: { username: 'alice', password: 'correct-pwd' } }))
+    expect(result.success).toBe(false)
+    expect(result.msg).toMatch(/锁定/)
+    expect(_mockDb.update).not.toHaveBeenCalled()
+  })
+
+  it('密码错误时累加失败次数', async () => {
+    const { hashPassword } = await import('../../server/utils/auth')
+    const hashed = await hashPassword('correct-pwd')
+    _mockDb.limit = vi.fn().mockResolvedValue([{
+      id: 1, username: 'alice', name: 'Alice', password: hashed,
+      email: 'a@b.c', avatarImg: null,
+      failedAttempts: 1, lockedUntil: null,
+    }])
+    const handler = (await import('../../server/api/auth/login.post')).default
+    const result = await handler(makeEvent({ body: { username: 'alice', password: 'wrong-pwd' } }))
+    expect(result.success).toBe(false)
+    expect(_mockDb.set.mock.calls[0][0]).toEqual({ failedAttempts: 2 })
+  })
+
+  it('达到最大尝试次数时锁定账号', async () => {
+    const { hashPassword } = await import('../../server/utils/auth')
+    const hashed = await hashPassword('correct-pwd')
+    _mockDb.limit = vi.fn().mockResolvedValue([{
+      id: 1, username: 'alice', name: 'Alice', password: hashed,
+      email: 'a@b.c', avatarImg: null,
+      failedAttempts: 2, lockedUntil: null, // 第 3 次失败 → 锁定
+    }])
+    const handler = (await import('../../server/api/auth/login.post')).default
+    const result = await handler(makeEvent({ body: { username: 'alice', password: 'wrong-pwd' } }))
+    expect(result.success).toBe(false)
+    const setCall = _mockDb.set.mock.calls[0][0]
+    expect(setCall.failedAttempts).toBe(0)
+    expect(setCall.lockedUntil).toBeInstanceOf(Date)
+    expect(setCall.lockedUntil.getTime()).toBeGreaterThan(Date.now())
+  })
+
+  it('登录成功时重置失败计数', async () => {
+    const { hashPassword } = await import('../../server/utils/auth')
+    const hashed = await hashPassword('correct-pwd')
+    _mockDb.limit = vi.fn().mockResolvedValue([{
+      id: 1, username: 'alice', name: 'Alice', password: hashed,
+      email: 'a@b.c', avatarImg: null,
+      failedAttempts: 2, lockedUntil: null,
+    }])
+    const handler = (await import('../../server/api/auth/login.post')).default
+    const result = await handler(makeEvent({ body: { username: 'alice', password: 'correct-pwd' } }))
+    expect(result.success).toBe(true)
+    // 第一次 set 是重置 failedAttempts/lockedUntil
+    expect(_mockDb.set.mock.calls[0][0]).toEqual({ failedAttempts: 0, lockedUntil: null })
+  })
+
+  it('锁定过期后允许登录并重置', async () => {
+    const { hashPassword } = await import('../../server/utils/auth')
+    const hashed = await hashPassword('correct-pwd')
+    _mockDb.limit = vi.fn().mockResolvedValue([{
+      id: 1, username: 'alice', name: 'Alice', password: hashed,
+      email: 'a@b.c', avatarImg: null,
+      failedAttempts: 0,
+      lockedUntil: new Date(Date.now() - 60 * 1000), // 1 分钟前已过期
+    }])
+    const handler = (await import('../../server/api/auth/login.post')).default
+    const result = await handler(makeEvent({ body: { username: 'alice', password: 'correct-pwd' } }))
+    expect(result.success).toBe(true)
+    // 第一次 set 是清除过期锁定
+    expect(_mockDb.set.mock.calls[0][0]).toEqual({ failedAttempts: 0, lockedUntil: null })
+  })
+
+  it('maxAttempts=0 时不进行失败计数', async () => {
+    setMockConfigValue('site:loginMaxAttempts', 0)
+    const { hashPassword } = await import('../../server/utils/auth')
+    const hashed = await hashPassword('correct-pwd')
+    _mockDb.limit = vi.fn().mockResolvedValue([{
+      id: 1, username: 'alice', name: 'Alice', password: hashed,
+      email: 'a@b.c', avatarImg: null,
+      failedAttempts: 0, lockedUntil: null,
+    }])
+    const handler = (await import('../../server/api/auth/login.post')).default
+    const result = await handler(makeEvent({ body: { username: 'alice', password: 'wrong-pwd' } }))
+    expect(result.success).toBe(false)
+    // 失败时不累加计数（maxAttempts=0 跳过）
+    expect(_mockDb.update).not.toHaveBeenCalled()
   })
 })
 
@@ -299,7 +403,7 @@ describe('API: auth/change-password.post', () => {
   })
 
   it('旧密码正确则更新成功', async () => {
-    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    setMockAuthState({ id: 1, username: 'alice', name: 'Alice', roles: ['student'], permissions: [] })
     const { hashPassword } = await import('../../server/utils/auth')
     const hashed = await hashPassword('correct-old')
     _mockDb.limit = vi.fn().mockResolvedValue([{ id: 1, password: hashed }])
@@ -308,6 +412,20 @@ describe('API: auth/change-password.post', () => {
     expect(result.success).toBe(true)
     expect(result.msg).toMatch(/成功/)
     expect(_mockDb.update).toHaveBeenCalled()
+  })
+
+  it('改密后失效其他会话 token', async () => {
+    setMockAuthState({ id: 1, username: 'alice', name: 'Alice', roles: ['student'], permissions: [] })
+    const { hashPassword } = await import('../../server/utils/auth')
+    const hashed = await hashPassword('correct-old')
+    _mockDb.limit = vi.fn().mockResolvedValue([{ id: 1, password: hashed }])
+    const handler = (await import('../../server/api/auth/change-password.post')).default
+    const event = makeEvent({ cookies: { auth_token: 'current-session' }, body: { oldPassword: 'correct-old', newPassword: 'newpass123' } })
+    const result = await handler(event)
+    expect(result.success).toBe(true)
+    // 第二次 set 是 token 失效（deletedAt）
+    const tokenSetCall = _mockDb.set.mock.calls[1][0]
+    expect(tokenSetCall.deletedAt).toBeInstanceOf(Date)
   })
 
   it('用户不存在返回失败', async () => {
@@ -427,7 +545,7 @@ describe('API: auth/reset-password.post', () => {
     const result = await handler(makeEvent({ body: { token: 'reset_valid', newPassword: 'newpass123' } }))
     expect(result.success).toBe(true)
     expect(result.msg).toMatch(/成功/)
-    expect(_mockDb.update).toHaveBeenCalledTimes(2) // update users + update tokens
+    expect(_mockDb.update).toHaveBeenCalledTimes(3) // update users + update tokens(reset) + update tokens(session)
   })
 })
 

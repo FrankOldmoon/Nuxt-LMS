@@ -381,6 +381,21 @@ export function getRequestIP(_event: any, _opts?: any): string | null {
   return null
 }
 
+/** getRequestPath 桩 — 从 event.path 读取请求路径 */
+export function getRequestPath(event: any): string {
+  return event?.path || ''
+}
+
+/** getRequestProtocol 桩 — 默认返回 http（测试环境非 https） */
+export function getRequestProtocol(_event: any): string {
+  return 'http'
+}
+
+/** getMethod 桩 — 从 event.method 读取 HTTP 方法 */
+export function getMethod(event: any): string {
+  return event?.method || 'GET'
+}
+
 /** runOnMeEnrich 桩 — 跨模块扩展钩子 */
 const _meEnrichHandlers: Array<(user: any) => Promise<any> | any> = []
 export function registerMeEnrich(handler: (user: any) => Promise<any> | any) {
@@ -1196,6 +1211,9 @@ const _stubsToExpose: Record<string, any> = {
   setCookie,
   deleteCookie,
   getRequestIP,
+  getRequestPath,
+  getRequestProtocol,
+  getMethod,
   registerMeEnrich,
   runOnMeEnrich,
   clearMeEnrichHandlers,

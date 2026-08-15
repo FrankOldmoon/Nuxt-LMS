@@ -22,6 +22,7 @@ const _mockSchema = {
   users: { id: 'id', username: 'username', email: 'email', password: 'password', name: 'name', deletedAt: 'deletedAt' },
   classes: { id: 'id', name: 'name', deletedAt: 'deletedAt' },
   userClasses: {},
+  tokens: { id: 'id', userId: 'userId', name: 'name', deletedAt: 'deletedAt' },
 }
 vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
 
@@ -168,7 +169,7 @@ describe('API: users/import.post', () => {
     await handler(makeEvent({
       body: { users: [{ username: 'alice', email: 'alice@test.com' }] },
     }))
-    // hashPassword 应被调用（默认密码 123abc）
+    // hashPassword 应被调用（默认密码 REDACTED）
     expect(globalThis.hashPassword).toBeDefined()
   })
 

@@ -119,6 +119,9 @@ export const users = pgTable(
     verifyAt: timestamp('verify_at'),
     loginIp: varchar('login_ip', { length: 50 }),
     loginLocation: varchar('login_location', { length: 255 }),
+    // 暴力破解防护：失败次数计数 + 锁定截止时间
+    failedAttempts: integer('failed_attempts').default(0),
+    lockedUntil: timestamp('locked_until'),
     ...withTimestamps,
   },
   (t) => ({

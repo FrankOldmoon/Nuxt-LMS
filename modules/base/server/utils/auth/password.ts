@@ -1,4 +1,4 @@
-import { randomBytes, scrypt } from 'node:crypto'
+import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto'
 
 const SALT_LENGTH = 16
 const KEY_LENGTH = 64
@@ -15,7 +15,7 @@ export async function hashPassword(password: string): Promise<string> {
   return `${salt}:${derivedKey.toString('hex')}`
 }
 
-/** 验证密码 */
+/** 验证密码（恒定时间比较，防计时侧信道） */
 export async function verifyPassword(password: string, hashed: string): Promise<boolean> {
   const [salt, key] = hashed.split(':')
   if (!salt || !key) return false
@@ -25,7 +25,10 @@ export async function verifyPassword(password: string, hashed: string): Promise<
       else resolve(k)
     })
   })
-  return key === derivedKey.toString('hex')
+  const expected = Buffer.from(key, 'hex')
+  // 长度不同时直接返回 false（timingSafeEqual 要求等长 Buffer）
+  if (expected.length !== derivedKey.length) return false
+  return timingSafeEqual(expected, derivedKey)
 }
 
 /** 生成随机 token */

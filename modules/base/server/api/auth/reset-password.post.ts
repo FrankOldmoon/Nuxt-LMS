@@ -57,10 +57,18 @@ export default defineEventHandler(async (event) => {
     .set({ password: hashedPwd })
     .where(eq(schema.users.id, tokens[0].userId))
 
-  // 删除 token（一次性）
+  // 删除 reset token（一次性）
   await db.update(schema.tokens)
     .set({ deletedAt: new Date() })
     .where(eq(schema.tokens.id, tokens[0].id))
+
+  // 失效该用户所有其他会话（防止旧会话在密码重置后仍可用）
+  await db.update(schema.tokens)
+    .set({ deletedAt: new Date() })
+    .where(and(
+      eq(schema.tokens.userId, tokens[0].userId),
+      isNull(schema.tokens.deletedAt),
+    ))
 
   return cResp(null, '密码重置成功')
 })
