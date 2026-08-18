@@ -18,7 +18,7 @@ export function useCinserts(props: any, emit: any) {
     // 下拉菜单：Markdown | HTML | JSON | 快速插入空白 | 选择现有
     const allItems = computed(() => {
         const base = [
-            { label: t('ueditor.markdown.title'), icon: 'i-lucide-markdown', onSelect: () => { markdownOpen.value = true } },
+            { label: t('ueditor.markdown.title'), icon: 'i-lucide-square-code', onSelect: () => { markdownOpen.value = true } },
             { label: t('ueditor.html.title'), icon: 'i-lucide-file-code', onSelect: () => { htmlOpen.value = true } },
             { label: t('ueditor.json.title'), icon: 'i-lucide-braces', onSelect: () => { jsonOpen.value = true } },
             { type: 'separator' },
@@ -45,6 +45,7 @@ export function useCinserts(props: any, emit: any) {
             { label: t('HTML'), icon: 'i-lucide-file-code', onSelect: () => insertTypedSheet('html') },
             { label: t('ueditor.insertPdf'), icon: 'i-lucide-file-text', onSelect: () => insertTypedSheet('pdf') },
             { label: t('ueditor.insertOffice'), icon: 'i-lucide-file-spreadsheet', onSelect: () => insertTypedSheet('office') },
+            { label: t('ueditor.insert3d'), icon: 'i-lucide-box', onSelect: () => insertVueNode('3d') },
             { label: t('ueditor.insertMindmap'), icon: 'i-lucide-network', onSelect: () => insertVueNode('mindmap') },
             { label: t('ueditor.insertAichat'), icon: 'i-lucide-bot', onSelect: () => insertAichat() },
             { label: t('ueditor.insertAigenerator'), icon: 'i-lucide-sparkles', onSelect: () => insertAigenerator() },

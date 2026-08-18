@@ -6,6 +6,9 @@
                 <div class="h-[450px]">
                     <Monaco v-model="inputText" language="json" />
                 </div>
+                <div class="flex justify-end gap-2">
+                    <UButton type="primary" @click="insertContent">{{ $t('ueditor.json.insert') }}</UButton>
+                </div>
             </div>
         </template>
     </UModal>
@@ -50,4 +53,18 @@ watch(inputText, (val) => {
         // JSON 无效时跳过
     }
 })
+
+function insertContent() {
+    if (!inputText.value.trim()) return
+    try {
+        const json = JSON.parse(inputText.value)
+        const editor = props.editor?.useEditor()
+        if (editor) {
+            editor.chain().focus().setContent(json).run()
+        }
+    } catch {
+        // JSON 无效时跳过
+    }
+    open.value = false
+}
 </script>

@@ -720,7 +720,8 @@
       "insert": "Insert"
     },
     "json": {
-      "title": "Manage JSON Content"
+      "title": "Manage JSON Content",
+      "insert": "Insert"
     },
     "aiFloat": {
       "title": "AI Generate",
@@ -750,6 +751,7 @@
     "insertSheet": "Sheet",
     "insertPdf": "PDF",
     "insertOffice": "Office",
+    "insert3d": "3D Model",
     "insertMindmap": "Mind Map",
     "insertAichat": "AI Chat",
     "insertAigenerator": "AI Question Generator",
@@ -806,6 +808,23 @@
     "officeFile": "Office File",
     "officeSelectHint": "Please upload or select an Office file (Word/Excel/PowerPoint)",
     "officeHeight": "Preview Height",
+    "model3d": "3D Model",
+    "modelName": "Name",
+    "modelNamePlaceholder": "3D Model Collection name",
+    "modelFiles": "Model Files",
+    "modelUploadHint": "Upload one or more 3D models (.glb, .gltf, .obj, .stl, .babylon)",
+    "modelSelectHint": "Click the settings icon to upload 3D models",
+    "modelList": "Model List",
+    "modelHeight": "Preview Height",
+    "modelBg": "Background Color",
+    "modelAutoRotate": "Auto Rotate",
+    "modelLoading": "Loading models",
+    "modelResetCamera": "Reset Camera",
+    "modelWireframe": "Toggle Wireframe",
+    "modelRotateOn": "Auto-Rotate On",
+    "modelRotateOff": "Auto-Rotate Off",
+    "modelExplode": "Toggle Explode View",
+    "modelFullscreen": "Fullscreen",
     "mindmap": "Mind Map",
     "mindmapPlaceholder": "Enter Markdown to generate a mind map\nSupports heading levels (# ## ###) or lists (- item)",
     "aichat": "AI Chat",
