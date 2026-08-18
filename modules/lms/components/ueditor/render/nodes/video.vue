@@ -1,6 +1,6 @@
 <template>
   <div class="umo-node-view" :style="nodeStyle" data-node-view-wrapper="">
-    <div class="umo-node-container">
+    <div class="umo-node-container w-full">
       <video
         :src="attrs.src"
         controls
@@ -27,6 +27,7 @@ const videoStyle = computed(() => ({
   display: 'block',
   maxWidth: '100%',
   width: '100%',
+  minHeight: '400px',
   height: attrs.value.height ? `${attrs.value.height}px` : 'auto',
   borderRadius: 'var(--umo-radius)',
 }))
