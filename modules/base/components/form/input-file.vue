@@ -43,6 +43,9 @@ const {
   (val) => emit('update:modelValue', val),
 )
 
+// 暴露 fileList 给父组件访问（含本地原始文件名）
+defineExpose({ fileList })
+
 // 同步外部 modelValue（如已加载的历史提交文件）到 fileList
 // 避免外部已存在的文件不显示，以及新上传时把历史文件覆盖丢失
 watch(() => props.modelValue, (val) => {

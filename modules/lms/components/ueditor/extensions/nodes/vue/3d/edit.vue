@@ -5,7 +5,7 @@
         </UFormField>
 
         <UFormField :label="t('ueditor.modelFiles')" size="sm">
-            <FormInputFile v-model="fileUrls" multiple accept=".glb,.gltf,.obj,.stl,.babylon" :placeholder="t('ueditor.modelUploadHint')" />
+            <FormInputFile ref="fileInputRef" v-model="fileUrls" multiple accept=".glb,.gltf,.obj,.stl,.babylon" :placeholder="t('ueditor.modelUploadHint')" />
         </UFormField>
 
         <div v-if="modelList.length" class="border border-default rounded-lg p-3">
@@ -61,6 +61,7 @@ const fileUrls = ref(props.config?.models?.map((m) => m.url) || [])
 const configHeight = ref(props.config?.height || 500)
 const configBg = ref(props.config?.bg || '#e0f2fe')
 const configAutoRotate = ref(!!props.config?.autoRotate)
+const fileInputRef = ref(null)
 
 const modelList = computed({
     get: () => {
@@ -75,10 +76,24 @@ const modelList = computed({
 watch(fileUrls, (urls) => {
     const existing = Array.isArray(props.config?.models) ? [...props.config.models] : []
     const existingUrls = new Set(existing.map((m) => m.url))
+    // 从 FormInputFile 的 fileList 获取上传时的本地原始文件名
+    const fileList = fileInputRef.value?.fileList || []
+    const urlToName = new Map(fileList.map((f) => [f.url, f.name]))
     urls.forEach((url) => {
         if (!existingUrls.has(url)) {
-            const parts = (url || '').split('/')
-            const fname = decodeURIComponent(parts[parts.length - 1] || '')
+            // 优先用上传时的本地文件名，回退到 URL 提取
+            let fname = urlToName.get(url) || ''
+            if (!fname) {
+                try {
+                    const u = new URL(url, window.location.origin)
+                    const pathname = u.searchParams.get('pathname') || ''
+                    const decoded = decodeURIComponent(pathname)
+                    const idx = Math.max(decoded.lastIndexOf('/'), decoded.lastIndexOf('\\'))
+                    fname = idx >= 0 ? decoded.slice(idx + 1) : decoded
+                } catch (_) {
+                    fname = 'model'
+                }
+            }
             existing.push({ url, name: fname, scale: 1, position: [0, 0, 0], rotation: [0, 0, 0] })
         }
     })
