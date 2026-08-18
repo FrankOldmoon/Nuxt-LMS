@@ -18,9 +18,9 @@
     <!-- 预览 -->
     <div v-if="config.url" class="mt-3">
       <label class="text-xs text-gray-500 mb-1 block">{{ $t('question.puzzlePreview') }}</label>
-      <div class="inline-block p-2 border border-gray-200 dark:border-gray-600 rounded">
+      <div class="inline-block">
         <div
-          class="grid gap-0.5"
+          class="grid"
           :style="{ gridTemplateColumns: `repeat(${config.split}, minmax(0, 1fr))` }"
         >
           <div

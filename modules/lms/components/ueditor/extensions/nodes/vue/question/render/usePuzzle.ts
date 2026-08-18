@@ -92,7 +92,7 @@ export function usePuzzle(props: any) {
 
   function pieceClass(pos, originalIndex) {
     if (selectedPos.value === pos) {
-      return 'ring-2 ring-blue-500 ring-offset-1'
+      return 'ring-2 ring-blue-500'
     }
     if (!submitted.value) return ''
     if (isCorrect.value) {

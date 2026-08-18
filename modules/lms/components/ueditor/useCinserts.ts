@@ -11,14 +11,16 @@ export function useCinserts(props: any, emit: any) {
 
     const markdownOpen = ref(false)
     const htmlOpen = ref(false)
+    const jsonOpen = ref(false)
     const pickerOpen = ref(false)
     const pickerType = ref('questions')
 
-    // 下拉菜单：Markdown | HTML | 快速插入空白 | 选择现有
+    // 下拉菜单：Markdown | HTML | JSON | 快速插入空白 | 选择现有
     const allItems = computed(() => {
         const base = [
-            { label: t('ueditor.markdown.title'), icon: 'i-mdi:language-markdown', onSelect: () => { markdownOpen.value = true } },
-            { label: t('ueditor.html.title'), icon: 'i-mdi:language-html5', onSelect: () => { htmlOpen.value = true } },
+            { label: t('ueditor.markdown.title'), icon: 'i-lucide-markdown', onSelect: () => { markdownOpen.value = true } },
+            { label: t('ueditor.html.title'), icon: 'i-lucide-file-code', onSelect: () => { htmlOpen.value = true } },
+            { label: t('ueditor.json.title'), icon: 'i-lucide-braces', onSelect: () => { jsonOpen.value = true } },
             { type: 'separator' },
             // 每种类型两个按钮：+ 直接插入空白 | 类型图标 选择已有
             { label: t('courseData.questionLabel'), icon: 'i-lucide-plus', onSelect: () => insertVueNode('question') },
@@ -40,7 +42,7 @@ export function useCinserts(props: any, emit: any) {
         base.push(
             { label: t('ueditor.insertInput'), icon: 'i-lucide-text-cursor-input', onSelect: () => insertQuestionNode('inputs') },
             { label: t('ueditor.insertSelect'), icon: 'i-lucide-chevron-down-square', onSelect: () => insertQuestionNode('select') },
-            { label: t('HTML'), icon: 'i-mdi:language-html5', onSelect: () => insertTypedSheet('html') },
+            { label: t('HTML'), icon: 'i-lucide-file-code', onSelect: () => insertTypedSheet('html') },
             { label: t('ueditor.insertPdf'), icon: 'i-lucide-file-text', onSelect: () => insertTypedSheet('pdf') },
             { label: t('ueditor.insertOffice'), icon: 'i-lucide-file-spreadsheet', onSelect: () => insertTypedSheet('office') },
             { label: t('ueditor.insertMindmap'), icon: 'i-lucide-network', onSelect: () => insertVueNode('mindmap') },
@@ -250,6 +252,7 @@ export function useCinserts(props: any, emit: any) {
     return {
         markdownOpen,
         htmlOpen,
+        jsonOpen,
         pickerOpen,
         pickerType,
         allItems,

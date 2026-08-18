@@ -14,6 +14,9 @@
     <!-- HTML 弹窗 -->
     <UeditorInsertHtml :editor="editor" v-model="htmlOpen" />
 
+    <!-- JSON 弹窗 -->
+    <UeditorInsertJson :editor="editor" v-model="jsonOpen" />
+
     <!-- 内容选择器 -->
     <UeditorContentPicker v-model="pickerOpen" :type="pickerType" @confirm="onPickerConfirm" />
 </template>
@@ -28,6 +31,7 @@ const props = defineProps({
 const {
     markdownOpen,
     htmlOpen,
+    jsonOpen,
     pickerOpen,
     pickerType,
     allItems,

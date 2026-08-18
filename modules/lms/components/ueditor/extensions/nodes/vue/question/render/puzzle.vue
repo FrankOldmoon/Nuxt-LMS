@@ -3,12 +3,9 @@
     <p class="text-xs text-gray-500 mb-3">{{ $t('question.puzzleRenderHint') }}</p>
 
     <!-- 拼图网格 -->
-    <div
-      v-if="imageUrl && split"
-      class="inline-block p-1 border border-gray-200 dark:border-gray-600 rounded select-none"
-    >
+    <div v-if="imageUrl && split" class="flex justify-center select-none">
       <div
-        class="grid gap-0.5"
+        class="grid"
         :style="{ gridTemplateColumns: `repeat(${split}, minmax(0, 1fr))` }"
       >
         <div

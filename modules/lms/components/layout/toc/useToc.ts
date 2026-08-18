@@ -274,13 +274,40 @@ export function useToc() {
         }
     }
 
+    // ── JSON 导出（章节内容 JSON 文件）──
+    const exportingJson = ref(false)
+    async function handleExportJson() {
+        if (!chapterContent.value) return
+        exportingJson.value = true
+        try {
+            const title = tocLinks.value[0]?.text || 'Chapter'
+            const safeName = title.replace(/[\\/:*?"<>|]/g, '_')
+            // chapterContent 可能是 { json, html } 结构，也可能是纯 JSON
+            const json = (chapterContent.value as any)?.json ?? chapterContent.value
+            const text = JSON.stringify(json, null, 2)
+            const blob = new Blob([text], { type: 'application/json' })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `${safeName}.json`
+            a.click()
+            URL.revokeObjectURL(url)
+            toast.add({ title: t('chapter.exportJsonSuccess'), color: 'success' })
+        } catch (e: any) {
+            toast.add({ title: e?.message || t('chapter.exportJsonFailed'), color: 'error' })
+        } finally {
+            exportingJson.value = false
+        }
+    }
+
     // 聚合 loading + 下拉菜单项
-    const downloading = computed(() => exportingPpt.value || exportingPdf.value)
+    const downloading = computed(() => exportingPpt.value || exportingPdf.value || exportingJson.value)
 
     const downloadItems = computed(() => [
         [
             { label: t('chapter.exportPpt'), icon: 'i-lucide-presentation', onSelect: handleExportPpt },
             { label: t('chapter.exportPdf'), icon: 'i-lucide-file-text', onSelect: handleExportPdf },
+            { label: t('chapter.exportJson'), icon: 'i-lucide-braces', onSelect: handleExportJson },
         ],
     ])
 
@@ -291,6 +318,7 @@ export function useToc() {
         tocLinks, flatHeadings, currentHeadingIndex, goToHeading,
         canEditContent, editModalOpen, chapterContent, handleSave,
         lockId, ueditorRef, saving, handleSaveClick, chapterId,
-        exportingPdf, handleExportPdf, downloading, downloadItems,
+        exportingPdf, handleExportPdf, exportingJson, handleExportJson,
+        downloading, downloadItems,
     }
 }

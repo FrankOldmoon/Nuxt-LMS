@@ -19,6 +19,7 @@ const _globalConfig = {
     UIcon: true,
     UeditorInsertMarkdown: true,
     UeditorInsertHtml: true,
+    UeditorInsertJson: true,
     UeditorContentPicker: true,
   },
 }

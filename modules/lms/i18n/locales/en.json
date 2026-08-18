@@ -106,6 +106,9 @@
     "exportPdf": "PDF",
     "exportPdfSuccess": "PDF exported successfully",
     "exportPdfFailed": "Failed to export PDF",
+    "exportJson": "JSON",
+    "exportJsonSuccess": "JSON exported successfully",
+    "exportJsonFailed": "Failed to export JSON",
     "download": "Download"
   },
   "classSelector": {
@@ -715,6 +718,9 @@
     "html": {
       "title": "Manage HTML Content",
       "insert": "Insert"
+    },
+    "json": {
+      "title": "Manage JSON Content"
     },
     "aiFloat": {
       "title": "AI Generate",
