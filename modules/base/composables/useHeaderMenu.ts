@@ -15,6 +15,7 @@ export function useHeaderMenu() {
   const showMessageModal = ref(false)
   const showImportUsersModal = ref(false)
   const showMyFilesModal = ref(false)
+  const showFeedbackModal = ref(false)
 
   // 登录后拉取未读数
   watch(isLoggedIn, (val) => {
@@ -86,6 +87,17 @@ export function useHeaderMenu() {
       },
     ])
 
+    // 反馈入口：始终放在下拉菜单最后
+    items.push([
+      {
+        label: t('feedback.title'),
+        icon: 'i-lucide-message-square-plus',
+        onSelect: () => {
+          showFeedbackModal.value = true
+        },
+      },
+    ])
+
     return items
   })
 
@@ -104,6 +116,7 @@ export function useHeaderMenu() {
     showMessageModal,
     showImportUsersModal,
     showMyFilesModal,
+    showFeedbackModal,
     userMenuItems,
   }
 }

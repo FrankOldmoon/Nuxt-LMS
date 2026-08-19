@@ -140,6 +140,8 @@ export interface VerifiedQuestion {
   /** 服务端读取的题目分值（DB point） */
   point: number
   isCorrect: boolean
+  /** DB 题目定义（answer/explanation/content 明文，供提交响应回传前端显示） */
+  question: any
 }
 
 /**
@@ -161,5 +163,5 @@ export async function verifyQuestionAnswer(
 
   const rate = computeServerRate(question, userAnswer)
   const point = Number(question.point) || 0
-  return { rate, point, isCorrect: rate > 0 }
+  return { rate, point, isCorrect: rate > 0, question }
 }

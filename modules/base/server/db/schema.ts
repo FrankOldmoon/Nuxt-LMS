@@ -213,6 +213,23 @@ export const messages = pgTable(
   }),
 );
 
+// ====================== 用户反馈 ======================
+export const feedbacks = pgTable(
+  'feedbacks',
+  {
+    id: serial('id').primaryKey(),
+    name: varchar('name', { length: 255 }).notNull(),
+    type: varchar('type', { length: 30 }).notNull().default('suggestion'),
+    content: jsonb('content'),
+    userId: integer('user_id').notNull(),
+    ...withTimestamps,
+  },
+  (t) => ({
+    userFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('cascade'),
+    userIdx: index('idx_feedbacks_user_id').on(t.userId),
+  }),
+);
+
 // ====================== Relations ======================
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -222,6 +239,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   notifications: many(notifys),
   sendMessages: many(messages, { relationName: 'msg_sender' }),
   receiveMessages: many(messages, { relationName: 'msg_receiver' }),
+  feedbacks: many(feedbacks),
 }));
 
 export const rolesRelations = relations(roles, ({ many }) => ({

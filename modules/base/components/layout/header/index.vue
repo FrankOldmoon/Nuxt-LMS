@@ -72,12 +72,15 @@
 
   <!-- 网盘文件弹窗 -->
   <FilesMyFilesModal v-model:open="showMyFilesModal" />
+
+  <!-- 反馈弹窗 -->
+  <LayoutFeedbackModal v-model:open="showFeedbackModal" />
 </template>
 
 <script setup lang="ts">
 const {
   user, isLoggedIn, siteTitle, logo, showNotify, showMsg, unreadCounts,
   showLoginModal, showProfileModal, showSettingsModal, showNotificationModal,
-  showMessageModal, showImportUsersModal, showMyFilesModal, userMenuItems,
+  showMessageModal, showImportUsersModal, showMyFilesModal, showFeedbackModal, userMenuItems,
 } = useHeaderMenu()
 </script>

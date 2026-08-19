@@ -18,7 +18,6 @@ export const learningDefaults = {
     submitCoin: 5,
     resubmitExp: 1,
     resubmitCoin: 1,
-    latePenalty: 0.8,
   },
   comment: {
     publishExp: 3,
@@ -29,6 +28,8 @@ export const learningDefaults = {
     likeReceivedCoin: 1,
     maxDailyExp: 20,
     maxDailyCoin: 20,
+    // 每主题回复数上限：同一用户在同一个父 comment（主题）下最多回复条数（防刷回复奖励）
+    maxCommentCount: 2,
   },
   chapter: {
     // heading 任务完成时奖励（hover 阅读 + 互动组件提交全部答对）
@@ -37,7 +38,7 @@ export const learningDefaults = {
     // - headingScore: 课程 marksScore（用于总分计算）
     headingExp: 5,
     headingCoin: 5,
-    headingScore: 5,
+    headingScore: 2,
   },
   quiz: {
     submitExp: 3,

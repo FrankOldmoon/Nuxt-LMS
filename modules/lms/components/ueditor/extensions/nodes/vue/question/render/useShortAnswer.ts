@@ -1,5 +1,5 @@
 import { ref, computed, inject, watch } from 'vue'
-import { submitQuestion, recordAnswer, computeCorrectRate } from './shared'
+import { submitQuestion, recordAnswer } from './shared'
 
 export function useShortAnswer(props: any) {
   const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')
@@ -58,21 +58,20 @@ export function useShortAnswer(props: any) {
     return 'border-red-400 bg-red-50 dark:bg-red-900/20'
   })
 
-  function submit() {
+  async function submit() {
     if (!props.question) return
-    const re = compileRegex()
-    const correct = re ? re.test(userAnswer.value.trim()) : false
-    isCorrect.value = correct
-    submitQuestion({
+    // 服务端判分（show 不下发答案，本地无法判定）
+    const result = await submitQuestion({
       questionId: props.questionId,
       userAnswer: [userAnswer.value.trim()],
-      isCorrect: correct,
-      correctRate: computeCorrectRate(props.question),
       courseId: courseId.value,
       chapterId: chapterId.value,
       point: props.question.point,
+      question: props.question,
     })
-    return { isCorrect: correct }
+    if (!result) return null
+    isCorrect.value = result.isCorrect
+    return { isCorrect: result.isCorrect }
   }
 
   function reset() {

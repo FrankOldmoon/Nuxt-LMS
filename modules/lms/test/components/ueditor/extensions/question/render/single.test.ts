@@ -80,12 +80,14 @@ describe('question/render/single.vue', () => {
     const { default: SingleRender } = await import(
       '../../../../../../components/ueditor/extensions/nodes/vue/question/render/single.vue'
     )
+    // 服务端判分：stub cRequest 返回 submit 响应（show 不下发答案，对错由服务端判定）
+    ;(globalThis as any).cRequest = async () => ({ isCorrect: true, rate: 1, score: 1, answer: [1], explanation: null })
     const wrapper = mount(SingleRender, {
       props: { question: { ...sampleQuestion, record: [1] }, questionId: 1 },
       global: _globalConfig,
     })
     const vm = wrapper.vm as any
-    const result = vm.submit()
+    const result = await vm.submit()
     expect(result).toEqual({ isCorrect: true })
   })
 })

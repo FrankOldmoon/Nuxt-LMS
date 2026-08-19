@@ -87,9 +87,11 @@ export function useSubQuestion(props: any, emit: (event: string, ...args: any[])
   })
 
   // 暴露方法
-  function submit() {
+  async function submit() {
     if (!renderRef.value) return null
-    const result = renderRef.value.submit()
+    // 子题不单独提交（questionId=0 时 submitQuestion 返回 null），
+    // 仅收集作答；submitted 由父级（composite）在整体判分后通过 applyJudgment 控制
+    const result = await renderRef.value.submit()
     if (result) {
       submitted.value = true
       fromRecord.value = false

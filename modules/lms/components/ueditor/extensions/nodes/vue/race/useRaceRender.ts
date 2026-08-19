@@ -1,5 +1,4 @@
 import { reactive, ref, computed, watch, onMounted, onBeforeUnmount, provide, inject, type InjectionKey } from 'vue'
-import { computeCorrectRate, decryptAnswer } from '../question/render/shared'
 
 export interface RaceRenderProps {
     node?: any
@@ -314,7 +313,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         }
     }
 
-    function submitStudentAnswer() {
+    async function submitStudentAnswer() {
         // 未登录时禁止提交
         if (!isLoggedIn.value) {
             toast.add({ title: t('common.loginRequired'), color: 'warning' })
@@ -325,12 +324,6 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         if (!comp) return
         const qData = comp.getQuestionData?.()
         if (!qData) return
-        // 确保 answer 已解密
-        if (Array.isArray(qData.answer) && qData.answer.some((a: any) => typeof a === 'string' && a.startsWith('enc:'))) {
-            qData.answer = decryptAnswer(qData.answer)
-        }
-        const rate = computeCorrectRate(qData)
-        const correct = rate > 0
         const record = qData.record ? [...qData.record] : []
 
         studentAnswered.value = true
@@ -339,12 +332,34 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         // 上报竞赛完成状态（参与答题即完成）
         chapterTask?.reportNodeDone('race', raceId.value, true)
 
+        // 服务端判分（show 不下发答案，本地无法判定）；失败按答错处理不阻断流程
+        let rate = 0
+        let correct = false
+        if (currentQuestionCid.value && effectiveCourseId.value) {
+            try {
+                const res = await cRequest('/api/questions/verify', {
+                    method: 'POST',
+                    body: {
+                        course_id: effectiveCourseId.value,
+                        question_cid: currentQuestionCid.value,
+                        user_answer: record,
+                    },
+                })
+                rate = Math.max(0, Math.min(1, Number(res?.rate) || 0))
+                correct = !!res?.isCorrect
+            } catch { /* 判分失败按 0 分 */ }
+        }
+        toast.add({
+            title: correct ? t('question.correct') : t('question.wrong'),
+            color: correct ? 'success' : 'error',
+        })
+
         sendRaceAnswer(
             pin.value, raceId.value, currentQuestionCid.value,
             record, rate, correct, user.value?.name || 'anonymous', user.value?.id || 0
         )
-        // 显示结果 UI
-        comp.showResult?.()
+        // 显示结果 UI（传入服务端判定的 rate）
+        comp.showResult?.(rate)
     }
 
     // ====================== 工具函数 ======================

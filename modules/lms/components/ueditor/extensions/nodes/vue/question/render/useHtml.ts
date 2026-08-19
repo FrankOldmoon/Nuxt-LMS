@@ -1,5 +1,5 @@
 import { ref, computed, inject, watch, onMounted, onBeforeUnmount } from 'vue'
-import { submitQuestion, recordAnswer, computeCorrectRate } from './shared'
+import { submitQuestion, recordAnswer } from './shared'
 
 export function useHtml(props: any) {
   const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')
@@ -82,21 +82,21 @@ export function useHtml(props: any) {
     }
   }, { immediate: true })
 
-  function submit() {
+  async function submit() {
     if (!props.question) return
     const rate = latestRate.value ?? 0
-    const correct = rate >= 1
-    isCorrect.value = correct
-    submitQuestion({
+    // HTML 题由 iframe postMessage 判定，服务端透传该 rate
+    const result = await submitQuestion({
       questionId: props.questionId,
       userAnswer: [rate],
-      isCorrect: correct,
-      correctRate: rate,
       courseId: courseId.value,
       chapterId: chapterId.value,
       point: props.question.point,
+      question: props.question,
     })
-    return { isCorrect: correct }
+    if (!result) return null
+    isCorrect.value = result.isCorrect
+    return { isCorrect: result.isCorrect }
   }
 
   function reset() {

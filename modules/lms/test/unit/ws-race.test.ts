@@ -14,14 +14,36 @@
  * - handleRaceEnd  leaderboard 广播 + 清理 raceStates
  * - cleanupRacePeer  离开清理
  */
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+
+// raceAnswer 服务端判分引入 @nuxthub/db；mock 为"题目不存在"（退回客户端值，保持用例语义）
+vi.mock('@nuxthub/db', () => ({
+  db: { query: { questions: { findFirst: vi.fn().mockResolvedValue(null) } } },
+  schema: { questions: { courseId: 'courseId', cid: 'cid' } },
+}))
+
+// 排名奖励结算：addCourseScore / checkAndAwardMedals 变为 spy，便于断言
+vi.mock('../../server/utils/userScore/course', () => ({
+  addCourseScore: vi.fn().mockResolvedValue(undefined),
+}))
+vi.mock('../../server/utils/medals/checker', () => ({
+  checkAndAwardMedals: vi.fn().mockResolvedValue([]),
+}))
+
 import { makeMockPeer } from '../../../../test/setup/db-helpers'
 import { raceRooms, raceStates } from '../../server/utils/ws/state'
 import { handleRaceMessage, cleanupRacePeer } from '../../server/utils/ws/race'
 
+/** 等待 handleRaceAnswer 的异步判分完成（fire-and-forget 微任务 flush） */
+const flushAsync = () => new Promise(r => setTimeout(r, 0))
+
 beforeEach(() => {
   raceRooms.clear()
   raceStates.clear()
+  // 竞赛排名奖励配置
+  ;(globalThis as any).getCourseLmsConfig = vi.fn().mockResolvedValue({
+    race: { rank1Exp: 100, rank1Coin: 100, rank2Exp: 80, rank2Coin: 80, rank3Exp: 60, rank3Coin: 60 },
+  })
 })
 
 function sendsOf(peer: any): any[] {
@@ -152,7 +174,7 @@ describe('ws/race: start / question / answer', () => {
     })).not.toThrow()
   })
 
-  it('raceAnswer 计分 + 广播 raceAnswerUpdate / raceScores', () => {
+  it('raceAnswer 计分 + 广播 raceAnswerUpdate / raceScores', async () => {
     handleRaceMessage(makeMockPeer(), {
       type: 'raceStart', pin: 'p1', raceCid: 100, courseId: 1, totalQuestions: 5, timeLimit: 30,
     })
@@ -163,6 +185,7 @@ describe('ws/race: start / question / answer', () => {
     handleRaceMessage(makeMockPeer(), {
       type: 'raceAnswer', pin: 'p1', userId: 1, from: 'a', answer: 'X', rate: 1, correct: true,
     })
+    await flushAsync()
     const sends = sendsOf(peer1)
     expect(sends).toContainEqual(expect.objectContaining({
       type: 'raceAnswerUpdate', raceCid: 100, questionCid: 50, answeredCount: 1,
@@ -170,7 +193,7 @@ describe('ws/race: start / question / answer', () => {
     expect(sends).toContainEqual(expect.objectContaining({ type: 'raceScores' }))
   })
 
-  it('raceAnswer 同一用户不能重复答同一题', () => {
+  it('raceAnswer 同一用户不能重复答同一题', async () => {
     handleRaceMessage(makeMockPeer(), {
       type: 'raceStart', pin: 'p1', raceCid: 100, courseId: 1, totalQuestions: 5, timeLimit: 30,
     })
@@ -180,10 +203,12 @@ describe('ws/race: start / question / answer', () => {
     handleRaceMessage(makeMockPeer(), {
       type: 'raceAnswer', pin: 'p1', userId: 1, from: 'a', answer: 'X', rate: 1, correct: true,
     })
+    await flushAsync()
     peer1.send.mockClear()
     handleRaceMessage(makeMockPeer(), {
       type: 'raceAnswer', pin: 'p1', userId: 1, from: 'a', answer: 'Y', rate: 0, correct: false,
     })
+    await flushAsync()
     // 第二次 answer 不应该产生 raceAnswerUpdate 推送
     const sends = sendsOf(peer1)
     const updates = sends.filter((m: any) => m.type === 'raceAnswerUpdate')
@@ -204,7 +229,7 @@ describe('ws/race: start / question / answer', () => {
 })
 
 describe('ws/race: questionEnd / end', () => {
-  it('raceQuestionEnd 推 top3 + results（按 correct/timeUsed 排序）', () => {
+  it('raceQuestionEnd 推 top3 + results（按 correct/timeUsed 排序）', async () => {
     const peer1 = makeMockPeer({ userId: 1, userName: 'a' })
     const peer2 = makeMockPeer({ userId: 2, userName: 'b' })
     const peer3 = makeMockPeer({ userId: 3, userName: 'c' })
@@ -226,6 +251,8 @@ describe('ws/race: questionEnd / end', () => {
     handleRaceMessage(makeMockPeer(), {
       type: 'raceAnswer', pin: 'p1', userId: 3, from: 'c', answer: 'Z', rate: 1, correct: true,
     })
+    // 等待异步判分（服务端判分 fire-and-forget）落库后再结束本题
+    await flushAsync()
     peer1.send.mockClear()
     handleRaceMessage(makeMockPeer(), { type: 'raceQuestionEnd', pin: 'p1' })
     const sends = sendsOf(peer1)
@@ -252,6 +279,45 @@ describe('ws/race: questionEnd / end', () => {
     const sends = sendsOf(peer1)
     expect(sends).toContainEqual(expect.objectContaining({ type: 'raceEnd' }))
     expect(raceStates.has('p1')).toBe(false)
+  })
+
+  it('raceEnd 按最终成绩结算前3名排名奖励', async () => {
+    const peer1 = makeMockPeer({ userId: 1, userName: 'a' })
+    const peer2 = makeMockPeer({ userId: 2, userName: 'b' })
+    const peer3 = makeMockPeer({ userId: 3, userName: 'c' })
+    handleRaceMessage(peer1, { type: 'raceJoin', pin: 'p1', userId: 1, from: 'a' })
+    handleRaceMessage(peer2, { type: 'raceJoin', pin: 'p1', userId: 2, from: 'b' })
+    handleRaceMessage(peer3, { type: 'raceJoin', pin: 'p1', userId: 3, from: 'c' })
+    handleRaceMessage(makeMockPeer(), {
+      type: 'raceStart', pin: 'p1', raceCid: 100, courseId: 1, totalQuestions: 5, timeLimit: 30,
+    })
+    handleRaceMessage(makeMockPeer(), {
+      type: 'raceQuestion', pin: 'p1', questionCid: 50, questionIndex: 0, timeLimit: 30,
+    })
+    // 3 人答题，rate 分别为 1 / 0.5 / 0.2（服务端判分 mock 返回 null → 退回客户端 rate）
+    handleRaceMessage(makeMockPeer(), { type: 'raceAnswer', pin: 'p1', userId: 1, from: 'a', answer: 'X', rate: 1, correct: true })
+    handleRaceMessage(makeMockPeer(), { type: 'raceAnswer', pin: 'p1', userId: 2, from: 'b', answer: 'Y', rate: 0.5, correct: true })
+    handleRaceMessage(makeMockPeer(), { type: 'raceAnswer', pin: 'p1', userId: 3, from: 'c', answer: 'Z', rate: 0.2, correct: false })
+    await flushAsync()
+    const { addCourseScore } = await import('../../server/utils/userScore/course')
+    ;(addCourseScore as any).mockClear()
+    handleRaceMessage(makeMockPeer(), { type: 'raceEnd', pin: 'p1' })
+    // 等待结算微任务
+    await flushAsync()
+    // 前3名各发对应 rank 奖励（只加 exp/coin，score 增量为 0）
+    const calls = (addCourseScore as any).mock.calls
+    expect(calls.length).toBe(3)
+    const byUser = new Map(calls.map((c: any[]) => [c[0], c]))
+    expect(byUser.get(1)![4]).toBe(100) // rank1
+    expect(byUser.get(2)![4]).toBe(80)  // rank2
+    expect(byUser.get(3)![4]).toBe(60)  // rank3
+    // 结算不改变 raceScore 分项与总分（score 增量为 0）
+    for (const c of calls) expect(c[2]).toBe(0)
+    // raceStates 已清理，重复 raceEnd 不会重发奖励
+    const { checkAndAwardMedals } = await import('../../server/utils/medals/checker')
+    ;(addCourseScore as any).mockClear()
+    handleRaceMessage(makeMockPeer(), { type: 'raceEnd', pin: 'p1' })
+    expect((addCourseScore as any).mock.calls.length).toBe(0)
   })
 
   it('raceEnd race 不存在时静默忽略', () => {

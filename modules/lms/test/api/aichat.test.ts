@@ -110,6 +110,31 @@ describe('API: aichat/award', () => {
     const calledCid = spy.mock.calls[0][0].questionCid
     expect(calledCid).toBe(-100000000 - 2 * 100000 - 42)
   })
+
+  it('伪造不同 ai_question_id 只发固定奖励且不累计 questionScore（防刷）', async () => {
+    setMockAuthState({ id: 1, username: 's', name: 's', roles: ['student'], permissions: [] })
+    // 配置：submitExp=2（无 correctBonusExp），用于断言固定奖励
+    setMockLmsConfig?.({ question: { submitExp: 2, submitCoin: 2, correctBonusExp: 0, correctBonusCoin: 0 } })
+    const { notifyCourseProgress } = await import('../../server/utils/submit/progress')
+    ;(notifyCourseProgress as any).mockClear()
+    const handler = (await import('../../server/api/aichat/award.post')).default
+    // 两次用不同 ai_question_id → 每次都是"新题"，但奖励必须固定且不累计总分
+    const r1 = await handler(makeEvent({ body: { course_id: 1, chapter_id: 1, correct_rate: 1, point: 10, ai_question_id: 1 } }))
+    const r2 = await handler(makeEvent({ body: { course_id: 1, chapter_id: 1, correct_rate: 1, point: 10, ai_question_id: 2 } }))
+    expect(r1.success).toBe(true)
+    expect(r2.success).toBe(true)
+    // 只发 submitExp，不含 firstCorrectBonus；scoreDelta 一律 0（不入账总分）
+    expect(r1.data.gainedExp).toBe(2)
+    expect(r2.data.gainedExp).toBe(2)
+    expect(r1.data.scoreDelta).toBe(0)
+    expect(r2.data.scoreDelta).toBe(0)
+    // notifyCourseProgress 收到的 score 必须为 0（不累计 questionScore）
+    const calls = (notifyCourseProgress as any).mock.calls
+    expect(calls.length).toBeGreaterThanOrEqual(2)
+    for (const c of calls) {
+      expect(c[0].score).toBe(0)
+    }
+  })
 })
 
 // ====================== tts.post.ts ======================

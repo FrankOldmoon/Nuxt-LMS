@@ -92,16 +92,19 @@ export function useUserCardSetup() {
     const coin = computed(() => stats.value.coin)
     const chapterScore = computed(() => stats.value.chapterScore)
 
-    // 经验 → 等级换算
-    // 等级 n 的累计经验阈值 = 50 * (n-1) * n
-    // Lv.1: 0   Lv.2: 100   Lv.3: 300   Lv.4: 600   Lv.5: 1000 ...
+    // 经验 → 等级换算（不存库，按 exp 动态计算）
+    // 曲线系数 base = levelStep / 2：等级 n 的累计经验阈值 = base * (n-1) * n
+    // Lv.1: 0   Lv.2: 100   Lv.3: 300   Lv.4: 600   Lv.5: 1000 ...（levelStep 默认 100）
+    // levelStep 越大升级越慢，由配置 general.levelStep 驱动（lms-public 公开配置）
     const levelInfo = computed(() => {
+        const { levelStep } = useLmsPublicConfig()
+        const base = Math.max(1, Number(levelStep.value) || 100) / 2
         const total = Math.max(0, exp.value)
-        // 解 50*(l-1)*l = total → l = (1 + sqrt(1 + 8*total/100)) / 2
-        const raw = (1 + Math.sqrt(1 + (8 * total) / 100)) / 2
+        // 解 base*(l-1)*l = total → l = (1 + sqrt(1 + 4*total/base)) / 2
+        const raw = (1 + Math.sqrt(1 + (4 * total) / base)) / 2
         const level = Math.max(1, Math.floor(raw))
-        const currentThreshold = 50 * (level - 1) * level
-        const nextThreshold = 50 * level * (level + 1)
+        const currentThreshold = base * (level - 1) * level
+        const nextThreshold = base * level * (level + 1)
         const span = nextThreshold - currentThreshold
         const into = total - currentThreshold
         const percent = span > 0 ? Math.min(100, Math.max(0, (into / span) * 100)) : 100

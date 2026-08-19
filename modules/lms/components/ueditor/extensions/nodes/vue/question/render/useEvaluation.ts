@@ -118,15 +118,14 @@ Supported question types and their formats:
     }
     // 保存到 props.question.record（供 computeCorrectRate 等使用）
     recordAnswer(props.question, [recordData] as any)
-    // 提交到后端（持久化，之后可从远程恢复）
+    // 提交到后端（持久化，之后可从远程恢复；评估进度由客户端判定，服务端透传）
     submitQuestion({
       questionId: props.questionId,
       userAnswer: [recordData] as any,
-      isCorrect: passed.value,
-      correctRate: progress.value,
       courseId: courseId.value,
       chapterId: chapterId.value,
       point: props.question?.point,
+      question: props.question,
     })
   }
 

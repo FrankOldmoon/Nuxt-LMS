@@ -1,5 +1,5 @@
 import { ref, watch, computed, onMounted, onBeforeUnmount, inject, nextTick } from 'vue'
-import { submitQuestion, recordAnswer, computeCorrectRate } from './shared'
+import { submitQuestion, recordAnswer } from './shared'
 
 export function useFill(props: any) {
   const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')!
@@ -129,7 +129,7 @@ export function useFill(props: any) {
     if (!val) clearInputStyles()
   })
 
-  function submit() {
+  async function submit() {
     if (!props.question) return
     // 提交前从 DOM 收集最新值
     const container = getInputContainer()
@@ -139,33 +139,20 @@ export function useFill(props: any) {
         fillAnswers.value[idx] = (el as HTMLInputElement).value
       })
     }
-    const qAnswer = props.question.answer || []
-    const qOptions = props.question.options || []
-    const correct = qAnswer.length > 0 && qAnswer.every((ans: any, i: number) => {
-      const userVal = (fillAnswers.value[i] || '').trim()
-      const correctVal = String(ans).trim()
-      // 支持正则表达式匹配
-      if (qOptions[i] === 'regex') {
-        try {
-          return new RegExp(correctVal).test(userVal)
-        } catch {
-          return false
-        }
-      }
-      return userVal === correctVal
-    })
-    isCorrect.value = correct
-    submitQuestion({
+    // 服务端判分（show 不下发答案，本地无法判定）
+    const result = await submitQuestion({
       questionId: props.questionId,
       userAnswer: fillAnswers.value.map((a: any) => (a || '').trim()),
-      isCorrect: correct,
-      correctRate: computeCorrectRate(props.question),
       courseId: courseId.value,
       chapterId: chapterId.value,
       point: props.question.point,
+      question: props.question,
     })
+    if (!result) return null
+    isCorrect.value = result.isCorrect
+    // 答案已由响应合并进 question，着色依赖它
     styleInputs()
-    return { isCorrect: correct }
+    return { isCorrect: result.isCorrect }
   }
 
   function reset() {

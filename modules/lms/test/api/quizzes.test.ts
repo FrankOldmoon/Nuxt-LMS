@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 const _mockDb = {
   query: {
     quizzes: { findFirst: vi.fn(), findMany: vi.fn() },
+    questions: { findFirst: vi.fn(), findMany: vi.fn() },
     userQuizzes: { findFirst: vi.fn(), findMany: vi.fn() },
     userCourses: { findFirst: vi.fn(), findMany: vi.fn() },
   } as any,
@@ -28,6 +29,7 @@ const _mockDb = {
 }
 const _mockSchema = {
   quizzes: { courseId: 'courseId', cid: 'cid', deletedAt: 'deletedAt', submitLimit: 'submitLimit', submitCount: 'submitCount' },
+  questions: { courseId: 'courseId', cid: 'cid', type: 'type', answer: 'answer', point: 'point' },
   userQuizzes: { userId: 'userId', courseId: 'courseId', quizCid: 'quizCid', score: 'score', submitCount: 'submitCount', startedAt: 'startedAt', submitedAt: 'submitedAt', records: 'records' },
   userCourses: { userId: 'userId', courseId: 'courseId', score: 'score', exp: 'exp', quizScore: 'quizScore', raceScore: 'raceScore' },
   users: { id: 'id', defaultClass: 'defaultClass' },
@@ -56,6 +58,7 @@ beforeEach(() => {
   _mockDb.returning = vi.fn().mockResolvedValue([])
   _mockDb.query = {
     quizzes: { findFirst: vi.fn(), findMany: vi.fn() },
+    questions: { findFirst: vi.fn(), findMany: vi.fn() },
     userQuizzes: { findFirst: vi.fn(), findMany: vi.fn() },
     userCourses: { findFirst: vi.fn(), findMany: vi.fn() },
   }
@@ -157,14 +160,30 @@ describe('API: quizzes/submit', () => {
     expect(result.success).toBe(false)
   })
 
+  // 服务端判分辅助：quiz 定义带 questions id 列表，questions.findMany 返回题目定义
+  function setupQuizDefs(quizRow: any, questionDefs: any[]) {
+    _mockDb.query.quizzes.findFirst = vi.fn().mockResolvedValue({
+      submitLimit: 3, submitCount: 0,
+      ...quizRow,
+      questions: quizRow.questions ?? questionDefs.map(q => q.cid),
+    })
+    _mockDb.query.questions.findMany = vi.fn().mockResolvedValue(questionDefs)
+  }
+
   it('新记录提交：及格获得 passBonusExp', async () => {
     setMockAuthState({ id: 1, username: 'student', roles: ['student'], permissions: [] })
-    _mockDb.query.quizzes.findFirst = vi.fn().mockResolvedValue({ courseId: 1, cid: 1, submitLimit: 3, submitCount: 0 })
+    setupQuizDefs(
+      { courseId: 1, cid: 1 },
+      [
+        { courseId: 1, cid: 1, type: 'single', answer: ['A'], point: 50 },
+        { courseId: 1, cid: 2, type: 'single', answer: ['B'], point: 50 },
+      ],
+    )
     _mockDb.query.userQuizzes.findFirst = vi.fn().mockResolvedValue(null)
-    // records: 2 题全对，每题 rate=1, point=50 → totalScore=100 ≥ 60 及格
+    // records: 2 题全对（user answer 与 DB answer 相符 → 服务端重算 rate=1）→ totalScore=100 ≥ 60 及格
     const records = [
-      { questionCid: 1, rate: 1, point: 50, answer: 'A' },
-      { questionCid: 2, rate: 1, point: 50, answer: 'B' },
+      { questionCid: 1, rate: 1, point: 50, answer: ['A'] },
+      { questionCid: 2, rate: 1, point: 50, answer: ['B'] },
     ]
     const handler = (await import('../../server/api/quizzes/submit.post')).default
     const result = await handler(makeEvent({ body: { course_id: 1, quiz_cid: 1, records } }))
@@ -176,14 +195,42 @@ describe('API: quizzes/submit', () => {
     expect(result.data.correctCount).toBe(2)
   })
 
+  it('伪造 rate 无效：服务端按 DB 题目重算', async () => {
+    setMockAuthState({ id: 1, username: 'student', roles: ['student'], permissions: [] })
+    setupQuizDefs(
+      { courseId: 1, cid: 1 },
+      [
+        { courseId: 1, cid: 1, type: 'single', answer: ['A'], point: 50 },
+        { courseId: 1, cid: 2, type: 'single', answer: ['B'], point: 50 },
+      ],
+    )
+    _mockDb.query.userQuizzes.findFirst = vi.fn().mockResolvedValue(null)
+    // 客户端声称 2 题全对 rate=1，但题 2 作答与 DB answer 不符 → 服务端判 0
+    const records = [
+      { questionCid: 1, rate: 1, point: 50, answer: ['A'] },
+      { questionCid: 2, rate: 1, point: 50, answer: ['X'] },
+    ]
+    const handler = (await import('../../server/api/quizzes/submit.post')).default
+    const result = await handler(makeEvent({ body: { course_id: 1, quiz_cid: 1, records } }))
+    expect(result.success).toBe(true)
+    expect(result.data.score).toBe(50)
+    expect(result.data.correctCount).toBe(1)
+  })
+
   it('新记录提交：不及格不给 passBonusExp', async () => {
     setMockAuthState({ id: 1, username: 'student', roles: ['student'], permissions: [] })
-    _mockDb.query.quizzes.findFirst = vi.fn().mockResolvedValue({ courseId: 1, cid: 1, submitLimit: 3, submitCount: 0 })
+    setupQuizDefs(
+      { courseId: 1, cid: 1 },
+      [
+        { courseId: 1, cid: 1, type: 'single', answer: ['A'], point: 30 },
+        { courseId: 1, cid: 2, type: 'single', answer: ['C'], point: 30 },
+      ],
+    )
     _mockDb.query.userQuizzes.findFirst = vi.fn().mockResolvedValue(null)
     // records: 1 题对 1 题错 → totalScore=30 < 60 不及格
     const records = [
-      { questionCid: 1, rate: 1, point: 30, answer: 'A' },
-      { questionCid: 2, rate: 0, point: 30, answer: 'B' },
+      { questionCid: 1, rate: 1, point: 30, answer: ['A'] },
+      { questionCid: 2, rate: 0, point: 30, answer: ['B'] },
     ]
     const handler = (await import('../../server/api/quizzes/submit.post')).default
     const result = await handler(makeEvent({ body: { course_id: 1, quiz_cid: 1, records } }))
@@ -195,15 +242,24 @@ describe('API: quizzes/submit', () => {
 
   it('已有记录更新：取最高分', async () => {
     setMockAuthState({ id: 1, username: 'student', roles: ['student'], permissions: [] })
-    _mockDb.query.quizzes.findFirst = vi.fn().mockResolvedValue({ courseId: 1, cid: 1, submitLimit: 3, submitCount: 1 })
+    setupQuizDefs(
+      { courseId: 1, cid: 1, submitCount: 1 },
+      [
+        // 题1 全对 50；题2 multiple 半对 25 → 本次 75 < 已有 80
+        { courseId: 1, cid: 1, type: 'single', answer: ['A'], point: 50 },
+        { courseId: 1, cid: 2, type: 'multiple', answer: ['A', 'B'], point: 50 },
+      ],
+    )
     // 已有记录 score=80
     _mockDb.query.userQuizzes.findFirst = vi.fn().mockResolvedValue({ submitCount: 1, score: '80', startedAt: new Date() })
-    // 本次 score=70 < 80 → bestScore=80
-    const records = [{ questionCid: 1, rate: 0.7, point: 100, answer: 'A' }]
+    const records = [
+      { questionCid: 1, rate: 1, point: 50, answer: ['A'] },
+      { questionCid: 2, rate: 0.5, point: 50, answer: ['A'] },
+    ]
     const handler = (await import('../../server/api/quizzes/submit.post')).default
     const result = await handler(makeEvent({ body: { course_id: 1, quiz_cid: 1, records } }))
     expect(result.success).toBe(true)
-    expect(result.data.score).toBe(70)
+    expect(result.data.score).toBe(75)
     // 验证 userQuizzes.update 中 score 是最高分 80
     // 注：分数走 addCourseScoreMax（最高分模式），不写 userQuizzes 的 set
     // 找到 set 调用中包含 userQuizzes 字段的那一次
@@ -211,7 +267,7 @@ describe('API: quizzes/submit', () => {
     const userQuizUpdate = setCalls.find((s: any) => 'records' in s || 'submitedAt' in s)
     expect(userQuizUpdate).toBeDefined()
     expect(userQuizUpdate.score).toBe('80')
-    // 70 < 80 → 不给经验，gainedExp=0（已存在记录防刷）
+    // 75 < 80 → 不给经验，gainedExp=0（已存在记录防刷）
     expect(result.data.gainedExp).toBe(0)
     // 走的是 addCourseScoreMax 最高分模式
     expect((globalThis as any).addCourseScoreMax).toHaveBeenCalled()
@@ -219,10 +275,19 @@ describe('API: quizzes/submit', () => {
 
   it('已有记录更新：分数提高给经验', async () => {
     setMockAuthState({ id: 1, username: 'student', roles: ['student'], permissions: [] })
-    _mockDb.query.quizzes.findFirst = vi.fn().mockResolvedValue({ courseId: 1, cid: 1, submitLimit: 3, submitCount: 1 })
+    setupQuizDefs(
+      { courseId: 1, cid: 1, submitCount: 1 },
+      [
+        // 题1 全对 40；题2 multiple 半对 50 → 本次 90 > 已有 50
+        { courseId: 1, cid: 1, type: 'single', answer: ['A'], point: 40 },
+        { courseId: 1, cid: 2, type: 'multiple', answer: ['A', 'B'], point: 100 },
+      ],
+    )
     _mockDb.query.userQuizzes.findFirst = vi.fn().mockResolvedValue({ submitCount: 1, score: '50', startedAt: new Date() })
-    // 本次 score=90 > 50 → 给经验
-    const records = [{ questionCid: 1, rate: 0.9, point: 100, answer: 'A' }]
+    const records = [
+      { questionCid: 1, rate: 1, point: 40, answer: ['A'] },
+      { questionCid: 2, rate: 0.5, point: 100, answer: ['A'] },
+    ]
     const handler = (await import('../../server/api/quizzes/submit.post')).default
     const result = await handler(makeEvent({ body: { course_id: 1, quiz_cid: 1, records } }))
     expect(result.success).toBe(true)
@@ -235,11 +300,20 @@ describe('API: quizzes/submit', () => {
 
   it('已及格的测验再次提交时不发放任何经验（防刷）', async () => {
     setMockAuthState({ id: 1, username: 'student', roles: ['student'], permissions: [] })
-    _mockDb.query.quizzes.findFirst = vi.fn().mockResolvedValue({ courseId: 1, cid: 1, submitLimit: 3, submitCount: 1 })
+    setupQuizDefs(
+      { courseId: 1, cid: 1, submitCount: 1 },
+      [
+        { courseId: 1, cid: 1, type: 'single', answer: ['A'], point: 40 },
+        { courseId: 1, cid: 2, type: 'multiple', answer: ['A', 'B'], point: 100 },
+      ],
+    )
     // 已有记录 score=80（已及格，80 >= 60）
     _mockDb.query.userQuizzes.findFirst = vi.fn().mockResolvedValue({ submitCount: 1, score: '80', startedAt: new Date() })
     // 本次 score=90 > 80 → 分数提高，但已及格过且已有记录：gainedExp=0（防刷）
-    const records = [{ questionCid: 1, rate: 0.9, point: 100, answer: 'A' }]
+    const records = [
+      { questionCid: 1, rate: 1, point: 40, answer: ['A'] },
+      { questionCid: 2, rate: 0.5, point: 100, answer: ['A'] },
+    ]
     const handler = (await import('../../server/api/quizzes/submit.post')).default
     const result = await handler(makeEvent({ body: { course_id: 1, quiz_cid: 1, records } }))
     expect(result.success).toBe(true)

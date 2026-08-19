@@ -77,7 +77,10 @@ export default eventHandler(async (event) => {
       if (validIds.has(key)) taskStatus[key] = !!val
     }
     for (const [key, val] of Object.entries(rawStatus)) {
-      if (validIds.has(key)) taskStatus[key] = val === true
+      if (!validIds.has(key)) continue
+      // sticky：已完成的 heading 不允许被客户端回退（true→false→true 反复 toggle
+      // 会重复触发 heading 奖励发放），故已完成的一律保持 true
+      taskStatus[key] = taskStatus[key] === true ? true : val === true
     }
 
     // 服务端重算 is_pass：全部合法 heading 完成

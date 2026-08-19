@@ -1,5 +1,5 @@
 import { ref, computed, inject, watch, onMounted, onBeforeUnmount } from 'vue'
-import { submitQuestion, recordAnswer, computeCorrectRate } from './shared'
+import { submitQuestion, recordAnswer } from './shared'
 
 export function useMatch(props: any) {
   const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')
@@ -226,26 +226,20 @@ export function useMatch(props: any) {
     return Object.values(connections.value).filter(v => v === rightIdx).length
   }
 
-  function submit() {
+  async function submit() {
     if (!props.question) return
-    const answer = props.question.answer || []
-    const correct = answer.length === Object.keys(connections.value).length &&
-      answer.every((_: any, leftIdx: number) => {
-        const rightPos = connections.value[leftIdx]
-        if (rightPos === undefined) return false
-        return rightItems.value[rightPos]?.originalIndex === leftIdx
-      })
-    if (isCorrect) isCorrect.value = correct
-    submitQuestion({
+    // 服务端判分（show 不下发答案，本地无法判定）
+    const result = await submitQuestion({
       questionId: props.questionId,
       userAnswer: buildRecordArray(),
-      isCorrect: correct,
-      correctRate: computeCorrectRate(props.question),
       courseId: courseId.value,
       chapterId: chapterId.value,
       point: props.question.point,
+      question: props.question,
     })
-    return { isCorrect: correct }
+    if (!result) return null
+    if (isCorrect) isCorrect.value = result.isCorrect
+    return { isCorrect: result.isCorrect }
   }
 
   function buildRecordArray() {

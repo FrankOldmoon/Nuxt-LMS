@@ -154,6 +154,12 @@ export function useQuestionRecords(props: QuestionRecordsProps, emit: QuestionRe
         const type = q.type
         const val = userAns[idx]
 
+        // show 不再对学生下发答案：无 answer（且非客户端判定型）时无法逐项比对，显示中性色
+        const clientJudged = type === 'html'
+        if (!answer.length && !clientJudged) {
+            return 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
+        }
+
         if (type === 'single' || type === 'judge' || type === 'multiple') {
             return answer.includes(Number(val))
                 ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-300'

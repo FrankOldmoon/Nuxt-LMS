@@ -67,20 +67,20 @@ function btnClass(idx) {
     : 'border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 text-gray-600 dark:text-gray-400'
 }
 
-function submit() {
+async function submit() {
   if (!props.question || selected.value < 0) return
-  const correct = selected.value === props.question.answer[0]
-  isCorrect.value = correct
-  submitQuestion({
+  // 服务端判分（show 不下发答案，本地无法判定）
+  const result = await submitQuestion({
     questionId: props.questionId,
     userAnswer: [selected.value],
-    isCorrect: correct,
-    correctRate: correct ? 1 : 0,
-        courseId: courseId.value,
-        chapterId: chapterId.value,
-        point: props.question.point,
+    courseId: courseId.value,
+    chapterId: chapterId.value,
+    point: props.question.point,
+    question: props.question,
   })
-  return { isCorrect: correct }
+  if (!result) return null
+  isCorrect.value = result.isCorrect
+  return { isCorrect: result.isCorrect }
 }
 
 function reset() {

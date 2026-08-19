@@ -26,10 +26,10 @@ export function useConfigEditor(props: ConfigEditorProps, emit: (e: 'update:mode
   const defaultConfig = {
     ai: { enabled: true, mode: 'api', model: '', thinking: false, apiUrl: '/api/aichat/chat', llmApiUrl: '', llmApiKey: '', ollamaUrl: 'http://localhost:11434', ollamaModel: '', title: '', preset: '', opening: '', ttsGender: 'female' },
     question: { submitExp: 2, correctBonusExp: 5, firstCorrectBonusExp: 10, maxSubmitCount: 999 },
-    homework: { submitExp: 5, resubmitExp: 1, latePenalty: 0.8 },
+    homework: { submitExp: 5, resubmitExp: 1 },
     comment: { publishExp: 3, replyExp: 2, likeReceivedExp: 1, maxDailyExp: 20 },
-    chapter: { headingExp: 5, headingCoin: 5, headingScore: 5 },
-    race: { participateExp: 10, rank1Exp: 100, rank2Exp: 80, rank3Exp: 60, participationExp: 30 },
+    chapter: { headingExp: 5, headingCoin: 5, headingScore: 2 },
+    race: { participateExp: 5, rank1Exp: 100, rank2Exp: 80, rank3Exp: 60 },
     quiz: { submitExp: 3, passScore: 60, passBonusExp: 10 },
     general: { dailyExpCap: 100, levelStep: 100 },
     course: { showDanmaku: true, showAnnouncement: true, showComments: true, showProgress: false, defaultChapterOpen: true },

@@ -11,45 +11,6 @@ export function recordAnswer(question: any, userAnswer: string[] | number[]) {
 
 }
 
-// ====================== 答案加密/解密 ======================
-
-// 与后端一致的密钥
-const ENC_KEY = 'lms_q_a_2026'
-
-/**
- * 解密后端加密的答案值
- * 格式 'enc:base64string'，解密为原始值（字符串）
- * 非加密值（不以 'enc:' 开头）直接返回原值
- */
-export function decryptValue(val: any): any {
-  if (typeof val !== 'string' || !val.startsWith('enc:')) return val
-  const encStr = val.slice(4)
-  try {
-    // Base64 解码 → URI 解码 → XOR 解密
-    const binary = atob(encStr)
-    const decoded = decodeURIComponent(escape(binary))
-    let result = ''
-    for (let i = 0; i < decoded.length; i++) {
-      result += String.fromCharCode(decoded.charCodeAt(i) ^ ENC_KEY.charCodeAt(i % ENC_KEY.length))
-    }
-    // 还原原始类型：纯数字字符串转回 number
-    if (result !== '' && !isNaN(Number(result))) {
-      return Number(result)
-    }
-    return result
-  } catch {
-    return val
-  }
-}
-
-/**
- * 解密整个 answer 数组（原地或返回新数组）
- */
-export function decryptAnswer(answer: any[]): any[] {
-  if (!Array.isArray(answer)) return answer
-  return answer.map(ans => decryptValue(ans))
-}
-
 /**
  * 根据 record 实时计算得分比（0 ~ 1）
  * - single/judge: 全对 1，否则 0
@@ -177,37 +138,52 @@ export function computeCorrectRate(question: any): number {
 }
 
 /**
- * 提交题目答案到后端（只负责 API 调用，record 由 recordAnswer 实时记录）
- * 成功后自增 userCard 刷新触发器，让侧栏的积分/经验立即更新
+ * 提交题目答案到后端（服务端判分）
+ *
+ * show 接口不再下发 answer/explanation，判分完全由服务端完成。
+ * 提交成功后响应携带 { isCorrect, rate, answer, explanation, content }，
+ * 这里把 answer/explanation 合并回 question 对象（供红绿高亮、
+ * formattedAnswers、ExplanationBlock 使用）并返回响应供调用方判断对错。
+ *
+ * @returns 判分结果；未登录/网络失败/questionId 为 0（子题）时返回 null
  */
 export async function submitQuestion(params: {
   questionId: number
   userAnswer: string[] | number[]
-  isCorrect: boolean
-  correctRate: number
   courseId?: number
   chapterId?: number
   point?: number
-}) {
+  /** 当前题目对象（响应中的 answer/explanation 会合并进去） */
+  question?: any
+}): Promise<{ isCorrect: boolean; rate: number; score: number; answer?: any[]; explanation?: any } | null> {
   // questionId 为 0 时（大题中的子题），跳过 API 调用
-  if (!params.questionId) return
+  if (!params.questionId) return null
   try {
-    await cRequest('/api/questions/submit', {
+    const res = await cRequest('/api/questions/submit', {
       method: 'POST',
       body: {
         course_id: params.courseId,
         chapter_id: params.chapterId,
         question_cid: params.questionId,
         user_answer: params.userAnswer,
-        is_correct: params.isCorrect,
-        correct_rate: params.correctRate,
-        point: params.point,
       },
     })
+    if (params.question && res) {
+      // 合并服务端返回的答案/解析（composite 子题答案在 content 内）
+      if (Array.isArray(res.answer)) params.question.answer = [...res.answer]
+      else if (res.answer !== undefined) params.question.answer = res.answer
+      if (res.explanation !== undefined) params.question.explanation = res.explanation
+      if (Array.isArray(res.content) && params.question.type === 'composite') {
+        params.question.content = res.content
+      }
+      params.question.correct_rate = res.rate || 0
+    }
     // 通知 userCard 刷新（题目提交会增加课程/章节积分与经验）
     useUserCard().refresh()
+    return res
   } catch {
-    // 接口暂未实现，静默忽略
+    // 接口暂未实现或网络错误，静默忽略
+    return null
   }
 }
 

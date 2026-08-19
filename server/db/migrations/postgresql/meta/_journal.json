@@ -15,6 +15,13 @@
       "when": 1786756428591,
       "tag": "0001_login_brute_force_protection",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787151261678,
+      "tag": "0002_busy_luckman",
+      "breakpoints": true
     }
   ]
 }

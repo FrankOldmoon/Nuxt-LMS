@@ -29,13 +29,13 @@
 </template>
 
 <script setup>
-import { useVfileRender } from './useVfileRender'
+import { useVfilesRender } from './useVfilesRender'
 
 const props = defineProps({
     node: Object,
 })
 
-const { navItems, selectedFile } = useVfileRender(props)
+const { navItems, selectedFile } = useVfilesRender(props)
 const navCollapsed = ref(false)
 </script>
 

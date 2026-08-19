@@ -15,7 +15,7 @@ export function useCommentRenderContext() {
 }
 
 export function useCommentRender(props: CommentRenderProps) {
-    const { courseId: ctxCourseId } = useLmsContext()
+    const { courseId: ctxCourseId, chapterId } = useLmsContext()
     const effectiveCourseId = computed(() => {
         if (props.courseId !== undefined && props.courseId !== null && props.courseId !== '') {
             return Number(props.courseId) || 0
@@ -167,6 +167,7 @@ export function useCommentRender(props: CommentRenderProps) {
                 method: 'POST',
                 body: {
                     course_id: effectiveCourseId.value,
+                    chapter_id: Number(chapterId?.value) || 0,
                     content,
                     parentId: parentCid,
                     name: '',

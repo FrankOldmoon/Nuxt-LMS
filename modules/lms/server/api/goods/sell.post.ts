@@ -44,8 +44,13 @@ export default eventHandler(async (event) => {
   if (!ucRows[0]) return cResp(null, '未加入该课程', false)
   const uc = ucRows[0]
 
-  // 4. 事务：加 coin + 减 bag + 加库存
-  const newCoin = (uc.coin || 0) + good.sellPrice
+  // 4. 交易：加 coin + 减 bag + 加库存
+  //    防套利兜底：卖出返还不超过买入价（add/update 已限制 sellPrice<=price，
+  //    这里对存量异常数据也做运行时 clamp，杜绝买→卖无限刷金币）
+  const refund = Number(good.sellPrice) > Number(good.price)
+    ? Math.max(0, Number(good.price) || 0)
+    : (Number(good.sellPrice) || 0)
+  const newCoin = (uc.coin || 0) + refund
   const newQuantity = bag.quantity - 1
   await db.transaction(async (tx) => {
     await tx.update(schema.userCourses)

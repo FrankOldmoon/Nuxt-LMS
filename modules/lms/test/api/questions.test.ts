@@ -116,22 +116,38 @@ describe('API: questions/show', () => {
     expect(result.data.name).toBe('Q1')
   })
 
-  it('answer 数组被加密（enc: 前缀）', async () => {
-    _mockDb.query.questions.findFirst = vi.fn().mockResolvedValue({ courseId: 1, cid: 1, answer: ['A', 'B'] })
+  it('学生/未登录视角：answer 与 explanation 被剥离', async () => {
+    setMockAuthState(null)
+    _mockDb.query.questions.findFirst = vi.fn().mockResolvedValue({ courseId: 1, cid: 1, answer: ['A', 'B'], explanation: { type: 'doc' } })
     const handler = (await import('../../server/api/questions/show')).default
     const result = await handler(makeEvent({ query: { course_id: '1', cid: '1' } }))
     expect(result.success).toBe(true)
-    expect(Array.isArray(result.data.answer)).toBe(true)
-    expect(result.data.answer[0]).toMatch(/^enc:/)
-    expect(result.data.answer[1]).toMatch(/^enc:/)
+    expect(result.data.answer).toBeUndefined()
+    expect(result.data.explanation).toBeUndefined()
   })
 
-  it('非数组 answer 不加密', async () => {
-    _mockDb.query.questions.findFirst = vi.fn().mockResolvedValue({ courseId: 1, cid: 1, answer: 'text-answer' })
+  it('学生视角：composite 子题 answer 被剥离', async () => {
+    setMockAuthState({ id: 2, username: 'stu', roles: ['student'], permissions: [] })
+    _mockDb.query.questions.findFirst = vi.fn().mockResolvedValue({
+      courseId: 1, cid: 1, type: 'composite',
+      answer: [],
+      content: [{ type: 'single', answer: [0] }, { type: 'judge', answer: [1] }],
+    })
     const handler = (await import('../../server/api/questions/show')).default
     const result = await handler(makeEvent({ query: { course_id: '1', cid: '1' } }))
     expect(result.success).toBe(true)
-    expect(result.data.answer).toBe('text-answer')
+    expect(result.data.content[0].answer).toBeUndefined()
+    expect(result.data.content[1].answer).toBeUndefined()
+  })
+
+  it('教师视角：answer/explanation 明文返回（编辑回填依赖）', async () => {
+    setMockAuthState({ id: 1, username: 'teacher', roles: ['teacher'], permissions: [] })
+    _mockDb.query.questions.findFirst = vi.fn().mockResolvedValue({ courseId: 1, cid: 1, answer: ['A', 'B'], explanation: { type: 'doc' } })
+    const handler = (await import('../../server/api/questions/show')).default
+    const result = await handler(makeEvent({ query: { course_id: '1', cid: '1' } }))
+    expect(result.success).toBe(true)
+    expect(result.data.answer).toEqual(['A', 'B'])
+    expect(result.data.explanation).toEqual({ type: 'doc' })
   })
 })
 

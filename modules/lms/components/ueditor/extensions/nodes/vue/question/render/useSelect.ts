@@ -1,5 +1,5 @@
 import { ref, watch, computed, onMounted, onBeforeUnmount, inject, nextTick } from 'vue'
-import { submitQuestion, recordAnswer, computeCorrectRate } from './shared'
+import { submitQuestion, recordAnswer } from './shared'
 
 export function useSelect(props: any) {
   const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')!
@@ -112,7 +112,7 @@ export function useSelect(props: any) {
     if (!val) clearSelectStyles()
   })
 
-  function submit() {
+  async function submit() {
     if (!props.question) return
     const container = getContainer()
     if (container) {
@@ -121,22 +121,20 @@ export function useSelect(props: any) {
         selectAnswers.value[idx] = (el as HTMLSelectElement).value
       })
     }
-    const qAnswer = props.question.answer || []
-    const correct = qAnswer.length > 0 && qAnswer.every((ans: any, i: number) => {
-      return (selectAnswers.value[i] || '').trim() === String(ans).trim()
-    })
-    isCorrect.value = correct
-    submitQuestion({
+    // 服务端判分（show 不下发答案，本地无法判定）
+    const result = await submitQuestion({
       questionId: props.questionId,
       userAnswer: selectAnswers.value.map((a: any) => (a || '').trim()),
-      isCorrect: correct,
-      correctRate: computeCorrectRate(props.question),
       courseId: courseId.value,
       chapterId: chapterId.value,
       point: props.question.point,
+      question: props.question,
     })
+    if (!result) return null
+    isCorrect.value = result.isCorrect
+    // 答案已由响应合并进 question，着色依赖它
     styleSelects()
-    return { isCorrect: correct }
+    return { isCorrect: result.isCorrect }
   }
 
   function reset() {

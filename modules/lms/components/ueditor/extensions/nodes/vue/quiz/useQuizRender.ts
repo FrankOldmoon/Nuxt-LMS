@@ -1,5 +1,4 @@
 import { reactive, ref, computed, watch, onMounted, onBeforeUnmount, nextTick, provide, inject, type InjectionKey } from 'vue'
-import { computeCorrectRate, decryptAnswer } from '../question/render/shared'
 
 export interface QuizRenderProps {
     node?: any
@@ -114,15 +113,13 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
             if (!comp) return
             const qData = comp.getQuestionData?.()
             if (!qData) return
-            if (Array.isArray(qData.answer) && qData.answer.some((a: any) => typeof a === 'string' && a.startsWith('enc:'))) {
-                qData.answer = decryptAnswer(qData.answer)
-            }
             const record = qData.record ? [...qData.record] : []
-            const rate = computeCorrectRate(qData)
             const answered = !!(comp.hasAnswer || record.length > 0)
+            // show 不下发答案，答题过程中不做本地判分（correct 仅在提交后由服务端结果回填）
+            const prevCorrect = questionStates[idx]?.correct ?? null
             questionStates[idx] = {
-                record, rate, point: q.point, answered,
-                correct: record.length > 0 ? rate > 0 : null,
+                record, rate: questionStates[idx]?.rate || 0, point: q.point, answered,
+                correct: prevCorrect,
             }
         })
     }
@@ -347,6 +344,10 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
             resultPassed.value = result.isPassed
             submitted.value = true
             started.value = false
+            // 服务端判分：用响应中的每题结果回填红绿状态（rate 由服务端重算）
+            if (Array.isArray(result.records)) {
+                nextTick(() => fillRecordsToQuestions(result.records))
+            }
             // 提交后 toast 提示：得分 + 是否通过 + 经验
             const gainedExp = Number(result?.gainedExp) || 0
             const scoreVal = Math.round(Number(result?.score) || 0)

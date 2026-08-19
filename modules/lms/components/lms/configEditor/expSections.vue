@@ -30,7 +30,6 @@ const sections = [
     fields: [
       { key: 'submitExp', label: 'lmsConfig.submitExp' },
       { key: 'resubmitExp', label: 'lmsConfig.resubmitExp' },
-      { key: 'latePenalty', label: 'lmsConfig.latePenalty', step: '0.1' },
     ],
   },
   {

@@ -1,5 +1,5 @@
 import { reactive, ref, computed, provide, inject, watch, type InjectionKey } from 'vue'
-import { computeCorrectRate, decryptAnswer } from './render/shared'
+import { computeCorrectRate } from './render/shared'
 import SingleRender from './render/single.vue'
 import JudgeRender from './render/judge.vue'
 import MultipleRender from './render/multiple.vue'
@@ -145,30 +145,20 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
         }
     })
 
-    function onSubmit() {
+    async function onSubmit() {
         if (!isLoggedIn.value) {
             toast.add({ title: t('common.loginRequired'), color: 'warning' })
             return
         }
         if (!renderRef.value) return
         if (inRace) {
-            const qData = question.value
-            if (Array.isArray(qData.answer) && qData.answer.some((a: any) => typeof a === 'string' && a.startsWith('enc:'))) {
-                qData.answer = decryptAnswer(qData.answer)
-            }
-            const rate = computeCorrectRate(qData)
-            isCorrect.value = rate > 0
+            // 竞赛模式：判分由 useRaceRender 走 verify 接口（show 不下发答案，本地无法判定），
+            // 这里仅进入"已提交"状态
             submitted.value = true
             fromRecord.value = false
-            showFireworks.value = isCorrect.value
-            // 竞赛模式仅前端判定，toast 仅做提示
-            toast.add({
-                title: isCorrect.value ? t('question.correct') : t('question.wrong'),
-                color: isCorrect.value ? 'success' : 'error',
-            })
             return
         }
-        const result = renderRef.value.submit()
+        const result = await renderRef.value.submit()
         if (result) {
             isCorrect.value = result.isCorrect
             submitted.value = true
@@ -255,11 +245,8 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
         if (!questionId.value) {
             question.value = defaultQuestion
         } else if (fetchedQuestion.value) {
-            const q = fetchedQuestion.value
-            if (import.meta.client && Array.isArray(q.answer) && q.answer.some((a: any) => typeof a === 'string' && a.startsWith('enc:'))) {
-                q.answer = decryptAnswer(q.answer)
-            }
-            question.value = q
+            // show 已按角色剥离 answer/explanation（教师视角有明文，学生无）
+            question.value = fetchedQuestion.value
         }
     }, { immediate: true, flush: 'sync' })
 
@@ -270,7 +257,12 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
     const pending = computed(() => !!questionId.value && fetchedPending.value)
 
     watch(() => question.value?.record, () => {
-        if (question.value) question.value.correct_rate = computeCorrectRate(question.value)
+        if (!question.value) return
+        // show 不下发答案：学生端 DB 题 answer 为 undefined，无法本地判分，
+        // correct_rate 由提交响应 / 服务端记录写入；内联题（AI 生成）与教师视角仍可实时计算
+        if (question.value.answer !== undefined) {
+            question.value.correct_rate = computeCorrectRate(question.value)
+        }
     }, { immediate: true, deep: true })
 
     const scoreDisplay = computed(() => {
@@ -306,7 +298,8 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
             const data = await cRequest(`/api/questions/record?course_id=${cid}&cid=${questionId.value}`)
             if (data && question.value && Array.isArray(data.records) && data.records.length > 0) {
                 question.value.record = [...data.records]
-                question.value.correct_rate = computeCorrectRate(question.value)
+                // show 不再下发答案，correct_rate 直接用服务端存储值（userQuestions.correctRate）
+                question.value.correct_rate = Math.max(0, Math.min(1, Number((data as any).correctRate) || 0))
                 submitted.value = true
                 fromRecord.value = true
                 isCorrect.value = (question.value.correct_rate || 0) > 0
@@ -333,17 +326,16 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
                 isCorrect.value = (question.value.correct_rate || 0) > 0
             }
         },
-        showResult() {
+        showResult(rate?: number) {
             if (!question.value) return { rate: 0, record: [] }
-            if (Array.isArray(question.value.answer) && question.value.answer.some((a: any) => typeof a === 'string' && a.startsWith('enc:'))) {
-                question.value.answer = decryptAnswer(question.value.answer)
-            }
-            const rate = computeCorrectRate(question.value)
-            question.value.correct_rate = rate
+            // 服务端判分：优先外部传入（verify 接口 / quiz 服务端结果），
+            // 否则用最近一次提交时 submitQuestion 写入的 correct_rate
+            const r = rate !== undefined ? rate : (question.value.correct_rate || 0)
+            question.value.correct_rate = r
             submitted.value = true
             fromRecord.value = false
-            isCorrect.value = rate > 0
-            return { rate, record: question.value.record ? [...question.value.record] : [] }
+            isCorrect.value = r > 0
+            return { rate: r, record: question.value.record ? [...question.value.record] : [] }
         },
         resetForQuiz() {
             if (renderRef.value) renderRef.value.reset()

@@ -143,7 +143,7 @@ export function useVideo(props: any) {
 
   // 父组件（render.vue）询问当前数据时返回
   function submit() {
-    // 整体通过才计为正确
+    // 整体通过才计为正确（视频观看进度 + 子题由客户端判定，服务端透传该结果）
     const passed = allPassed.value
     if (passed) {
       // 上报题目完成状态（quiz 模式下由 quiz 统一上报）
@@ -161,11 +161,10 @@ export function useVideo(props: any) {
       submitQuestion({
         questionId: props.questionId,
         userAnswer: [passed ? 1 : 0],
-        isCorrect: passed,
-        correctRate: passed ? 1 : 0,
         courseId: courseId.value,
         chapterId: chapterId.value,
         point: props.question?.point,
+        question: props.question,
       })
     })
 

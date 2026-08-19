@@ -6,7 +6,13 @@
  * 策略：通过 nuxt-stubs.ts 已定义 defineWebSocketHandler 桩（透传配置对象），
  * 直接调用 message(peer, mockMessage) 验证 send 调用。
  */
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+
+// race-handlers/answer 引入 @nuxthub/db（服务端判分），需 mock
+vi.mock('@nuxthub/db', () => ({
+  db: { query: { questions: { findFirst: vi.fn().mockResolvedValue(null), findMany: vi.fn().mockResolvedValue([]) } } },
+  schema: { questions: { courseId: 'courseId', cid: 'cid' } },
+}))
 
 import { makeMockPeer } from '../../../../test/setup/db-helpers'
 import { classRooms, raceRooms, groupRooms, raceStates, votes, quickAnswers } from '../../server/utils/ws/state'

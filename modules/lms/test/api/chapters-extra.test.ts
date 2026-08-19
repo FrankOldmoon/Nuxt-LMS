@@ -434,6 +434,27 @@ describe('API: chapters/task-status', () => {
     expect(r2.data.isPass).toBe(true)
   })
 
+  it('已完成 heading sticky：客户端回退无效，不能反复触发奖励', async () => {
+    setMockAuthState({ id: 1, username: 's', name: 's', roles: ['student'], permissions: [] })
+    // 已有记录：'1' 已完成，'h1' 未完成
+    _mockDb.query.userChapters.findFirst = vi.fn().mockResolvedValue({
+      userId: 1, chapterId: 1, isPass: false, taskStatus: { '1': true },
+    })
+    _mockDb.limit = vi.fn().mockResolvedValue([{ courseId: 10, content: { content: [
+      { type: 'heading', attrs: { id: 'h1' } },
+    ] } }])
+    _mockDb.then = (resolve: any) => resolve([])
+    const handler = (await import('../../server/api/chapters/task-status.post')).default
+    // 客户端尝试把已完成的 '1' 回退为 false
+    const r = await handler(makeEvent({ body: { chapter_id: 1, task_status: { '1': false }, is_pass: false } }))
+    expect(r.success).toBe(true)
+    // '1' 仍为 true（sticky），r.data.isPass=false（h1 未完成）
+    expect(r.data.isPass).toBe(false)
+    // 验证落库的 taskStatus 中 '1' 保持 true
+    const setArg = _mockDb.set.mock.calls.map(c => c[0]).find((s: any) => 'taskStatus' in s)
+    expect(setArg.taskStatus['1']).toBe(true)
+  })
+
   it('更新已存在记录', async () => {
     setMockAuthState({ id: 1, username: 's', name: 's', roles: ['student'], permissions: [] })
     _mockDb.query.userChapters.findFirst = vi.fn().mockResolvedValue({ userId: 1, chapterId: 1, isPass: true })

@@ -39,7 +39,7 @@ export default withSubmitHandler('提交题目失败', async (event) => {
   if (!verified) {
     throw new SubmitContextError('题目不存在或已删除')
   }
-  const { rate, point: totalPoint, isCorrect } = verified
+  const { rate, point: totalPoint, isCorrect, question: questionDef } = verified
   const score = Math.round(rate * totalPoint * 100) / 100
 
   // 1. 写 userQuestions（防刷由 upsertUserQuestion 内部处理）
@@ -91,5 +91,12 @@ export default withSubmitHandler('提交题目失败', async (event) => {
     gainedCoin,
   })
 
-  return cResp({ gainedExp, gainedCoin, score, scoreDelta })
+  return cResp({
+    gainedExp, gainedCoin, score, scoreDelta,
+    isCorrect, rate,
+    // 提交后返回答案与解析（show 不再下发；前端在答对时展示）
+    answer: questionDef.answer ?? [],
+    explanation: questionDef.explanation ?? null,
+    content: questionDef.content ?? null,
+  })
 })

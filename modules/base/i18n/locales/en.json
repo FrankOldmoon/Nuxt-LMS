@@ -235,6 +235,18 @@
     "importFailed": "Import failed",
     "passwordDefault": "default REDACTED"
   },
+  "feedback": {
+    "title": "Feedback",
+    "name": "Title",
+    "namePlaceholder": "Enter a short title",
+    "nameRequired": "Title is required",
+    "type": "Type",
+    "typeBug": "Bug",
+    "typeSuggestion": "Suggestion",
+    "typeRequirement": "Requirement",
+    "content": "Content",
+    "submitSuccess": "Feedback submitted successfully"
+  },
   "ide": {
     "title": "Code IDE",
     "run": "Run",

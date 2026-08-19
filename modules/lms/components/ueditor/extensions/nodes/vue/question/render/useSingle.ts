@@ -61,20 +61,20 @@ export function useSingle(props: any) {
       : 'border-gray-300 dark:border-gray-500'
   }
 
-  function submit() {
+  async function submit() {
     if (!props.question || selected.value < 0) return
-    const correct = selected.value === props.question.answer[0]
-    isCorrect.value = correct
-    submitQuestion({
+    // 服务端判分（show 不下发答案，本地无法判定）
+    const result = await submitQuestion({
       questionId: props.questionId,
       userAnswer: [selected.value],
-      isCorrect: correct,
-      correctRate: correct ? 1 : 0,
       courseId: courseId.value,
       chapterId: chapterId.value,
       point: props.question.point,
+      question: props.question,
     })
-    return { isCorrect: correct }
+    if (!result) return null
+    isCorrect.value = result.isCorrect
+    return { isCorrect: result.isCorrect }
   }
 
   function reset() {

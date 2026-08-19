@@ -1,27 +1,17 @@
 import { db, schema } from "@nuxthub/db"
-import { eq, and } from "drizzle-orm"  // 仅需导入 eq 和 and
-
-// 简单加密密钥（不对外公开，仅做轻度混淆）
-const ENC_KEY = 'lms_q_a_2026'
+import { eq, and } from "drizzle-orm"
 
 /**
- * 对字符串进行简单加密：XOR + Base64
- * 非字符串值（数字等）先转字符串，解密时由前端自行转换
+ * 题目详情
+ * GET /api/questions/show?course_id=&cid=
+ *
+ * 答案安全：
+ *  - 学生/未登录：不返回 answer / explanation（判分由服务端完成，
+ *    提交后 /api/questions/submit 响应中带回，供前端显示）
+ *  - 教师/管理员：返回明文 answer / explanation（编辑回填与"查看答案"依赖）
+ *  - composite 题型：子题 answer 内嵌在 content 数组中，同样按角色剥离
+ *  - OJ 题型：content 存 pid，用 fetchOj 拉取题目内容替换供前端展示
  */
-function encryptValue(val: any): string {
-  const str = String(val)
-  let result = ''
-  for (let i = 0; i < str.length; i++) {
-    result += String.fromCharCode(str.charCodeAt(i) ^ ENC_KEY.charCodeAt(i % ENC_KEY.length))
-  }
-  // Base64 编码（兼容中文，先转 UTF-8 再编码）
-  const utf8 = unescape(encodeURIComponent(result))
-  let binary = ''
-  for (let i = 0; i < utf8.length; i++) {
-    binary += String.fromCharCode(utf8.charCodeAt(i))
-  }
-  return btoa(binary)
-}
 
 export default eventHandler(async (event) => {
   const { course_id, cid } = getQuery(event)
@@ -29,7 +19,6 @@ export default eventHandler(async (event) => {
     return cResp(null, '缺少 id 参数', false)
   }
 
-  // 从 schema 中获取 questions 表（根据实际导出结构调整）
   const { questions } = schema
 
   const data = await db.query.questions.findFirst({
@@ -38,10 +27,11 @@ export default eventHandler(async (event) => {
       eq(questions.cid, Number(cid))
     )
   })
+  if (!data) return cResp(null, '题目不存在', false)
 
   // OJ 题型：content 存的是 pid，用 fetchOj 拉取题目内容替换 content 供前端展示；
   // 同时把 pid 放入 options，供编辑回填与渲染「前往 OJ」链接使用。
-  if (data && data.type === 'oj') {
+  if (data.type === 'oj') {
     const pid = String(data.content || '')
     if (pid) {
       const opts: any = data.options
@@ -55,9 +45,18 @@ export default eventHandler(async (event) => {
     }
   }
 
-  // 对 answer 数组加密，防止直接从前端源码查看正确答案
-  if (data && Array.isArray(data.answer)) {
-    data.answer = data.answer.map((ans: any) => 'enc:' + encryptValue(ans))
+  // 角色：教师/管理员可见答案，其他人剥离
+  const user = await getCurrentUser(event)
+  const canReveal = !!user?.roles?.some((r: string) => r === 'teacher' || r === 'admin')
+  if (!canReveal) {
+    delete (data as any).answer
+    delete (data as any).explanation
+    // composite 子题答案内嵌在 content 中，一并剥离
+    if (data.type === 'composite' && Array.isArray(data.content)) {
+      data.content = (data.content as any[]).map(sub =>
+        sub && typeof sub === 'object' ? { ...sub, answer: undefined } : sub
+      )
+    }
   }
 
   return cResp(data)

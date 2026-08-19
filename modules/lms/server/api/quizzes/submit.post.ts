@@ -13,11 +13,12 @@
  *  - 首次不及格：submitExp
  */
 import { db, schema } from '@nuxthub/db'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 import { calcQuizScore, calcQuizExp, calcQuizCoin } from '../../utils/quizSubmit/score'
 import { handleQuizStartOnly } from '../../utils/quizSubmit/startOnly'
 import { insertUserQuiz, updateUserQuizBestScore, incrementQuizSubmitCount } from '../../utils/quizSubmit/persist'
 import { notifyCourseProgressMax } from '../../utils/submit/progress'
+import { computeServerRate } from '../../utils/submit/verify'
 
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
@@ -57,8 +58,30 @@ export default eventHandler(async (event) => {
     return cResp(null, '已达到最大提交次数', false)
   }
 
-  // 5. 计算分数 + 经验
-  const { totalScore, correctCount } = calcQuizScore(records)
+  // 5. 服务端判分：按测验题目定义重算每题 rate（不信任客户端 rate/point）
+  const quizQids: number[] = (Array.isArray(quiz.questions) ? quiz.questions : [])
+    .map((item: any) => Number(typeof item === 'number' ? item : item?.id))
+    .filter(Boolean)
+  const quizQuestions = quizQids.length
+    ? await db.query.questions.findMany({
+        where: and(
+          eq(schema.questions.courseId, courseId),
+          inArray(schema.questions.cid, quizQids),
+        ),
+      })
+    : []
+  const questionMap = new Map(quizQuestions.map(q => [Number(q.cid), q]))
+
+  const verifiedRecords = (Array.isArray(records) ? records : [])
+    .filter((r: any) => r && questionMap.has(Number(r.questionCid)))
+    .map((r: any) => {
+      const q = questionMap.get(Number(r.questionCid))!
+      const rate = computeServerRate(q, r.answer)
+      return { questionCid: Number(r.questionCid), answer: r.answer ?? [], rate, point: Number(q.point) || 0 }
+    })
+
+  // 6. 计算分数 + 经验
+  const { totalScore, correctCount } = calcQuizScore(verifiedRecords)
   const config = await getCourseLmsConfig(courseId)
   const qConfig = config.quiz
   const existingBestScore = existing ? Number(existing.score) || 0 : null
@@ -68,15 +91,15 @@ export default eventHandler(async (event) => {
   const newSubmitCount = currentCount + 1
   const now = new Date()
 
-  // 6. 写 userQuizzes（取最高分）
+  // 7. 写 userQuizzes（取最高分，records 存服务端重算后的每题结果）
   if (existing) {
     const bestScore = Math.max(existingBestScore!, totalScore)
     await updateUserQuizBestScore({
-      userId: user.id, courseId, quizCid, records,
+      userId: user.id, courseId, quizCid, records: verifiedRecords,
       bestScore, newSubmitCount, existingStartedAt: existing.startedAt, now,
     })
   } else {
-    await insertUserQuiz({ userId: user.id, courseId, quizCid, records, totalScore, now })
+    await insertUserQuiz({ userId: user.id, courseId, quizCid, records: verifiedRecords, totalScore, now })
   }
 
   // 7. 更新 userCourses.quizScore（最高分模式）+ 奖章
@@ -103,5 +126,5 @@ export default eventHandler(async (event) => {
     gainedCoin,
   })
 
-  return cResp({ gainedExp, gainedCoin, score: totalScore, correctCount, isPassed, submitCount: newSubmitCount })
+  return cResp({ gainedExp, gainedCoin, score: totalScore, correctCount, isPassed, submitCount: newSubmitCount, records: verifiedRecords })
 })

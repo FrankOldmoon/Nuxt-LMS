@@ -68,12 +68,14 @@ describe('lms/configEditor/expSections.vue', () => {
     expect(wrapper.text()).toContain('lmsConfig.maxSubmitCount')
   })
 
-  it('渲染 homework section 的 3 个字段', async () => {
+  it('渲染 homework section 的 2 个字段', async () => {
     setupContext()
     const { default: ExpSections } = await import('../../../../components/lms/configEditor/expSections.vue')
     const wrapper = mount(ExpSections, { global: _globalConfig })
+    expect(wrapper.text()).toContain('lmsConfig.submitExp')
     expect(wrapper.text()).toContain('lmsConfig.resubmitExp')
-    expect(wrapper.text()).toContain('lmsConfig.latePenalty')
+    // latePenalty 已移除（作业无截止时间，从未生效）
+    expect(wrapper.text()).not.toContain('lmsConfig.latePenalty')
   })
 
   it('渲染 comment section 的 4 个字段', async () => {
@@ -99,8 +101,8 @@ describe('lms/configEditor/expSections.vue', () => {
     const { default: ExpSections } = await import('../../../../components/lms/configEditor/expSections.vue')
     const wrapper = mount(ExpSections, { global: _globalConfig })
     const inputs = wrapper.findAll('.uinput')
-    // 4+3+4+3+4+3+2 = 23 个输入框（chapter 段 3 字段：headingExp/headingCoin/headingScore）
-    expect(inputs.length).toBe(23)
+    // 4+2+4+3+4+3+2 = 22 个输入框（homework 段移除 latePenalty）
+    expect(inputs.length).toBe(22)
     // 都是 number 类型
     expect(inputs[0]!.attributes('type')).toBe('number')
   })

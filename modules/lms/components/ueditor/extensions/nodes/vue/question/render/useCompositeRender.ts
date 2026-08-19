@@ -1,5 +1,5 @@
 import { ref, computed, inject, watch, nextTick } from 'vue'
-import { submitQuestion, recordAnswer, computeCorrectRate } from './shared'
+import { submitQuestion, recordAnswer } from './shared'
 
 export function useCompositeRender(props: any) {
   const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')
@@ -73,44 +73,31 @@ export function useCompositeRender(props: any) {
     }
   })
 
-  function submit() {
+  async function submit() {
     if (!props.question || !subQuestions.value.length) return
-    // 调用每个子题的 submit
-    const results = []
-    subRefs.value.forEach(ref => {
-      if (ref) {
-        const result = ref.submit()
-        if (result) results.push(result)
-      }
-    })
-    // 计算总分和得分
-    let totalPoint = 0
-    let correctPoint = 0
-    subQuestions.value.forEach((sub, i) => {
-      const pt = Number(sub.point) || 0
-      totalPoint += pt
-      const subRecord = subRecords.value[i] || []
-      const subQuestion = { ...sub, record: subRecord }
-      const rate = computeCorrectRate(subQuestion)
-      correctPoint += rate * pt
-    })
-    const correctRate = totalPoint > 0 ? correctPoint / totalPoint : 0
-    const correct = correctRate >= 1 && results.length === subQuestions.value.length
-    isCorrect.value = correct
-
-    // 构建完整 record
+    // 先收集子题作答（必须在服务端响应合并 content 重渲染之前）
     const fullRecord = subQuestions.value.map((_, i) => subRecords.value[i] || [])
+    const totalPoint = subQuestions.value.reduce((sum: number, sub: any) => sum + (Number(sub.point) || 0), 0)
 
-    submitQuestion({
+    // 服务端判分（show 不下发子题答案，本地无法判定）
+    const result = await submitQuestion({
       questionId: props.questionId,
       userAnswer: fullRecord,
-      isCorrect: correct,
-      correctRate,
       courseId: courseId.value,
       chapterId: chapterId.value,
       point: totalPoint,
+      question: props.question,
     })
-    return { isCorrect: correct }
+    if (!result) return null
+    isCorrect.value = result.isCorrect
+
+    // 响应携带完整 content（子题含 answer），子题组件重建后回填作答与对错
+    nextTick(() => {
+      subQuestions.value.forEach((_, i) => {
+        subRefs.value[i]?.setRecord(fullRecord[i] || [])
+      })
+    })
+    return { isCorrect: result.isCorrect }
   }
 
   function reset() {

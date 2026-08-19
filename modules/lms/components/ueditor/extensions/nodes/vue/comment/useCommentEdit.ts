@@ -27,7 +27,7 @@ export function useCommentEdit(props: CommentEditProps, emit: CommentEditEmit) {
     })
 
     const { t } = useI18n()
-    const { courseId: effectiveCourseId } = useLmsContext()
+    const { courseId: effectiveCourseId, chapterId } = useLmsContext()
     const toast = useToast()
 
     const saving = ref(false)
@@ -78,7 +78,7 @@ export function useCommentEdit(props: CommentEditProps, emit: CommentEditEmit) {
             } else {
                 const result = await cRequest('/api/comments/add', {
                     method: 'POST',
-                    body: { course_id: effectiveCourseId.value, ...form.value },
+                    body: { course_id: effectiveCourseId.value, chapter_id: Number(chapterId?.value) || 0, ...form.value },
                 })
                 emit('saved', { ...form.value, cid: result.cid })
                 // 新增评论：toast 成功

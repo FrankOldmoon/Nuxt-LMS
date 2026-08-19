@@ -30,6 +30,10 @@ beforeEach(() => {
   ;(globalThis as any).useUserCard = () => ({
     refreshTrigger: ref(0),
   })
+  // stub useLmsPublicConfig（等级换算读取 levelStep，默认 100）
+  ;(globalThis as any).useLmsPublicConfig = () => ({
+    levelStep: ref(100),
+  })
 })
 
 const _globalStubs = {
