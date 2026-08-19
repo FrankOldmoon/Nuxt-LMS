@@ -4,16 +4,21 @@
  * body: { course_id, race_cid, records, total_score }
  * records: [{ questionCid, rate, point, answer }]
  *
+ * 判分安全：total_score / rate / point 均不信任客户端。
+ * 服务端加载竞赛题目定义，根据 records[].answer 重算每题得分比，point 取 DB 值，
+ * 且只统计属于该竞赛（races.questionIds）的题目。
+ *
  * 防刷策略（详见 utils/submit/race.ts）：
  *  - 已有记录：取最高分（不累加），不再给经验
  *  - 首次提交：给参与经验（participateExp）
  */
 import { db, schema } from '@nuxthub/db'
-import { and, eq } from 'drizzle-orm'
-import { parseSubmitContext } from '../../utils/submit/context'
+import { and, eq, inArray } from 'drizzle-orm'
+import { parseSubmitContext, SubmitContextError } from '../../utils/submit/context'
 import { findUserSubmitRecord } from '../../utils/submit/record'
 import { notifyCourseProgressMax } from '../../utils/submit/progress'
 import { withSubmitHandler } from '../../utils/submit/handler'
+import { computeServerRate } from '../../utils/submit/verify'
 
 export default withSubmitHandler('提交竞赛成绩失败', async (event) => {
   const ctx = await parseSubmitContext(event, {
@@ -22,8 +27,40 @@ export default withSubmitHandler('提交竞赛成绩失败', async (event) => {
   })
   const { user, courseId, cid: raceCid, section: rConfig, body } = ctx
 
-  const records = body.records
-  const score = Number(body.total_score) || 0
+  const records = Array.isArray(body.records) ? body.records : []
+
+  // 1. 加载竞赛定义（questionIds 白名单）
+  const race = await db.query.races.findFirst({
+    where: and(eq(schema.races.courseId, courseId), eq(schema.races.cid, raceCid)),
+  })
+  if (!race) {
+    throw new SubmitContextError('竞赛不存在')
+  }
+  const questionIds: number[] = (Array.isArray(race.questionIds) ? race.questionIds : []).map(Number)
+
+  // 2. 加载竞赛题目，服务端重算成绩
+  const raceQuestions = questionIds.length
+    ? await db.query.questions.findMany({
+        where: and(
+          eq(schema.questions.courseId, courseId),
+          inArray(schema.questions.cid, questionIds),
+        ),
+      })
+    : []
+  const questionMap = new Map(raceQuestions.map(q => [Number(q.cid), q]))
+
+  let verifiedScore = 0
+  const verifiedRecords = records
+    .filter((r: any) => r && questionMap.has(Number(r.questionCid)))
+    .map((r: any) => {
+      const q = questionMap.get(Number(r.questionCid))!
+      const rate = computeServerRate(q, r.answer)
+      const point = Number(q.point) || 0
+      verifiedScore += rate * point
+      return { ...r, rate, point }
+    })
+  const score = Math.round(verifiedScore * 100) / 100
+
   const participationExp = rConfig.participateExp || rConfig.participationExp || 0
   const participationCoin = rConfig.participateCoin || rConfig.participationCoin || 0
 
@@ -35,10 +72,10 @@ export default withSubmitHandler('提交竞赛成绩失败', async (event) => {
   const gainedExp = isFirstSubmit ? participationExp : 0
   const gainedCoin = isFirstSubmit ? participationCoin : 0
 
-  // 2. 写 userRaces（取最高分）
+  // 2. 写 userRaces（取最高分，records 存服务端重算后的版本）
   if (existing) {
     await db.update(schema.userRaces).set({
-      records,
+      records: verifiedRecords,
       score: String(bestScore),
     }).where(and(
       eq(schema.userRaces.userId, user.id),
@@ -50,7 +87,7 @@ export default withSubmitHandler('提交竞赛成绩失败', async (event) => {
       userId: user.id,
       courseId,
       raceCid,
-      records,
+      records: verifiedRecords,
       score: String(score),
     })
   }

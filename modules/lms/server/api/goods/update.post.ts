@@ -22,6 +22,17 @@ export default eventHandler(async (event) => {
   if (type !== undefined) updateData.type = type
   if (order !== undefined) updateData.order = Number(order)
 
+  // 防套利：卖出价不得高于买入价（结合库中原值校验，防止只改一项绕过）
+  const existingGood = await db.query.goods.findFirst({
+    where: eq(schema.goods.id, Number(id)),
+  })
+  if (!existingGood) return cResp(null, '商品不存在', false)
+  const finalPrice = updateData.price !== undefined ? updateData.price : Number(existingGood.price)
+  const finalSellPrice = updateData.sellPrice !== undefined ? updateData.sellPrice : Number(existingGood.sellPrice)
+  if (finalSellPrice > finalPrice) {
+    return cResp(null, '卖出价不能高于买入价', false)
+  }
+
   const result = await db.update(schema.goods)
     .set(updateData)
     .where(eq(schema.goods.id, Number(id)))

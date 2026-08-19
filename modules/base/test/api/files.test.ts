@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 const _mockDb = {
   query: {
     files: { findFirst: vi.fn() },
+    userCourses: { findMany: vi.fn() },
   },
   select: vi.fn().mockReturnThis(),
   from: vi.fn().mockReturnThis(),
@@ -27,6 +28,7 @@ const _mockSchema = {
     size: 'size', userId: 'userId', group: 'group', deletedAt: 'deletedAt',
   },
   users: { id: 'id', username: 'username' },
+  userCourses: { userId: 'userId', courseId: 'courseId', group: 'group' },
 }
 vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
 
@@ -161,12 +163,25 @@ describe('API: files/delete.post (soft delete)', () => {
     expect(db.delete).not.toHaveBeenCalled()
   })
 
-  it('小组文件：任何成员可删', async () => {
+  it('小组文件：非组内成员不可删', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
     const { db } = await import('@nuxthub/db')
     vi.mocked(db.query.files.findFirst).mockResolvedValue({
-      id: 2, userId: 99, group: 'team-a', path: '/team/file.png',
+      id: 2, userId: 99, group: '1_team-a', path: '/team/file.png',
     } as any)
+    vi.mocked(db.query.userCourses.findMany).mockResolvedValue([] as any)
+    const handler = (await import('../../server/api/files/delete.post')).default
+    const result = await handler(makeEvent({ id: 2 }))
+    expect(result.success).toBe(false)
+  })
+
+  it('小组文件：组内成员可删', async () => {
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    const { db } = await import('@nuxthub/db')
+    vi.mocked(db.query.files.findFirst).mockResolvedValue({
+      id: 2, userId: 99, group: '1_team-a', path: '/team/file.png',
+    } as any)
+    vi.mocked(db.query.userCourses.findMany).mockResolvedValue([{ group: 'team-a' }] as any)
     const handler = (await import('../../server/api/files/delete.post')).default
     const result = await handler(makeEvent({ id: 2 }))
     expect(result.success).toBe(true)
@@ -578,15 +593,28 @@ describe('API: files/rename.post', () => {
     expect(db.update).toHaveBeenCalled()
   })
 
-  it('小组文件：任何成员可改名', async () => {
+  it('小组文件：组内成员可改名', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
     const { db } = await import('@nuxthub/db')
     vi.mocked(db.query.files.findFirst).mockResolvedValue({
-      id: 2, userId: 99, group: 'team-a', name: 'old',
+      id: 2, userId: 99, group: '1_team-a', name: 'old',
     } as any)
+    vi.mocked(db.query.userCourses.findMany).mockResolvedValue([{ group: 'team-a' }] as any)
     const handler = (await import('../../server/api/files/rename.post')).default
     const result = await handler(makeEvent({ id: 2, name: 'new-name' }))
     expect(result.success).toBe(true)
+  })
+
+  it('小组文件：非组内成员不可改名', async () => {
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    const { db } = await import('@nuxthub/db')
+    vi.mocked(db.query.files.findFirst).mockResolvedValue({
+      id: 2, userId: 99, group: '1_team-a', name: 'old',
+    } as any)
+    vi.mocked(db.query.userCourses.findMany).mockResolvedValue([] as any)
+    const handler = (await import('../../server/api/files/rename.post')).default
+    const result = await handler(makeEvent({ id: 2, name: 'new-name' }))
+    expect(result.success).toBe(false)
   })
 })
 

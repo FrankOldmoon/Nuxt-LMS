@@ -8,8 +8,22 @@
  * 前端不再传递敏感信息；model 可由前端覆盖，默认取 lms_config.ai.model 或 glm-4.5-air
  * 返回 SSE 流式响应（逐块透传，不缓冲），并在流结束前附加 model 与 usage 元数据
  */
+// 用户级速率限制：LLM 调用成本高，防止单用户刷 API 额度（滑动窗口，内存存储）
+const CHAT_WINDOW_MS = 60_000
+const CHAT_RATE_LIMIT_MAX = 20
+const userChatHits = new Map<number, number[]>()
+
 export default eventHandler(async (event) => {
     const user = await requireAuth(event)
+
+    // 频控：每用户每分钟最多 CHAT_RATE_LIMIT_MAX 次
+    const now = Date.now()
+    const hits = (userChatHits.get(user.id) || []).filter((t) => t > now - CHAT_WINDOW_MS)
+    hits.push(now)
+    userChatHits.set(user.id, hits)
+    if (hits.length > CHAT_RATE_LIMIT_MAX) {
+        return cResp(null, '请求过于频繁，请稍后再试', false)
+    }
 
     const body = await readBody(event)
     const { messages, model, thinking } = body

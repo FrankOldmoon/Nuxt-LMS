@@ -138,6 +138,14 @@ describe('API: questions/show', () => {
 // ====================== submit.post.ts ======================
 
 describe('API: questions/submit', () => {
+  // 服务端判分：submit 会从 questions 表加载题目定义（type/answer/point）
+  beforeEach(() => {
+    // 默认题目：单选，answer=['A']，point=10 → user_answer ['A'] rate=1，['B'] rate=0
+    _mockDb.query.questions.findFirst = vi.fn().mockResolvedValue({
+      courseId: 1, cid: 1, type: 'single', answer: ['A'], point: 10,
+    })
+  })
+
   it('未登录抛 401', async () => {
     const handler = (await import('../../server/api/questions/submit.post')).default
     await expect(handler(makeEvent({ body: { course_id: 1, question_cid: 1 } }))).rejects.toThrow()
@@ -155,6 +163,29 @@ describe('API: questions/submit', () => {
     const handler = (await import('../../server/api/questions/submit.post')).default
     const result = await handler(makeEvent({ body: { course_id: 1 } }))
     expect(result.success).toBe(false)
+  })
+
+  it('题目不存在时拒绝计分', async () => {
+    setMockAuthState({ id: 1, username: 'student', roles: ['student'], permissions: [] })
+    _mockDb.query.questions.findFirst = vi.fn().mockResolvedValue(null)
+    const handler = (await import('../../server/api/questions/submit.post')).default
+    const result = await handler(makeEvent({ body: { course_id: 1, question_cid: 999, correct_rate: 1, point: 999, user_answer: ['A'] } }))
+    expect(result.success).toBe(false)
+  })
+
+  it('伪造 correct_rate/point 无效：服务端按 DB 题目判分', async () => {
+    setMockAuthState({ id: 1, username: 'student', roles: ['student'], permissions: [] })
+    _mockDb.query.userQuestions.findFirst = vi.fn().mockResolvedValue(null)
+    _mockDb.returning = vi.fn().mockResolvedValue([])
+    const handler = (await import('../../server/api/questions/submit.post')).default
+    // 客户端声称 rate=1 point=9999，但 user_answer ['B'] 与 DB answer ['A'] 不符 → 判错
+    const result = await handler(makeEvent({ body: { course_id: 1, question_cid: 1, correct_rate: 1, point: 9999, user_answer: ['B'] } }))
+    expect(result.success).toBe(true)
+    expect(result.data.score).toBe(0)
+    // 答对时 point 取 DB 值 10，而非客户端 9999
+    const result2 = await handler(makeEvent({ body: { course_id: 1, question_cid: 1, correct_rate: 1, point: 9999, user_answer: ['A'] } }))
+    expect(result2.success).toBe(true)
+    expect(result2.data.score).toBe(10)
   })
 
   it('新记录：插入并返回经验值和分数', async () => {
@@ -225,6 +256,10 @@ describe('API: questions/submit', () => {
 
   it('分数增量只取比上次更好的（scoreDelta >= 0）', async () => {
     setMockAuthState({ id: 1, username: 'student', roles: ['student'], permissions: [] })
+    // 多选题：answer=['A','B']，user_answer ['A'] → matching=1/2 → 服务端 rate=0.5
+    _mockDb.query.questions.findFirst = vi.fn().mockResolvedValue({
+      courseId: 1, cid: 1, type: 'multiple', answer: ['A', 'B'], point: 10,
+    })
     _mockDb.query.userQuestions.findFirst = vi.fn().mockResolvedValue({ firstRight: true, score: '8', submitCount: 1, wrongCount: 0 })
     _mockDb.returning = vi.fn().mockResolvedValue([])
     const handler = (await import('../../server/api/questions/submit.post')).default

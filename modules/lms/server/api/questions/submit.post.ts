@@ -3,6 +3,11 @@
  * POST /api/questions/submit
  * body: { course_id, chapter_id?, question_cid, user_answer, correct_rate, point }
  *
+ * 判分安全：correct_rate 与 point 不信任客户端。
+ *  - 服务端从 questions 表加载题目定义（answer/type/point），根据 user_answer 重算得分比
+ *  - html/evaluation/oj/video 等客户端判定型题型，rate 以客户端为准但 clamp 到 [0,1]
+ *  - 分值一律取 DB 中题目自带的 point
+ *
  * 防刷策略（详见 utils/submit/questions.ts）：
  *  - 仅首次提交（无论对错）给基础经验
  *  - 首次答对额外给 correctBonusExp + firstCorrectBonusExp
@@ -12,11 +17,12 @@
  * 注：addChapterScore / addCourseScore / checkAndAwardMedals / getCourseLmsConfig 通过 Nuxt auto-import 引入
  *     （不显式 import），让测试可通过 globalThis 注入 mock。
  */
-import { parseSubmitContext } from '../../utils/submit/context'
+import { parseSubmitContext, SubmitContextError } from '../../utils/submit/context'
 import { notifyCourseProgress } from '../../utils/submit/progress'
 import { withSubmitHandler } from '../../utils/submit/handler'
 import { upsertUserQuestion } from '../../utils/submit/questions/upsert'
 import { calcQuestionGainedExp, calcQuestionGainedCoin } from '../../utils/submit/questions/calc'
+import { verifyQuestionAnswer } from '../../utils/submit/verify'
 
 export default withSubmitHandler('提交题目失败', async (event) => {
   const ctx = await parseSubmitContext(event, {
@@ -27,9 +33,13 @@ export default withSubmitHandler('提交题目失败', async (event) => {
 
   // 兼容 chapter_id（用于更新 userChapters.score）
   const chapterId = Number(body.chapter_id) || 0
-  const totalPoint = Number(body.point) || 0
-  const rate = Number(body.correct_rate) || 0
-  const isCorrect = rate > 0
+
+  // 服务端判分：不信任客户端 correct_rate / point
+  const verified = await verifyQuestionAnswer(courseId, questionCid, body.user_answer)
+  if (!verified) {
+    throw new SubmitContextError('题目不存在或已删除')
+  }
+  const { rate, point: totalPoint, isCorrect } = verified
   const score = Math.round(rate * totalPoint * 100) / 100
 
   // 1. 写 userQuestions（防刷由 upsertUserQuestion 内部处理）

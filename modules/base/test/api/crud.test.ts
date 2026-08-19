@@ -67,6 +67,22 @@ describe('API: crud/[table]/list.get', () => {
 })
 
 describe('API: crud/[table]/show.get', () => {
+  beforeEach(() => {
+    setMockAuthState({ id: 1, username: 'admin', name: 'Admin', roles: ['admin'], permissions: [] })
+  })
+
+  it('未登录抛 401', async () => {
+    setMockAuthState(null)
+    const handler = (await import('../../server/api/crud/[table]/show.get')).default
+    await expect(handler(makeEvent({ params: { table: 'users' }, query: { id: '1' } }))).rejects.toThrow()
+  })
+
+  it('非 admin 角色抛 403', async () => {
+    setMockAuthState({ id: 2, username: 'alice', name: 'Alice', roles: ['student'], permissions: [] })
+    const handler = (await import('../../server/api/crud/[table]/show.get')).default
+    await expect(handler(makeEvent({ params: { table: 'users' }, query: { id: '1' } }))).rejects.toThrow()
+  })
+
   it('缺少 id 参数返回失败', async () => {
     const handler = (await import('../../server/api/crud/[table]/show.get')).default
     const result = await handler(makeEvent({ params: { table: 'users' }, query: {} }))

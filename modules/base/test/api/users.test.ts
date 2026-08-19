@@ -48,18 +48,29 @@ function makeEvent(opts: { query?: Record<string, any>; body?: any } = {}) {
 }
 
 describe('API: users/show', () => {
+  beforeEach(() => {
+    setMockAuthState({ id: 1, username: 'admin', name: 'Admin', roles: ['admin'], permissions: [] })
+  })
+
+  it('未登录抛 401', async () => {
+    setMockAuthState(null)
+    const handler = (await import('../../server/api/users/show')).default
+    await expect(handler(makeEvent({ query: { id: '1' } }))).rejects.toThrow()
+  })
+
   it('缺少 id 参数返回失败', async () => {
     const handler = (await import('../../server/api/users/show')).default
     const result = await handler(makeEvent({ query: {} }))
     expect(result.success).toBe(false)
   })
 
-  it('有效 id 返回用户数据', async () => {
-    globalThis.showTable = vi.fn().mockResolvedValue({ id: 1, username: 'alice', name: 'Alice' })
+  it('有效 id 返回用户数据（不含 password）', async () => {
+    globalThis.showTable = vi.fn().mockResolvedValue({ id: 1, username: 'alice', name: 'Alice', password: 'hash' })
     const handler = (await import('../../server/api/users/show')).default
     const result = await handler(makeEvent({ query: { id: '1' } }))
     expect(result.success).toBe(true)
     expect(result.data.username).toBe('alice')
+    expect(result.data.password).toBeUndefined()
   })
 })
 

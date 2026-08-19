@@ -53,6 +53,7 @@ export default defineEventHandler(async (event) => {
   if (!isPrivileged) {
     throw createError({ statusCode: 403, message: '无权限：仅教师/管理员可切换身份' })
   }
+  const callerIsAdmin = roleRows.some(r => r.code === 'admin')
 
   const body = await readBody(event)
   const { userId } = body
@@ -69,6 +70,18 @@ export default defineEventHandler(async (event) => {
 
   if (!targetUser[0]) {
     return cResp(null, '目标用户不存在', false)
+  }
+
+  // 防提权：非 admin 调用者（teacher）不能模拟教师/管理员账号
+  if (!callerIsAdmin) {
+    const targetRoles = await db
+      .select({ code: schema.roles.code })
+      .from(schema.userRoles)
+      .innerJoin(schema.roles, eq(schema.userRoles.roleId, schema.roles.id))
+      .where(eq(schema.userRoles.userId, Number(userId)))
+    if (targetRoles.some(r => r.code === 'teacher' || r.code === 'admin')) {
+      throw createError({ statusCode: 403, message: '无权限：不能切换到教师/管理员账号' })
+    }
   }
 
   // 仅在首次模拟时保存原始 token（已有 original_token 时不覆盖）

@@ -66,6 +66,8 @@ export function createMockDb(extraQuery: Record<string, any> = {}) {
       quizzes: { findFirst: vi.fn(), findMany: vi.fn() },
       races: { findFirst: vi.fn(), findMany: vi.fn() },
       classes: { findFirst: vi.fn(), findMany: vi.fn() },
+      goods: { findFirst: vi.fn(), findMany: vi.fn() },
+      bags: { findFirst: vi.fn(), findMany: vi.fn() },
       classChapters: { findFirst: vi.fn(), findMany: vi.fn() },
       userClasses: { findFirst: vi.fn(), findMany: vi.fn() },
       userChapters: { findFirst: vi.fn(), findMany: vi.fn() },

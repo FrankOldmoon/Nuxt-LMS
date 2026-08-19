@@ -11,10 +11,20 @@ export default eventHandler(async (event) => {
     return cResp(null, '缺少 id 参数', false)
   }
 
-  delete body.cid, body.course_id, body.id
+  // 字段白名单：仅允许更新评论内容相关字段，防止 mass assignment 改写 userId/status 等
+  const allowedFields = ['name', 'code', 'content', 'tags', 'point']
+  const updateData: Record<string, any> = {}
+  for (const field of allowedFields) {
+    if (body[field] !== undefined) {
+      updateData[field] = body[field]
+    }
+  }
+  if (Object.keys(updateData).length === 0) {
+    return cResp(null, '没有需要更新的字段', false)
+  }
 
   try {
-    const result = await db.update(schema.comments).set(body).where(and(
+    const result = await db.update(schema.comments).set(updateData).where(and(
       eq(schema.comments.courseId, course_id),
       eq(schema.comments.cid, id)
     ))

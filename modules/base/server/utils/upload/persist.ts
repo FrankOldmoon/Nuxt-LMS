@@ -1,15 +1,16 @@
 /**
- * 上传步骤 3：落盘 + 写库 + 改名（最终步骤）
+ * 上传步骤 3：落盘 + 写库（最终步骤）
  *
- *  1. 写入临时文件 hash.ext
- *  2. 插入 files 表（拿到 id）
- *  3. 重命名为 {id}.ext，更新 db.path
+ *  1. 写入文件 hash.ext（sha256 内容哈希作为文件名，不再改名为 {id}.ext）
+ *  2. 插入 files 表
+ *
+ * hash 命名的安全收益：serve 端点无需鉴权（公开读取），
+ * 但路径含 64 位十六进制内容哈希，不可枚举猜测。
  * 并发插入失败 → 移除临时文件 + 抛错（外层 catch 复用 buildDedupWhere 重新查重）
  */
 import { db, schema } from '@nuxthub/db'
-import { eq } from 'drizzle-orm'
 import { createHash } from 'node:crypto'
-import { writeFile, mkdir, rename, rm } from 'node:fs/promises'
+import { writeFile, mkdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 
 /** sha256 hex */
@@ -34,7 +35,7 @@ export async function writeTempFile(buffer: Buffer, hash: string, ext: string, d
   return { tempFilePath, tempDbPath }
 }
 
-/** 落盘 + 写库 + 改名（最终步骤） */
+/** 落盘 + 写库（最终步骤，文件名保持 hash.ext） */
 export async function persistUploadedFile(args: {
   buffer: Buffer
   hash: string
@@ -67,14 +68,8 @@ export async function persistUploadedFile(args: {
     throw error
   }
 
-  const finalFileName = `${record.id}${ext}`
-  const finalFilePath = join(dayDir, finalFileName)
-  // DB path 只保留 UPLOAD_ROOT 之内的相对路径，避免 URL 里出现 storage 前缀
-  const finalDbPath = `/${dayDirName}/${finalFileName}`
-  await rename(tempFilePath, finalFilePath)
-  await db.update(schema.files)
-    .set({ path: finalDbPath })
-    .where(eq(schema.files.id, record.id))
+  // 文件名即 hash.ext（内容寻址）：serve 公开访问但路径不可枚举
+  const finalDbPath = tempDbPath
 
   return { id: record.id, finalDbPath }
 }

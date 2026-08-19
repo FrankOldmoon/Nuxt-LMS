@@ -550,15 +550,17 @@ describe('API: auth/reset-password.post', () => {
 })
 
 describe('API: auth/impersonate.post', () => {
-  /** impersonate 有 3 条 db 查询：token / roles / target user
+  /** impersonate 查询：token / caller roles / target user / target roles（非 admin 时）
    *  token 与 target user 走 select().from().where().limit()
    *  roles 走 select().from().innerJoin().where()（无 limit）
-   *  用 callIndex 区分每次 select 调用 */
-  function setupImpersonateDb(opts: { tokenRows?: any[]; roleRows?: any[]; targetRows?: any[] }) {
+   *  用 callIndex 区分 limit 查询，innerJoinCount 区分两次角色查询 */
+  function setupImpersonateDb(opts: { tokenRows?: any[]; roleRows?: any[]; targetRows?: any[]; targetRoleRows?: any[] }) {
     let callIndex = 0
+    let innerJoinCount = 0
     const tokenRows = opts.tokenRows ?? [{ userId: 1 }]
     const roleRows = opts.roleRows ?? [{ code: 'teacher' }]
     const targetRows = opts.targetRows ?? [{ id: 2, name: 'Student1' }]
+    const targetRoleRows = opts.targetRoleRows ?? []
     _mockDb.select = vi.fn(() => {
       const idx = callIndex++
       return {
@@ -569,7 +571,9 @@ describe('API: auth/impersonate.post', () => {
             ),
           }),
           innerJoin: () => ({
-            where: () => Promise.resolve(roleRows),
+            where: () => Promise.resolve(
+              innerJoinCount++ === 0 ? roleRows : targetRoleRows
+            ),
           }),
         }),
       }
@@ -610,7 +614,7 @@ describe('API: auth/impersonate.post', () => {
   })
 
   it('教师成功切换身份并设置 cookie', async () => {
-    setupImpersonateDb({ tokenRows: [{ userId: 1 }], roleRows: [{ code: 'teacher' }], targetRows: [{ id: 2, name: 'Student1' }] })
+    setupImpersonateDb({ tokenRows: [{ userId: 1 }], roleRows: [{ code: 'teacher' }], targetRows: [{ id: 2, name: 'Student1' }], targetRoleRows: [{ code: 'student' }] })
     const handler = (await import('../../server/api/auth/impersonate.post')).default
     const event = makeEvent({ cookies: { auth_token: 'valid' }, body: { userId: 2 } })
     const result = await handler(event)
@@ -619,6 +623,23 @@ describe('API: auth/impersonate.post', () => {
     expect(result.data.impersonatedBy).toBe(1)
     expect(event.cookies.auth_token).toMatch(/^[0-9a-f]{64}$/)
     expect(event.cookies.original_token).toBe('valid') // 保存原始 token
+    expect(_mockDb.insert).toHaveBeenCalled()
+  })
+
+  it('教师不能切换到教师/管理员账号（防提权）', async () => {
+    setupImpersonateDb({ tokenRows: [{ userId: 1 }], roleRows: [{ code: 'teacher' }], targetRows: [{ id: 2, name: 'Admin1' }], targetRoleRows: [{ code: 'admin' }] })
+    const handler = (await import('../../server/api/auth/impersonate.post')).default
+    const event = makeEvent({ cookies: { auth_token: 'valid' }, body: { userId: 2 } })
+    await expect(handler(event)).rejects.toMatchObject({ statusCode: 403 })
+    expect(_mockDb.insert).not.toHaveBeenCalled() // 未生成新 token
+  })
+
+  it('管理员可切换到教师/管理员账号', async () => {
+    setupImpersonateDb({ tokenRows: [{ userId: 1 }], roleRows: [{ code: 'admin' }], targetRows: [{ id: 2, name: 'Teacher1' }], targetRoleRows: [{ code: 'teacher' }] })
+    const handler = (await import('../../server/api/auth/impersonate.post')).default
+    const event = makeEvent({ cookies: { auth_token: 'valid' }, body: { userId: 2 } })
+    const result = await handler(event)
+    expect(result.success).toBe(true)
     expect(_mockDb.insert).toHaveBeenCalled()
   })
 

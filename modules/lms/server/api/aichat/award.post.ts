@@ -26,8 +26,11 @@ export default withSubmitHandler('AI 出题积分奖励失败', async (event) =>
   if (!course_id) throw new SubmitContextError('缺少 course_id 参数')
   const courseId = Number(course_id)
   const chapterId = Number(chapter_id) || 0
-  const totalPoint = Number(point) || 0
-  const rate = Number(correct_rate) || 0
+  // AI 题为临时生成（无 DB 题目定义），rate/point 无法服务端复算：
+  // 仅接收客户端 rate 并 clamp 到 [0,1]，分值封顶防刷
+  const MAX_AI_AWARD_POINT = 10
+  const rate = Math.max(0, Math.min(1, Number(correct_rate) || 0))
+  const totalPoint = Math.max(0, Math.min(MAX_AI_AWARD_POINT, Number(point) || 0))
   const isCorrect = rate > 0
   const score = Math.round(rate * totalPoint * 100) / 100
 

@@ -402,6 +402,8 @@ describe('API: chapters/task-status', () => {
   it('新建 userChapters 记录（is_pass false）', async () => {
     setMockAuthState({ id: 1, username: 's', name: 's', roles: ['student'], permissions: [] })
     _mockDb.query.userChapters.findFirst = vi.fn().mockResolvedValue(null)
+    // 章节加载：content 无 heading → 合法 heading 仅合成 id '1'（chapterId）
+    _mockDb.limit = vi.fn().mockResolvedValueOnce([{ courseId: 10, content: { content: [] } }])
     const checkSpy = vi.fn().mockResolvedValue([])
     ;(globalThis as any).checkAndAwardMedals = checkSpy
     const handler = (await import('../../server/api/chapters/task-status.post')).default
@@ -411,9 +413,33 @@ describe('API: chapters/task-status', () => {
     expect(checkSpy).not.toHaveBeenCalled()
   })
 
+  it('伪造 task_status / is_pass 无效：未知 heading 被丢弃，is_pass 服务端重算', async () => {
+    setMockAuthState({ id: 1, username: 's', name: 's', roles: ['student'], permissions: [] })
+    _mockDb.query.userChapters.findFirst = vi.fn().mockResolvedValue(null)
+    // 章节 content 含 heading id 'h1'：合法集合 = { '1', 'h1' }（两次调用共用）
+    _mockDb.limit = vi.fn().mockResolvedValue([{ courseId: 10, content: { content: [
+      { type: 'heading', attrs: { id: 'h1' } },
+    ] } }])
+    // updateCourseProgress 内部 where 终端链需要 thenable
+    _mockDb.then = (resolve: any) => resolve([])
+    const handler = (await import('../../server/api/chapters/task-status.post')).default
+    // 客户端声称 is_pass=true 并伪造 100 个未知 heading，但 'h1' 未完成 → 服务端判 false
+    const fake = Object.fromEntries(Array.from({ length: 100 }, (_, i) => [`fake-${i}`, true]))
+    const r = await handler(makeEvent({ body: { chapter_id: 1, task_status: { ...fake, '1': true }, is_pass: true } }))
+    expect(r.success).toBe(true)
+    expect(r.data.isPass).toBe(false)
+    // 全部合法 heading 完成 → 服务端判 true（即使客户端传 is_pass=false）
+    const r2 = await handler(makeEvent({ body: { chapter_id: 1, task_status: { '1': true, h1: true }, is_pass: false } }))
+    expect(r2.success).toBe(true)
+    expect(r2.data.isPass).toBe(true)
+  })
+
   it('更新已存在记录', async () => {
     setMockAuthState({ id: 1, username: 's', name: 's', roles: ['student'], permissions: [] })
     _mockDb.query.userChapters.findFirst = vi.fn().mockResolvedValue({ userId: 1, chapterId: 1, isPass: true })
+    _mockDb.limit = vi.fn().mockResolvedValueOnce([{ courseId: 10, content: { content: [] } }])
+    // 服务端重算 isPass=false ≠ wasPass=true 会触发 updateCourseProgress，需要 thenable 链
+    _mockDb.then = (resolve: any) => resolve([])
     const handler = (await import('../../server/api/chapters/task-status.post')).default
     const r = await handler(makeEvent({ body: { chapter_id: 1, task_status: {}, is_pass: true } }))
     expect(r.success).toBe(true)
@@ -423,14 +449,15 @@ describe('API: chapters/task-status', () => {
   it('从未通过变为通过触发 checkAndAwardMedals', async () => {
     setMockAuthState({ id: 1, username: 's', name: 's', roles: ['student'], permissions: [] })
     _mockDb.query.userChapters.findFirst = vi.fn().mockResolvedValue({ userId: 1, chapterId: 1, isPass: false })
-    _mockDb.limit = vi.fn().mockResolvedValueOnce([{ courseId: 10 }])
+    _mockDb.limit = vi.fn().mockResolvedValueOnce([{ courseId: 10, content: { content: [] } }])
     // updateCourseProgress 内部用 db.select().from().where()（无 .limit()），
     // 使 db 对象 thenable 让这些查询 resolve 为空数组 → total=0 → 提前返回，不抛错
     _mockDb.then = (resolve: any) => resolve([])
     const checkSpy = vi.fn().mockResolvedValue([100, 200])
     ;(globalThis as any).checkAndAwardMedals = checkSpy
     const handler = (await import('../../server/api/chapters/task-status.post')).default
-    const r = await handler(makeEvent({ body: { chapter_id: 1, task_status: {}, is_pass: true } }))
+    // 合法 heading 仅 '1'（合成），完成它 → 服务端重算 isPass=true
+    const r = await handler(makeEvent({ body: { chapter_id: 1, task_status: { '1': true }, is_pass: true } }))
     expect(r.success).toBe(true)
     expect(checkSpy).toHaveBeenCalledWith(1, 10)
     expect(r.data.newMedals).toEqual([100, 200])

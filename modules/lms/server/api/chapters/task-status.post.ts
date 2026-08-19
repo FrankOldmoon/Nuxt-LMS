@@ -6,8 +6,10 @@ import { eq, and, inArray, sql } from "drizzle-orm"
  * 持久化当前用户在某章节的 heading 任务完成状态
  * body: { chapter_id, task_status: { [headingId]: boolean }, is_pass: boolean }
  *
- * 客户端负责计算每个 heading 的完成状态（hover 阅读停留 3s + 互动组件提交全部答对），
- * 这里仅做 upsert 持久化；is_pass 由客户端根据全部 heading 完成情况计算。
+ * 安全策略（防客户端伪造）：
+ *  - task_status 的 key 必须是章节内容中真实存在的 heading id（含合成的章节标题 id），
+ *    未知的 key 一律丢弃
+ *  - is_pass 由服务端根据「全部合法 heading 是否完成」重算，不信任客户端
  *
  * 当某个 heading 从未完成变为完成时，奖励 chapter.headingExp 经验 + chapter.headingCoin 金币 +
  * chapter.headingScore 课程分（计入 userCourses.marksScore，参与总分计算）。
@@ -16,6 +18,21 @@ import { eq, and, inArray, sql } from "drizzle-orm"
  * 当 is_pass 状态发生变化时，同步更新 user_courses.records.progress
  * （整个课程所有章节的通过比 = 已通过章节数 / 课程总章节数）。
  */
+
+/** 从章节 tiptap JSON 中提取合法 heading id 集合（与前端 useChapterTask 对齐） */
+function extractHeadingIds(content: any, chapterId: number): Set<string> {
+  const ids = new Set<string>()
+  // 合成 heading：章节标题（h1）以 chapterId 作为 id
+  ids.add(String(chapterId))
+  const topBlocks: any[] = Array.isArray(content?.content) ? content.content : []
+  for (const child of topBlocks) {
+    if (!child || child.type !== 'heading') continue
+    const id = child.attrs?.id || child.attrs?.['data-toc-id']
+    if (id) ids.add(String(id))
+  }
+  return ids
+}
+
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
 
@@ -25,10 +42,6 @@ export default eventHandler(async (event) => {
     return cResp(null, '缺少 chapter_id 参数', false)
   }
 
-  const taskStatus = (body.task_status && typeof body.task_status === 'object')
-    ? body.task_status
-    : {}
-  const isPass = !!body.is_pass
   let newMedals: number[] = []
   let gainedExp = 0
   let gainedCoin = 0
@@ -42,6 +55,33 @@ export default eventHandler(async (event) => {
     const oldTaskStatus = (existing?.taskStatus && typeof existing.taskStatus === 'object')
       ? existing.taskStatus as Record<string, boolean>
       : {}
+
+    // 加载章节（courseId + content 用于校验 heading 合法性）
+    const chapterRows = await db
+      .select({ courseId: schema.chapters.courseId, content: schema.chapters.content })
+      .from(schema.chapters)
+      .where(eq(schema.chapters.id, chapterId))
+      .limit(1)
+    const courseId = chapterRows[0]?.courseId || 0
+    if (!courseId) {
+      return cResp(null, '章节不存在', false)
+    }
+
+    // 只保留章节内容中真实存在的 heading id，值强制为 boolean
+    const validIds = extractHeadingIds(chapterRows[0]?.content, chapterId)
+    const rawStatus = (body.task_status && typeof body.task_status === 'object')
+      ? body.task_status as Record<string, any>
+      : {}
+    const taskStatus: Record<string, boolean> = {}
+    for (const [key, val] of Object.entries(oldTaskStatus)) {
+      if (validIds.has(key)) taskStatus[key] = !!val
+    }
+    for (const [key, val] of Object.entries(rawStatus)) {
+      if (validIds.has(key)) taskStatus[key] = val === true
+    }
+
+    // 服务端重算 is_pass：全部合法 heading 完成
+    const isPass = validIds.size > 0 && [...validIds].every(id => taskStatus[id] === true)
 
     // 找出新完成的 heading（旧状态非 true → 新状态 true）
     const newHeadingIds = Object.keys(taskStatus).filter(
@@ -61,14 +101,6 @@ export default eventHandler(async (event) => {
         isPass,
       })
     }
-
-    // 加载 courseId（heading 奖励和 is_pass 逻辑都需要）
-    const chapter = await db
-      .select({ courseId: schema.chapters.courseId })
-      .from(schema.chapters)
-      .where(eq(schema.chapters.id, chapterId))
-      .limit(1)
-    const courseId = chapter[0]?.courseId || 0
 
     // heading 完成奖励：每个新完成的 heading 发放 headingExp + headingCoin + headingScore
     if (courseId && newHeadingIds.length > 0) {

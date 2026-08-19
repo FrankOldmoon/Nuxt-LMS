@@ -164,6 +164,14 @@ describe('API: goods/add.post', () => {
     expect(result.success).toBe(true)
     expect(result.data.name).toBe('Course Card')
   })
+
+  it('创建商品卖出价高于买入价返回失败（防套利）', async () => {
+    setMockAuthState({ id: 1, username: 'admin', name: 'Admin', roles: ['admin'], permissions: [] })
+    const handler = (await import('../../server/api/goods/add.post')).default
+    const result = await handler(makeEvent({ body: { name: 'Bad', courseId: 0, price: 10, sellPrice: 99 } }))
+    expect(result.success).toBe(false)
+    expect(result.msg).toMatch(/卖出价/)
+  })
 })
 
 // ====================== update.post.ts ======================
@@ -195,12 +203,26 @@ describe('API: goods/update.post', () => {
 
   it('管理员成功更新商品', async () => {
     setMockAuthState({ id: 1, username: 'admin', name: 'Admin', roles: ['admin'], permissions: [] })
+    // 防套利校验需读取库中原值（price 50 / sellPrice 25）
+    _mockDb.query.goods.findFirst = vi.fn().mockResolvedValue({ id: 1, price: 50, sellPrice: 25 })
     _mockDb.returning = vi.fn().mockResolvedValue([{ id: 1, name: 'Updated', price: 60 }])
     const handler = (await import('../../server/api/goods/update.post')).default
     const result = await handler(makeEvent({ body: { id: 1, name: 'Updated', price: 60 } }))
     expect(result.success).toBe(true)
     expect(result.data.name).toBe('Updated')
     expect(_mockDb.update).toHaveBeenCalled()
+  })
+
+  it('卖出价高于买入价返回失败（防套利）', async () => {
+    setMockAuthState({ id: 1, username: 'admin', name: 'Admin', roles: ['admin'], permissions: [] })
+    _mockDb.query.goods.findFirst = vi.fn().mockResolvedValue({ id: 1, price: 50, sellPrice: 25 })
+    const handler = (await import('../../server/api/goods/update.post')).default
+    const result = await handler(makeEvent({ body: { id: 1, sellPrice: 99 } }))
+    expect(result.success).toBe(false)
+    expect(result.msg).toMatch(/卖出价/)
+    // 只改 price 绕过同样被拦（sellPrice 25 > 新 price 10）
+    const result2 = await handler(makeEvent({ body: { id: 1, price: 10 } }))
+    expect(result2.success).toBe(false)
   })
 })
 
