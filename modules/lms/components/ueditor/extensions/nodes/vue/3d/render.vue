@@ -30,6 +30,9 @@
             <UTooltip :text="t('ueditor.modelFullscreen')">
                 <UButton icon="i-lucide-fullscreen" size="2xs" variant="ghost" color="neutral" @click="toggleFullscreen" />
             </UTooltip>
+            <UTooltip :text="t('ueditor.modelDownloadAll')">
+                <UButton icon="i-lucide-download" size="2xs" variant="ghost" color="neutral" :loading="downloading" @click="downloadAll" />
+            </UTooltip>
         </div>
 
         <!-- Model list panel -->
@@ -44,6 +47,7 @@
                     <input type="checkbox" :checked="m.visible" @change="toggleVisible(idx)" />
                     <span class="truncate flex-1" :style="{ color: m.color }">◉</span>
                     <span class="truncate flex-1 text-white/80">{{ m.name || `Model ${idx + 1}` }}</span>
+                    <UIcon name="i-lucide-download" class="size-3.5 cursor-pointer text-white/60 hover:text-white flex-shrink-0" @click.stop="downloadOne(idx)" />
                 </label>
             </div>
         </div>
@@ -63,6 +67,7 @@ const errors = ref([])
 const wireframeMode = ref(false)
 const autoRotateState = ref(false)
 const exploded = ref(false)
+const downloading = ref(false)
 
 const parseConfig = () => {
     try {
@@ -123,6 +128,104 @@ async function ensureBabylon() {
     // 失败时清空缓存，允许重试
     _babylonPromise.catch(() => { _babylonPromise = null })
     return _babylonPromise
+}
+
+// JSZip CDN 加载（按需，打包下载时用）
+const JSZIP_CDN = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'
+let _jszipPromise = null
+async function ensureJSZip() {
+    if (window.JSZip) return window.JSZip
+    if (_jszipPromise) return _jszipPromise
+    _jszipPromise = new Promise((resolve, reject) => {
+        const s = document.createElement('script')
+        s.src = JSZIP_CDN
+        s.onload = () => window.JSZip ? resolve(window.JSZip) : reject(new Error('JSZip load failed'))
+        s.onerror = () => reject(new Error('Failed to load JSZip'))
+        document.head.appendChild(s)
+    })
+    _jszipPromise.catch(() => { _jszipPromise = null })
+    return _jszipPromise
+}
+
+// 从 modelList 项提取原始文件名（用于下载命名）
+function getModelFileName(idx) {
+    const m = modelList.value[idx]
+    if (!m) return `model_${idx + 1}`
+    let name = m.name || `model_${idx + 1}`
+    // 保证有扩展名（无扩展名时根据 url 推断）
+    if (!/\.[a-z0-9]+$/i.test(name)) {
+        try {
+            const u = new URL(m.url, window.location.origin)
+            const pathname = u.searchParams.get('pathname') || ''
+            const decoded = decodeURIComponent(pathname)
+            const ext = decoded.match(/\.[a-z0-9]+$/i)
+            if (ext) name += ext[0].toLowerCase()
+        } catch (_) { /* noop */ }
+    }
+    return name
+}
+
+// 触发浏览器下载（blob → 文件）
+function triggerDownload(blob, filename) {
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+// 下载单个模型
+async function downloadOne(idx) {
+    const m = modelList.value[idx]
+    if (!m || !m.url) return
+    try {
+        const resp = await fetch(m.url)
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+        const blob = await resp.blob()
+        triggerDownload(blob, getModelFileName(idx))
+    } catch (e) {
+        errors.value.push(`Download failed: ${e.message}`)
+    }
+}
+
+// 打包下载全部模型为 zip
+async function downloadAll() {
+    if (downloading.value || !modelList.value.length) return
+    downloading.value = true
+    try {
+        const JSZip = await ensureJSZip()
+        const zip = new JSZip()
+        // 用于避免重名
+        const usedNames = new Set()
+        for (let i = 0; i < modelList.value.length; i++) {
+            const m = modelList.value[i]
+            if (!m.url) continue
+            const resp = await fetch(m.url)
+            if (!resp.ok) throw new Error(`HTTP ${resp.status} for ${m.name}`)
+            const blob = await resp.blob()
+            let name = getModelFileName(i)
+            // 处理重名：追加 _1, _2...
+            if (usedNames.has(name)) {
+                const ext = name.match(/\.[a-z0-9]+$/i)?.[0] || ''
+                const base = ext ? name.slice(0, -ext.length) : name
+                let n = 1
+                while (usedNames.has(`${base}_${n}${ext}`)) n++
+                name = `${base}_${n}${ext}`
+            }
+            usedNames.add(name)
+            zip.file(name, blob)
+        }
+        const zipBlob = await zip.generateAsync({ type: 'blob' })
+        const sceneName = config.value?.name || 'models'
+        triggerDownload(zipBlob, `${sceneName}.zip`)
+    } catch (e) {
+        errors.value.push(`Download all failed: ${e.message}`)
+    } finally {
+        downloading.value = false
+    }
 }
 
 function palette(i) {

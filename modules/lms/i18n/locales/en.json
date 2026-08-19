@@ -825,6 +825,7 @@
     "modelRotateOff": "Auto-Rotate Off",
     "modelExplode": "Toggle Explode View",
     "modelFullscreen": "Fullscreen",
+    "modelDownloadAll": "Download All (Zip)",
     "mindmap": "Mind Map",
     "mindmapPlaceholder": "Enter Markdown to generate a mind map\nSupports heading levels (# ## ###) or lists (- item)",
     "aichat": "AI Chat",
