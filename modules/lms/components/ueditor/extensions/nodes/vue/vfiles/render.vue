@@ -1,8 +1,12 @@
 <template>
     <div class="vfiles-render-container">
         <div class="flex" style="min-height: 300px;">
+            <!-- 收缩按钮 -->
+            <button class="vfiles-collapse-btn" @click="navCollapsed = !navCollapsed">
+                <UIcon :name="navCollapsed ? 'i-lucide-chevron-right' : 'i-lucide-chevron-left'" class="size-4" />
+            </button>
             <!-- 左侧导航 -->
-            <div class="vfiles-render-nav">
+            <div v-show="!navCollapsed" class="vfiles-render-nav">
                 <UNavigationMenu :items="navItems" orientation="vertical" class="w-full" />
             </div>
             <!-- 右侧内容展示 -->
@@ -25,13 +29,14 @@
 </template>
 
 <script setup>
-import { useVfilesRender } from './useVfilesRender'
+import { useVfileRender } from './useVfileRender'
 
 const props = defineProps({
     node: Object,
 })
 
-const { navItems, selectedFile } = useVfilesRender(props)
+const { navItems, selectedFile } = useVfileRender(props)
+const navCollapsed = ref(false)
 </script>
 
 <style scoped>
@@ -41,6 +46,21 @@ const { navItems, selectedFile } = useVfilesRender(props)
     border-radius: 8px;
     background: #fff;
     overflow: hidden;
+}
+.vfiles-collapse-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    border-right: 1px solid #e5e7eb;
+    background: #f9fafb;
+    color: #6b7280;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.vfiles-collapse-btn:hover {
+    background: #f3f4f6;
+    color: #374151;
 }
 .vfiles-render-nav {
     width: 220px;
