@@ -55,7 +55,7 @@ describe('comment/index.vue', () => {
       global: _globalConfig,
     })
     await flushPromises()
-    expect(meta.title).toBe('评论')
+    expect(meta.title).toBe('comment.label')
     expect(meta.icon).toBe('i-lucide-message-circle')
     expect(meta.hasSettings).toBe(true)
   })

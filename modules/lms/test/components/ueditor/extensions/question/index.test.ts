@@ -100,7 +100,7 @@ describe('question/index.vue', () => {
       },
     }, { global: { stubs: _globalStubs, mocks: _mocks } })
     // index.vue 在 setup 中设置 meta.title/icon/hasSettings
-    expect(meta.title).toBe('题目')
+    expect(meta.title).toBe('question.label')
     expect(meta.icon).toBe('i-lucide-circle-help')
     expect(meta.hasSettings).toBe(true)
   })

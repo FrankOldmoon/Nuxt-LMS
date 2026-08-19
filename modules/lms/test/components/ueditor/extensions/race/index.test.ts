@@ -93,7 +93,7 @@ describe('race/index.vue', () => {
       },
     })
     await flushPromises()
-    expect(meta.title).toBe('竞赛')
+    expect(meta.title).toBe('race.label')
     expect(meta.icon).toBe('i-lucide-trophy')
     expect(meta.hasSettings).toBe(true)
   })

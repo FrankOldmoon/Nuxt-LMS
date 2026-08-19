@@ -63,7 +63,7 @@ describe('composables/useHeaderMenu - 初始状态', () => {
 })
 
 describe('composables/useHeaderMenu - userMenuItems', () => {
-  it('未登录用户菜单包含 profile / logout 项', async () => {
+  it('未登录用户菜单包含 profile / logout / feedback 项', async () => {
     setMockAuthUser(null)
     const { useHeaderMenu } = await import('../../composables/useHeaderMenu')
     const { userMenuItems } = useHeaderMenu()
@@ -71,9 +71,13 @@ describe('composables/useHeaderMenu - userMenuItems', () => {
     expect(userMenuItems.value[0]).toHaveLength(2)
     expect(userMenuItems.value[0][0].label).toBe('profile.title')
     expect(userMenuItems.value[0][1].label).toBe('myFiles.title')
-    // 最后一组是 logout
+    // 含 logout
+    expect(userMenuItems.value.some((g: any) =>
+      g.some((i: any) => i.label === 'auth.logout')
+    )).toBe(true)
+    // 最后一组是 feedback
     const last = userMenuItems.value[userMenuItems.value.length - 1]
-    expect(last[0].label).toBe('auth.logout')
+    expect(last[0].label).toBe('feedback.title')
   })
 
   it('showMyFiles=true 时菜单包含 myFiles', async () => {
@@ -161,8 +165,11 @@ describe('composables/useHeaderMenu - userMenuItems', () => {
     setMockAuthUser({ id: 1, username: 'alice', name: 'Alice' }, [{ code: 'student', name: 'Student' }])
     const { useHeaderMenu } = await import('../../composables/useHeaderMenu')
     const { userMenuItems } = useHeaderMenu()
-    const lastGroup = userMenuItems.value[userMenuItems.value.length - 1]
-    await lastGroup[0].onSelect()
+    const logoutGroup = userMenuItems.value.find((g: any) =>
+      g.some((i: any) => i.label === 'auth.logout')
+    )
+    const logoutItem = logoutGroup.find((i: any) => i.label === 'auth.logout')
+    await logoutItem.onSelect()
     // 不抛错即视为成功
   })
 })

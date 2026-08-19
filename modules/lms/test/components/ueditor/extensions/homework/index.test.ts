@@ -59,7 +59,7 @@ describe('homework/index.vue', () => {
       },
     })
     await flushPromises()
-    expect(meta.title).toBe('作业')
+    expect(meta.title).toBe('homework.label')
     expect(meta.icon).toBe('i-lucide-book-open')
     expect(meta.hasSettings).toBe(true)
   })

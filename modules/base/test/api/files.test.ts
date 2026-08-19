@@ -400,10 +400,11 @@ describe('API: files/download.get', () => {
 describe('API: files/serve.get', () => {
   beforeEach(resetChain)
 
-  it('未登录抛 401', async () => {
+  it('未登录也可成功读取文件', async () => {
     setMockAuthState(null)
     const handler = (await import('../../server/api/files/serve.get')).default
-    await expect(handler(makeEvent(undefined, { pathname: 'dir/1.png' }))).rejects.toThrow()
+    const result = await handler(makeEvent(undefined, { pathname: 'dir/1.png' }))
+    expect(result).toBe('mock-stream')
   })
 
   it('缺少 pathname 抛 400', async () => {

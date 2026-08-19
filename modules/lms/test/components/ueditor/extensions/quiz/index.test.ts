@@ -59,7 +59,7 @@ describe('quiz/index.vue', () => {
       },
     })
     await flushPromises()
-    expect(meta.title).toBe('测验')
+    expect(meta.title).toBe('quiz.label')
     expect(meta.icon).toBe('i-lucide-clipboard-check')
     expect(meta.hasSettings).toBe(true)
   })
