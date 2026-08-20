@@ -51,6 +51,7 @@ describe('API: medals/list.get', () => {
   beforeEach(resetChain)
 
   it('返回所有奖章', async () => {
+    setMockAuthState({ id: 1, username: 'stu', roles: ['student'], permissions: [] })
     const sample = [
       { id: 1, code: 'first-login', name: '首次登录', description: '...', icon: 'i-lucide-award', points: 10 },
     ]
@@ -63,6 +64,7 @@ describe('API: medals/list.get', () => {
   })
 
   it('无奖章返回空数组', async () => {
+    setMockAuthState({ id: 1, username: 'stu', roles: ['student'], permissions: [] })
     _mockDb.from = vi.fn().mockResolvedValue([])
     const handler = (await import('../../server/api/medals/list.get')).default
     const result = await handler(makeEvent())

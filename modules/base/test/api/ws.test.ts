@@ -37,9 +37,9 @@ describe('API: base/ws', () => {
 
   // ====================== open / close ======================
 
-  it('open 时 trackPeer 注册活跃连接', () => {
+  it('open 时 trackPeer 注册活跃连接', async () => {
     const peer = makeMockPeer()
-    handler.open(peer)
+    await handler.open(peer)
     // trackPeer 是 no-op 桩（base ws/state 的 allPeers 是模块私有），
     // 但 open 不应抛错
     expect(peer.send).not.toHaveBeenCalled()
@@ -64,11 +64,28 @@ describe('API: base/ws', () => {
   // ====================== registerUser ======================
 
   it('registerUser 注册到 userPeers 并记录 userId/from', () => {
-    const peer = makeMockPeer()
+    const peer = makeMockPeer({ userId: 100 })
     handler.message(peer, mockMessage({ type: 'registerUser', userId: 100, from: 'alice' }))
     expect(realUserPeers.get(100)?.has(peer)).toBe(true)
     expect(peer._userId).toBe(100)
     expect(peer._userName).toBe('alice')
+  })
+
+  it('registerUser 身份不匹配（冒充他人）被拒绝', () => {
+    const peer = makeMockPeer({ userId: 100 })
+    handler.message(peer, mockMessage({ type: 'registerUser', userId: 200, from: 'attacker' }))
+    expect(realUserPeers.has(200)).toBe(false)
+    expect(realUserPeers.has(100)).toBe(false)
+    const sends = sendsOf(peer)
+    expect(sends).toContainEqual({ type: 'error', message: 'Unauthorized' })
+  })
+
+  it('registerUser 未登录（无认证身份）被拒绝', () => {
+    const peer = makeMockPeer()
+    handler.message(peer, mockMessage({ type: 'registerUser', userId: 100, from: 'x' }))
+    expect(realUserPeers.has(100)).toBe(false)
+    const sends = sendsOf(peer)
+    expect(sends).toContainEqual({ type: 'error', message: 'Unauthorized' })
   })
 
   it('registerUser 缺 userId 静默忽略', () => {
@@ -85,8 +102,8 @@ describe('API: base/ws', () => {
   })
 
   it('registerUser 多次注册同一用户添加多个 peer', () => {
-    const peer1 = makeMockPeer()
-    const peer2 = makeMockPeer()
+    const peer1 = makeMockPeer({ userId: 50 })
+    const peer2 = makeMockPeer({ userId: 50 })
     handler.message(peer1, mockMessage({ type: 'registerUser', userId: 50, from: 'bob' }))
     handler.message(peer2, mockMessage({ type: 'registerUser', userId: 50, from: 'bob' }))
     expect(realUserPeers.get(50)?.size).toBe(2)
@@ -95,7 +112,7 @@ describe('API: base/ws', () => {
   // ====================== join / leave ======================
 
   it('join 加入房间并回复 joined', () => {
-    const peer = makeMockPeer()
+    const peer = makeMockPeer({ userId: 1 })
     handler.message(peer, mockMessage({ type: 'join', room: 'lobby' }))
     const sends = sendsOf(peer)
     expect(sends).toContainEqual({ type: 'joined', room: 'lobby' })
@@ -103,15 +120,23 @@ describe('API: base/ws', () => {
     expect(peer._rooms?.has('lobby')).toBe(true)
   })
 
-  it('join 缺 room 静默忽略', () => {
+  it('join 未登录被拒绝', () => {
     const peer = makeMockPeer()
+    handler.message(peer, mockMessage({ type: 'join', room: 'lobby' }))
+    const sends = sendsOf(peer)
+    expect(sends).toContainEqual({ type: 'error', message: 'Unauthorized' })
+    expect(rooms.size).toBe(0)
+  })
+
+  it('join 缺 room 静默忽略', () => {
+    const peer = makeMockPeer({ userId: 1 })
     handler.message(peer, mockMessage({ type: 'join' }))
     expect(sendsOf(peer)).toHaveLength(0)
     expect(rooms.size).toBe(0)
   })
 
   it('leave 离开房间', () => {
-    const peer = makeMockPeer()
+    const peer = makeMockPeer({ userId: 1 })
     handler.message(peer, mockMessage({ type: 'join', room: 'r1' }))
     handler.message(peer, mockMessage({ type: 'leave', room: 'r1' }))
     expect(rooms.get('r1')?.has(peer) ?? false).toBe(false)

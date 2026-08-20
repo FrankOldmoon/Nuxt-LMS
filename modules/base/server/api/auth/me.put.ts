@@ -2,7 +2,7 @@ export default defineEventHandler(async (event) => {
   const authUser = await requireAuth(event)
   const body = await readBody(event)
 
-  // 白名单：只允许更新安全字段
+  // 白名单：只允许更新安全字段（不含 classId，防止学生自行改班级）
   const allowedFields = [
     'name',
     'preferName',
@@ -10,7 +10,6 @@ export default defineEventHandler(async (event) => {
     'email',
     'gender',
     'rollNumber',
-    'classId',
     'telephone',
     'defaultClass',
     'defaultLocale',

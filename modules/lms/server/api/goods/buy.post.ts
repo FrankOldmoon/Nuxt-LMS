@@ -1,5 +1,5 @@
 import { db, schema } from '@nuxthub/db'
-import { eq, and, sql } from 'drizzle-orm'
+import { eq, and, sql, gte, gt } from 'drizzle-orm'
 
 /**
  * 购买商品
@@ -34,38 +34,48 @@ export default eventHandler(async (event) => {
     return cResp(null, '库存不足', false)
   }
 
-  // 4. 查 userCourses，校验 coin
+  // 4. 查 userCourses，校验已加入课程
   const ucRows = await db
     .select()
     .from(schema.userCourses)
     .where(and(eq(schema.userCourses.userId, user.id), eq(schema.userCourses.courseId, paidCourseId)))
     .limit(1)
   if (!ucRows[0]) return cResp(null, '未加入该课程', false)
-  const uc = ucRows[0]
-  if ((uc.coin || 0) < good.price) {
-    return cResp(null, '金币不足', false)
+
+  // 5. 事务：原子扣 coin + upsert bag + 原子减库存
+  //    并发安全：余额与库存均在事务内用条件更新判断，防止双重扣款/超卖
+  let newCoin = 0
+  try {
+    await db.transaction(async (tx) => {
+      const updated = await tx.update(schema.userCourses)
+        .set({ coin: sql`${schema.userCourses.coin} - ${good.price}` })
+        .where(and(
+          eq(schema.userCourses.userId, user.id),
+          eq(schema.userCourses.courseId, paidCourseId),
+          gte(schema.userCourses.coin, good.price),
+        ))
+        .returning({ coin: schema.userCourses.coin })
+      if (!updated[0]) throw new Error('金币不足')
+      newCoin = Number(updated[0].coin) || 0
+
+      await tx.insert(schema.bags)
+        .values({ userId: user.id, goodId, courseId: good.courseId, quantity: 1 })
+        .onConflictDoUpdate({
+          target: [schema.bags.userId, schema.bags.goodId, schema.bags.courseId],
+          set: { quantity: sql`${schema.bags.quantity} + 1` },
+        })
+
+      if (good.stock !== -1) {
+        const stockUpdated = await tx.update(schema.goods)
+          .set({ stock: sql`${schema.goods.stock} - 1` })
+          .where(and(eq(schema.goods.id, goodId), gt(schema.goods.stock, 0)))
+          .returning({ id: schema.goods.id })
+        if (!stockUpdated[0]) throw new Error('库存不足')
+      }
+    })
+  } catch (error: any) {
+    return cResp(null, error?.message || '购买失败', false)
   }
-
-  // 5. 事务：扣 coin + upsert bag + 减库存
-  const newCoin = (uc.coin || 0) - good.price
-  await db.transaction(async (tx) => {
-    await tx.update(schema.userCourses)
-      .set({ coin: newCoin })
-      .where(and(eq(schema.userCourses.userId, user.id), eq(schema.userCourses.courseId, paidCourseId)))
-
-    await tx.insert(schema.bags)
-      .values({ userId: user.id, goodId, courseId: good.courseId, quantity: 1 })
-      .onConflictDoUpdate({
-        target: [schema.bags.userId, schema.bags.goodId, schema.bags.courseId],
-        set: { quantity: sql`${schema.bags.quantity} + 1` },
-      })
-
-    if (good.stock !== -1) {
-      await tx.update(schema.goods)
-        .set({ stock: good.stock - 1 })
-        .where(eq(schema.goods.id, goodId))
-    }
-  })
 
   // 6. 查最新 bag 数量
   const bagRows = await db

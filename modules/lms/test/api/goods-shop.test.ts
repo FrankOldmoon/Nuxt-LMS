@@ -104,6 +104,8 @@ describe('API: goods/buy.post', () => {
       .mockResolvedValueOnce([{ id: 1, name: 'Homework Pass', courseId: 0, price: 50, sellPrice: 25, stock: -1 }]) // goods
       .mockResolvedValueOnce([{ userId: 1, courseId: 1, coin: 100 }]) // userCourses
       .mockResolvedValueOnce([{ quantity: 1 }]) // bags 查询
+    // 事务内原子扣款 returning 返回新余额
+    _mockDb.returning = vi.fn().mockResolvedValueOnce([{ coin: 50 }])
     const handler = (await import('../../server/api/goods/buy.post')).default
     const result = await handler(makeEvent({ body: { goodId: 1, paidCourseId: 1 } }))
     expect(result.success).toBe(true)
@@ -118,6 +120,10 @@ describe('API: goods/buy.post', () => {
       .mockResolvedValueOnce([{ id: 2, name: 'Course Card', courseId: 1, price: 30, sellPrice: 15, stock: 10 }]) // goods
       .mockResolvedValueOnce([{ userId: 1, courseId: 1, coin: 100 }]) // userCourses
       .mockResolvedValueOnce([{ quantity: 1 }]) // bags
+    // 事务内：扣款 returning + 库存递减 returning
+    _mockDb.returning = vi.fn()
+      .mockResolvedValueOnce([{ coin: 70 }])
+      .mockResolvedValueOnce([{ id: 2 }])
     const handler = (await import('../../server/api/goods/buy.post')).default
     const result = await handler(makeEvent({ body: { goodId: 2, paidCourseId: 1 } }))
     expect(result.success).toBe(true)
@@ -130,6 +136,9 @@ describe('API: goods/buy.post', () => {
       .mockResolvedValueOnce([{ id: 3, name: '限量卡', courseId: 0, price: 10, sellPrice: 5, stock: 5 }]) // goods
       .mockResolvedValueOnce([{ userId: 1, courseId: 1, coin: 100 }]) // userCourses
       .mockResolvedValueOnce([{ quantity: 1 }]) // bags
+    _mockDb.returning = vi.fn()
+      .mockResolvedValueOnce([{ coin: 90 }])
+      .mockResolvedValueOnce([{ id: 3 }])
     const handler = (await import('../../server/api/goods/buy.post')).default
     const result = await handler(makeEvent({ body: { goodId: 3, paidCourseId: 1 } }))
     expect(result.success).toBe(true)
@@ -193,6 +202,10 @@ describe('API: goods/sell.post', () => {
       .mockResolvedValueOnce([{ id: 1, name: 'Homework Pass', courseId: 0, price: 50, sellPrice: 25, stock: -1 }]) // goods
       .mockResolvedValueOnce([{ userId: 1, goodId: 1, courseId: 0, quantity: 3 }]) // bags quantity=3
       .mockResolvedValueOnce([{ userId: 1, courseId: 1, coin: 10 }]) // userCourses
+    // 事务内：背包原子递减 returning + 加币 returning
+    _mockDb.returning = vi.fn()
+      .mockResolvedValueOnce([{ quantity: 2 }])
+      .mockResolvedValueOnce([{ coin: 35 }])
     const handler = (await import('../../server/api/goods/sell.post')).default
     const result = await handler(makeEvent({ body: { goodId: 1, paidCourseId: 1 } }))
     expect(result.success).toBe(true)
@@ -210,6 +223,9 @@ describe('API: goods/sell.post', () => {
       .mockResolvedValueOnce([{ id: 1, name: 'Homework Pass', courseId: 0, price: 50, sellPrice: 25, stock: -1 }]) // goods
       .mockResolvedValueOnce([{ userId: 1, goodId: 1, courseId: 0, quantity: 1 }]) // bags quantity=1
       .mockResolvedValueOnce([{ userId: 1, courseId: 1, coin: 10 }]) // userCourses
+    _mockDb.returning = vi.fn()
+      .mockResolvedValueOnce([{ quantity: 0 }])
+      .mockResolvedValueOnce([{ coin: 35 }])
     const handler = (await import('../../server/api/goods/sell.post')).default
     const result = await handler(makeEvent({ body: { goodId: 1, paidCourseId: 1 } }))
     expect(result.success).toBe(true)

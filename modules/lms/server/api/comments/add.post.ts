@@ -62,8 +62,9 @@ export default eventHandler(async (event) => {
       userId: user.id,
       parentId: body.parentId || null,
       tags: Array.isArray(body.tags) ? body.tags : [],
-      point: body.point ?? 1,
-      status: body.status || 'published',
+      // 安全：point/status 由服务端固定默认值，不接受客户端自设（防止自定分值/状态）
+      point: 1,
+      status: 'published',
     }
 
     const result = await db.insert(schema.comments).values(insertData).returning()

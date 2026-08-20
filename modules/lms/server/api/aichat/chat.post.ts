@@ -43,13 +43,28 @@ export default eventHandler(async (event) => {
         return cResp(null, 'messages 不能为空', false)
     }
 
+    // 安全：限制 model 只能是非空短字符串（防前端注入任意/超长 model 名）
+    const safeModel = typeof model === 'string' && model.trim() && model.length <= 100
+        ? model.trim()
+        : undefined
+    // 安全：限制 messages 条数与单条长度，防止刷额度/超长上下文
+    const MAX_MESSAGES = 50
+    const MAX_MESSAGE_LEN = 20000
+    const safeMessages = messages.slice(0, MAX_MESSAGES).map((m: any) => {
+        if (m && typeof m === 'object') {
+            const c = typeof m.content === 'string' ? m.content.slice(0, MAX_MESSAGE_LEN) : m.content
+            return { ...m, content: c }
+        }
+        return m
+    })
+
     const url = apiUrl.replace(/\/$/, '') + '/chat/completions'
-    const defaultModel = model || aiConfig.model || "glm-4.5-air";
+    const defaultModel = safeModel || aiConfig.model || "glm-4.5-air";
 
     // 构建请求体
     const requestBody: Record<string, any> = {
         model: defaultModel,
-        messages,
+        messages: safeMessages,
         stream: true,
         // 让上游在最后一个 chunk 中附带 usage（prompt_tokens / completion_tokens / total_tokens）
         stream_options: { include_usage: true },
@@ -70,7 +85,9 @@ export default eventHandler(async (event) => {
 
     if (!upstream.ok) {
         const errText = await upstream.text()
-        return cResp({ status: upstream.status, error: errText }, `AI 接口请求失败: ${upstream.status}`, false)
+        // 仅截断返回错误摘要，避免向上游/客户端泄露完整敏感信息
+        const brief = String(errText || '').slice(0, 200)
+        return cResp({ status: upstream.status, error: brief }, `AI 接口请求失败: ${upstream.status}`, false)
     }
 
     // 设置 SSE 响应头

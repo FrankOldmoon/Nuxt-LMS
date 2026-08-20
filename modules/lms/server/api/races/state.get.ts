@@ -6,6 +6,8 @@ import { eq, and } from "drizzle-orm"
  * query: class_id, course_id, race_cid
  */
 export default eventHandler(async (event) => {
+  await requireAuth(event)
+
   const { class_id, course_id, race_cid } = getQuery(event)
   if (!class_id || !course_id || !race_cid) {
     return cResp(null, '缺少参数', false)

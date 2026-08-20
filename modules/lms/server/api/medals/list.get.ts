@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm'
 
 /** 获取所有奖章列表 */
 export default eventHandler(async (event) => {
+  await requireAuth(event)
   const medals = await db.select().from(schema.medals)
   return cResp(medals)
 })

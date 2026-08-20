@@ -48,11 +48,28 @@ describe('API: lms/ws', () => {
   })
 
   it('registerUser 注册到 userPeers', () => {
-    const peer = makeMockPeer()
+    const peer = makeMockPeer({ userId: 100 })
     handler.message(peer, mockMessage({ type: 'registerUser', userId: 100, from: 'alice' }))
     expect(userPeers.get(100)?.has(peer)).toBe(true)
     expect(peer._userId).toBe(100)
     expect(peer._userName).toBe('alice')
+  })
+
+  it('registerUser 身份不匹配（冒充他人）被拒绝', () => {
+    const peer = makeMockPeer({ userId: 100 })
+    handler.message(peer, mockMessage({ type: 'registerUser', userId: 200, from: 'attacker' }))
+    expect(userPeers.has(200)).toBe(false)
+    expect(userPeers.has(100)).toBe(false)
+    const sends = sendsOf(peer)
+    expect(sends).toContainEqual({ type: 'error', message: 'Unauthorized' })
+  })
+
+  it('registerUser 未登录被拒绝', () => {
+    const peer = makeMockPeer()
+    handler.message(peer, mockMessage({ type: 'registerUser', userId: 100, from: 'x' }))
+    expect(userPeers.has(100)).toBe(false)
+    const sends = sendsOf(peer)
+    expect(sends).toContainEqual({ type: 'error', message: 'Unauthorized' })
   })
 
   it('registerUser 缺 userId 静默忽略', () => {
@@ -62,11 +79,19 @@ describe('API: lms/ws', () => {
   })
 
   it('join 转发到 class handler', () => {
-    const peer = makeMockPeer()
+    const peer = makeMockPeer({ userId: 100 })
     handler.message(peer, mockMessage({ type: 'join', classId: 1, userId: 100, from: 'alice' }))
     const sends = sendsOf(peer)
     expect(sends).toContainEqual({ type: 'joined', classId: 1 })
     expect(classRooms.get(1)?.has(peer)).toBe(true)
+  })
+
+  it('join 未登录被拒绝，不进入班级房间', () => {
+    const peer = makeMockPeer()
+    handler.message(peer, mockMessage({ type: 'join', classId: 1, userId: 100, from: 'alice' }))
+    const sends = sendsOf(peer)
+    expect(sends).toContainEqual({ type: 'error', message: 'Unauthorized' })
+    expect(classRooms.get(1)?.has(peer)).toBeFalsy()
   })
 
   it('invalid JSON 推送 error', () => {
@@ -100,9 +125,9 @@ describe('API: lms/ws', () => {
     expect(() => handler.close(peer)).not.toThrow()
   })
 
-  it('open 钩子无副作用', () => {
+  it('open 钩子无副作用', async () => {
     const peer = makeMockPeer()
-    expect(() => handler.open(peer)).not.toThrow()
+    await expect(handler.open(peer)).resolves.not.toThrow()
   })
 })
 

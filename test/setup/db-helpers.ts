@@ -215,6 +215,10 @@ export function makeMockPeer(opts: {
     _racePin: opts.racePin,
     _groupId: opts.groupId,
     _lockId: opts.lockId,
+    // 模拟已通过 WS 认证：提供 userId 即视为已登录用户（registerUser 身份校验用）
+    _authResolved: true,
+    _authUserId: opts.userId ?? null,
+    _authUserName: opts.userName || null,
   }
   return peer
 }

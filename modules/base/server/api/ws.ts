@@ -25,14 +25,20 @@ import {
   cleanupPeerRooms,
 } from '../utils/ws/state'
 import { runWsServerHandlers, runWsServerCleanups } from '../utils/ws/registry'
+import { resolveWsAuthUser } from '../utils/ws/auth'
+
 export default defineWebSocketHandler({
-  open(peer) {
+  async open(peer) {
     // 维护全连接集合（用于系统级广播，如 site-config-changed）
     trackPeer(peer)
+    // 解析 WS 连接对应的登录用户（未登录为 null）
+    await resolveWsAuthUser(peer)
   },
 
-  message(peer, message) {
+  async message(peer, message) {
     try {
+      // 兜底：open 时未解析完则在此补解析（防止首条消息竞态）
+      if (!peer._authResolved) await resolveWsAuthUser(peer)
       const data = JSON.parse(message.text())
       const { type } = data
       const p = peer as any
@@ -41,6 +47,11 @@ export default defineWebSocketHandler({
       if (type === 'registerUser') {
         const userId = Number(data.userId)
         if (!userId) return
+        // 安全：仅允许注册为自己的身份，防止冒充他人接收私信
+        if (!p._authUserId || p._authUserId !== userId) {
+          p.send(JSON.stringify({ type: 'error', message: 'Unauthorized' }))
+          return
+        }
         if (!userPeers.has(userId)) userPeers.set(userId, new Set())
         userPeers.get(userId)!.add(peer)
         p._userId = userId
@@ -48,8 +59,12 @@ export default defineWebSocketHandler({
         return
       }
 
-      // 通用房间加入
+      // 通用房间加入（仅登录用户）
       if (type === 'join' && data.room) {
+        if (!p._authUserId) {
+          p.send(JSON.stringify({ type: 'error', message: 'Unauthorized' }))
+          return
+        }
         joinRoom(String(data.room), peer)
         peer.send(JSON.stringify({ type: 'joined', room: data.room }))
         return

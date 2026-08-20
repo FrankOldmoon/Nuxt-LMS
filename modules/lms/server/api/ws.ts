@@ -47,14 +47,18 @@
 import { handleClassMessage, cleanupClassPeer } from '../utils/ws/class'
 import { handleRaceMessage, cleanupRacePeer } from '../utils/ws/race'
 import { handleGroupMessage, cleanupGroupPeer } from '../utils/ws/group'
+import { resolveWsAuthUser } from '../../../base/server/utils/ws/auth'
 
 export default defineWebSocketHandler({
-  open() {
-    // 连接建立时不自动加入任何房间，等待客户端发送 join
+  async open(peer) {
+    // 解析 WS 连接对应的登录用户（未登录为 null），供 registerUser / join 鉴权
+    await resolveWsAuthUser(peer)
   },
 
-  message(peer, message) {
+  async message(peer, message) {
     try {
+      // 兜底：open 时未解析完则在此补解析（防止首条消息竞态）
+      if (!peer._authResolved) await resolveWsAuthUser(peer)
       const data = JSON.parse(message.text())
       const { type } = data
       //console.log('[ws] received:', type, 'data:', JSON.stringify(data).slice(0, 200))
@@ -63,10 +67,21 @@ export default defineWebSocketHandler({
       if (type === 'registerUser') {
         const userId = Number(data.userId)
         if (!userId) return
+        // 安全：仅允许注册为自己的身份，防止冒充他人接收私信
+        if (!peer._authUserId || peer._authUserId !== userId) {
+          peer.send(JSON.stringify({ type: 'error', message: 'Unauthorized' }))
+          return
+        }
         if (!userPeers.has(userId)) userPeers.set(userId, new Set())
         userPeers.get(userId)!.add(peer)
         peer._userId = userId
         peer._userName = String(data.from || 'anonymous')
+        return
+      }
+
+      // 班级房间加入 / 小组房间加入：仅登录用户可进入，防止未授权窃听
+      if ((type === 'join' || type === 'joinGroup') && !peer._authUserId) {
+        peer.send(JSON.stringify({ type: 'error', message: 'Unauthorized' }))
         return
       }
 

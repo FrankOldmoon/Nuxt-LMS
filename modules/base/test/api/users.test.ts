@@ -16,12 +16,15 @@ const _mockDb = {
   where: vi.fn().mockResolvedValue([]),
   select: vi.fn().mockReturnThis(),
   from: vi.fn().mockReturnThis(),
+  innerJoin: vi.fn().mockReturnThis(),
   onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
 }
 const _mockSchema = {
   users: { id: 'id', username: 'username', email: 'email', password: 'password', name: 'name', deletedAt: 'deletedAt' },
   classes: { id: 'id', name: 'name', deletedAt: 'deletedAt' },
   userClasses: {},
+  roles: { id: 'id', code: 'code', name: 'name' },
+  userRoles: { userId: 'userId', roleId: 'roleId' },
   tokens: { id: 'id', userId: 'userId', name: 'name', deletedAt: 'deletedAt' },
 }
 vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
@@ -40,6 +43,7 @@ beforeEach(() => {
   _mockDb.where = vi.fn().mockResolvedValue([])
   _mockDb.select = vi.fn().mockReturnThis()
   _mockDb.from = vi.fn().mockReturnThis()
+  _mockDb.innerJoin = vi.fn().mockReturnThis()
   _mockDb.onConflictDoNothing = vi.fn().mockResolvedValue(undefined)
 })
 
@@ -289,11 +293,25 @@ describe('API: users/reset-password.post', () => {
     expect(_mockDb.set).toHaveBeenCalled()
   })
 
-  it('teacher 角色也可重置密码', async () => {
+  it('teacher 角色也可重置密码（仅限学生账号）', async () => {
     setMockAuthState({ id: 2, username: 'teacher', name: 'Teacher', roles: ['teacher'], permissions: [] })
-    _mockDb.where.mockResolvedValue(undefined)
+    // 角色查询返回空数组 → 目标用户非 teacher/admin → 允许重置
+    _mockDb.where.mockResolvedValue([])
     const handler = (await import('../../server/api/users/reset-password.post')).default
     const result = await handler(makeEvent({ body: { user_id: 5, password: 'newpass' } }))
     expect(result.success).toBe(true)
+  })
+
+  it('teacher 不能重置教师/管理员账号密码', async () => {
+    setMockAuthState({ id: 2, username: 'teacher', name: 'Teacher', roles: ['teacher'], permissions: [] })
+    // 角色查询返回 admin → 目标为管理员 → 拒绝
+    _mockDb.select = vi.fn().mockReturnThis()
+    _mockDb.from = vi.fn().mockReturnThis()
+    _mockDb.innerJoin = vi.fn().mockReturnThis()
+    _mockDb.where = vi.fn().mockResolvedValue([{ code: 'admin' }])
+    const handler = (await import('../../server/api/users/reset-password.post')).default
+    const result = await handler(makeEvent({ body: { user_id: 1, password: 'newpass' } }))
+    expect(result.success).toBe(false)
+    expect(result.msg).toMatch(/无权限/)
   })
 })

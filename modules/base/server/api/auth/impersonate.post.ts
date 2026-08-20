@@ -61,11 +61,18 @@ export default defineEventHandler(async (event) => {
     return cResp(null, '缺少 userId', false)
   }
 
+  const targetId = Number(userId)
+
+  // 禁止切换到自身
+  if (targetId === authUserId) {
+    return cResp(null, '不能切换到自己的账号', false)
+  }
+
   // 验证目标用户存在
   const targetUser = await db
     .select({ id: schema.users.id, name: schema.users.name })
     .from(schema.users)
-    .where(eq(schema.users.id, Number(userId)))
+    .where(eq(schema.users.id, targetId))
     .limit(1)
 
   if (!targetUser[0]) {
@@ -78,7 +85,7 @@ export default defineEventHandler(async (event) => {
       .select({ code: schema.roles.code })
       .from(schema.userRoles)
       .innerJoin(schema.roles, eq(schema.userRoles.roleId, schema.roles.id))
-      .where(eq(schema.userRoles.userId, Number(userId)))
+      .where(eq(schema.userRoles.userId, targetId))
     if (targetRoles.some(r => r.code === 'teacher' || r.code === 'admin')) {
       throw createError({ statusCode: 403, message: '无权限：不能切换到教师/管理员账号' })
     }
@@ -90,7 +97,7 @@ export default defineEventHandler(async (event) => {
       httpOnly: true,
       secure: getRequestProtocol(event) === 'https',
       sameSite: 'lax',
-      maxAge: 60 * 60,
+      maxAge: 60 * 60 * 24 * 7, // 与 auth_token 一致（7 天），避免模拟期间原始 token 过早过期
       path: '/',
     })
   }
@@ -99,7 +106,7 @@ export default defineEventHandler(async (event) => {
   const tokenStr = generateToken()
   await db.insert(schema.tokens).values({
     name: tokenStr,
-    userId: Number(userId),
+    userId: targetId,
   })
 
   // 设置新 token 到 cookie
@@ -112,7 +119,7 @@ export default defineEventHandler(async (event) => {
   })
 
   return cResp({
-    userId: Number(userId),
+    userId: targetId,
     name: targetUser[0].name,
     impersonatedBy: authUserId,
   }, '已切换为学生视角')

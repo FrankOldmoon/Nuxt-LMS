@@ -70,6 +70,7 @@ describe('API: races/state.get', () => {
   beforeEach(resetChain)
 
   it('缺少参数返回失败', async () => {
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
     const handler = (await import('../../server/api/races/state.get')).default
     const result = await handler(makeEvent({ query: {} }))
     expect(result.success).toBe(false)

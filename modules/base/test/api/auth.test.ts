@@ -693,6 +693,18 @@ describe('API: auth/restore.post', () => {
   })
 
   it('有 original_token + auth_token 则恢复原始身份', async () => {
+    // where 调用顺序：1) 当前 token 校验 → 链到 limit；2) 原 token 校验 → 链到 limit；3) 原用户角色查询 → 返回 admin
+    _mockDb.select = vi.fn().mockReturnThis()
+    _mockDb.from = vi.fn().mockReturnThis()
+    _mockDb.innerJoin = vi.fn().mockReturnThis()
+    _mockDb.where = vi.fn()
+      .mockImplementationOnce(() => _mockDb) // currentToken 校验（链到 limit）
+      .mockImplementationOnce(() => _mockDb) // originalToken 校验（链到 limit）
+      .mockResolvedValue([{ code: 'admin' }]) // 原用户角色
+    _mockDb.limit = vi.fn()
+      .mockResolvedValueOnce([{ userId: 2 }]) // currentToken 有效
+      .mockResolvedValueOnce([{ userId: 1 }]) // originalToken 有效
+
     const handler = (await import('../../server/api/auth/restore.post')).default
     const event = makeEvent({ cookies: { auth_token: 'impersonating', original_token: 'original-token' } })
     const result = await handler(event)

@@ -92,12 +92,11 @@ describe('composables/useCourseEditor', () => {
     const { useCourseEditor } = await import('../../composables/useCourseEditor')
     const emit = vi.fn()
     const r = useCourseEditor({ courseId: 1 }, emit)
-    // 注入 configFormRef / membersRef 模拟组件挂载后的赋值
+    // 注入 configFormRef 模拟组件挂载后的赋值
     r.configFormRef.value = {
       initFromConfig: vi.fn(),
       buildConfig: vi.fn(() => ({ icon: 'star' })),
     }
-    r.membersRef.value = { loadMembers: vi.fn().mockResolvedValue(undefined) }
     await r.loadCourse()
     expect(r.form.value.name).toBe('Course A')
     expect(r.form.value.code).toBe('CA')
@@ -200,7 +199,6 @@ describe('composables/useCourseEditor', () => {
     const emit = vi.fn()
     const r = useCourseEditor({ courseId: 1 }, emit)
     r.configFormRef.value = { initFromConfig: vi.fn(), buildConfig: vi.fn(() => ({})) }
-    r.membersRef.value = { loadMembers: vi.fn().mockResolvedValue(undefined) }
     expect(called).toBe(false)
     r.open.value = true
     await new Promise((resolve) => setTimeout(resolve, 0))

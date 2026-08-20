@@ -413,12 +413,14 @@ describe('API: races/show', () => {
 
 describe('API: races/state.get', () => {
   it('缺少参数返回失败', async () => {
+    setMockAuthState({ id: 1, username: 's', name: 's', roles: ['student'], permissions: [] })
     const handler = (await import('../../server/api/races/state.get')).default
     const r = await handler(makeEvent({ query: { class_id: '1' } }))
     expect(r.success).toBe(false)
   })
 
   it('返回班级竞赛状态', async () => {
+    setMockAuthState({ id: 1, username: 's', name: 's', roles: ['student'], permissions: [] })
     _mockDb.query.classRaces.findFirst = vi.fn().mockResolvedValue({ classId: 1, raceCid: 1, currentIndex: 3 })
     const handler = (await import('../../server/api/races/state.get')).default
     const r = await handler(makeEvent({ query: { class_id: '1', course_id: '1', race_cid: '1' } }))
