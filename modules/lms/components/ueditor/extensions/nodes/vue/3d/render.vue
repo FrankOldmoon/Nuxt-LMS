@@ -43,6 +43,8 @@
                     v-for="(m, idx) in modelList"
                     :key="idx"
                     class="flex items-center gap-2 px-2 py-1 rounded hover:bg-white/10 cursor-pointer text-xs"
+                    :title="t('ueditor.modelFocus')"
+                    @dblclick="focusModel(idx)"
                 >
                     <input type="checkbox" :checked="m.visible" @change="toggleVisible(idx)" />
                     <span class="truncate flex-1" :style="{ color: m.color }">◉</span>
@@ -418,6 +420,13 @@ function resetCamera() {
     const all = []
     loadedMeshes.forEach((e) => all.push(...e.meshes))
     if (all.length) frameAll(all)
+}
+
+// 双击物体列表项：聚焦到该模型的包围盒
+function focusModel(idx) {
+    const entry = loadedMeshes.find((e) => e.modelIdx === idx)
+    if (!entry || !entry.meshes.length) return
+    frameAll(entry.meshes)
 }
 
 function toggleWireframe() {

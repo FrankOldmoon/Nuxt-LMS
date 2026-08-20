@@ -23,7 +23,7 @@ describe('Middleware: security-headers', () => {
     expect(headerCalls).toHaveLength(1)
     const headers = headerCalls[0]
     expect(headers['X-Frame-Options']).toBe('SAMEORIGIN')
-    expect(headers['Content-Security-Policy']).toContain("frame-ancestors 'none'")
+    expect(headers['Content-Security-Policy']).toContain("frame-ancestors 'self'")
     expect(headers['X-Content-Type-Options']).toBe('nosniff')
   })
 

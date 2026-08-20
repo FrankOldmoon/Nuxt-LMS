@@ -36,6 +36,7 @@ export function useCinserts(props: any, emit: any) {
             base.push(
                 { label: t('race.label'), icon: 'i-lucide-plus', onSelect: () => insertVueNode('race') },
                 { label: t('courseData.search') + ' ' + t('race.label'), icon: 'i-lucide-zap', onSelect: () => openPicker('races') },
+                { label: t('peerReview.label'), icon: 'i-lucide-users', onSelect: () => insertVueNode('peerReview') },
             )
         }
         base.push({ type: 'separator' })

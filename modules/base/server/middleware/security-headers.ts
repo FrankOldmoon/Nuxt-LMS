@@ -3,7 +3,8 @@
  *
  * 对所有响应统一添加：
  * - X-Frame-Options: SAMEORIGIN（旧浏览器，禁止跨域 iframe 嵌入）
- * - Content-Security-Policy: frame-ancestors 'none'（CSP3，禁止任何页面 iframe 嵌入）
+ * - Content-Security-Policy: frame-ancestors 'self'（CSP3，仅允许同源 iframe 嵌入，
+ *   既阻止外部恶意站点点击劫持，又允许站内编辑器用 iframe 嵌入本站页面）
  * - X-Content-Type-Options: nosniff（禁止 MIME 嗅探）
  *
  * 说明：
@@ -15,7 +16,7 @@
 export default defineEventHandler((event) => {
   setResponseHeaders(event, {
     'X-Frame-Options': 'SAMEORIGIN',
-    'Content-Security-Policy': "frame-ancestors 'none'",
+    'Content-Security-Policy': "frame-ancestors 'self'",
     'X-Content-Type-Options': 'nosniff',
   })
 })

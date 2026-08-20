@@ -265,6 +265,40 @@ export const races = pgTable(
   })
 );
 
+// ====================== 同伴互评（peer review） ======================
+export const peerReviewConfigs = pgTable(
+  'peer_review_configs',
+  {
+    courseId: integer('course_id').notNull(),
+    cid: integer('cid').notNull(),
+    name: varchar('name', { length: 255 }),
+    // 评价项数组：[{ key, label, maxScore }]
+    options: jsonb('options').default([]),
+    ...withTimestamps,
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.courseId, t.cid] }),
+  })
+);
+
+/** 同伴互评评分记录：fromUserId 评价 targetUserId，可覆盖修改 */
+export const peerReviews = pgTable(
+  'peer_reviews',
+  {
+    courseId: integer('course_id').notNull(),
+    cid: integer('cid').notNull(),
+    fromUserId: integer('from_user_id').notNull(),
+    targetUserId: integer('target_user_id').notNull(),
+    // { key: 分值 }，key 对应 peer_review_configs.options 里的 key
+    scores: jsonb('scores').default({}),
+    ...withTimestamps,
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.courseId, t.cid, t.fromUserId, t.targetUserId] }),
+    targetIdx: index('idx_peer_reviews_target').on(t.courseId, t.cid, t.targetUserId),
+  })
+);
+
 export const comments = pgTable(
   'comments',
   {
@@ -353,6 +387,7 @@ export const userCourses = pgTable(
     quizScore: numeric('quiz_score', { precision: 10, scale: 2 }).default('0'),
     homeworkScore: numeric('homework_score', { precision: 10, scale: 2 }).default('0'),
     commentScore: numeric('comment_score', { precision: 10, scale: 2 }).default('0'),
+    peerScore: numeric('peer_score', { precision: 10, scale: 2 }).default('0'),
     extraScore: numeric('extra_score', { precision: 10, scale: 2 }).default('0'),
     abilities: jsonb('abilities'),
     records: jsonb('records'),
