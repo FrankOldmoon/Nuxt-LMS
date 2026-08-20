@@ -26,9 +26,10 @@ import { relations } from 'drizzle-orm';
 
 // ----- 公共时间戳列（软删除 + 时间戳） -----
 export const withTimestamps = {
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
-  deletedAt: timestamp('deleted_at'),
+  // 统一使用 timestamptz（withTimezone）→ Postgres 按 UTC 存储，跨时区一致
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().$onUpdate(() => new Date()),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
 };
 
 // ====================== 基础表 ======================
@@ -114,14 +115,14 @@ export const users = pgTable(
     classId: integer('class_id'),
     defaultClass: jsonb('default_class'),
     defaultLocale: varchar('default_locale', { length: 20 }).default('zh-CN'),
-    birthday: timestamp('birthday'),
-    loginAt: timestamp('login_at'),
-    verifyAt: timestamp('verify_at'),
+    birthday: timestamp('birthday', { withTimezone: true }),
+    loginAt: timestamp('login_at', { withTimezone: true }),
+    verifyAt: timestamp('verify_at', { withTimezone: true }),
     loginIp: varchar('login_ip', { length: 50 }),
     loginLocation: varchar('login_location', { length: 255 }),
     // 暴力破解防护：失败次数计数 + 锁定截止时间
     failedAttempts: integer('failed_attempts').default(0),
-    lockedUntil: timestamp('locked_until'),
+    lockedUntil: timestamp('locked_until', { withTimezone: true }),
     ...withTimestamps,
   },
   (t) => ({
@@ -185,7 +186,7 @@ export const notifys = pgTable(
     content: jsonb('content'),
     data: jsonb('data'),
     userId: integer('user_id').notNull(),
-    readAt: timestamp('read_at'),
+    readAt: timestamp('read_at', { withTimezone: true }),
     ...withTimestamps,
   },
   (t) => ({
@@ -202,7 +203,7 @@ export const messages = pgTable(
     content: jsonb('content'),
     senderUserId: integer('sender_user_id').notNull(),
     receiverUserId: integer('receiver_user_id').notNull(),
-    readAt: timestamp('read_at'),
+    readAt: timestamp('read_at', { withTimezone: true }),
     ...withTimestamps,
   },
   (t) => ({

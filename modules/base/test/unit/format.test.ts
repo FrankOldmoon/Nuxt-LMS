@@ -38,6 +38,17 @@ describe('utils/format', () => {
       expect(result).toMatch(/2024/)
     })
 
+    it('带 Z 字符串按 UTC 解析、按浏览器本地时区显示（与 new Date 一致）', async () => {
+      const { formatTime } = await import('../../utils/format')
+      // 后端返回带 Z 的 UTC 字符串（timestamp without time zone 被驱动序列化为 UTC）
+      const result = formatTime('2024-01-15T10:30:00Z')
+      const expected = new Date('2024-01-15T10:30:00Z').toLocaleString(undefined, {
+        year: 'numeric', month: 'numeric', day: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+      })
+      expect(result).toBe(expected)
+    })
+
     it('结果包含年月日时分信息', async () => {
       const { formatTime } = await import('../../utils/format')
       const result = formatTime('2024-12-25T14:00:00')

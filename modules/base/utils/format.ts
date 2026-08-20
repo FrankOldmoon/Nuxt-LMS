@@ -3,15 +3,17 @@
  */
 
 /**
- * 将数据库返回的时间字符串转为本地 Date
- * Postgres timestamp（不带时区）返回的 ISO 字符串带 Z 后缀会被误当成 UTC，
- * 这里去掉 Z 后缀使其按本地时区解析
+ * 将后端返回的时间字符串转为本地 Date。
+ *
+ * 存储链路：DB 用 timestamp（without time zone）存服务器本地墙上时间；
+ * pglite/postgres 驱动会按服务器时区把该值解析为 Date，JSON 序列化后
+ * 返回带 Z 的 UTC 字符串（如存储 09:00 → 返回 01:00:00Z）。
+ * 因此前端应保留 Z，让 new Date 按 UTC 解析、再 toLocaleString 转浏览器
+ * 本地时区，才能还原原始墙上时间。若去掉 Z 再按本地解析会二次偏移。
  */
 function parseLocalTime(time?: string | null): Date | null {
   if (!time) return null
-  // 去掉末尾的 Z（UTC 标记），让 new Date 按本地时区解析
-  const normalized = time.endsWith('Z') ? time.slice(0, -1) : time
-  return new Date(normalized)
+  return new Date(time)
 }
 
 /** 格式化时间为本地可读字符串（跟随用户 locale） */
