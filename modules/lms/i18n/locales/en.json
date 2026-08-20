@@ -931,6 +931,7 @@
     "codePlaceholder": "Enter course code",
     "tags": "Tags",
     "tagsPlaceholder": "Press Enter to add",
+    "basicInfoSection": "Basic Info",
     "configSection": "Display Settings",
     "icon": "Icon",
     "iconPlaceholder": "e.g. i-lucide-book-open",
@@ -978,8 +979,9 @@
     "uploadFailed": "Upload failed",
     "content": "Course Content",
     "tabContent": "Content",
-    "tabBasic": "Basic Info",
     "tabConfig": "Display",
+    "tabLearning": "Learning Config",
+    "learningConfig": "Learning Behavior Config",
     "tabMembers": "Members",
     "tabGoods": "Goods"
   },

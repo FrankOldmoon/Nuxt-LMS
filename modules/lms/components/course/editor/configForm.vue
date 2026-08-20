@@ -1,35 +1,21 @@
 <template>
   <div class="space-y-4">
-    <USeparator :label="$t('courseEditor.configSection')" class="my-4" />
+    <!-- 基本信息（原 Basic Info tab，已并入 Display） -->
+    <USeparator :label="$t('courseEditor.basicInfoSection')" class="my-4" />
 
-    <!-- 封面图片 -->
-    <UFormField :label="$t('courseEditor.coverImage')" class="w-full">
-      <div class="flex items-center gap-3">
-        <div v-if="coverImg" class="relative group">
-          <img :src="coverImg" class="w-32 h-20 object-cover rounded-lg border border-default" />
-          <button
-            class="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-            @click="coverImg = ''"
-          >×</button>
-        </div>
-        <UButton
-          :icon="coverImg ? 'i-lucide-refresh-cw' : 'i-lucide-image-plus'"
-          variant="outline"
-          size="sm"
-          :loading="uploading"
-          @click="triggerCoverUpload"
-        />
-        <input ref="coverInputRef" type="file" accept="image/*" class="hidden" @change="onCoverFileSelected" />
-      </div>
+    <UFormField :label="$t('courseEditor.name')" class="w-full">
+      <UInput v-model="form.name" :placeholder="$t('courseEditor.namePlaceholder')" class="w-full" />
     </UFormField>
 
-    <FormImageCropperModal
-      ref="cropperRef"
-      :title="$t('courseEditor.cropCover')"
-      :aspect-ratio="16/10"
-      stencil-type="rectangle"
-      @uploaded="onCropped"
-    />
+    <UFormField :label="$t('courseEditor.code')" class="w-full">
+      <UInput v-model="form.code" :placeholder="$t('courseEditor.codePlaceholder')" class="w-full" />
+    </UFormField>
+
+    <UFormField :label="$t('courseEditor.tags')" class="w-full">
+      <UInputTags v-model="form.tags" :placeholder="$t('courseEditor.tagsPlaceholder')" class="w-full" />
+    </UFormField>
+
+    <USeparator :label="$t('courseEditor.configSection')" class="my-4" />
 
     <UFormField :label="$t('courseEditor.icon')" class="w-full">
       <UInput v-model="config.icon" :placeholder="$t('courseEditor.iconPlaceholder')" class="w-full" />
@@ -43,17 +29,6 @@
       <USelect v-model="config.level" :items="levelOpts" class="w-full" />
     </UFormField>
 
-    <!-- config 开关项（数据驱动：v-for 渲染 courseSwitchList） -->
-    <div class="space-y-3">
-      <div v-for="sw in courseSwitchList" :key="sw.key" class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium">{{ $t(sw.label) }}</p>
-          <p class="text-xs text-muted">{{ $t(sw.hint) }}</p>
-        </div>
-        <USwitch v-model="courseSwitches[sw.key]" />
-      </div>
-    </div>
-
     <!-- 自定义 config 参数（JSON） -->
     <UFormField :label="$t('courseEditor.extraConfig')" class="w-full">
       <UTextarea
@@ -65,7 +40,7 @@
       <p v-if="extraConfigError" class="text-xs text-error mt-1">{{ extraConfigError }}</p>
     </UFormField>
 
-    <!-- 课程级 lmsConfig 覆盖（hide-course：course 分组开关由上方单独管理） -->
+    <!-- 课程级 lmsConfig 覆盖（hide-course：course 分组开关由 Learning Config tab 单独管理） -->
     <LmsConfigEditor
       ref="lmsConfigRef"
       v-model="lmsConfig"
@@ -76,13 +51,12 @@
 
 <script setup lang="ts">
 const {
-  config, coverImg, uploading, coverInputRef, cropperRef,
-  courseSwitches, courseSwitchList,
+  form,
+  config,
   extraConfigText, extraConfigError, lmsConfigRef, lmsConfig,
   colorOpts, levelOpts,
-  triggerCoverUpload, onCoverFileSelected, onCropped,
   initFromConfig, buildConfig,
-} = useCourseConfigForm()
+} = useCourseConfigFormContext()
 
 defineExpose({ initFromConfig, buildConfig })
 </script>

@@ -1,9 +1,13 @@
 import type { InjectionKey } from 'vue'
 
 /**
- * 课程编辑器配置表单：封面图片 + 课程配置 + LMS 配置
+ * 课程编辑器配置表单：基本信息 + 封面图片 + 课程配置 + LMS 配置
+ *
+ * 通过 provide/inject 共享同一实例：
+ * - index.vue 提供（provideCourseConfigForm），在 content / learning tab 渲染封面图与学习行为开关
+ * - configForm.vue 注入（useCourseConfigFormContext），渲染 Display tab（基本信息 + 显示配置）
  */
-export function useCourseConfigForm() {
+export function useCourseConfigForm(form?: Ref<CourseBasicForm>) {
   const { t } = useI18n()
   const toast = useToast()
 
@@ -148,11 +152,35 @@ export function useCourseConfigForm() {
   }
 
   return {
-    config, coverImg, uploading, coverInputRef, cropperRef,
+    form, config, coverImg, uploading, coverInputRef, cropperRef,
     courseSwitches, courseSwitchList,
     extraConfigText, extraConfigError, lmsConfigRef, lmsConfig,
     colorOpts, levelOpts,
     triggerCoverUpload, onCoverFileSelected, onCropped,
     initFromConfig, buildConfig,
   }
+}
+
+type CourseConfigFormCtx = ReturnType<typeof useCourseConfigForm>
+export const CourseConfigFormKey: InjectionKey<CourseConfigFormCtx> = Symbol('CourseConfigForm')
+
+/** 课程基本信息（name / code / tags），由 useCourseEditor 提供、configForm.vue 展示 */
+export interface CourseBasicForm {
+  name: string
+  code: string
+  tags: string[]
+}
+
+/** 创建并 provide 配置表单上下文（由 course/editor/index.vue 调用一次） */
+export function provideCourseConfigForm(form?: Ref<CourseBasicForm>): CourseConfigFormCtx {
+  const ctx = useCourseConfigForm(form)
+  provide(CourseConfigFormKey, ctx)
+  return ctx
+}
+
+/** 注入配置表单上下文（由 configForm.vue 等子组件调用） */
+export function useCourseConfigFormContext(): CourseConfigFormCtx {
+  const ctx = inject(CourseConfigFormKey)
+  if (!ctx) throw new Error('useCourseConfigFormContext must be used within provideCourseConfigForm')
+  return ctx
 }

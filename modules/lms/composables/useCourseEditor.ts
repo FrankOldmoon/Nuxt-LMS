@@ -18,7 +18,6 @@ export function useCourseEditor(
   const lockId = computed(() => `courses_${props.courseId}`)
 
   const configFormRef = ref<{ initFromConfig: (cfg: Record<string, any>) => void; buildConfig: () => Record<string, any> | null } | null>(null)
-  const membersRef = ref<{ loadMembers: () => Promise<void> } | null>(null)
 
   const form = ref({
     name: '',
@@ -48,7 +47,6 @@ export function useCourseEditor(
       contentJson.value = data?.content || null
       const cfg = (data?.config as Record<string, any>) || {}
       configFormRef.value?.initFromConfig(cfg)
-      await membersRef.value?.loadMembers()
     } catch {
       toast.add({ title: t('courseEditor.loadFailed'), color: 'error' })
     } finally {
@@ -96,7 +94,6 @@ export function useCourseEditor(
     form,
     contentJson,
     configFormRef,
-    membersRef,
     openModal,
     closeModal,
     loadCourse,

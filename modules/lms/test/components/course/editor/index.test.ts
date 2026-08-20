@@ -23,10 +23,23 @@ beforeEach(() => {
     form: ref({ name: '', code: '', tags: [] }),
     contentJson: ref(null),
     configFormRef: ref(null),
-    membersRef: ref(null),
     openModal: vi.fn(),
     closeModal: vi.fn(),
     save: vi.fn(async () => {}),
+  })
+  // stub provideCourseConfigForm（content 封面图 + learning 开关）
+  ;(globalThis as any).provideCourseConfigForm = () => ({
+    coverImg: ref(''),
+    uploading: ref(false),
+    coverInputRef: ref(null),
+    cropperRef: ref(null),
+    courseSwitches: reactive({ defaultChapterOpen: true, showDanmaku: true, showAnnouncement: true, showComments: true, showProgress: false }),
+    courseSwitchList: [
+      { key: 'defaultChapterOpen', label: 'courseEditor.defaultChapterOpen', hint: 'courseEditor.defaultChapterOpenHint' },
+    ],
+    triggerCoverUpload: vi.fn(),
+    onCoverFileSelected: vi.fn(),
+    onCropped: vi.fn(),
   })
 })
 
@@ -51,7 +64,10 @@ const _globalStubs = {
     props: ['label'],
   },
   USeparator: { template: '<div class="useparator" />', props: ['label'] },
-  UTabs: { template: '<div class="utabs"><slot /></div>', props: ['modelValue', 'items'] },
+  UTabs: {
+    template: '<div class="utabs"><button v-for="item in items" :key="item.value" class="utab">{{ item.label }}</button></div>',
+    props: ['modelValue', 'items'],
+  },
   richEditor: { template: '<div class="rich-editor" />', props: ['modelValue', 'lockId'] },
   CourseEditorConfigForm: { template: '<div class="config-form" />' },
   CourseEditorMembersManager: { template: '<div class="members-manager" />' },
@@ -102,7 +118,7 @@ describe('course/editor/index.vue', () => {
     expect(btn.attributes('disabled')).toBeDefined()
   })
 
-  it('admin 用户渲染成员管理组件', async () => {
+  it('admin 用户看到 4 个 tab（含 Goods）且无 Basic Info tab', async () => {
     setMockAuthUser({ id: 1, name: 'admin' }, [{ code: 'admin' }], [])
     // 让 modal 打开
     ;(globalThis as any).useCourseEditor = (_props: any, _emit: any) => ({
@@ -117,11 +133,35 @@ describe('course/editor/index.vue', () => {
       global: _globalConfig,
     })
     await flushPromises()
-    expect(wrapper.find('.members-manager').exists()).toBe(true)
+    const tabs = wrapper.findAll('.utab').map(n => n.text())
+    // Content / Display / Learning Config / Goods
+    expect(tabs).toHaveLength(4)
+    expect(tabs).toContain('courseEditor.tabGoods')
+    expect(tabs).not.toContain('courseEditor.tabBasic')
+    expect(wrapper.find('.members-manager').exists()).toBe(false)
   })
 
-  it('非 admin 用户不渲染成员管理组件', async () => {
+  it('非 admin 用户不渲染 Goods tab（仅 3 个 tab）', async () => {
     setMockAuthUser({ id: 2, name: 'teacher' }, [{ code: 'teacher' }], [])
+    ;(globalThis as any).useCourseEditor = (_props: any, _emit: any) => ({
+      open: ref(true), loading: ref(false), saving: ref(false),
+      canEdit: ref(false), lockId: ref(''), form: ref({ name: '', code: '', tags: [] }),
+      contentJson: ref(null), configFormRef: ref(null), membersRef: ref(null),
+      openModal: vi.fn(), closeModal: vi.fn(), save: vi.fn(async () => {}),
+    })
+    const { default: CourseEditor } = await import('../../../../components/course/editor/index.vue')
+    const wrapper = mount(CourseEditor, {
+      props: { courseId: 1 },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    const tabs = wrapper.findAll('.utab').map(n => n.text())
+    expect(tabs).toHaveLength(3)
+    expect(tabs).not.toContain('courseEditor.tabGoods')
+  })
+
+  it('Display tab 中渲染配置表单（基本信息 + 显示配置）', async () => {
+    setMockAuthUser({ id: 1, name: 'admin' }, [{ code: 'admin' }], [])
     ;(globalThis as any).useCourseEditor = (_props: any, _emit: any) => ({
       open: ref(true), loading: ref(false), saving: ref(false),
       canEdit: ref(true), lockId: ref(''), form: ref({ name: '', code: '', tags: [] }),
@@ -134,6 +174,7 @@ describe('course/editor/index.vue', () => {
       global: _globalConfig,
     })
     await flushPromises()
-    expect(wrapper.find('.members-manager').exists()).toBe(false)
+    // config 组件通过 v-show 常驻 DOM，无论当前激活哪个 tab
+    expect(wrapper.find('.config-form').exists()).toBe(true)
   })
 })

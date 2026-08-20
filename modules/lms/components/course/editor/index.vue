@@ -26,36 +26,55 @@
         <div v-show="!loading" class="space-y-4">
           <UTabs v-model="activeTab" :items="tabItems" class="mb-2" />
 
-          <!-- 课程内容编辑 -->
+          <!-- 课程内容编辑 + 封面图片 -->
           <div v-show="activeTab === 'content'">
+            <!-- 封面图片上传 -->
+            <UFormField :label="$t('courseEditor.coverImage')" class="w-full mb-4">
+              <div class="flex items-center gap-3">
+                <div v-if="coverImg" class="relative group">
+                  <img :src="coverImg" class="w-32 h-20 object-cover rounded-lg border border-default" />
+                  <button
+                    class="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    @click="coverImg = ''"
+                  >×</button>
+                </div>
+                <UButton
+                  :icon="coverImg ? 'i-lucide-refresh-cw' : 'i-lucide-image-plus'"
+                  variant="outline"
+                  size="sm"
+                  :loading="uploading"
+                  @click="triggerCoverUpload"
+                />
+                <input ref="coverInputRef" type="file" accept="image/*" class="hidden" @change="onCoverFileSelected" />
+              </div>
+            </UFormField>
+
+            <FormImageCropperModal
+              ref="cropperRef"
+              :title="$t('courseEditor.cropCover')"
+              :aspect-ratio="16/10"
+              stencil-type="rectangle"
+              @uploaded="onCropped"
+            />
+
             <richEditor v-model="contentJson" :lock-id="lockId" />
           </div>
 
-          <!-- 基础信息 -->
-          <div v-show="activeTab === 'basic'" class="space-y-4">
-            <UFormField :label="$t('courseEditor.name')" class="w-full">
-              <UInput v-model="form.name" :placeholder="$t('courseEditor.namePlaceholder')" class="w-full" />
-            </UFormField>
-            <UFormField :label="$t('courseEditor.code')" class="w-full">
-              <UInput v-model="form.code" :placeholder="$t('courseEditor.codePlaceholder')" class="w-full" />
-            </UFormField>
-            <UFormField :label="$t('courseEditor.tags')" class="w-full">
-              <UInputTags v-model="form.tags" :placeholder="$t('courseEditor.tagsPlaceholder')" class="w-full" />
-            </UFormField>
-          </div>
-
-          <!-- config 编辑 -->
+          <!-- config 编辑（Display：基本信息 + 显示配置） -->
           <div v-show="activeTab === 'config'">
             <CourseEditorConfigForm ref="configFormRef" />
           </div>
 
-          <!-- 教师/编辑者管理（仅管理员可见） -->
-          <div v-show="activeTab === 'members' && hasRole('admin')">
-            <CourseEditorMembersManager
-              v-if="hasRole('admin')"
-              ref="membersRef"
-              :course-id="props.courseId"
-            />
+          <!-- 学习行为配置（Learning Config） -->
+          <div v-show="activeTab === 'learning'" class="space-y-3">
+            <USeparator :label="$t('courseEditor.learningConfig')" class="my-4" />
+            <div v-for="sw in courseSwitchList" :key="sw.key" class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium">{{ $t(sw.label) }}</p>
+                <p class="text-xs text-muted">{{ $t(sw.hint) }}</p>
+              </div>
+              <USwitch v-model="courseSwitches[sw.key]" />
+            </div>
           </div>
 
           <!-- 商品管理（教师/管理员可见） -->
@@ -99,25 +118,26 @@ const {
   form,
   contentJson,
   configFormRef,
-  membersRef,
   openModal,
   closeModal,
   save,
 } = useCourseEditor(props, emit)
 
-type EditorTab = 'content' | 'basic' | 'config' | 'members' | 'goods'
+// 提供配置表单上下文（content 封面图 + learning 开关 + Display 基本信息/其余项共享同一实例）
+const {
+  coverImg, uploading, coverInputRef, cropperRef,
+  courseSwitches, courseSwitchList,
+  triggerCoverUpload, onCoverFileSelected, onCropped,
+} = provideCourseConfigForm(form)
+
+type EditorTab = 'content' | 'config' | 'learning' | 'goods'
 const activeTab = ref<EditorTab>('content')
 const tabItems = computed(() => {
   const items: { label: string, value: EditorTab, icon: string }[] = [
     { label: t('courseEditor.tabContent'), value: 'content', icon: 'i-lucide-file-text' },
-  ]
-  if (hasRole('admin')) {
-    items.push({ label: t('courseEditor.tabMembers'), value: 'members', icon: 'i-lucide-users' })
-  }
-  items.push(
-    { label: t('courseEditor.tabBasic'), value: 'basic', icon: 'i-lucide-info' },
     { label: t('courseEditor.tabConfig'), value: 'config', icon: 'i-lucide-settings-2' },
-  )
+  ]
+  items.push({ label: t('courseEditor.tabLearning'), value: 'learning', icon: 'i-lucide-graduation-cap' })
   if (canEdit.value) {
     items.push({ label: t('courseEditor.tabGoods'), value: 'goods', icon: 'i-lucide-shopping-bag' })
   }
