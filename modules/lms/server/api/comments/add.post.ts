@@ -1,6 +1,7 @@
 import { db, schema } from "@nuxthub/db"
 import { eq, and, desc, sql } from "drizzle-orm"
 import { grantCommentReward } from "../../utils/comment/reward"
+import { validateCommentContent } from "../../utils/comment/validate"
 
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
@@ -10,6 +11,12 @@ export default eventHandler(async (event) => {
 
   if (!course_id) {
     return cResp(null, '缺少 course_id 参数', false)
+  }
+
+  // H3：富文本内容安全校验（禁止 iframe/script 等危险节点）
+  const contentError = validateCommentContent(content)
+  if (contentError) {
+    return cResp(null, contentError, false)
   }
 
   try {

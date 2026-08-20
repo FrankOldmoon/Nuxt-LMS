@@ -245,6 +245,8 @@
     "typeSuggestion": "Suggestion",
     "typeRequirement": "Requirement",
     "content": "Content",
+    "chooseImage": "Choose an image",
+    "reChoose": "Re-choose",
     "submitSuccess": "Feedback submitted successfully"
   },
   "ide": {

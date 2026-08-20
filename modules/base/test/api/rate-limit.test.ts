@@ -34,7 +34,7 @@ describe('Middleware: rate-limit', () => {
   it('保护路径在限额内放行', async () => {
     setMockRequestIP('1.2.3.4')
     const { default: handler } = await import('../../server/middleware/rate-limit')
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 5; i++) {
       await expect(handler(makeEvent({ path: '/api/auth/login' }))).resolves.toBeUndefined()
     }
   })
@@ -42,10 +42,10 @@ describe('Middleware: rate-limit', () => {
   it('超过限额抛 429', async () => {
     setMockRequestIP('1.2.3.5')
     const { default: handler } = await import('../../server/middleware/rate-limit')
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 5; i++) {
       await handler(makeEvent({ path: '/api/auth/login' }))
     }
-    // 第 11 次应抛 429
+    // 第 6 次应抛 429
     await expect(handler(makeEvent({ path: '/api/auth/login' }))).rejects.toMatchObject({
       statusCode: 429,
     })
@@ -54,7 +54,7 @@ describe('Middleware: rate-limit', () => {
   it('不同 IP 独立计数', async () => {
     setMockRequestIP('1.2.3.6')
     const { default: handler } = await import('../../server/middleware/rate-limit')
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 5; i++) {
       await handler(makeEvent({ path: '/api/auth/login' }))
     }
     // 切换 IP，计数重置
@@ -65,7 +65,7 @@ describe('Middleware: rate-limit', () => {
   it('未知 IP（null）仍按同一桶计数', async () => {
     setMockRequestIP(null)
     const { default: handler } = await import('../../server/middleware/rate-limit')
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 5; i++) {
       await handler(makeEvent({ path: '/api/auth/forgot-password' }))
     }
     await expect(handler(makeEvent({ path: '/api/auth/forgot-password' }))).rejects.toMatchObject({
@@ -76,7 +76,7 @@ describe('Middleware: rate-limit', () => {
   it('保护 forgot-password 与 reset-password 端点', async () => {
     setMockRequestIP('1.2.3.8')
     const { default: handler } = await import('../../server/middleware/rate-limit')
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 5; i++) {
       await handler(makeEvent({ path: '/api/auth/reset-password' }))
     }
     await expect(handler(makeEvent({ path: '/api/auth/reset-password' }))).rejects.toMatchObject({

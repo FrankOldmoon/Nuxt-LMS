@@ -9,6 +9,13 @@
  * 流程：解析来源 → 校验 → 配额 → 哈希+查重 → 落盘写库
  */
 import { db } from '@nuxthub/db'
+import { resolveUploadSource, UploadError } from '../../utils/upload/parse'
+import { compressGifBuffer } from '../../utils/files/remoteImage'
+import {
+  validateUpload, isSvgContent, sanitizeSvg, buildDedupWhere,
+} from '../../utils/upload/validate'
+import { sha256Hex, persistUploadedFile } from '../../utils/upload/persist'
+import { formatBytes } from '../../../utils/fileUtils'
 const UPLOAD_ROOT = './storage/'
 
 export default eventHandler(async (event) => {
@@ -38,6 +45,14 @@ export default eventHandler(async (event) => {
     validateUpload(buffer, ext)
   } catch (e: any) {
     return cResp(e.extra || null, e.message, false)
+  }
+
+  // 2.5 SVG：MIME 嗅探 + 消毒（移除脚本/事件处理器/javascript: URL）
+  if (ext === '.svg' || fileType === 'image/svg+xml') {
+    if (!isSvgContent(buffer)) {
+      return cResp(null, '非法的 SVG 文件内容', false)
+    }
+    buffer = sanitizeSvg(buffer)
   }
 
   // 3. 网盘配额

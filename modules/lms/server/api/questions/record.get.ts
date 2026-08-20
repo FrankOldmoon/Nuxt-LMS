@@ -1,5 +1,6 @@
 import { db, schema } from "@nuxthub/db"
 import { eq, and } from "drizzle-orm"
+import { findUserSubmitRecord } from "../../utils/submit/record"
 
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)

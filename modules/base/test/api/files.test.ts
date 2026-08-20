@@ -70,6 +70,8 @@ vi.mock('../../server/utils/upload/parse', () => ({
 vi.mock('../../server/utils/upload/validate', () => ({
   validateUpload: vi.fn(),
   buildDedupWhere: vi.fn(() => 'mock-where'),
+  isSvgContent: vi.fn(() => true),
+  sanitizeSvg: vi.fn((b: any) => b),
 }))
 vi.mock('../../server/utils/upload/persist', () => ({
   sha256Hex: vi.fn(() => 'mock-hash'),
@@ -450,6 +452,40 @@ describe('API: files/serve.get', () => {
     expect(value).toContain("filename*=UTF-8''")
     // filename="..." 兜底部分不含非 ASCII
     expect(value).not.toMatch(/filename="[^"]*[\u0080-\uFFFF]/)
+  })
+
+  it('所有响应带 X-Content-Type-Options: nosniff（防 MIME 嗅探 XSS）', async () => {
+    setMockAuthState(null)
+    const h3 = await import('h3')
+    const spy = vi.mocked(h3.setResponseHeader)
+    const handler = (await import('../../server/api/files/serve.get')).default
+    await handler(makeEvent(undefined, { pathname: 'dir/1.png' }))
+    const nosniff = spy.mock.calls.find((c: any[]) => c[1] === 'X-Content-Type-Options')
+    expect(nosniff).toBeTruthy()
+    expect(String(nosniff![2])).toBe('nosniff')
+  })
+
+  it('SVG 响应带 CSP：禁止脚本执行（直开 XSS 兜底）', async () => {
+    setMockAuthState(null)
+    const h3 = await import('h3')
+    const spy = vi.mocked(h3.setResponseHeader)
+    const handler = (await import('../../server/api/files/serve.get')).default
+    await handler(makeEvent(undefined, { pathname: 'dir/1.svg' }))
+    const csp = spy.mock.calls.find((c: any[]) => c[1] === 'Content-Security-Policy')
+    expect(csp).toBeTruthy()
+    // default-src 'none' ⇒ script-src 继承 'none'，内联脚本与事件处理器均被拦截
+    expect(String(csp![2])).toContain("default-src 'none'")
+    expect(String(csp![2])).not.toMatch(/script-src/)
+  })
+
+  it('非 SVG 响应不带 CSP 头', async () => {
+    setMockAuthState(null)
+    const h3 = await import('h3')
+    const spy = vi.mocked(h3.setResponseHeader)
+    const handler = (await import('../../server/api/files/serve.get')).default
+    await handler(makeEvent(undefined, { pathname: 'dir/1.png' }))
+    const csp = spy.mock.calls.find((c: any[]) => c[1] === 'Content-Security-Policy')
+    expect(csp).toBeUndefined()
   })
 })
 

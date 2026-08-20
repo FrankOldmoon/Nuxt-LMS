@@ -10,6 +10,8 @@ import RaceShow from '../overrides/RaceShow.vue'
 import RaceForm from '../overrides/RaceForm.vue'
 import ChapterShow from '../overrides/ChapterShow.vue'
 import ChapterForm from '../overrides/ChapterForm.vue'
+import FeedbackShow from '../overrides/FeedbackShow.vue'
+import FeedbackContentCell from '../overrides/FeedbackContentCell.vue'
 
 /**
  * 表个性化覆盖注册插件
@@ -99,6 +101,13 @@ export default defineNuxtPlugin(() => {
         },
       })
     },
+  })
+
+  // feedbacks: 用户反馈只读预览（无新增/编辑/删除/导入），content 为 base64 图片
+  registerTableOverride('feedbacks', {
+    readOnly: true,
+    show: FeedbackShow,
+    cell: { content: FeedbackContentCell },
   })
 
   // races

@@ -290,6 +290,17 @@ export function createError(opts: { statusCode?: number; statusMessage?: string;
   return err
 }
 
+/** UploadError（server/utils/upload/parse 的业务错误分类，server auto-import 桩） */
+export class UploadError extends Error {
+  code: string = 'generic'
+  extra: any = {}
+  constructor(msg: string, code: string = 'generic', extra: any = {}) {
+    super(msg)
+    this.code = code
+    this.extra = extra
+  }
+}
+
 /** import.meta.client / import.meta.server — 由 vitest.config.ts define 提供 */
 
 // ===================== 2. Nitro auto-imports =====================
@@ -368,8 +379,11 @@ export function deleteCookie(event: any, name: string, _opts?: any) {
   if (event.cookies) delete event.cookies[name]
 }
 
-/** setResponseHeader / sendStream 桩（Nitro 额外 auto-imports） */
+/** setResponseHeader / setResponseHeaders / sendStream 桩（Nitro 额外 auto-imports） */
 export function setResponseHeader(_event: any, _name: string, _value: any) {
+  /* stub */
+}
+export function setResponseHeaders(_event: any, _headers: Record<string, string>) {
   /* stub */
 }
 export async function sendStream(_event: any, stream: any) {
@@ -1129,6 +1143,8 @@ export function useTableOverride(table: any) {
   const override = computed(() => _tableOverrideRegistry[name.value] || {})
   return {
     override,
+    isReadOnly: computed(() => !!override.value.readOnly),
+    cellOverrides: computed(() => override.value.cell || {}),
     hasFormOverride: computed(() => !!override.value.form),
     hasShowOverride: computed(() => !!override.value.show),
     hasDeleteOverride: computed(() => !!override.value.delete),
@@ -1207,6 +1223,7 @@ const _stubsToExpose: Record<string, any> = {
   setHeader,
   getHeader,
   setResponseHeader,
+  setResponseHeaders,
   sendStream,
   setCookie,
   deleteCookie,

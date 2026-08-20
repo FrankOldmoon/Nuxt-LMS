@@ -14,7 +14,16 @@
       :key="col.jsName"
       :class="['px-3 py-1.5 align-middle', idx === 0 ? firstColStickyBody : '']"
     >
+      <component
+        :is="cellOverrides[col.jsName]"
+        v-if="cellOverrides[col.jsName]"
+        :row="row"
+        :column="col"
+        :value="row[col.jsName]"
+        :fk-label="resolveFk(col, row)"
+      />
       <TableCellView
+        v-else
         :column="col"
         :value="row[col.jsName]"
         :fk-label="resolveFk(col, row)"
@@ -54,9 +63,10 @@
 </template>
 
 <script setup lang="ts">
+import type { Component } from 'vue'
 import type { ColumnMeta } from '../../utils/types'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   row: Record<string, any>
   visibleColumns: ColumnMeta[]
   selectedKeys: Set<string>
@@ -65,7 +75,11 @@ const props = defineProps<{
   includeDeleted: boolean
   rowKeyOf: (row: Record<string, any>) => string
   fkLabels?: Record<string, Record<number, string>>
-}>()
+  /** 按列 jsName 覆盖单元格渲染（来自 TableOverride.cell） */
+  cellOverrides?: Record<string, Component>
+}>(), {
+  cellOverrides: () => ({}),
+})
 
 defineEmits<{
   toggleSelect: [key: string]

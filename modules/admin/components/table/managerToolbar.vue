@@ -10,6 +10,7 @@
         @click="emit('add')"
       />
       <UButton
+        v-if="canImport"
         icon="i-lucide-upload"
         color="neutral"
         variant="outline"
@@ -51,14 +52,17 @@
 <script setup lang="ts">
 import type { ColumnMeta } from '../../utils/types'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   canEdit: boolean
+  canImport?: boolean
   exporting: boolean
   includeDeleted: boolean
   total: number
   columns: ColumnMeta[]
   hiddenColumns: Set<string>
-}>()
+}>(), {
+  canImport: true,
+})
 
 const emit = defineEmits<{
   add: []

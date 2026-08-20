@@ -15,6 +15,8 @@ export type TableDeleteOverride = (
  * 注册时机：通常在插件中（如 plugins/overrides.ts），在 app 启动时写入 REGISTRY。
  */
 export interface TableOverride {
+  /** 整表只读：隐藏新增/编辑/删除/导入等写操作，仅保留分页预览与详情查看 */
+  readOnly?: boolean
   /** 替换 CShow 整窗内容（行详情预览） */
   show?: Component
   /** 替换 CForm 整窗内容（新增/编辑表单） */
@@ -38,6 +40,8 @@ export function useTableOverride(table: MaybeRefOrGetter<string>) {
   const override = computed<TableOverride>(() => REGISTRY[name.value] || {})
   return {
     override,
+    isReadOnly: computed(() => !!override.value.readOnly),
+    cellOverrides: computed<Record<string, Component>>(() => override.value.cell || {}),
     hasFormOverride: computed(() => !!override.value.form),
     hasShowOverride: computed(() => !!override.value.show),
     hasDeleteOverride: computed(() => !!override.value.delete),

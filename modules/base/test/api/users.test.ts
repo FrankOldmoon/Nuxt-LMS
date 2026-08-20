@@ -100,6 +100,22 @@ describe('API: users/search.get', () => {
     expect(result.data).toHaveLength(1)
     expect(globalThis.searchUsers).toHaveBeenCalledWith('ali', 50)
   })
+
+  it('教师角色可搜索', async () => {
+    setMockAuthState({ id: 5, username: 'teacher', name: 'Teacher', roles: ['teacher'], permissions: [] })
+    globalThis.searchUsers = vi.fn().mockResolvedValue([])
+    const handler = (await import('../../server/api/users/search.get')).default
+    const result = await handler(makeEvent({ query: { keyword: 'x' } }))
+    expect(result.success).toBe(true)
+  })
+
+  it('学生角色禁止搜索（M3 防枚举）', async () => {
+    setMockAuthState({ id: 2, username: 'student', name: 'Student', roles: ['student'], permissions: [] })
+    const handler = (await import('../../server/api/users/search.get')).default
+    await expect(handler(makeEvent({ query: { keyword: 'a' } }))).rejects.toMatchObject({
+      statusCode: 403,
+    })
+  })
 })
 
 describe('API: users/update.post', () => {

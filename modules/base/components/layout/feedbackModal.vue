@@ -8,15 +8,56 @@
 
         <div class="space-y-4">
           <UFormField :label="$t('feedback.name')">
-            <UInput v-model="form.name" :placeholder="$t('feedback.namePlaceholder')" />
+            <UInput v-model="form.name" class="w-full" :placeholder="$t('feedback.namePlaceholder')" />
           </UFormField>
 
           <UFormField :label="$t('feedback.type')">
-            <USelect v-model="form.type" :items="typeOptions" />
+            <USelect v-model="form.type" :items="typeOptions" class="w-full" />
           </UFormField>
 
           <UFormField :label="$t('feedback.content')">
-            <Ueditor v-model="form.content" />
+            <div class="w-full space-y-2">
+              <input
+                ref="fileInput"
+                type="file"
+                accept="image/*"
+                class="hidden"
+                @change="onFileChange"
+              />
+              <UButton
+                v-if="!form.content"
+                icon="i-lucide-image-plus"
+                color="primary"
+                variant="outline"
+                :label="$t('feedback.chooseImage')"
+                @click="fileInput?.click()"
+              />
+              <div v-else class="flex items-start gap-3">
+                <img
+                  :src="form.content"
+                  class="max-h-40 max-w-full rounded border border-default/50 object-contain"
+                  alt="feedback preview"
+                />
+                <div class="flex flex-col gap-1">
+                  <UButton
+                    icon="i-lucide-rotate-ccw"
+                    color="neutral"
+                    variant="ghost"
+                    size="xs"
+                    :label="$t('feedback.reChoose')"
+                    @click="fileInput?.click()"
+                  />
+                  <UButton
+                    icon="i-lucide-x"
+                    color="error"
+                    variant="ghost"
+                    size="xs"
+                    :label="$t('common.cancel')"
+                    @click="clearContent"
+                  />
+                </div>
+              </div>
+            </div>
           </UFormField>
         </div>
 
@@ -41,14 +82,15 @@ const typeOptions = [
   { label: t('feedback.typeRequirement'), value: 'requirement' },
 ]
 
-const emptyContent = () => ({ content: {}, type: 'doc' as const })
-const form = reactive<{ name: string; type: string; content: any }>({
+const emptyContent = () => ''
+const form = reactive<{ name: string; type: string; content: string }>({
   name: '',
   type: 'suggestion',
   content: emptyContent(),
 })
 
 const saving = ref(false)
+const fileInput = ref<HTMLInputElement | null>(null)
 
 // 每次打开时重置表单
 watch(isOpen, (val) => {
@@ -56,8 +98,38 @@ watch(isOpen, (val) => {
     form.name = ''
     form.type = 'suggestion'
     form.content = emptyContent()
+    if (fileInput.value) fileInput.value.value = ''
   }
 })
+
+/** 读取图片文件为 base64 data URL */
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result))
+    reader.onerror = () => reject(new Error('图片读取失败'))
+    reader.readAsDataURL(file)
+  })
+}
+
+/** 选择图片：压缩后转 base64 存入 content */
+async function onFileChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  try {
+    const compressed = await compressImage(file)
+    form.content = await fileToBase64(compressed)
+  } catch (err: any) {
+    toast.add({ title: err?.message || t('common.operationFailed'), color: 'error' })
+    if (fileInput.value) fileInput.value.value = ''
+  }
+}
+
+function clearContent() {
+  form.content = ''
+  if (fileInput.value) fileInput.value.value = ''
+}
 
 async function submit() {
   if (!form.name.trim()) {

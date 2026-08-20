@@ -469,13 +469,13 @@ describe('API: auth/forgot-password.post', () => {
     expect(result.success).toBe(true)
   })
 
-  it('邮件服务未配置返回失败', async () => {
+  it('邮件服务未配置仍返回统一提示（M2 防枚举）', async () => {
     setMockConfigValue('site:mail.host', '')
     _mockDb.limit = vi.fn().mockResolvedValue([{ id: 1, name: 'Alice', email: 'a@b.c' }])
     const handler = (await import('../../server/api/auth/forgot-password.post')).default
     const result = await handler(makeEvent({ body: { email: 'a@b.c' } }))
-    expect(result.success).toBe(false)
-    expect(result.msg).toMatch(/邮件服务/)
+    expect(result.success).toBe(true)
+    expect(result.msg).toMatch(/如果该邮箱已注册/)
   })
 
   it('成功发送重置邮件', async () => {
@@ -484,17 +484,17 @@ describe('API: auth/forgot-password.post', () => {
     const handler = (await import('../../server/api/auth/forgot-password.post')).default
     const result = await handler(makeEvent({ body: { email: 'a@b.c' } }))
     expect(result.success).toBe(true)
-    expect(result.msg).toMatch(/已发送/)
+    expect(result.msg).toMatch(/如果该邮箱已注册/)
     expect(_mockDb.insert).toHaveBeenCalled()
   })
 
-  it('邮件发送失败返回失败', async () => {
+  it('邮件发送失败仍返回统一提示（M2 防枚举）', async () => {
     _mockDb.limit = vi.fn().mockResolvedValue([{ id: 1, name: 'Alice', email: 'a@b.c' }])
     setMockSendMailResult(false)
     const handler = (await import('../../server/api/auth/forgot-password.post')).default
     const result = await handler(makeEvent({ body: { email: 'a@b.c' } }))
-    expect(result.success).toBe(false)
-    expect(result.msg).toMatch(/发送失败/)
+    expect(result.success).toBe(true)
+    expect(result.msg).toMatch(/如果该邮箱已注册/)
   })
 })
 

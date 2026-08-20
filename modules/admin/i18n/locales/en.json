@@ -103,6 +103,12 @@
       "actions": "Actions",
       "view": "View"
     },
+    "feedback": {
+      "type": "Type",
+      "user": "User",
+      "createdAt": "Created At",
+      "content": "Content"
+    },
     "filter": {
       "eq": "Equals",
       "ne": "Not Equals",

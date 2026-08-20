@@ -9,6 +9,31 @@ import { UploadError } from './parse'
 
 const DANGEROUS_EXTS = ['.exe', '.sh', '.bat', '.cmd', '.ps1', '.php']
 
+/**
+ * SVG 消毒：移除 <script>/<foreignObject>、事件处理器属性(on*)与 javascript: URL，
+ * 防止存储型 XSS（浏览器直接打开上传的 .svg 时脚本在站内执行）。
+ * 仅用于 .svg 上传内容，防御纵深之一（serve 端另有 CSP 兜底）。
+ */
+export function sanitizeSvg(buffer: Buffer): Buffer {
+  let text = buffer.toString('utf8')
+  // 去除 <script>...</script> 及自闭合 <script/>
+  text = text.replace(/<script[\s\S]*?<\/script\s*>/gi, '')
+  text = text.replace(/<script[^>]*\/?>/gi, '')
+  // 去除 foreignObject（可内嵌 HTML/脚本）
+  text = text.replace(/<foreignObject[\s\S]*?<\/foreignObject\s*>/gi, '')
+  // 去除所有事件处理器属性 on*=
+  text = text.replace(/\son\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+  // 去除 javascript: 伪协议 URL（href / xlink:href / src），保留属性名
+  text = text.replace(/(\b(?:href|xlink:href|src)\s*=\s*)["']\s*javascript:[^"']*["']/gi, (match, prefix) => `${prefix}""`)
+  return Buffer.from(text, 'utf8')
+}
+
+/** 校验 .svg 文件内容确为 SVG（MIME 嗅探），防止伪装成 SVG 的其他文档直开 */
+export function isSvgContent(buffer: Buffer): boolean {
+  const text = buffer.toString('utf8').replace(/^\uFEFF/, '').trimStart()
+  return /<svg[\s>]/i.test(text)
+}
+
 /** 大小 + 后缀两道校验，失败抛 UploadError（webp 后缀跳过） */
 export function validateUpload(buffer: Buffer, ext: string) {
   const maxFileSizeMB = Number(getConfigSync('site:maxFileSize')) || 50

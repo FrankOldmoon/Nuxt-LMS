@@ -20,6 +20,9 @@ const MIME_TYPES: Record<string, string> = {
   '.zip': 'application/zip', '.rar': 'application/vnd.rar', '.7z': 'application/x-7z-compressed',
 }
 
+// SVG 直开 XSS 兜底：default-src 'none' → script-src 继承 'none'，禁止脚本执行
+const SVG_CSP = "default-src 'none'; style-src 'unsafe-inline'; img-src data: blob: https: http:; media-src data: blob: https: http:; font-src data: https: http:"
+
 export default eventHandler(async (event) => {
 
   const pathname = getQuery(event).pathname as string
@@ -49,6 +52,12 @@ export default eventHandler(async (event) => {
   setResponseHeader(event, 'Content-Type', contentType)
   // 上传文件内容不变，缓存一年
   setResponseHeader(event, 'Cache-Control', 'public, max-age=31536000, immutable')
+  // 防止 MIME 嗅探将上传内容按 HTML 渲染（存储型 XSS 兜底）
+  setResponseHeader(event, 'X-Content-Type-Options', 'nosniff')
+  // SVG 直开时禁止脚本执行
+  if (ext === '.svg') {
+    setResponseHeader(event, 'Content-Security-Policy', SVG_CSP)
+  }
   setResponseHeader(
     event,
     'Content-Disposition',

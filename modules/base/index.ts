@@ -99,7 +99,7 @@ export default defineNuxtModule({
       },
       routeRules: {
         ...nuxt.options.nitro.routeRules,
-        '/api/**': { cors: true },
+        //'/api/**': { cors: true },
       }
     }
     // ========== base 模块功能注册（env 控制开关）==========

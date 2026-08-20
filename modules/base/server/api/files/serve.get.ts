@@ -36,6 +36,10 @@ const TEXT_PREVIEW_EXTS = new Set([
   '.vue', '.svelte', '.astro',
 ])
 
+// SVG 直开 XSS 兜底：default-src 'none' → script-src 继承 'none'，禁止脚本执行；
+// 仅放行内联样式与图片/媒体/字体资源，不影响作为 <img>/<iframe> 正常展示
+const SVG_CSP = "default-src 'none'; style-src 'unsafe-inline'; img-src data: blob: https: http:; media-src data: blob: https: http:; font-src data: https: http:"
+
 export default eventHandler(async (event) => {
 
   const pathname = getQuery(event).pathname as string
@@ -70,6 +74,12 @@ export default eventHandler(async (event) => {
   setResponseHeader(event, 'Content-Type', contentType)
   // 上传文件内容不变，缓存一年
   setResponseHeader(event, 'Cache-Control', 'public, max-age=31536000, immutable')
+  // 防止 MIME 嗅探将上传内容按 HTML 渲染（存储型 XSS 兜底）
+  setResponseHeader(event, 'X-Content-Type-Options', 'nosniff')
+  // SVG 直开时禁止脚本执行（覆盖历史上已上传的恶意 SVG）
+  if (ext === '.svg') {
+    setResponseHeader(event, 'Content-Security-Policy', SVG_CSP)
+  }
   // ASCII 兜底文件名：去除非 ASCII 与双引号/控制字符，避免 header 出现非 ASCII 触发 ERR_INVALID_CHAR
   // filename* 用 RFC 5987 百分号编码保留完整 UTF-8 原名
   const asciiName = fileName.replace(/[^\x20-\x7E]/g, '').replace(/"/g, '').trim() || 'file'

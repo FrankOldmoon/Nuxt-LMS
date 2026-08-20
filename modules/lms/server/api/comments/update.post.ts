@@ -1,5 +1,6 @@
 import { db, schema } from "@nuxthub/db"
 import { eq, and } from "drizzle-orm"
+import { validateCommentContent } from "../../utils/comment/validate"
 
 export default eventHandler(async (event) => {
   await requireRole(event, ['teacher', 'admin'])
@@ -21,6 +22,14 @@ export default eventHandler(async (event) => {
   }
   if (Object.keys(updateData).length === 0) {
     return cResp(null, '没有需要更新的字段', false)
+  }
+
+  // H3：富文本内容安全校验（禁止 iframe/script 等危险节点）
+  if (updateData.content !== undefined) {
+    const contentError = validateCommentContent(updateData.content)
+    if (contentError) {
+      return cResp(null, contentError, false)
+    }
   }
 
   try {

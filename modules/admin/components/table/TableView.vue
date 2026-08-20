@@ -43,6 +43,7 @@
             :include-deleted="includeDeleted"
             :row-key-of="rowKeyOf"
             :fk-labels="fkLabels"
+            :cell-overrides="cellOverrides"
             @toggle-select="$emit('toggleSelect', $event)"
             @view="$emit('view', $event)"
             @edit="$emit('edit', $event)"
@@ -62,6 +63,7 @@
 </template>
 
 <script setup lang="ts">
+import type { Component } from 'vue'
 import type { ColumnMeta } from '../../utils/types'
 
 const props = defineProps<{
@@ -77,6 +79,8 @@ const props = defineProps<{
   pending: boolean
   rowKeyOf: (row: Record<string, any>) => string
   fkLabels?: Record<string, Record<number, string>>
+  /** 按列 jsName 覆盖单元格渲染（来自 TableOverride.cell） */
+  cellOverrides?: Record<string, Component>
 }>()
 
 defineEmits<{

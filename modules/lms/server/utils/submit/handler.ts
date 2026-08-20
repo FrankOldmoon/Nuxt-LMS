@@ -11,7 +11,8 @@
  * 特性：
  *  - 业务校验错误（SubmitContextError）→ 返回 cResp(null, message, false)
  *  - 认证/权限错误（statusCode 4xx）→ 重新抛出，由 Nitro 自动转为 HTTP 响应
- *  - 其它异常 → 控制台打印 + 返回 cResp(null, fallbackMessage, false)
+ *  - 其它异常（DB 错误、运行时 bug）→ 控制台打印完整错误，向客户端返回通用兜底文案，
+ *    避免泄露 SQL 语句 / 表结构等内部信息（M1 安全加固）
  *  - 成功返回 → 直接透传 handler 的返回值
  */
 import { SubmitContextError } from './context'
@@ -40,9 +41,9 @@ export function withSubmitHandler<E = any>(
       if (err && typeof err.statusCode === 'number' && err.statusCode >= 400 && err.statusCode < 500) {
         throw err
       }
-      // 其它异常：兜底
+      // 其它异常：记录完整错误，仅向客户端返回通用兜底文案（不泄露 SQL/内部信息）
       console.error(`[${fallbackMessage}]`, err)
-      return cResp(null, err?.message || fallbackMessage, false)
+      return cResp(null, fallbackMessage, false)
     }
   }
 }

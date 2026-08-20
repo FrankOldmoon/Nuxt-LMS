@@ -26,6 +26,12 @@ export default defineEventHandler(async (event) => {
     return cResp(null, '请输入邮箱', false)
   }
 
+  // 邮件服务未配置时也返回同一提示（M2 防枚举：不区分邮箱是否存在）
+  const mail = await getConfigByPrefix('site:mail')
+  if (!mail.host) {
+    return cResp(null, '如果该邮箱已注册，你将收到重置密码邮件')
+  }
+
   // 查找用户
   const users = await db
     .select({ id: schema.users.id, name: schema.users.name, email: schema.users.email })
@@ -39,11 +45,6 @@ export default defineEventHandler(async (event) => {
   }
 
   const user = users[0]
-  const mail = await getConfigByPrefix('site:mail')
-
-  if (!mail.host) {
-    return cResp(null, '邮件服务未配置，请联系管理员', false)
-  }
 
   // 生成 reset token
   const tokenStr = `reset_${generateToken()}`
@@ -61,11 +62,8 @@ export default defineEventHandler(async (event) => {
     ? `${siteUrl.replace(/\/$/, '')}/reset-password?token=${tokenStr}`
     : `/reset-password?token=${tokenStr}`
 
-  // 发送邮件
-  const ok = await sendPasswordResetEmail(user.email, resetUrl)
-  if (!ok) {
-    return cResp(null, '邮件发送失败，请稍后重试或联系管理员', false)
-  }
+  // 发送邮件（失败也返回同一提示，避免通过响应差异枚举邮箱）
+  await sendPasswordResetEmail(user.email, resetUrl)
 
-  return cResp(null, '重置密码邮件已发送，请查收')
+  return cResp(null, '如果该邮箱已注册，你将收到重置密码邮件')
 })

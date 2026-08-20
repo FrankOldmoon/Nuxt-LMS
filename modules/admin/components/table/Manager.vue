@@ -5,7 +5,7 @@
     <TableFilterBar :columns="columns" :filters="filters" :search="search" @update:filters="applyFilters" @update:search="(v) => applySearch(v)" />
 
     <ManagerToolbar
-      :can-edit="canEdit" :exporting="exporting" :include-deleted="includeDeleted"
+      :can-edit="canEdit" :can-import="canImport" :exporting="exporting" :include-deleted="includeDeleted"
       :total="total" :columns="columns" :hidden-columns="hiddenColumns"
       @add="openAdd" @import="importOpen = true" @export="openExport"
       @toggle-column="toggleColumn" @show-all="showAllColumns" @toggle-trash="toggleTrash"
@@ -17,7 +17,7 @@
       :visible-columns="visibleColumns" :rows="rows" :selected-keys="selectedKeys"
       :all-selected="allSelected" :sort="sort" :include-deleted="includeDeleted"
       :can-edit="canEdit" :can-delete="canDelete" :has-id="hasId" :pending="pending"
-      :fk-labels="fkLabels" :row-key-of="rowKeyOf"
+      :fk-labels="fkLabels" :row-key-of="rowKeyOf" :cell-overrides="cellOverrides"
       @sort="toggleSort" @toggle-select="toggleSelect" @toggle-select-all="toggleSelectAll"
       @view="onView" @edit="onEdit" @delete="onSingleDelete" @restore="onSingleRestore" @remove="onSingleRemove"
     />
@@ -49,9 +49,10 @@ const {
 } = useAdminTable(() => props.tableName)
 
 const { ensure } = useTableMeta(() => props.tableName)
-const { hasFormOverride, hasDeleteOverride } = useTableOverride(() => props.tableName)
-const canEdit = computed(() => !readOnly.value || hasFormOverride.value)
-const canDelete = computed(() => (hasId.value && !readOnly.value) || hasDeleteOverride.value)
+const { hasFormOverride, hasDeleteOverride, isReadOnly, cellOverrides } = useTableOverride(() => props.tableName)
+const canEdit = computed(() => (!readOnly.value || hasFormOverride.value) && !isReadOnly.value)
+const canDelete = computed(() => ((hasId.value && !readOnly.value) || hasDeleteOverride.value) && !isReadOnly.value)
+const canImport = computed(() => !isReadOnly.value)
 
 const { fkLabels } = useFkLabels(columns)
 
