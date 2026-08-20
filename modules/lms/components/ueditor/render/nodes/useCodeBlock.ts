@@ -3,6 +3,21 @@ import { createLowlight, common } from 'lowlight'
 
 const lowlight = createLowlight(common)
 
+/** 语言别名 → lowlight 注册名（lowlight common 只注册官方名，html/js/ts 等别名需映射） */
+const LANG_ALIASES: Record<string, string> = {
+  'js': 'javascript', 'jsx': 'javascript', 'mjs': 'javascript', 'cjs': 'javascript', 'node': 'javascript',
+  'ts': 'typescript', 'tsx': 'typescript',
+  'py': 'python', 'python3': 'python',
+  'sh': 'bash', 'shell': 'bash', 'zsh': 'bash',
+  'yml': 'yaml',
+  'c++': 'cpp', 'cc': 'cpp', 'hpp': 'cpp',
+  'golang': 'go',
+  'html': 'xml', 'htm': 'xml', 'markup': 'xml', 'svg': 'xml',
+  'text': 'plaintext', 'txt': 'plaintext',
+  'rb': 'ruby', 'rs': 'rust', 'kt': 'kotlin', 'cs': 'csharp', 'md': 'markdown',
+  'jsonc': 'json',
+}
+
 export function useCodeBlock(props: { node: any }) {
     const inQuiz = inject('inQuiz', false)
     const inQuestion = inject('inQuestion', false)
@@ -60,11 +75,13 @@ export function useCodeBlock(props: { node: any }) {
 
     const highlightedHtml = computed(() => {
         const text = codeText.value || ''
-        const lang = language.value
+        const lang = normLang.value
         try {
             const langs = lowlight.listLanguages()
-            if (langs.includes(lang)) {
-                const tree = lowlight.highlight(lang, text)
+            // 先精确匹配，再查别名映射（html→xml、js→javascript 等）
+            const target = langs.includes(lang) ? lang : LANG_ALIASES[lang]
+            if (target && langs.includes(target)) {
+                const tree = lowlight.highlight(target, text)
                 return astToHtml(tree)
             }
             return escapeHtml(text)

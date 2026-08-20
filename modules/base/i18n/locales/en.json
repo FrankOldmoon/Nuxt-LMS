@@ -247,6 +247,8 @@
     "content": "Content",
     "chooseImage": "Choose an image",
     "reChoose": "Re-choose",
+    "empty": "No feedback yet",
+    "total": "{n} feedbacks",
     "submitSuccess": "Feedback submitted successfully"
   },
   "ide": {

@@ -46,9 +46,17 @@ export const CODE_DEFAULT_COLOR = '1E293B'
 
 /** 语言别名映射（lowlight 注册名可能与编辑器使用的不同） */
 export const LANG_ALIASES: Record<string, string> = {
-  'js': 'javascript', 'py': 'python', 'python3': 'python',
-  'ts': 'typescript', 'sh': 'bash', 'shell': 'bash',
-  'yml': 'yaml', 'c++': 'cpp', 'golang': 'go',
+  'js': 'javascript', 'jsx': 'javascript', 'mjs': 'javascript', 'cjs': 'javascript', 'node': 'javascript',
+  'ts': 'typescript', 'tsx': 'typescript',
+  'py': 'python', 'python3': 'python',
+  'sh': 'bash', 'shell': 'bash', 'zsh': 'bash',
+  'yml': 'yaml',
+  'c++': 'cpp', 'cc': 'cpp', 'hpp': 'cpp',
+  'golang': 'go',
+  'html': 'xml', 'htm': 'xml', 'markup': 'xml', 'svg': 'xml',
+  'text': 'plaintext', 'txt': 'plaintext',
+  'rb': 'ruby', 'rs': 'rust', 'kt': 'kotlin', 'cs': 'csharp', 'md': 'markdown',
+  'jsonc': 'json',
 }
 
 /**

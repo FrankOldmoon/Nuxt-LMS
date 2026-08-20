@@ -82,4 +82,55 @@ describe('ueditor/render/nodes/code-block.vue', () => {
     })
     expect(wrapper.find('.cb-lang').text()).toBe('plaintext')
   })
+
+  it('高亮 html 代码（别名 html → xml 映射）', async () => {
+    const { default: CodeBlockView } = await import('../../../../../components/ueditor/render/nodes/code-block.vue')
+    const wrapper = mount(CodeBlockView, {
+      props: {
+        node: {
+          type: 'codeBlock',
+          attrs: { language: 'html' },
+          content: [{ type: 'text', text: '<div class="box"><h1>Hi</h1></div>' }],
+        },
+      },
+      global: _globalConfig,
+    })
+    const html = wrapper.find('.cb-code').html()
+    expect(html).toContain('hljs-tag')
+    expect(html).toContain('hljs-name')
+    expect(html).toContain('hljs-attr')
+    expect(html).toContain('hljs-string')
+  })
+
+  it('高亮 js 别名（js → javascript 映射）', async () => {
+    const { default: CodeBlockView } = await import('../../../../../components/ueditor/render/nodes/code-block.vue')
+    const wrapper = mount(CodeBlockView, {
+      props: {
+        node: {
+          type: 'codeBlock',
+          attrs: { language: 'js' },
+          content: [{ type: 'text', text: 'const x = 1' }],
+        },
+      },
+      global: _globalConfig,
+    })
+    expect(wrapper.find('.cb-code').html()).toContain('hljs-keyword')
+  })
+
+  it('未知语言仍转义纯文本（不抛错）', async () => {
+    const { default: CodeBlockView } = await import('../../../../../components/ueditor/render/nodes/code-block.vue')
+    const wrapper = mount(CodeBlockView, {
+      props: {
+        node: {
+          type: 'codeBlock',
+          attrs: { language: 'foobarbaz' },
+          content: [{ type: 'text', text: '<script>alert(1)</script>' }],
+        },
+      },
+      global: _globalConfig,
+    })
+    const html = wrapper.find('.cb-code').html()
+    expect(html).not.toContain('<script>')
+    expect(html).toContain('&lt;script&gt;')
+  })
 })
