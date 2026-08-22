@@ -93,7 +93,8 @@ export function useNavEditor(props: NavEditorProps, emit: (e: 'saved') => void) 
   }
 
   function resetFromProps() {
-    keyCounter = 0
+    // 注意：不重置 keyCounter，保证 _key 在多次打开/重置间全局唯一，
+    // 避免折叠状态（collapsedKeys）因 key 冲突错误命中新节点
     flatItems.value = initFromNavigation(props.navigation)
   }
 
@@ -210,7 +211,7 @@ Item B
 
   watch(open, (val) => {
     if (val) {
-      keyCounter = 0
+      // 不重置 keyCounter：保证跨多次打开的 _key 唯一，防止折叠状态串位
       flatItems.value = initFromNavigation(props.navigation)
     }
   })
