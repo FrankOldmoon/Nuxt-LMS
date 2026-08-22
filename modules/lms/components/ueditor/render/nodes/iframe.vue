@@ -6,7 +6,16 @@
         :style="iframeStyle"
       ></iframe>
       <button
-        class="iframe-fullscreen-btn"
+        class="iframe-btn iframe-open-btn"
+        :title="'在新标签页打开'"
+        @click.stop="openInNewTab"
+      >
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+          <path d="M10 1.5h4.5V6H13V3.6L7.3 9.3 6.4 8.4L12 2.8H10V1.5zM2 2.5h4.5V4H3.5v9.5H13V10h1.5v4.5H2V2.5z" />
+        </svg>
+      </button>
+      <button
+        class="iframe-btn iframe-fullscreen-btn"
         :title="isFullscreen ? '退出全屏' : '全屏'"
         @click.stop="toggleFullscreen"
       >
@@ -41,9 +50,10 @@ const nodeStyle = computed(() => ({
 const iframeStyle = computed(() => ({
   display: 'block',
   width: '100%',
-  height: `${attrs.value.height || 200}px`,
-  border: '1px solid #e5e7eb',
-  borderRadius: '4px',
+  // 全屏时撑满容器，避免下方留白
+  height: isFullscreen.value ? '100%' : `${attrs.value.height || 200}px`,
+  border: isFullscreen.value ? 'none' : '1px solid #e5e7eb',
+  borderRadius: isFullscreen.value ? '0' : '4px',
   backgroundColor: '#fff',
   pointerEvents: 'auto',
 }))
@@ -56,6 +66,13 @@ function toggleFullscreen() {
   } else {
     el.requestFullscreen()
   }
+}
+
+function openInNewTab() {
+  const src = attrs.value.src
+  if (!src) return
+  // 相对地址补全为完整 URL，再在新标签页打开
+  window.open(new URL(src, window.location.origin).href, '_blank', 'noopener,noreferrer')
 }
 
 function onFullscreenChange() {
@@ -76,10 +93,9 @@ onBeforeUnmount(() => {
   position: relative;
 }
 
-.iframe-fullscreen-btn {
+.iframe-btn {
   position: absolute;
   top: 6px;
-  right: 6px;
   z-index: 10;
   display: flex;
   align-items: center;
@@ -96,15 +112,32 @@ onBeforeUnmount(() => {
   transition: opacity 0.2s;
 }
 
-.umo-node-iframe:hover .iframe-fullscreen-btn {
+.iframe-open-btn {
+  right: 38px;
+}
+
+.iframe-fullscreen-btn {
+  right: 6px;
+}
+
+.umo-node-iframe:hover .iframe-btn {
   opacity: 1;
 }
 
-.iframe-fullscreen-btn:hover {
+.iframe-btn:hover {
   background: rgba(0, 0, 0, 0.65);
 }
 
 .umo-node-iframe:fullscreen {
   background: #fff;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: stretch;
+}
+
+.umo-node-iframe:fullscreen iframe {
+  width: 100% !important;
+  height: 100% !important;
 }
 </style>

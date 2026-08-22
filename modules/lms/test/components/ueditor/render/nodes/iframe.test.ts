@@ -2,7 +2,7 @@
  * ueditor/render/nodes/iframe.vue 组件测试
  * @see modules/lms/components/ueditor/render/nodes/iframe.vue
  */
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { resetAllStubs, setMockI18n } from '../../../../../../../test/setup/nuxt-stubs'
 
@@ -44,5 +44,29 @@ describe('ueditor/render/nodes/iframe.vue', () => {
       global: _globalConfig,
     })
     expect(wrapper.find('iframe').attributes('style') || '').toContain('height: 500px')
+  })
+
+  it('renders 打开网页按钮与全屏按钮', async () => {
+    const { default: IframeView } = await import('../../../../../components/ueditor/render/nodes/iframe.vue')
+    const wrapper = mount(IframeView, {
+      props: { node: { type: 'iframe', attrs: { src: 'https://example.com/page' } } },
+      global: _globalConfig,
+    })
+    expect(wrapper.find('.iframe-open-btn').exists()).toBe(true)
+    expect(wrapper.find('.iframe-fullscreen-btn').exists()).toBe(true)
+  })
+
+  it('点击打开网页按钮在新标签页打开完整 URL', async () => {
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+    const { default: IframeView } = await import('../../../../../components/ueditor/render/nodes/iframe.vue')
+    const wrapper = mount(IframeView, {
+      props: { node: { type: 'iframe', attrs: { src: '/page' } } },
+      global: _globalConfig,
+    })
+    await wrapper.find('.iframe-open-btn').trigger('click')
+    const href = (String((window.open as any).mock.calls[0][0]))
+    expect(href.endsWith('/page')).toBe(true)
+    expect((window.open as any).mock.calls[0][1]).toBe('_blank')
+    openSpy.mockRestore()
   })
 })

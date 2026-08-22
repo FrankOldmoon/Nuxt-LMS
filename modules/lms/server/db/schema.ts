@@ -1,5 +1,5 @@
 /**
- * doc module schema 片段
+ * module schema 片段
  *
  * 包含表：categories, courses, chapters, chapterVersions, courseVersions
  *
