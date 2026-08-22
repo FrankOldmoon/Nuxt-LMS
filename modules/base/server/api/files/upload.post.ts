@@ -73,15 +73,15 @@ export default eventHandler(async (event) => {
     return cResp({ url: `/api/files/serve?pathname=${encodeURIComponent(existing.path.replace(/^\/+/, ''))}` }, '文件已存在', true)
   }
 
-  // 5. 落盘 + 写库 + 改名（并发冲突 catch 分支复用 dedupWhere 重新查重）
+  // 5. 落盘 + 写库（path 唯一冲突在 persist 内恢复：软删记录复活 / 复用现有记录）
   try {
-    const { id, finalDbPath } = await persistUploadedFile({
+    const { id, finalDbPath, deduplicated } = await persistUploadedFile({
       buffer, hash, ext, originalName, fileType, group,
       userId: user.id, uploadRoot: UPLOAD_ROOT,
     })
     return cResp(
       { id, url: `/api/files/serve?pathname=${encodeURIComponent(finalDbPath.replace(/^\/+/, ''))}` },
-      '上传成功', true,
+      deduplicated ? '文件已存在' : '上传成功', true,
     )
   } catch (err: any) {
     const conflict = await db.query.files.findFirst({ where: dedupWhere })
