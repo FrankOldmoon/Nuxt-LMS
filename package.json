@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "nuxt build",
+    "build": "NODE_OPTIONS='--max-old-space-size=8192' nuxt build",
     "dev": "nuxt-hub db migrate && nuxt dev --host",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
@@ -15,6 +15,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@colyseus/schema": "^2.0.0",
     "@electric-sql/pglite": "^0.5.3",
     "@nuxt/ui": "^4.9.0",
     "@nuxthub/core": "0.10.7",
@@ -24,12 +25,15 @@
     "@tiptap/vue-3": "^3.27.1",
     "@umoteam/editor": "^11.1.1",
     "browser-image-compression": "^2.0.2",
+    "colyseus": "^0.15.0",
+    "colyseus.js": "^0.15.28",
     "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.45.2",
     "edge-tts-universal": "^1.4.0",
     "lowlight": "^3.3.0",
     "nodemailer": "^9.0.3",
     "nuxt": "^4.4.8",
+    "phaser": "3.80.1",
     "postgres": "^3.4.9",
     "sharp": "^0.35.3",
     "tailwindcss": "^4.3.2",

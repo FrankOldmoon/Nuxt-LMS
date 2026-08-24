@@ -18,7 +18,13 @@ export function useWsClass() {
   }
 
   // ====================== 弹幕 ======================
+  function isInIframe() {
+    return window.top !== window.self
+  }
+
   function sendDanmaku(classId: number, text: string, from: string = 'anonymous') {
+    // iframe 嵌套环境下（如富文本内嵌预览）不发送弹幕，避免向课堂广播重复/干扰消息
+    if (isInIframe()) return
     send({ type: 'danmaku', classId, text: text.slice(0, 200), from })
   }
   function onDanmaku(callback: (data: any) => void) {

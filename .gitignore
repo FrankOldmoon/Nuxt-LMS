@@ -24,4 +24,5 @@ logs
 !.env.example
 .trae
 ecosystem.config.cjs
-mmo
+game_assets
+modules/mmo

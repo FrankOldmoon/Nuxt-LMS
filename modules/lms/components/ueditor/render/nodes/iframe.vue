@@ -114,6 +114,8 @@ onBeforeUnmount(() => {
 
 .iframe-open-btn {
   right: 38px;
+  /* 打开新标签页按钮始终显示(不依赖悬停), 便于发现与点击 */
+  opacity: 1;
 }
 
 .iframe-fullscreen-btn {

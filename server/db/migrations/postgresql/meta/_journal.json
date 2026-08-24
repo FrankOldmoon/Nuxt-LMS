@@ -36,6 +36,20 @@
       "when": 1787191696683,
       "tag": "0004_third_lionheart",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1787375427316,
+      "tag": "0005_mute_azazel",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1787492000000,
+      "tag": "0006_rename_zone_to_map_id",
+      "breakpoints": true
     }
   ]
 }
