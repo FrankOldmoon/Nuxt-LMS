@@ -61,11 +61,22 @@ const iframeStyle = computed(() => ({
 function toggleFullscreen() {
   const el = containerRef.value
   if (!el) return
-  if (document.fullscreenElement) {
+  // 已是本 iframe 的全屏 → 退出
+  if (document.fullscreenElement === el) {
     document.exitFullscreen()
-  } else {
-    el.requestFullscreen()
+    return
   }
+  // 已处于其它元素的全屏 → 先退出该全屏，退出完成后自动进入本 iframe 全屏（切换全屏目标）
+  if (document.fullscreenElement) {
+    const onExit = () => {
+      document.removeEventListener('fullscreenchange', onExit)
+      containerRef.value?.requestFullscreen().catch(() => {})
+    }
+    document.addEventListener('fullscreenchange', onExit)
+    document.exitFullscreen()
+    return
+  }
+  el.requestFullscreen().catch(() => {})
 }
 
 function openInNewTab() {

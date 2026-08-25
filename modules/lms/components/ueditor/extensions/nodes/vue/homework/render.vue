@@ -1,5 +1,5 @@
 <template>
-    <div class="homework-render w-full space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 relative"
+    <div class="homework-render w-full space-y-4 p-4 border border-amber-400 dark:border-amber-500 rounded-lg bg-white dark:bg-gray-900 relative"
         :data-homework-id="homeworkId"
         @mouseenter.once="fetchRecord">
         <!-- 加载中 -->

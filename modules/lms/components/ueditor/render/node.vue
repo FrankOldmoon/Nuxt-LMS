@@ -2,16 +2,11 @@
   <TextRenderer v-if="node.type === 'text'" :text="node.text" :marks="node.marks" />
   <template v-else-if="node.type === 'doc'">
     <template v-for="(child, index) in node.content" :key="index">
+      <!-- 仅 codeBlock 参与阅读追踪，其它块级节点直接渲染不监控 -->
       <RenderNode
-        v-if="!trackReading || child.type === 'heading' || child.type === 'vue'"
+        v-if="!trackReading || child.type === 'heading' || child.type === 'vue' || child.type !== 'codeBlock'"
         :node="child"
         :course-id="courseId"
-      />
-      <RenderNode
-        v-else-if="isListType(child.type)"
-        :node="child"
-        :course-id="courseId"
-        :block-key-prefix="String(index)"
       />
       <ReadingBlock v-else :node="child" :block-key="String(index)">
         <RenderNode :node="child" :course-id="courseId" />
@@ -46,11 +41,6 @@ const props = defineProps({
 })
 
 const { currentComponent } = useNodeDispatcher(props)
-
-const LIST_TYPES = new Set(['bulletList', 'orderedList', 'taskList'])
-function isListType(type) {
-  return LIST_TYPES.has(type)
-}
 
 // 仅在显式传入时透传 blockKeyPrefix / blockKey，避免非列表组件的属性穿透
 const componentProps = computed(() => {

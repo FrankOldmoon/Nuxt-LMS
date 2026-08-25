@@ -3,7 +3,7 @@
     <div v-if="!canShow" class="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-center text-gray-400 text-sm">
         {{ placeholderText }}
     </div>
-    <div v-else class="race-render w-full p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 relative">
+    <div v-else class="race-render w-full p-4 border border-amber-400 dark:border-amber-500 rounded-lg bg-white dark:bg-gray-900 relative">
         <!-- 加载中 -->
         <div v-if="pending" class="flex items-center justify-center py-6 text-gray-400">
             <span>{{ t('race.loading') }}</span>

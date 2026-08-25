@@ -90,7 +90,7 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
     const containerBorderClass = computed(() => {
         if (submitted.value && isCorrect.value) return 'border-green-400 dark:border-green-500'
         if (submitted.value && !isCorrect.value) return 'border-red-400 dark:border-red-500'
-        return 'border-gray-200 dark:border-gray-700'
+        return 'border-amber-400 dark:border-amber-500'
     })
 
     // provide 给子组件

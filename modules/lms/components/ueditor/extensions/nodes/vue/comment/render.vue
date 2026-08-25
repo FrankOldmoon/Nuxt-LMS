@@ -1,5 +1,5 @@
 <template>
-    <div class="comment-render w-full space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 relative"
+    <div class="comment-render w-full space-y-4 p-4 border border-amber-400 dark:border-amber-500 rounded-lg bg-white dark:bg-gray-900 relative"
         :data-comment-id="commentId">
         <!-- 评论未找到 -->
         <div v-if="!comment" class="text-center py-6 text-gray-400">

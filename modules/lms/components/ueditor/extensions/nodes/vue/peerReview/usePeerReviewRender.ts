@@ -14,9 +14,21 @@ export function usePeerReviewRender(props: any, emit: any) {
 
     const loading = ref(false)
     const config = ref<any>(null)
-    const students = ref<any[]>([])
     const myScores = ref<Record<number, Record<string, number>>>({})
     const isTeacher = ref(false)
+
+    // 班级名单来自 default_class（参考 race 拓展）
+    const { user } = useAuth()
+    const classId = computed(() => user.value?.defaultClass?.id || user.value?.classId || 0)
+    const { students: classStudents, fetchUsers } = useClassUsers()
+    // 适配 peerReview 预期的学生结构（userId/name/avatarImg）
+    const students = computed(() =>
+        classStudents.value.map((s: any) => ({
+            userId: s.id,
+            name: s.name,
+            avatarImg: s.avatarImg,
+        })),
+    )
 
     // 学生评价面板状态
     const selectedTarget = ref<any>(null)
@@ -35,10 +47,11 @@ export function usePeerReviewRender(props: any, emit: any) {
         if (!peerCid.value || !effectiveCourseId.value) return
         loading.value = true
         try {
+            // 拉取 default_class 班级名单（参考 race 拓展 ~useClassUsers）
+            if (classId.value) await fetchUsers(Number(classId.value), effectiveCourseId.value)
             const data = await cRequest(`/api/peer-reviews/show?course_id=${effectiveCourseId.value}&cid=${peerCid.value}`)
             if (!data) return
             config.value = data.config || null
-            students.value = data.students || []
             myScores.value = data.myScores || {}
             isTeacher.value = !!data.isTeacher
         } catch {
@@ -48,7 +61,7 @@ export function usePeerReviewRender(props: any, emit: any) {
         }
     }
 
-    watch([peerCid, effectiveCourseId], load, { immediate: true })
+    watch([peerCid, effectiveCourseId, classId], load, { immediate: true })
 
     /** 选中某学生开始评价 */
     function openRating(student: any) {
