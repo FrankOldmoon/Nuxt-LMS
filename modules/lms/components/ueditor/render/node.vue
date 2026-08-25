@@ -2,9 +2,9 @@
   <TextRenderer v-if="node.type === 'text'" :text="node.text" :marks="node.marks" />
   <template v-else-if="node.type === 'doc'">
     <template v-for="(child, index) in node.content" :key="index">
-      <!-- 仅 codeBlock 参与阅读追踪，其它块级节点直接渲染不监控 -->
+      <!-- 仅 codeBlock / blockquote 参与阅读追踪，其它块级节点直接渲染不监控 -->
       <RenderNode
-        v-if="!trackReading || child.type === 'heading' || child.type === 'vue' || child.type !== 'codeBlock'"
+        v-if="!trackReading || child.type === 'heading' || child.type === 'vue' || (child.type !== 'codeBlock' && child.type !== 'blockquote')"
         :node="child"
         :course-id="courseId"
       />
