@@ -27,6 +27,11 @@ beforeEach(async () => {
       isCourseTeacher: (cid: number) => cid === 5,
     }
   }
+  // 桩 useAuthLms（auto-import from lms）
+  ;(globalThis as any).useAuthLms = () => ({
+    isCourseTeacher: (cid: number) => cid === 5,
+    isCourseEditor: (cid: number) => cid === 5,
+  })
   // 桩 useClassUsers（auto-import from lms）
   const studentsRef = ref<any[]>([])
   ;(globalThis as any).useClassUsers = () => ({

@@ -10,8 +10,9 @@ import { computed, onBeforeUnmount, ref } from 'vue'
  * - 所属 heading 已完成（sticky）：不再高亮、也不再启动计时
  *
  * @param blockKey 块 key，形如 "3"（顶层块）或 "3.1"（列表项）
+ * @param instant 为 true 时 hover 进入即标记已读（用于无可监控块的标题，hover 一瞬间即完成）
  */
-export function useReadingTracker(blockKey: string) {
+export function useReadingTracker(blockKey: string, instant = false) {
   const tracker = useChapterTask()
 
   const visited = computed(() => !!tracker?.isBlockRead(blockKey))
@@ -26,6 +27,10 @@ export function useReadingTracker(blockKey: string) {
   function onEnter() {
     isHovering.value = true
     if (!tracker || headingDone.value || visited.value) return
+    if (instant) {
+      tracker.markBlockRead(blockKey)
+      return
+    }
     if (timer) clearTimeout(timer)
     timer = setTimeout(() => {
       tracker.markBlockRead(blockKey)

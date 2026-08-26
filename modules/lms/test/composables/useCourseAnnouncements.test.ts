@@ -25,6 +25,11 @@ beforeEach(async () => {
       isCourseEditor: (cid: number) => cid === 5,
     }
   }
+  // 桩 useAuthLms（auto-import from lms）
+  ;(globalThis as any).useAuthLms = () => ({
+    isCourseTeacher: (cid: number) => cid === 5,
+    isCourseEditor: (cid: number) => cid === 5,
+  })
   // renderContent 依赖 auto-import 的 extractText：用真实实现
   const { extractText } = await import('../../utils/tiptapText')
   ;(globalThis as any).extractText = extractText

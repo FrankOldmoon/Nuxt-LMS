@@ -2,15 +2,18 @@
   <TextRenderer v-if="node.type === 'text'" :text="node.text" :marks="node.marks" />
   <template v-else-if="node.type === 'doc'">
     <template v-for="(child, index) in node.content" :key="index">
-      <!-- 仅 codeBlock / blockquote 参与阅读追踪，其它块级节点直接渲染不监控 -->
-      <RenderNode
-        v-if="!trackReading || child.type === 'heading' || child.type === 'vue' || (child.type !== 'codeBlock' && child.type !== 'blockquote')"
-        :node="child"
-        :course-id="courseId"
-      />
-      <ReadingBlock v-else :node="child" :block-key="String(index)">
+      <!-- codeBlock / blockquote 参与阅读追踪（hover 3s 已读） -->
+      <ReadingBlock v-if="trackReading && (child.type === 'codeBlock' || child.type === 'blockquote')"
+        :node="child" :block-key="String(index)">
         <RenderNode :node="child" :course-id="courseId" />
       </ReadingBlock>
+      <!-- 无可监控块标题：hover 一瞬间即完成 -->
+      <ReadingBlock v-else-if="trackReading && isAutoCompleteHeading(child, index)" :node="child"
+        :block-key="String(index)" instant>
+        <RenderNode :node="child" :course-id="courseId" />
+      </ReadingBlock>
+      <!-- 其余块级节点直接渲染不监控 -->
+      <RenderNode v-else :node="child" :course-id="courseId" />
     </template>
   </template>
 
@@ -41,6 +44,21 @@ const props = defineProps({
 })
 
 const { currentComponent } = useNodeDispatcher(props)
+
+// 无可监控块（codeBlock/blockquote）的标题：hover 一瞬间即完成
+// 判断依据：该标题到下一个标题之间没有 codeBlock / blockquote（与 useChapterTask.blockLayout 一致）
+function isAutoCompleteHeading(child, index) {
+  if (child.type !== 'heading') return false
+  if (!child.attrs?.id && !child.attrs?.['data-toc-id']) return false
+  const blocks = props.node.content || []
+  for (let i = index + 1; i < blocks.length; i++) {
+    const c = blocks[i]
+    if (!c) continue
+    if (c.type === 'heading') break
+    if (c.type === 'codeBlock' || c.type === 'blockquote') return false
+  }
+  return true
+}
 
 // 仅在显式传入时透传 blockKeyPrefix / blockKey，避免非列表组件的属性穿透
 const componentProps = computed(() => {

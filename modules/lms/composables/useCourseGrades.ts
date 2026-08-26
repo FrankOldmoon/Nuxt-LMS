@@ -77,12 +77,13 @@ export function useCourseGrades(
   const { t } = useI18n()
   const { students, fetchUsers } = useClassUsers()
   const auth = useAuth()
+  const { isCourseTeacher } = useAuthLms()
   const toast = useToast()
 
   // 是否可编辑（教师或管理员）
   const canEdit = computed(() => {
     if (auth.hasRole('admin')) return true
-    return props.courseId ? auth.isCourseTeacher(Number(props.courseId)) : false
+    return props.courseId ? isCourseTeacher(Number(props.courseId)) : false
   })
 
   const rows = ref<any[]>([])

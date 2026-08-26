@@ -20,7 +20,8 @@ export function useCourseAnnouncements(
   isOpen: Ref<boolean>,
 ) {
   const { t } = useI18n()
-  const { hasRole, isCourseTeacher } = useAuth()
+  const { hasRole } = useAuth()
+  const { isCourseTeacher } = useAuthLms()
   const toast = useToast()
 
   // 响应式状态

@@ -94,7 +94,8 @@ describe('composables/useChapterTask', () => {
     expect(ctx.nodeStatus.value['question:100']).toBe(true)
   })
 
-  it('reportNodeDone 标记完所有任务后 heading 完成（无阅读块时）', async () => {
+  it('reportNodeDone 标记完所有任务 + 读取标题后 heading 完成（无可监控块时）', async () => {
+    vi.useFakeTimers()
     const { setupChapterTask } = await import('../../composables/useChapterTask')
     const content = ref(makeContent(
       [{ type: 'heading', attrs: { id: 'h1', level: 2 }, content: [{ type: 'text', text: 'H1' }] }],
@@ -106,8 +107,12 @@ describe('composables/useChapterTask', () => {
       courseId: ref(1),
     })
     ctx.reportNodeDone('question', 100, true)
-    // 无阅读块 → 立即完成
+    // 标题下无可监控块 → 需读取标题自身（key='0'）才完成
+    expect(ctx.isHeadingDone('h1')).toBe(false)
+    ctx.markBlockRead('0')
+    await vi.advanceTimersByTimeAsync(1000)
     expect(ctx.isHeadingDone('h1')).toBe(true)
+    vi.useRealTimers()
   })
 
   it('markBlockRead 标记块已读', async () => {
@@ -130,7 +135,7 @@ describe('composables/useChapterTask', () => {
     const { setupChapterTask } = await import('../../composables/useChapterTask')
     const content = ref(makeContent(
       [{ type: 'heading', attrs: { id: 'h1', level: 2 }, content: [{ type: 'text', text: 'H1' }] }],
-      [{ type: 'paragraph', content: [{ type: 'text', text: 'para' }] }],
+      [{ type: 'codeBlock', content: [{ type: 'text', text: 'code' }] }],
     ))
     const ctx = setupChapterTask({
       content,
@@ -146,7 +151,7 @@ describe('composables/useChapterTask', () => {
     const { setupChapterTask } = await import('../../composables/useChapterTask')
     const content = ref(makeContent(
       [{ type: 'heading', attrs: { id: 'h1', level: 2 }, content: [{ type: 'text', text: 'H1' }] }],
-      [{ type: 'paragraph', content: [{ type: 'text', text: 'para' }] }],
+      [{ type: 'codeBlock', content: [{ type: 'text', text: 'code' }] }],
     ))
     const ctx = setupChapterTask({
       content,
@@ -158,6 +163,7 @@ describe('composables/useChapterTask', () => {
   })
 
   it('所有 heading 完成时 isPass=true', async () => {
+    vi.useFakeTimers()
     const { setupChapterTask } = await import('../../composables/useChapterTask')
     const content = ref(makeContent(
       [{ type: 'heading', attrs: { id: 'h1', level: 2 }, content: [{ type: 'text', text: 'H1' }] }],
@@ -168,11 +174,16 @@ describe('composables/useChapterTask', () => {
       chapterId: ref(1),
       courseId: ref(1),
     })
+    // 标题下无 codeBlock/blockquote → 需读取标题自身（key='0')
     ctx.reportNodeDone('question', 100, true)
+    ctx.markBlockRead('0')
+    await vi.advanceTimersByTimeAsync(1000)
     expect(ctx.isPass.value).toBe(true)
+    vi.useRealTimers()
   })
 
   it('sticky：已完成的 heading 不回退', async () => {
+    vi.useFakeTimers()
     const { setupChapterTask } = await import('../../composables/useChapterTask')
     const content = ref(makeContent(
       [{ type: 'heading', attrs: { id: 'h1', level: 2 }, content: [{ type: 'text', text: 'H1' }] }],
@@ -184,11 +195,14 @@ describe('composables/useChapterTask', () => {
       courseId: ref(1),
     })
     ctx.reportNodeDone('question', 100, true)
+    ctx.markBlockRead('0')
+    await vi.advanceTimersByTimeAsync(1000)
     expect(ctx.isHeadingDone('h1')).toBe(true)
     // 取消完成状态
     ctx.reportNodeDone('question', 100, false)
     // sticky：不回退
     expect(ctx.isHeadingDone('h1')).toBe(true)
+    vi.useRealTimers()
   })
 
   it('空段落不纳入阅读追踪', async () => {
@@ -212,18 +226,13 @@ describe('composables/useChapterTask', () => {
     expect(ctx.isBlockRead('1')).toBe(false)
   })
 
-  it('列表项作为单独块追踪', async () => {
+  it('blockquote 作为单独块追踪', async () => {
     const { setupChapterTask } = await import('../../composables/useChapterTask')
     const content = ref(makeContent(
       [{ type: 'heading', attrs: { id: 'h1', level: 2 }, content: [{ type: 'text', text: 'H1' }] }],
       [
-        {
-          type: 'bulletList',
-          content: [
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'a' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'b' }] }] },
-          ],
-        },
+        { type: 'blockquote', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'a' }] }] },
+        { type: 'blockquote', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'b' }] }] },
       ],
     ))
     const ctx = setupChapterTask({
@@ -231,12 +240,33 @@ describe('composables/useChapterTask', () => {
       chapterId: ref(1),
       courseId: ref(1),
     })
-    // 列表第 0 项 key 为 "1.0"，第 1 项 key 为 "1.1"（topIndex=1）
-    expect(ctx.blockHeadingOf('1.0')).toBe('h1')
-    expect(ctx.blockHeadingOf('1.1')).toBe('h1')
-    ctx.markBlockRead('1.0')
-    expect(ctx.isBlockRead('1.0')).toBe(true)
-    expect(ctx.isBlockRead('1.1')).toBe(false)
+    // 顶层块 index 1、2 分别是两个 blockquote
+    expect(ctx.blockHeadingOf('1')).toBe('h1')
+    expect(ctx.blockHeadingOf('2')).toBe('h1')
+    ctx.markBlockRead('1')
+    expect(ctx.isBlockRead('1')).toBe(true)
+    expect(ctx.isBlockRead('2')).toBe(false)
+  })
+
+  it('无可监控块的标题：自身作为可阅读块，读取后完成', async () => {
+    vi.useFakeTimers()
+    const { setupChapterTask } = await import('../../composables/useChapterTask')
+    const content = ref(makeContent([
+      { type: 'heading', attrs: { id: 'auto', level: 2 }, content: [{ type: 'text', text: 'A' }] },
+    ]))
+    const ctx = setupChapterTask({
+      content,
+      chapterId: ref(1),
+      courseId: ref(1),
+    })
+    // 标题自身 key 为其顶层块 index（0），尚未读取 → 未完成
+    expect(ctx.blockHeadingOf('0')).toBe('auto')
+    expect(ctx.isHeadingDone('auto')).toBe(false)
+    // hover(读取)标题自身后完成
+    ctx.markBlockRead('0')
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(ctx.isHeadingDone('auto')).toBe(true)
+    vi.useRealTimers()
   })
 
   it('initialTaskStatus 初始化已完成 heading', async () => {
@@ -263,7 +293,7 @@ describe('composables/useChapterTask', () => {
     const { setupChapterTask } = await import('../../composables/useChapterTask')
     const content = ref(makeContent(
       [{ type: 'heading', attrs: { id: 'h1', level: 2 }, content: [{ type: 'text', text: 'H1' }] }],
-      [{ type: 'paragraph', content: [{ type: 'text', text: 'only block' }] }],
+      [{ type: 'codeBlock', content: [{ type: 'text', text: 'only block' }] }],
     ))
     const ctx = setupChapterTask({
       content,

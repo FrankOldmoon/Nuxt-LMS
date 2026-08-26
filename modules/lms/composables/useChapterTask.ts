@@ -84,19 +84,10 @@ export function setupChapterTask(opts: {
   // ===== 顶层块布局：建立 blockKey → headingId 的映射 =====
   // 仅追踪需要 hover 阅读的块级内容（排除 heading 自身与 vue 互动节点）
   // vue 互动节点（question/homework/...）走 submit 上报路径，不计入阅读要求
-  // 列表节点（bulletList/orderedList/taskList）按 listItem/taskItem 拆分，
-  // 每个 <li> 单独作为一个可阅读块（逐行标黄），key 形如 "${topIndex}.${itemIndex}"
-  // 空段落（无文字、仅有 hardBreak/空白）不纳入追踪，否则用户无法 hover 导致卡住
-  const LIST_TYPES = new Set(['bulletList', 'orderedList', 'taskList'])
-  function isEmptyParagraph(node: any): boolean {
-    if (node.type !== 'paragraph') return false
-    if (!node.content || node.content.length === 0) return true
-    return node.content.every((child: any) => {
-      if (child.type === 'text') return !child.text || !child.text.trim()
-      if (child.type === 'hardBreak') return true
-      return false
-    })
-  }
+  // 阅读追踪范围与渲染端 node.vue 的 ReadingBlock 保持一致：
+  //   仅 codeBlock / blockquote 参与 hover 追踪；
+  //   其余块级内容（段落/图片/列表/表格/callout 等）直接渲染、不监控，
+  //   也不计入 heading 完成条件——否则这些无法被标记已读的块会卡住 heading 无法完成。
   const blockLayout = computed(() => {
     const byHeading: Record<string, string[]> = {}
     const blockToHeading: Record<string, string> = {}
@@ -105,6 +96,19 @@ export function setupChapterTask(opts: {
     const topBlocks: any[] = Array.isArray(opts.content.value?.content)
       ? opts.content.value.content
       : []
+    // 预先扫描：每个带 id 的顶层 heading，其之后（直到下一个 heading）是否有 codeBlock/blockquote
+    const trackedBelow = new Map<number, boolean>()
+    let lastHIndex = -1
+    for (let i = 0; i < topBlocks.length; i++) {
+      const c = topBlocks[i]
+      if (!c) continue
+      if (c.type === 'heading') {
+        const id = c.attrs?.id || c.attrs?.['data-toc-id']
+        lastHIndex = id ? i : lastHIndex
+      } else if (lastHIndex >= 0 && (c.type === 'codeBlock' || c.type === 'blockquote')) {
+        trackedBelow.set(lastHIndex, true)
+      }
+    }
     // 章节标题 h1（合成）作为初始当前 heading，其下的顶层块归属它
     let curHeading = String(opts.chapterId.value)
     topBlocks.forEach((child: any, index: number) => {
@@ -112,20 +116,17 @@ export function setupChapterTask(opts: {
       if (child.type === 'heading') {
         const id = child.attrs?.id || child.attrs?.['data-toc-id']
         if (id) curHeading = String(id)
+        // 无受监控阅读块的标题：自身作为可阅读块，hover 标题即完成
+        if (id && !trackedBelow.get(index)) {
+          const key = String(index)
+          blockToHeading[key] = curHeading
+          ;(byHeading[curHeading] ||= []).push(key)
+        }
         return
       }
       if (child.type === 'vue') return // 互动组件走 submit 路径
-      if (isEmptyParagraph(child)) return // 空行不纳入 hover 追踪
-      // 列表：每个 listItem/taskItem 单独作为一个可阅读块
-      if (LIST_TYPES.has(child.type) && Array.isArray(child.content)) {
-        child.content.forEach((_item: any, j: number) => {
-          const key = `${index}.${j}`
-          blockToHeading[key] = curHeading
-          ;(byHeading[curHeading] ||= []).push(key)
-        })
-        return
-      }
-      // 其它块级内容（段落/图片/codeBlock/表格/callout 等）整体作为一个可阅读块
+      // 仅 codeBlock / blockquote 作为可阅读块
+      if (child.type !== 'codeBlock' && child.type !== 'blockquote') return
       const key = String(index)
       blockToHeading[key] = curHeading
       ;(byHeading[curHeading] ||= []).push(key)

@@ -5,7 +5,6 @@
         :src="attrs.src"
         controls
         preload="metadata"
-        crossorigin="anonymous"
         :style="videoStyle"
       ></video>
     </div>

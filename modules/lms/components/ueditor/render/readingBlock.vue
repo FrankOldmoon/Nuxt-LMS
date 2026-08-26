@@ -11,9 +11,11 @@
 const props = defineProps({
   node: { type: Object, required: true },
   blockKey: { type: String, required: true },
+  // instant=true 时 hover 进入即标记已读（无可监控块的标题）
+  instant: { type: Boolean, default: false },
 })
 
-const { shouldHighlight, headingDone, isHovering, onEnter, onLeave } = useReadingTracker(props.blockKey)
+const { shouldHighlight, headingDone, isHovering, onEnter, onLeave } = useReadingTracker(props.blockKey, props.instant)
 
 /**
  * 边框高亮规则（所有 node 一律用 box-shadow 边框，不再区分文字/非文字）：
