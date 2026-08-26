@@ -3,7 +3,8 @@
 </template>
 
 <script setup>
-const CDN_URL = 'https://unpkg.com/@umoteam/editor-external@latest'
+import katex from 'katex'
+import 'katex/dist/katex.min.css'
 
 const props = defineProps({
   node: { type: Object, required: true },
@@ -13,64 +14,22 @@ const isBlock = computed(() => props.node.type === 'blockMath')
 const latex = computed(() => props.node.attrs?.latex || '')
 const tag = computed(() => (isBlock.value ? 'div' : 'span'))
 
-// ---- CDN 资源加载 ----
-const loadCss = (url, id) =>
-  new Promise((resolve) => {
-    if (document.getElementById(id)) return resolve()
-    const link = document.createElement('link')
-    link.rel = 'stylesheet'
-    link.href = url
-    link.id = id
-    link.onload = resolve
-    link.onerror = resolve
-    document.head.appendChild(link)
+function renderKatex(source) {
+  return katex.renderToString(source, {
+    throwOnError: false,
+    displayMode: isBlock.value,
   })
-
-const loadScript = (url, id) =>
-  new Promise((resolve) => {
-    if (document.getElementById(id)) return resolve()
-    const script = document.createElement('script')
-    script.src = url
-    script.id = id
-    script.type = 'text/javascript'
-    script.onload = resolve
-    script.onerror = resolve
-    document.head.appendChild(script)
-  })
-
-const katexReady = ref(false)
-const checkKatex = () => {
-  if (typeof window !== 'undefined' && window.katex) {
-    katexReady.value = true
-    return true
-  }
-  return false
 }
 
-onMounted(async () => {
-  if (checkKatex()) return
-  await loadCss(`${CDN_URL}/libs/katex/katex.min.css`, 'katex-style')
-  await loadScript(`${CDN_URL}/libs/katex/katex.min.js`, 'katex-script')
-  if (checkKatex()) return
-  const interval = setInterval(() => {
-    if (checkKatex()) clearInterval(interval)
-  }, 200)
-  setTimeout(() => clearInterval(interval), 15000)
-})
-
 const html = computed(() => {
-  katexReady.value
-  if (typeof window !== 'undefined' && window.katex) {
-    try {
-      return window.katex.renderToString(latex.value, {
-        throwOnError: false,
-        displayMode: isBlock.value,
-      })
-    } catch {
-      /* ignore */
-    }
+  if (!latex.value) return ''
+  try {
+    return renderKatex(latex.value)
+  } catch (e) {
+    // 渲染出错时回退：若内容是已转义的 HTML，直接原样输出
+    if (latex.value.includes('&') && latex.value.includes(';')) return latex.value
+    return e?.message || ''
   }
-  return ''
 })
 
 const hasError = computed(() => !html.value)
@@ -82,3 +41,9 @@ const containerClass = computed(() =>
 )
 const dataType = computed(() => (isBlock.value ? 'block-math' : 'inline-math'))
 </script>
+
+<style scoped>
+.tiptap-mathematics-render :deep(.katex-display) {
+  margin: 0;
+}
+</style>

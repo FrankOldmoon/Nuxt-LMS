@@ -1,0 +1,199 @@
+// ============================================================
+// A LEVEL (9618) Pseudocode Examples —— 覆盖全部语法
+// 依据 Cambridge International AS & A Level Computer Science 9618 规范
+// 缩进 3 空格；IF...THEN 同行；WHILE 无 DO；DIV/MOD 中缀；
+// 常量用 =；过程/函数恒带括号；含 DATE、TYPE、BYREF/BYVAL、
+// & 拼接、随机文件、OOP（CLASS/NEW/INHERITS/SUPER）
+// ============================================================
+
+// --- 1. 变量声明与常量（DECLARE / CONSTANT = / DATE）---
+DECLARE Counter : INTEGER
+DECLARE TotalToPay : REAL
+DECLARE Initial : CHAR
+DECLARE PlayerName : STRING
+DECLARE GameOver : BOOLEAN
+DECLARE Today : DATE
+CONSTANT HourlyRate = 6.50
+CONSTANT DefaultText = "N/A"
+
+// --- 2. 赋值（←）---
+Counter <- 0
+Counter <- Counter + 1
+TotalToPay <- NumberOfHours * HourlyRate
+PlayerName <- "Ali"
+
+// --- 3. 算术运算（+ - * / 与中缀 DIV/MOD、& 字符串拼接）---
+DECLARE Q : INTEGER
+DECLARE Remainder : INTEGER
+Q <- 10 DIV 3
+Remainder <- 10 MOD 3
+DECLARE Message : STRING
+Message <- "Summer" & " " & "Pudding"
+
+// --- 4. 关系运算与逻辑运算（= < <= > >= <>  AND OR NOT）---
+DECLARE Pass : BOOLEAN
+Pass <- Score >= 50 AND Score <= 100
+Pass <- Score = 100
+Pass <- NOT (Score < 0 OR Score > 100)
+
+// --- 5. 字符串与数值函数（LENGTH/RIGHT/MID/LCASE/UCASE/INT/RAND）---
+OUTPUT LENGTH("Happy Days")
+OUTPUT RIGHT("ABCDEFGH", 3)
+OUTPUT MID("ABCDEFGH", 2, 3)
+OUTPUT LCASE('W')
+OUTPUT UCASE('h')
+OUTPUT INT(27.5415)
+OUTPUT RAND(87)
+
+// --- 6. 数组（一维 / 二维声明与访问）---
+DECLARE StudentNames : ARRAY[1:30] OF STRING
+DECLARE NoughtsAndCrosses : ARRAY[1:3, 1:3] OF CHAR
+StudentNames[1] <- "Ali"
+NoughtsAndCrosses[2,3] <- 'X'
+StudentNames[n+1] <- StudentNames[n]
+FOR Index <- 1 TO 30
+    StudentNames[Index] <- ""
+NEXT Index
+
+// --- 7. 输入与输出（INPUT / OUTPUT 多值逗号分隔）---
+INPUT Answer
+OUTPUT Score
+OUTPUT "You have ", Lives, " lives left"
+
+// --- 8. 选择：IF <cond> THEN 同行 / ELSE / ENDIF ---
+IF ChallengerScore > ChampionScore THEN
+    OUTPUT ChallengerName, " is the new champion"
+ELSE
+    OUTPUT ChampionName, " is still the champion"
+ENDIF
+
+// --- 9. 选择：CASE OF（TO 范围 + OTHERWISE :）---
+INPUT Score
+CASE OF Score
+    90 TO 100 : Grade <- "A*"
+    80 TO 89 : Grade <- "A"
+    70 TO 79 : Grade <- "B"
+    OTHERWISE : Grade <- "F"
+ENDCASE
+
+// --- 10. 迭代：FOR ... TO ... [STEP] ... NEXT（←）---
+FOR Row <- 1 TO 10
+    OUTPUT Row
+NEXT Row
+FOR Index <- 10 TO 1 STEP -1
+    OUTPUT Index
+NEXT Index
+
+// --- 11. 迭代：REPEAT ... UNTIL（后测）---
+REPEAT
+    OUTPUT "Please enter the password"
+    INPUT Password
+UNTIL Password = "Secret"
+
+// --- 12. 迭代：WHILE <cond>（无 DO）... ENDWHILE ---
+WHILE Number > 9
+    Number <- Number - 9
+ENDWHILE
+
+// --- 13. 过程：定义与调用（恒带括号）+ BYREF/BYVAL 参数 ---
+PROCEDURE Square(Size : INTEGER)
+    FOR Side <- 1 TO 4
+        CALL MoveForward(Size)
+        CALL Turn(90)
+    NEXT Side
+ENDPROCEDURE
+
+PROCEDURE DefaultSquare()
+    CALL Square(100)
+ENDPROCEDURE
+
+PROCEDURE SWAP(BYREF X : INTEGER, Y : INTEGER)
+    Temp <- X
+    X <- Y
+    Y <- Temp
+ENDPROCEDURE
+
+PROCEDURE SetValue(BYVAL V : INTEGER)
+    V <- V + 1
+ENDPROCEDURE
+
+CALL DefaultSquare()
+CALL Square(50)
+CALL SWAP(A, B)
+CALL SetValue(N)
+
+// --- 14. 函数：定义与调用（FUNCTION ... RETURNS / RETURN）---
+FUNCTION Max(Number1 : INTEGER, Number2 : INTEGER) RETURNS INTEGER
+    IF Number1 > Number2 THEN
+        RETURN Number1
+    ELSE
+        RETURN Number2
+    ENDIF
+ENDFUNCTION
+OUTPUT "Penalty Fine = ", Max(10, Distance * 2)
+
+// --- 15. 用户定义数据类型（TYPE：枚举/指针/记录/集合 + DEFINE）---
+TYPE Season = (Spring, Summer, Autumn, Winter)
+TYPE TIntPointer = ^INTEGER
+TYPE StudentRecord
+    DECLARE LastName : STRING
+    DECLARE FirstName : STRING
+    DECLARE DateOfBirth : DATE
+    DECLARE YearGroup : INTEGER
+ENDTYPE
+TYPE LetterSet = SET OF CHAR
+DEFINE Vowels ('A','E','I','O','U') : LetterSet
+
+DECLARE Pupil1 : StudentRecord
+DECLARE MyPointer : TIntPointer
+Pupil1.LastName <- "Johnson"
+Pupil1.YearGroup <- 6
+ThisSeason <- Spring
+MyPointer <- ^ThisSeason
+NextSeason <- MyPointer^ + 1
+
+// --- 16. 文件处理：文本文件（READ/WRITE/APPEND + EOF）---
+DECLARE LineOfText : STRING
+OPENFILE "FileA.txt" FOR READ
+OPENFILE "FileB.txt" FOR WRITE
+WHILE NOT EOF("FileA.txt")
+    READFILE "FileA.txt", LineOfText
+    WRITEFILE "FileB.txt", LineOfText
+ENDWHILE
+CLOSEFILE "FileA.txt"
+CLOSEFILE "FileB.txt"
+
+// --- 17. 文件处理：随机文件（RANDOM/SEEK/GETRECORD/PUTRECORD）---
+DECLARE Pupil : StudentRecord
+DECLARE NewPupil : StudentRecord
+DECLARE Position : INTEGER
+OPENFILE "StudentFile.Dat" FOR RANDOM
+FOR Position <- 20 TO 10 STEP -1
+    SEEK "StudentFile.Dat", Position
+    GETRECORD "StudentFile.Dat", Pupil
+    SEEK "StudentFile.Dat", Position + 1
+    PUTRECORD "StudentFile.Dat", Pupil
+NEXT Position
+SEEK "StudentFile.Dat", 10
+PUTRECORD "StudentFile.Dat", NewPupil
+CLOSEFILE "StudentFile.Dat"
+
+// --- 18. 面向对象（CLASS/PUBLIC/PRIVATE/NEW/INHERITS/SUPER/对象方法）---
+CLASS Pet
+    PRIVATE Name : STRING
+    PUBLIC PROCEDURE NEW(GivenName : STRING)
+        Name <- GivenName
+    ENDPROCEDURE
+ENDCLASS
+
+CLASS Cat INHERITS Pet
+    PRIVATE Breed : INTEGER
+    PUBLIC PROCEDURE NEW(GivenName : STRING, GivenBreed : STRING)
+        SUPER.NEW(GivenName)
+        Breed <- GivenBreed
+    ENDPROCEDURE
+ENDCLASS
+
+MyCat <- NEW Cat("Kitty", "Shorthaired")
+Player.SetAttempts(5)
+OUTPUT Player.GetAttempts()

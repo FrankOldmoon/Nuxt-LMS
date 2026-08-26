@@ -1,0 +1,128 @@
+// ============================================================
+// IGCSE (0478) Pseudocode Examples —— 覆盖全部语法
+// 依据 Cambridge IGCSE Computer Science 0478 规范
+// 缩进 4 空格；THEN 单独一行；WHILE...DO；DIV/MOD 函数式；
+// 常量用 <-；无参过程不带括号
+// ============================================================
+
+// --- 1. 变量声明与常量（DECLARE / CONSTANT）---
+DECLARE Counter : INTEGER
+DECLARE TotalToPay : REAL
+DECLARE Initial : CHAR
+DECLARE PlayerName : STRING
+DECLARE GameOver : BOOLEAN
+CONSTANT HourlyRate <- 6.50
+CONSTANT DefaultText <- "N/A"
+
+// --- 2. 赋值（←）---
+Counter <- 0
+Counter <- Counter + 1
+TotalToPay <- NumberOfHours * HourlyRate
+PlayerName <- "Ali"
+
+// --- 3. 算术运算（+ - * / ^ 与函数式 DIV/MOD）---
+DECLARE Answer : INTEGER
+Answer <- (2 + 3) * 4 - 6 / 2
+Answer <- Radius ^ 2
+Answer <- DIV(10, 3)
+Answer <- MOD(10, 3)
+Answer <- Score * 100 / MaxMark
+
+// --- 4. 关系运算与逻辑运算（= < <= > >= <>  AND OR NOT）---
+DECLARE Pass : BOOLEAN
+Pass <- Score >= 50 AND Score <= 100
+Pass <- Score = 100
+Pass <- Score <> 0
+Pass <- NOT (Score < 0 OR Score > 100)
+
+// --- 5. 字符串函数与库函数（LENGTH/LCASE/UCASE/SUBSTRING/ROUND/RANDOM）---
+DECLARE Len : INTEGER
+DECLARE Text : STRING
+Len <- LENGTH("Happy Days")
+Text <- LCASE('W')
+Text <- UCASE("happy")
+Text <- SUBSTRING("Happy Days", 1, 5)
+DECLARE R : REAL
+R <- ROUND(RANDOM() * 6, 0)
+
+// --- 6. 数组（一维 / 二维声明与访问）---
+DECLARE StudentNames : ARRAY[1:30] OF STRING
+DECLARE NoughtsAndCrosses : ARRAY[1:3, 1:3] OF CHAR
+StudentNames[1] <- "Ali"
+NoughtsAndCrosses[2,3] <- 'X'
+StudentNames[n+1] <- StudentNames[n]
+FOR Index <- 1 TO 30
+    StudentNames[Index] <- ""
+NEXT Index
+
+// --- 7. 输入与输出（INPUT / OUTPUT 多值逗号分隔）---
+INPUT Answer
+OUTPUT Score
+OUTPUT "You have ", Lives, " lives left"
+
+// --- 8. 选择：IF / ELSE / ENDIF（THEN 单独一行）---
+IF ChallengerScore > ChampionScore
+  THEN
+    OUTPUT ChallengerName, " is the new champion"
+  ELSE
+    OUTPUT ChampionName, " is still the champion"
+ENDIF
+
+// --- 9. 选择：CASE OF / OTHERWISE / ENDCASE ---
+INPUT Move
+CASE OF Move
+  'W' : Position <- Position - 10
+  'E' : Position <- Position + 10
+  'A' : Position <- Position - 1
+  'D' : Position <- Position + 1
+  OTHERWISE OUTPUT "Beep"
+ENDCASE
+
+// --- 10. 迭代：FOR ... TO ... [STEP] ... NEXT ---
+FOR Row <- 1 TO 10
+    OUTPUT Row
+NEXT Row
+FOR Index <- 10 TO 1 STEP -1
+    OUTPUT Index
+NEXT Index
+
+// --- 11. 迭代：REPEAT ... UNTIL（后测）---
+REPEAT
+    OUTPUT "Please enter the password"
+    INPUT Password
+UNTIL Password = "Secret"
+
+// --- 12. 迭代：WHILE ... DO ... ENDWHILE（前测）---
+WHILE Number > 9 DO
+    Number <- Number - 9
+ENDWHILE
+
+// --- 13. 过程：定义与调用（PROCEDURE / CALL，无参可无括号）---
+PROCEDURE Line(Size : INTEGER)
+    DECLARE Length : INTEGER
+    FOR Length <- 1 TO Size
+        OUTPUT '-'
+    NEXT Length
+ENDPROCEDURE
+
+PROCEDURE DefaultLine
+    CALL Line(60)
+ENDPROCEDURE
+
+CALL DefaultLine
+CALL Line(MySize)
+
+// --- 14. 函数：定义与调用（FUNCTION ... RETURNS / RETURN）---
+FUNCTION SumSquare(Number1 : INTEGER, Number2 : INTEGER) RETURNS INTEGER
+    RETURN Number1 * Number1 + Number2 * Number2
+ENDFUNCTION
+OUTPUT "Sum of squares = ", SumSquare(10, 20)
+
+// --- 15. 文件处理（OPENFILE/READFILE/WRITEFILE/CLOSEFILE）---
+DECLARE LineOfText : STRING
+OPENFILE "FileA.txt" FOR READ
+OPENFILE "FileB.txt" FOR WRITE
+READFILE "FileA.txt", LineOfText
+WRITEFILE "FileB.txt", LineOfText
+CLOSEFILE "FileA.txt"
+CLOSEFILE "FileB.txt"

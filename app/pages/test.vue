@@ -1,7 +1,9 @@
 <template>
-    <UButtons color="warning">112311</UButtons>11
+    
+        <logicGate/>
+    
 </template>
 
 <script setup lang="ts">
-const UButtons = resolveComponent('UButton')
+
 </script>
