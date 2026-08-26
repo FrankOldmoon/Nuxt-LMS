@@ -300,6 +300,16 @@ export function markdownToTiptap(markdown: string): TiptapNode {
     // 开围栏的反引号数量（CommonMark：闭围栏须至少同等数量）
     let codeFenceLen = 0;
 
+    // 段落：连续非空行各自解析行内语法，行与行之间用 hardBreak 连接（一个换行即换行）
+    function parseParaLines(lines: string[]): TiptapNode[] {
+      const content: TiptapNode[] = [];
+      lines.forEach((ln, idx) => {
+        if (idx > 0) content.push({ type: 'hardBreak' });
+        content.push(...parseInline(ln));
+      });
+      return content;
+    }
+
     while (i < lines.length) {
       const line = lines[i];
 
@@ -456,7 +466,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
       }
       blocks.push({
         type: 'paragraph',
-        content: parseInline(paraLines.join(' '))
+        content: parseParaLines(paraLines)
       });
     }
 

@@ -6,10 +6,17 @@ export interface HtmlRenderProps {
 
 export function useHtmlRender(props: HtmlRenderProps) {
     const contentBox = ref<any>(null)
-    const iframeHeight = ref(500)
+    const autoHeight = ref(500)
     const isFullscreen = ref(false)
 
     const userHtml = computed(() => props.node?.attrs?.content || '')
+    // 手动设置的高度：>0 时覆盖自适应高度
+    const fixedHeight = computed(() => {
+      const h = Number(props.node?.attrs?.height)
+      return h > 0 ? h : 0
+    })
+    // 展示高度 = 手动高度或内容自适应高度
+    const iframeHeight = computed(() => fixedHeight.value > 0 ? fixedHeight.value : autoHeight.value)
 
     /** 构造 iframe srcdoc：包裹为基础 HTML 文档 + 高度上报脚本 */
     const iframeContent = computed(() => {
@@ -48,7 +55,7 @@ body { margin: 0; padding: 8px; font-family: -apple-system, BlinkMacSystemFont, 
 
     function onMessage(e) {
       if (e.data?.type === 'html-node-height' && e.data.height > 0) {
-        iframeHeight.value = e.data.height
+        autoHeight.value = e.data.height
       }
     }
 

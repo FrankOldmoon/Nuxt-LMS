@@ -13,6 +13,7 @@ export default Node.create({
     return {
       content: '',
       type: 'vue',
+      height: { default: null, renderHTML: () => null },
     }
   },
 

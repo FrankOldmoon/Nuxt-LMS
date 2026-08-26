@@ -265,6 +265,19 @@ describe('utils/markdown - markdownToTiptap', () => {
     expect(result.content![0].content.length).toBeGreaterThan(0)
   })
 
+  it('单个换行即换行（行间插入 hardBreak，无需空行/两个换行）', async () => {
+    const { markdownToTiptap } = await import('../../utils/markdown')
+    const result = markdownToTiptap('第一行\n第二行\n第三行')
+    expect(result.content).toHaveLength(1)
+    expect(result.content![0].type).toBe('paragraph')
+    const content = result.content![0].content || []
+    // 3 行文本 + 2 个 hardBreak
+    const texts = content.filter((n: any) => n.type === 'text').map((n: any) => n.text)
+    const breaks = content.filter((n: any) => n.type === 'hardBreak')
+    expect(texts).toEqual(['第一行', '第二行', '第三行'])
+    expect(breaks).toHaveLength(2)
+  })
+
   it('多个段落分隔（空行）', async () => {
     const { markdownToTiptap } = await import('../../utils/markdown')
     const result = markdownToTiptap('段1\n\n段2\n\n段3')

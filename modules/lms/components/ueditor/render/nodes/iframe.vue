@@ -87,7 +87,8 @@ function openInNewTab() {
 }
 
 function onFullscreenChange() {
-  isFullscreen.value = !!document.fullscreenElement
+  // 仅当本 iframe 容器处于全屏时才判定为全屏；否则（其它元素全屏时）保持普通高度，避免 iframe 缩到很小
+  isFullscreen.value = containerRef.value === document.fullscreenElement
 }
 
 onMounted(() => {

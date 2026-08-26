@@ -741,7 +741,9 @@
     },
     "html": {
       "title": "Manage HTML Content",
-      "insert": "Insert"
+      "insert": "Insert",
+      "height": "Height",
+      "heightPlaceholder": "Auto-fit content (leave blank)"
     },
     "json": {
       "title": "Manage JSON Content",
