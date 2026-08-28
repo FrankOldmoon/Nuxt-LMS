@@ -8,10 +8,8 @@ useHead(() => ({
 // Global startup access password
 // Hostnames that are IP addresses (e.g. 192.168.x.x, IPv6) or localhost are
 // allowed in without a password; other cases (e.g. domain access) require the
-// access password before the app is formally loaded.
-const appUnlocked = ref(false)
-const unlockKey = 'lms_startup_unlocked'
-
+// access password before the app is formally loaded. The password is verified
+// on the SERVER side; the client only asks the server whether it is unlocked.
 const isIpAddress = (hostname: string) => {
   if (!hostname) return false
   const host = hostname.replace(/^\[|\]$/g, '')
@@ -24,14 +22,30 @@ const isIpAddress = (hostname: string) => {
   return false
 }
 
-onMounted(() => {
-  if (isIpAddress(window.location.hostname) || sessionStorage.getItem(unlockKey) === '1') {
-    appUnlocked.value = true
+// `useRequestURL()` resolves the same hostname on both server and client, so
+// IP/localhost visitors are unlocked synchronously at render time and SSR
+// renders the homepage directly - no password-gate flash before entry.
+const requestHost = useRequestURL().hostname
+const appUnlocked = ref(isIpAddress(requestHost))
+
+onMounted(async () => {
+  // IP/localhost are already unlocked via the initial value; nothing to do.
+  if (appUnlocked.value) return
+  // Non-IP/localhost access: confirm unlock status with the server via the
+  // HttpOnly startup cookie. The gate stays locked until the server confirms.
+  try {
+    const res = await $fetch<{ data: { unlocked: boolean } }>('/api/auth/startup', {
+      credentials: 'include',
+    })
+    if (res.data?.unlocked) {
+      appUnlocked.value = true
+    }
+  } catch {
+    // On error, keep locked and show the gate.
   }
 })
 
 function handleUnlocked() {
-  sessionStorage.setItem(unlockKey, '1')
   appUnlocked.value = true
 }
 </script>

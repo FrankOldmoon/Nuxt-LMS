@@ -40,18 +40,30 @@ defineOptions({
 
 const emit = defineEmits<{ unlocked: [] }>()
 
-const STARTUP_PASSWORD = 'Minxin1314'
 const password = ref('')
 const loading = ref(false)
 const error = ref('')
 
-function verify() {
-  if (password.value === STARTUP_PASSWORD) {
-    loading.value = true
-    emit('unlocked')
-    return
+// 密码校验在服务端完成，前端不保存/不泄露密码
+async function verify() {
+  if (!password.value) return
+  loading.value = true
+  error.value = ''
+  try {
+    const res = await $fetch<{ success: boolean; msg?: string }>('/api/auth/startup', {
+      method: 'POST',
+      body: { password: password.value },
+    })
+    if (res.success) {
+      emit('unlocked')
+      return
+    }
+    error.value = res.msg || 'Incorrect access password'
+    password.value = ''
+  } catch {
+    error.value = 'Verification failed, please try again'
+  } finally {
+    loading.value = false
   }
-  error.value = 'Incorrect access password'
-  password.value = ''
 }
 </script>
