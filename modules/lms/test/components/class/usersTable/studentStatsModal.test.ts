@@ -35,7 +35,7 @@ function setupComposables(overrides: any = {}) {
     stats: ref({ questionCount: 0, homeworkCount: 0, quizCount: 0, raceCount: 0, commentCount: 0 }),
     score: ref({
       questionScore: 0, homeworkScore: 0, quizScore: 0,
-      raceScore: 0, commentScore: 0, marksScore: 0, extraScore: 0,
+      raceScore: 0, commentScore: 0, altitudeScore: 0, externalScore: 0,
     }),
     statCards: ref([
       { label: 'Q', value: 1 },

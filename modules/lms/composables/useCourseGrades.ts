@@ -21,22 +21,23 @@ const DEFAULT_PERCENTS: Record<string, number> = {
   quizScore: 20,
   raceScore: 10,
   commentScore: 10,
-  marksScore: 20,
-  extraScore: 0,
+  altitudeScore: 20,
+  externalScore: 0,
 }
 
 export const GRADE_WEIGHT_KEYS = [
   'questionScore', 'homeworkScore', 'quizScore',
-  'raceScore', 'commentScore', 'marksScore', 'extraScore',
+  'raceScore', 'commentScore', 'altitudeScore', 'externalScore',
 ] as const
 
 export const DEFAULT_GRADE_CRITERIA = {
   weights: GRADE_WEIGHT_KEYS.map(key => ({ key, maxScore: 100, percent: DEFAULT_PERCENTS[key] })),
   levels: [
-    { letter: 'A', min: 90 },
-    { letter: 'B', min: 80 },
-    { letter: 'C', min: 70 },
-    { letter: 'D', min: 60 },
+    { letter: 'A', min: 85 },
+    { letter: 'B', min: 70 },
+    { letter: 'C', min: 60 },
+    { letter: 'D', min: 50 },
+    { letter: 'F', min: 0 },
   ],
 }
 
@@ -110,7 +111,7 @@ export function useCourseGrades(
     }
   }
 
-  // 额外列定义：group + grade(字母) + total(最终分) + progress(通过比) + 各项分数 + extraScore
+  // 额外列定义：group + grade(字母) + total(最终分) + progress(通过比) + 各项分数 + externalScore
   const extraColumns = computed(() => [
     {
       id: 'group',
@@ -166,14 +167,14 @@ export function useCourseGrades(
       sortingFn: (a: any, b: any) => (b.original.commentScore ?? 0) - (a.original.commentScore ?? 0),
     },
     {
-      id: 'marksScore',
-      header: t('coursePanel.marksScore'),
-      sortingFn: (a: any, b: any) => (b.original.marksScore ?? 0) - (a.original.marksScore ?? 0),
+      id: 'altitudeScore',
+      header: t('coursePanel.altitudeScore'),
+      sortingFn: (a: any, b: any) => (b.original.altitudeScore ?? 0) - (a.original.altitudeScore ?? 0),
     },
     {
-      id: 'extraScore',
-      header: t('coursePanel.extraScore'),
-      sortingFn: (a: any, b: any) => (b.original.extraScore ?? 0) - (a.original.extraScore ?? 0),
+      id: 'externalScore',
+      header: t('coursePanel.externalScore'),
+      sortingFn: (a: any, b: any) => (b.original.externalScore ?? 0) - (a.original.externalScore ?? 0),
     },
   ])
 
@@ -197,8 +198,8 @@ export function useCourseGrades(
         quizScore: g?.quizScore ?? 0,
         raceScore: g?.raceScore ?? 0,
         commentScore: g?.commentScore ?? 0,
-        marksScore: g?.marksScore ?? 0,
-        extraScore: g?.extraScore ?? 0,
+        altitudeScore: g?.altitudeScore ?? 0,
+        externalScore: g?.externalScore ?? 0,
         progress: g?.progress ?? 0,
         _hasGrade: !!g,
       }
@@ -239,7 +240,7 @@ export function useCourseGrades(
       { name: t('coursePanel.quizScore'), value: Number(r.quizScore) || 0 },
       { name: t('coursePanel.commentScore'), value: Number(r.commentScore) || 0 },
       { name: t('coursePanel.raceScore'), value: Number(r.raceScore) || 0 },
-      { name: t('coursePanel.marksScore'), value: Number(r.marksScore) || 0 },
+      { name: t('coursePanel.altitudeScore'), value: Number(r.altitudeScore) || 0 },
     ]
     const peak = Math.max(...dims.map((d) => d.value), 10)
     const maxVal = Math.ceil((peak * 1.2) / 10) * 10
@@ -318,24 +319,24 @@ export function useCourseGrades(
   }
 
   // 教师保存单个学生的额外分
-  const extraScoreSaving = ref<number | null>(null)
-  async function saveExtraScore(userId: number, extraScore: number) {
+  const externalScoreSaving = ref<number | null>(null)
+  async function saveExternalScore(userId: number, externalScore: number) {
     if (!props.courseId) return
-    extraScoreSaving.value = userId
+    externalScoreSaving.value = userId
     try {
       await cRequest('/api/courses/extra-score', {
         method: 'POST',
-        body: { course_id: Number(props.courseId), user_id: userId, extra_score: extraScore },
+        body: { course_id: Number(props.courseId), user_id: userId, extra_score: externalScore },
       })
       // 同步更新本地行数据
       const row = rows.value.find((r: any) => r.id === userId)
-      if (row) row.extraScore = extraScore
+      if (row) row.externalScore = externalScore
       toast.add({ title: t('coursePanel.saveSuccess'), color: 'success' })
     } catch (e: any) {
       console.error('保存额外分失败', e)
       toast.add({ title: t('coursePanel.saveFailed'), color: 'error' })
     } finally {
-      extraScoreSaving.value = null
+      externalScoreSaving.value = null
     }
   }
 
@@ -360,7 +361,7 @@ export function useCourseGrades(
     computeGrade,
     saveCriteria,
     resetCriteria,
-    saveExtraScore,
-    extraScoreSaving,
+    saveExternalScore,
+    externalScoreSaving,
   }
 }

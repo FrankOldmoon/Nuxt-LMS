@@ -35,8 +35,8 @@ export default eventHandler(async (event) => {
         quizScore: schema.userCourses.quizScore,
         commentScore: schema.userCourses.commentScore,
         raceScore: schema.userCourses.raceScore,
-        marksScore: schema.userCourses.marksScore,
-        extraScore: schema.userCourses.extraScore,
+        altitudeScore: schema.userCourses.altitudeScore,
+        externalScore: schema.userCourses.externalScore,
         records: schema.userCourses.records,
         group: schema.userCourses.group,
       })
@@ -63,8 +63,8 @@ export default eventHandler(async (event) => {
         quizScore: Number(r.quizScore) || 0,
         commentScore: Number(r.commentScore) || 0,
         raceScore: Number(r.raceScore) || 0,
-        marksScore: Number(r.marksScore) || 0,
-        extraScore: Number(r.extraScore) || 0,
+        altitudeScore: Number(r.altitudeScore) || 0,
+        externalScore: Number(r.externalScore) || 0,
         progress: extractProgress(r.records),
       }],
       gradeCriteria: courseRow[0]?.gradeCriteria ?? null,
@@ -86,8 +86,8 @@ export default eventHandler(async (event) => {
       quizScore: schema.userCourses.quizScore,
       commentScore: schema.userCourses.commentScore,
       raceScore: schema.userCourses.raceScore,
-      marksScore: schema.userCourses.marksScore,
-      extraScore: schema.userCourses.extraScore,
+      altitudeScore: schema.userCourses.altitudeScore,
+      externalScore: schema.userCourses.externalScore,
       records: schema.userCourses.records,
       group: schema.userCourses.group,
     })
@@ -107,8 +107,8 @@ export default eventHandler(async (event) => {
       quizScore: Number(r.quizScore) || 0,
       commentScore: Number(r.commentScore) || 0,
       raceScore: Number(r.raceScore) || 0,
-      marksScore: Number(r.marksScore) || 0,
-      extraScore: Number(r.extraScore) || 0,
+      altitudeScore: Number(r.altitudeScore) || 0,
+      externalScore: Number(r.externalScore) || 0,
       progress: extractProgress(r.records),
     }))
     .sort((a, b) => b.score - a.score)

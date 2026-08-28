@@ -21,8 +21,8 @@ beforeEach(() => {
     defaultSort: ref([]),
     canEdit: ref(false),
     computeGrade: () => ({ letter: '-', finalScore: 0 }),
-    saveExtraScore: vi.fn(async () => {}),
-    extraScoreSaving: ref(0),
+    saveExternalScore: vi.fn(async () => {}),
+    externalScoreSaving: ref(0),
     // 评分标准上下文（criteria/studentCriteria/studentStats 用）
     gradeCriteria: ref({ weights: [], levels: [] }),
     effectiveCriteria: ref({ weights: [], levels: [] }),
@@ -109,7 +109,7 @@ describe('course/gradesModal/index.vue', () => {
     ;(globalThis as any).useCourseGrades = () => ({
       rows: ref([]), pending: ref(false), extraColumns: ref([]), defaultSort: ref([]),
       canEdit: ref(true), computeGrade: () => ({ letter: '-', finalScore: 0 }),
-      saveExtraScore: vi.fn(async () => {}), extraScoreSaving: ref(0),
+      saveExternalScore: vi.fn(async () => {}), externalScoreSaving: ref(0),
       gradeCriteria: ref({ weights: [], levels: [] }),
       effectiveCriteria: ref({ weights: [], levels: [] }),
       criteriaDirty: ref(false), saveCriteria: vi.fn(async () => {}), resetCriteria: vi.fn(),

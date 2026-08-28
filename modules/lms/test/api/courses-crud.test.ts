@@ -28,8 +28,8 @@ const _mockSchema: any = {
   userCourses: {
     userId: 'userId', courseId: 'courseId', score: 'score',
     questionScore: 'questionScore', homeworkScore: 'homeworkScore', quizScore: 'quizScore',
-    commentScore: 'commentScore', raceScore: 'raceScore', marksScore: 'marksScore',
-    extraScore: 'extraScore', records: 'records', group: 'group', number: 'number',
+    commentScore: 'commentScore', raceScore: 'raceScore', altitudeScore: 'altitudeScore',
+    externalScore: 'externalScore', records: 'records', group: 'group', number: 'number',
     isTeacher: 'isTeacher', isEditor: 'isEditor', deletedAt: 'deletedAt',
   },
   userClasses: { userId: 'userId', classId: 'classId' },
@@ -311,7 +311,7 @@ describe('API: courses/grades.get', () => {
       if (whereCall === 1) {
         return [{
           userId: 5, score: '85', questionScore: '20', homeworkScore: '20', quizScore: '20',
-          commentScore: '10', raceScore: '5', marksScore: '10', extraScore: '0',
+          commentScore: '10', raceScore: '5', altitudeScore: '10', externalScore: '0',
           records: { progress: 80 }, group: 'g1',
         }]
       }
@@ -340,8 +340,8 @@ describe('API: courses/grades.get', () => {
       whereCall++
       if (whereCall === 1) {
         return [
-          { userId: 2, score: '70', questionScore: '10', homeworkScore: '10', quizScore: '10', commentScore: '10', raceScore: '10', marksScore: '10', extraScore: '10', records: { progress: 50 }, group: 'g1' },
-          { userId: 3, score: '90', questionScore: '20', homeworkScore: '20', quizScore: '20', commentScore: '10', raceScore: '10', marksScore: '10', extraScore: '0', records: { progress: 90 }, group: 'g2' },
+          { userId: 2, score: '70', questionScore: '10', homeworkScore: '10', quizScore: '10', commentScore: '10', raceScore: '10', altitudeScore: '10', externalScore: '10', records: { progress: 50 }, group: 'g1' },
+          { userId: 3, score: '90', questionScore: '20', homeworkScore: '20', quizScore: '20', commentScore: '10', raceScore: '10', altitudeScore: '10', externalScore: '0', records: { progress: 90 }, group: 'g2' },
         ]
       }
       return this
@@ -397,7 +397,7 @@ describe('API: courses/extra-score.post', () => {
     const handler = (await import('../../server/api/courses/extra-score.post')).default
     const r = await handler(makeEvent({ body: { course_id: 1, user_id: 2, extra_score: 5 } }))
     expect(r.success).toBe(true)
-    expect(r.data.extraScore).toBe(5)
+    expect(r.data.externalScore).toBe(5)
     expect(_mockDb.insert).toHaveBeenCalled()
   })
 })

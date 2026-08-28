@@ -32,6 +32,10 @@ export async function compressImage(file: File, options?: CompressOptions): Prom
     if (file.type === 'image/gif') {
         return file
     }
+    // SVG 为矢量文本，保持原格式不压缩（压缩成 webp 会破坏矢量且丢失后缀一致性）
+    if (file.type === 'image/svg+xml' || /\.svg$/i.test(file.name)) {
+        return file
+    }
 
     const mergedOptions = { ...DEFAULT_OPTIONS, ...options }
 

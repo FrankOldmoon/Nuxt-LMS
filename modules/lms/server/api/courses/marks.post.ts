@@ -1,5 +1,5 @@
 /**
- * 加减分：批量更新 user_courses 的 marks_score 字段
+ * 加减分：批量更新 user_courses 的 altitude_score 字段
  * POST /api/courses/marks
  * body: { course_id, user_ids: number[], delta: number }
  *
@@ -29,7 +29,7 @@ export default eventHandler(async (event) => {
     // 对已有记录执行加减分（COALESCE 防 NULL）
     await db.update(schema.userCourses)
       .set({
-        marksScore: sql`COALESCE(${schema.userCourses.marksScore}, 0) + ${numDelta}`,
+        altitudeScore: sql`COALESCE(${schema.userCourses.altitudeScore}, 0) + ${numDelta}`,
       })
       .where(and(
         eq(schema.userCourses.courseId, courseId),
@@ -51,7 +51,7 @@ export default eventHandler(async (event) => {
         missingIds.map(uid => ({
           userId: uid,
           courseId,
-          marksScore: String(Math.max(0, numDelta)),
+          altitudeScore: String(Math.max(0, numDelta)),
         }))
       )
     }

@@ -18,7 +18,7 @@
  *     （不显式 import），让测试可通过 globalThis 注入 mock。
  */
 import { parseSubmitContext, SubmitContextError } from '../../utils/submit/context'
-import { notifyCourseProgress } from '../../utils/submit/progress'
+import { notifyCourseProgress, notifyParentCourse } from '../../utils/submit/progress'
 import { withSubmitHandler } from '../../utils/submit/handler'
 import { upsertUserQuestion } from '../../utils/submit/questions/upsert'
 import { calcQuestionGainedExp, calcQuestionGainedCoin } from '../../utils/submit/questions/calc'
@@ -81,6 +81,20 @@ export default withSubmitHandler('提交题目失败', async (event) => {
     exp: gainedExp,
     coin: gainedCoin,
   })
+
+  // 3.5 被其他课程 iframe 嵌入时，将相同加分镜像给宿主课程（分数/经验/金币）
+  const parentCourseId = Number(body.parent_course_id) || 0
+  if (parentCourseId && parentCourseId !== courseId) {
+    await notifyParentCourse({
+      userId: user.id,
+      parentCourseId,
+      selfCourseId: courseId,
+      score: scoreDelta,
+      scoreKey: 'questionScore',
+      exp: gainedExp,
+      coin: gainedCoin,
+    })
+  }
 
   // 4. 向班级房间广播 danmaku（fire-and-forget，不影响响应）
   void broadcastSubmitDanmaku({

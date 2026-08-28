@@ -56,7 +56,7 @@ provideGrades({
   computeGrade: () => ({ letter: '-', finalScore: 0 }),
   saveCriteria: async () => {},
   resetCriteria: () => {},
-  saveExtraScore: async () => {},
-  extraScoreSaving: ref(null),
+  saveExternalScore: async () => {},
+  externalScoreSaving: ref(null),
 })
 </script>

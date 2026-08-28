@@ -68,19 +68,19 @@
                             {{ row.original.commentScore.toFixed(1) }}
                         </span>
                     </template>
-                    <!-- marksScore 列 -->
-                    <template #marksScore-cell="{ row }">
+                    <!-- altitudeScore 列 -->
+                    <template #altitudeScore-cell="{ row }">
                         <span class="font-mono text-xs" :class="!row.original._hasGrade && 'opacity-40'">
-                            {{ row.original.marksScore.toFixed(1) }}
+                            {{ row.original.altitudeScore.toFixed(1) }}
                         </span>
                     </template>
-                    <!-- extraScore 列：教师可输入并保存，学生只读 -->
-                    <template #extraScore-cell="{ row }">
-                        <UInput v-if="canEdit" v-model.number="extraScoreDraft[row.original.id]" type="number"
-                            size="xs" class="w-20" :loading="extraScoreSaving === row.original.id"
-                            @blur="onExtraScoreBlur(row.original)" @keydown.enter="onExtraScoreEnter($event)" />
+                    <!-- externalScore 列：教师可输入并保存，学生只读 -->
+                    <template #externalScore-cell="{ row }">
+                        <UInput v-if="canEdit" v-model.number="externalScoreDraft[row.original.id]" type="number"
+                            size="xs" class="w-20" :loading="externalScoreSaving === row.original.id"
+                            @blur="onExternalScoreBlur(row.original)" @keydown.enter="onExternalScoreEnter($event)" />
                         <span v-else class="font-mono text-xs" :class="!row.original._hasGrade && 'opacity-40'">
-                            {{ Number(row.original.extraScore || 0).toFixed(1) }}
+                            {{ Number(row.original.externalScore || 0).toFixed(1) }}
                         </span>
                     </template>
                 </ClassUsersTable>
@@ -103,33 +103,33 @@ const { t } = useI18n()
 
 const ctx = useCourseGrades(props, isOpen)
 provideGrades(ctx)
-const { rows, pending, extraColumns, defaultSort, canEdit, computeGrade, saveExtraScore, extraScoreSaving } = ctx
+const { rows, pending, extraColumns, defaultSort, canEdit, computeGrade, saveExternalScore, externalScoreSaving } = ctx
 
-// extraScore 草稿：用本地 ref 跟踪输入值，blur/enter 时提交保存
-const extraScoreDraft = ref<Record<number, number | string>>({})
+// externalScore 草稿：用本地 ref 跟踪输入值，blur/enter 时提交保存
+const externalScoreDraft = ref<Record<number, number | string>>({})
 // 弹窗重新打开时清空草稿，让 watch(rows) 重新从服务端数据填充
 watch(isOpen, (val) => {
-    if (val) extraScoreDraft.value = {}
+    if (val) externalScoreDraft.value = {}
 })
 watch(rows, (newRows) => {
     // 仅当行有真实成绩数据（_hasGrade）且草稿未填充时同步服务端值
-    // 避免 buildRows([]) 占位数据（extraScore=0, _hasGrade=false）覆盖真实值
+    // 避免 buildRows([]) 占位数据（externalScore=0, _hasGrade=false）覆盖真实值
     for (const r of newRows) {
-        if (r._hasGrade && extraScoreDraft.value[r.id] === undefined) {
-            extraScoreDraft.value[r.id] = Number(r.extraScore || 0)
+        if (r._hasGrade && externalScoreDraft.value[r.id] === undefined) {
+            externalScoreDraft.value[r.id] = Number(r.externalScore || 0)
         }
     }
 }, { immediate: true })
 
-async function onExtraScoreBlur(row: any) {
-    const val = Number(extraScoreDraft.value[row.id])
+async function onExternalScoreBlur(row: any) {
+    const val = Number(externalScoreDraft.value[row.id])
     if (isNaN(val)) return
     // 值未变化则跳过
-    if (val === Number(row.extraScore || 0)) return
-    await saveExtraScore(row.id, val)
+    if (val === Number(row.externalScore || 0)) return
+    await saveExternalScore(row.id, val)
 }
 
-function onExtraScoreEnter(e: KeyboardEvent) {
+function onExternalScoreEnter(e: KeyboardEvent) {
     ;(e.target as HTMLInputElement).blur()
 }
 

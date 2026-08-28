@@ -30,8 +30,9 @@ export function sanitizeSvg(buffer: Buffer): Buffer {
 
 /** 校验 .svg 文件内容确为 SVG（MIME 嗅探），防止伪装成 SVG 的其他文档直开 */
 export function isSvgContent(buffer: Buffer): boolean {
-  const text = buffer.toString('utf8').replace(/^\uFEFF/, '').trimStart()
-  return /<svg[\s>]/i.test(text)
+  const text = buffer.toString('utf8').replace(/^\uFEFF/, '')
+  // 允许前导 XML 声明/DOCTYPE/注释；<svg 后必须跟空格、换行/制表、自闭合 /> 或右括号 >
+  return /<(?:svg:)?svg[\s/>]/i.test(text)
 }
 
 /** 大小 + 后缀两道校验，失败抛 UploadError（webp 后缀跳过） */

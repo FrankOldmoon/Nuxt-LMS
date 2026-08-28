@@ -31,6 +31,43 @@ export async function notifyCourseProgress(args: {
 }
 
 /**
+ * 将一笔提交的加分同时镜像给"宿主"课程（iframe 嵌套课程场景）。
+ * 宿主课程与当前课程相同时跳过，避免重复累加。
+ * @param mode 'acc' 累加模式（题目等）；'max' 最高分模式（测验/竞赛等）
+ */
+export async function notifyParentCourse(args: {
+  userId: number
+  parentCourseId: number
+  selfCourseId: number
+  score: number
+  scoreKey: 'questionScore' | 'homeworkScore' | 'quizScore' | 'raceScore' | string
+  exp: number
+  coin?: number
+  mode?: 'acc' | 'max'
+}) {
+  const { parentCourseId, selfCourseId } = args
+  if (!parentCourseId || parentCourseId === selfCourseId) return
+  if (args.mode === 'max') {
+    return notifyCourseProgressMax({
+      userId: args.userId,
+      courseId: parentCourseId,
+      score: args.score,
+      scoreKey: args.scoreKey,
+      exp: args.exp,
+      coin: args.coin,
+    })
+  }
+  return notifyCourseProgress({
+    userId: args.userId,
+    courseId: parentCourseId,
+    score: args.score,
+    scoreKey: args.scoreKey,
+    exp: args.exp,
+    coin: args.coin,
+  })
+}
+
+/**
  * 最高分模式：分项取 max（防刷）+ 总分按差额累加 + 经验值 + 金币 + 奖章检查
  */
 export async function notifyCourseProgressMax(args: {

@@ -17,7 +17,7 @@ import { and, eq, inArray } from 'drizzle-orm'
 import { calcQuizScore, calcQuizExp, calcQuizCoin } from '../../utils/quizSubmit/score'
 import { handleQuizStartOnly } from '../../utils/quizSubmit/startOnly'
 import { insertUserQuiz, updateUserQuizBestScore, incrementQuizSubmitCount } from '../../utils/quizSubmit/persist'
-import { notifyCourseProgressMax } from '../../utils/submit/progress'
+import { notifyCourseProgressMax, notifyParentCourse } from '../../utils/submit/progress'
 import { computeServerRate } from '../../utils/submit/verify'
 
 export default eventHandler(async (event) => {
@@ -112,6 +112,21 @@ export default eventHandler(async (event) => {
     exp: gainedExp,
     coin: gainedCoin,
   })
+
+  // 7.5 被其他课程 iframe 嵌入时，将相同加分镜像给宿主课程
+  const parentCourseId = Number(body.parent_course_id) || 0
+  if (parentCourseId && parentCourseId !== courseId) {
+    await notifyParentCourse({
+      userId: user.id,
+      parentCourseId,
+      selfCourseId: courseId,
+      score: finalScore,
+      scoreKey: 'quizScore',
+      exp: gainedExp,
+      coin: gainedCoin,
+      mode: 'max',
+    })
+  }
 
   // 8. 更新测验全局计数
   await incrementQuizSubmitCount(courseId, quizCid, quiz.submitCount)

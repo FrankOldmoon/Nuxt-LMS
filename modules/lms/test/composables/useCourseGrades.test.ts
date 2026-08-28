@@ -50,17 +50,17 @@ describe('composables/useCourseGrades', () => {
     expect(r.rows.value).toEqual([])
     expect(r.pending.value).toBe(false)
     expect(r.criteriaDirty.value).toBe(false)
-    expect(r.extraScoreSaving.value).toBe(null)
+    expect(r.externalScoreSaving.value).toBe(null)
   })
 
   it('导出 DEFAULT_GRADE_CRITERIA 与 GRADE_WEIGHT_KEYS', async () => {
     const mod = await import('../../composables/useCourseGrades')
     expect(mod.DEFAULT_GRADE_CRITERIA).toBeDefined()
     expect(mod.DEFAULT_GRADE_CRITERIA.weights.length).toBe(7)
-    expect(mod.DEFAULT_GRADE_CRITERIA.levels.length).toBe(4)
+    expect(mod.DEFAULT_GRADE_CRITERIA.levels.length).toBe(5)
     expect(mod.GRADE_WEIGHT_KEYS.length).toBe(7)
     expect(mod.GRADE_WEIGHT_KEYS).toContain('questionScore')
-    expect(mod.GRADE_WEIGHT_KEYS).toContain('extraScore')
+    expect(mod.GRADE_WEIGHT_KEYS).toContain('externalScore')
   })
 
   it('gradeCriteria 初始为 DEFAULT_GRADE_CRITERIA 副本', async () => {
@@ -107,7 +107,7 @@ describe('composables/useCourseGrades', () => {
     expect(ids).toContain('grade')
     expect(ids).toContain('total')
     expect(ids).toContain('progress')
-    expect(ids).toContain('extraScore')
+    expect(ids).toContain('externalScore')
   })
 
   it('defaultSort 为 total desc', async () => {
@@ -127,7 +127,7 @@ describe('composables/useCourseGrades', () => {
     // 全部满分 → finalScore = 20+20+20+10+10+20+0 = 100 → A
     const row = {
       questionScore: 100, homeworkScore: 100, quizScore: 100,
-      raceScore: 100, commentScore: 100, marksScore: 100, extraScore: 0,
+      raceScore: 100, commentScore: 100, altitudeScore: 100, externalScore: 0,
     }
     const g = r.computeGrade(row)
     expect(g.finalScore).toBeCloseTo(100, 1)
@@ -141,12 +141,12 @@ describe('composables/useCourseGrades', () => {
     const r = useCourseGrades({ courseId: 1, classId: 1 }, isOpen)
     const row = {
       questionScore: 0, homeworkScore: 0, quizScore: 0,
-      raceScore: 0, commentScore: 0, marksScore: 0, extraScore: 0,
+      raceScore: 0, commentScore: 0, altitudeScore: 0, externalScore: 0,
     }
     const g = r.computeGrade(row)
     expect(g.finalScore).toBe(0)
-    // 0 < 60 (D 阈值) → 最后一个 level 的 letter
-    expect(g.letter).toBe('D')
+    // 0 < 50 (D 阈值) → 最后一个 level 的 letter
+    expect(g.letter).toBe('F')
   })
 
   it('buildRows：合并学生与成绩并按 score 降序', async () => {
@@ -263,7 +263,7 @@ describe('composables/useCourseGrades', () => {
     expect(r.criteriaDirty.value).toBe(false)
   })
 
-  it('saveExtraScore：成功时更新行 + toast', async () => {
+  it('saveExternalScore：成功时更新行 + toast', async () => {
     setMockAuthUser({ id: 1, name: 'admin' }, [{ code: 'admin', name: 'Admin' }])
     let calledUrl = ''
     setMockFetchHandler(async (url: string) => {
@@ -279,12 +279,12 @@ describe('composables/useCourseGrades', () => {
     const studentsRef = (globalThis as any).__studentsRef
     studentsRef.value = [{ id: 7, name: 'a', preferName: 'A', rollNumber: '001', avatarImg: '' }]
     r.buildRows([{ userId: 7, score: 50 }])
-    await r.saveExtraScore(7, 15)
+    await r.saveExternalScore(7, 15)
     expect(calledUrl).toContain('/api/courses/extra-score')
-    expect(r.rows.value[0].extraScore).toBe(15)
+    expect(r.rows.value[0].externalScore).toBe(15)
     const toasts = getToastCalls()
     expect(toasts.some((t) => t.color === 'success')).toBe(true)
-    expect(r.extraScoreSaving.value).toBe(null)
+    expect(r.externalScoreSaving.value).toBe(null)
   })
 
   it('loadData：isOpen=true 触发加载', async () => {

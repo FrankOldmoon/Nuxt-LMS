@@ -47,8 +47,8 @@ export function useStudentGrades(
     quizScore: 0,
     raceScore: 0,
     commentScore: 0,
-    marksScore: 0,
-    extraScore: 0,
+    altitudeScore: 0,
+    externalScore: 0,
   })
 
   const statCards = computed(() => [
@@ -67,7 +67,7 @@ export function useStudentGrades(
       { name: t('coursePanel.quizScore'), value: Number(score.value.quizScore) || 0 },
       { name: t('coursePanel.commentScore'), value: Number(score.value.commentScore) || 0 },
       { name: t('coursePanel.raceScore'), value: Number(score.value.raceScore) || 0 },
-      { name: t('coursePanel.marksScore'), value: Number(score.value.marksScore) || 0 },
+      { name: t('coursePanel.altitudeScore'), value: Number(score.value.altitudeScore) || 0 },
     ]
     const peak = Math.max(...dims.map((d) => d.value), 10)
     const maxVal = Math.ceil((peak * 1.2) / 10) * 10
@@ -117,8 +117,8 @@ export function useStudentGrades(
           quizScore: Number(mine.quizScore) || 0,
           raceScore: Number(mine.raceScore) || 0,
           commentScore: Number(mine.commentScore) || 0,
-          marksScore: Number(mine.marksScore) || 0,
-          extraScore: Number(mine.extraScore) || 0,
+          altitudeScore: Number(mine.altitudeScore) || 0,
+          externalScore: Number(mine.externalScore) || 0,
         }
       }
     } catch (e) {

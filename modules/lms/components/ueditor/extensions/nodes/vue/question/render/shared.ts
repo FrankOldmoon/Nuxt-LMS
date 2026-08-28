@@ -159,6 +159,7 @@ export async function submitQuestion(params: {
   // questionId 为 0 时（大题中的子题），跳过 API 调用
   if (!params.questionId) return null
   try {
+    const parentCourseId = useEmbeddingParentCourse()
     const res = await cRequest('/api/questions/submit', {
       method: 'POST',
       body: {
@@ -166,6 +167,7 @@ export async function submitQuestion(params: {
         chapter_id: params.chapterId,
         question_cid: params.questionId,
         user_answer: params.userAnswer,
+        ...(parentCourseId ? { parent_course_id: parentCourseId } : {}),
       },
     })
     if (params.question && res) {

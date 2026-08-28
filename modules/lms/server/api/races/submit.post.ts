@@ -16,7 +16,7 @@ import { db, schema } from '@nuxthub/db'
 import { and, eq, inArray } from 'drizzle-orm'
 import { parseSubmitContext, SubmitContextError } from '../../utils/submit/context'
 import { findUserSubmitRecord } from '../../utils/submit/record'
-import { notifyCourseProgressMax } from '../../utils/submit/progress'
+import { notifyCourseProgressMax, notifyParentCourse } from '../../utils/submit/progress'
 import { withSubmitHandler } from '../../utils/submit/handler'
 import { computeServerRate } from '../../utils/submit/verify'
 
@@ -101,6 +101,21 @@ export default withSubmitHandler('提交竞赛成绩失败', async (event) => {
     exp: gainedExp,
     coin: gainedCoin,
   })
+
+  // 3.5 被其他课程 iframe 嵌入时，将相同加分镜像给宿主课程
+  const parentCourseId = Number(body.parent_course_id) || 0
+  if (parentCourseId && parentCourseId !== courseId) {
+    await notifyParentCourse({
+      userId: user.id,
+      parentCourseId,
+      selfCourseId: courseId,
+      score: bestScore,
+      scoreKey: 'raceScore',
+      exp: gainedExp,
+      coin: gainedCoin,
+      mode: 'max',
+    })
+  }
 
   return cResp({ gainedExp, gainedCoin, score })
 })

@@ -50,6 +50,13 @@
       "when": 1787492000000,
       "tag": "0006_rename_zone_to_map_id",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1787884000000,
+      "tag": "0007_rename_altitude_external",
+      "breakpoints": true
     }
   ]
 }

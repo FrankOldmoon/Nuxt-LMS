@@ -332,12 +332,14 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
         if (timerInterval) clearInterval(timerInterval)
         try {
             const records = collectAnswers()
+            const parentCourseId = useEmbeddingParentCourse()
             const result = await cRequest('/api/quizzes/submit', {
                 method: 'POST',
                 body: {
                     course_id: courseId.value,
                     quiz_cid: quizId.value,
                     records,
+                    ...(parentCourseId ? { parent_course_id: parentCourseId } : {}),
                 },
             })
             resultScore.value = result.score

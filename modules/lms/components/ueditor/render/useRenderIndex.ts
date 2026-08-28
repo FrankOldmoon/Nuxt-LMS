@@ -71,19 +71,26 @@ export function useRenderIndex(props: any, emit: any) {
     if (!el || typeof el.querySelectorAll !== 'function') return
 
     // 收集所有可预览的图片 URL（img 标签 + canvas 转 dataURL）
-    const urls: string[] = []
+    // 每项可为字符串 src，或 { src, width, height }（携带编辑器里设置的尺寸，供 SVG 等按尺寸渲染）
+    const urls: any[] = []
 
     // 1. 收集 img 标签
     const imgs = el.querySelectorAll('img')
     imgs.forEach((img: any) => {
       const src = img.src || img.getAttribute('data-src') || ''
       if (src) {
-        urls.push(src)
+        // 尺寸：优先 HTML width/height 属性，其次内联样式（image.vue 对 SVG 用 style.width/height 渲染）
+        const attrsW = img.getAttribute('width')
+        const attrsH = img.getAttribute('height')
+        const styleW = img.style?.width
+        const styleH = img.style?.height
+        const entry = { src, width: attrsW || styleW || null, height: attrsH || styleH || null }
+        urls.push(entry)
         img.style.cursor = 'pointer'
         img.onclick = (e: any) => {
           e.stopPropagation()
           imageList.value = urls
-          imageModalIndex.value = urls.indexOf(src)
+          imageModalIndex.value = urls.findIndex((u: any) => (typeof u === 'string' ? u : u.src) === src)
           imageModalOpen.value = true
         }
       }

@@ -106,6 +106,7 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
         submitMsg.value = ''
         try {
             const files = Array.isArray(submittedFiles.value) ? submittedFiles.value : [submittedFiles.value]
+            const parentCourseId = useEmbeddingParentCourse()
             const result: any = await cRequest('/api/homeworks/submit', {
                 method: 'POST',
                 body: {
@@ -114,6 +115,7 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
                     homework_cid: homeworkId.value,
                     files,
                     content: submittedContent.value,
+                    ...(parentCourseId ? { parent_course_id: parentCourseId } : {}),
                 },
             })
             submitted.value = true

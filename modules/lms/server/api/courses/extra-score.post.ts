@@ -1,5 +1,5 @@
 /**
- * 额外分：直接设置 user_courses.extra_score 字段
+ * 额外分：直接设置 user_courses.external_score 字段
  * POST /api/courses/extra-score
  * body: { course_id, user_id, extra_score }
  *
@@ -25,21 +25,21 @@ export default eventHandler(async (event) => {
   const userId = Number(user_id)
 
   try {
-    // upsert：已有记录则更新 extra_score，否则插入新记录
+    // upsert：已有记录则更新 external_score，否则插入新记录
     await db.insert(schema.userCourses)
       .values({
         userId,
         courseId,
-        extraScore: String(numScore),
+        externalScore: String(numScore),
       })
       .onConflictDoUpdate({
         target: [schema.userCourses.userId, schema.userCourses.courseId],
         set: {
-          extraScore: String(numScore),
+          externalScore: String(numScore),
         },
       })
 
-    return cResp({ success: true, extraScore: numScore })
+    return cResp({ success: true, externalScore: numScore })
   } catch (error: any) {
     console.error('保存额外分失败:', error)
     return cResp(null, error.message || '保存额外分失败', false)

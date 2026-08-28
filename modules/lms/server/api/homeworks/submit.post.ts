@@ -13,7 +13,7 @@ import { db, schema } from '@nuxthub/db'
 import { and, eq } from 'drizzle-orm'
 import { parseSubmitContext } from '../../utils/submit/context'
 import { findUserSubmitRecord } from '../../utils/submit/record'
-import { notifyCourseProgress } from '../../utils/submit/progress'
+import { notifyCourseProgress, notifyParentCourse } from '../../utils/submit/progress'
 import { withSubmitHandler } from '../../utils/submit/handler'
 
 export default withSubmitHandler('提交作业失败', async (event) => {
@@ -78,6 +78,20 @@ export default withSubmitHandler('提交作业失败', async (event) => {
     exp: gainedExp,
     coin: gainedCoin,
   })
+
+  // 4.5 被其他课程 iframe 嵌入时，将经验/金币镜像给宿主课程
+  const parentCourseId = Number(body.parent_course_id) || 0
+  if (parentCourseId && parentCourseId !== courseId) {
+    await notifyParentCourse({
+      userId: user.id,
+      parentCourseId,
+      selfCourseId: courseId,
+      score: 0,
+      scoreKey: 'homeworkScore',
+      exp: gainedExp,
+      coin: gainedCoin,
+    })
+  }
 
   // 5. 向班级房间广播 danmaku（fire-and-forget，不影响响应）
   void broadcastSubmitDanmaku({

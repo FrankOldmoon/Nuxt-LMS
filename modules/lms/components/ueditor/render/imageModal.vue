@@ -3,7 +3,8 @@
         <Transition name="image-modal">
             <div v-if="open" class="image-modal-overlay" @click="close">
                 <!-- 图片铺满屏幕 -->
-                <img v-if="currentImage" :src="currentImage" class="image-modal-img image-modal-img-png"
+                <img v-if="currentImage" :src="currentSrc" :style="imgWrapperStyle"
+                    :class="['image-modal-img', 'image-modal-img-png', { 'image-modal-img-svg': isSvg }]"
                     @click.stop="next" />
                 <!-- 顶部工具栏（hover 显示）：左计数 / 右关闭 -->
                 <div class="image-modal-toolbar" @click.stop>
@@ -22,7 +23,7 @@
                 <div v-if="images.length > 1" class="image-modal-thumbs" @click.stop>
                     <div v-for="(img, idx) in images" :key="idx" class="image-modal-thumb"
                         :class="{ active: idx === currentIndex }" @click="currentIndex = idx">
-                        <img :src="img" />
+                        <img :src="thumbSrc(img)" />
                     </div>
                 </div>
             </div>
@@ -50,9 +51,33 @@ const {
     next,
 } = useImageModal(props, emit)
 
+// 兼容字符串 src 与 { src, width, height } 对象
+const currentSrc = computed(() => {
+    const c = currentImage.value
+    return typeof c === 'string' ? c : c?.src || ''
+})
+const currentWidth = computed(() => (typeof currentImage.value === 'object' ? currentImage.value?.width : null))
+const currentHeight = computed(() => (typeof currentImage.value === 'object' ? currentImage.value?.height : null))
+const thumbSrc = (img) => (typeof img === 'string' ? img : img?.src || '')
+
+// 是否为 SVG：按编辑器尺寸渲染而非铺满全屏
+const isSvg = computed(() => /\.svg($|\?)/i.test(currentSrc.value))
+const imgWrapperStyle = computed(() => {
+    if (!isSvg.value) return {}
+    const style = {}
+    if (currentWidth.value) style.width = toCssSize(currentWidth.value)
+    if (currentHeight.value) style.height = toCssSize(currentHeight.value)
+    return style
+})
+// 编辑器 img 尺寸可能是纯数字或带单位；纯数字补 px，带单位原样
+function toCssSize(v) {
+    const s = String(v).trim()
+    return /^\d+(\.\d+)?$/.test(s) ? `${s}px` : s
+}
+
 // PNG 通常带透明通道，预览时铺一层白底避免透明区域看不清
 const isPng = computed(() => {
-    const src = currentImage.value
+    const src = currentSrc.value
     if (!src) return false
     if (src.startsWith('data:')) return /image\/png/i.test(src)
     const clean = src.split('?')[0].split('#')[0]
@@ -66,5 +91,11 @@ const isPng = computed(() => {
     /* PNG 带透明通道，预览时铺白底避免透明区域看不清 */
     .image-modal-img-png {
         background: #fff;
+    }
+
+    /* SVG：按编辑器尺寸显示（不强制铺满），但不超过视口 */
+    .image-modal-img-svg {
+        max-width: 100%;
+        max-height: 100%;
     }
 </style>
