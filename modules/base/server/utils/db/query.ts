@@ -98,3 +98,50 @@ export async function importTableRows(
 
   return { inserted, errors }
 }
+
+/**
+ * 统计 jsonb 字段中某个普通文本片段出现次数（用于替换前 dry-run / 替换后核对）。
+ * 例：countColumnText('chapters', 'content', '10.21.1.1')
+ */
+export async function countColumnText(
+  tableName: string,
+  column: string,
+  text: string,
+): Promise<{ affectedRows: number; occurrences: number }> {
+  const rows = await db.execute(sql`
+    SELECT
+      count(*) AS affected_rows,
+      COALESCE(sum(
+        (length(${sql.raw(column)}::text)
+          - length(replace(${sql.raw(column)}::text, ${text}, ''))
+        ) / length(${text})
+      ), 0) AS occurrences
+    FROM ${sql.raw(tableName)}
+    WHERE ${sql.raw(column)}::text LIKE ${'%' + text + '%'}
+  `)
+  const row = rows?.rows?.[0] as { affected_rows?: number; occurrences?: number } | undefined
+  return {
+    affectedRows: Number(row?.affected_rows ?? 0),
+    occurrences: Number(row?.occurrences ?? 0),
+  }
+}
+
+/**
+ * 在指定表的 jsonb 字段中，将普通文本 from 整体替换为 to，返回受影响行数。
+ * 适用于不含 JSON 特殊字符的普通文本（如 IP 地址），替换不会破坏 JSON 结构。
+ * 例：replaceJsonbText('chapters', 'content', '10.21.1.1', '10.22.22.2')
+ * （若列本身是 text，去掉末尾的 ::jsonb 强转即可。）
+ */
+export async function replaceJsonbText(
+  tableName: string,
+  column: string,
+  from: string,
+  to: string,
+): Promise<number> {
+  const result = await db.execute(sql`
+    UPDATE ${sql.raw(tableName)}
+    SET ${sql.raw(column)} = REPLACE(${sql.raw(column)}::text, ${from}, ${to})::jsonb
+    WHERE ${sql.raw(column)}::text LIKE ${'%' + from + '%'}
+  `)
+  return result?.rowCount ?? 0
+}
