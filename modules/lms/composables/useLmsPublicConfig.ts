@@ -38,7 +38,7 @@ export function useLmsPublicConfig() {
   const courseBtns = computed(() => config.value?.courseBtns || {})
   const user = computed(() => config.value?.user || {})
   const ai = computed(() => config.value?.ai || {})
-  const oj = computed(() => config.value?.oj || { url: 'http://10.22.99.130' })
+  const oj = computed(() => config.value?.oj || { url: 'http://10.28.1.155' })
   // 等级换算步长：每 levelStep 经验升一级的曲线系数（默认 100，前端等级换算用）
   const levelStep = computed(() => Number(config.value?.general?.levelStep) || 100)
 

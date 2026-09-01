@@ -50,7 +50,7 @@ export function useConfigEditor(props: ConfigEditorProps, emit: (e: 'update:mode
       onlyOnReward: true,
     },
     // OJ 在线评测平台基址（fetchOj / getOjStatus 拼接地址用）
-    oj: { url: 'http://10.22.99.130' },
+    oj: { url: 'http://10.28.1.155' },
   }
 
   const aiModeOpts = computed(() => [

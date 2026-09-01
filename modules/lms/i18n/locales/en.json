@@ -607,7 +607,7 @@
     "teacherMultiplierHint": "Teacher drive size = default size × this multiplier",
     "oj": "OJ Platform",
     "ojUrl": "OJ Base URL",
-    "ojUrlHint": "Base URL of the Online Judge used by OJ questions, e.g. http://10.22.99.130",
+    "ojUrlHint": "Base URL of the Online Judge used by OJ questions, e.g. http://10.28.1.155",
     "home": "Home Page",
     "showHero": "Show hero section",
     "showStats": "Show statistics",

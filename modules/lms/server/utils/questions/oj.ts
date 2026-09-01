@@ -1,14 +1,14 @@
 /**
  * OJ（在线评测）平台对接
  *
- * 基址来自 LMS 配置 oj.url（默认 http://10.22.99.130），可在管理后台覆盖。
+ * 基址来自 LMS 配置 oj.url（默认 http://10.28.1.155），可在管理后台覆盖。
  * getLmsConfigSync 通过 Nuxt auto-import 引入（不显式 import），与其它 server util 一致。
  */
 
 /** 获取 OJ 平台基址（去掉末尾斜杠） */
 function getOjUrl(): string {
   const cfg = (typeof getLmsConfigSync === 'function') ? getLmsConfigSync() : null
-  const url = (cfg?.oj?.url || 'http://10.22.99.130') as string
+  const url = (cfg?.oj?.url || 'http://10.28.1.155') as string
   return String(url).replace(/\/+$/, '')
 }
 

@@ -5,5 +5,5 @@
  * 可在管理后台「学习行为配置」中覆盖。
  */
 export const ojDefaults = {
-  url: 'http://10.22.99.130',
-}
+  url: process.env.OJ || "http://10.28.1.155",
+};
