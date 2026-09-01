@@ -7,7 +7,6 @@ interface UserProfileForm {
   email: string
   gender: string
   avatarImg: string
-  rollNumber: string
   telephone: string
   classId: number | null
 }
@@ -24,7 +23,7 @@ export function useProfileModal(isOpen: Ref<boolean>) {
 
   const form = ref<UserProfileForm>({
     name: '', preferName: '', englishName: '', email: '',
-    gender: '', avatarImg: '', rollNumber: '', telephone: '',
+    gender: '', avatarImg: '', telephone: '',
     classId: null,
   })
 
@@ -42,7 +41,6 @@ export function useProfileModal(isOpen: Ref<boolean>) {
       email: user.value?.email || '',
       gender: user.value?.gender || '',
       avatarImg: user.value?.avatarImg || '',
-      rollNumber: user.value?.rollNumber || '',
       telephone: user.value?.telephone || '',
       classId: user.value?.classId ?? null,
     }

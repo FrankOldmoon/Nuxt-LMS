@@ -38,7 +38,7 @@ const _stubs = {
 function makeForm(overrides: any = {}) {
   return {
     name: '', preferName: '', englishName: '', email: '',
-    gender: '', avatarImg: '', rollNumber: '', telephone: '',
+    gender: '', avatarImg: '', telephone: '',
     classId: null,
     ...overrides,
   }
@@ -63,7 +63,7 @@ describe('auth/userProfileForm.vue', () => {
     expect(wrapper.find('.uavatar').exists()).toBe(true)
   })
 
-  it('渲染所有表单字段（name, email, gender, rollNumber, telephone 等）', async () => {
+  it('渲染所有表单字段（name, email, gender, class, telephone 等）', async () => {
     const { default: UserProfileForm } = await import('../../../components/auth/userProfileForm.vue')
     const wrapper = mount(UserProfileForm, {
       props: { modelValue: makeForm() },
@@ -74,8 +74,9 @@ describe('auth/userProfileForm.vue', () => {
     expect(labelTexts.some(t => t.includes('profile.name'))).toBe(true)
     expect(labelTexts.some(t => t.includes('profile.email'))).toBe(true)
     expect(labelTexts.some(t => t.includes('profile.gender'))).toBe(true)
-    expect(labelTexts.some(t => t.includes('profile.rollNumber'))).toBe(true)
+    expect(labelTexts.some(t => t.includes('profile.class'))).toBe(true)
     expect(labelTexts.some(t => t.includes('profile.telephone'))).toBe(true)
+    expect(labelTexts.some(t => t.includes('profile.rollNumber'))).toBe(false)
   })
 
   it('渲染修改密码按钮', async () => {

@@ -4,8 +4,8 @@ export interface MindmapRenderProps {
     node?: any
 }
 
-const SMM_CSS = 'https://unpkg.com/simple-mind-map@0.10.2/dist/simpleMindMap.esm.css'
-const SMM_JS = 'https://unpkg.com/simple-mind-map@0.10.2/dist/simpleMindMap.umd.min.js'
+const SMM_CSS = 'https://cdn.jsdelivr.net/npm/simple-mind-map@0.10.2/dist/simpleMindMap.esm.css'
+const SMM_JS = 'https://cdn.jsdelivr.net/npm/simple-mind-map@0.10.2/dist/simpleMindMap.umd.min.js'
 
 function markdownToTree(md: string) {
     const lines = (md || '').split('\n').filter(l => l.trim())

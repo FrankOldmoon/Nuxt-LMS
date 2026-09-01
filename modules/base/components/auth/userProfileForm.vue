@@ -43,10 +43,6 @@
       <USelect v-model="form.gender" :items="genderOptions" :placeholder="$t('profile.genderPlaceholder')"
         class="w-full" :disabled="!canEditGeneral" />
     </UFormField>
-    <UFormField :label="$t('profile.rollNumber')" class="w-full">
-      <UInput v-model="form.rollNumber" :placeholder="$t('profile.rollNumberPlaceholder')" class="w-full"
-        :disabled="!canEditGeneral" />
-    </UFormField>
     <UFormField :label="$t('profile.class')" class="w-full">
       <USelect v-model="form.classId" :items="classOptions" :placeholder="$t('profile.classPlaceholder')"
         class="w-full" :disabled="!canEditClass" />
@@ -74,7 +70,6 @@ interface UserProfileForm {
   email: string
   gender: string
   avatarImg: string
-  rollNumber: string
   telephone: string
   classId: number | null
 }

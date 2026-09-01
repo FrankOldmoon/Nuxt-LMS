@@ -7,7 +7,6 @@ interface UserProfileForm {
   email: string
   gender: string
   avatarImg: string
-  rollNumber: string
   telephone: string
   classId: number | null
 }
@@ -42,11 +41,16 @@ export function useUserProfileForm(form: Ref<UserProfileForm>) {
 
   const classOptions = computed(() => {
     const opts = classes.value.map((c: any) => ({ label: c.name, value: c.id }))
-    if (form.value.classId != null && !opts.some((o) => o.value === form.value.classId)) {
-      opts.unshift({ label: `${t('profile.class')} #${form.value.classId}`, value: form.value.classId })
-    }
     return [{ label: '', value: null }, ...opts]
   })
+
+  // 当前班级未出现在已缓存的班级列表时，强制刷新班级列表，
+  // 确保班级下拉框显示班级真实名称，而不是构造出的 "#id" 占位。
+  watch(() => form.value.classId, (cur) => {
+    if (cur != null && !classes.value.some((c: any) => c.id === Number(cur))) {
+      loadClasses(true)
+    }
+  }, { immediate: true })
 
   const fileInputRef = ref<HTMLInputElement>()
   const uploading = ref(false)

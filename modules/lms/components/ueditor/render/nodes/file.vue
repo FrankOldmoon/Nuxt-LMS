@@ -32,7 +32,7 @@ import prettyBytes from 'pretty-bytes'
 
 import { computeAtomNodeStyle } from '../helpers'
 
-const CDN_URL = 'https://unpkg.com/@umoteam/editor-external@latest'
+const CDN_URL = 'https://cdn.jsdelivr.net/npm/@umoteam/editor-external@latest'
 
 const { t } = useI18n()
 

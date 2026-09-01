@@ -5,14 +5,13 @@ interface UserProfileForm {
   email: string
   gender: string
   avatarImg: string
-  rollNumber: string
   telephone: string
   classId: number | null
 }
 
 const EMPTY_FORM: UserProfileForm = {
   name: '', preferName: '', englishName: '', email: '',
-  gender: '', avatarImg: '', rollNumber: '', telephone: '',
+  gender: '', avatarImg: '', telephone: '',
   classId: null,
 }
 
@@ -43,7 +42,6 @@ export function useUserEditModal(
         email: data?.email || '',
         gender: data?.gender || '',
         avatarImg: data?.avatarImg || '',
-        rollNumber: data?.rollNumber || '',
         telephone: data?.telephone || '',
         classId: data?.classId ?? null,
       }

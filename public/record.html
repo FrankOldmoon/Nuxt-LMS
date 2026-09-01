@@ -187,7 +187,7 @@
     All processing happens locally in your browser. Grant microphone/camera permission when prompted.
   </div>
 
-  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
   <script>
     // ===== Helpers =====
     function pad(n) { return n.toString().padStart(2, '0'); }
@@ -425,7 +425,7 @@
           if (!window.FFmpeg) throw new Error('ffmpeg.min.js failed to load (check network)');
           ffmpegInstance = FFmpeg.createFFmpeg({
             log: false,
-            corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'
+            corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'
           });
           await ffmpegInstance.load();
         }

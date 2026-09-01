@@ -438,7 +438,7 @@ export function useClassUsersTable(
     }
     cols.push(
       { accessorKey: 'name', header: sortableHeader(t('classSelector.colName')) },
-      { accessorKey: 'rollNumber', header: sortableHeader(t('classSelector.colRollNumber')) },
+      { accessorKey: 'username', header: sortableHeader(t('classSelector.colUsername')) },
     )
     if (!props.hideActions) {
       cols.push({ id: 'resetPassword', header: t('classSelector.resetPassword') })

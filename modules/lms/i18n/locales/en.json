@@ -124,6 +124,7 @@
     "colName": "Name",
     "colPreferName": "Nickname",
     "colRollNumber": "Roll Number",
+    "colUsername": "Username",
     "colEmail": "Email",
     "colTelephone": "Telephone",
     "colNumber": "Number",

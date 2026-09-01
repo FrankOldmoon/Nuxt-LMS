@@ -40,7 +40,7 @@ beforeEach(() => {
 function makeForm(overrides: any = {}) {
   return ref({
     name: '', preferName: '', englishName: '', email: '',
-    gender: '', avatarImg: '', rollNumber: '', telephone: '',
+    gender: '', avatarImg: '', telephone: '',
     classId: null,
     ...overrides,
   })
@@ -116,14 +116,16 @@ describe('composables/useUserProfileForm - classOptions', () => {
     expect(classOptions.value[1].label).toBe('Class A')
   })
 
-  it('form.classId 不在 classes 列表时插入占位项', async () => {
+  it('form.classId 不在 classes 列表时不构造 "#id" 占位项', async () => {
     stubDeps({ classes: [{ id: 1, name: 'Class A' }] })
     setMockAuthUser(null)
     const { useUserProfileForm } = await import('../../composables/useUserProfileForm')
     const { classOptions } = useUserProfileForm(makeForm({ classId: 99 }))
-    // 空 + 占位(99) + Class A
-    expect(classOptions.value).toHaveLength(3)
-    expect(classOptions.value[1].value).toBe(99)
+    // 仅空选项 + Class A，不再插入 "#99" 之类的占位 option
+    expect(classOptions.value).toHaveLength(2)
+    expect(classOptions.value[0]).toEqual({ label: '', value: null })
+    expect(classOptions.value.map((o: any) => o.value)).toEqual([null, 1])
+    expect(classOptions.value.some((o: any) => String(o.value) === '99')).toBe(false)
   })
 })
 

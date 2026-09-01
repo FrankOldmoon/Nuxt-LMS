@@ -111,13 +111,13 @@ describe('composables/useClassUsersTable', () => {
     expect(r.onlineMap[7]).toBe(true)
   })
 
-  it('columns 包含 name/rollNumber', async () => {
+  it('columns 包含 name/username', async () => {
     const { useClassUsersTable } = await import('../../composables/useClassUsersTable')
     const r = useClassUsersTable(makeProps(), { UButton: () => {} })
     const cols = r.columns.value
     const ids = cols.map((c: any) => c.id || c.accessorKey)
     expect(ids).toContain('name')
-    expect(ids).toContain('rollNumber')
+    expect(ids).toContain('username')
     expect(ids).not.toContain('preferName')
   })
 

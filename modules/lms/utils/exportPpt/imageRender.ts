@@ -19,7 +19,7 @@ const MAX_CONTENT_WIDTH = 12.33
 // CDN 加载
 // ═══════════════════════════════════════
 
-const ECHARTS_CDN = 'https://unpkg.com/@umoteam/editor-external@latest/libs/echarts/echarts.min.js'
+const ECHARTS_CDN = 'https://cdn.jsdelivr.net/npm/@umoteam/editor-external@latest/libs/echarts/echarts.min.js'
 let echartsLoadPromise: Promise<void> | null = null
 
 /** 加载 echarts（幂等） */
@@ -52,8 +52,8 @@ export function loadEcharts(): Promise<void> {
   return echartsLoadPromise
 }
 
-const SMM_CSS = 'https://unpkg.com/simple-mind-map@0.10.2/dist/simpleMindMap.esm.css'
-const SMM_JS = 'https://unpkg.com/simple-mind-map@0.10.2/dist/simpleMindMap.umd.min.js'
+const SMM_CSS = 'https://cdn.jsdelivr.net/npm/simple-mind-map@0.10.2/dist/simpleMindMap.esm.css'
+const SMM_JS = 'https://cdn.jsdelivr.net/npm/simple-mind-map@0.10.2/dist/simpleMindMap.umd.min.js'
 let smmLoadPromise: Promise<void> | null = null
 
 /** 加载 simple-mind-map（幂等） */

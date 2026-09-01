@@ -123,7 +123,7 @@ function loadXlsxScript(url: string): Promise<boolean> {
 async function downloadXlsx() {
     exporting.value = true
     try {
-        const XLSX_CDN = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js'
+        const XLSX_CDN = 'https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.full.min.js'
         const ok = await loadXlsxScript(XLSX_CDN)
         const XLSX = (window as any).XLSX
         if (!ok || !XLSX) {

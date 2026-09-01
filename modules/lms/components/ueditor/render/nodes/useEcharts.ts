@@ -1,7 +1,7 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { calbaseConfigData, calbaseConfigOptions } from '../cal-service'
 
-const CDN_URL = 'https://unpkg.com/@umoteam/editor-external@latest'
+const CDN_URL = 'https://cdn.jsdelivr.net/npm/@umoteam/editor-external@latest'
 
 const shortId = (length = 8) =>
   Math.random().toString(36).substring(2, length + 2)

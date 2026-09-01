@@ -24,7 +24,7 @@ const props = defineProps({
   // CDN 地址（用于文件图标、echarts、KaTeX 等资源加载）
   cdnUrl: {
     type: String,
-    default: 'https://unpkg.com/@umoteam/editor-external@latest',
+    default: 'https://cdn.jsdelivr.net/npm/@umoteam/editor-external@latest',
   },
   // 默认行高
   lineHeight: {

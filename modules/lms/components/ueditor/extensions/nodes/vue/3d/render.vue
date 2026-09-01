@@ -92,8 +92,8 @@ let loadedMeshes = []
 let sceneLoaded = false
 
 // CDN (sandbox.babylonjs.com 同款 CDN)
-const BJS_CORE = 'https://cdn.babylonjs.com/babylon.js'
-const BJS_LOADERS = 'https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js'
+const BJS_CORE = 'https://cdn.jsdelivr.net/npm/babylonjs@latest/babylon.js'
+const BJS_LOADERS = 'https://cdn.jsdelivr.net/npm/babylonjs-loaders@latest/babylonjs.loaders.min.js'
 
 // 全局缓存 promise，避免重复加载或竞态
 let _babylonPromise = null

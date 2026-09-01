@@ -31,7 +31,7 @@ describe('composables/useProfileModal - 初始状态', () => {
 describe('composables/useProfileModal - watch isOpen', () => {
   it('isOpen 打开且有用户时加载表单数据', async () => {
     setMockAuthUser(
-      { id: 1, username: 'alice', name: 'Alice', preferName: 'Al', englishName: 'A', email: 'a@x.com', gender: 'female', avatarImg: 'http://x/a.png', rollNumber: '001', telephone: '123', classId: 5 },
+      { id: 1, username: 'alice', name: 'Alice', preferName: 'Al', englishName: 'A', email: 'a@x.com', gender: 'female', avatarImg: 'http://x/a.png', telephone: '123', classId: 5 },
       [{ code: 'student', name: 'Student' }],
     )
     const { useProfileModal } = await import('../../composables/useProfileModal')
@@ -44,7 +44,6 @@ describe('composables/useProfileModal - watch isOpen', () => {
     expect(form.value.email).toBe('a@x.com')
     expect(form.value.gender).toBe('female')
     expect(form.value.avatarImg).toBe('http://x/a.png')
-    expect(form.value.rollNumber).toBe('001')
     expect(form.value.telephone).toBe('123')
     expect(form.value.classId).toBe(5)
   })

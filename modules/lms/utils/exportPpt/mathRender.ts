@@ -12,7 +12,7 @@ import type { MathImage } from './types'
 import { markdownToTiptap } from '../markdown'
 
 // CDN 基址（与 math.vue 一致，共享浏览器缓存）
-const KATEX_CDN_BASE = 'https://unpkg.com/@umoteam/editor-external@latest/libs/katex'
+const KATEX_CDN_BASE = 'https://cdn.jsdelivr.net/npm/@umoteam/editor-external@latest/libs/katex'
 const HTML2CANVAS_CDN = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'
 
 /** 幻灯片内容区最大宽度（英寸，LAYOUT_WIDE = 13.33"，左右各 0.5" 边距） */

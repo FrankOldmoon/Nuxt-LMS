@@ -44,16 +44,16 @@ export function useUniverSheet(
 
   // Univer CDN 资源
   const UNIVER_CDN = {
-    css: 'https://unpkg.com/@univerjs/preset-sheets-core/lib/index.css',
+    css: 'https://cdn.jsdelivr.net/npm/@univerjs/preset-sheets-core/lib/index.css',
     scripts: [
-      'https://unpkg.com/react@18.3.1/umd/react.production.min.js',
-      'https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js',
-      'https://unpkg.com/rxjs/dist/bundles/rxjs.umd.min.js',
-      'https://unpkg.com/echarts@5.6.0/dist/echarts.min.js',
-      'https://unpkg.com/@univerjs/presets/lib/umd/index.js',
-      'https://unpkg.com/@univerjs/preset-sheets-core/lib/umd/index.js',
+      'https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js',
+      'https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js',
+      'https://cdn.jsdelivr.net/npm/rxjs@latest/dist/bundles/rxjs.umd.min.js',
+      'https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js',
+      'https://cdn.jsdelivr.net/npm/@univerjs/presets/lib/umd/index.js',
+      'https://cdn.jsdelivr.net/npm/@univerjs/preset-sheets-core/lib/umd/index.js',
     ],
-    locale: 'https://unpkg.com/@univerjs/preset-sheets-core/lib/umd/locales/zh-CN.js',
+    locale: 'https://cdn.jsdelivr.net/npm/@univerjs/preset-sheets-core/lib/umd/locales/zh-CN.js',
   }
 
   // ========== 销毁 Univer 实例 ==========
