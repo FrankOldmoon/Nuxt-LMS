@@ -7,7 +7,7 @@
       ></iframe>
       <button
         class="iframe-btn iframe-open-btn"
-        :title="'在新标签页打开'"
+        :title="$t('ueditor.iframe.openInNewTab')"
         @click.stop="openInNewTab"
       >
         <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
@@ -16,7 +16,7 @@
       </button>
       <button
         class="iframe-btn iframe-fullscreen-btn"
-        :title="isFullscreen ? '退出全屏' : '全屏'"
+        :title="isFullscreen ? $t('ueditor.iframe.exitFullscreen') : $t('ueditor.iframe.fullscreen')"
         @click.stop="toggleFullscreen"
       >
         <svg v-if="!isFullscreen" viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
@@ -132,6 +132,8 @@ onBeforeUnmount(() => {
 
 .iframe-fullscreen-btn {
   right: 6px;
+  /* 全屏按钮始终显示，不依赖悬停 */
+  opacity: 1;
 }
 
 .umo-node-iframe:hover .iframe-btn {

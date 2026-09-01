@@ -766,6 +766,11 @@
       "heading": "Table of Contents",
       "empty": "No table of contents"
     },
+    "iframe": {
+      "openInNewTab": "Open in new tab",
+      "fullscreen": "Fullscreen",
+      "exitFullscreen": "Exit fullscreen"
+    },
     "file": {
       "unknown": "Unknown file",
       "download": "Download",
