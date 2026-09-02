@@ -14,6 +14,11 @@ import { hashPassword } from "../utils/auth"
 const ADMIN_USERNAME = 'admin'
 const ADMIN_PASSWORD = 'REDACTED'
 
+// 固定 observer（只读观察者）账号配置
+const OBSERVER_USERNAME = 'observer'
+const OBSERVER_PASSWORD = 'REDACTED'
+const OBSERVER_CLASS = 'observer'
+
 export default defineNitroPlugin(async () => {
   // 1. 拍平播种：每个 site:* key 独立一行
   try {
@@ -69,6 +74,7 @@ export default defineNitroPlugin(async () => {
           { name: '管理员', code: 'admin' },
           { name: '教师', code: 'teacher' },
           { name: '学生', code: 'student' },
+          { name: '观察者', code: 'observer' },
         ]
         await db.insert(schema.roles).values(roleData).onConflictDoNothing()
         const roles = await db.select().from(schema.roles)
@@ -78,6 +84,7 @@ export default defineNitroPlugin(async () => {
           admin: permissions.map(p => p.id),
           teacher: permissions.filter(p => ['announce:write', 'file:manage'].includes(p.code)).map(p => p.id),
           student: [],
+          observer: [],
         }
         const rolePermInserts: { roleId: number; permissionId: number }[] = []
         for (const role of roles) {
@@ -160,5 +167,88 @@ export default defineNitroPlugin(async () => {
     }
   } catch (e) {
     console.error('[startup] admin 账号初始化失败', e)
+  }
+
+  // 4. 创建默认 observer（只读观察者）：角色 + 班级 + 账号（全程幂等）
+  try {
+    // 4.1 确保 observer 角色存在
+    const observerRoleRows = await db
+      .select({ id: schema.roles.id })
+      .from(schema.roles)
+      .where(eq(schema.roles.code, 'observer'))
+      .limit(1)
+    let observerRoleId = observerRoleRows[0]?.id
+    if (!observerRoleId) {
+      await db.insert(schema.roles).values({ name: '观察者', code: 'observer' }).onConflictDoNothing()
+      observerRoleId = (await db
+        .select({ id: schema.roles.id })
+        .from(schema.roles)
+        .where(eq(schema.roles.code, 'observer'))
+        .limit(1))[0]?.id
+    }
+    if (!observerRoleId) {
+      console.error('[startup] observer 角色创建失败')
+      return
+    }
+
+    // 4.2 确保 observer 班级存在
+    const observerClassRows = await db
+      .select({ id: schema.classes.id })
+      .from(schema.classes)
+      .where(eq(schema.classes.code, OBSERVER_CLASS))
+      .limit(1)
+    let observerClassId = observerClassRows[0]?.id
+    if (!observerClassId) {
+      await db.insert(schema.classes).values({ name: OBSERVER_CLASS, code: OBSERVER_CLASS }).onConflictDoNothing()
+      observerClassId = (await db
+        .select({ id: schema.classes.id })
+        .from(schema.classes)
+        .where(eq(schema.classes.code, OBSERVER_CLASS))
+        .limit(1))[0]?.id
+    }
+
+    // 4.3 创建 observer 账号（不存在才创建）
+    const observerUser = await db
+      .select({ id: schema.users.id })
+      .from(schema.users)
+      .where(eq(schema.users.username, OBSERVER_USERNAME))
+      .limit(1)
+    let observerUserId: number | undefined = observerUser[0]?.id
+    if (!observerUserId) {
+      const hashedPwd = await hashPassword(OBSERVER_PASSWORD)
+      await db.insert(schema.users).values({
+        username: OBSERVER_USERNAME,
+        password: hashedPwd,
+        name: 'Observer',
+        preferName: 'Observer',
+        englishName: 'Observer',
+        gender: 'other',
+        email: 'observer@university.edu.cn',
+        strongPwd: true,
+        defaultLocale: 'zh-CN',
+        avatarImg: '/avatar.webp',
+        classId: observerClassId ?? null,
+      }).onConflictDoNothing()
+      observerUserId = (await db
+        .select({ id: schema.users.id })
+        .from(schema.users)
+        .where(eq(schema.users.username, OBSERVER_USERNAME))
+        .limit(1))[0]?.id
+    }
+
+    if (!observerUserId) {
+      console.error('[startup] observer 账号创建失败')
+      return
+    }
+
+    // 绑定 observer 角色 + 加入 observer 班级（幂等）
+    await db.insert(schema.userRoles).values({ userId: observerUserId, roleId: observerRoleId }).onConflictDoNothing()
+    if (observerClassId) {
+      await db.insert(schema.userClasses).values({ userId: observerUserId, classId: observerClassId, isTeacher: false }).onConflictDoNothing()
+    }
+
+    console.log(`[startup] observer 账号就绪 (用户名: ${OBSERVER_USERNAME}, 密码: ${OBSERVER_PASSWORD}, 班级: ${OBSERVER_CLASS})`)
+  } catch (e) {
+    console.error('[startup] observer 初始化失败', e)
   }
 })

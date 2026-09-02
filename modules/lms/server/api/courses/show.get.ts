@@ -59,10 +59,12 @@ export default eventHandler(async (event) => {
   const user = await getCurrentUser(event)
   const isAdmin = user?.roles?.includes('admin')
   const isTeacher = user ? await isCourseTeacher(user.id, id) : false
-  const canEditAll = isAdmin || isTeacher
+  // observer 为只读观察者：所有章节可见（但不参与编辑权限判断）
+  const isObserver = user?.roles?.includes('observer')
+  const canViewAll = isAdmin || isTeacher || isObserver
 
-  if (canEditAll) {
-    // 教师/管理员：所有章节都可访问
+  if (canViewAll) {
+    // 教师/管理员/观察者：所有章节都可访问
     result.chapters = result.chapters.map(ch => ({ ...ch, accessible: true }))
   } else {
     // 普通用户：is_open=true 或其班级 class_chapter.open=true

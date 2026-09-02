@@ -18,8 +18,8 @@ export default eventHandler(async (event) => {
   const sortByName = (rows: { name: string }[]) =>
     rows.slice().sort((x, y) => compareByName(x.name, y.name))
 
-  // admin 返回所有班级
-  if (user.roles.includes('admin')) {
+  // admin / observer 返回所有班级（observer 为只读观察者，可全局选择班级）
+  if (user.roles.includes('admin') || user.roles.includes('observer')) {
     const data = await db
       .select(cols)
       .from(schema.classes)
