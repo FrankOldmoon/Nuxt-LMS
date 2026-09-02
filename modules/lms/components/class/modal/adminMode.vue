@@ -1,9 +1,9 @@
 <template>
   <!-- 班级选择行 -->
   <div class="flex items-center gap-2">
-    <UInputMenu v-if="classOptions.length && !editingClassName" v-model="selectedItem" :items="classOptions"
-      value-key="value" label-key="label" :placeholder="$t('classSelector.searchPlaceholder')"
-      :loading="classLoading" icon="i-lucide-search" class="flex-1" @change="onClassChange" />
+    <USelectMenu v-if="classOptions.length && !editingClassName" v-model="selectedItem" :items="classOptions"
+      value-key="value" option-attribute="label" :placeholder="$t('classSelector.searchPlaceholder')"
+      :loading="classLoading" class="flex-1" size="sm" @change="onClassChange" />
 
     <!-- 编辑班级名称 -->
     <UInput v-if="selectedClassId && editingClassName" v-model="editClassName" size="sm" class="flex-1"
