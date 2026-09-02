@@ -125,7 +125,7 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
     }
 
     async function fetchRecord() {
-        if (isTeacher.value) return
+        if (!isLoggedIn.value || isTeacher.value) return
         if (!quizId.value || !effectiveCourseId.value) return
         try {
             const data = await cRequest(`/api/quizzes/record?course_id=${effectiveCourseId.value}&cid=${quizId.value}`)

@@ -16,6 +16,10 @@ import VideoRender from './render/video.vue'
 import EvaluationRender from './render/evaluation.vue'
 import OjRender from './render/oj.vue'
 
+// OJ 题型：同一会话内每个 OJ 题只查一次 OJ 状态（key: courseId:questionId），
+// 避免重复调用外部 OJ；手动复查走 useOj.ts 的完整查询，不受此缓存影响
+const ojChecked = new Set<string>()
+
 export interface QuestionRenderProps {
     node?: any
     question?: any
@@ -292,10 +296,15 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
     }
     async function fetchRecord() {
         const cid = effectiveCourseId.value
-        if (!questionId.value || !cid) return
+        if (!isLoggedIn.value || !questionId.value || !cid) return
         if (question.value?.type === 'evaluation') return
+        // OJ 题：同一会话内只查询一次 OJ 状态，避免重复调用外部 OJ（手动复查仍走完整流程）
+        const isOj = question.value?.type === 'oj'
+        const ojKey = `${cid}:${questionId.value}`
+        const skipOj = isOj && ojChecked.has(ojKey)
+        if (isOj) ojChecked.add(ojKey)
         try {
-            const data = await cRequest(`/api/questions/record?course_id=${cid}&cid=${questionId.value}`)
+            const data = await cRequest(`/api/questions/record?course_id=${cid}&cid=${questionId.value}${skipOj ? '&skip_oj=1' : ''}`)
             if (data && question.value && Array.isArray(data.records) && data.records.length > 0) {
                 question.value.record = [...data.records]
                 // show 不再下发答案，correct_rate 直接用服务端存储值（userQuestions.correctRate）

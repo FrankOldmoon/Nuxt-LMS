@@ -156,7 +156,7 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
 
     // 鼠标移入时（仅一次）获取当前用户的提交记录，填充到提交状态
     async function fetchRecord() {
-        if (!homeworkId.value || !effectiveCourseId.value) return
+        if (!isLoggedIn.value || !homeworkId.value || !effectiveCourseId.value) return
         try {
             const data = await cRequest(`/api/homeworks/record?course_id=${effectiveCourseId.value}&cid=${homeworkId.value}`)
             if (data) {

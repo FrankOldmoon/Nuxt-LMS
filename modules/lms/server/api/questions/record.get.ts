@@ -5,7 +5,7 @@ import { findUserSubmitRecord } from "../../utils/submit/record"
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
 
-  const { course_id, cid } = getQuery(event)
+  const { course_id, cid, skip_oj } = getQuery(event)
   if (!course_id || !cid) {
     return cResp(null, '缺少 course_id 或 cid 参数', false)
   }
@@ -21,7 +21,7 @@ export default eventHandler(async (event) => {
       eq(schema.questions.cid, questionCid)
     )
   })
-  if (question?.type === 'oj') {
+  if (question?.type === 'oj' && !skip_oj) {
     const pid = String(question.content || '')
     if (pid) {
       try {
