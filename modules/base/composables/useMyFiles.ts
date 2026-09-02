@@ -80,8 +80,11 @@ export function useMyFiles(group: () => string | undefined, open?: Ref<boolean |
   async function uploadFile(file: File) {
     uploading.value = true
     try {
+      // 图片文件先压缩（compressImage 内部对非图片/GIF/SVG 返回原文件）
+      const isImage = file.type.startsWith('image/')
+      const uploadFile = isImage ? await compressImage(file) : file
       const formData = new FormData()
-      formData.append('files', file)
+      formData.append('files', uploadFile)
       if (group()) formData.append('group', group()!)
       const resp: any = await $fetch('/api/files/upload', {
         method: 'POST',
