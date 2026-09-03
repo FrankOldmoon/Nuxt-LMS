@@ -76,7 +76,7 @@
     "danmaku": "Danmaku",
     "danmakuPlaceholder": "Type a message...",
     "danmakuSend": "Send",
-    "danmakuToggle": "Allow Student Danmaku",
+    "danmakuToggle": "弹幕",
     "danmakuToggleHint": "When off, students cannot send danmaku",
     "danmakuDisabled": "Danmaku is disabled",
     "vote": "Vote",
