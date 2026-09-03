@@ -5,10 +5,10 @@
             : 'bg-muted/30 border-default hover:bg-muted/50']" @click="$emit('click')">
         <UAvatar :src="user.avatarImg || undefined" :alt="user.name" :text="user.name?.charAt(0)" :size="avatarSize" />
         <span class="truncate w-full leading-tight" :class="textClass">
-            {{ user.preferName || user.name }}
+            {{ user.name || user.preferName }}
         </span>
-        <span v-if="user.rollNumber" class="text-muted font-mono truncate w-full leading-tight" :class="subTextClass">
-            {{ user.rollNumber }}
+        <span v-if="user.username" class="text-muted font-mono truncate w-full leading-tight" :class="subTextClass">
+            {{ user.username }}
         </span>
         <slot />
     </div>
@@ -20,6 +20,7 @@ const props = withDefaults(defineProps<{
         id?: number
         name: string
         preferName?: string | null
+        username?: string | null
         avatarImg?: string | null
         rollNumber?: string | null
     }

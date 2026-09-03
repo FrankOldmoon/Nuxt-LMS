@@ -157,6 +157,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
             name: s.name,
             preferName: s.preferName,
             rollNumber: s.rollNumber,
+            username: s.username,
             avatarImg: s.avatarImg,
             score: scoreMap.get(s.id)?.score ?? 0,
             correctCount: scoreMap.get(s.id)?.correctCount ?? 0,

@@ -57,6 +57,7 @@ export function useChapterScore(props: { courseId: number; chapterId: number; cl
         name: s.name,
         preferName: s.preferName,
         rollNumber: s.rollNumber,
+        username: s.username,
         avatarImg: s.avatarImg,
         score: sd?.score ?? 0,
         items: sd?.items ?? [],

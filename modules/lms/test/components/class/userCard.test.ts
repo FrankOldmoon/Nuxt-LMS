@@ -53,7 +53,7 @@ const _globalConfig = {
 
 describe('class/userCard.vue', () => {
   it('用户已登录时渲染卡片', async () => {
-    setMockAuthUser({ id: 1, name: 'Alice', preferName: 'Al', rollNumber: 'S001', avatarImg: null })
+    setMockAuthUser({ id: 1, name: 'Alice', preferName: 'Al', username: 'S001', avatarImg: null })
     setMockRoute({ params: {}, query: {}, path: '/', fullPath: '/' })
     const { default: UserCard } = await import('../../../components/class/userCard.vue')
     const wrapper = mount(UserCard, { global: _globalConfig })
@@ -62,22 +62,24 @@ describe('class/userCard.vue', () => {
     expect(wrapper.text()).toContain('Alice')
   })
 
-  it('显示 preferName 优先于 name', async () => {
-    setMockAuthUser({ id: 1, name: 'Alice', preferName: 'Ally', rollNumber: '', avatarImg: null })
+  it('显示 name 优先于 preferName', async () => {
+    setMockAuthUser({ id: 1, name: 'Alice', preferName: 'Ally', username: '', avatarImg: null })
     setMockRoute({ params: {}, query: {}, path: '/', fullPath: '/' })
     const { default: UserCard } = await import('../../../components/class/userCard.vue')
     const wrapper = mount(UserCard, { global: _globalConfig })
     await flushPromises()
-    expect(wrapper.text()).toContain('Ally')
+    expect(wrapper.text()).toContain('Alice')
+    expect(wrapper.text()).not.toContain('Ally')
   })
 
-  it('显示学号 rollNumber', async () => {
-    setMockAuthUser({ id: 1, name: 'Alice', preferName: '', rollNumber: 'R001', avatarImg: null })
+  it('显示 username 而非 rollNumber', async () => {
+    setMockAuthUser({ id: 1, name: 'Alice', preferName: '', username: 'R001', rollNumber: 'S1', avatarImg: null })
     setMockRoute({ params: {}, query: {}, path: '/', fullPath: '/' })
     const { default: UserCard } = await import('../../../components/class/userCard.vue')
     const wrapper = mount(UserCard, { global: _globalConfig })
     await flushPromises()
     expect(wrapper.text()).toContain('R001')
+    expect(wrapper.text()).not.toContain('S1')
   })
 
   it('用户未登录时不渲染卡片', async () => {

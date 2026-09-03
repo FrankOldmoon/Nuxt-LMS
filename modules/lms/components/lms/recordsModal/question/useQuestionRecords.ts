@@ -43,6 +43,7 @@ export function useQuestionRecords(props: QuestionRecordsProps, emit: QuestionRe
             name: s.name,
             preferName: s.preferName,
             rollNumber: s.rollNumber,
+            username: s.username,
             avatarImg: s.avatarImg,
             record: recordMap.get(s.id) || null,
         }))

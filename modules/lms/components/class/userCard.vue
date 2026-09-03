@@ -10,10 +10,10 @@
       />
       <div class="flex-1 min-w-0">
         <div class="font-semibold text-highlighted truncate">
-          {{ user.preferName || user.name }}
+          {{ user.name || user.preferName }}
         </div>
-        <div v-if="user.rollNumber" class="text-xs text-muted truncate font-mono mt-0.5">
-          {{ user.rollNumber }}
+        <div v-if="user.username" class="text-xs text-muted truncate font-mono mt-0.5">
+          {{ user.username }}
         </div>
         <!-- 已获得的奖章 -->
         <div v-if="myMedals.length" class="flex flex-wrap gap-1 mt-1">

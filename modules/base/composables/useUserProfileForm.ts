@@ -31,7 +31,8 @@ export function useUserProfileForm(form: Ref<UserProfileForm>) {
   const canEditAvatar = computed(() => allowSelfAvatarUpload.value && canEditGeneral.value)
   const canEditClass = computed(() => hasRole('admin'))
   const canEditEmail = computed(() => allowChangeEmail.value && canEditGeneral.value)
-  const canEditPassword = computed(() => allowChangePassword.value && canEditGeneral.value)
+  // 修改密码：任何已登录用户（含普通学生）都可修改自己的密码，仅受全局配置开关约束
+  const canEditPassword = computed(() => allowChangePassword.value)
 
   const genderOptions = computed(() => [
     { label: t('profile.genderMale'), value: 'male' },

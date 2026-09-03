@@ -190,6 +190,7 @@ export function useCourseGrades(
         name: s.name,
         preferName: s.preferName,
         rollNumber: s.rollNumber,
+        username: s.username,
         avatarImg: s.avatarImg,
         group: g?.group || '',
         score: g?.score ?? 0,

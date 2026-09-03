@@ -33,6 +33,7 @@ export function useCourseLeaderboard(
       name: s.name,
       preferName: s.preferName,
       rollNumber: s.rollNumber,
+      username: s.username,
       avatarImg: s.avatarImg,
       score: scoreMap.get(s.id) ?? 0,
     }))

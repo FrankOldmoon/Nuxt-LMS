@@ -74,7 +74,8 @@ describe('composables/useUserProfileForm - canEdit* (基于角色)', () => {
     expect(canEditAvatar.value).toBe(false)
     expect(canEditClass.value).toBe(false)
     expect(canEditEmail.value).toBe(false)
-    expect(canEditPassword.value).toBe(false)
+    // 学生也能修改自己的密码
+    expect(canEditPassword.value).toBe(true)
   })
 
   it('allowSelfAvatarUpload=false 时 admin 也不可编辑头像', async () => {

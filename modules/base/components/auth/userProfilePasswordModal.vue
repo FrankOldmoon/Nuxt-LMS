@@ -12,7 +12,7 @@
             :placeholder="$t('profile.newPasswordPlaceholder')" class="w-full" />
         </UFormField>
         <UFormField :label="$t('profile.confirmNewPassword')" required
-          :error="pwdForm.newPassword && pwdForm.confirmPassword && pwdForm.newPassword !== pwdForm.confirmPassword ? $t('profile.passwordMismatch') : ''">
+          :error="pwdForm.newPassword && pwdForm.confirmPassword && pwdForm.newPassword !== pwdForm.confirmPassword ? $t('profile.passwordMismatch') : undefined">
           <UInput v-model="pwdForm.confirmPassword" type="password"
             :placeholder="$t('profile.confirmNewPasswordPlaceholder')" class="w-full" />
         </UFormField>

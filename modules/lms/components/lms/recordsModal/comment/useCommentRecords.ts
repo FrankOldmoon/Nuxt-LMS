@@ -36,6 +36,7 @@ export function useCommentRecords(props: CommentRecordsProps, emit: CommentRecor
             name: s.name,
             preferName: s.preferName,
             rollNumber: s.rollNumber,
+            username: s.username,
             avatarImg: s.avatarImg,
             record: recordMap.get(s.id) || null,
         }))

@@ -27,14 +27,23 @@ describe('auth/userCard.vue', () => {
     expect(wrapper.text()).toContain('Alice')
   })
 
-  it('优先显示 preferName 而非 name', async () => {
+  it('优先显示 name 而非 preferName', async () => {
     const { default: UserCard } = await import('../../components/auth/userCard.vue')
     const wrapper = mount(UserCard, {
       props: { user: { id: 1, name: 'Alice', preferName: '小爱' } },
       global: { stubs: _globalStubs },
     })
+    expect(wrapper.text()).toContain('Alice')
+    expect(wrapper.text()).not.toContain('小爱')
+  })
+
+  it('name 缺失时回退到 preferName', async () => {
+    const { default: UserCard } = await import('../../components/auth/userCard.vue')
+    const wrapper = mount(UserCard, {
+      props: { user: { id: 1, name: null as any, preferName: '小爱' } },
+      global: { stubs: _globalStubs },
+    })
     expect(wrapper.text()).toContain('小爱')
-    expect(wrapper.text()).not.toContain('Alice')
   })
 
   it('selected=true 时应用 primary 样式', async () => {
@@ -65,13 +74,14 @@ describe('auth/userCard.vue', () => {
     expect(wrapper.emitted('click')).toBeTruthy()
   })
 
-  it('显示 rollNumber', async () => {
+  it('显示 username 而非 rollNumber', async () => {
     const { default: UserCard } = await import('../../components/auth/userCard.vue')
     const wrapper = mount(UserCard, {
-      props: { user: { id: 1, name: 'Alice', rollNumber: '001' } },
+      props: { user: { id: 1, name: 'Alice', username: '001', rollNumber: '99' } },
       global: { stubs: _globalStubs },
     })
     expect(wrapper.text()).toContain('001')
+    expect(wrapper.text()).not.toContain('99')
   })
 
   it('size=lg 应用大尺寸 class', async () => {
