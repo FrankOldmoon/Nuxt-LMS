@@ -24,7 +24,24 @@ let idCounter = 0
 
 const { onDanmaku } = useWebSocket()
 
-onDanmaku((data) => {
+// 去重窗口：同一 (text|from) 在窗口内只渲染一次，防止
+// 组件多次挂载/重复订阅导致同一条记录重复 push
+const seenCache = new Map<string, number>()
+const DEDUP_WINDOW_MS = 10000
+
+const unregisterDanmaku = onDanmaku((data) => {
+  const key = `${data.from}|${data.text}`
+  const now = Date.now()
+  const lastSeen = seenCache.get(key)
+  if (lastSeen && now - lastSeen < DEDUP_WINDOW_MS) return
+  seenCache.set(key, now)
+  // 定期清理过期的去重记录，避免无限增长
+  if (seenCache.size > 200) {
+    for (const [k, t] of seenCache) {
+      if (now - t >= DEDUP_WINDOW_MS) seenCache.delete(k)
+    }
+  }
+
   const item: DanmakuItem = {
     id: idCounter++,
     text: data.text,
@@ -35,6 +52,11 @@ onDanmaku((data) => {
   setTimeout(() => {
     danmakuList.value = danmakuList.value.filter(d => d.id !== item.id)
   }, 8000)
+})
+
+// 卸载时注销回调，避免回调在全局 handler 表中累积导致同一条广播被多次渲染
+onUnmounted(() => {
+  unregisterDanmaku()
 })
 </script>
 

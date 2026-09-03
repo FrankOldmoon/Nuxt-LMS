@@ -280,6 +280,36 @@ export function useClassUsersTable(
     editModal.value?.show()
   }
 
+  // ====================== 移除教师（任课关系） ======================
+  const removeTeacherOpen = ref(false)
+  const removeTeacherUserId = ref<number | null>(null)
+  const removeTeacherName = ref('')
+  const removingTeacher = ref(false)
+
+  function confirmRemoveTeacher(t: any) {
+    removeTeacherUserId.value = t?.id ?? null
+    removeTeacherName.value = t?.name || ''
+    removeTeacherOpen.value = true
+  }
+
+  async function doRemoveTeacher() {
+    if (!props.classId || !removeTeacherUserId.value) return
+    removingTeacher.value = true
+    try {
+      await cRequest('/api/classes/remove-teacher', {
+        method: 'POST',
+        body: { classId: props.classId, userId: removeTeacherUserId.value },
+      })
+      toast.add({ title: t('classSelector.removeTeacherSuccess'), color: 'success' })
+      removeTeacherOpen.value = false
+      refresh()
+    } catch (err: any) {
+      toast.add({ title: err.message || t('classSelector.removeTeacherFailed'), color: 'error' })
+    } finally {
+      removingTeacher.value = false
+    }
+  }
+
   // ====================== 排序表头 ======================
   
 
@@ -505,6 +535,8 @@ export function useClassUsersTable(
     classId: () => props.classId,
     openEdit, openReset, openStats, autoFillNumbers, onNumberBlur,
     editModal, editingUserId,
+    confirmRemoveTeacher, doRemoveTeacher,
+    removeTeacherOpen, removeTeacherUserId, removeTeacherName, removingTeacher,
     resetOpen, resetPassword, doResetPassword,
     statsOpen, statsUserId, statsUser,
     sortableHeader,

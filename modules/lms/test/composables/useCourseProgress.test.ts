@@ -142,4 +142,23 @@ describe('composables/useCourseProgress', () => {
     expect(tableData.value[0].label).toBe('Ch1')
     expect(tableData.value[0].to).toBe('/course/1/2')
   })
+
+  it('tasks 列：未开放/不可访问的章节不显示内部题目', async () => {
+    const { useCourseProgress } = await import('../../composables/useCourseProgress')
+    const isOpen = ref(false)
+    const ui = { UButton: {}, UTooltip: {}, UIcon: {}, NuxtLink: {} }
+    const { columns } = useCourseProgress({ courseId: '1', navigation: [] }, isOpen, ui)
+    const tasksCol = columns.find(c => c.id === 'tasks')
+    expect(tasksCol).toBeDefined()
+
+    const items = [{ id: 1, type: 'question', status: 'todo' } as const]
+
+    // accessible=false：即使有 items 也不渲染
+    const locked = tasksCol!.cell({ row: { original: { accessible: false, items } } as any })
+    expect(locked).toBeNull()
+
+    // accessible=true：渲染题目
+    const opened = tasksCol!.cell({ row: { original: { accessible: true, items } } as any })
+    expect(opened).toBeTruthy()
+  })
 })

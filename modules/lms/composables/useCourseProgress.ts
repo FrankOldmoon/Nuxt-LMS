@@ -172,8 +172,10 @@ export function useCourseProgress(
       id: 'tasks',
       header: () => t('coursePanel.tasks'),
       cell: ({ row }) => {
-        const items = (row.original as ProgressRow)?.items
-        if (!items?.length) return null
+        const orig = row.original as ProgressRow
+        // 未开放/不可访问的章节不显示内部题目（与链接、锁图标逻辑保持一致）
+        const items = orig?.accessible ? (orig.items || []) : []
+        if (!items.length) return null
         return h('div', { class: 'flex items-center gap-1 flex-wrap' },
           items.map((item: TaskItem) =>
             h(UTooltip, { key: `${item.type}-${item.id}`, text: `${item.type} #${item.id} (${item.status})` }, () =>

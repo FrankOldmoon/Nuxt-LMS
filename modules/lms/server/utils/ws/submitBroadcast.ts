@@ -154,7 +154,8 @@ async function resolveUserClassContext(userId: number): Promise<{ classId: numbe
     if (!u || !u.classId) return null
     return {
       classId: Number(u.classId),
-      name: String(u.preferName || u.name || u.username || 'anonymous'),
+      // 弹幕来源显示 user.name（优先），name 为空时回退 username
+      name: String(u.name || u.username || 'anonymous'),
     }
   } catch {
     return null

@@ -2,7 +2,7 @@
  * class/usersTable/teachers.vue 组件测试
  * @see modules/lms/components/class/usersTable/teachers.vue
  *
- * 教师列表：头像 + 姓名 + 编辑按钮。
+ * 教师列表：头像 + 姓名 + 删除按钮（移除任课关系）+ 确认弹窗。
  * 依赖 useClassUsersTableContext()（inject），测试中 stub 到 globalThis。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -19,6 +19,7 @@ const _globalStubs = {
   UAvatar: { template: '<span class="avatar">{{ alt || text }}</span>', props: ['src', 'alt', 'text', 'size'] },
   UButton: { template: '<button @click="$emit(\'click\')">{{ label }}<slot /></button>', props: ['icon', 'size', 'color', 'variant', 'aria-label'] },
   USeparator: { template: '<hr class="separator" />' },
+  UModal: { template: '<div class="modal"><slot v-if="open" /></div>', props: ['open'], emits: ['update:open'] },
 }
 
 const _globalConfig = {
@@ -31,7 +32,11 @@ function setupMockContext(overrides: any = {}) {
     teachers: ref([]),
     students: ref([]),
     hideTeachers: () => false,
-    openEdit: vi.fn(),
+    confirmRemoveTeacher: vi.fn(),
+    doRemoveTeacher: vi.fn(),
+    removeTeacherOpen: ref(false),
+    removeTeacherName: ref(''),
+    removingTeacher: ref(false),
     ...overrides,
   }
   ;(globalThis as any).useClassUsersTableContext = () => ctx
@@ -73,16 +78,16 @@ describe('class/usersTable/teachers.vue', () => {
     expect(wrapper.find('.separator').exists()).toBe(true)
   })
 
-  it('点击编辑按钮调用 openEdit', async () => {
-    const openEdit = vi.fn()
+  it('点击删除按钮调用 confirmRemoveTeacher', async () => {
+    const confirmRemoveTeacher = vi.fn()
     setupMockContext({
       teachers: ref([{ id: 5, name: 'Teacher A', avatarImg: null }]),
-      openEdit,
+      confirmRemoveTeacher,
     })
     const { default: Teachers } = await import('../../../../components/class/usersTable/teachers.vue')
     const wrapper = mount(Teachers, { global: _globalConfig })
     const btn = wrapper.find('button')
     await btn.trigger('click')
-    expect(openEdit).toHaveBeenCalledWith(5)
+    expect(confirmRemoveTeacher).toHaveBeenCalledWith(expect.objectContaining({ id: 5 }))
   })
 })
