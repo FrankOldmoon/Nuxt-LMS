@@ -96,8 +96,10 @@ export function setupChapterTask(opts: {
     const topBlocks: any[] = Array.isArray(opts.content.value?.content)
       ? opts.content.value.content
       : []
-    // 预先扫描：每个带 id 的顶层 heading，其之后（直到下一个 heading）是否有 codeBlock/blockquote
-    const trackedBelow = new Map<number, boolean>()
+    // 预先扫描：每个带 id 的顶层 heading，其之后（直到下一个 heading）的内容情况
+    // - hasTracked：是否有 codeBlock/blockquote（这类块需 hover 3s 才能读完）
+    // - hasAny：是否还有任何内容块（含段落 / 互动 vue / 代码块 / 引用等）
+    const belowInfo = new Map<number, { hasTracked: boolean, hasAny: boolean }>()
     let lastHIndex = -1
     for (let i = 0; i < topBlocks.length; i++) {
       const c = topBlocks[i]
@@ -105,8 +107,11 @@ export function setupChapterTask(opts: {
       if (c.type === 'heading') {
         const id = c.attrs?.id || c.attrs?.['data-toc-id']
         lastHIndex = id ? i : lastHIndex
-      } else if (lastHIndex >= 0 && (c.type === 'codeBlock' || c.type === 'blockquote')) {
-        trackedBelow.set(lastHIndex, true)
+      } else if (lastHIndex >= 0) {
+        const info = belowInfo.get(lastHIndex) || { hasTracked: false, hasAny: false }
+        info.hasAny = true
+        if (c.type === 'codeBlock' || c.type === 'blockquote') info.hasTracked = true
+        belowInfo.set(lastHIndex, info)
       }
     }
     // 章节标题 h1（合成）作为初始当前 heading，其下的顶层块归属它
@@ -116,8 +121,11 @@ export function setupChapterTask(opts: {
       if (child.type === 'heading') {
         const id = child.attrs?.id || child.attrs?.['data-toc-id']
         if (id) curHeading = String(id)
-        // 无受监控阅读块的标题：自身作为可阅读块，hover 标题即完成
-        if (id && !trackedBelow.get(index)) {
+        const info = belowInfo.get(index)
+        // 标题下无受监控阅读块但仍存在其他内容（段落/互动 vue 等）：
+        //   标题自身作为可阅读块，hover 标题即完成
+        // 标题下完全无任何内容：不作为可阅读块 → 空标题进章节自动完成
+        if (id && info && info.hasTracked === false && info.hasAny === true) {
           const key = String(index)
           blockToHeading[key] = curHeading
           ;(byHeading[curHeading] ||= []).push(key)

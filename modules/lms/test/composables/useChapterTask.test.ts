@@ -248,8 +248,7 @@ describe('composables/useChapterTask', () => {
     expect(ctx.isBlockRead('2')).toBe(false)
   })
 
-  it('无可监控块的标题：自身作为可阅读块，读取后完成', async () => {
-    vi.useFakeTimers()
+  it('空标题（下无任何内容）：不作为可阅读块，进章节自动完成', async () => {
     const { setupChapterTask } = await import('../../composables/useChapterTask')
     const content = ref(makeContent([
       { type: 'heading', attrs: { id: 'auto', level: 2 }, content: [{ type: 'text', text: 'A' }] },
@@ -259,13 +258,29 @@ describe('composables/useChapterTask', () => {
       chapterId: ref(1),
       courseId: ref(1),
     })
-    // 标题自身 key 为其顶层块 index（0），尚未读取 → 未完成
-    expect(ctx.blockHeadingOf('0')).toBe('auto')
-    expect(ctx.isHeadingDone('auto')).toBe(false)
-    // hover(读取)标题自身后完成
+    // 标题下完全无内容块 → 标题自身不作为可阅读块（blockHeadingOf('0') 为 null）
+    // 因此该 heading 的 blocks 为空，进入章节即被 watcher 自动标记完成
+    expect(ctx.blockHeadingOf('0')).toBe(null)
+  })
+
+  it('标题下仅有普通段落（无 codeBlock/blockquote）：自身作为可阅读块，hover 标题完成', async () => {
+    vi.useFakeTimers()
+    const { setupChapterTask } = await import('../../composables/useChapterTask')
+    const content = ref(makeContent([
+      { type: 'heading', attrs: { id: 'hh', level: 2 }, content: [{ type: 'text', text: 'H' }] },
+      { type: 'paragraph', content: [{ type: 'text', text: 'para' }] },
+    ]))
+    const ctx = setupChapterTask({
+      content,
+      chapterId: ref(1),
+      courseId: ref(1),
+    })
+    // 标题后仍有普通段落 → 标题自身作为可阅读块（key='0'）
+    expect(ctx.blockHeadingOf('0')).toBe('hh')
+    expect(ctx.isHeadingDone('hh')).toBe(false)
     ctx.markBlockRead('0')
     await vi.advanceTimersByTimeAsync(1000)
-    expect(ctx.isHeadingDone('auto')).toBe(true)
+    expect(ctx.isHeadingDone('hh')).toBe(true)
     vi.useRealTimers()
   })
 
