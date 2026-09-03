@@ -71,6 +71,7 @@
     <!-- 学生学习数据弹窗（点击姓名触发） -->
     <ClassUsersTableStudentStatsModal v-model:open="statsOpen"
       :user-id="statsUserId || 0"
+      :course-id="currentCourseId"
       :class-id="classId() || 0"
       :user="statsUser" />
   </div>
@@ -81,7 +82,7 @@ const { t } = useI18n()
 
 const {
   showGroup, activeTab, sorting, students, columns,
-  hideNumber, hideActions, extraColumns, classId,
+  hideNumber, hideActions, extraColumns, classId, currentCourseId,
   numberMap, sortableHeader,
   onNumberBlur, autoFillNumbers, openEdit, openReset, openStats,
   statsOpen, statsUserId, statsUser,

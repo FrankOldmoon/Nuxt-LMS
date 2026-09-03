@@ -463,18 +463,20 @@ describe('API: courses/leaderboard.get', () => {
       { id: 4, isTeacher: false },
     ])
     _mockDb.where = vi.fn().mockResolvedValue([
-      { userId: 2, score: '70' },
-      { userId: 3, score: '90' },
-      { userId: 4, score: '80' },
+      { userId: 2, score: '70', exp: 500 },
+      { userId: 3, score: '90', exp: 1200 },
+      { userId: 4, score: '80', exp: 150 },
     ])
     const handler = (await import('../../server/api/courses/leaderboard.get')).default
     const r = await handler(makeEvent({ query: { courseId: '1', classId: '2' } }))
     expect(r.success).toBe(true)
     expect(r.data.top10).toHaveLength(3)
     expect(r.data.top10[0].userId).toBe(3)   // 90 分第一
+    expect(r.data.top10[0].exp).toBe(1200)   // 携带经验值
     expect(r.data.top10[1].userId).toBe(4)   // 80 分第二
     expect(r.data.myRank).toBe(1)            // 当前用户第 1 名
     expect(r.data.myInfo.score).toBe(90)
+    expect(r.data.myInfo.exp).toBe(1200)
   })
 })
 

@@ -421,6 +421,7 @@ export function useClassUsersTable(
     if (!row || !row.id) return
     statsUserId.value = Number(row.id)
     statsUser.value = row
+    console.log('[DEBUG openStats] 点击学生姓名 打开统计弹窗: userId=', statsUserId.value, 'name=', row.name, 'courseId=', currentCourseId.value)
     statsOpen.value = true
   }
 
@@ -533,6 +534,7 @@ export function useClassUsersTable(
     hideTeachers: () => props.hideTeachers,
     extraColumns: () => props.extraColumns,
     classId: () => props.classId,
+    currentCourseId,
     openEdit, openReset, openStats, autoFillNumbers, onNumberBlur,
     editModal, editingUserId,
     confirmRemoveTeacher, doRemoveTeacher,

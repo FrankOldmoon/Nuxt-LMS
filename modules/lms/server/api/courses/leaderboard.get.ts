@@ -20,11 +20,12 @@ export default eventHandler(async (event) => {
     const studentIds = classUsers.filter(u => !u.isTeacher).map(u => u.id)
     if (studentIds.length === 0) return cResp({ top10: [], myRank: null, myInfo: null })
 
-    // 查询这些学生在本课程的得分
+    // 查询这些学生在本课程的得分与经验
     const rows = await db
         .select({
             userId: schema.userCourses.userId,
             score: schema.userCourses.score,
+            exp: schema.userCourses.exp,
         })
         .from(schema.userCourses)
         .where(and(
@@ -34,14 +35,18 @@ export default eventHandler(async (event) => {
 
     // 合并：有成绩的用实际分，无成绩的补0（确保至少10条）
     const scoreMap = new Map(rows.map(r => [r.userId, Number(r.score) || 0]))
+    const expMap = new Map(rows.map(r => [r.userId, Number(r.exp) || 0]))
     const allStudents = studentIds.map(userId => ({
         userId,
         score: scoreMap.get(userId) ?? 0,
+        exp: expMap.get(userId) ?? 0,
     })).sort((a, b) => b.score - a.score)
 
     // 我的排名（全程，不含截断）
     const myRank = allStudents.findIndex(s => s.userId === user.id)
-    const myInfo = myRank >= 0 ? { userId: user.id, score: allStudents[myRank].score } : null
+    const myInfo = myRank >= 0
+        ? { userId: user.id, score: allStudents[myRank].score, exp: allStudents[myRank].exp }
+        : null
 
     return cResp({
         // 只返回前 10 名，供前端排行榜表格展示

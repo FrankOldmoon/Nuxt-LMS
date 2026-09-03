@@ -109,28 +109,30 @@ function shouldBroadcast(
 }
 
 /**
- * 根据 kind + 结果拼接弹幕文本（带 emoji + 得分信息的完整格式）
- * 单条弹幕限 200 字符以内（与现有 danmaku 协议一致）。
+ * 根据 kind + 结果返回弹幕 i18n 描述（key + 插值参数）。
+ * 服务端不拼中文/英文文案，由客户端用自身语言环境通过 i18n 渲染，
+ * 这样不同语言的同学收到的弹幕都是本地化文本。
  */
-function buildDanmakuText(args: BroadcastSubmitDanmakuArgs): string {
+function buildDanmakuText(args: BroadcastSubmitDanmakuArgs): { key: string; params: Record<string, number | string> } | null {
   const exp = Number(args.gainedExp) || 0
   switch (args.kind) {
     case 'question':
       return args.isCorrect
-        ? `🎉 答对了题目 (+${exp}经验)`
-        : `💪 提交了题目`
+        ? { key: 'danmaku.questionCorrect', params: { exp } }
+        : { key: 'danmaku.questionSubmit', params: {} }
     case 'homework':
-      return `📚 提交了作业 (+${exp}经验)`
+      return { key: 'danmaku.homeworkSubmit', params: { exp } }
     case 'quiz': {
       const score = Math.round(Number(args.score) || 0)
-      return args.isPassed
-        ? `🎊 完成了测验 (${score}分)`
-        : `📝 完成了测验 (${score}分)`
+      return {
+        key: args.isPassed ? 'danmaku.quizPassed' : 'danmaku.quizFailed',
+        params: { score },
+      }
     }
     case 'comment':
-      return `💬 发表了评论`
+      return { key: 'danmaku.comment', params: {} }
     default:
-      return '提交了'
+      return { key: 'danmaku.submit', params: {} }
   }
 }
 
@@ -154,8 +156,8 @@ async function resolveUserClassContext(userId: number): Promise<{ classId: numbe
     if (!u || !u.classId) return null
     return {
       classId: Number(u.classId),
-      // 弹幕来源显示 user.name（优先），name 为空时回退 username
-      name: String(u.name || u.username || 'anonymous'),
+      // 弹幕来源显示 preferName > name > username
+      name: String(u.preferName || u.name || u.username || 'anonymous'),
     }
   } catch {
     return null
@@ -176,11 +178,12 @@ export async function broadcastSubmitDanmaku(args: BroadcastSubmitDanmakuArgs): 
 
     const ctx = await resolveUserClassContext(args.userId)
     if (!ctx) return
-    const text = buildDanmakuText(args)
-    if (!text) return
+    const i18n = buildDanmakuText(args)
+    if (!i18n) return
     broadcastToClass(ctx.classId, JSON.stringify({
       type: 'danmaku',
-      text: text.slice(0, 200),
+      // 携带 i18n key + 参数，由客户端本地化渲染（区别于用户手发弹幕的 text 字段）
+      i18n,
       from: ctx.name,
     }))
   } catch (err) {

@@ -70,7 +70,7 @@ beforeEach(() => {
   })
 })
 
-function lastBroadcast(): { classId: number; type: string; text: string; from: string } | null {
+function lastBroadcast(): { classId: number; type: string; i18n: { key: string; params: any }; text: string; from: string } | null {
   const c = mocks._broadcastCalls[mocks._broadcastCalls.length - 1]
   if (!c) return null
   const m = JSON.parse(c.msg)
@@ -113,7 +113,7 @@ describe('submitBroadcast: questionOnlyOnCorrect', () => {
     await broadcastSubmitDanmaku({ userId: 1, kind: 'question', isCorrect: true, gainedExp: 17 })
     expect(mocks._broadcastCalls).toHaveLength(1)
     const m = lastBroadcast()!
-    expect(m.text).toBe('🎉 答对了题目 (+17经验)')
+    expect(m.i18n).toEqual({ key: 'danmaku.questionCorrect', params: { exp: 17 } })
   })
 
   it('questionOnlyOnCorrect=false → 答错也广播', async () => {
@@ -121,7 +121,7 @@ describe('submitBroadcast: questionOnlyOnCorrect', () => {
     await broadcastSubmitDanmaku({ userId: 1, kind: 'question', isCorrect: false, gainedExp: 2 })
     expect(mocks._broadcastCalls).toHaveLength(1)
     const m = lastBroadcast()!
-    expect(m.text).toBe('💪 提交了题目')
+    expect(m.i18n).toEqual({ key: 'danmaku.questionSubmit', params: {} })
   })
 })
 
@@ -154,30 +154,30 @@ describe('submitBroadcast: onlyOnReward', () => {
   })
 })
 
-describe('submitBroadcast: 文本生成', () => {
+describe('submitBroadcast: 文本生成（i18n key + 参数）', () => {
   it('question 答对', async () => {
     await broadcastSubmitDanmaku({ userId: 1, kind: 'question', isCorrect: true, gainedExp: 17 })
-    expect(lastBroadcast()!.text).toBe('🎉 答对了题目 (+17经验)')
+    expect(lastBroadcast()!.i18n).toEqual({ key: 'danmaku.questionCorrect', params: { exp: 17 } })
   })
 
   it('homework', async () => {
     await broadcastSubmitDanmaku({ userId: 1, kind: 'homework', gainedExp: 5 })
-    expect(lastBroadcast()!.text).toBe('📚 提交了作业 (+5经验)')
+    expect(lastBroadcast()!.i18n).toEqual({ key: 'danmaku.homeworkSubmit', params: { exp: 5 } })
   })
 
   it('quiz 及格', async () => {
     await broadcastSubmitDanmaku({ userId: 1, kind: 'quiz', score: 85, isPassed: true, gainedExp: 13 })
-    expect(lastBroadcast()!.text).toBe('🎊 完成了测验 (85分)')
+    expect(lastBroadcast()!.i18n).toEqual({ key: 'danmaku.quizPassed', params: { score: 85 } })
   })
 
   it('quiz 未及格', async () => {
     await broadcastSubmitDanmaku({ userId: 1, kind: 'quiz', score: 45, isPassed: false, gainedExp: 3 })
-    expect(lastBroadcast()!.text).toBe('📝 完成了测验 (45分)')
+    expect(lastBroadcast()!.i18n).toEqual({ key: 'danmaku.quizFailed', params: { score: 45 } })
   })
 
   it('comment', async () => {
     await broadcastSubmitDanmaku({ userId: 1, kind: 'comment', gainedExp: 3 })
-    expect(lastBroadcast()!.text).toBe('💬 发表了评论')
+    expect(lastBroadcast()!.i18n).toEqual({ key: 'danmaku.comment', params: {} })
   })
 })
 

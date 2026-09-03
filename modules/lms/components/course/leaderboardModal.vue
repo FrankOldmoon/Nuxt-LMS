@@ -15,6 +15,7 @@
                         {{ myStudent?.name || `User ${myRank.userId}` }}
                         <span class="text-xs text-muted">({{ $t('coursePanel.you') }})</span>
                     </span>
+                    <span class="text-xs font-semibold text-highlighted">Lv.{{ myLv }}</span>
                     <span class="font-mono font-bold text-primary">{{ myRank.score.toFixed(1) }}</span>
                 </div>
 
@@ -29,6 +30,9 @@
                     :hide-number="true" :default-sort="[{ id: 'score', desc: true }]"
                     show-chart show-group
                     :extra-columns="extraColumns">
+                    <template #lv-cell="{ row }">
+                        <span class="font-semibold text-xs">Lv.{{ row.original.lv ?? 1 }}</span>
+                    </template>
                     <template #score-cell="{ row }">
                         <span class="font-mono font-bold text-sm">{{ (row.original.score ?? 0).toFixed(1) }}</span>
                     </template>
@@ -46,5 +50,5 @@ const props = defineProps<{
     classId: string | number
 }>()
 
-const { loading, myStudent, myRank, tableRows, extraColumns } = useCourseLeaderboard(props, isOpen)
+const { loading, myStudent, myRank, myLv, tableRows, extraColumns } = useCourseLeaderboard(props, isOpen)
 </script>

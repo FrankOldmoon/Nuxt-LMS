@@ -717,7 +717,8 @@
     "addLevel": "Add Level",
     "resetCriteria": "Reset to Defaults",
     "criteriaSaved": "Grading criteria saved",
-    "criteriaSaveFailed": "Failed to save grading criteria"
+    "criteriaSaveFailed": "Failed to save grading criteria",
+    "level": "Level"
   },
   "announcement": {
     "title": "Course Announcements",
@@ -1161,5 +1162,14 @@
     "stop": "Stop",
     "unsaved": "Unsaved",
     "fullscreen": "Fullscreen"
+  },
+  "danmaku": {
+    "questionCorrect": "🎉 answered the question correctly (+{exp} exp)",
+    "questionSubmit": "💪 submitted the question",
+    "homeworkSubmit": "📚 submitted homework (+{exp} exp)",
+    "quizPassed": "🎊 completed the quiz ({score} points)",
+    "quizFailed": "📝 completed the quiz ({score} points)",
+    "comment": "💬 posted a comment",
+    "submit": "submitted"
   }
 }

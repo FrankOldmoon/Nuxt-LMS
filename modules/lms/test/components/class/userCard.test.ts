@@ -34,6 +34,13 @@ beforeEach(() => {
   ;(globalThis as any).useLmsPublicConfig = () => ({
     levelStep: ref(100),
   })
+  // stub expToLevel（auto-import util）— 与 utils/expLevel.ts 一致的换算
+  ;(globalThis as any).expToLevel = (exp: number, step?: number) => {
+    const base = Math.max(1, Number(step) || 100) / 2
+    const total = Math.max(0, Number(exp) || 0)
+    const raw = (1 + Math.sqrt(1 + (4 * total) / base)) / 2
+    return Math.max(1, Math.floor(raw))
+  }
 })
 
 const _globalStubs = {

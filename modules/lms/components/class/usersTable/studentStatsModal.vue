@@ -31,9 +31,13 @@ const props = defineProps({
 
 const isOpen = defineModel('open', { default: false })
 const { t } = useI18n()
+// 父级不一定传 courseId（如班级管理弹窗/recordsModal），回退到课程上下文（route/课程页 provide）
+const { courseId: ctxCourseId } = useLmsContext()
+const effectiveCourseId = computed(() => Number(props.courseId) || ctxCourseId.value || 0)
+console.log('[DEBUG studentStatsModal] setup: props.courseId=', props.courseId, 'ctxCourseId=', ctxCourseId.value, 'effectiveCourseId=', effectiveCourseId.value)
 
 const ctx = useStudentGrades({
-  courseId: computed(() => Number(props.courseId) || 0),
+  courseId: effectiveCourseId,
   userId: computed(() => Number(props.userId) || 0),
   classId: computed(() => Number(props.classId) || 0),
 }, isOpen)

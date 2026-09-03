@@ -16,11 +16,16 @@ beforeEach(async () => {
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
   const { useClassUsers } = await import('../../composables/useClassUsers')
   ;(globalThis as any).useClassUsers = useClassUsers
+  // stub useLmsPublicConfig（auto-import）
+  ;(globalThis as any).useLmsPublicConfig = () => ({ levelStep: ref(100) })
+  // stub expToLevel（auto-import util）—— 直接复用真实实现
+  const { expToLevel } = await import('../../utils/expLevel')
+  ;(globalThis as any).expToLevel = expToLevel
 })
 
 describe('composables/useCourseLeaderboard', () => {
   it('初始状态', async () => {
-    setMockAuthUser({ id: 1, name: 'guest' })
+    // 未登录：无用户、无数据 → 表格为空
     const isOpen = ref(false)
     const { useCourseLeaderboard } = await import('../../composables/useCourseLeaderboard')
     const r = useCourseLeaderboard({ courseId: 1, classId: 10 }, isOpen)
@@ -28,8 +33,9 @@ describe('composables/useCourseLeaderboard', () => {
     expect(r.scoreRows.value).toEqual([])
     expect(r.myRank.value).toBeNull()
     expect(r.tableRows.value).toEqual([])
-    expect(r.extraColumns.value).toHaveLength(1)
-    expect(r.extraColumns.value[0].id).toBe('score')
+    expect(r.extraColumns.value).toHaveLength(2)
+    expect(r.extraColumns.value[0].id).toBe('lv')
+    expect(r.extraColumns.value[1].id).toBe('score')
   })
 
   it('loadData 无 courseId 时不加载', async () => {
@@ -106,11 +112,11 @@ describe('composables/useCourseLeaderboard', () => {
         return {
           data: {
             top10: [
-              { userId: 1, score: 100 },
-              { userId: 2, score: 80 },
+              { userId: 1, score: 100, exp: 1200 },
+              { userId: 2, score: 80, exp: 150 },
             ],
             myRank: 3,
-            myInfo: { userId: 3, score: 60 },
+            myInfo: { userId: 3, score: 60, exp: 0 },
           },
           success: true,
           msg: '',
@@ -128,6 +134,11 @@ describe('composables/useCourseLeaderboard', () => {
     expect(byId(1).score).toBe(100)
     expect(byId(2).score).toBe(80)
     expect(byId(3).score).toBe(60) // 自己的行使用 myInfo.score
+    // lv 由 exp 换算：exp=1200 → Lv.5（levelStep=100）
+    expect(byId(1).lv).toBe(5)
+    expect(byId(1).exp).toBe(1200)
+    expect(byId(2).lv).toBe(2)
+    expect(byId(3).lv).toBe(1)
   })
 
   it('myRank 计算当前用户排名', async () => {
@@ -140,12 +151,12 @@ describe('composables/useCourseLeaderboard', () => {
         return {
           data: {
             top10: [
-              { userId: 1, score: 100 },
-              { userId: 2, score: 80 },
-              { userId: 3, score: 60 },
+              { userId: 1, score: 100, exp: 1200 },
+              { userId: 2, score: 80, exp: 150 },
+              { userId: 3, score: 60, exp: 0 },
             ],
             myRank: 2,
-            myInfo: { userId: 2, score: 80 },
+            myInfo: { userId: 2, score: 80, exp: 150 },
           },
           success: true,
           msg: '',
@@ -157,7 +168,7 @@ describe('composables/useCourseLeaderboard', () => {
     const { useCourseLeaderboard } = await import('../../composables/useCourseLeaderboard')
     const r = useCourseLeaderboard({ courseId: 1, classId: 10 }, isOpen)
     await r.loadData()
-    expect(r.myRank.value).toEqual({ rank: 2, userId: 2, score: 80 })
+    expect(r.myRank.value).toEqual({ rank: 2, userId: 2, score: 80, exp: 150 })
   })
 
   it('myRank 未登录时为 null', async () => {

@@ -98,11 +98,9 @@ export function useUserCardSetup() {
     // levelStep 越大升级越慢，由配置 general.levelStep 驱动（lms-public 公开配置）
     const levelInfo = computed(() => {
         const { levelStep } = useLmsPublicConfig()
-        const base = Math.max(1, Number(levelStep.value) || 100) / 2
         const total = Math.max(0, exp.value)
-        // 解 base*(l-1)*l = total → l = (1 + sqrt(1 + 4*total/base)) / 2
-        const raw = (1 + Math.sqrt(1 + (4 * total) / base)) / 2
-        const level = Math.max(1, Math.floor(raw))
+        const level = expToLevel(total, Number(levelStep.value) || 100)
+        const base = Math.max(1, Number(levelStep.value) || 100) / 2
         const currentThreshold = base * (level - 1) * level
         const nextThreshold = base * level * (level + 1)
         const span = nextThreshold - currentThreshold

@@ -19,32 +19,39 @@ interface DanmakuItem {
   top: number
 }
 
+const { t } = useI18n()
 const danmakuList = ref<DanmakuItem[]>([])
 let idCounter = 0
 
 const { onDanmaku } = useWebSocket()
 
-// 去重窗口：同一 (text|from) 在窗口内只渲染一次，防止
+// 去重窗口：同一 (from|text) 在窗口内只渲染一次，防止
 // 组件多次挂载/重复订阅导致同一条记录重复 push
 const seenCache = new Map<string, number>()
 const DEDUP_WINDOW_MS = 10000
 
 const unregisterDanmaku = onDanmaku((data) => {
-  const key = `${data.from}|${data.text}`
+  // 系统自动弹幕携带 i18n（服务端只发 key+参数，客户端按自身语言渲染）；
+  // 用户手发弹幕携带 text（原始输入，不做翻译）
+  const text = data.i18n
+    ? t(data.i18n.key, data.i18n.params || {})
+    : String(data.text || '')
+  if (!text) return
+  const key = `${data.from}|${text}`
   const now = Date.now()
   const lastSeen = seenCache.get(key)
   if (lastSeen && now - lastSeen < DEDUP_WINDOW_MS) return
   seenCache.set(key, now)
   // 定期清理过期的去重记录，避免无限增长
   if (seenCache.size > 200) {
-    for (const [k, t] of seenCache) {
-      if (now - t >= DEDUP_WINDOW_MS) seenCache.delete(k)
+    for (const [k, t2] of seenCache) {
+      if (now - t2 >= DEDUP_WINDOW_MS) seenCache.delete(k)
     }
   }
 
   const item: DanmakuItem = {
     id: idCounter++,
-    text: data.text,
+    text,
     from: data.from,
     top: 5 + Math.random() * 75,
   }

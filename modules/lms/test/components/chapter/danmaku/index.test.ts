@@ -51,6 +51,29 @@ describe('chapter/danmaku/index.vue', () => {
     expect(wrapper.text()).toContain('老师：测试弹幕')
   })
 
+  it('收到带 i18n 的弹幕（服务端自动弹幕）时按本地语言渲染', async () => {
+    let registeredCb: ((data: any) => void) | null = null
+    ;(globalThis as any).useWebSocket = () => ({
+      onDanmaku: (cb: (data: any) => void) => { registeredCb = cb; return () => {} },
+    })
+    // mock t 支持插值：t('danmaku.homeworkSubmit', { exp: 5 }) → 'submitted homework (+5 exp)'
+    setMockI18n({
+      locale: { value: 'en' },
+      d: (v: any) => String(v),
+      t: (k: string, params?: any) => {
+        if (k === 'danmaku.homeworkSubmit') return `submitted homework (+${params?.exp} exp)`
+        return k
+      },
+    })
+    const { default: Danmaku } = await import('../../../../components/chapter/danmaku/index.vue')
+    const wrapper = mount(Danmaku, { global: { mocks: { $t: (k: string) => k } } })
+    await flushPromises()
+    ;(registeredCb as any)({ i18n: { key: 'danmaku.homeworkSubmit', params: { exp: 5 } }, from: 'Alice' })
+    await flushPromises()
+    expect(wrapper.text()).toContain('submitted homework (+5 exp)')
+    expect(wrapper.text()).toContain('Alice')
+  })
+
   it('多条弹幕同时渲染', async () => {
     let registeredCb: ((data: any) => void) | null = null
     ;(globalThis as any).useWebSocket = () => ({
