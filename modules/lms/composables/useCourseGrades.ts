@@ -269,6 +269,11 @@ export function useCourseGrades(
     // 先用缓存学生数据立即显示
     buildRows([])
     pending.value = true
+    // 学生端学习数据统计：独立加载，不依赖成绩请求是否成功
+    // （未分班学生 grades 可能因缺 classId 失败，但不该因此丢失答题/作业等统计）
+    if (!canEdit.value) {
+      loadStats()
+    }
     try {
       // 确保班级用户已加载
       if (props.classId) {
@@ -285,10 +290,6 @@ export function useCourseGrades(
       // 加载评分标准
       gradeCriteria.value = normalizeCriteria(criteria)
       criteriaDirty.value = false
-      // 学生端额外加载学习数据
-      if (!canEdit.value) {
-        await loadStats()
-      }
     } catch (e) {
       console.error('加载成绩失败', e)
     } finally {

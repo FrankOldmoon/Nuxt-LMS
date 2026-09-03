@@ -16,27 +16,37 @@ export function useCourseLeaderboard(
   const stuMap = computed(() => new Map(students.value.map(s => [s.id, s])))
   const myStudent = computed(() => user.value ? stuMap.value.get(user.value.id) : null)
 
-  // 我的排名
-  const myRank = computed(() => {
-    if (!user.value) return null
-    const sorted = [...scoreRows.value].sort((a, b) => (b.score || 0) - (a.score || 0))
-    const idx = sorted.findIndex(r => r.userId === user.value!.id)
-    if (idx < 0) return null
-    return { rank: idx + 1, userId: user.value.id, score: sorted[idx].score || 0 }
-  })
+  // 我的排名（使用后端返回的全程排名，而非前10截断）
+  const myRank = ref<{ rank: number, userId: number, score: number } | null>(null)
 
-  // ClassUsersTable 的行数据：合并 students 和 score
+  // 排行榜表格行：前10名 + （自己不在前10时）自己的行
   const tableRows = computed(() => {
-    const scoreMap = new Map(scoreRows.value.map(r => [r.userId, r.score || 0]))
-    return students.value.map(s => ({
-      id: s.id,
-      name: s.name,
-      preferName: s.preferName,
-      rollNumber: s.rollNumber,
-      username: s.username,
-      avatarImg: s.avatarImg,
-      score: scoreMap.get(s.id) ?? 0,
-    }))
+    const base = scoreRows.value.map((r) => {
+      const s = stuMap.value.get(r.userId)
+      return {
+        id: r.userId,
+        name: s?.name || `User ${r.userId}`,
+        preferName: s?.preferName,
+        rollNumber: s?.rollNumber,
+        username: s?.username,
+        avatarImg: s?.avatarImg,
+        score: r.score ?? 0,
+      }
+    })
+    // 自己不在前10时，在末尾追加自己的行（顶部"我的名次"卡片仍显示全程排名）
+    if (user.value && !scoreRows.value.some(r => r.userId === user.value!.id)) {
+      const s = stuMap.value.get(user.value.id)
+      base.push({
+        id: user.value.id,
+        name: s?.name || user.value.name || `User ${user.value.id}`,
+        preferName: s?.preferName,
+        rollNumber: s?.rollNumber,
+        username: s?.username,
+        avatarImg: s?.avatarImg,
+        score: myRank.value?.score ?? 0,
+      })
+    }
+    return base
   })
 
   // 额外列：总分
@@ -54,8 +64,12 @@ export function useCourseLeaderboard(
       const params = new URLSearchParams({ courseId: String(props.courseId) })
       if (props.classId) params.set('classId', String(props.classId))
       const data = await cRequest<any>(`/api/courses/leaderboard?${params}`)
-      // 用全量 top10 作为行数据（包含所有学生，补0）
+      // 前10名作为表格行
       scoreRows.value = data?.top10 || []
+      // 我的全程排名（来自后端）
+      myRank.value = (data?.myRank != null && data?.myInfo)
+        ? { rank: Number(data.myRank), userId: data.myInfo.userId, score: Number(data.myInfo.score) || 0 }
+        : null
     } catch (e) {
       console.error('加载排行榜失败', e)
     } finally {

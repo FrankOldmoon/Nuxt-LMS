@@ -75,9 +75,9 @@ describe('composables/useHeaderMenu - userMenuItems', () => {
     expect(userMenuItems.value.some((g: any) =>
       g.some((i: any) => i.label === 'auth.logout')
     )).toBe(true)
-    // 最后一组是 feedback
+    // 最后一组是 logout，feedback 在其上方
     const last = userMenuItems.value[userMenuItems.value.length - 1]
-    expect(last[0].label).toBe('feedback.title')
+    expect(last[0].label).toBe('auth.logout')
   })
 
   it('showMyFiles=true 时菜单包含 myFiles', async () => {

@@ -78,22 +78,21 @@ export function useHeaderMenu() {
 
     items.push([
       {
+        label: t('feedback.title'),
+        icon: 'i-lucide-message-square-plus',
+        onSelect: () => {
+          showFeedbackModal.value = true
+        },
+      },
+    ])
+
+    items.push([
+      {
         label: t('auth.logout'),
         icon: 'i-lucide-log-out',
         onSelect: async () => {
           await logout()
           toast.add({ title: t('auth.logout'), color: 'neutral' })
-        },
-      },
-    ])
-
-    // 反馈入口：始终放在下拉菜单最后
-    items.push([
-      {
-        label: t('feedback.title'),
-        icon: 'i-lucide-message-square-plus',
-        onSelect: () => {
-          showFeedbackModal.value = true
         },
       },
     ])

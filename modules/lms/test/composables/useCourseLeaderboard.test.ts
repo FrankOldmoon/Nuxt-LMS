@@ -87,8 +87,9 @@ describe('composables/useCourseLeaderboard', () => {
     expect(r.loading.value).toBe(false)
   })
 
-  it('tableRows 合并 students 和 scores', async () => {
-    setMockAuthUser({ id: 1, name: 'guest' })
+  it('tableRows 只含前10 + 自己（自己不在前10时追加）', async () => {
+    // 当前用户 carol(id=3) 不在前10 → 表格 = 前10 + carol
+    setMockAuthUser({ id: 3, name: 'carol' })
     setMockFetchHandler(async (url) => {
       if (url.includes('/api/classes/users')) {
         return {
@@ -108,6 +109,8 @@ describe('composables/useCourseLeaderboard', () => {
               { userId: 1, score: 100 },
               { userId: 2, score: 80 },
             ],
+            myRank: 3,
+            myInfo: { userId: 3, score: 60 },
           },
           success: true,
           msg: '',
@@ -119,11 +122,12 @@ describe('composables/useCourseLeaderboard', () => {
     const { useCourseLeaderboard } = await import('../../composables/useCourseLeaderboard')
     const r = useCourseLeaderboard({ courseId: 1, classId: 10 }, isOpen)
     await r.loadData()
+    // 前10（1,2）+ 自己（3，不在前10追加）
     expect(r.tableRows.value).toHaveLength(3)
     const byId = (id: number) => r.tableRows.value.find((row: any) => row.id === id)
     expect(byId(1).score).toBe(100)
     expect(byId(2).score).toBe(80)
-    expect(byId(3).score).toBe(0) // 不在 scoreRows 中，默认 0
+    expect(byId(3).score).toBe(60) // 自己的行使用 myInfo.score
   })
 
   it('myRank 计算当前用户排名', async () => {
@@ -140,6 +144,8 @@ describe('composables/useCourseLeaderboard', () => {
               { userId: 2, score: 80 },
               { userId: 3, score: 60 },
             ],
+            myRank: 2,
+            myInfo: { userId: 2, score: 80 },
           },
           success: true,
           msg: '',
