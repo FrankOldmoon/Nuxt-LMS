@@ -63,23 +63,19 @@ export function useHeaderNav() {
   const { categories, getCoursesByCategory } = useHomeCourses()
 
   const links = computed<NavigationMenuItem[]>(() => {
-    const base: NavigationMenuItem = { label: 'Home', icon: 'i-lucide-home', to: '/' }
-    if (!categories.value.length) return [base]
+    if (!categories.value.length) return []
 
-    return [
-      base,
-      ...categories.value.map<NavigationMenuItem>((cat) => ({
-        label: cat.title,
-        icon: cat.icon,
-        _meta: { type: 'category', id: String(cat.id) },
-        children: getCoursesByCategory(cat.id).map((c) => ({
-          label: c.title,
-          to: `/course/${c.id}`,
-          icon: c.icon,
-          _meta: { type: 'course', id: String(c.id) },
-        })),
+    return categories.value.map<NavigationMenuItem>((cat) => ({
+      label: cat.title,
+      icon: cat.icon,
+      _meta: { type: 'category', id: String(cat.id) },
+      children: getCoursesByCategory(cat.id).map((c) => ({
+        label: c.title,
+        to: `/course/${c.id}`,
+        icon: c.icon,
+        _meta: { type: 'course', id: String(c.id) },
       })),
-    ]
+    }))
   })
 
   return { links, refresh }

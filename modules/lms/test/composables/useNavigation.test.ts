@@ -37,7 +37,7 @@ describe('composables/useNavigation - useHome', () => {
 })
 
 describe('composables/useNavigation - useHeaderNav', () => {
-  it('无分类时返回 base Home 链接', async () => {
+  it('无分类时返回空链接', async () => {
     // stub useHomeCourses（auto-imported）
     ;(globalThis as any).useHomeCourses = () => ({
       categories: computed(() => []),
@@ -45,8 +45,7 @@ describe('composables/useNavigation - useHeaderNav', () => {
     })
     const { useHeaderNav } = await import('../../composables/useNavigation')
     const { links } = useHeaderNav()
-    expect(links.value).toHaveLength(1)
-    expect(links.value[0].label).toBe('Home')
+    expect(links.value).toHaveLength(0)
   })
 
   it('有分类时返回分类+课程链接', async () => {
@@ -60,10 +59,10 @@ describe('composables/useNavigation - useHeaderNav', () => {
     })
     const { useHeaderNav } = await import('../../composables/useNavigation')
     const { links } = useHeaderNav()
-    expect(links.value).toHaveLength(2)
-    expect(links.value[1].label).toBe('Cat A')
-    expect(links.value[1].children).toHaveLength(1)
-    expect(links.value[1].children[0].to).toBe('/course/10')
+    expect(links.value).toHaveLength(1)
+    expect(links.value[0].label).toBe('Cat A')
+    expect(links.value[0].children).toHaveLength(1)
+    expect(links.value[0].children[0].to).toBe('/course/10')
   })
 })
 
