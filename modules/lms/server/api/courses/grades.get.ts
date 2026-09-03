@@ -13,7 +13,6 @@ export default eventHandler(async (event) => {
   const courseId = Number(query.courseId)
   const classId = Number(query.classId) || 0
   if (!courseId) return cResp(null, '缺少 courseId', false)
-  if (!classId) return cResp(null, '缺少 classId', false)
 
   // 从 records jsonb 中提取 progress（章节通过比，0~100）
   const extractProgress = (records: any): number => {
@@ -23,6 +22,7 @@ export default eventHandler(async (event) => {
   }
 
   // 教师或管理员可查看所有成绩，学生只能看自己的
+  // 注意：学生自我查询不依赖 classId（未分班学生也可查看自己的学习统计），故 classId 校验放在教师分支
   const isTeacher = await isCourseTeacher(user.id, courseId)
   if (!isTeacher && !user.roles.includes('admin')) {
     // 学生只返回自己的成绩
@@ -70,6 +70,9 @@ export default eventHandler(async (event) => {
       gradeCriteria: courseRow[0]?.gradeCriteria ?? null,
     })
   }
+
+  // 教师分支：需按班级列出学生，classId 必填
+  if (!classId) return cResp(null, '缺少 classId', false)
 
   // 获取该班级学生 userIds
   const classUsers = await getClassUsers(classId, courseId)

@@ -293,12 +293,39 @@ describe('API: courses/grades.get', () => {
     expect(r.msg).toMatch(/courseId/)
   })
 
-  it('缺少 classId 返回失败', async () => {
-    setMockAuthState({ id: 1, username: 's', name: 'S', roles: ['student'], permissions: [] })
+  it('教师缺少 classId 返回失败', async () => {
+    setMockAuthState({ id: 1, username: 't', name: 'T', roles: ['admin'], permissions: [] })
     const handler = (await import('../../server/api/courses/grades.get')).default
     const r = await handler(makeEvent({ query: { courseId: '1' } }))
     expect(r.success).toBe(false)
     expect(r.msg).toMatch(/classId/)
+  })
+
+  it('学生无 classId 也能查看自己的成绩（未分班）', async () => {
+    setMockAuthState({ id: 5, username: 'stu', name: 'Stu', roles: ['student'], permissions: [] })
+    ;(globalThis as any).isCourseTeacher = vi.fn().mockResolvedValue(false)
+    let whereCall = 0
+    _mockDb.where = vi.fn().mockImplementation(function (this: any) {
+      whereCall++
+      if (whereCall === 1) {
+        return [{
+          userId: 5, score: '85', questionScore: '20', homeworkScore: '20', quizScore: '20',
+          commentScore: '10', raceScore: '5', altitudeScore: '10', externalScore: '0',
+          records: { progress: 80 }, group: 'g1',
+        }]
+      }
+      return this
+    })
+    _mockDb.limit = vi.fn().mockResolvedValue([{ gradeCriteria: { levels: [{ letter: 'A', min: 90 }] } }])
+    const handler = (await import('../../server/api/courses/grades.get')).default
+    // 不传 classId（学生未分班）时，学生自我查询应成功
+    const r = await handler(makeEvent({ query: { courseId: '1' } }))
+    expect(r.success).toBe(true)
+    expect(r.data.grades).toHaveLength(1)
+    expect(r.data.grades[0].userId).toBe(5)
+    expect(r.data.grades[0].score).toBe(85)
+    expect(r.data.grades[0].progress).toBe(80)
+    expect(r.data.gradeCriteria).toBeDefined()
   })
 
   it('学生只返回自己的成绩', async () => {
