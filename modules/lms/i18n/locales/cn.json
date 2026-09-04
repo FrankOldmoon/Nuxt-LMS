@@ -642,7 +642,12 @@
     "questionOnlyOnCorrect": "题目弹幕仅在答对时",
     "questionOnlyOnCorrectHint": "学生答错题目时不广播弹幕。",
     "onlyOnReward": "无经验时不广播",
-    "onlyOnRewardHint": "当提交未产生经验值时不广播弹幕（超过提交次数、重考已通过测验等）。"
+    "onlyOnRewardHint": "当提交未产生经验值时不广播弹幕（超过提交次数、重考已通过测验等）。",
+    "analytics": "站点统计",
+    "googleTrackingId": "谷歌统计 ID",
+    "googleTrackingIdHint": "例如 G-XXXXXXXXXX（留空禁用）",
+    "baiduTrackingId": "百度统计 ID",
+    "baiduTrackingIdHint": "例如 1234567890abcdef（留空禁用）"
   },
   "coursePanel": {
     "progress": "进度",

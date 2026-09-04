@@ -642,7 +642,12 @@
     "questionOnlyOnCorrect": "Question danmaku only on correct answer",
     "questionOnlyOnCorrectHint": "Skip the danmaku broadcast when the student answers a question incorrectly.",
     "onlyOnReward": "Skip danmaku when no exp awarded",
-    "onlyOnRewardHint": "Skip the danmaku broadcast when the submission yields zero experience (over submit limit, retake a passed quiz, etc.)."
+    "onlyOnRewardHint": "Skip the danmaku broadcast when the submission yields zero experience (over submit limit, retake a passed quiz, etc.).",
+    "analytics": "Analytics",
+    "googleTrackingId": "Google Analytics ID",
+    "googleTrackingIdHint": "e.g. G-XXXXXXXXXX (empty to disable)",
+    "baiduTrackingId": "Baidu Tongji ID",
+    "baiduTrackingIdHint": "e.g. 1234567890abcdef (empty to disable)"
   },
   "coursePanel": {
     "progress": "Progress",

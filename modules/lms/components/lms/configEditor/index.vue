@@ -8,6 +8,7 @@
     <LmsConfigEditorDanmakuSection />
     <LmsConfigEditorGridSections />
     <LmsConfigEditorOjSection />
+    <LmsConfigEditorAnalyticsSection />
   </div>
 </template>
 

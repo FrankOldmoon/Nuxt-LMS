@@ -39,6 +39,7 @@ const PUBLIC_KEYS = [
   'ai.preset',
   'ai.opening',
   'ai.ttsGender',
+  'analytics',
 ] as const
 
 export default defineEventHandler(() => {

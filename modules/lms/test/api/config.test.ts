@@ -239,6 +239,19 @@ describe('API: config/lms-public.get', () => {
     expect(result.data.ai).toEqual({})
   })
 
+  it('公开端点：暴露 analytics 统计配置段', async () => {
+    setMockLmsConfig({
+      analytics: { googleTrackingId: 'G-ABC123', baiduTrackingId: '0123abcd' },
+    })
+    const handler = (await import('../../server/api/config/lms-public.get')).default
+    const result = await handler(makeEvent())
+    expect(result.success).toBe(true)
+    expect(result.data.analytics).toEqual({
+      googleTrackingId: 'G-ABC123',
+      baiduTrackingId: '0123abcd',
+    })
+  })
+
   it('空配置返回仅 ai 空对象', async () => {
     setMockLmsConfig({})
     const handler = (await import('../../server/api/config/lms-public.get')).default
