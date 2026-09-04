@@ -50,3 +50,30 @@ export function validateCommentContent(content: any): string | null {
   if (hit) return `评论内容包含不允许的节点：${hit}`
   return null
 }
+
+/**
+ * 判断评论内容是否为空（不应允许发送）。
+ * 覆盖：null / 纯空白字符串 / 纯文本 / UMO 文档 JSON（无可见文本节点）。
+ */
+export function isCommentEmpty(content: any): boolean {
+  if (content == null) return true
+
+  // 纯文本评论
+  if (typeof content === 'string') {
+    return content.trim().length === 0
+  }
+
+  // UMO 文档 JSON：收集所有文本节点（递归），无可见文本即视为空
+  let text = ''
+  const collect = (node: any) => {
+    if (!node) return
+    if (typeof node === 'string') { text += node; return }
+    if (Array.isArray(node)) { node.forEach(collect); return }
+    if (typeof node === 'object') {
+      if (typeof node.text === 'string') text += node.text
+      if (Array.isArray(node.content)) node.content.forEach(collect)
+    }
+  }
+  collect(content)
+  return text.trim().length === 0
+}

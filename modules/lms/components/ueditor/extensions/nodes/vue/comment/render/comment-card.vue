@@ -20,6 +20,15 @@
                             class="w-3.5 h-3.5" />
                         <span>{{ comment.likeCount || 0 }}</span>
                     </button>
+                    <!-- 待审核标记 + 批准（仅老师/管理员） -->
+                    <template v-if="isTeacher && comment.status === 'audit'">
+                        <button
+                            class="flex items-center gap-1 text-xs text-amber-500 hover:text-emerald-500 transition-colors"
+                            @click="$emit('approve', comment)">
+                            <UIcon name="i-heroicons-check-badge" class="w-3.5 h-3.5" />
+                            <span>{{ $t('comment.approve') }}</span>
+                        </button>
+                    </template>
                     <!-- 删除（带确认） -->
                     <UPopover v-if="canDelete" :modal="true">
                         <button
@@ -57,9 +66,12 @@ const props = defineProps({
     currentUserId: { type: Number, default: null },
 })
 
-const emit = defineEmits(['toggle-like', 'delete'])
+const emit = defineEmits(['toggle-like', 'delete', 'approve'])
 
 const { hasRole } = useAuth()
+
+// 是否老师/管理员
+const isTeacher = computed(() => hasRole('teacher') || hasRole('admin'))
 
 // 构造 user 对象供 AuthUserCard 使用
 const userObj = computed(() => ({

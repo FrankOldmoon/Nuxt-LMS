@@ -3,7 +3,8 @@
         <div v-for="(item, idx) in comments" :key="item.cid || idx">
             <CommentCard :comment="item" :current-user-id="currentUserId"
                 @toggle-like="$emit('toggle-like', $event)"
-                @delete="$emit('delete', $event)" />
+                @delete="$emit('delete', $event)"
+                @approve="$emit('approve', $event)" />
         </div>
     </div>
     <div v-else class="text-xs text-gray-400 text-center py-2">{{ $t('comment.noReplies') }}</div>
@@ -17,5 +18,5 @@ defineProps({
     currentUserId: { type: Number, default: null },
 })
 
-defineEmits(['toggle-like', 'delete'])
+defineEmits(['toggle-like', 'delete', 'approve'])
 </script>

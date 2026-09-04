@@ -1062,7 +1062,10 @@
     "like": "点赞",
     "anonymous": "匿名",
     "noReplies": "暂无回复",
-    "confirmDelete": "确定删除这条评论？"
+    "confirmDelete": "确定删除这条评论？",
+    "approve": "批准",
+    "approveSuccess": "评论已通过审核",
+    "approveFailed": "审核失败"
   },
   "ide": {
     "title": "Python IDE",

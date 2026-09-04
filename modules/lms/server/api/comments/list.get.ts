@@ -1,5 +1,6 @@
 import { db, schema } from "@nuxthub/db"
 import { eq, and, inArray } from "drizzle-orm"
+import { getUserClassId } from "../../utils/comment/classId"
 
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
@@ -12,23 +13,42 @@ export default eventHandler(async (event) => {
   const courseId = Number(course_id)
   const commentCid = Number(cid)
 
-  // 1. 查询该评论自身（root comment）
+  // 审核可见性：老师/管理员可看到全部（含待审核），普通用户只看到已过审（published）的评论
+  const isStaff = user.roles?.some((r) => ['teacher', 'admin'].includes(r))
+
+  // 1. 查询该评论自身（root comment，课程级共享，不做班级过滤）
   const root = await db.query.comments.findFirst({
     where: and(
       eq(schema.comments.courseId, courseId),
-      eq(schema.comments.cid, commentCid)
+      eq(schema.comments.cid, commentCid),
+      ...(isStaff ? [] : [eq(schema.comments.status, 'published')]),
     )
   })
 
   if (!root) return cResp({ root: null, children: [] })
 
   // 2. 查询所有 parentId 为该 cid 的子评论
-  const children = await db.query.comments.findMany({
+  let children = await db.query.comments.findMany({
     where: and(
       eq(schema.comments.courseId, courseId),
-      eq(schema.comments.parentId, commentCid)
+      eq(schema.comments.parentId, commentCid),
+      ...(isStaff ? [] : [eq(schema.comments.status, 'published')]),
     )
   })
+
+  // 3. 普通用户按班级隔离回复：仅显示"作者主班级 = 当前用户主班级"的回复
+  //    （评论跟用户走，用户班级由 users.classId 决定）
+  if (!isStaff) {
+    const userClassId = await getUserClassId(user.id)
+    let classUserIds = new Set<number>()
+    if (userClassId) {
+      const classUsers = await db.query.users.findMany({
+        where: eq(schema.users.classId, userClassId),
+      })
+      classUserIds = new Set(classUsers.map((u: any) => u.id))
+    }
+    children = children.filter((c) => classUserIds.has(c.userId))
+  }
 
   // 3. 收集所有 userId，批量查询用户信息
   const allComments = [root, ...children]

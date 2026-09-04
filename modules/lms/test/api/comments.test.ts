@@ -43,6 +43,12 @@ vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
 
 import { resetAllStubs, setMockAuthState } from '../../../../test/setup/nuxt-stubs'
 
+// mock 用户主班级解析（评论按班级隔离依赖 users.classId 查询）
+vi.mock('../../server/utils/comment/classId', () => ({
+  getUserClassId: vi.fn().mockResolvedValue(null),
+}))
+import { getUserClassId } from '../../server/utils/comment/classId'
+
 // mock 评论加分工具底层：addCourseScore / addChapterScore 成为 spy，便于断言加分行为
 vi.mock('../../server/utils/userScore/course', () => ({
   addCourseScore: vi.fn().mockResolvedValue(undefined),
@@ -120,6 +126,75 @@ describe('API: comments/list.get', () => {
     const result = await handler(makeEvent({ query: { course_id: 1, cid: 1 } }))
     expect(result.success).toBe(true)
   })
+
+  it('学生只能看到已过审（published）评论（查询带 status 过滤）', async () => {
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    const { db } = await import('@nuxthub/db')
+    vi.mocked(db.query.comments.findFirst).mockResolvedValue({
+      id: 1, userId: 1, courseId: 1, cid: 1, content: 'Root', parentId: null, status: 'published',
+      createdAt: new Date(), updatedAt: new Date(),
+    } as any)
+    vi.mocked(db.query.comments.findMany).mockResolvedValue([])
+    vi.mocked(db.query.users.findMany).mockResolvedValue([])
+    vi.mocked(db.query.userComments.findMany).mockResolvedValue([])
+    const handler = (await import('../../server/api/comments/list.get')).default
+    await handler(makeEvent({ query: { course_id: 1, cid: 1 } }))
+    // 非 staff 时，root/children 的 where 都必须带上 status='published' 过滤
+    const whereArgs = vi.mocked(db.query.comments.findFirst).mock.calls[0][0].where
+    expect(JSON.stringify(whereArgs)).toContain('status')
+  })
+
+  it('老师/管理员可看到全部评论（不含 status 过滤）', async () => {
+    setMockAuthState({ id: 9, username: 'teacher', roles: ['teacher'], permissions: [] })
+    const { db } = await import('@nuxthub/db')
+    vi.mocked(db.query.comments.findFirst).mockResolvedValue({
+      id: 1, userId: 1, courseId: 1, cid: 1, content: 'Root', parentId: null, status: 'audit',
+      createdAt: new Date(), updatedAt: new Date(),
+    } as any)
+    vi.mocked(db.query.comments.findMany).mockResolvedValue([])
+    vi.mocked(db.query.users.findMany).mockResolvedValue([])
+    vi.mocked(db.query.userComments.findMany).mockResolvedValue([])
+    const handler = (await import('../../server/api/comments/list.get')).default
+    await handler(makeEvent({ query: { course_id: 1, cid: 1 } }))
+    const whereArgs = vi.mocked(db.query.comments.findFirst).mock.calls[0][0].where
+    expect(JSON.stringify(whereArgs)).not.toContain('status')
+  })
+
+  it('学生只看到本班同学的回复（按作者主班级过滤）', async () => {
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    vi.mocked(getUserClassId).mockResolvedValue(3)
+    const { db } = await import('@nuxthub/db')
+    vi.mocked(db.query.comments.findFirst).mockResolvedValue({
+      id: 1, userId: 1, courseId: 1, cid: 1, content: 'Root', parentId: null, status: 'published',
+      createdAt: new Date(), updatedAt: new Date(),
+    } as any)
+    // 全部回复：userId=1（班内）、userId=2（班外）
+    vi.mocked(db.query.comments.findMany).mockResolvedValue([
+      { id: 1, userId: 1, courseId: 1, cid: 2, parentId: 1, status: 'published' },
+      { id: 2, userId: 2, courseId: 1, cid: 3, parentId: 1, status: 'published' },
+    ] as any)
+    // 第一次 users.findMany：班级(3)成员 -> 只有 id=1；第二次：作者信息
+    vi.mocked(db.query.users.findMany)
+      .mockResolvedValueOnce([{ id: 1 }] as any)
+      .mockResolvedValueOnce([{ id: 1, name: 'Alice' }, { id: 2, name: 'Bob' }] as any)
+    vi.mocked(db.query.userComments.findMany).mockResolvedValue([] as any)
+    const handler = (await import('../../server/api/comments/list.get')).default
+    const result = await handler(makeEvent({ query: { course_id: 1, cid: 1 } }))
+    expect(result.success).toBe(true)
+    expect(result.data.children.length).toBe(1)
+    expect(result.data.children[0].userId).toBe(1)
+  })
+
+  it('学生新增评论默认 status 为 audit（待审核）', async () => {
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    _mockDb.returning = vi.fn().mockResolvedValue([{ id: 1, userId: 1, courseId: 1, cid: 1, content: 'X', status: 'audit' }])
+    const handler = (await import('../../server/api/comments/add.post')).default
+    await handler(makeEvent({ body: { course_id: 1, content: 'X' } }))
+    // 写入的 insertData.status 必须是 audit
+    expect(_mockDb.values).toHaveBeenCalled()
+    const insertData = _mockDb.values.mock.calls[0][0]
+    expect(insertData).toHaveProperty('status', 'audit')
+  })
 })
 
 describe('API: comments/add.post', () => {
@@ -137,6 +212,21 @@ describe('API: comments/add.post', () => {
     const handler = (await import('../../server/api/comments/add.post')).default
     const result = await handler(makeEvent({ body: { chapterId: 1, content: 'X' } }))
     expect(result).toBeDefined()
+  })
+
+  it('空内容评论被拒绝', async () => {
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    const handler = (await import('../../server/api/comments/add.post')).default
+    // 纯空白字符串
+    const r1 = await handler(makeEvent({ body: { course_id: 1, content: '   ' } }))
+    expect(r1.success).toBe(false)
+    // 空 UMO 文档
+    const r2 = await handler(makeEvent({ body: { course_id: 1, content: { type: 'doc', content: [] } } }))
+    expect(r2.success).toBe(false)
+    // 仅含空段落
+    const r3 = await handler(makeEvent({ body: { course_id: 1, content: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: '  ' }] }] } } }))
+    expect(r3.success).toBe(false)
+    expect(_mockDb.values).not.toHaveBeenCalled()
   })
 
   it('发顶层评论给 publishExp + publishCoin + 计入课程分', async () => {
@@ -287,5 +377,30 @@ describe('API: comments/like.post', () => {
     const r = await handler(makeEvent({ body: { course_id: 1, comment_cid: 1, like: false } }))
     expect(r.success).toBe(true)
     expect(addCourseScore).not.toHaveBeenCalled()
+  })
+})
+
+describe('API: comments/approve.post', () => {
+  beforeEach(resetChain)
+
+  it('未登录返回 401', async () => {
+    setMockAuthState(null)
+    const handler = (await import('../../server/api/comments/approve.post')).default
+    await expect(handler(makeEvent({ body: { course_id: 1, cid: 1 } }))).rejects.toThrow()
+  })
+
+  it('普通学生无权限审核', async () => {
+    setMockAuthState({ id: 2, username: 'bob', roles: ['student'], permissions: [] })
+    const handler = (await import('../../server/api/comments/approve.post')).default
+    await expect(handler(makeEvent({ body: { course_id: 1, cid: 1 } }))).rejects.toThrow()
+  })
+
+  it('老师批准评论：status 更新为 published', async () => {
+    setMockAuthState({ id: 9, username: 'teacher', roles: ['teacher'], permissions: [] })
+    const handler = (await import('../../server/api/comments/approve.post')).default
+    const r = await handler(makeEvent({ body: { course_id: 1, cid: 5 } }))
+    expect(r.success).toBe(true)
+    expect(_mockDb.update).toHaveBeenCalled()
+    expect(_mockDb.set).toHaveBeenCalledWith({ status: 'published' })
   })
 })

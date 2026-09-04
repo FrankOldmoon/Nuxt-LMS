@@ -32,7 +32,9 @@ const wrapperStyle = computed(() => ({
 }))
 
 const imgStyle = computed(() => {
-  const style = {}
+  const style = {
+    border: '1px solid #d1d5db',
+  }
   if (attrs.value.flipX || attrs.value.flipY) {
     style.transform = `rotateX(${attrs.value.flipX ? '180' : '0'}deg) rotateY(${attrs.value.flipY ? '180' : '0'}deg)`
   }

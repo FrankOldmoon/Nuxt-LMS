@@ -1,7 +1,7 @@
 import { db, schema } from "@nuxthub/db"
 import { eq, and, desc, sql } from "drizzle-orm"
 import { grantCommentReward } from "../../utils/comment/reward"
-import { validateCommentContent } from "../../utils/comment/validate"
+import { validateCommentContent, isCommentEmpty } from "../../utils/comment/validate"
 
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
@@ -11,6 +11,11 @@ export default eventHandler(async (event) => {
 
   if (!course_id) {
     return cResp(null, '缺少 course_id 参数', false)
+  }
+
+  // 评论内容不能为空（纯文本空白 / UMO 文档无可见文本均拒绝）
+  if (isCommentEmpty(content)) {
+    return cResp(null, '评论内容不能为空', false)
   }
 
   // H3：富文本内容安全校验（禁止 iframe/script 等危险节点）
@@ -64,7 +69,8 @@ export default eventHandler(async (event) => {
       tags: Array.isArray(body.tags) ? body.tags : [],
       // 安全：point/status 由服务端固定默认值，不接受客户端自设（防止自定分值/状态）
       point: 1,
-      status: 'published',
+      // 新评论默认待审核（audit），过审后（status=published）才对普通用户可见
+      status: 'audit',
     }
 
     const result = await db.insert(schema.comments).values(insertData).returning()

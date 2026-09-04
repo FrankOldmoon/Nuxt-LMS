@@ -50,6 +50,7 @@ export function useCommentRender(props: CommentRenderProps) {
                 content: raw.content || '',
                 tags: Array.isArray(raw.tags) ? [...raw.tags] : [],
                 point: Number(raw.point) || 0,
+                status: raw.status || null,
             }
         },
     })
@@ -178,6 +179,7 @@ export function useCommentRender(props: CommentRenderProps) {
                 children.value.push({
                     ...result,
                     liked: false,
+                    status: result.status || 'audit',
                 })
                 // 跳转到最后一页，让用户看到新回复
                 page.value = totalPages.value
@@ -214,12 +216,30 @@ export function useCommentRender(props: CommentRenderProps) {
         }
     }
 
+    // 审核通过（老师/管理员）：把待审核评论置为 published，随后对普通用户可见
+    async function onApprove(item: any) {
+        if (!item?.cid) return
+        try {
+            await cRequest('/api/comments/approve', {
+                method: 'POST',
+                body: {
+                    course_id: effectiveCourseId.value,
+                    cid: item.cid,
+                },
+            })
+            item.status = 'published'
+            toast.add({ title: t('comment.approveSuccess'), color: 'success' })
+        } catch (err: any) {
+            toast.add({ title: t('comment.approveFailed'), description: err?.message, color: 'error' })
+        }
+    }
+
     const ctx = {
         effectiveCourseId, moduleLms, RecordsModal,
         comment, commentId, isTeacher, user,
         editOpen, recordsOpen, pending, listPending,
         page, pageSize, totalPages, children, pagedChildren,
-        onReply, toggleLike, onDelete, onSaved,
+        onReply, toggleLike, onDelete, onApprove, onSaved,
     }
     provide(CommentRenderKey, ctx)
     return ctx

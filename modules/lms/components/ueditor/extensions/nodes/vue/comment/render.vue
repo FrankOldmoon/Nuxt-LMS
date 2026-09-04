@@ -15,6 +15,10 @@
                 <span class="font-semibold text-gray-800 dark:text-gray-200">{{ comment.name }}</span>
                 <span v-if="commentId" class="text-xs text-gray-400">#{{ commentId }}</span>
                 <div class="flex items-center gap-2 ml-auto">
+                    <UButton v-if="isTeacher && comment.status === 'audit'" icon="i-heroicons-check-badge"
+                        color="amber" variant="ghost" size="2xs"
+                        class="opacity-70 hover:opacity-100 transition-opacity"
+                        @click="onApprove(comment)">{{ $t('comment.approve') }}</UButton>
                     <UButton v-if="isTeacher" icon="i-lucide-edit" variant="ghost" size="2xs"
                         class="opacity-50 hover:opacity-100 transition-opacity"
                         @click="editOpen = true" />
@@ -52,7 +56,7 @@
 
                     <!-- 子评论列表（分页） -->
                     <CommentList :comments="pagedChildren" :current-user-id="user?.id"
-                        @toggle-like="toggleLike" @delete="onDelete" />
+                        @toggle-like="toggleLike" @delete="onDelete" @approve="onApprove" />
 
                     <!-- 分页控件 -->
                     <CommentPagination />
@@ -85,7 +89,7 @@ const props = defineProps({
 const {
     effectiveCourseId, moduleLms, RecordsModal, comment, commentId, isTeacher, user,
     editOpen, recordsOpen, listPending, pagedChildren,
-    onReply, toggleLike, onDelete, onSaved,
+    onReply, toggleLike, onDelete, onApprove, onSaved,
 } = useCommentRender(props)
 </script>
 

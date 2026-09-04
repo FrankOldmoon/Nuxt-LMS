@@ -25,7 +25,21 @@ const content = ref('')
 const hasContent = computed(() => {
     if (!content.value) return false
     if (typeof content.value === 'string') return content.value.trim().length > 0
-    if (typeof content.value === 'object') return true
+    // UMO 文档：递归收集文本节点，无可见文本视为空（按钮禁用）
+    if (typeof content.value === 'object') {
+        let text = ''
+        const collect = (n) => {
+            if (!n) return
+            if (typeof n === 'string') { text += n; return }
+            if (Array.isArray(n)) { n.forEach(collect); return }
+            if (typeof n === 'object') {
+                if (typeof n.text === 'string') text += n.text
+                if (Array.isArray(n.content)) n.content.forEach(collect)
+            }
+        }
+        collect(content.value)
+        return text.trim().length > 0
+    }
     return false
 })
 

@@ -29,6 +29,11 @@ vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
 
 import { resetAllStubs, setMockAuthState } from '../../../../test/setup/nuxt-stubs'
 
+// mock 用户主班级解析：list.get 学生场景按班级过滤回复
+vi.mock('../../server/utils/comment/classId', () => ({
+  getUserClassId: vi.fn().mockResolvedValue(5),
+}))
+
 beforeEach(() => {
   resetAllStubs()
   resetDb(_mockDb)
