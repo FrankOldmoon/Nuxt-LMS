@@ -102,6 +102,13 @@ export default withSubmitHandler('提交竞赛成绩失败', async (event) => {
     coin: gainedCoin,
   })
 
+  // 3.25 竞赛提交章节分（可调参数 race.chapterScore）
+  const chapterId = Number(ctx.body.chapter_id) || 0
+  const raceChapterScore = Number(rConfig.chapterScore) || 0
+  if (chapterId && raceChapterScore > 0) {
+    await addChapterScore(user.id, chapterId, raceChapterScore)
+  }
+
   // 3.5 被其他课程 iframe 嵌入时，将相同加分镜像给宿主课程
   const parentCourseId = Number(body.parent_course_id) || 0
   if (parentCourseId && parentCourseId !== courseId) {

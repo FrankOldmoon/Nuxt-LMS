@@ -25,6 +25,8 @@ interface ClassUsersTableProps {
   showChart?: boolean
   showOnline?: boolean
   showGroup?: boolean
+  /** 前三名 name 右侧显示金银铜奖杯 */
+  showMedal?: boolean
 }
 
 const ClassUsersTableKey = Symbol('ClassUsersTable') as InjectionKey<ReturnType<typeof useClassUsersTable>>
@@ -536,6 +538,7 @@ export function useClassUsersTable(
     columns,
     showGroup: () => props.showGroup,
     showChart: () => props.showChart,
+    showMedal: () => props.showMedal,
     hideNumber: () => props.hideNumber,
     hideActions: () => props.hideActions,
     hideTeachers: () => props.hideTeachers,

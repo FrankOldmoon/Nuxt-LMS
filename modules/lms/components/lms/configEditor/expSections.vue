@@ -30,6 +30,7 @@ const sections = [
     fields: [
       { key: 'submitExp', label: 'lmsConfig.submitExp' },
       { key: 'resubmitExp', label: 'lmsConfig.resubmitExp' },
+      { key: 'chapterScore', label: 'lmsConfig.chapterScore' },
     ],
   },
   {
@@ -49,6 +50,7 @@ const sections = [
       { key: 'headingExp', label: 'lmsConfig.headingExp' },
       { key: 'headingCoin', label: 'lmsConfig.headingCoin' },
       { key: 'headingScore', label: 'lmsConfig.headingScore' },
+      { key: 'headingChapterScore', label: 'lmsConfig.headingChapterScore' },
     ],
   },
   {
@@ -59,6 +61,7 @@ const sections = [
       { key: 'rank1Exp', label: 'lmsConfig.rank1Exp' },
       { key: 'rank2Exp', label: 'lmsConfig.rank2Exp' },
       { key: 'rank3Exp', label: 'lmsConfig.rank3Exp' },
+      { key: 'chapterScore', label: 'lmsConfig.chapterScore' },
     ],
   },
   {
@@ -68,6 +71,16 @@ const sections = [
       { key: 'submitExp', label: 'lmsConfig.submitExp' },
       { key: 'passScore', label: 'lmsConfig.passScore' },
       { key: 'passBonusExp', label: 'lmsConfig.passBonusExp' },
+      { key: 'chapterScore', label: 'lmsConfig.chapterScore' },
+    ],
+  },
+  {
+    title: 'lmsConfig.peerReview',
+    configKey: 'peerReview',
+    fields: [
+      { key: 'exp', label: 'lmsConfig.exp' },
+      { key: 'coin', label: 'lmsConfig.coin' },
+      { key: 'score', label: 'lmsConfig.peerReviewScore' },
     ],
   },
   {

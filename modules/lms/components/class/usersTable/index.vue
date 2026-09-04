@@ -45,6 +45,8 @@ const props = defineProps<{
   showChart?: boolean
   showOnline?: boolean
   showGroup?: boolean
+  /** 前三名 name 右侧显示金银铜奖杯 */
+  showMedal?: boolean
 }>()
 
 // 在 setup 阶段解析 UI 组件引用，传入 composable。

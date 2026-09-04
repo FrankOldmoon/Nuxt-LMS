@@ -2,7 +2,7 @@ import { ref, computed, watch } from 'vue'
 
 export function usePeerReviewRender(props: any, emit: any) {
     const { t } = useI18n()
-    const { courseId: ctxCourseId } = useLmsContext()
+    const { courseId: ctxCourseId, chapterId } = useLmsContext()
     const effectiveCourseId = computed(() => {
         if (props.courseId !== undefined && props.courseId !== null && props.courseId !== '') {
             return Number(props.courseId) || 0
@@ -91,6 +91,7 @@ export function usePeerReviewRender(props: any, emit: any) {
                 method: 'POST',
                 body: {
                     course_id: effectiveCourseId.value,
+                    chapter_id: chapterId?.value || 0,
                     cid: peerCid.value,
                     target_user_id: selectedTarget.value.userId,
                     scores: draftScores.value,

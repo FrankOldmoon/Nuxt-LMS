@@ -50,7 +50,7 @@
   <!-- 弹窗 -->
   <ChapterScoreModal v-model:open="scoreOpen" :course-id="courseIdNum" :chapter-id="chapterIdNum"
     :class-id="classIdNum" />
-  <ChapterSelectModal v-model:open="selectOpen" :course-id="courseIdNum" :class-id="classIdNum" />
+  <ChapterSelectModal v-model:open="selectOpen" :course-id="courseIdNum" :class-id="classIdNum" :chapter-id="chapterIdNum" />
   <ChapterTimerModal v-model:open="timerOpen" />
   <ChapterDanmakuModal v-model:open="danmakuOpen" :class-id="classIdNum" :can-edit="canEdit" />
   <ChapterVoteModal v-model:open="voteOpen" :class-id="classIdNum" :can-edit="canEdit" />

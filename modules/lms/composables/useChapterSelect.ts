@@ -9,7 +9,7 @@
  * isOpen 由 timerModal 通过 v-model:open 传入；打开时加载数据，关闭时复位。
  */
 export function useChapterSelect(
-  props: { courseId: number; classId: number },
+  props: { courseId: number; classId: number; chapterId?: number },
   isOpen: Ref<boolean>,
 ) {
   const { t } = useI18n()
@@ -79,6 +79,7 @@ export function useChapterSelect(
         method: 'POST',
         body: {
           course_id: props.courseId,
+          chapter_id: props.chapterId || 0,
           user_ids: selectedIds.value,
           delta,
         },

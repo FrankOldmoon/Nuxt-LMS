@@ -2,7 +2,7 @@
  * lms/configEditor/expSections.vue 组件测试
  * @see modules/lms/components/lms/configEditor/expSections.vue
  *
- * 经验值配置区域：7 个 section（question/homework/comment/chapter/race/quiz/general）
+ * 经验值配置区域：8 个 section（question/homework/comment/chapter/race/quiz/peerReview/general）
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -33,11 +33,12 @@ const _globalConfig = {
 function setupContext() {
   const config = reactive({
     question: { submitExp: 2, correctBonusExp: 5, firstCorrectBonusExp: 10, maxSubmitCount: 999 },
-    homework: { submitExp: 5, resubmitExp: 1, latePenalty: 0.8 },
+    homework: { submitExp: 5, resubmitExp: 1, latePenalty: 0.8, chapterScore: 3 },
     comment: { publishExp: 3, replyExp: 2, likeReceivedExp: 1, maxDailyExp: 20 },
-    chapter: { headingExp: 5, headingCoin: 5, headingScore: 5 },
-    race: { participateExp: 10, rank1Exp: 100, rank2Exp: 80, rank3Exp: 60 },
-    quiz: { submitExp: 3, passScore: 60, passBonusExp: 10 },
+    chapter: { headingExp: 5, headingCoin: 5, headingScore: 5, headingChapterScore: 1 },
+    race: { participateExp: 10, rank1Exp: 100, rank2Exp: 80, rank3Exp: 60, chapterScore: 3 },
+    quiz: { submitExp: 3, passScore: 60, passBonusExp: 10, chapterScore: 3 },
+    peerReview: { exp: 2, coin: 2, score: 1 },
     general: { dailyExpCap: 100, levelStep: 100 },
   })
   ;(globalThis as any).useConfigEditorContext = () => ({ config })
@@ -45,7 +46,7 @@ function setupContext() {
 }
 
 describe('lms/configEditor/expSections.vue', () => {
-  it('渲染所有 7 个 section 标题', async () => {
+  it('渲染所有 8 个 section 标题', async () => {
     setupContext()
     const { default: ExpSections } = await import('../../../../components/lms/configEditor/expSections.vue')
     const wrapper = mount(ExpSections, { global: _globalConfig })
@@ -55,6 +56,7 @@ describe('lms/configEditor/expSections.vue', () => {
     expect(wrapper.text()).toContain('lmsConfig.chapter')
     expect(wrapper.text()).toContain('lmsConfig.race')
     expect(wrapper.text()).toContain('lmsConfig.quiz')
+    expect(wrapper.text()).toContain('lmsConfig.peerReview')
     expect(wrapper.text()).toContain('lmsConfig.general')
   })
 
@@ -68,12 +70,13 @@ describe('lms/configEditor/expSections.vue', () => {
     expect(wrapper.text()).toContain('lmsConfig.maxSubmitCount')
   })
 
-  it('渲染 homework section 的 2 个字段', async () => {
+  it('渲染 homework section 的 3 个字段', async () => {
     setupContext()
     const { default: ExpSections } = await import('../../../../components/lms/configEditor/expSections.vue')
     const wrapper = mount(ExpSections, { global: _globalConfig })
     expect(wrapper.text()).toContain('lmsConfig.submitExp')
     expect(wrapper.text()).toContain('lmsConfig.resubmitExp')
+    expect(wrapper.text()).toContain('lmsConfig.chapterScore')
     // latePenalty 已移除（作业无截止时间，从未生效）
     expect(wrapper.text()).not.toContain('lmsConfig.latePenalty')
   })
@@ -86,6 +89,26 @@ describe('lms/configEditor/expSections.vue', () => {
     expect(wrapper.text()).toContain('lmsConfig.replyExp')
     expect(wrapper.text()).toContain('lmsConfig.likeReceivedExp')
     expect(wrapper.text()).toContain('lmsConfig.maxDailyExp')
+  })
+
+  it('渲染 chapter section 的 4 个字段（含标题章节分）', async () => {
+    setupContext()
+    const { default: ExpSections } = await import('../../../../components/lms/configEditor/expSections.vue')
+    const wrapper = mount(ExpSections, { global: _globalConfig })
+    expect(wrapper.text()).toContain('lmsConfig.headingExp')
+    expect(wrapper.text()).toContain('lmsConfig.headingCoin')
+    expect(wrapper.text()).toContain('lmsConfig.headingScore')
+    expect(wrapper.text()).toContain('lmsConfig.headingChapterScore')
+  })
+
+  it('渲染 race/quiz 的 chapterScore 与 peerReview 字段', async () => {
+    setupContext()
+    const { default: ExpSections } = await import('../../../../components/lms/configEditor/expSections.vue')
+    const wrapper = mount(ExpSections, { global: _globalConfig })
+    expect(wrapper.text()).toContain('lmsConfig.chapterScore')
+    expect(wrapper.text()).toContain('lmsConfig.exp')
+    expect(wrapper.text()).toContain('lmsConfig.coin')
+    expect(wrapper.text()).toContain('lmsConfig.peerReviewScore')
   })
 
   it('渲染 general section 的 2 个字段', async () => {
@@ -101,8 +124,8 @@ describe('lms/configEditor/expSections.vue', () => {
     const { default: ExpSections } = await import('../../../../components/lms/configEditor/expSections.vue')
     const wrapper = mount(ExpSections, { global: _globalConfig })
     const inputs = wrapper.findAll('.uinput')
-    // 4+2+4+3+4+3+2 = 22 个输入框（homework 段移除 latePenalty）
-    expect(inputs.length).toBe(22)
+    // 4+3+4+4+5+4+3+2 = 29 个输入框
+    expect(inputs.length).toBe(29)
     // 都是 number 类型
     expect(inputs[0]!.attributes('type')).toBe('number')
   })

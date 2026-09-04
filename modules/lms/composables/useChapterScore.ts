@@ -20,6 +20,7 @@ type ScoreRow = {
  * - 合并构建表格行（students + scoreData）
  * - 额外列：章节得分 + 任务 + 进度（score / progress 可排序）
  * - 任务预览弹窗状态
+ * - 自动刷新：打开后每 2 秒静默拉取最新得分（不置 loading，表格直接替换数据不闪烁）
  */
 export function useChapterScore(props: { courseId: number; chapterId: number; classId: number }, isOpen: Ref<boolean>) {
   const { t } = useI18n()
@@ -75,9 +76,10 @@ export function useChapterScore(props: { courseId: number; chapterId: number; cl
     { id: 'progress', canSort: true, header: t('chapter.progress') },
   ])
 
-  async function loadData() {
+  // silent=true：自动刷新时静默替换数据，不置 loading（避免表格闪烁）
+  async function loadData(silent = false) {
     if (!props.chapterId || !props.classId || !props.courseId) return
-    loading.value = true
+    if (!silent) loading.value = true
     try {
       // 确保班级用户已加载
       await fetchUsers(props.classId, props.courseId)
@@ -87,13 +89,33 @@ export function useChapterScore(props: { courseId: number; chapterId: number; cl
     } catch (e) {
       console.error('加载章节得分失败', e)
     } finally {
-      loading.value = false
+      if (!silent) loading.value = false
+    }
+  }
+
+  // ---- 自动轮询：每 2 秒静默刷新一次 ----
+  let pollTimer: ReturnType<typeof setInterval> | null = null
+  function startPolling() {
+    stopPolling()
+    pollTimer = setInterval(() => { loadData(true) }, 2000)
+  }
+  function stopPolling() {
+    if (pollTimer) {
+      clearInterval(pollTimer)
+      pollTimer = null
     }
   }
 
   watch(isOpen, (val) => {
-    if (val) loadData()
+    if (val) {
+      loadData()
+      startPolling()
+    } else {
+      stopPolling()
+    }
   })
+
+  onBeforeUnmount(stopPolling)
 
   return {
     students, loading, scoreData, taskModalOpen, taskModalItem,

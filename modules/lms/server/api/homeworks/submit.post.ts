@@ -69,11 +69,16 @@ export default withSubmitHandler('提交作业失败', async (event) => {
     })
   }
 
-  // 4. 更新 userCourses.exp + coin（作业分数 = 0，经验/金币 = gained）+ 奖章
+  // 4. 更新 userCourses.exp + coin + 首次提交章节分；作业分数 = 首次提交章节分，经验/金币 = gained
+  const chapterId = Number(ctx.body.chapter_id) || 0
+  const submitScore = !existing ? (Number(hConfig.chapterScore) || 0) : 0
+  if (chapterId && submitScore > 0) {
+    await addChapterScore(user.id, chapterId, submitScore)
+  }
   await notifyCourseProgress({
     userId: user.id,
     courseId,
-    score: 0,
+    score: submitScore,
     scoreKey: 'homeworkScore',
     exp: gainedExp,
     coin: gainedCoin,
@@ -86,7 +91,7 @@ export default withSubmitHandler('提交作业失败', async (event) => {
       userId: user.id,
       parentCourseId,
       selfCourseId: courseId,
-      score: 0,
+      score: submitScore,
       scoreKey: 'homeworkScore',
       exp: gainedExp,
       coin: gainedCoin,

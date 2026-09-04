@@ -34,6 +34,10 @@
           @click="openStats(row.original)">
           <UAvatar :src="row.original.avatarImg || undefined" :alt="row.original.name" size="2xs" :text="row.original.name?.charAt(0)" />
           <span class="text-sm text-primary group-hover:underline cursor-pointer">{{ row.original.name }}</span>
+          <!-- 前三名金银铜奖杯（当前显示排名） -->
+          <span v-if="showMedal()" class="text-sm leading-none">
+            {{ ['🥇', '🥈', '🥉'][students.indexOf(row.original)] ?? '' }}
+          </span>
         </button>
       </template>
       <!-- 重置密码列 -->
@@ -83,7 +87,7 @@ const { t } = useI18n()
 const {
   showGroup, activeTab, sorting, students, columns,
   hideNumber, hideActions, extraColumns, classId, currentCourseId,
-  numberMap, sortableHeader,
+  numberMap, sortableHeader, showMedal,
   onNumberBlur, autoFillNumbers, openEdit, openReset, openStats,
   statsOpen, statsUserId, statsUser,
 } = useClassUsersTableContext()

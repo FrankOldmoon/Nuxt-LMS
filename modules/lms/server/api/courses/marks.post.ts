@@ -12,7 +12,7 @@ export default eventHandler(async (event) => {
   await requireRole(event, ['teacher', 'admin'])
 
   const body = await readBody(event)
-  const { course_id, user_ids, delta } = body
+  const { course_id, user_ids, delta, chapter_id } = body
 
   if (!course_id || !Array.isArray(user_ids) || user_ids.length === 0) {
     return cResp(null, '缺少 course_id 或 user_ids 参数', false)
@@ -24,6 +24,7 @@ export default eventHandler(async (event) => {
 
   const courseId = Number(course_id)
   const userIds = user_ids.map(Number)
+  const chapterId = Number(chapter_id) || 0
 
   try {
     // 对已有记录执行加减分（COALESCE 防 NULL）
@@ -54,6 +55,13 @@ export default eventHandler(async (event) => {
           altitudeScore: String(Math.max(0, numDelta)),
         }))
       )
+    }
+
+    // 若传入 chapter_id，同步给每个被选中学生加/减章节分
+    if (chapterId) {
+      for (const uid of userIds) {
+        await addChapterScore(uid, chapterId, numDelta)
+      }
     }
 
     return cResp({ success: true, delta: numDelta })

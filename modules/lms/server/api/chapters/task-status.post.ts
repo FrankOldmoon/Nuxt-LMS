@@ -106,18 +106,23 @@ export default eventHandler(async (event) => {
       })
     }
 
-    // heading 完成奖励：每个新完成的 heading 发放 headingExp + headingCoin + headingScore
+    // heading 完成奖励：每个新完成的 heading 发放 headingExp + headingCoin + headingScore + headingChapterScore
     if (courseId && newHeadingIds.length > 0) {
       const config = await getCourseLmsConfig(courseId)
       const headingExp = Number(config?.chapter?.headingExp) || 0
       const headingCoin = Number(config?.chapter?.headingCoin) || 0
       const headingScore = Number(config?.chapter?.headingScore) || 0
-      if (headingExp > 0 || headingCoin > 0 || headingScore > 0) {
+      const headingChapterScore = Number(config?.chapter?.headingChapterScore) || 0
+      if (headingExp > 0 || headingCoin > 0 || headingScore > 0 || headingChapterScore > 0) {
         gainedExp = headingExp * newHeadingIds.length
         gainedCoin = headingCoin * newHeadingIds.length
         const scoreDelta = headingScore * newHeadingIds.length
         gainedScore = scoreDelta
         await addCourseScore(user.id, courseId, scoreDelta, 'altitudeScore', gainedExp, gainedCoin)
+        // 章节标题完成同时计入章节分（可调参数 chapter.headingChapterScore）
+        if (headingChapterScore > 0) {
+          await addChapterScore(user.id, chapterId, headingChapterScore * newHeadingIds.length)
+        }
       }
     }
 

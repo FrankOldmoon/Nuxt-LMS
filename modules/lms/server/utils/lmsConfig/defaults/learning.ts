@@ -18,6 +18,8 @@ export const learningDefaults = {
     submitCoin: 5,
     resubmitExp: 1,
     resubmitCoin: 1,
+    // 首次提交作业奖励的章节分（同时计入课程 homeworkScore 分项）
+    chapterScore: 3,
   },
   comment: {
     publishExp: 3,
@@ -36,9 +38,11 @@ export const learningDefaults = {
     // - headingExp: 经验值
     // - headingCoin: 金币
     // - headingScore: 课程 altitudeScore（用于总分计算）
+    // - headingChapterScore: 章节分（user_chapters.score）
     headingExp: 5,
     headingCoin: 5,
     headingScore: 2,
+    headingChapterScore: 1,
   },
   quiz: {
     submitExp: 3,
@@ -46,6 +50,15 @@ export const learningDefaults = {
     passScore: 60,
     passBonusExp: 10,
     passBonusCoin: 10,
+    // 每次正常提交测验奖励的章节分（课程 quizScore 为最高分模式）
+    chapterScore: 3,
+  },
+  peerReview: {
+    // 提交互评奖励（给评价者）
+    exp: 2,
+    coin: 2,
+    // 章节分 + 课程分（peerScore 分项）
+    score: 1,
   },
   /**
    * 提交后班级弹幕广播开关（控制 questions / homeworks / quizzes / comments 提交后

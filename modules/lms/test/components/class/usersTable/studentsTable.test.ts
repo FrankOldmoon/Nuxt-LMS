@@ -38,6 +38,8 @@ const _globalConfig = {
 function setupMockContext(overrides: any = {}) {
   const ctx = {
     showGroup: () => false,
+    showChart: () => false,
+    showMedal: () => false,
     activeTab: ref('students'),
     sorting: ref([]),
     students: ref([]),

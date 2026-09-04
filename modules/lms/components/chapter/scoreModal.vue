@@ -4,9 +4,6 @@
       <div class="p-6 space-y-4 min-w-[600px]">
         <div class="flex items-center justify-between">
           <h3 class="text-lg font-semibold">{{ $t('chapter.score') }}</h3>
-          <UTooltip :text="$t('common.refresh')">
-            <UButton icon="i-lucide-refresh-cw" variant="soft" size="sm" :loading="loading" @click="loadData" />
-          </UTooltip>
         </div>
 
         <div v-if="!classId" class="py-8 text-center text-muted text-sm">
@@ -25,7 +22,7 @@
         <!-- 得分表 + 条形图 -->
         <div v-else>
           <ClassUsersTable :rows="(tableRows as any)" :class-id="classId" :course-id="courseId" :loading="loading"
-            :hide-actions="true" :hide-teachers="true" :hide-number="true"
+            :hide-actions="true" :hide-teachers="true" :hide-number="true" show-medal
             :extra-columns="extraColumns" :default-sort="[{ id: 'score', desc: true }]"
             show-chart show-group>
             <!-- 章节得分列 -->

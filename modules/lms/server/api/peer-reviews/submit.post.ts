@@ -57,5 +57,24 @@ export default eventHandler(async (event) => {
       set: { scores },
     })
 
+  // 提交互评奖励（给评价者）：exp/coin + 章节分 + 课程分（peerScore 分项），可调参数 peerReview.*
+  try {
+    const cfg = await getCourseLmsConfig(courseId)
+    const pConfig = cfg?.peerReview || {}
+    const exp = Number(pConfig.exp) || 0
+    const coin = Number(pConfig.coin) || 0
+    const score = Number(pConfig.score) || 0
+    if (score > 0 || exp > 0 || coin > 0) {
+      await addCourseScore(user.id, courseId, score, 'peerScore', exp, coin)
+      const chapterId = Number(body.chapter_id) || 0
+      if (chapterId && score > 0) {
+        await addChapterScore(user.id, chapterId, score)
+      }
+    }
+  } catch (e) {
+    // 奖励发放失败不阻塞评价提交
+    console.error('[peer-review] 奖励发放失败:', e)
+  }
+
   return cResp(null, '评价已提交', true)
 })

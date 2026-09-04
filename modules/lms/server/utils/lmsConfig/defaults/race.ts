@@ -13,4 +13,6 @@ export const raceDefaults = {
   rank2Coin: 80,
   rank3Exp: 60,
   rank3Coin: 60,
+  // 参与竞赛提交奖励的章节分（课程 raceScore 为最高分模式）
+  chapterScore: 3,
 }

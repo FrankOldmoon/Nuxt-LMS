@@ -17,7 +17,7 @@ export function useQuizRenderContext() {
 
 export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
     const { t } = useI18n()
-    const { courseId } = useLmsContext()
+    const { courseId, chapterId } = useLmsContext()
     const effectiveCourseId = computed(() => {
         if (props.courseId !== undefined && props.courseId !== null && props.courseId !== '') {
             return Number(props.courseId) || 0
@@ -337,6 +337,7 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
                 method: 'POST',
                 body: {
                     course_id: courseId.value,
+                    chapter_id: chapterId?.value || 0,
                     quiz_cid: quizId.value,
                     records,
                     ...(parentCourseId ? { parent_course_id: parentCourseId } : {}),

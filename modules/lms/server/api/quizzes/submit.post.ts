@@ -113,6 +113,13 @@ export default eventHandler(async (event) => {
     coin: gainedCoin,
   })
 
+  // 7.25 测验提交章节分（可调参数 quiz.chapterScore）
+  const chapterId = Number(body.chapter_id) || 0
+  const quizChapterScore = Number(qConfig.chapterScore) || 0
+  if (chapterId && quizChapterScore > 0) {
+    await addChapterScore(user.id, chapterId, quizChapterScore)
+  }
+
   // 7.5 被其他课程 iframe 嵌入时，将相同加分镜像给宿主课程
   const parentCourseId = Number(body.parent_course_id) || 0
   if (parentCourseId && parentCourseId !== courseId) {

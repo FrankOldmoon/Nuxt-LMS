@@ -81,6 +81,7 @@ const isOpen = defineModel('open', { default: false })
 const props = defineProps({
   courseId: { type: Number, default: 0 },
   classId: { type: Number, default: 0 },
+  chapterId: { type: Number, default: 0 },
 })
 const {
   loading, saving, randomizing, students, selectedIds, randomCount, customScore,
