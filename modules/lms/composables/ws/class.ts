@@ -22,10 +22,10 @@ export function useWsClass() {
     return window.top !== window.self
   }
 
-  function sendDanmaku(classId: number, text: string, from: string = 'anonymous') {
+  function sendDanmaku(classId: number, text: string, from: string = 'anonymous', courseId: number = 0, userId: number = 0) {
     // iframe 嵌套环境下（如富文本内嵌预览）不发送弹幕，避免向课堂广播重复/干扰消息
     if (isInIframe()) return
-    send({ type: 'danmaku', classId, text: text.slice(0, 200), from })
+    send({ type: 'danmaku', classId, text: text.slice(0, 200), from, courseId, userId })
   }
   function onDanmaku(callback: (data: any) => void) {
     return registerWsHandler('danmaku', callback)

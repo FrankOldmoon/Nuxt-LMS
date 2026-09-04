@@ -31,6 +31,8 @@ const _globalConfig = {
 function setupContext() {
   const config = reactive({
     danmaku: {
+      enableDanmaku: true,
+      studentCanSend: true,
       enableOnQuestion: true,
       enableOnHomework: true,
       enableOnQuiz: true,
@@ -82,18 +84,18 @@ describe('lms/configEditor/danmakuSection.vue', () => {
     expect(wrapper.text()).toContain('lmsConfig.onlyOnRewardHint')
   })
 
-  it('渲染 6 个 USwitch 开关', async () => {
+  it('渲染 8 个 USwitch 开关', async () => {
     setupContext()
     const { default: DanmakuSection } = await import('../../../../components/lms/configEditor/danmakuSection.vue')
     const wrapper = mount(DanmakuSection, { global: _globalConfig })
-    expect(wrapper.findAll('.uswitch').length).toBe(6)
+    expect(wrapper.findAll('.uswitch').length).toBe(8)
   })
 
   it('切换 enableOnQuestion 触发 config 更新', async () => {
     const config = setupContext()
     const { default: DanmakuSection } = await import('../../../../components/lms/configEditor/danmakuSection.vue')
     const wrapper = mount(DanmakuSection, { global: _globalConfig })
-    const checkbox = wrapper.findAll('.uswitch input')[0]
+    const checkbox = wrapper.findAll('.uswitch input')[2]
     await checkbox.setValue(false)
     expect(config.danmaku.enableOnQuestion).toBe(false)
   })
@@ -102,8 +104,8 @@ describe('lms/configEditor/danmakuSection.vue', () => {
     const config = setupContext()
     const { default: DanmakuSection } = await import('../../../../components/lms/configEditor/danmakuSection.vue')
     const wrapper = mount(DanmakuSection, { global: _globalConfig })
-    // 第 5 个开关是 questionOnlyOnCorrect
-    const checkbox = wrapper.findAll('.uswitch input')[4]
+    // 第 7 个开关是 questionOnlyOnCorrect
+    const checkbox = wrapper.findAll('.uswitch input')[6]
     await checkbox.setValue(false)
     expect(config.danmaku.questionOnlyOnCorrect).toBe(false)
   })
@@ -112,8 +114,8 @@ describe('lms/configEditor/danmakuSection.vue', () => {
     const config = setupContext()
     const { default: DanmakuSection } = await import('../../../../components/lms/configEditor/danmakuSection.vue')
     const wrapper = mount(DanmakuSection, { global: _globalConfig })
-    // 第 6 个开关是 onlyOnReward
-    const checkbox = wrapper.findAll('.uswitch input')[5]
+    // 第 8 个开关是 onlyOnReward
+    const checkbox = wrapper.findAll('.uswitch input')[7]
     await checkbox.setValue(false)
     expect(config.danmaku.onlyOnReward).toBe(false)
   })

@@ -58,6 +58,10 @@ export const learningDefaults = {
    *   对 comment 默认不受此开关约束（评论通常都能拿到 publishExp/replyExp）。
    */
   danmaku: {
+    // 弹幕收发总开关：false 时所有用户手发弹幕与提交自动弹幕均关闭
+    enableDanmaku: true,
+    // 学生是否可发送弹幕：false 时仅教师/管理员可发送（教师可在弹幕面板切换）
+    studentCanSend: true,
     enableOnQuestion: true,
     enableOnHomework: true,
     enableOnQuiz: true,

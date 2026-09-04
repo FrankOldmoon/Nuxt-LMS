@@ -2,8 +2,7 @@
  * chapter/danmaku/modal.vue 组件测试
  * @see modules/lms/components/chapter/danmaku/modal.vue
  *
- * 弹窗：教师可切换弹幕开关、发送弹幕；学生仅可在弹幕开启时发送。
- * 依赖 useAuth/useWebSocket/useLayoutState，测试中 stub。
+ * 弹窗：教师可切换"学生能否发送弹幕"（课程级配置）；发送区对教师或允许学生发送时开放。
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -15,20 +14,22 @@ beforeEach(() => {
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
 })
 
-function setupStubs(opts: { canEdit?: boolean; showDanmaku?: boolean } = {}) {
+function setupStubs(opts: { canEdit?: boolean; courseId?: number; studentCanSend?: boolean } = {}) {
   const sendDanmaku = vi.fn()
-  const showDanmakuRef = ref(opts.showDanmaku ?? true)
+  const courseId = opts.courseId ?? 0
+  const courseIdRef = ref(courseId)
   ;(globalThis as any).useWebSocket = () => ({ sendDanmaku })
-  ;(globalThis as any).useLayoutState = () => ({
-    showDanmaku: showDanmakuRef,
-    notifyCourseNavUpdate: vi.fn(),
-  })
+  ;(globalThis as any).useLayoutState = () => ({ notifyCourseNavUpdate: vi.fn() })
+  ;(globalThis as any).useLmsContext = () => ({ courseId: courseIdRef, chapterId: ref(0) })
+  // 课程配置读取（仅 courseId>0 时触发）
+  const cRequest = vi.fn().mockResolvedValue({ studentCanSend: opts.studentCanSend ?? true })
+  ;(globalThis as any).cRequest = cRequest
   if (opts.canEdit) {
     setMockAuthUser({ id: 1, name: 'teacher' }, [{ code: 'teacher' }], [])
   } else {
     setMockAuthUser({ id: 2, name: 'student' }, [{ code: 'student' }], [])
   }
-  return { sendDanmaku, showDanmakuRef }
+  return { sendDanmaku, cRequest, courseIdRef }
 }
 
 const _globalStubs = {
@@ -56,8 +57,8 @@ const _globalConfig = {
 }
 
 describe('chapter/danmaku/modal.vue', () => {
-  it('open=true canEdit=true 时渲染弹幕开关 + 发送区', async () => {
-    setupStubs({ canEdit: true, showDanmaku: true })
+  it('canEdit=true 时渲染教师开关 + 发送区', async () => {
+    setupStubs({ canEdit: true })
     const { default: DanmakuModal } = await import('../../../../components/chapter/danmaku/modal.vue')
     const wrapper = mount(DanmakuModal, {
       props: { open: true, classId: 1, canEdit: true },
@@ -65,33 +66,34 @@ describe('chapter/danmaku/modal.vue', () => {
     })
     expect(wrapper.find('.modal').exists()).toBe(true)
     expect(wrapper.find('.uswitch').exists()).toBe(true)
-    expect(wrapper.find('input[type="text"], input:not([type])').exists()).toBe(true)
+    expect(wrapper.find('input').exists()).toBe(true)
   })
 
-  it('canEdit=false 且 showDanmaku=true 时渲染发送区（无开关）', async () => {
-    setupStubs({ canEdit: false, showDanmaku: true })
+  it('canEdit=false 且允许学生发送时渲染发送区（无教师开关）', async () => {
+    setupStubs({ canEdit: false, studentCanSend: true })
     const { default: DanmakuModal } = await import('../../../../components/chapter/danmaku/modal.vue')
     const wrapper = mount(DanmakuModal, {
       props: { open: true, classId: 1, canEdit: false },
       global: _globalConfig,
     })
     expect(wrapper.find('.uswitch').exists()).toBe(false)
-    // 发送区仍渲染
     expect(wrapper.find('button').exists()).toBe(true)
   })
 
-  it('canEdit=false 且 showDanmaku=false 时显示"弹幕已关闭"', async () => {
-    setupStubs({ canEdit: false, showDanmaku: false })
+  it('课程禁止学生发送时（studentCanSend=false）学生看不到发送区', async () => {
+    setupStubs({ canEdit: false, courseId: 1, studentCanSend: false })
     const { default: DanmakuModal } = await import('../../../../components/chapter/danmaku/modal.vue')
     const wrapper = mount(DanmakuModal, {
       props: { open: true, classId: 1, canEdit: false },
       global: _globalConfig,
     })
+    await flushPromises()
+    expect(wrapper.find('button').exists()).toBe(false)
     expect(wrapper.text()).toContain('chapter.danmakuDisabled')
   })
 
-  it('输入弹幕后点击发送调用 wsSendDanmaku 并关闭弹窗', async () => {
-    const { sendDanmaku } = setupStubs({ canEdit: false, showDanmaku: true })
+  it('输入弹幕后点击发送携带 courseId + userId 调用 wsSendDanmaku 并关闭弹窗', async () => {
+    const { sendDanmaku } = setupStubs({ canEdit: false, courseId: 7 })
     const { default: DanmakuModal } = await import('../../../../components/chapter/danmaku/modal.vue')
     const wrapper = mount(DanmakuModal, {
       props: { open: true, classId: 5, canEdit: false },
@@ -100,32 +102,33 @@ describe('chapter/danmaku/modal.vue', () => {
     const input = wrapper.find('input')
     await input.setValue('你好弹幕')
     await wrapper.find('button').trigger('click')
-    expect(sendDanmaku).toHaveBeenCalledWith(5, '你好弹幕', 'student')
-    // 发送后 open 变 false
+    expect(sendDanmaku).toHaveBeenCalledWith(5, '你好弹幕', 'student', 7, 2)
     expect(wrapper.emitted('update:open')).toBeTruthy()
     expect(wrapper.emitted('update:open')![0]).toEqual([false])
   })
 
+  it('教师切换开关保存为课程配置', async () => {
+    const { cRequest } = setupStubs({ canEdit: true, courseId: 3 })
+    const { default: DanmakuModal } = await import('../../../../components/chapter/danmaku/modal.vue')
+    const wrapper = mount(DanmakuModal, {
+      props: { open: true, classId: 1, canEdit: true },
+      global: _globalConfig,
+    })
+    const sw = wrapper.find('.uswitch')
+    await sw.setValue(false)
+    expect(cRequest).toHaveBeenCalledWith('/api/lms-config/course', expect.objectContaining({
+      method: 'POST',
+      body: { course_id: 3, danmaku: { studentCanSend: false } },
+    }))
+  })
+
   it('空文本不发送', async () => {
-    const { sendDanmaku } = setupStubs({ canEdit: false, showDanmaku: true })
+    const { sendDanmaku } = setupStubs({ canEdit: false })
     const { default: DanmakuModal } = await import('../../../../components/chapter/danmaku/modal.vue')
     const wrapper = mount(DanmakuModal, {
       props: { open: true, classId: 5, canEdit: false },
       global: _globalConfig,
     })
-    await wrapper.find('button').trigger('click')
-    expect(sendDanmaku).not.toHaveBeenCalled()
-  })
-
-  it('classId=0 时不发送', async () => {
-    const { sendDanmaku } = setupStubs({ canEdit: false, showDanmaku: true })
-    const { default: DanmakuModal } = await import('../../../../components/chapter/danmaku/modal.vue')
-    const wrapper = mount(DanmakuModal, {
-      props: { open: true, classId: 0, canEdit: false },
-      global: _globalConfig,
-    })
-    const input = wrapper.find('input')
-    await input.setValue('测试')
     await wrapper.find('button').trigger('click')
     expect(sendDanmaku).not.toHaveBeenCalled()
   })

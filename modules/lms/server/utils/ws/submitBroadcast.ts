@@ -38,6 +38,7 @@ export interface BroadcastSubmitDanmakuArgs {
 
 /** 读取 danmaku 配置（取自 LMS 配置缓存，未加载则返回默认） */
 function getDanmakuCfg(): {
+  enableDanmaku: boolean
   enableOnQuestion: boolean
   enableOnHomework: boolean
   enableOnQuiz: boolean
@@ -49,6 +50,7 @@ function getDanmakuCfg(): {
     const cfg = getLmsConfigSync() || {}
     const d = (cfg.danmaku && typeof cfg.danmaku === 'object') ? cfg.danmaku : {}
     return {
+      enableDanmaku: d.enableDanmaku !== false,
       enableOnQuestion: d.enableOnQuestion !== false,
       enableOnHomework: d.enableOnHomework !== false,
       enableOnQuiz: d.enableOnQuiz !== false,
@@ -59,6 +61,7 @@ function getDanmakuCfg(): {
   } catch {
     // 测试环境或未初始化：使用默认（全开 + 严格过滤）
     return {
+      enableDanmaku: true,
       enableOnQuestion: true,
       enableOnHomework: true,
       enableOnQuiz: true,
@@ -80,6 +83,9 @@ function shouldBroadcast(
   args: BroadcastSubmitDanmakuArgs,
   cfg: ReturnType<typeof getDanmakuCfg>,
 ): boolean {
+  // 0) 弹幕收发总开关关闭 → 任何提交自动弹幕都不广播
+  if (cfg.enableDanmaku === false) return false
+
   // 1) per-kind 总开关
   const switchMap: Record<SubmitDanmakuKind, boolean> = {
     question: cfg.enableOnQuestion,

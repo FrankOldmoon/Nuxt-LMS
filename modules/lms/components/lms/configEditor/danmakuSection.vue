@@ -21,6 +21,8 @@
 const { config } = useConfigEditorContext()
 
 const fields = [
+  { key: 'enableDanmaku', label: 'lmsConfig.enableDanmaku', hint: 'lmsConfig.enableDanmakuHint' },
+  { key: 'studentCanSend', label: 'lmsConfig.studentCanSend', hint: 'lmsConfig.studentCanSendHint' },
   { key: 'enableOnQuestion', label: 'lmsConfig.enableOnQuestion', hint: 'lmsConfig.enableOnQuestionHint' },
   { key: 'enableOnHomework', label: 'lmsConfig.enableOnHomework', hint: 'lmsConfig.enableOnHomeworkHint' },
   { key: 'enableOnQuiz', label: 'lmsConfig.enableOnQuiz', hint: 'lmsConfig.enableOnQuizHint' },

@@ -2,6 +2,7 @@
  * 班级消息：join / invite / danmaku / online / chatroom
  */
 import { broadcastToClass, joinClassRoom } from '../state'
+import { isStaffUser } from '../staff'
 
 /** join: 加入班级房间
  * 兼容两种字段名：
@@ -34,14 +35,32 @@ export function handleClassInvite(_peer: any, data: any) {
   }))
 }
 
-/** danmaku: 弹幕广播 */
-export function handleClassDanmaku(_peer: any, data: any) {
+/** danmaku: 弹幕广播（鉴权：课程级总开关 + 学生发送权限） */
+export function handleClassDanmaku(peer: any, data: any) {
   const cid = Number(data.classId); if (!cid) return
-  broadcastToClass(cid, JSON.stringify({
-    type: 'danmaku',
-    text: String(data.text || '').slice(0, 200),
-    from: data.from || 'anonymous',
-  }))
+  void (async () => {
+    try {
+      const courseId = Number(data.courseId) || 0
+      const cfg = courseId
+        ? await getCourseLmsConfig(courseId).catch(() => null)
+        : (getLmsConfigSync() || null)
+      const d = (cfg?.danmaku && typeof cfg.danmaku === 'object') ? cfg.danmaku : {}
+      // 弹幕收发总开关关闭 → 不发送
+      if (d.enableDanmaku === false) return
+      // 学生发送权限关闭 → 仅教师/管理员可发送
+      if (d.studentCanSend === false) {
+        const senderId = Number(data.userId) || Number(peer?._userId || peer?._authUserId)
+        if (!senderId || !(await isStaffUser(senderId))) return
+      }
+      broadcastToClass(cid, JSON.stringify({
+        type: 'danmaku',
+        text: String(data.text || '').slice(0, 200),
+        from: data.from || 'anonymous',
+      }))
+    } catch (e) {
+      console.error('[danmaku] broadcast failed:', e)
+    }
+  })()
 }
 
 /** online: 用户在线状态变更 */
