@@ -45,6 +45,7 @@ export default eventHandler(async (event) => {
   let newMedals: number[] = []
   let gainedExp = 0
   let gainedCoin = 0
+  let gainedScore = 0
 
   try {
     const existing = await db.query.userChapters.findFirst({
@@ -115,6 +116,7 @@ export default eventHandler(async (event) => {
         gainedExp = headingExp * newHeadingIds.length
         gainedCoin = headingCoin * newHeadingIds.length
         const scoreDelta = headingScore * newHeadingIds.length
+        gainedScore = scoreDelta
         await addCourseScore(user.id, courseId, scoreDelta, 'altitudeScore', gainedExp, gainedCoin)
       }
     }
@@ -130,7 +132,7 @@ export default eventHandler(async (event) => {
       await Promise.all(tasks)
     }
 
-    return cResp({ isPass, newMedals, gainedExp, gainedCoin })
+    return cResp({ isPass, newMedals, gainedExp, gainedCoin, gainedScore })
   } catch (error: any) {
     // drizzle 的 DrizzleQueryError 把真正的 PG 错误藏在 error.cause 里
     const pgError = error?.cause?.message || error?.message || '保存失败'

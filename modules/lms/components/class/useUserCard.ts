@@ -5,6 +5,9 @@ type MyStats = {
     exp: number
     coin: number
     chapterScore: number | null
+    medals?: MyMedal[]
+    chapterTaskStatus?: Record<string, boolean> | null
+    chapterIsPass?: boolean
 }
 
 /**
@@ -17,7 +20,7 @@ type MyStats = {
 export function useUserCardSetup() {
     const { user } = useAuth()
     const route = useRoute()
-    const { myMedals, fetchMyMedals, checkMedals } = useMedals()
+    const { myMedals, checkMedals } = useMedals()
 
     // 路由中的课程/章节 ID
     const courseId = computed(() => Number(route.params.id) || 0)
@@ -40,36 +43,78 @@ export function useUserCardSetup() {
         chapterScore: null,
     }))
 
+    // fetchStats 的乱序保护 + 并发去重
+    let fetchSeq = 0
+    let inFlightKey = ''
+
+    // me 返回的最新章节进度写入全局状态（useState 走 Nuxt 运行时，跨组件可靠），
+    // 由章节页 [cid].vue watch 后应用到自己的 chapterTaskCtx（TOC progress 数据源）。
+    // 不再直接调 useChapterTask 的模块级 shared ctx：路由切换页面 remount 时，
+    // 「新页面 setup 设置 → 旧页面 unmount」的时序会让该 ref 不可靠。
+    const serverProgress = useState<{ chapterId: number, taskStatus: Record<string, boolean>, isPass: boolean } | null>(
+        'server-chapter-progress', () => null)
+
     async function fetchStats() {
         if (!courseId.value) {
             stats.value = { courseScore: 0, exp: 0, coin: 0, chapterScore: null }
             return
         }
+        // 章节竞态防护：记录请求时的章节 id，响应到达时若已切换章节则丢弃
+        const reqChapterId = chapterId.value
+        // 并发去重：同课程同章节的并发请求只发一次
+        const flightKey = `${courseId.value}:${reqChapterId}`
+        if (inFlightKey === flightKey) return
+        // 乱序保护：仅接受最新一次请求的响应（慢的旧响应到达时已被更新请求取代，直接丢弃），
+        // 否则切换章节时多个 me 并发，慢的旧响应最后落地会把 userCard 覆盖回旧数据
+        const seq = ++fetchSeq
+        inFlightKey = flightKey
         try {
             const data = await cRequest<MyStats>('/api/courses/me', {
                 query: {
                     courseId: courseId.value,
-                    chapterId: chapterId.value || undefined,
+                    chapterId: reqChapterId || undefined,
                 },
             })
+            if (seq !== fetchSeq || chapterId.value !== reqChapterId) return // 已被更新请求取代 / 已切换章节
             stats.value = data
+            // me 已附带已获奖章，直接更新显示（章节页不再单独请求 /api/medals/my）
+            if (Array.isArray(data?.medals)) {
+                myMedals.value = data.medals
+            }
+            // 把 me 拉到的最新章节任务进度写入全局状态（TOC progress 数据源），
+            // 由章节页 [cid].vue watch 后应用到自己的 chapterTaskCtx。
+            // 进度数据源统一为 me（实时请求）；/api/chapters/show 允许缓存旧值，不再使用其 taskStatus。
+            syncServerTaskStatus(data)
         } catch {
             // 静默忽略，保持旧值
+        } finally {
+            if (inFlightKey === flightKey) inFlightKey = ''
         }
     }
 
-    // 路由变化时（进入/切换课程/章节）重新拉取
-    watch([courseId, chapterId], () => { fetchStats() }, { immediate: true })
+    // 将 me 返回的最新章节进度写入全局状态，[cid].vue watch 后应用到 chapterTaskCtx
+    function syncServerTaskStatus(data: MyStats | undefined) {
+        const taskStatus = data?.chapterTaskStatus
+        if (!taskStatus || typeof taskStatus !== 'object') return
+        if (chapterId.value <= 0) return
+        serverProgress.value = { chapterId: chapterId.value, taskStatus, isPass: !!data?.chapterIsPass }
+    }
 
-    // 监听全局 trigger：答题 / 交作业 / 评论等加分操作后自动刷新 + 检查奖章
-    const { refreshTrigger } = useUserCard()
+    // 路由课程变化（进入课程/首次挂载）时拉取；
+    // 章节切换由 [cid].vue 的切换流程统一触发（flush 旧章节后拉一次 me），此处不监听 chapterId
+    watch(courseId, () => { fetchStats() }, { immediate: true })
+
+    // 监听全局 trigger：
+    // - refresh()：答题/交作业/评论等提交操作后 → 刷新积分 + 检查奖章授予
+    // - refreshStatsOnly()：章节切换流程（flush 旧章节后）/保存进度 → 仅刷新积分/奖章
+    const { refreshTrigger, statsOnlyTrigger } = useUserCard()
     watch(refreshTrigger, () => {
         fetchStats()
         if (courseId.value) checkMedals(courseId.value)
     })
+    watch(statsOnlyTrigger, () => { fetchStats() })
 
-    // 进入课程时拉取已获奖章
-    watch(courseId, () => { fetchMyMedals() }, { immediate: true })
+    // 已获奖章由 me 响应附带更新（fetchStats 内），不再单独请求 /api/medals/my
 
     // 奖章图标颜色映射
     function medalIconColor(color: any) {

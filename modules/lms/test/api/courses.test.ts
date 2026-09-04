@@ -26,7 +26,9 @@ const _mockSchema = {
   users: { id: 'id', username: 'username' },
   courses: { id: 'id', name: 'name', code: 'code', deletedAt: 'deletedAt' },
   userCourses: { userId: 'userId', courseId: 'courseId', score: 'score', exp: 'exp' },
-  userChapters: { userId: 'userId', chapterId: 'chapterId', score: 'score' },
+  userChapters: { userId: 'userId', chapterId: 'chapterId', score: 'score', taskStatus: 'taskStatus', isPass: 'isPass' },
+  userMedals: { userId: 'userId', medalId: 'medalId', createdAt: 'createdAt' },
+  medals: { id: 'id', name: 'name', content: 'content' },
   chapters: { id: 'id', courseId: 'courseId' },
   configs: { id: 'id', value: 'value' },
 }
@@ -73,37 +75,47 @@ describe('API: courses/me.get', () => {
 
   it('有效 courseId 返回分数/经验', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
-    _mockDb.limit = vi.fn().mockResolvedValue([{ score: 85, exp: 120 }])
+    // 第一次 limit: userCourses → score/exp；第二次 limit: medals → []
+    _mockDb.limit = vi.fn()
+      .mockResolvedValueOnce([{ score: 85, exp: 120, coin: 10 }])
+      .mockResolvedValueOnce([])
     const handler = (await import('../../server/api/courses/me.get')).default
     const result = await handler(makeEvent({ query: { courseId: '1' } }))
     expect(result.success).toBe(true)
     expect(result.data.courseScore).toBe(85)
     expect(result.data.exp).toBe(120)
+    expect(result.data.medals).toEqual([])
   })
 
   it('指定 chapterId 且属于该课程时返回章节分数', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
     // 第一次 limit: userCourses → score/exp
     // 第二次 limit: chapters → 存在
-    // 第三次 limit: userChapters → score
+    // 第三次 limit: userChapters → score + taskStatus
+    // 第四次 limit: medals → []
     _mockDb.limit = vi.fn()
-      .mockResolvedValueOnce([{ score: 80, exp: 50 }])  // userCourses
-      .mockResolvedValueOnce([{ id: 10 }])             // chapters
-      .mockResolvedValueOnce([{ score: 30 }])          // userChapters
+      .mockResolvedValueOnce([{ score: 80, exp: 50, coin: 5 }])             // userCourses
+      .mockResolvedValueOnce([{ id: 10 }])                                  // chapters
+      .mockResolvedValueOnce([{ score: 30, taskStatus: { a: true }, isPass: true }]) // userChapters
+      .mockResolvedValueOnce([])                                            // medals
     const handler = (await import('../../server/api/courses/me.get')).default
     const result = await handler(makeEvent({ query: { courseId: '1', chapterId: '10' } }))
     expect(result.success).toBe(true)
     expect(result.data.chapterScore).toBe(30)
+    expect(result.data.chapterTaskStatus).toEqual({ a: true })
+    expect(result.data.chapterIsPass).toBe(true)
   })
 
   it('chapterId 属于其他课程时 chapterScore 为 null', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
     _mockDb.limit = vi.fn()
-      .mockResolvedValueOnce([{ score: 80, exp: 50 }])
+      .mockResolvedValueOnce([{ score: 80, exp: 50, coin: 5 }])
       .mockResolvedValueOnce([]) // chapters 查询为空 → 章节不属于该课程
+      .mockResolvedValueOnce([]) // medals
     const handler = (await import('../../server/api/courses/me.get')).default
     const result = await handler(makeEvent({ query: { courseId: '1', chapterId: '999' } }))
     expect(result.success).toBe(true)
     expect(result.data.chapterScore).toBeNull()
+    expect(result.data.medals).toEqual([])
   })
 })

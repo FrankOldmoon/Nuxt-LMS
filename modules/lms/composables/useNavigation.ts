@@ -147,7 +147,9 @@ export function useSidebarNav() {
 
   const { data: courseData, refresh } = cRequest.use<LmsCourseDetail | null>(
     () => courseApiUrl.value,
-    { default: () => null }
+    // 侧边栏导航是课程级数据（不含章节维度），跳过 course_id/chapter_id 自动注入，
+    // 避免切章节时 chapter_id 变化导致 URL 变化而重复请求 /api/courses/show
+    { default: () => null, skipInjectIds: true }
   )
 
   const navigation = computed<NavigationMenuItem[]>(() => {

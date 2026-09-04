@@ -21,6 +21,10 @@ beforeEach(async () => {
   // useChapterTask 依赖 auto-import 的 extractChapterTasks
   const { extractChapterTasks } = await import('../../utils/chapterTask')
   ;(globalThis as any).extractChapterTasks = extractChapterTasks
+  // setupChapterTask 依赖 useUserCard + useMedals（奖章单独触发）
+  const { useUserCard } = await import('../../composables/useUserCard')
+  ;(globalThis as any).useUserCard = useUserCard
+  ;(globalThis as any).useMedals = () => ({ checkMedals: vi.fn(), fetchMyMedals: vi.fn(), myMedals: ref([]) })
 })
 
 function makeContent(headings: any[] = [], blocks: any[] = []) {
@@ -362,6 +366,73 @@ describe('composables/useChapterTask', () => {
         try { delete (import.meta as any).client } catch { /* ignore */ }
       }
     }
+  })
+
+  it('ctx 暴露 flushPersist（章节切换时用于立即落库旧章节）', async () => {
+    const { setupChapterTask } = await import('../../composables/useChapterTask')
+    const ctx = setupChapterTask({
+      content: ref(null),
+      chapterId: ref(1),
+      courseId: ref(1),
+    })
+    expect(typeof ctx.flushPersist).toBe('function')
+    // client=false 时安全调用，不抛错
+    await expect(ctx.flushPersist()).resolves.toBeUndefined()
+  })
+
+  it('applyServerTaskStatus：填充 me 返回的最新进度（sticky 合并）+ resetProgress 清空', async () => {
+    const { setupChapterTask } = await import('../../composables/useChapterTask')
+    const content = ref(makeContent([
+      { type: 'heading', attrs: { id: 'h1', level: 2 }, content: [{ type: 'text', text: 'H1' }] },
+      { type: 'heading', attrs: { id: 'h2', level: 2 }, content: [{ type: 'text', text: 'H2' }] },
+    ]))
+    const ctx = setupChapterTask({
+      content,
+      chapterId: ref(5),
+      courseId: ref(1),
+      chapterTitle: ref('Chapter Title'),
+    })
+    // 初始为空
+    expect(ctx.taskStatus.value).toEqual({})
+    // me 返回最新进度：章节标题 5 + h1 完成
+    ctx.applyServerTaskStatus({ '5': true, 'h1': true }, false)
+    expect(ctx.taskStatus.value['5']).toBe(true)
+    expect(ctx.taskStatus.value['h1']).toBe(true)
+    expect(ctx.taskStatus.value['h2']).toBeUndefined()
+    // sticky：再次 apply 不会回退已完成
+    ctx.applyServerTaskStatus({ 'h2': true }, true)
+    expect(ctx.taskStatus.value['h1']).toBe(true)
+    expect(ctx.taskStatus.value['h2']).toBe(true)
+    expect(ctx.isPass.value).toBe(true)
+    // 模拟阅读过一个块
+    ctx.markBlockRead('0')
+    expect(ctx.isBlockRead('0')).toBe(true)
+    // 切章节 reset：全部清空（含 hover 已读块），等 me 重新填充
+    ctx.resetProgress()
+    expect(ctx.taskStatus.value).toEqual({})
+    expect(ctx.nodeStatus.value).toEqual({})
+    expect(ctx.isPass.value).toBe(false)
+    expect(ctx.isBlockRead('0')).toBe(false)
+  })
+
+  it('completeChapterHeading：hover 章节标题即完成一级标题（sticky）', async () => {
+    const { setupChapterTask } = await import('../../composables/useChapterTask')
+    const ctx = setupChapterTask({
+      content: ref(null),
+      chapterId: ref(5),
+      courseId: ref(1),
+      chapterTitle: ref('Chapter Title'),
+    })
+    const hid = '5'
+    // 章节标题作为第一个 heading 存在，初始未完成
+    expect(ctx.taskMap.value.headings[0]?.id).toBe(hid)
+    expect(ctx.isHeadingDone(hid)).toBe(false)
+    // hover 触发完成
+    ctx.completeChapterHeading()
+    expect(ctx.isHeadingDone(hid)).toBe(true)
+    // sticky：重复调用不改变状态
+    ctx.completeChapterHeading()
+    expect(ctx.isHeadingDone(hid)).toBe(true)
   })
 
   it('脏数据：content.content 为 {}（truthy 非数组）时不抛错', async () => {

@@ -83,7 +83,7 @@ async function cRequest<T = any>(url: string, options: Record<string, any> = {})
 }
 
 cRequest.use = <T = any>(url: string | (() => string) | Ref<string>, options: Record<string, any> = {}) => {
-  const { transform: customTransform, ...rest } = options
+  const { transform: customTransform, skipInjectIds, ...rest } = options
 
   // 解析 url 为 getter 函数，支持 string / function / Ref 三种类型
   const urlGetter = () => {
@@ -92,15 +92,20 @@ cRequest.use = <T = any>(url: string | (() => string) | Ref<string>, options: Re
     return url as string
   }
 
-  // 用 URL 字符串作为稳定 key，确保客户端导航时能命中缓存
-  const resolvedKey = urlGetter()
+  // 稳定 key：以「当前 URL」为缓存键。
+  // 对于函数式 url（如 useChapterPage 的 /api/chapters/show?id=chapterId），
+  // 章节切换时 urlGetter 返回值变化 → key 随之变化 → Nuxt 重新请求最新章节，
+  // 而不会命中首次 URL 的固定 key 缓存导致数据不更新。（纯字符串 url 不受影响）
+  const key = computed(() => urlGetter())
 
-  // 自动注入 course_id 和 chapter_id 到 URL（响应式，路由变化时重新计算）
+  // 自动注入 course_id 和 chapter_id 到 URL（响应式，路由变化时重新计算）。
+  // skipInjectIds=true 时跳过注入（用于"课程级、与当前章节无关"的请求，如侧边栏导航，
+  // 避免 chapter_id 变化导致 URL 变化而触发不必要的重拉）
   const wrappedUrl = computed(() => {
     const rawUrl = urlGetter()
     if (!rawUrl) return ''
     const { courseId, chapterId } = getRouteIds()
-    return injectToUrl(rawUrl, courseId, chapterId)
+    return skipInjectIds ? rawUrl : injectToUrl(rawUrl, courseId, chapterId)
   })
 
   // 教师以上角色（admin / teacher / editor）需要在客户端获取最新数据
@@ -110,7 +115,7 @@ cRequest.use = <T = any>(url: string | (() => string) | Ref<string>, options: Re
 
   const fetchResult = useFetch<T>(wrappedUrl, {
     ...rest,
-    key: resolvedKey,
+    key,
     getCachedData(key: string) {
       // 始终返回 SSR payload 数据作为 hydration 初始值
       // 若返回 undefined，Nuxt 会用 default()（通常为 null）初始化 data，

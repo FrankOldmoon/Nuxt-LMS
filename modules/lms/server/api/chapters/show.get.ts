@@ -70,15 +70,9 @@ export default eventHandler(async (event) => {
     }
   }
 
-  // 查询当前用户的章节学习记录（task_status / is_pass）
-  // lms 模式下对所有登录用户都查询（非 lms 模式无 userChapters 表，但 lms 启用时表一定存在）
-  let userChapter: any = null
-  if (user) {
-    userChapter = await db.query.userChapters.findFirst({
-      where: and(eq(schema.userChapters.userId, user.id), eq(schema.userChapters.chapterId, id)),
-    })
-  }
-  const result = normalizeChapterPageData(chapter, chapter.course, userChapter)
+  // 纯内容接口：用户进度（task_status / is_pass）由 /api/courses/me 实时返回，
+  // show 允许客户端缓存复用，不携带任何用户相关数据
+  const result = normalizeChapterPageData(chapter, chapter.course)
 
   // 教师/管理员：附带 isOpen 和班级开放状态
   // 仍保留角色限制：非教师用户前端 accessBar 由 canEdit=v-if 隐藏，没必要传输 isOpen

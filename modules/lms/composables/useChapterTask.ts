@@ -29,15 +29,30 @@ export interface ChapterTaskContext {
   markBlockRead: (key: string) => void
   /** 某个 heading 是否已完成（sticky） */
   isHeadingDone: (headingId: string) => boolean
+  /** hover 章节标题（一级标题）即完成该标题 */
+  completeChapterHeading: () => void
+  /**
+   * 用 /api/courses/me 返回的服务端最新章节进度填充本地状态（sticky 合并）。
+   * 进度数据源已统一为 me（show 允许缓存旧值），me 每次实时拉取。
+   */
+  applyServerTaskStatus: (status: Record<string, boolean> | null | undefined, isPass?: boolean) => void
+  /** 切换章节时重置本地进度（旧章节已由 flushPersist 落库），等 me 填充 */
+  resetProgress: () => void
+  /** 立即持久化当前章节任务状态（切章节/离开前调用，防止防抖定时器在切换后误存） */
+  flushPersist: () => Promise<void>
 }
 
 const CHAPTER_TASK_KEY = 'chapter-task-context'
+
+// shared ctx 版本号：页面 remount 时序是「新 ctx 先 set → 旧 ctx 后 unmount」，
+// 若 unmount 无条件置 null 会把新 ctx 抹掉；仅当自己仍是最新版本时才清除
+let ctxVersion = 0
 
 /**
  * 模块级共享 ref：允许不在 provide/inject 子树内的组件访问当前章节任务上下文。
  * 典型场景：移动端 TOC 在 USlideover（layout 层，是页面的父组件）中渲染，
  * 无法通过 inject 获取页面内 setupChapterTask 提供的上下文。
- * setupChapterTask 设置此 ref，onBeforeUnmount 清除。
+ * setupChapterTask 设置此 ref，onBeforeUnmount 清除（版本守卫）。
  */
 const sharedChapterTaskCtx = shallowRef<ChapterTaskContext | null>(null)
 
@@ -63,8 +78,10 @@ export function setupChapterTask(opts: {
   const { user } = useAuth()
   const toast = useToast()
   const { t } = useI18n()
-  // 引入 useUserCard：readingBlock 完成 heading 时调用 refresh() 触发 userCard 重新拉取积分
-  const { refresh: refreshUserCard } = useUserCard()
+  // 引入 useUserCard：heading 完成时刷新积分显示（仅刷新，不做奖章检查）
+  const { refreshStatsOnly: refreshUserCardStats } = useUserCard()
+  // 章节首次通过时显式检查奖章授予
+  const { checkMedals } = useMedals()
 
   const taskMap = computed(() => {
     const map = extractChapterTasks(opts.content.value)
@@ -148,6 +165,27 @@ export function setupChapterTask(opts: {
   // 延迟完成的 heading 定时器（最后一个 block 标黄后 1s 再记录完成）
   const pendingCompletion = new Map<string, ReturnType<typeof setTimeout>>()
 
+  // ===== 服务端进度同步门控 =====
+  // resetProgress / 首次挂载后需等 /api/courses/me 填充服务端进度，
+  // 才允许 watcher 自动完成空 heading —— 否则重访已完成章节时会
+  // 触发多余的 task-status POST + me 请求。
+  // 3s 兜底：me 请求失败/超时后放行，保证离线/异常时进度追踪仍可用。
+  const serverSynced = ref(!!opts.initialTaskStatus)
+  let syncFallbackTimer: any = null
+  function armSyncFallback() {
+    if (!import.meta.client) return
+    if (syncFallbackTimer) clearTimeout(syncFallbackTimer)
+    syncFallbackTimer = setTimeout(() => { serverSynced.value = true }, 3000)
+  }
+  function markServerSynced() {
+    serverSynced.value = true
+    if (syncFallbackTimer) {
+      clearTimeout(syncFallbackTimer)
+      syncFallbackTimer = null
+    }
+  }
+  if (!serverSynced.value) armSyncFallback()
+
   function isBlockRead(key: string): boolean {
     return readBlocks.value.has(key)
   }
@@ -212,24 +250,86 @@ export function setupChapterTask(opts: {
     isPass.value = hs.length > 0 && hs.every(h => taskStatus.value[h.id])
   }
 
+  /**
+   * hover 章节标题（一级标题）即完成该标题。
+   * 与"自动完成"并存：sticky，一旦完成不再回退。
+   */
+  function completeChapterHeading() {
+    const hid = String(opts.chapterId.value)
+    if (taskStatus.value[hid]) return
+    taskStatus.value = { ...taskStatus.value, [hid]: true }
+    recomputePass()
+    schedulePersist()
+  }
+
+  /**
+   * 用 me 返回的服务端最新章节进度填充本地状态（sticky 合并，只补 true 不回退）。
+   * 附带反推 nodeStatus，避免后续 recompute 丢失已完成任务。
+   */
+  function applyServerTaskStatus(status: Record<string, boolean> | null | undefined, serverIsPass?: boolean) {
+    if (!status || typeof status !== 'object') return
+    const merged = { ...taskStatus.value }
+    for (const [k, v] of Object.entries(status)) {
+      if (v === true) merged[k] = true
+    }
+    taskStatus.value = merged
+    if (serverIsPass && !isPass.value) isPass.value = true
+    // 服务端状态已同步：同步通知水位，避免下次 persist 重复 notify/checkMedals
+    lastNotifiedPass = isPass.value
+    // 用已完成的 heading 反推 node 级状态，避免后续 recompute 丢失已完成任务
+    const map = taskMap.value
+    const ns: Record<string, boolean> = {}
+    for (const h of map.headings) {
+      if (merged[h.id]) {
+        for (const t of (map.tasksByHeading[h.id] || [])) ns[t.key] = true
+      }
+    }
+    nodeStatus.value = ns
+    markServerSynced()
+  }
+
+  /** 切换章节时重置本地进度（旧章节已由 flushPersist 落库），等 me 填充 */
+  function resetProgress() {
+    taskStatus.value = {}
+    nodeStatus.value = {}
+    isPass.value = false
+    // 旧章节的 hover 已读块对 新章节内容索引无意义，一并清空
+    readBlocks.value = new Set()
+    // 旧章节延迟完成的定时器不再有意义，清掉避免切换后误弹 toast / 误标记
+    for (const timer of pendingCompletion.values()) clearTimeout(timer)
+    pendingCompletion.clear()
+    // 等待新章节的 me 填充后才允许自动完成（配合 3s 兜底）
+    serverSynced.value = false
+    armSyncFallback()
+  }
+
   // ===== 持久化（防抖，仅客户端） =====
   let persistTimer: any = null
   let lastNotifiedPass = isPass.value
+  // 记录触发持久化时的章节 id：防抖定时器可能在章节切换后才触发，
+  // 若实时读取 opts.chapterId.value，会把旧章节的完成状态误存到新章节
+  let persistChapterId = 0
+  // 自上次成功落库后是否有变更：无变更时 flushPersist 跳过 POST（切章节/离开页面不再发空请求）
+  let dirty = false
 
   function schedulePersist() {
     if (!import.meta.client) return
+    persistChapterId = Number(opts.chapterId.value)
+    dirty = true
     if (persistTimer) clearTimeout(persistTimer)
     persistTimer = setTimeout(doPersist, 1500)
   }
 
-  async function doPersist() {
+  async function doPersist(persistOpts: { silent?: boolean } = {}) {
+    // 定时器已触发本函数：清掉句柄，避免 flushPersist 误判有挂起定时器而重复 POST
+    persistTimer = null
     // 未登录时不记录学习进度
     if (!user.value) return
 
-    const chId = Number(opts.chapterId.value)
+    const chId = persistChapterId
     if (!chId) return
     try {
-      await cRequest('/api/chapters/task-status', {
+      const res = await cRequest<{ isPass: boolean; newMedals: number[]; gainedExp: number; gainedCoin: number; gainedScore: number }>('/api/chapters/task-status', {
         method: 'POST',
         body: {
           chapter_id: chId,
@@ -237,16 +337,45 @@ export function setupChapterTask(opts: {
           is_pass: isPass.value,
         },
       })
-      // heading 完成：通知 userCard 重新拉取积分（章节分/经验/金币可能因完成而变化）
-      refreshUserCard()
-      // is_pass 变化时通知课程侧边栏刷新打钩
-      if (isPass.value !== lastNotifiedPass) {
+      dirty = false
+
+      const passChanged = isPass.value !== lastNotifiedPass
+      if (passChanged) {
         lastNotifiedPass = isPass.value
+        // is_pass 变化时通知课程侧边栏刷新打钩；章节首次通过时检查奖章授予
         notifyCourseNavUpdate()
+        if (isPass.value && Number(opts.courseId.value)) {
+          await checkMedals(Number(opts.courseId.value))
+        }
+      }
+      // heading 完成：刷新积分显示（章节分/经验/金币可能因完成而变化）。
+      // 仅在服务端实际发放了奖励/奖章或通关状态变化时才刷新；
+      // silent（章节切换 flush）：由 [cid].vue 切换流程在 flush 结束后统一拉一次 me，
+      // 此处不重复触发，保证每次切换只有一次 me 请求。
+      const gained = res?.gainedExp || res?.gainedCoin || res?.gainedScore || res?.newMedals?.length || passChanged
+      if (!persistOpts.silent && gained) {
+        refreshUserCardStats()
       }
     } catch {
-      // 静默（网络错误）
+      // 静默（网络错误）：保持 dirty，下次 flush 重试
     }
+  }
+
+  /**
+   * 立即持久化（切章节前调用）。
+   * 调用时机：taskStatus 仍为旧章节状态、persistChapterId 仍为旧章节 id 时。
+   * 无未落库变更时跳过 POST；落库成功后由调用方（[cid].vue）拉一次 me 刷新展示。
+   */
+  async function flushPersist() {
+    if (!import.meta.client) return
+    if (persistTimer) {
+      clearTimeout(persistTimer)
+      persistTimer = null
+      // 挂起的防抖定时器代表未落库的变更
+      dirty = true
+    }
+    if (!dirty) return
+    await doPersist({ silent: true })
   }
 
   // ===== 上报接口 =====
@@ -296,10 +425,15 @@ export function setupChapterTask(opts: {
     isBlockRead,
     markBlockRead,
     isHeadingDone,
+    completeChapterHeading,
+    applyServerTaskStatus,
+    resetProgress,
+    flushPersist,
   }
 
   provide(CHAPTER_TASK_KEY, ctx)
   // 同时通过模块级 ref 共享，供不在 provide 子树内的组件访问（如移动端 slideover 中的 TOC）
+  const myVersion = ++ctxVersion
   sharedChapterTaskCtx.value = ctx
 
   // ===== 客户端：内容/布局变化时重算所有 heading =====
@@ -309,10 +443,12 @@ export function setupChapterTask(opts: {
     // 此时 nodeToHeading 尚未建立 → reportNodeDone 内的 checkHeading 未命中；
     // 此 watcher 在 taskMap 就绪后统一补救，让已答对的任务正确触发完成。
     // 同时覆盖空 heading（无任务且无可阅读块）自动完成的原始需求。
+    // 门控 serverSynced：等 /api/courses/me 填充服务端进度后才自动完成，
+    // 避免重访已完成章节时立即触发多余的 task-status POST（3s 兜底放行）。
     watch(
-      [taskMap, blockLayout],
+      [taskMap, blockLayout, serverSynced],
       () => {
-        if (!user.value) return
+        if (!user.value || !serverSynced.value) return
         for (const h of taskMap.value.headings) {
           checkHeading(h.id)
         }
@@ -321,14 +457,21 @@ export function setupChapterTask(opts: {
     )
 
     onBeforeUnmount(() => {
-      if (persistTimer) clearTimeout(persistTimer)
       // 清除延迟完成定时器，避免离开页面后触发 toast
       for (const timer of pendingCompletion.values()) clearTimeout(timer)
       pendingCompletion.clear()
-      // 离开页面时立即持久化一次
-      doPersist()
-      // 清除模块级共享 ref，防止下一个页面读到旧的上下文
-      sharedChapterTaskCtx.value = null
+      // 清除 me 兜底定时器
+      if (syncFallbackTimer) {
+        clearTimeout(syncFallbackTimer)
+        syncFallbackTimer = null
+      }
+      // 离开页面时立即持久化一次（使用快照的章节 id，避免误存到其它章节）
+      flushPersist()
+      // 清除模块级共享 ref：仅当自己仍是最新版本时才清除
+      // （页面 remount 时新 ctx 已先行 set，无条件清空会误杀新 ctx）
+      if (ctxVersion === myVersion) {
+        sharedChapterTaskCtx.value = null
+      }
     })
   }
 
