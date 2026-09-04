@@ -25,29 +25,21 @@ export function useCourseUserSelect(
   const impersonating = ref(false)
   const allStudents = ref<any[]>([])
 
-  // 管理员：全部学生；教师：当前班级学生
-  const userOptions = computed(() => {
-    const list = isAdmin.value ? allStudents.value : students.value
-    return list.map(s => ({
-      label: `${s.name}${s.preferName ? ` (${s.preferName})` : ''}`,
-      value: s.id,
-    }))
-  })
+  // 与 select class 一致：始终显示当前班级（defaultClass）的学生
+  const userOptions = computed(() => students.value.map(s => ({
+    label: `${s.name}${s.preferName ? ` (${s.preferName})` : ''}`,
+    value: s.id,
+  })))
 
-  // 加载学生列表
+  // 加载学生列表：使用当前 defaultClass 班级（与 select class 的班级学生一致）
   async function loadStudents() {
     loading.value = true
     try {
       // 记录初始角色（加载时仍是教师/管理员）
       isAdmin.value = originalIsAdmin.value
-      if (isAdmin.value) {
-        const data = await cRequest<any[]>('/api/users/students')
-        allStudents.value = data || []
-      } else {
-        const classId = user.value?.defaultClass?.id
-        if (classId) {
-          await fetchUsers(classId, props.courseId)
-        }
+      const classId = user.value?.defaultClass?.id
+      if (classId) {
+        await fetchUsers(classId, props.courseId)
       }
     } catch (e) {
       console.error('[userSelect] 加载学生失败', e)

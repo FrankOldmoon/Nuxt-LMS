@@ -10,13 +10,13 @@
 
     <!-- 作业内容 -->
     <div>
-        <label class="text-xs text-gray-500 mb-1 block">{{ t('question.contentLabel') }}</label>
+        <label class="text-xs text-gray-500 mb-1 block">{{ t('homework.contentLabel') }}</label>
         <richEditor v-model="form.content" />
     </div>
 
-    <!-- 答案解析 -->
+    <!-- 答案解析（打分后显示） -->
     <div>
-        <label class="text-xs text-gray-500 mb-1 block">{{ t('question.explanationLabel') }}</label>
+        <label class="text-xs text-gray-500 mb-1 block">{{ t('homework.explanationLabel') }}</label>
         <richEditor v-model="form.explanation" />
     </div>
 

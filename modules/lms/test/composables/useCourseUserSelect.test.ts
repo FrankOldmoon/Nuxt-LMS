@@ -15,11 +15,14 @@ import {
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
-  // stub useClassUsers（auto-imported）
+  // stub useClassUsers（auto-imported）：students 为可变 ref，fetchUsers 填充班级学生
+  const studentsRef = ref<any[]>([])
   ;(globalThis as any).useClassUsers = () => ({
-    students: ref<any[]>([]),
+    students: studentsRef,
     teachers: ref<any[]>([]),
-    fetchUsers: async () => {},
+    fetchUsers: async (classId: number) => {
+      studentsRef.value = [{ id: 2, name: 'Class Student', preferName: 'CS' }]
+    },
   })
 })
 
@@ -34,24 +37,19 @@ describe('composables/useCourseUserSelect', () => {
     expect(allStudents.value).toEqual([])
   })
 
-  it('loadStudents admin 加载全部学生', async () => {
+  it('loadStudents 使用当前班级（defaultClass）学生，与 select class 一致', async () => {
     setMockAuthUser(
       { id: 1, name: 'Admin', defaultClass: { id: 10 } },
       [{ code: 'admin', name: 'Admin' }],
       [],
     )
-    setMockFetchHandler(async (url) => {
-      if (url === '/api/users/students') {
-        return { data: [{ id: 2, name: 'Student 1' }, { id: 3, name: 'Student 2' }], success: true, msg: '' }
-      }
-      return { data: null, success: true, msg: '' }
-    })
     const { useCourseUserSelect } = await import('../../composables/useCourseUserSelect')
-    const { loadStudents, allStudents, userOptions } = useCourseUserSelect({ courseId: 1 }, () => {})
+    const { loadStudents, userOptions } = useCourseUserSelect({ courseId: 1 }, () => {})
     await loadStudents()
-    expect(allStudents.value).toHaveLength(2)
-    expect(userOptions.value).toHaveLength(2)
+    // 不再请求 /api/users/students 全量学生；显示班级学生
+    expect(userOptions.value).toHaveLength(1)
     expect(userOptions.value[0].value).toBe(2)
+    expect(userOptions.value[0].label).toBe('Class Student (CS)')
   })
 
   it('onSelect 调用 impersonate API', async () => {
@@ -150,24 +148,23 @@ describe('composables/useCourseUserSelect', () => {
     expect(toasts[toasts.length - 1].color).toBe('error')
   })
 
-  it('userOptions 格式化学生列表', async () => {
+  it('userOptions 格式化班级学生列表', async () => {
     setMockAuthUser(
-      { id: 1, name: 'Admin' },
+      { id: 1, name: 'Admin', defaultClass: { id: 10 } },
       [{ code: 'admin', name: 'Admin' }],
       [],
     )
-    setMockFetchHandler(async (url) => {
-      if (url === '/api/users/students') {
-        return {
-          data: [
-            { id: 1, name: 'Alice', preferName: 'A' },
-            { id: 2, name: 'Bob', preferName: '' },
-          ],
-          success: true,
-          msg: '',
-        }
-      }
-      return { data: null, success: true, msg: '' }
+    // 用班级学生数据覆盖 beforeEach 的 stub
+    const studentsRef = ref<any[]>([])
+    ;(globalThis as any).useClassUsers = () => ({
+      students: studentsRef,
+      teachers: ref<any[]>([]),
+      fetchUsers: async () => {
+        studentsRef.value = [
+          { id: 1, name: 'Alice', preferName: 'A' },
+          { id: 2, name: 'Bob', preferName: '' },
+        ]
+      },
     })
     const { useCourseUserSelect } = await import('../../composables/useCourseUserSelect')
     const { userOptions, loadStudents } = useCourseUserSelect({ courseId: 1 }, () => {})
