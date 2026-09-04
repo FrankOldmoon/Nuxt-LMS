@@ -95,11 +95,7 @@ export function useStudentGrades(
     const courseId = Number(toValue(props.courseId))
     const userId = Number(toValue(props.userId))
     const classId = Number(toValue(props.classId)) || 0
-    console.log('[DEBUG useStudentGrades] loadData 触发: isOpen=', isOpen.value, 'courseId=', courseId, 'userId=', userId, 'classId=', classId)
-    if (!courseId || !userId) {
-      console.log('[DEBUG useStudentGrades] ❌ 提前 return（缺少 courseId 或 userId）', { courseId, userId })
-      return
-    }
+    if (!courseId || !userId) return
     pending.value = true
     try {
       // 并行加载：行为统计 + 成绩（成绩由 /api/courses/grades 提供，含各项分）
@@ -111,7 +107,6 @@ export function useStudentGrades(
         cRequest(statsUrl).catch(() => null),
         cRequest(gradesUrl).catch(() => null),
       ])
-      console.log('[DEBUG useStudentGrades] 请求返回: statsResp=', statsResp, 'gradesResp=', gradesResp)
       if (statsResp) stats.value = { ...stats.value, ...statsResp }
       // grades 接口可能返回数组或 { grades, gradeCriteria }
       const gradesArr = Array.isArray(gradesResp) ? gradesResp : (gradesResp?.grades ?? [])

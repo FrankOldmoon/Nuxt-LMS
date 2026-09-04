@@ -2,7 +2,12 @@
   <UModal v-model:open="isOpen" :ui="{ content: 'max-w-5xl' }" scrollable>
     <template #content>
       <div class="p-6 space-y-4 min-w-[600px]">
-        <h3 class="text-lg font-semibold">{{ $t('chapter.score') }}</h3>
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold">{{ $t('chapter.score') }}</h3>
+          <UTooltip :text="$t('common.refresh')">
+            <UButton icon="i-lucide-refresh-cw" variant="soft" size="sm" :loading="loading" @click="loadData" />
+          </UTooltip>
+        </div>
 
         <div v-if="!classId" class="py-8 text-center text-muted text-sm">
           {{ $t('chapter.noClass') }}
@@ -75,6 +80,6 @@ const props = defineProps({
 const isOpen = defineModel<boolean>('open', { default: false })
 const {
   students, loading, taskModalOpen, taskModalItem,
-  onItemClick, tableRows, extraColumns,
+  onItemClick, tableRows, extraColumns, loadData,
 } = useChapterScore(props, isOpen)
 </script>

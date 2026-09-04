@@ -60,13 +60,13 @@ describe('chapter/btns.vue', () => {
     expect(wrapper.find('.utooltip').exists()).toBe(false)
   })
 
-  it('登录学生（非教师）只渲染计时器按钮（canEdit=false 隐藏其他）', async () => {
+  it('登录学生（非教师）不渲染任何教师按钮（timer/弹幕默认不对普通用户显示）', async () => {
     setMockAuthUser({ id: 2, name: 'student' }, [{ code: 'student' }], [])
     const { default: Btns } = await import('../../../components/chapter/btns.vue')
     const wrapper = mount(Btns, { global: _globalConfig })
     await flushPromises()
-    // canEdit=false → 只有 showTimer 按钮（弹幕需 canEdit||showDanmaku，showDanmaku=false）
-    expect(wrapper.findAll('.utooltip').length).toBe(1)
+    // canEdit=false → 得分/选择/计时器/邀请/弹幕/投票/抢答 全部隐藏
+    expect(wrapper.findAll('.utooltip').length).toBe(0)
   })
 
   it('admin 渲染所有教师按钮（得分/选择/计时器/邀请/弹幕/投票/抢答）', async () => {

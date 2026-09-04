@@ -129,6 +129,35 @@ describe('composables/useClassUsersTable', () => {
     expect(ids).not.toContain('number')
   })
 
+  it('showOnline=true 时 online 列可排序（有 accessorFn + sortingFn）', async () => {
+    const { useClassUsersTable } = await import('../../composables/useClassUsersTable')
+    const r = useClassUsersTable(makeProps({ showOnline: true }), { UButton: () => {} })
+    const onlineCol = r.columns.value.find((c: any) => c.id === 'online')
+    expect(onlineCol).toBeDefined()
+    // accessorFn 提供排序能力（TanStack getCanSort=true 的前提）
+    expect(typeof onlineCol.accessorFn).toBe('function')
+    // 在线判定：loginAt 2 小时内在线；WS onlineMap 覆盖 loginAt
+    const makeRow = (id: number, loginAt: any) => ({ id, loginAt })
+    const onlineNow = makeRow(1, new Date().toISOString())
+    const offlineOld = makeRow(2, new Date(Date.now() - 5 * 3600 * 1000).toISOString())
+    // accessorFn：在线 → 1，离线 → 0
+    expect(onlineCol.accessorFn(onlineNow)).toBe(1)
+    expect(onlineCol.accessorFn(offlineOld)).toBe(0)
+    // sortingFn：在线行排在离线行前面（降序时在线优先）
+    const sortVal = onlineCol.sortingFn(
+      { original: onlineNow },
+      { original: offlineOld },
+    )
+    expect(sortVal).toBeGreaterThan(0)
+  })
+
+  it('showOnline=false 时不包含 online 列', async () => {
+    const { useClassUsersTable } = await import('../../composables/useClassUsersTable')
+    const r = useClassUsersTable(makeProps({ showOnline: false }), { UButton: () => {} })
+    const ids = r.columns.value.map((c: any) => c.id || c.accessorKey)
+    expect(ids).not.toContain('online')
+  })
+
   it('hideActions=true 时不包含 actions 列', async () => {
     const { useClassUsersTable } = await import('../../composables/useClassUsersTable')
     const r = useClassUsersTable(makeProps({ hideActions: true }), { UButton: () => {} })

@@ -13,7 +13,8 @@
           <span>{{ data.course.title }}</span>
         </div>
         <div class="flex items-center justify-between gap-4">
-          <h1 :id="String(chapterId)" class="text-3xl font-bold text-highlighted scroll-mt-20">
+          <h1 :id="String(chapterId)" class="text-3xl font-bold text-highlighted scroll-mt-20"
+            @mouseenter="chapterTask?.completeChapterHeading()">
             {{ data.chapter.title }}
           </h1>
         </div>
@@ -91,4 +92,6 @@ import type { ChapterViewProps } from '../../../composables/useChapterView'
 const props = withDefaults(defineProps<ChapterViewProps>(), { extraCondition: false })
 const { chapterPageCfg, aiRecord, saveRecord } = useChapterView(props)
 const { user } = useAuth()
+// 章节标题 hover 即完成一级标题（null 时（如课程页）静默忽略）
+const chapterTask = useChapterTask()
 </script>

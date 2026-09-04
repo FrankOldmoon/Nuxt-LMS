@@ -34,7 +34,6 @@ const { t } = useI18n()
 // 父级不一定传 courseId（如班级管理弹窗/recordsModal），回退到课程上下文（route/课程页 provide）
 const { courseId: ctxCourseId } = useLmsContext()
 const effectiveCourseId = computed(() => Number(props.courseId) || ctxCourseId.value || 0)
-console.log('[DEBUG studentStatsModal] setup: props.courseId=', props.courseId, 'ctxCourseId=', ctxCourseId.value, 'effectiveCourseId=', effectiveCourseId.value)
 
 const ctx = useStudentGrades({
   courseId: effectiveCourseId,

@@ -12,8 +12,8 @@
         @click="() => { selectOpen = true }" />
     </UTooltip>
 
-    <!-- 计时器 -->
-    <UTooltip v-if="chapterBtnsConfig.showTimer" :text="$t('chapter.timer')">
+    <!-- 计时器（教师/管理员可见，默认不给普通用户显示） -->
+    <UTooltip v-if="canEdit && chapterBtnsConfig.showTimer" :text="$t('chapter.timer')">
       <UButton icon="i-lucide-timer" color="info" variant="soft" size="xs" @click="() => { timerOpen = true }" />
     </UTooltip>
 
@@ -23,8 +23,8 @@
         @click="sendInvite" />
     </UTooltip>
 
-    <!-- 弹幕：chapterBtnsConfig.showDanmaku 关闭 OR chapterPage.showDanmakuPanel 关闭时隐藏 -->
-    <UTooltip v-if="(canEdit || showDanmaku) && chapterBtnsConfig.showDanmaku && chapterPageCfg.showDanmakuPanel" :text="$t('chapter.danmaku')">
+    <!-- 弹幕（教师/管理员可见，默认不给普通用户显示） -->
+    <UTooltip v-if="canEdit && chapterBtnsConfig.showDanmaku && chapterPageCfg.showDanmakuPanel" :text="$t('chapter.danmaku')">
       <UButton icon="i-lucide-message-square-text" color="success" variant="soft" size="xs"
         @click="() => { danmakuOpen = true }" />
     </UTooltip>

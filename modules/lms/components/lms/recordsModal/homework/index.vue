@@ -2,7 +2,12 @@
     <UModal v-model:open="open" scrollable fullscreen>
         <template #body>
             <div class="p-6 space-y-4 min-w-[600px]">
-                <h2 class="text-lg font-semibold">{{ $t('record.homeworkRecords') }}</h2>
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-semibold">{{ $t('record.homeworkRecords') }}</h2>
+                    <UTooltip :text="$t('common.refresh')">
+                        <UButton icon="i-lucide-refresh-cw" variant="soft" size="sm" :loading="pending" @click="fetchRecords" />
+                    </UTooltip>
+                </div>
 
                 <ClassUsersTable :rows="rows" :loading="pending" :extra-columns="extraColumns"
                     :hide-actions="true" :hide-teachers="true" :default-sort="defaultSort">
@@ -78,7 +83,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const {
-    open, rows, pending, extraColumns, defaultSort, scoreMap,
+    open, rows, pending, extraColumns, defaultSort, scoreMap, fetchRecords,
     onScoreBlur, detailOpen, detailData, openHomeworkDetail, isRichDoc,
 } = useHomeworkRecords(props, emit)
 </script>

@@ -6,34 +6,40 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import { nextTick } from 'vue'
 import { resetAllStubs, setMockI18n } from '../../../../../../../test/setup/nuxt-stubs'
 
 // mock useQuestionRecords（本地导入）
-vi.mock('../../../../../components/lms/recordsModal/question/useQuestionRecords', () => ({
-  useQuestionRecords: (props: any, emit: any) => {
-    const { ref, computed }: any = globalThis as any
-    return {
-      open: computed({
-        get: () => props.modelValue,
-        set: (v: boolean) => emit('update:modelValue', v),
-      }),
-      rows: ref([]),
-      pending: ref(false),
-      extraColumns: computed(() => [
-        { id: 'record', header: 'Record' },
-        { id: 'score', header: 'Score', canSort: true },
-      ]),
-      defaultSort: [{ id: 'score', desc: true }],
-      recordIcon: () => 'i-lucide-check',
-      recordIconClass: () => 'text-success',
-      formatUserAnswer: () => ['A'],
-      answerItemClass: () => '',
-      formatCorrectRate: () => '100%',
-      showOptionChart: ref(false),
-      optionChartOption: ref({}),
-    }
-  },
-}))
+vi.mock('../../../../../components/lms/recordsModal/question/useQuestionRecords', () => {
+  // 提升到工厂作用域：所有 useQuestionRecords() 调用共享同一个 fetchRecords mock
+  const fetchRecords = vi.fn()
+  return {
+    useQuestionRecords: (props: any, emit: any) => {
+      const { ref, computed }: any = globalThis as any
+      return {
+        open: computed({
+          get: () => props.modelValue,
+          set: (v: boolean) => emit('update:modelValue', v),
+        }),
+        rows: ref([]),
+        pending: ref(false),
+        extraColumns: computed(() => [
+          { id: 'record', header: 'Record' },
+          { id: 'score', header: 'Score', canSort: true },
+        ]),
+        defaultSort: [{ id: 'score', desc: true }],
+        fetchRecords,
+        recordIcon: () => 'i-lucide-check',
+        recordIconClass: () => 'text-success',
+        formatUserAnswer: () => ['A'],
+        answerItemClass: () => '',
+        formatCorrectRate: () => '100%',
+        showOptionChart: ref(false),
+        optionChartOption: ref({}),
+      }
+    },
+  }
+})
 
 beforeEach(() => {
   resetAllStubs()
@@ -50,6 +56,12 @@ const _globalStubs = {
     props: ['rows', 'loading', 'extraColumns', 'hideActions', 'hideTeachers', 'defaultSort'],
   },
   UIcon: { template: '<span class="uicon" />', props: ['name'] },
+  UTooltip: { template: '<span class="utooltip"><slot /></span>', props: ['text'] },
+  UButton: {
+    template: '<button type="button" @click="$emit(\'click\')"><slot /></button>',
+    props: ['icon', 'variant', 'size', 'loading', 'disabled', 'label'],
+    emits: ['click'],
+  },
   ClientOnly: { template: '<div class="client-only"><slot /></div>' },
   Chart: { template: '<div class="chart" />', props: ['option', 'height'] },
 }
@@ -118,5 +130,23 @@ describe('lms/recordsModal/question/index.vue', () => {
     })
     await flushPromises()
     expect(wrapper.props('question')).toEqual({ type: 'single', options: [] })
+  })
+
+  it('点击刷新按钮触发 fetchRecords', async () => {
+    const { useQuestionRecords } = await import('../../../../../components/lms/recordsModal/question/useQuestionRecords')
+    const mocked = useQuestionRecords as any as () => { fetchRecords: ReturnType<typeof vi.fn> }
+    const { default: QuestionRecords } = await import('../../../../../components/lms/recordsModal/question/index.vue')
+    const wrapper = mount(QuestionRecords, {
+      props: { modelValue: true, courseId: 1, cid: 100 },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    // 找标题旁刷新图标按钮并点击
+    const refreshBtn = wrapper.find('button')
+    expect(refreshBtn.exists()).toBe(true)
+    await refreshBtn.trigger('click')
+    await nextTick()
+    await flushPromises()
+    expect(mocked().fetchRecords).toHaveBeenCalled()
   })
 })

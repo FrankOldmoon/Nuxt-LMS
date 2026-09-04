@@ -85,6 +85,11 @@ export function useClassUsersTable(
     return diff < 2 * 60 * 60 * 1000
   }
 
+  // 在线判定（cell 渲染与排序共用同一逻辑）
+  function isOnline(row: any): boolean {
+    return onlineMap[row?.id] ?? isOnlineByLoginAt(row?.loginAt)
+  }
+
   const currentCourseId = computed(() => props.courseId || ctxCourseId.value)
 
   // ====================== 学生得分图表 ======================
@@ -421,7 +426,6 @@ export function useClassUsersTable(
     if (!row || !row.id) return
     statsUserId.value = Number(row.id)
     statsUser.value = row
-    console.log('[DEBUG openStats] 点击学生姓名 打开统计弹窗: userId=', statsUserId.value, 'name=', row.name, 'courseId=', currentCourseId.value)
     statsOpen.value = true
   }
 
@@ -446,9 +450,12 @@ export function useClassUsersTable(
       cols.push({
         id: 'online',
         header: sortableHeader(t('classSelector.online')),
+        // 提供 accessorFn 使列可排序（TanStack 无 accessorFn 时 getCanSort()=false）
+        accessorFn: (row: any) => (isOnline(row) ? 1 : 0),
+        // 在线优先（降序时在线排在前面）
+        sortingFn: (a: any, b: any) => (isOnline(a.original) ? 1 : 0) - (isOnline(b.original) ? 1 : 0),
         cell: ({ row }) => {
-          const uid = row.original.id
-          const online = onlineMap[uid] ?? isOnlineByLoginAt(row.original.loginAt)
+          const online = isOnline(row.original)
           return h('div', {
             class: ['w-4 h-4 rounded-full shrink-0', online ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'],
             title: online ? t('classSelector.online') : t('classSelector.offline'),
