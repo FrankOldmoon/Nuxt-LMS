@@ -415,6 +415,8 @@ export const userHomeworks = pgTable(
     record: jsonb('record'),
     files: jsonb('files'),
     comment: jsonb('comment'),
+    // 优秀作业标记：教师端设为 true 后，同班学生可看到该份作业
+    excellent: boolean('excellent').default(false),
     ...withTimestamps,
   },
   (t) => ({

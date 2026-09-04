@@ -22,11 +22,36 @@
                         </div>
                     </template>
 
-                    <!-- score 列：打分输入 -->
+                    <!-- score 列：打分输入 + 一键满分 -->
                     <template #score-cell="{ row }">
-                        <UInput v-if="row.original.record" v-model.number="scoreMap[row.original.id]" type="number"
-                            size="xs" class="w-20" :max="maxScore" :placeholder="'/' + maxScore"
-                            @blur="onScoreBlur(row.original)" @keydown.enter="$event.target.blur()" />
+                        <div v-if="row.original.record" class="flex items-center gap-1">
+                            <UInput v-model.number="scoreMap[row.original.id]" type="number"
+                                size="xs" class="w-16" :max="maxScore" :placeholder="maxScore"
+                                @blur="onScoreBlur(row.original)" @keydown.enter="$event.target.blur()" />
+                            <UTooltip :text="$t('homework.quickScore')">
+                                <UButton icon="i-heroicons-check" color="primary" variant="soft" size="xs"
+                                    @click="onQuickScore(row.original, maxScore)" />
+                            </UTooltip>
+                        </div>
+                        <span v-else class="text-xs text-gray-400">-</span>
+                    </template>
+
+                    <!-- comment 列：评语输入 -->
+                    <template #comment-cell="{ row }">
+                        <UInput v-if="row.original.record" v-model="commentMap[row.original.id]"
+                            size="xs" class="w-44" :placeholder="$t('homework.commentPlaceholder')"
+                            @blur="onCommentBlur(row.original)" @keydown.enter="$event.target.blur()" />
+                        <span v-else class="text-xs text-gray-400">-</span>
+                    </template>
+
+                    <!-- excellent 列：标为优秀 -->
+                    <template #excellent-cell="{ row }">
+                        <UButton v-if="row.original.record" size="xs" variant="soft"
+                            :color="excellentMap[row.original.id] ? 'warning' : 'gray'"
+                            :icon="excellentMap[row.original.id] ? 'i-heroicons-star' : 'i-heroicons-star'"
+                            @click="toggleExcellent(row.original)">
+                            {{ excellentMap[row.original.id] ? $t('homework.excellent') : $t('homework.markExcellent') }}
+                        </UButton>
                         <span v-else class="text-xs text-gray-400">-</span>
                     </template>
                 </ClassUsersTable>
@@ -65,6 +90,20 @@
                     <label class="text-xs text-gray-500">{{ $t('record.score') }}: </label>
                     <span class="text-sm font-medium">{{ detailData.score }}</span>
                 </div>
+
+                <!-- 优秀标记 -->
+                <div v-if="detailData.excellent">
+                    <span class="text-xs text-amber-500 flex items-center gap-1">
+                        <UIcon name="i-heroicons-star" class="w-4 h-4" />
+                        {{ $t('homework.excellent') }}
+                    </span>
+                </div>
+
+                <!-- 评语 -->
+                <div v-if="strFromComment(detailData.comment)">
+                    <label class="text-xs text-gray-500 block mb-1">{{ $t('homework.comment') }}</label>
+                    <p class="text-sm whitespace-pre-wrap">{{ strFromComment(detailData.comment) }}</p>
+                </div>
             </div>
         </template>
     </UModal>
@@ -83,7 +122,8 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const {
-    open, rows, pending, extraColumns, defaultSort, scoreMap, fetchRecords,
-    onScoreBlur, detailOpen, detailData, openHomeworkDetail, isRichDoc,
+    open, rows, pending, extraColumns, defaultSort, scoreMap, commentMap, excellentMap, fetchRecords,
+    onScoreBlur, onQuickScore, onCommentBlur, toggleExcellent,
+    detailOpen, detailData, openHomeworkDetail, isRichDoc, strFromComment,
 } = useHomeworkRecords(props, emit)
 </script>

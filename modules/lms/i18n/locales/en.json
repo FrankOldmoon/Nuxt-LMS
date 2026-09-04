@@ -470,7 +470,14 @@
     "submit": "Submit Homework",
     "resubmit": "Resubmit",
     "submitSuccess": "Submitted successfully",
-    "submitFailed": "Submit failed"
+    "submitFailed": "Submit failed",
+    "comment": "Comment",
+    "commentPlaceholder": "Write a comment…",
+    "quickScore": "Full marks",
+    "excellent": "Excellent",
+    "markExcellent": "Mark excellent",
+    "featuredTitle": "Excellent Homework",
+    "featuredEmpty": "No excellent homework yet"
   },
   "medal": {
     "editorTitle": "Medal Management",

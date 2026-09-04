@@ -95,6 +95,35 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
         return content && typeof content === 'object' && !Array.isArray(content) && !!content.type
     }
 
+    // 学生的得分 / 评语（提交记录）
+    const selfScore = ref<number | null>(null)
+    const selfComment = ref('')
+
+    // 优秀作业列表（本班被标优的作业，全班可见）
+    const featuredList = ref<any[]>([])
+    const featuredPending = ref(false)
+
+    // comment 兼容字符串与 jsonb 对象
+    function strFromComment(comment: any): string {
+        if (comment == null) return ''
+        if (typeof comment === 'string') return comment
+        if (typeof comment === 'object') return comment.text || ''
+        return ''
+    }
+
+    async function fetchFeatured() {
+        if (!homeworkId.value || !effectiveCourseId.value) return
+        featuredPending.value = true
+        try {
+            const data = await cRequest(`/api/homeworks/featured?course_id=${effectiveCourseId.value}&homework_cid=${homeworkId.value}`)
+            featuredList.value = data || []
+        } catch {
+            featuredList.value = []
+        } finally {
+            featuredPending.value = false
+        }
+    }
+
     async function onSubmit() {
         // 未登录时禁止提交
         if (!isLoggedIn.value) {
@@ -169,6 +198,9 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
                     submittedFiles.value = [...data.files]
                     submittedFileList.value = [...data.files]
                 }
+                // 得分 / 评语
+                if (data.score != null) selfScore.value = Number(data.score)
+                if (data.comment) selfComment.value = strFromComment(data.comment)
                 // 有内容或文件则标记为已提交
                 if (data.content || (Array.isArray(data.files) && data.files.length > 0)) {
                     submitted.value = true
@@ -199,6 +231,8 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
         editOpen, recordsOpen, refresh,
         submittedContent, submittedFiles, submitted, submittedFileList,
         submitting, submitMsg, submitOk,
+        selfScore, selfComment, featuredList, featuredPending,
+        fetchFeatured, strFromComment,
         onSubmit, onReset, fetchRecord, onSaved, isRichDoc,
     }
     provide(HomeworkRenderKey, ctx)

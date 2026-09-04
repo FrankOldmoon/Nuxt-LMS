@@ -25,6 +25,11 @@
                     <UButton v-if="moduleLms && isTeacher" icon="i-heroicons-clipboard" variant="ghost" size="2xs"
                         class="opacity-50 hover:opacity-100 transition-opacity"
                         @click="recordsOpen = true" />
+                    <UTooltip :text="$t('common.refresh')">
+                        <UButton icon="i-lucide-refresh-cw" variant="ghost" size="2xs"
+                            class="opacity-50 hover:opacity-100 transition-opacity" :loading="listPending"
+                            @click="fetchComments()" />
+                    </UTooltip>
                     <span class="text-xs text-gray-400">{{ comment.point }}{{ $t('question.points') }}</span>
                 </div>
             </div>
@@ -74,6 +79,7 @@
 </template>
 
 <script setup>
+import { onMounted, onUnmounted } from 'vue'
 import { useCommentRender } from './useCommentRender'
 import CommentForm from './render/comment-form.vue'
 import CommentList from './render/comment-list.vue'
@@ -88,9 +94,21 @@ const props = defineProps({
 
 const {
     effectiveCourseId, moduleLms, RecordsModal, comment, commentId, isTeacher, user,
-    editOpen, recordsOpen, listPending, pagedChildren,
+    editOpen, recordsOpen, listPending, pagedChildren, fetchComments,
     onReply, toggleLike, onDelete, onApprove, onSaved,
 } = useCommentRender(props)
+
+// 审核通过实时刷新：服务端审核通过后向该评论所在班级广播 commentRefresh，
+// 当广播与当前主题(courseId + topicCid)匹配时刷新评论列表
+onMounted(() => {
+    if (import.meta.server || typeof registerWsHandler !== 'function') return
+    const unregister = registerWsHandler('commentRefresh', (data) => {
+        if (Number(data.courseId) !== effectiveCourseId.value) return
+        if (Number(data.topicCid) !== commentId.value) return
+        fetchComments()
+    })
+    onUnmounted(unregister)
+})
 </script>
 
 <style scoped>

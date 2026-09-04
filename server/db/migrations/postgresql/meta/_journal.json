@@ -57,6 +57,13 @@
       "when": 1787884000000,
       "tag": "0007_rename_altitude_external",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795000000000,
+      "tag": "0008_excellent_homework",
+      "breakpoints": true
     }
   ]
 }

@@ -29,11 +29,22 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
             sortingFn: (a, b) => (a.original.record ? 1 : 0) - (b.original.record ? 1 : 0),
         },
         { id: 'score', header: t('record.score'), canSort: true },
+        { id: 'comment', header: t('homework.comment'), canSort: false },
+        { id: 'excellent', header: t('homework.excellent'), canSort: false },
     ])
 
     const defaultSort = [{ id: 'record', desc: true }]
 
     const scoreMap = reactive({})
+    const commentMap = reactive({})
+    const excellentMap = reactive({})
+
+    function strFromComment(comment: any): string {
+        if (comment == null) return ''
+        if (typeof comment === 'string') return comment
+        if (typeof comment === 'object') return comment.text || ''
+        return ''
+    }
 
     // 先用缓存学生数据填充 table，再异步合并 records
     function buildRows(recordsData) {
@@ -41,6 +52,8 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
         rows.value = students.value.map(s => {
             const record = recordMap.get(s.id) || null
             scoreMap[s.id] = record?.score != null ? Number(record.score) : null
+            commentMap[s.id] = record?.comment ? strFromComment(record.comment) : ''
+            excellentMap[s.id] = !!record?.excellent
             return {
                 id: s.id,
                 name: s.name,
@@ -99,6 +112,54 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
         }
     }
 
+    // 一键给满分（保留输入分值）快捷打分
+    async function onQuickScore(row, value) {
+        scoreMap[row.id] = value
+        await onScoreBlur(row)
+    }
+
+    // 保存评语（纯文本）
+    async function onCommentBlur(row) {
+        const text = (commentMap[row.id] || '').trim()
+        const original = row.record?.comment ? strFromComment(row.record.comment) : ''
+        if (text === original) return
+        try {
+            await cRequest('/api/homeworks/grade', {
+                method: 'POST',
+                body: {
+                    course_id: props.courseId,
+                    homework_cid: props.cid,
+                    user_id: row.id,
+                    comment: text,
+                },
+            })
+            if (row.record) row.record.comment = text
+        } catch {
+            commentMap[row.id] = original
+        }
+    }
+
+    // 标记/取消优秀作业
+    async function toggleExcellent(row) {
+        const original = !!excellentMap[row.id]
+        const next = !original
+        excellentMap[row.id] = next
+        try {
+            await cRequest('/api/homeworks/grade', {
+                method: 'POST',
+                body: {
+                    course_id: props.courseId,
+                    homework_cid: props.cid,
+                    user_id: row.id,
+                    excellent: next,
+                },
+            })
+            if (row.record) row.record.excellent = next
+        } catch {
+            excellentMap[row.id] = original
+        }
+    }
+
     watch(open, (val) => {
         if (val) fetchRecords()
     })
@@ -117,7 +178,8 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
     }
 
     return {
-        open, rows, pending, extraColumns, defaultSort, scoreMap,
-        onScoreBlur, detailOpen, detailData, openHomeworkDetail, isRichDoc,
+        open, rows, pending, extraColumns, defaultSort, scoreMap, commentMap, excellentMap,
+        onScoreBlur, onQuickScore, onCommentBlur, toggleExcellent,
+        detailOpen, detailData, openHomeworkDetail, isRichDoc, strFromComment,
     }
 }

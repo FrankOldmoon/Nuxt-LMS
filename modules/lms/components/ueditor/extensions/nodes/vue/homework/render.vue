@@ -1,7 +1,7 @@
 <template>
     <div class="homework-render w-full space-y-4 p-4 border border-amber-400 dark:border-amber-500 rounded-lg bg-white dark:bg-gray-900 relative"
         :data-homework-id="homeworkId"
-        @mouseenter.once="fetchRecord">
+        @mouseenter.once="fetchOnce">
         <!-- 加载中 -->
         <div v-if="pending" class="flex items-center justify-center py-6 text-gray-400">
             <span>{{ t('homework.loading') }}</span>
@@ -50,8 +50,11 @@
         <!-- 学生提交区域 -->
         <HomeworkSubmitSection v-if="homework" />
 
-        <!-- 答案解析（仅教师可见） -->
-        <div v-if="homework && isTeacher && homework.explanation" class="mt-4">
+        <!-- 优秀作业：教师或"已打分"的学生可见 -->
+        <FeaturedBlock v-if="homework && (isTeacher || selfScore !== null)" />
+
+        <!-- 答案解析：教师或"已打分"的学生可见 -->
+        <div v-if="homework && homework.explanation && (isTeacher || selfScore !== null)" class="mt-4">
             <ExplanationBlock :explanation="homework.explanation" />
         </div>
 
@@ -67,6 +70,7 @@
 <script setup>
 import { useHomeworkRender } from './useHomeworkRender'
 import HomeworkSubmitSection from './render/submit-section.vue'
+import FeaturedBlock from './render/featured-block.vue'
 import ExplanationBlock from '../question/render/explanation-block.vue'
 import Edit from './edit.vue'
 
@@ -80,8 +84,14 @@ const {
     t, moduleLms, RecordsModal,
     homework, pending, homeworkId, isTeacher,
     editOpen, recordsOpen, refresh,
-    fetchRecord, onSaved,
+    selfScore,
+    fetchRecord, fetchFeatured, onSaved,
 } = useHomeworkRender(props, emit)
+
+function fetchOnce() {
+    fetchRecord()
+    fetchFeatured()
+}
 
 // 暴露 refresh 和 data 给 index.vue 调用
 defineExpose({ refresh, data: homework })

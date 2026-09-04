@@ -85,7 +85,7 @@ export function useCommentRender(props: CommentRenderProps) {
     }
 
     // 子评论分页（前端分页，API 一次性获取全部）
-    const pageSize = 5
+    const pageSize = 10
     const page = ref(1)
 
     // 评论列表数据（自身 + 子评论）
@@ -239,6 +239,7 @@ export function useCommentRender(props: CommentRenderProps) {
         comment, commentId, isTeacher, user,
         editOpen, recordsOpen, pending, listPending,
         page, pageSize, totalPages, children, pagedChildren,
+        fetchComments,
         onReply, toggleLike, onDelete, onApprove, onSaved,
     }
     provide(CommentRenderKey, ctx)

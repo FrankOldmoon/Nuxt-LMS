@@ -50,6 +50,18 @@
                         }}</a>
                 </div>
             </div>
+
+            <!-- 我的得分 -->
+            <div v-if="selfScore !== null && selfScore !== undefined" class="mt-2 flex items-center gap-1 text-sm">
+                <span class="text-gray-500">{{ t('record.score') }}:</span>
+                <span class="font-semibold text-green-600">{{ selfScore }}</span>
+            </div>
+
+            <!-- 我的评语 -->
+            <div v-if="selfComment" class="mt-2">
+                <span class="text-xs text-gray-500">{{ t('homework.comment') }}: </span>
+                <p class="text-sm whitespace-pre-wrap text-gray-700 dark:text-gray-300">{{ selfComment }}</p>
+            </div>
         </div>
     </div>
 </template>
@@ -61,6 +73,7 @@ const {
     t, effectiveCourseId,
     submittedContent, submittedFiles, submitted, submittedFileList,
     submitting, submitMsg, submitOk,
+    selfScore, selfComment,
     onSubmit, onReset, isRichDoc,
 } = useHomeworkRenderContext()
 </script>

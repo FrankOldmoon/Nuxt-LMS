@@ -470,7 +470,14 @@
     "submit": "提交作业",
     "resubmit": "重新提交",
     "submitSuccess": "提交成功",
-    "submitFailed": "提交失败"
+    "submitFailed": "提交失败",
+    "comment": "评语",
+    "commentPlaceholder": "填写评语…",
+    "quickScore": "满分",
+    "excellent": "优秀",
+    "markExcellent": "标为优秀",
+    "featuredTitle": "优秀作业",
+    "featuredEmpty": "暂无优秀作业"
   },
   "medal": {
     "editorTitle": "勋章管理",
