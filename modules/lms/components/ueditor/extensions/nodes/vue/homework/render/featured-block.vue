@@ -45,10 +45,13 @@ import { useHomeworkRenderContext } from '../useHomeworkRender'
 const { t, effectiveCourseId, featuredList, isRichDoc, strFromComment } = useHomeworkRenderContext()
 
 function userOf(item) {
+    // 与 AuthUserCard 期望一致：name 主标签、username 副标签（后端 featured.get 已返回对齐字段）
     return {
         id: item.userId,
-        name: item.preferName || item.userName || 'U',
-        preferName: item.userName || null,
+        name: item.name || item.preferName || 'U',
+        preferName: item.preferName || null,
+        username: item.username || null,
+        rollNumber: item.rollNumber || null,
         avatarImg: item.avatarImg || null,
     }
 }

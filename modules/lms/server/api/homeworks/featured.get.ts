@@ -32,10 +32,20 @@ export default eventHandler(async (event) => {
     ),
   })
 
-  // 作者信息
+  // 作者信息（与 LmsClassUser 字段对齐，供 AuthUserCard 渲染：name 优先、副标签 username）
   const authorIds = [...new Set(rows.map((r: any) => r.userId))]
   const users = authorIds.length
-    ? await db.query.users.findMany({ where: inArray(schema.users.id, authorIds) })
+    ? await db.query.users.findMany({
+        where: inArray(schema.users.id, authorIds),
+        columns: {
+          id: true,
+          name: true,
+          preferName: true,
+          username: true,
+          rollNumber: true,
+          avatarImg: true,
+        },
+      })
     : []
   const userMap = new Map(users.map((u: any) => [u.id, u]))
 
@@ -43,8 +53,10 @@ export default eventHandler(async (event) => {
     const u = userMap.get(r.userId)
     return {
       ...r,
-      userName: u?.name || u?.preferName || '',
+      name: u?.name || null,
       preferName: u?.preferName || null,
+      username: u?.username || null,
+      rollNumber: u?.rollNumber || null,
       avatarImg: u?.avatarImg || null,
     }
   }))

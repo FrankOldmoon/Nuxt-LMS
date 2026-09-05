@@ -74,19 +74,25 @@ describe('API: homeworks/grade.post', () => {
 
 // ====================== featured.get.ts ======================
 describe('API: homeworks/featured.get', () => {
-  it('返回当前班级被标优的作业（含作者昵称）', async () => {
+  it('返回当前班级被标优的作业（含作者完整信息）', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
     vi.mocked(getUserClassId).mockResolvedValue(5)
     ;(globalThis as any).getClassUsers = vi.fn().mockResolvedValue([{ id: 1, isTeacher: false }])
     vi.mocked(_query.userHomeworks.findMany).mockResolvedValue([
       { userId: 1, courseId: 1, homeworkCid: 1, content: '优秀答案', files: [], score: '95', comment: '出色', excellent: true },
     ] as any)
-    vi.mocked(_query.users.findMany).mockResolvedValue([{ id: 1, name: 'Alice', preferName: null, avatarImg: null }] as any)
+    vi.mocked(_query.users.findMany).mockResolvedValue([
+      { id: 1, name: 'Alice', preferName: 'Al', username: 'alice01', rollNumber: 'R001', avatarImg: null },
+    ] as any)
     const handler = (await import('../../server/api/homeworks/featured.get')).default
     const r = await handler(makeEvent({ query: { course_id: 1, homework_cid: 1 } }))
     expect(r.success).toBe(true)
     expect(r.data.length).toBe(1)
-    expect(r.data[0].userName).toBe('Alice')
+    // 作者字段与 LmsClassUser 对齐（name 主标签 / username 副标签）
+    expect(r.data[0].name).toBe('Alice')
+    expect(r.data[0].preferName).toBe('Al')
+    expect(r.data[0].username).toBe('alice01')
+    expect(r.data[0].rollNumber).toBe('R001')
     expect(r.data[0].content).toBe('优秀答案')
     // 只查标优的作业
     const where = _query.userHomeworks.findMany.mock.calls[0][0].where
