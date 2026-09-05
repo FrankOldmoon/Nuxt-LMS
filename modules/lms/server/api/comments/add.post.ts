@@ -1,6 +1,5 @@
 import { db, schema } from "@nuxthub/db"
 import { eq, and, desc, sql } from "drizzle-orm"
-import { grantCommentReward } from "../../utils/comment/reward"
 import { validateCommentContent, isCommentEmpty } from "../../utils/comment/validate"
 
 export default eventHandler(async (event) => {
@@ -25,8 +24,6 @@ export default eventHandler(async (event) => {
   }
 
   try {
-    // 评论所在章节（可选）：用于加分时累加章节总分
-    const chapterId = Number(body.chapter_id) || 0
     // 父评论 id（回复的"主题"）：顶层评论 parentId 为空，不受此限制
     const parentId = body.parentId ? Number(body.parentId) : null
 
@@ -75,29 +72,8 @@ export default eventHandler(async (event) => {
 
     const result = await db.insert(schema.comments).values(insertData).returning()
 
-    // 发评论/回复奖励（顶层评论 → publishExp/publishCoin；回复 → replyExp/replyCoin）
-    // 受 maxDailyExp / maxDailyCoin 每日上限约束；
-    // 同时计入课程总分（commentScore）与章节总分（若有 chapter_id）
-    let commentGainedExp: number | undefined
-    let commentGainedCoin: number | undefined
-    try {
-      if (cConfig) {
-        const kind = insertData.parentId ? 'reply' : 'publish'
-        commentGainedExp = kind === 'publish' ? Number(cConfig.publishExp) || 0 : Number(cConfig.replyExp) || 0
-        const granted = await grantCommentReward(user.id, Number(course_id), kind, cConfig, chapterId)
-        commentGainedCoin = granted.coin
-      }
-    } catch { /* 配置不可用或加分失败时不阻塞提交 */ }
-
-    // 检查并授予奖章
-    await checkAndAwardMedals(user.id, Number(course_id))
-
-    // 向班级房间广播 danmaku（fire-and-forget，不影响响应）
-    void broadcastSubmitDanmaku({
-      userId: user.id,
-      kind: 'comment',
-      gainedExp: commentGainedExp,
-    })
+    // 发评论/回复奖励延后到审核通过时发放（见 approve.post.ts）：
+    // 未过审不奖励，防止灌水刷分；通过后按 publish/reply 发放 exp/coin + 课程/章节分
 
     return cResp(result[0])
   } catch (error: any) {

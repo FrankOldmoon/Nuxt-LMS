@@ -229,34 +229,30 @@ describe('API: comments/add.post', () => {
     expect(_mockDb.values).not.toHaveBeenCalled()
   })
 
-  it('发顶层评论给 publishExp + publishCoin + 计入课程分', async () => {
+  it('发顶层评论：提交时不再加分（审核通过后才发放）', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
     _mockDb.returning = vi.fn().mockResolvedValue([{ id: 1, userId: 1, courseId: 1, cid: 1, content: 'X' }])
     const { addCourseScore } = await import('../../server/utils/userScore/course')
     const handler = (await import('../../server/api/comments/add.post')).default
     const r = await handler(makeEvent({ body: { course_id: 1, content: 'X' } }))
     expect(r.success).toBe(true)
-    // 加分：exp=3, coin=3，score 也计入课程总分（commentScore 分项）
-    const call = (addCourseScore as any).mock.calls[0]
-    expect(call[0]).toBe(1)            // userId
-    expect(call[1]).toBe(1)            // courseId
-    expect(call[2]).toBe(3)            // score 增量 = publishExp
-    expect(call[3]).toBe('commentScore')
-    expect(call[4]).toBe(3)            // exp
-    expect(call[5]).toBe(3)            // coin
+    // 提交不立即加分：奖励延后到 approve（审核通过）时发放，防止未过审灌水刷分
+    expect(addCourseScore).not.toHaveBeenCalled()
+    // 新评论默认待审核
+    expect(_mockDb.values).toHaveBeenCalled()
+    const insertData = _mockDb.values.mock.calls[0][0]
+    expect(insertData).toHaveProperty('status', 'audit')
   })
 
-  it('评论在章节内（带 chapter_id）时同时计入章节总分', async () => {
+  it('评论在章节内（带 chapter_id）时不立即加章节分，审核通过后由请求自动注入累加', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
     _mockDb.returning = vi.fn().mockResolvedValue([{ id: 1, userId: 1, courseId: 1, cid: 1, content: 'X' }])
     const { addChapterScore } = await import('../../server/utils/userScore/chapter')
     const handler = (await import('../../server/api/comments/add.post')).default
     const r = await handler(makeEvent({ body: { course_id: 1, chapter_id: 7, content: 'X' } }))
     expect(r.success).toBe(true)
-    const call = (addChapterScore as any).mock.calls[0]
-    expect(call[0]).toBe(1)  // userId
-    expect(call[1]).toBe(7)  // chapterId
-    expect(call[2]).toBe(3)  // score = publishExp
+    // 提交不立即加章节分（奖励延后到审核通过时发放）
+    expect(addChapterScore).not.toHaveBeenCalled()
   })
 
   it('达到 maxCommentCount 上限时拒绝回复（按父评论统计）', async () => {
@@ -289,16 +285,19 @@ describe('API: comments/add.post', () => {
     expect(_mockDb.insert).toHaveBeenCalled()
   })
 
-  it('回复评论给 replyExp + replyCoin', async () => {
+  it('回复评论：提交时不再加分（审核通过后发放 replyExp）', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
     _mockDb.returning = vi.fn().mockResolvedValue([{ id: 1, userId: 1, courseId: 1, cid: 1, parentId: 5, content: 'X' }])
     const { addCourseScore } = await import('../../server/utils/userScore/course')
     const handler = (await import('../../server/api/comments/add.post')).default
     const r = await handler(makeEvent({ body: { course_id: 1, content: 'X', parentId: 5 } }))
     expect(r.success).toBe(true)
-    const call = (addCourseScore as any).mock.calls[0]
-    expect(call[4]).toBe(2)            // replyExp
-    expect(call[5]).toBe(2)            // replyCoin
+    // 提交不立即加分
+    expect(addCourseScore).not.toHaveBeenCalled()
+    // 父评论 id 随评论存储，供 approve 判断 reply/publish 奖励类型
+    expect(_mockDb.values).toHaveBeenCalled()
+    const insertData = _mockDb.values.mock.calls[0][0]
+    expect(insertData).toHaveProperty('parentId', 5)
   })
 })
 
@@ -395,12 +394,56 @@ describe('API: comments/approve.post', () => {
     await expect(handler(makeEvent({ body: { course_id: 1, cid: 1 } }))).rejects.toThrow()
   })
 
-  it('老师批准评论：status 更新为 published', async () => {
+  it('老师批准评论：status 更新为 published 并发放 publish 奖励', async () => {
     setMockAuthState({ id: 9, username: 'teacher', roles: ['teacher'], permissions: [] })
+    _mockDb.query.comments.findFirst = vi.fn().mockResolvedValue({
+      userId: 1, courseId: 1, cid: 5, parentId: null, chapterId: null, status: 'audit',
+    })
+    const { addCourseScore } = await import('../../server/utils/userScore/course')
     const handler = (await import('../../server/api/comments/approve.post')).default
     const r = await handler(makeEvent({ body: { course_id: 1, cid: 5 } }))
     expect(r.success).toBe(true)
     expect(_mockDb.update).toHaveBeenCalled()
     expect(_mockDb.set).toHaveBeenCalledWith({ status: 'published' })
+    // 审核通过发放顶层评论奖励：exp=3, coin=3, score 计入课程总分（commentScore 分项）
+    const call = (addCourseScore as any).mock.calls[0]
+    expect(call[0]).toBe(1)            // userId（评论作者）
+    expect(call[1]).toBe(1)            // courseId
+    expect(call[2]).toBe(3)            // score = publishExp
+    expect(call[3]).toBe('commentScore')
+    expect(call[4]).toBe(3)            // exp
+    expect(call[5]).toBe(3)            // coin
+  })
+
+  it('审核通过时按回复类型发放 reply 奖励并累加章节总分（chapter_id 由 cRequest 注入）', async () => {
+    setMockAuthState({ id: 9, username: 'teacher', roles: ['teacher'], permissions: [] })
+    _mockDb.query.comments.findFirst = vi.fn().mockResolvedValue({
+      userId: 1, courseId: 1, cid: 5, parentId: 2, status: 'audit',
+    })
+    const { addCourseScore } = await import('../../server/utils/userScore/course')
+    const { addChapterScore } = await import('../../server/utils/userScore/chapter')
+    const handler = (await import('../../server/api/comments/approve.post')).default
+    const r = await handler(makeEvent({ body: { course_id: 1, cid: 5, chapter_id: 7 } }))
+    expect(r.success).toBe(true)
+    // reply 奖励：exp=2
+    const call = (addCourseScore as any).mock.calls[0]
+    expect(call[4]).toBe(2)            // replyExp
+    // 章节总分：chapterId=7（请求 body 自动注入），score = replyExp
+    const chCall = (addChapterScore as any).mock.calls[0]
+    expect(chCall[0]).toBe(1)
+    expect(chCall[1]).toBe(7)
+    expect(chCall[2]).toBe(2)
+  })
+
+  it('重复审核（已 published）不重复发放奖励（幂等）', async () => {
+    setMockAuthState({ id: 9, username: 'teacher', roles: ['teacher'], permissions: [] })
+    _mockDb.query.comments.findFirst = vi.fn().mockResolvedValue({
+      userId: 1, courseId: 1, cid: 5, parentId: null, chapterId: null, status: 'published',
+    })
+    const { addCourseScore } = await import('../../server/utils/userScore/course')
+    const handler = (await import('../../server/api/comments/approve.post')).default
+    const r = await handler(makeEvent({ body: { course_id: 1, cid: 5 } }))
+    expect(r.success).toBe(true)
+    expect(addCourseScore).not.toHaveBeenCalled()
   })
 })
