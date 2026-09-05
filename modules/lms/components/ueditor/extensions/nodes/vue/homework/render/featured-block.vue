@@ -36,6 +36,7 @@
 
 <script setup>
 import { useHomeworkRenderContext } from '../useHomeworkRender'
+import HomeworkFileList from './homework-file-list.vue'
 
 const { t, effectiveCourseId, featuredList, isRichDoc, strFromComment } = useHomeworkRenderContext()
 

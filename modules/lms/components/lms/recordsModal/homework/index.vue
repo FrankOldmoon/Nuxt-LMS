@@ -106,6 +106,9 @@
 
 <script setup>
 import { useHomeworkRecords } from './useHomeworkRecords'
+// 显式导入：Nuxt 组件自动导入按目录拼接（pathPrefix），
+// homework/render/homework-file-list.vue 的名字是 HomeworkRenderHomeworkFileList，非 HomeworkFileList
+import HomeworkFileList from '../../../ueditor/extensions/nodes/vue/homework/render/homework-file-list.vue'
 
 const props = defineProps({
     modelValue: { type: Boolean, default: false },
