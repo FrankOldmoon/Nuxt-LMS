@@ -12,11 +12,13 @@
 
 - **教学组织**：`courses` 课程 → `chapters` 章节 → `classes` 班级，通过 `class_courses / class_chapters` 关联班级开放；用户主班级由 `users.defaultClass`（JSON）或 `users.classId` 决定。
 
-- **互动题型**：`questions`（单选/多选/判断/HTML/拼图等）、`homeworks` 作业、`quizzes` 测验、`races` 竞赛抢答、`peer_reviews` 互评。
+- **互动题型**：`questions`（单选/多选/判断/HTML/拼图等）、`homeworks` 作业、`quizzes` 测验、`races` 竞赛抢答、`peer_reviews` 互评；HTML 题型经 iframe 渲染、通过 `postMessage` 实时上报正确率。
 
-- **成绩与激励**：`userChapters / userCourses` 记录得分与进度；经验/金币升级、`medals` 奖章、课程总分与排行榜。
+- **成绩与激励**：`userChapters / userCourses` 记录得分与进度（课程进度按任务完成率计算）；经验/金币升级、`medals` 奖章、课程总分与排行榜。
 
-- **互动社交**：评论（`comments`，富文本，支持审核/班级隔离）、弹幕 `danmaku`、互动投票/点名。
+- **互动社交**：评论（`comments`，富文本，支持审核/班级隔离）、弹幕 `danmaku`（管理员主开关/学生发送/接收三级控制）、互动投票/点名。
+
+- **作业批改**：作业逐份全屏批改弹窗（上下篇切换、评分/评语/精选、文件预览与下载），评语经 WS 实时刷新。
 
 - **富文本编辑器（ueditor）**：基于 `@umoteam/editor` + Tiptap，支持 Markdown、HTML 渲染、KaTeX 公式、嵌入式互动节点（题目/作业/测验/评论/聊天室等）。
 
@@ -42,7 +44,7 @@
 
 ### 基础能力（Base）
 
-- 认证、统一响应包装 `cResp`、通用 CRUD、WebSocket 连接层、系统通知/消息/个人网盘、站点配置单例。
+- 认证（登录/注册/忘记密码、URL 参数自动登录）、统一响应包装 `cResp`、通用 CRUD、WebSocket 连接层、系统通知/消息/个人网盘、站点配置单例。
 
 ## 项目结构
 
@@ -121,7 +123,7 @@ pnpm test:watch    # watch 模式
 
 - `e2e`：Nuxt 端到端（@nuxt/test-utils）
 
-共享桩：`test/setup/nuxt-stubs.ts`（requireAuth/requireRole、cRequest/i18n 等）、`test/setup/db-helpers.ts`（mock db）。
+共享桩：`test/setup/unit-shared.ts`（unit 项目将 Nitro/Nuxt stubs 暴露到 globalThis）、`test/setup/nuxt-stubs.ts`（requireAuth/requireRole、cRequest/i18n 等）、`test/setup/db-helpers.ts`（mock db）。
 
 ## 构建与部署
 
