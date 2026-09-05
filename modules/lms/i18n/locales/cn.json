@@ -473,6 +473,7 @@
     "submitSuccess": "提交成功",
     "submitFailed": "提交失败",
     "comment": "评语",
+    "noContent": "暂无作答内容",
     "commentPlaceholder": "填写评语…",
     "quickScore": "满分",
     "excellent": "优秀",

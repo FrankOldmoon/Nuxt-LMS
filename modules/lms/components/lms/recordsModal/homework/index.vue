@@ -60,105 +60,125 @@
     </UModal>
 
     <!-- 作业详情弹窗（全屏逐份评阅） -->
+    <!-- 布局：顶栏（左：用户卡片；右两行：评分/评语/标优秀 + 导航）/ 主区（左侧作答+附件列表，右侧预览） -->
     <UModal v-model:open="detailOpen" fullscreen>
         <template #content>
             <div v-if="detailData" class="h-full flex flex-col">
-                <!-- 顶部导航：当前用户 + 序号/总数 + 前后循环切换 -->
-                <div class="flex items-center gap-3 px-6 py-3 border-b border-gray-200 dark:border-gray-800 shrink-0">
+                <!-- 顶栏：用户卡片高度较高，右侧排两行内容 -->
+                <div class="flex items-center gap-4 px-6 py-3 border-b border-gray-200 dark:border-gray-800 shrink-0">
                     <AuthUserCard :user="detailUser" />
-                    <span class="text-sm text-muted whitespace-nowrap">{{ detailIndex + 1 }}/{{ detailTotal }}</span>
-                    <div class="flex items-center gap-1 ml-auto">
-                        <UTooltip :text="$t('record.homeworkDetail')">
-                            <UButton icon="i-lucide-chevron-left" variant="soft" size="sm" :disabled="detailTotal === 0"
-                                @click="prevSubmission" />
-                        </UTooltip>
-                        <UTooltip :text="$t('record.homeworkDetail')">
-                            <UButton icon="i-lucide-chevron-right" variant="soft" size="sm" :disabled="detailTotal === 0"
-                                @click="nextSubmission" />
-                        </UTooltip>
-                    </div>
-                </div>
 
-                <!-- 工具栏：打分 / 评语 / 标优秀 -->
-                <div class="flex flex-wrap items-center gap-x-4 gap-y-2 px-6 py-3 border-b border-gray-200 dark:border-gray-800 shrink-0">
-                    <div class="flex items-center gap-1">
-                        <label class="text-sm text-gray-500">{{ $t('record.score') }}:</label>
-                        <UInput v-model.number="scoreMap[detailData.id]" type="number" size="sm" class="w-20"
-                            :max="maxScore" :placeholder="String(maxScore)"
-                            @blur="onScoreBlur(detailData)" @keydown.enter="$event.target.blur()" />
-                        <UTooltip :text="$t('homework.quickScore')">
-                            <UButton icon="i-heroicons-check" color="primary" variant="soft" size="sm"
-                                @click="onQuickScore(detailData, maxScore)" />
-                        </UTooltip>
-                    </div>
+                    <div class="flex-1 flex flex-col gap-2 min-w-0">
+                        <!-- 行 1：打分 / 满分 / 标优秀 + 序号/总数 + 切换 + 关闭 -->
+                        <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                            <div class="flex items-center gap-1.5">
+                                <label class="text-sm text-muted whitespace-nowrap">{{ $t('record.score') }}</label>
+                                <UInput v-model.number="scoreMap[detailData.id]" type="number" size="sm" class="w-20"
+                                    :max="maxScore" :placeholder="String(maxScore)"
+                                    @blur="onScoreBlur(detailData)" @keydown.enter="$event.target.blur()" />
+                                <span class="text-sm text-muted whitespace-nowrap">/ {{ maxScore }}</span>
+                                <UTooltip :text="$t('homework.quickScore')">
+                                    <UButton icon="i-heroicons-check" color="primary" variant="soft" size="sm"
+                                        @click="onQuickScore(detailData, maxScore)" />
+                                </UTooltip>
+                            </div>
 
-                    <div class="flex items-center gap-1 flex-1 min-w-[220px]">
-                        <label class="text-sm text-gray-500">{{ $t('homework.comment') }}:</label>
-                        <UInput v-model="commentMap[detailData.id]" size="sm"
-                            :placeholder="$t('homework.commentPlaceholder')"
-                            @blur="onCommentBlur(detailData)" @keydown.enter="$event.target.blur()" />
-                    </div>
+                            <UButton size="sm" variant="soft"
+                                :color="excellentMap[detailData.id] ? 'warning' : 'gray'"
+                                :icon="excellentMap[detailData.id] ? 'i-heroicons-star-solid' : 'i-heroicons-star'"
+                                @click="toggleExcellent(detailData)">
+                                {{ excellentMap[detailData.id] ? $t('homework.excellent') : $t('homework.markExcellent') }}
+                            </UButton>
 
-                    <UButton size="sm" variant="soft"
-                        :color="excellentMap[detailData.id] ? 'warning' : 'gray'"
-                        :icon="excellentMap[detailData.id] ? 'i-heroicons-star-solid' : 'i-heroicons-star'"
-                        @click="toggleExcellent(detailData)">
-                        {{ excellentMap[detailData.id] ? $t('homework.excellent') : $t('homework.markExcellent') }}
-                    </UButton>
+                            <span class="text-sm text-muted whitespace-nowrap">{{ detailIndex + 1 }}/{{ detailTotal }}</span>
+
+                            <div class="flex items-center gap-1 ml-auto">
+                                <UTooltip :text="$t('record.homeworkDetail')">
+                                    <UButton icon="i-lucide-chevron-left" variant="soft" size="sm" :disabled="detailTotal === 0"
+                                        @click="prevSubmission" />
+                                </UTooltip>
+                                <UTooltip :text="$t('record.homeworkDetail')">
+                                    <UButton icon="i-lucide-chevron-right" variant="soft" size="sm" :disabled="detailTotal === 0"
+                                        @click="nextSubmission" />
+                                </UTooltip>
+                                <UTooltip :text="$t('common.close')">
+                                    <UButton icon="i-heroicons-x-mark" variant="ghost" size="sm" class="ml-2" @click="closeDetail()" />
+                                </UTooltip>
+                            </div>
+                        </div>
+
+                        <!-- 行 2：评语（占满右侧宽度） -->
+                        <div class="flex items-center gap-1.5">
+                            <label class="text-sm text-muted whitespace-nowrap">{{ $t('homework.comment') }}</label>
+                            <UInput v-model="commentMap[detailData.id]" size="sm" class="flex-1"
+                                :placeholder="$t('homework.commentPlaceholder')"
+                                @blur="onCommentBlur(detailData)" @keydown.enter="$event.target.blur()" />
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 主内容区 -->
                 <div class="flex flex-1 overflow-hidden">
-                    <!-- 左列：作答内容 + 文件列表 -->
-                    <div class="w-[360px] border-r border-gray-200 dark:border-gray-800 p-5 overflow-y-auto space-y-5 shrink-0">
-                        <!-- 作答内容 -->
+                    <!-- 左栏：仅在有附件时出现（作答内容 + 附件列表） -->
+                    <aside v-if="fileItems.length"
+                        class="w-[320px] border-r border-gray-200 dark:border-gray-800 p-4 overflow-y-auto space-y-5 shrink-0">
+                        <!-- 作答内容（与附件并存时收在左栏） -->
                         <div v-if="detailRecord.content">
-                            <label class="text-xs text-gray-500 mb-1 block">{{ $t('homework.contentLabel') }}</label>
-                            <div class="prose prose-sm dark:prose-invert max-w-none border rounded-md p-3">
+                            <label class="text-xs text-muted mb-1 block">{{ $t('homework.contentLabel') }}</label>
+                            <div class="prose prose-sm dark:prose-invert max-w-none border border-gray-200 dark:border-gray-800 rounded-md p-3">
                                 <ueditorRender v-if="isRichDoc(detailRecord.content)" :json="detailRecord.content" :course-id="props.courseId" />
                                 <p v-else class="text-sm whitespace-pre-wrap break-words">{{ detailRecord.content }}</p>
                             </div>
                         </div>
 
-                        <!-- 得分 / 优秀标记（已有值展示） -->
-                        <div class="space-y-1 text-sm">
-                            <div v-if="detailRecord.score !== null && detailRecord.score !== undefined">
-                                <span class="text-gray-500">{{ $t('record.score') }}: </span>
-                                <span class="font-semibold text-green-600">{{ detailRecord.score }}</span>
-                            </div>
-                            <div v-if="detailRecord.excellent" class="text-amber-500 flex items-center gap-1">
-                                <UIcon name="i-heroicons-star" class="w-4 h-4" />
-                                {{ $t('homework.excellent') }}
-                            </div>
-                        </div>
-
-                        <!-- 文件列表（点击切换预览） -->
-                        <div v-if="fileItems.length">
-                            <label class="text-xs text-gray-500 mb-1 block">{{ $t('homework.uploadLabel') }}</label>
-                            <div class="flex flex-wrap gap-1">
-                                <UButton v-for="(file, i) in fileItems" :key="i" size="xs" variant="soft"
-                                    :color="selectedFileIndex === i ? 'primary' : 'gray'"
-                                    :icon="i === activeFileIndex ? 'i-heroicons-eye' : 'i-heroicons-document'"
+                        <!-- 附件列表（纵向，点击切换预览） -->
+                        <div>
+                            <label class="text-xs text-muted mb-1.5 block">{{ $t('homework.uploadLabel') }}（{{ fileItems.length }}）</label>
+                            <div class="space-y-1">
+                                <button v-for="(file, i) in fileItems" :key="i" type="button"
+                                    class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-left text-sm transition-colors"
+                                    :class="selectedFileIndex === i
+                                        ? 'bg-primary-50 dark:bg-primary-950/40 text-primary-500'
+                                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'"
                                     @click="selectedFileIndex = i">
-                                    {{ file.name }}
-                                </UButton>
+                                    <UIcon :name="fileIcon(file.url)" class="w-4 h-4 shrink-0" />
+                                    <span class="truncate">{{ file.name }}</span>
+                                </button>
                             </div>
                         </div>
-                    </div>
+                    </aside>
 
-                    <!-- 右列：文件预览 iframe -->
-                    <div class="flex-1 p-5 overflow-auto">
-                        <div v-if="activeFile" class="flex flex-col gap-2 h-full">
-                            <!-- 可内联预览：iframe -->
-                            <iframe v-if="activeFilePreviewable && activeFile.url" :key="activeFile.url"
-                                :src="activeFile.url" class="w-full flex-1 min-h-[60vh] border border-gray-200 dark:border-gray-800 rounded-md bg-white" />
+                    <!-- 右主区：附件预览 / 无附件时作答内容占满 / 均无时占位 -->
+                    <div class="flex-1 p-5 overflow-hidden flex flex-col min-w-0">
+                        <!-- 有附件：文件预览 iframe -->
+                        <div v-if="activeFile" ref="previewRef"
+                            class="relative flex-1 overflow-auto border border-gray-200 dark:border-gray-800 rounded-md bg-white">
+                            <!-- 可内联预览：iframe（内容按自然尺寸缩放适配容器宽度） -->
+                            <div v-if="activeFilePreviewable && activeFile.url" :style="iframeWrapperStyle">
+                                <iframe ref="iframeRef" :key="activeFile.url" :src="activeFile.url"
+                                    @load="onIframeLoad" class="block bg-white border-0 max-w-none"
+                                    :style="iframeElStyle" />
+                            </div>
                             <!-- 不可预览：仅下载 -->
-                            <div v-else class="h-full min-h-[60vh] flex flex-col items-center justify-center gap-3 border border-gray-200 dark:border-gray-800 rounded-md text-muted">
-                                <UIcon name="i-heroicons-arrow-down-tray" class="w-10 h-10" />
-                                <span class="text-sm">{{ $t('common.download') }}</span>
+                            <div v-else class="h-full min-h-[60vh] flex flex-col items-center justify-center gap-3 text-muted">
+                                <UIcon :name="fileIcon(activeFile.url)" class="w-10 h-10" />
+                                <span class="text-sm">{{ activeFile.name }}</span>
                                 <UButton :to="activeFile.url" target="_blank" icon="i-heroicons-arrow-down-tray"
                                     :label="$t('common.download')" color="primary" size="sm" />
                             </div>
+                        </div>
+
+                        <!-- 无附件：作答内容占满主区 -->
+                        <div v-else-if="detailRecord.content"
+                            class="flex-1 overflow-y-auto border border-gray-200 dark:border-gray-800 rounded-md p-5 bg-white dark:bg-gray-900">
+                            <ueditorRender v-if="isRichDoc(detailRecord.content)" :json="detailRecord.content" :course-id="props.courseId" />
+                            <p v-else class="text-sm whitespace-pre-wrap break-words">{{ detailRecord.content }}</p>
+                        </div>
+
+                        <!-- 无内容也无附件 -->
+                        <div v-else class="flex-1 flex flex-col items-center justify-center gap-2 text-muted">
+                            <UIcon name="i-heroicons-inbox" class="w-10 h-10" />
+                            <span class="text-sm">{{ $t('homework.noContent') }}</span>
                         </div>
                     </div>
                 </div>
@@ -184,7 +204,7 @@ const {
     open, rows, pending, extraColumns, defaultSort, scoreMap, commentMap, excellentMap, fetchRecords,
     onScoreBlur, onQuickScore, onCommentBlur, toggleExcellent,
     detailOpen, detailData, detailRecord, detailIndex, detailTotal,
-    openHomeworkDetail, prevSubmission, nextSubmission, isRichDoc, isPreviewableFile,
+    openHomeworkDetail, prevSubmission, nextSubmission, closeDetail, isRichDoc, isPreviewableFile,
 } = useHomeworkRecords(props, emit)
 
 // ==================== 文件预览 ====================
@@ -192,11 +212,76 @@ const {
 const selectedFileIndex = ref(0)
 const fileItems = useFileNames(() => detailRecord.value?.files ?? [])
 const activeFile = computed(() => fileItems.value[selectedFileIndex.value] ?? null)
-const activeFileIndex = computed(() => selectedFileIndex.value)
 const activeFilePreviewable = computed(() => !!activeFile.value && isPreviewableFile(activeFile.value.url))
+
+// 按扩展名给附件列表配类型图标
+function fileIcon(url) {
+    const ext = (url || '').split('?')[0].split('.').pop()?.toLowerCase() || ''
+    if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp'].includes(ext)) return 'i-heroicons-photo'
+    if (ext === 'pdf') return 'i-heroicons-document-text'
+    if (['doc', 'docx', 'txt', 'md'].includes(ext)) return 'i-heroicons-document-text'
+    if (['xls', 'xlsx', 'csv'].includes(ext)) return 'i-heroicons-table-cells'
+    if (['ppt', 'pptx'].includes(ext)) return 'i-heroicons-presentation-chart-bar'
+    return 'i-heroicons-paperclip'
+}
 
 // 切换作业时重置为预览第一个文件
 watch(() => detailIndex.value, () => { selectedFileIndex.value = 0 })
+
+// ==================== iframe 内容自适应容器宽度 ====================
+// 同源文件（/api/files/serve）加载后读取其自然尺寸，再用 transform:scale 缩放到外部容器宽度
+const previewRef = ref(null)
+const iframeRef = ref(null)
+const measured = ref(false)
+const iframeScale = ref(1)
+const iframeNaturalW = ref(0)
+const iframeNaturalH = ref(0)
+
+function resetIframe() {
+    measured.value = false
+    iframeScale.value = 1
+    iframeNaturalW.value = 0
+    iframeNaturalH.value = 0
+}
+
+// 切换文件时重置测量状态
+watch(() => activeFile.value?.url, resetIframe)
+watch(() => detailIndex.value, resetIframe)
+
+function onIframeLoad() {
+    resetIframe()
+    const win = iframeRef.value?.contentWindow
+    const doc = win?.document
+    if (!doc) return
+    const nw = doc.documentElement?.scrollWidth || doc.body?.scrollWidth || 0
+    const nh = doc.documentElement?.scrollHeight || doc.body?.scrollHeight || 0
+    if (!nw || !nh) return
+    const cw = previewRef.value?.clientWidth || nw
+    iframeScale.value = Math.max(0.1, Math.min(1, cw / nw))
+    iframeNaturalW.value = nw
+    iframeNaturalH.value = nh
+    measured.value = true
+}
+
+// 未测量时用 100% 填满容器；测量后按自然尺寸 + 缩放
+const iframeElStyle = computed(() => {
+    if (!measured.value) return { width: '100%', height: '100%' }
+    return {
+        width: iframeNaturalW.value + 'px',
+        height: iframeNaturalH.value + 'px',
+        transform: `scale(${iframeScale.value})`,
+        transformOrigin: 'top left',
+    }
+})
+
+// 外层包裹占用缩放后的实际显示尺寸，保证滚动区域正确
+const iframeWrapperStyle = computed(() => {
+    if (!measured.value) return {}
+    return {
+        width: Math.round(iframeNaturalW.value * iframeScale.value) + 'px',
+        height: Math.round(iframeNaturalH.value * iframeScale.value) + 'px',
+    }
+})
 
 // 当前评阅用户的卡片数据
 const detailUser = computed(() => {

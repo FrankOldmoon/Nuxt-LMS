@@ -190,6 +190,11 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
     function prevSubmission() { detailIndex.value -= 1; applyDetail() }
     function nextSubmission() { detailIndex.value += 1; applyDetail() }
 
+    function closeDetail() {
+        detailOpen.value = false
+        detailData.value = null
+    }
+
     function isRichDoc(content) {
         return content && typeof content === 'object' && !Array.isArray(content) && !!content.type
     }
@@ -236,7 +241,7 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
         open, rows, pending, extraColumns, defaultSort, scoreMap, commentMap, excellentMap,
         fetchRecords, onScoreBlur, onQuickScore, onCommentBlur, toggleExcellent,
         detailOpen, detailData, detailRecord, detailIndex, detailTotal,
-        openHomeworkDetail, prevSubmission, nextSubmission,
+        openHomeworkDetail, prevSubmission, nextSubmission, closeDetail,
         isRichDoc, strFromComment, isPreviewableFile,
     }
 }

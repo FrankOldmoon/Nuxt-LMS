@@ -473,6 +473,7 @@
     "submitSuccess": "Submitted successfully",
     "submitFailed": "Submit failed",
     "comment": "Comment",
+    "noContent": "No submission content",
     "commentPlaceholder": "Write a comment…",
     "quickScore": "Full marks",
     "excellent": "Excellent",
