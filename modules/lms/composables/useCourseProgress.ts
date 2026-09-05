@@ -27,6 +27,8 @@ type ProgressRow = {
   to?: string
   score: number | null | undefined
   items: TaskItem[]
+  /** 章节任务完成率（0-100，无任务为 null） */
+  progress: number | null
   isParent: boolean
   isOpen?: boolean
   accessible?: boolean
@@ -89,11 +91,17 @@ export function useCourseProgress(
         const hasChildren = !!item.children?.length
         const fallback = { score: null, isPass: false, isOpen: false, accessible: false, items: [] }
         const nodeData: ChapterData = chapterId ? (dataMap[chapterId] || fallback) : fallback
+        const items = nodeData.items || []
+        const totalTasks = items.length
+        const doneTasks = items.filter(i => i.status === 'done' || i.status === 'partial').length
+        // 章节进度 = 已完成任务数 / 总任务数（百分制）
+        const progress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : null
         const row: ProgressRow = {
           label: item.label,
           to: chapterId ? item.to : undefined,
           score: nodeData.score ?? null,
-          items: nodeData.items || [],
+          items,
+          progress,
           isParent: hasChildren,
           isOpen: nodeData.isOpen,
           accessible: nodeData.accessible,
@@ -157,9 +165,10 @@ export function useCourseProgress(
       id: 'bar',
       header: () => t('coursePanel.bar'),
       cell: ({ row }) => {
-        const score = row.getValue('score') as number | null
-        if (score == null) return null
-        const pct = Math.min(100, score)
+        // 进度条 = 章节任务完成率（无任务不显示）
+        const progress = (row.original as ProgressRow)?.progress ?? null
+        if (progress == null) return null
+        const pct = Math.min(100, Math.max(0, progress))
         return h('div', { class: 'w-full h-2 bg-gray-200 dark:bg-gray-700 rounded overflow-hidden' }, [
           h('div', {
             class: ['h-full rounded transition-all', (row.original as ProgressRow)?.isParent ? 'bg-primary-300' : 'bg-primary-500'],
