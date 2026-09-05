@@ -49,7 +49,7 @@ describe('composables/useCourseUserSelect', () => {
     // 不再请求 /api/users/students 全量学生；显示班级学生
     expect(userOptions.value).toHaveLength(1)
     expect(userOptions.value[0].value).toBe(2)
-    expect(userOptions.value[0].label).toBe('Class Student (CS)')
+    expect(userOptions.value[0].label).toBe('Class Student')
   })
 
   it('onSelect 调用 impersonate API', async () => {
@@ -148,7 +148,7 @@ describe('composables/useCourseUserSelect', () => {
     expect(toasts[toasts.length - 1].color).toBe('error')
   })
 
-  it('userOptions 格式化班级学生列表', async () => {
+  it('userOptions 只显示 name', async () => {
     setMockAuthUser(
       { id: 1, name: 'Admin', defaultClass: { id: 10 } },
       [{ code: 'admin', name: 'Admin' }],
@@ -170,7 +170,7 @@ describe('composables/useCourseUserSelect', () => {
     const { userOptions, loadStudents } = useCourseUserSelect({ courseId: 1 }, () => {})
     await loadStudents()
     expect(userOptions.value).toHaveLength(2)
-    expect(userOptions.value[0].label).toBe('Alice (A)')
+    expect(userOptions.value[0].label).toBe('Alice')
     expect(userOptions.value[1].label).toBe('Bob')
   })
 })

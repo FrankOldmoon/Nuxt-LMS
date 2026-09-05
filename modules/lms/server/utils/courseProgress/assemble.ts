@@ -25,12 +25,26 @@ export type ProgressContext = {
   commentStatusMap: Map<number, ItemStatus>
   scoreMap: Map<number, number>
   passMap: Map<number, boolean>
+  taskStatusMap: Map<number, Record<string, boolean>>
   accessibleSet: Set<number>
 }
 
-/** 装配每章节的 items + score + isPass + accessible */
+/** 从章节 content 提取合法 heading id（与 useChapterTask / task-status.post 对齐：含合成章节标题 id） */
+function extractHeadingIds(content: any, chapterId: number): string[] {
+  const ids: string[] = []
+  ids.push(String(chapterId))
+  const topBlocks: any[] = Array.isArray(content?.content) ? content.content : []
+  for (const child of topBlocks) {
+    if (!child || child.type !== 'heading') continue
+    const id = child.attrs?.id || child.attrs?.['data-toc-id']
+    if (id) ids.push(String(id))
+  }
+  return ids
+}
+
+/** 装配每章节的 items + score + isPass + accessible + progress（标题完成率） */
 export function assembleProgress(chapters: any[], ctx: ProgressContext) {
-  const { questionStatusMap, homeworkStatusMap, commentStatusMap, scoreMap, passMap, accessibleSet } = ctx
+  const { questionStatusMap, homeworkStatusMap, commentStatusMap, scoreMap, passMap, taskStatusMap, accessibleSet } = ctx
   return chapters.map((ch) => {
     const qIds = (ch.questionIds as number[] | null) || []
     const hIds = (ch.homeworkIds as number[] | null) || []
@@ -40,6 +54,13 @@ export function assembleProgress(chapters: any[], ctx: ProgressContext) {
       ...hIds.map(id => ({ id, type: 'homework', status: homeworkStatusMap.get(id) || 'todo' })),
       ...cIds.map(id => ({ id, type: 'comment', status: commentStatusMap.get(id) || 'todo' })),
     ]
+    // 标题完成率（与 toc progressPercent 同口径）：已完成 heading / 总 heading
+    const headings = extractHeadingIds(ch.content, ch.id)
+    const taskStatus = taskStatusMap.get(ch.id) || {}
+    const doneHeadings = headings.filter(id => taskStatus[id] === true).length
+    const progress = headings.length > 0
+      ? Math.round((doneHeadings / headings.length) * 100)
+      : null
     return {
       chapterId: ch.id,
       chapterName: ch.name,
@@ -47,6 +68,7 @@ export function assembleProgress(chapters: any[], ctx: ProgressContext) {
       isPass: passMap.get(ch.id) || false,
       isOpen: !!ch.isOpen,
       accessible: accessibleSet.has(ch.id),
+      progress,
       items,
     }
   })

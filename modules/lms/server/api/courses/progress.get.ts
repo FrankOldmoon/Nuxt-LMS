@@ -26,6 +26,7 @@ export default eventHandler(async (event) => {
       id: schema.chapters.id,
       name: schema.chapters.name,
       isOpen: schema.chapters.isOpen,
+      content: schema.chapters.content,
       questionIds: schema.chapters.questionIds,
       homeworkIds: schema.chapters.homeworkIds,
       commentIds: schema.chapters.commentIds,
@@ -37,7 +38,7 @@ export default eventHandler(async (event) => {
   const chapterIds = chapters.map(ch => ch.id)
 
   // 2. 批量查状态 / 得分（并发）
-  const [questionStatusMap, homeworkStatusMap, commentStatusMap, { scoreMap, passMap }] = await Promise.all([
+  const [questionStatusMap, homeworkStatusMap, commentStatusMap, { scoreMap, passMap, taskStatusMap }] = await Promise.all([
     queryQuestionStatus(user.id, courseId, allQuestionCids),
     queryHomeworkStatus(user.id, courseId, allHomeworkCids),
     queryCommentStatus(user.id, courseId, allCommentCids),
@@ -49,6 +50,6 @@ export default eventHandler(async (event) => {
 
   // 4. 装配
   return cResp(assembleProgress(chapters, {
-    questionStatusMap, homeworkStatusMap, commentStatusMap, scoreMap, passMap, accessibleSet,
+    questionStatusMap, homeworkStatusMap, commentStatusMap, scoreMap, passMap, taskStatusMap, accessibleSet,
   }))
 })

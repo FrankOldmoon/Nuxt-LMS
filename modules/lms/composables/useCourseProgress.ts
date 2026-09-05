@@ -14,6 +14,8 @@ interface ChapterData {
   isOpen: boolean
   accessible: boolean
   items: TaskItem[]
+  /** 标题完成率（0-100，无标题为 null） */
+  progress: number | null
 }
 
 export type TaskItem = {
@@ -92,16 +94,13 @@ export function useCourseProgress(
         const fallback = { score: null, isPass: false, isOpen: false, accessible: false, items: [] }
         const nodeData: ChapterData = chapterId ? (dataMap[chapterId] || fallback) : fallback
         const items = nodeData.items || []
-        const totalTasks = items.length
-        const doneTasks = items.filter(i => i.status === 'done' || i.status === 'partial').length
-        // 章节进度 = 已完成任务数 / 总任务数（百分制）
-        const progress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : null
         const row: ProgressRow = {
           label: item.label,
           to: chapterId ? item.to : undefined,
           score: nodeData.score ?? null,
           items,
-          progress,
+          // 标题完成率（服务端已按 toc 同口径计算）
+          progress: nodeData.progress ?? null,
           isParent: hasChildren,
           isOpen: nodeData.isOpen,
           accessible: nodeData.accessible,
@@ -206,6 +205,7 @@ export function useCourseProgress(
         map[row.chapterId] = {
           score: row.score, isPass: !!row.isPass, isOpen: !!row.isOpen,
           accessible: !!row.accessible, items: row.items || [],
+          progress: row.progress != null ? Number(row.progress) : null,
         }
       }
       chapterData.value = map

@@ -27,7 +27,7 @@ export function useCourseUserSelect(
 
   // 与 select class 一致：始终显示当前班级（defaultClass）的学生
   const userOptions = computed(() => students.value.map(s => ({
-    label: `${s.name}${s.preferName ? ` (${s.preferName})` : ''}`,
+    label: s.name || `#${s.id}`,
     value: s.id,
   })))
 

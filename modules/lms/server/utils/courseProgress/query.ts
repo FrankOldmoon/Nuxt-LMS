@@ -74,14 +74,15 @@ export async function queryCommentStatus(
   return map
 }
 
-/** 批量查询用户章节得分 + 通过状态 */
+/** 批量查询用户章节得分 + 通过状态 + 任务完成状态 */
 export async function queryUserChapterScores(
   userId: number,
   chapterIds: number[],
-): Promise<{ scoreMap: Map<number, number>; passMap: Map<number, boolean> }> {
+): Promise<{ scoreMap: Map<number, number>; passMap: Map<number, boolean>; taskStatusMap: Map<number, Record<string, boolean>> }> {
   const scoreMap = new Map<number, number>()
   const passMap = new Map<number, boolean>()
-  if (!chapterIds.length) return { scoreMap, passMap }
+  const taskStatusMap = new Map<number, Record<string, boolean>>()
+  if (!chapterIds.length) return { scoreMap, passMap, taskStatusMap }
   const rows = await db
     .select()
     .from(schema.userChapters)
@@ -92,6 +93,9 @@ export async function queryUserChapterScores(
   for (const uc of rows) {
     scoreMap.set(uc.chapterId, Number(uc.score) || 0)
     passMap.set(uc.chapterId, !!uc.isPass)
+    if (uc.taskStatus && typeof uc.taskStatus === 'object') {
+      taskStatusMap.set(uc.chapterId, uc.taskStatus as Record<string, boolean>)
+    }
   }
-  return { scoreMap, passMap }
+  return { scoreMap, passMap, taskStatusMap }
 }
