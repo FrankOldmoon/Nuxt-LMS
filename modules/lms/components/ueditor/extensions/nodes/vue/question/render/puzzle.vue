@@ -1,6 +1,10 @@
 <template>
   <div>
-    <p class="text-xs text-gray-500 mb-3">{{ $t('question.puzzleRenderHint') }}</p>
+    <p class="text-xs text-gray-500 mb-3">
+      {{ $t('question.puzzleRenderHint') }}
+      <!-- 选中一块后紧跟提示（不单独显示在下方） -->
+      <span v-if="selectedPos !== null" class="text-blue-500 ml-2">{{ $t('question.puzzleSelectAnother') }}</span>
+    </p>
 
     <!-- 拼图网格 -->
     <div v-if="imageUrl && split" class="flex justify-center select-none">
@@ -19,11 +23,6 @@
         />
       </div>
     </div>
-
-    <!-- 提示 -->
-    <p v-if="selectedPos !== null" class="text-xs text-blue-500 mt-2">
-      {{ $t('question.puzzleSelectAnother') }}
-    </p>
   </div>
 </template>
 

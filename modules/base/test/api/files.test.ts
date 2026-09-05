@@ -712,7 +712,7 @@ describe('API: files/meta.get', () => {
 
   it('按 pathname 返回原始文件名与大小', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
-    _mockDb.query.files.findFirst = vi.fn().mockResolvedValue({ name: '原图.png', size: 2048, path: '2026/x.png' })
+    _mockDb.query.files.findFirst = vi.fn().mockResolvedValue({ name: '原图.png', size: 2048, path: '/2026/x.png' })
     const handler = (await import('../../server/api/files/meta.get')).default
     const r = await handler(makeEvent(undefined, { pathname: '2026%2Fx.png' }))
     expect(r.success).toBe(true)

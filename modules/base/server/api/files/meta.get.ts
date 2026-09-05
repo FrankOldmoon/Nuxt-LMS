@@ -8,8 +8,11 @@ export default eventHandler(async (event) => {
   const { pathname } = getQuery(event)
   if (!pathname) return cResp(null, '缺少 pathname 参数', false)
 
+  // files.path 以 '/' 开头（如 /245/hash.webp），url pathname 解码后无前导斜杠
   const filePath = decodeURIComponent(String(pathname)).replace(/^\/+/, '')
-  const row = await db.query.files.findFirst({ where: eq(schema.files.path, filePath) })
+  const row = await db.query.files.findFirst({
+    where: eq(schema.files.path, `/${filePath}`),
+  })
   if (!row) return cResp(null, '文件不存在', false)
 
   return cResp({ name: row.name, size: row.size ?? 0 })
