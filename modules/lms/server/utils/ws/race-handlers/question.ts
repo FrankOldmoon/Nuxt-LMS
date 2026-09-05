@@ -1,7 +1,7 @@
 /**
- * raceQuestion：设置当前题 + 广播 raceQuestion
+ * raceQuestion：设置当前题 + 广播 raceQuestion + 服务端自动收题 + 进度持久化
  */
-import { raceStates, broadcastToRace } from '../state'
+import { raceStates, broadcastToRace, raceAutoEndTimers } from '../state'
 
 export function handleRaceQuestion(_peer: any, data: any) {
   const pin = String(data.pin || '')
@@ -15,4 +15,55 @@ export function handleRaceQuestion(_peer: any, data: any) {
   if (!race.answers.has(questionCid)) race.answers.set(questionCid, new Map())
   broadcastToRace(pin, JSON.stringify({ type: 'raceQuestion', raceCid: race.raceCid,
     questionCid, questionIndex, totalQuestions: race.totalQuestions, timeLimit: race.timeLimit }))
+
+  // 进度持久化到 classRaces（教师刷新/进程重启后可按 currentIndex 续控；fire-and-forget）
+  persistRaceProgress(pin, race, questionIndex)
+
+  // 自动收题：timeLimit 后自动 raceQuestionEnd（教师提前结束会由 end 清理定时器）
+  clearRaceAutoEnd(pin)
+  raceAutoEndTimers.set(pin, setTimeout(() => {
+    raceAutoEndTimers.delete(pin)
+    handleRaceQuestionEndSafe(pin)
+  }, race.timeLimit * 1000))
 }
+
+/** 教师进度快照到 classRaces（幂等 upsert） */
+async function persistRaceProgress(pin: string, race: any, currentIndex: number) {
+  try {
+    const { db, schema } = await import('@nuxthub/db')
+    const { and, eq } = await import('drizzle-orm')
+    const classId = Number(String(pin).split('_')[0]) || 0
+    if (!classId) return
+    const existing = await db.query.classRaces.findFirst({
+      where: and(
+        eq(schema.classRaces.classId, classId),
+        eq(schema.classRaces.courseId, race.courseId),
+        eq(schema.classRaces.raceCid, race.raceCid),
+      ),
+    })
+    const data = { currentIndex, lastQuestionStartedAt: new Date() }
+    if (existing) {
+      await db.update(schema.classRaces).set(data).where(and(
+        eq(schema.classRaces.classId, classId),
+        eq(schema.classRaces.courseId, race.courseId),
+        eq(schema.classRaces.raceCid, race.raceCid),
+      ))
+    } else {
+      await db.insert(schema.classRaces).values({
+        classId, courseId: race.courseId, raceCid: race.raceCid,
+        currentIndex, lastQuestionStartedAt: new Date(),
+      })
+    }
+  } catch { /* 持久化失败静默 */ }
+}
+
+/** 由 end.ts 导出，避免循环依赖：清掉该竞赛自动收题定时器 */
+export function clearRaceAutoEnd(pin: string) {
+  const t = raceAutoEndTimers.get(pin)
+  if (t) { clearTimeout(t); raceAutoEndTimers.delete(pin) }
+}
+
+/** 延迟引用 handleRaceQuestionEnd，避免与 end.ts 循环依赖 */
+let _endFn: (pin: string) => void | null = null
+export function setRaceQuestionEndFn(fn: (pin: string) => void) { _endFn = fn }
+function handleRaceQuestionEndSafe(pin: string) { _endFn?.(pin) }

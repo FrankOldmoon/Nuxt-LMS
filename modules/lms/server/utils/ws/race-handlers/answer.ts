@@ -31,6 +31,7 @@ export async function handleRaceAnswer(_peer: any, data: any) {
     if (question) {
       rate = computeServerRate(question, data.answer)
       correct = rate > 0
+      race.questionPoints.set(questionCid, Number(question.point) || 1)
     }
   } catch { /* 判分失败退回客户端值 */ }
 

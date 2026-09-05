@@ -24,7 +24,7 @@ export function handleRaceJoin(peer: any, data: any) {
     peer.send(JSON.stringify({ type: 'raceScores', raceCid: race.raceCid,
       scores: computeRaceScores(race) }))
   }
-  broadcastToRace(pin, JSON.stringify({ type: 'onlineUpdate', pin, onlineUsers: getRaceOnlineUsers(pin) }))
+  broadcastToRace(pin, JSON.stringify({ type: 'raceOnlineUpdate', pin, onlineUsers: getRaceOnlineUsers(pin) }))
 }
 
 /** raceOnline: 广播某用户在线状态变更 */

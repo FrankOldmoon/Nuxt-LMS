@@ -1,14 +1,20 @@
 /**
  * raceQuestionEnd / raceEnd：题结束/竞赛结束
  */
-import { raceStates, broadcastToRace, computeRaceScores } from '../state'
+import { db, schema } from '@nuxthub/db'
+import { and, eq, inArray } from 'drizzle-orm'
+import { raceStates, raceAutoEndTimers, broadcastToRace, computeRaceScores } from '../state'
 import { addCourseScore } from '../../userScore/course'
 import { checkAndAwardMedals } from '../../medals/checker'
+import { findUserSubmitRecord } from '../../submit/record'
+import { notifyCourseProgressMax } from '../../submit/progress'
+import { clearRaceAutoEnd, setRaceQuestionEndFn } from './question'
 
 /** raceQuestionEnd: 计算 top3 + 广播 raceQuestionEnd */
 export function handleRaceQuestionEnd(_peer: any, data: any) {
   const pin = String(data.pin || '')
   const race = raceStates.get(pin); if (!race || !race.activeQuestionCid) return
+  clearRaceAutoEnd(pin)
   const questionCid = race.activeQuestionCid
   const qAnswers = race.answers.get(questionCid)
   const results: any[] = []
@@ -27,28 +33,115 @@ export function handleRaceQuestionEnd(_peer: any, data: any) {
   race.activeQuestionCid = null
 }
 
-/** raceEnd: 计算总分 + 广播 raceEnd + 结算排名奖励 + 清理 raceStates */
+/** 服务端自动收题：timeLimit 到后触发（由 question.ts 的定时器回调调用，peer 无意义） */
+setRaceQuestionEndFn((pin: string) => { handleRaceQuestionEnd(null, { pin }) })
+
+/** raceEnd: 计算总分 + 广播 raceEnd + 落库成绩/参与奖/排名奖 + 清理 raceStates */
 export function handleRaceEnd(_peer: any, data: any) {
   const pin = String(data.pin || '')
   const race = raceStates.get(pin); if (!race) return
+  clearRaceAutoEnd(pin)
   const summary = computeRaceScores(race)
   broadcastToRace(pin, JSON.stringify({
     type: 'raceEnd', raceCid: race.raceCid, leaderboard: summary, scores: summary,
   }))
-  // 结算排名奖励（fire-and-forget；raceStates 随后删除，重复 raceEnd 不会重发）
-  void settleRaceRankRewards(race, summary)
+  // fire-and-forget；raceStates 随后删除，重复 raceEnd 不会重发
+  void settleRace(race, summary)
   raceStates.delete(pin)
 }
 
 /**
- * 竞赛排名奖励：按最终成绩（rate 累计）前 3 名发放 rank1/2/3 的 exp/coin。
- * 只加经验金币，不改变 raceScore 分项与课程总分（排名奖是额外激励，非竞赛分）。
+ * 竞赛结算：
+ *  1. 按学生聚合本场所有作答，写入 userRaces（取该生最高分）
+ *  2. 首次参与发放 participateExp / participateCoin
+ *  3. userCourses.raceScore 最高分模式更新
+ *  4. 前 3 名发排名奖励 rank1/2/3 exp/coin
+ * 各段独立容错：成绩落库失败不影响排名奖励发放。
  */
-async function settleRaceRankRewards(race: any, summary: any[]) {
+async function settleRace(race: any, summary: any[]) {
   try {
     // getCourseLmsConfig 通过 Nuxt auto-import 引入
     const config = await getCourseLmsConfig(race.courseId)
     const rConfig = config?.race || {}
+
+    // 1. 聚合每个学生的作答（按题答案 Map 转 user → 每题明细）
+    const perUser = new Map<number, { from: string; answers: any[] }>()
+    for (const [questionCid, answers] of race.answers) {
+      for (const [uid, info] of answers) {
+        const cur = perUser.get(uid) || { from: info.from, answers: [] }
+        cur.answers.push({
+          questionCid: Number(questionCid),
+          answer: info.answer,
+          rate: info.rate,
+          correct: info.correct,
+        })
+        perUser.set(uid, cur)
+      }
+    }
+    if (perUser.size === 0) return
+
+    // 题目分值（与实时计分 computeRaceScores 对齐：Σ(rate * point)）
+    const questionIds = [...race.answers.keys()]
+    const pointMap = new Map<number, number>()
+    try {
+      const qrows = questionIds.length
+        ? await db.query.questions.findMany({
+            where: and(eq(schema.questions.courseId, race.courseId), inArray(schema.questions.cid, questionIds)),
+          })
+        : []
+      for (const q of qrows) pointMap.set(Number(q.cid), Number(q.point) || 1)
+    } catch { /* 题目分值加载失败回退每题 1 分 */ }
+
+    // 2/3. 逐学生落库 + raceScore/参与奖（单个失败不影响其他学生）
+    for (const [uid, d] of perUser) {
+      try {
+        let score = 0
+        const records = d.answers.map((a: any) => {
+          const point = pointMap.get(a.questionCid) || 1
+          score += a.rate * point
+          return { ...a, point }
+        })
+        score = Math.round(score * 100) / 100
+
+        const existing = await findUserSubmitRecord(uid, race.courseId, 'race', race.raceCid)
+        const prevScore = Number(existing?.score) || 0
+        const bestScore = Math.max(prevScore, score)
+        const isFirstSubmit = !existing
+        const exp = isFirstSubmit ? (rConfig.participateExp || rConfig.participationExp || 0) : 0
+        const coin = isFirstSubmit ? (rConfig.participateCoin || rConfig.participationCoin || 0) : 0
+
+        if (existing) {
+          await db.update(schema.userRaces).set({
+            records,
+            score: String(bestScore),
+          }).where(and(
+            eq(schema.userRaces.userId, uid),
+            eq(schema.userRaces.courseId, race.courseId),
+            eq(schema.userRaces.raceCid, race.raceCid),
+          ))
+        } else {
+          await db.insert(schema.userRaces).values({
+            userId: uid,
+            courseId: race.courseId,
+            raceCid: race.raceCid,
+            records,
+            score: String(score),
+          })
+        }
+
+        // raceScore 最高分模式 + 参与经验/金币
+        await notifyCourseProgressMax({
+          userId: uid,
+          courseId: race.courseId,
+          score: bestScore,
+          scoreKey: 'raceScore',
+          exp,
+          coin,
+        })
+      } catch { /* 单个学生结算失败静默 */ }
+    }
+
+    // 4. 排名奖励（前 3 名按最终成绩）— 只加经验金币，不改 raceScore 分项
     const ranks = [
       { exp: rConfig.rank1Exp, coin: rConfig.rank1Coin },
       { exp: rConfig.rank2Exp, coin: rConfig.rank2Coin },

@@ -31,8 +31,10 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
     const chapterTask = useChapterTask()
     const { wsConnected, connect, raceJoin, onRaceJoined, sendRaceStart, onRaceStart, sendRaceQuestion, onRaceQuestion, sendRaceAnswer, onRaceAnswerUpdate, onRaceScores, sendRaceQuestionEnd, onRaceQuestionEnd, sendRaceEnd, onRaceEnd, sendRaceOnline, onRaceOnlineUpdate } = useWebSocket()
 
-    // 告知 question 组件当前在 race 中：显示提交按钮但不向后端提交
+    // 告知 question 组件当前在 race 中：显示提交按钮但不向后端提交，
+    // 提交时触发 onRaceSubmit 回调（显式提交，避免 record 非空即自动提交）
     provide('inRace', true)
+    provide('onRaceSubmit', () => { submitStudentAnswer() })
 
     const raceId = computed(() => Number(props.node?.attrs?.content) || 0)
     const isTeacher = computed(() => hasRole('teacher') || hasRole('admin'))
@@ -194,7 +196,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         showPodium.value = false
         questionTop3.value = []
 
-        // 启动倒计时
+        // 启动倒计时（显式提交；到 0 自动提交当前答案）
         if (timerInterval) clearInterval(timerInterval)
         timerInterval = setInterval(() => {
             timeRemaining.value = Math.max(0, timeRemaining.value - 1)
@@ -206,12 +208,6 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
                 }
             }
         }, 1000)
-
-        // 学生：启动提交检测
-        if (!isTeacher.value) {
-            if (submitCheckTimer) clearInterval(submitCheckTimer)
-            submitCheckTimer = setInterval(checkStudentSubmit, 500)
-        }
     })
 
     onRaceAnswerUpdate((_data: any) => {
@@ -227,7 +223,8 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         if (data.raceCid !== raceId.value) return
         currentQuestionCid.value = 0
         showPodium.value = true
-        questionTop3.value = data.top3 || []
+        // 每题领奖台：耳 top3 展示用时
+        questionTop3.value = (data.top3 || []).map((t: any) => ({ ...t, display: `${t.timeUsed}s` }))
         if (timerInterval) clearInterval(timerInterval)
         if (submitCheckTimer) clearInterval(submitCheckTimer)
     })
@@ -237,11 +234,11 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         raceActive.value = false
         currentQuestionCid.value = 0
         raceScores.value = data.scores || data.leaderboard || []
-        // 显示最终总得分前三名 podium
+        // 最终领奖台：按总得分展示
         questionTop3.value = (data.scores || data.leaderboard || []).slice(0, 3).map((s: any) => ({
             userId: s.userId,
             from: s.from,
-            timeUsed: `${s.correctCount || 0} ${t('race.correct')}`,
+            display: `${Number(s.score) || 0}${t('question.points')}`,
         }))
         showPodium.value = true
         if (timerInterval) clearInterval(timerInterval)
@@ -299,21 +296,6 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
     }
 
     // ====================== 学生答题 ======================
-    function checkStudentSubmit() {
-        if (studentAnswered.value) return
-        const comp = questionRef.value
-        if (!comp) return
-        // 检测 question 是否已提交（学生点了提交按钮）
-        const qData = comp.getQuestionData?.()
-        if (!qData) return
-        // submitted 状态通过 question 组件的内部 ref 暴露
-        // 通过检查 record 是否有值来判断是否已作答
-        const record = qData.record
-        if (Array.isArray(record) && record.length > 0) {
-            submitStudentAnswer()
-        }
-    }
-
     async function submitStudentAnswer() {
         // 未登录时禁止提交
         if (!isLoggedIn.value) {

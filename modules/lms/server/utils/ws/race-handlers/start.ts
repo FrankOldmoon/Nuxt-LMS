@@ -11,6 +11,7 @@ export function handleRaceStart(_peer: any, data: any) {
     raceCid, courseId, currentQuestion: -1, totalQuestions,
     activeQuestionCid: null, timeLimit: Number(data.timeLimit) || 30,
     questionStartedAt: 0, startedAt: Date.now(), answers: new Map(),
+    questionPoints: new Map(),
   })
   broadcastToRace(pin, JSON.stringify({ type: 'raceStart', raceCid, courseId,
     from: data.from || 'teacher', totalQuestions, timeLimit: data.timeLimit || 30 }))

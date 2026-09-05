@@ -30,10 +30,14 @@ export type RaceState = {
   activeQuestionCid: number | null
   timeLimit: number; questionStartedAt: number; startedAt: number
   answers: Map<number, Map<number, RaceAnswerInfo>>
+  /** 题目分值（questionCid → point），answer 判分时写入，供计分对齐 point */
+  questionPoints: Map<number, number>
 }
 export const votes        = new Map<string, VoteRecord>()
 export const quickAnswers = new Map<number, QuickAnswerRecord>()
 export const raceStates   = new Map<string, RaceState>()
+// 每场竞赛的自动收题定时器（handleRaceQuestion 建立；handleRaceQuestionEnd/handleRaceEnd 清理）
+export const raceAutoEndTimers = new Map<string, any>()
 
 // ==================== 广播工具 ====================
 function safeSend(peer: any, msg: string) { try { peer.send(msg) } catch { /* 断开 */ } }
@@ -90,11 +94,14 @@ export function getRaceOnlineUsers(pin: string) {
 }
 export function computeRaceScores(race: RaceState) {
   const totals = new Map<number, { userId: number; from: string; score: number }>()
-  for (const answers of race.answers.values()) {
+  for (const [questionCid, answers] of race.answers) {
+    const point = race.questionPoints.get(questionCid) || 1
     for (const [uid, info] of answers) {
       const cur = totals.get(uid) || { userId: uid, from: info.from, score: 0 }
-      cur.score += info.rate; totals.set(uid, cur)
+      cur.score += info.rate * point
+      totals.set(uid, cur)
     }
   }
-  return [...totals.values()].sort((a, b) => b.score - a.score)
+  const rounded = [...totals.values()].map(t => ({ ...t, score: Math.round(t.score * 100) / 100 }))
+  return rounded.sort((a, b) => b.score - a.score)
 }
