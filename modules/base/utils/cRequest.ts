@@ -116,6 +116,11 @@ cRequest.use = <T = any>(url: string | (() => string) | Ref<string>, options: Re
   const fetchResult = useFetch<T>(wrappedUrl, {
     ...rest,
     key,
+    // 同一 key 可能被多个 useFetch 实例注册（如课程页 useSidebarNav + useCourseDetailPage，
+    // 章节页 useChapterPage + useAside），默认 dedupe='cancel' 会让后挂载的实例
+    // abort 前一个进行中的请求并重发（network 出现多次取消、最后一次才成功）。
+    // 'defer'：有进行中请求时直接复用，不 abort、不重复发（完成后自动清除，不影响 refresh）。
+    dedupe: 'defer',
     getCachedData(key: string) {
       // 始终返回 SSR payload 数据作为 hydration 初始值
       // 若返回 undefined，Nuxt 会用 default()（通常为 null）初始化 data，

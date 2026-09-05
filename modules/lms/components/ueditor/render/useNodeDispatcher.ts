@@ -111,8 +111,11 @@ export const componentNodeTypes: Record<string, any> = {
 }
 
 // 文本节点渲染组件：封装原有 renderTextWithMarks 逻辑
+// inheritAttrs: false —— 文本节点无法承载 scoped 样式透传的 data-v-* 属性，
+// 否则 Vue 会因属性无法继承到文本/片段根节点而告警（Extraneous non-props attributes）
 export const TextRenderer = defineComponent({
   name: 'TextRenderer',
+  inheritAttrs: false,
   props: {
     text: { type: String, default: '' },
     marks: { type: Array, default: () => [] },
