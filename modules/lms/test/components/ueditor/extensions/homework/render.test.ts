@@ -10,6 +10,7 @@ import { resetAllStubs, setMockI18n, setMockLmsContext } from '../../../../../..
 // Stub composables not in nuxt-stubs
 ;(globalThis as any).useChapterTask = () => null
 ;(globalThis as any).useUserCard = () => ({ refreshTrigger: ref(0), refresh: () => {} })
+;(globalThis as any).useFileNames = () => ref([])
 
 beforeEach(() => {
   resetAllStubs()

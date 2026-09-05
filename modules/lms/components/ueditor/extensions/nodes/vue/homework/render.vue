@@ -1,5 +1,9 @@
 <template>
-    <div class="homework-render w-full space-y-4 p-4 border border-amber-400 dark:border-amber-500 rounded-lg bg-white dark:bg-gray-900 relative"
+    <div
+        class="homework-render w-full space-y-4 p-4 rounded-lg bg-white dark:bg-gray-900 relative"
+        :class="submitted
+            ? 'border-2 border-green-400 dark:border-green-500'
+            : 'border border-amber-400 dark:border-amber-500'"
         :data-homework-id="homeworkId"
         @mouseenter.once="fetchOnce">
         <!-- 加载中 -->
@@ -84,7 +88,7 @@ const {
     t, moduleLms, RecordsModal,
     homework, pending, homeworkId, isTeacher,
     editOpen, recordsOpen, refresh,
-    selfScore,
+    selfScore, submitted,
     fetchRecord, fetchFeatured, onSaved,
 } = useHomeworkRender(props, emit)
 

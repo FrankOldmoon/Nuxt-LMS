@@ -70,19 +70,14 @@
                     <label class="text-xs text-gray-500 mb-1 block">{{ $t('homework.contentLabel') }}</label>
                     <div class="prose prose-sm dark:prose-invert max-w-none border rounded-md p-3">
                         <ueditorRender v-if="isRichDoc(detailData.content)" :json="detailData.content" />
-                        <p v-else class="text-sm whitespace-pre-wrap">{{ detailData.content }}</p>
+                        <p v-else class="text-sm whitespace-pre-wrap break-words">{{ detailData.content }}</p>
                     </div>
                 </div>
 
                 <!-- 提交文件 -->
                 <div v-if="detailData.files && detailData.files.length">
                     <label class="text-xs text-gray-500 mb-1 block">{{ $t('homework.uploadLabel') }}</label>
-                    <div class="space-y-1">
-                        <div v-for="(url, idx) in detailData.files" :key="idx" class="flex items-center gap-2">
-                            <UIcon name="i-heroicons-document" class="w-4 h-4 text-gray-400" />
-                            <a :href="url" target="_blank" class="text-xs text-blue-500 hover:underline truncate">{{ url }}</a>
-                        </div>
-                    </div>
+                    <HomeworkFileList :files="detailData.files" />
                 </div>
 
                 <!-- 得分 -->
@@ -102,7 +97,7 @@
                 <!-- 评语 -->
                 <div v-if="strFromComment(detailData.comment)">
                     <label class="text-xs text-gray-500 block mb-1">{{ $t('homework.comment') }}</label>
-                    <p class="text-sm whitespace-pre-wrap">{{ strFromComment(detailData.comment) }}</p>
+                    <p class="text-sm whitespace-pre-wrap break-words">{{ strFromComment(detailData.comment) }}</p>
                 </div>
             </div>
         </template>

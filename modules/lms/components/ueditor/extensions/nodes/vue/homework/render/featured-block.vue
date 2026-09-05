@@ -24,12 +24,7 @@
             </div>
 
             <!-- 文件 -->
-            <div v-if="item.files && item.files.length" class="mt-1 space-y-1">
-                <div v-for="(url, i) in item.files" :key="i" class="flex items-center gap-2">
-                    <UIcon name="i-heroicons-document" class="w-4 h-4 text-gray-400" />
-                    <a :href="url" target="_blank" class="text-xs text-blue-500 hover:underline truncate">{{ url }}</a>
-                </div>
-            </div>
+            <HomeworkFileList v-if="item.files && item.files.length" :files="item.files" class="mt-1" />
 
             <!-- 评语 -->
             <p v-if="strFromComment(item.comment)" class="mt-2 text-sm whitespace-pre-wrap text-gray-700 dark:text-gray-300">

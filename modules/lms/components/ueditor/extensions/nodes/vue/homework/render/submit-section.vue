@@ -43,10 +43,10 @@
                 <p v-else class="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{{ submittedContent }}</p>
             </div>
             <!-- 已提交文件列表 -->
-            <div v-if="submittedFileList && submittedFileList.length" class="mt-2 space-y-1">
-                <div v-for="(url, idx) in submittedFileList" :key="idx" class="flex items-center gap-2">
+            <div v-if="submittedFilesMeta.length" class="mt-2 space-y-1">
+                <div v-for="(file, idx) in submittedFilesMeta" :key="idx" class="flex items-center gap-2">
                     <UIcon name="i-heroicons-document" class="w-4 h-4 text-gray-400" />
-                    <a :href="url" target="_blank" class="text-xs text-blue-500 hover:underline truncate">{{ url
+                    <a :href="file.url" target="_blank" class="text-xs text-blue-500 hover:underline truncate">{{ file.name
                         }}</a>
                 </div>
             </div>
@@ -76,4 +76,6 @@ const {
     selfScore, selfComment,
     onSubmit, onReset, isRichDoc,
 } = useHomeworkRenderContext()
+
+const submittedFilesMeta = useFileNames(() => submittedFileList.value)
 </script>

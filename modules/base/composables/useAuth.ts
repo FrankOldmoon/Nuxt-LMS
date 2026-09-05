@@ -57,6 +57,10 @@ export function useAuth() {
     server: true,
     // 懒加载关闭，setup 阶段即发起请求
     lazy: false,
+    // 多个组件/组合式函数都会调用 useAuth()，默认 dedupe:'cancel' 会让同 key 的新调用
+    // 取消上一次在途请求并重启，造成进入页面时多次 /api/auth/me 后又自动取消。
+    // 'defer' 让后续同 key 调用等待在途请求，收敛为单次请求。
+    dedupe: 'defer',
     // 解析 { data, success, msg } 包裹格式
     transform: (raw: any) => {
       if (raw && raw.success && raw.data) {

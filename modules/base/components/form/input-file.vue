@@ -72,8 +72,15 @@ async function fetchFileMeta(url, item) {
     const pathname = u.searchParams.get('pathname')
     if (!pathname) return
     const data = await cRequest(`/api/files/meta?pathname=${encodeURIComponent(pathname)}`)
-    if (data?.name) item.name = data.name
-    if (data?.size != null) item.size = Number(data.size)
+    if (!data?.name) return
+    // 替换整个数组元素以触发响应式更新（item 为普通对象，直接改属性不生效）
+    const idx = fileList.value.indexOf(item)
+    if (idx < 0) return
+    fileList.value[idx] = {
+      ...fileList.value[idx],
+      name: data.name,
+      size: Number(data.size) || 0,
+    }
   } catch {
     // 补全失败保持 url 解析名
   }

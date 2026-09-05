@@ -11,6 +11,8 @@ import { HomeworkRenderKey } from '../../../../../../components/ueditor/extensio
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
+  // useFileNames 由 base 模块 addImportsDir 自动导入，测试中 globalThis stub
+  ;(globalThis as any).useFileNames = () => ref([])
 })
 
 const _globalStubs = {

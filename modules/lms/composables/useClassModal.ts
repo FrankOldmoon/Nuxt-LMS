@@ -287,9 +287,14 @@ export function useClassModal(open: Ref<boolean>) {
     }
   })
 
-  onMounted(async () => {
-    if (selectedClassId.value) await fetchUsers(selectedClassId.value, courseId.value)
-  })
+  // 用户加载完成后存在 default_class 时，无需弹开 select-class，一进页面即预取学生名单
+  watch(
+    () => selectedClassId.value,
+    async (id) => {
+      if (id) await fetchUsers(id, courseId.value)
+    },
+    { immediate: true },
+  )
 
   return {
     hasRole,
