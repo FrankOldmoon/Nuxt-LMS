@@ -69,41 +69,50 @@
                     <AuthUserCard :user="detailUser" />
 
                     <div class="flex-1 flex flex-col gap-2 min-w-0">
-                        <!-- 行 1：打分 / 满分 / 标优秀 + 序号/总数 + 切换 + 关闭 -->
+                        <!-- 行 1：标优秀 + 序号 / 打分 + 切换 + 关闭 -->
                         <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-                            <div class="flex items-center gap-1.5">
-                                <label class="text-sm text-muted whitespace-nowrap">{{ $t('record.score') }}</label>
-                                <UInput v-model.number="scoreMap[detailData.id]" type="number" size="sm" class="w-20"
-                                    :max="maxScore" :placeholder="String(maxScore)"
-                                    @blur="onScoreBlur(detailData)" @keydown.enter="$event.target.blur()" />
-                                <span class="text-sm text-muted whitespace-nowrap">/ {{ maxScore }}</span>
-                                <UTooltip :text="$t('homework.quickScore')">
-                                    <UButton icon="i-heroicons-check" color="primary" variant="soft" size="sm"
-                                        @click="onQuickScore(detailData, maxScore)" />
-                                </UTooltip>
+                            <div class="flex items-center gap-2">
+                                <!-- 标优秀 -->
+                                <UButton size="sm" variant="soft"
+                                    :color="excellentMap[detailData.id] ? 'warning' : 'gray'"
+                                    :icon="excellentMap[detailData.id] ? 'i-heroicons-star-solid' : 'i-heroicons-star'"
+                                    @click="toggleExcellent(detailData)">
+                                    {{ excellentMap[detailData.id] ? $t('homework.excellent') : $t('homework.markExcellent') }}
+                                </UButton>
+
+                                <!-- 序号 / 总数 -->
+                                <span class="text-xs font-medium text-muted whitespace-nowrap bg-gray-100 dark:bg-gray-800 rounded-full px-2.5 py-1">
+                                    {{ detailIndex + 1 }}/{{ detailTotal }}
+                                </span>
                             </div>
 
-                            <UButton size="sm" variant="soft"
-                                :color="excellentMap[detailData.id] ? 'warning' : 'gray'"
-                                :icon="excellentMap[detailData.id] ? 'i-heroicons-star-solid' : 'i-heroicons-star'"
-                                @click="toggleExcellent(detailData)">
-                                {{ excellentMap[detailData.id] ? $t('homework.excellent') : $t('homework.markExcellent') }}
-                            </UButton>
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 ml-auto">
+                                <!-- 打分 / 满分 -->
+                                <div class="flex items-center gap-1.5">
+                                    <label class="text-sm text-muted whitespace-nowrap">{{ $t('record.score') }}</label>
+                                    <UInput v-model.number="scoreMap[detailData.id]" type="number" size="sm" class="w-20"
+                                        :max="maxScore" :placeholder="String(maxScore)"
+                                        @blur="onScoreBlur(detailData)" @keydown.enter="$event.target.blur()" />
+                                    <span class="text-sm text-muted whitespace-nowrap">/ {{ maxScore }}</span>
+                                    <UTooltip :text="$t('homework.quickScore')">
+                                        <UButton icon="i-heroicons-check" color="primary" variant="soft" size="sm"
+                                            @click="onQuickScore(detailData, maxScore)" />
+                                    </UTooltip>
+                                </div>
 
-                            <span class="text-sm text-muted whitespace-nowrap">{{ detailIndex + 1 }}/{{ detailTotal }}</span>
-
-                            <div class="flex items-center gap-1 ml-auto">
-                                <UTooltip :text="$t('record.homeworkDetail')">
-                                    <UButton icon="i-lucide-chevron-left" variant="soft" size="sm" :disabled="detailTotal === 0"
-                                        @click="prevSubmission" />
-                                </UTooltip>
-                                <UTooltip :text="$t('record.homeworkDetail')">
-                                    <UButton icon="i-lucide-chevron-right" variant="soft" size="sm" :disabled="detailTotal === 0"
-                                        @click="nextSubmission" />
-                                </UTooltip>
-                                <UTooltip :text="$t('common.close')">
-                                    <UButton icon="i-heroicons-x-mark" variant="ghost" size="sm" class="ml-2" @click="closeDetail()" />
-                                </UTooltip>
+                                <div class="flex items-center gap-1">
+                                    <UTooltip :text="$t('record.homeworkDetail')">
+                                        <UButton icon="i-lucide-chevron-left" variant="soft" size="sm" :disabled="detailTotal === 0"
+                                            @click="prevSubmission" />
+                                    </UTooltip>
+                                    <UTooltip :text="$t('record.homeworkDetail')">
+                                        <UButton icon="i-lucide-chevron-right" variant="soft" size="sm" :disabled="detailTotal === 0"
+                                            @click="nextSubmission" />
+                                    </UTooltip>
+                                    <UTooltip :text="$t('common.close')">
+                                        <UButton icon="i-heroicons-x-mark" color="warning" variant="soft" size="sm" class="ml-2" @click="closeDetail()" />
+                                    </UTooltip>
+                                </div>
                             </div>
                         </div>
 
