@@ -1078,6 +1078,11 @@ try {
   }
 } catch { /* ignore */ }
 
+/** useEmbeddingParentCourse 桩 — 检测页面是否被课程页 iframe 嵌入，测试中视为未嵌入返回 0 */
+export function useEmbeddingParentCourse(): number {
+  return 0
+}
+
 // ===================== 4b. base 模块额外 auto-import 桩 =====================
 
 /** getConfigByPrefix — 返回指定前缀的配置键值对（与 base/server/utils/config/reload.ts 同构） */
@@ -1208,6 +1213,7 @@ const _stubsToExpose: Record<string, any> = {
   markdownToTiptap,
   // LMS extension context auto-imports
   useRaceEditContext,
+  useEmbeddingParentCourse,
   // base utils auto-imports
   formatTime,
   // Nitro auto-imports

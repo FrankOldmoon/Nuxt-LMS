@@ -155,6 +155,8 @@ export default defineNuxtModule({
 
     // 注册客户端 plugin：恢复登录态
     addPlugin(resolve('./plugins/restore.client.ts'))
+    // 注册插件：支持 URL 携带 ?username=&password= 自动登录
+    addPlugin(resolve('./plugins/url-auth.client.ts'))
 
     // 注册插件：站点配置单例预拉取（应用启动时调一次 /api/config/get，结果存 useState）
     addPlugin(resolve('./plugins/site-config.ts'))

@@ -37,7 +37,8 @@ export function useHtml(props: any) {
   // iframe 传来的正确率
   const latestRate = ref(null)
 
-  const hasAnswer = computed(() => latestRate.value !== null)
+  // 正确率不为 0 时才有可提交的内容：0 视为未答对，submit 保持不可用
+  const hasAnswer = computed(() => latestRate.value !== null && latestRate.value > 0)
 
   // 监听 iframe message（通过 event.source 区分不同 iframe）
   function onMessage(event) {

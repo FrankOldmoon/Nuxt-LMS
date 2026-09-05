@@ -12,8 +12,8 @@
                 @click="toggleFullscreen" />
         </div>
 
-        <!-- 正确率提示（提交后显示） -->
-        <div v-if="submitted && latestRate !== null" class="mt-2 text-xs text-gray-500">
+        <!-- 正确率实时显示（iframe 通报的最新正确率） -->
+        <div v-if="latestRate !== null" class="mt-2 text-xs" :class="latestRate > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-500'">
             {{ $t('question.htmlCorrectRate') }}: {{ Math.round(latestRate * 100) }}%
         </div>
     </div>

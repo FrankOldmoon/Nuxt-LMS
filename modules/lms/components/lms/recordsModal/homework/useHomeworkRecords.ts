@@ -164,22 +164,79 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
         if (val) fetchRecords()
     })
 
-    // 作业详情弹窗
+    // 作业详情弹窗（全屏逐份评阅）
     const detailOpen = ref(false)
-    const detailData = ref<any>(null)
+    const detailData = ref<any>(null) // 当前评阅的完整行 { id, name, ..., record }
+    const detailIndex = ref(0)
+    const detailRecord = computed(() => detailData.value?.record ?? null)
+    const detailTotal = computed(() => submissions.value.length)
+    // 所有已提交的作业（表格行仅含 record 的），用于前后切换
+    const submissions = computed(() => rows.value.filter(r => r.record))
 
-    function openHomeworkDetail(record: any) {
-        detailData.value = record
-        detailOpen.value = true
+    function applyDetail() {
+        const len = submissions.value.length
+        if (!len) { detailData.value = null; return }
+        detailIndex.value = ((detailIndex.value % len) + len) % len
+        detailData.value = submissions.value[detailIndex.value]
     }
+
+    function openHomeworkDetail(row) {
+        const idx = submissions.value.findIndex(r => r.id === (row?.id ?? row?.userId))
+        detailIndex.value = idx >= 0 ? idx : 0
+        detailOpen.value = true
+        applyDetail()
+    }
+
+    function prevSubmission() { detailIndex.value -= 1; applyDetail() }
+    function nextSubmission() { detailIndex.value += 1; applyDetail() }
 
     function isRichDoc(content) {
         return content && typeof content === 'object' && !Array.isArray(content) && !!content.type
     }
 
+    // ==================== 文件预览 ====================
+    // 与 /api/files/serve 一致：这些类型可在 iframe 内联预览，其余类型仅提供下载
+    const PREVIEWABLE_EXTS = new Set([
+        // 图片
+        '.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico',
+        // PDF
+        '.pdf',
+        // 音频 / 视频
+        '.mp3', '.wav', '.mp4', '.webm',
+        // 文本 / 代码（服务端以 text/plain 返回）
+        '.txt', '.md', '.markdown', '.log', '.csv', '.tsv',
+        '.js', '.mjs', '.cjs', '.ts', '.jsx', '.tsx',
+        '.json', '.json5', '.css', '.scss', '.less', '.sass',
+        '.html', '.htm', '.xml', '.yaml', '.yml', '.toml', '.ini', '.conf', '.cfg', '.env', '.properties',
+        '.py', '.java', '.c', '.cpp', '.cc', '.cxx', '.h', '.hpp', '.hxx',
+        '.go', '.rs', '.rb', '.php', '.swift', '.kt', '.kts', '.dart', '.lua', '.r', '.scala', '.groovy',
+        '.sh', '.bash', '.zsh', '.fish', '.bat', '.cmd', '.ps1',
+        '.sql', '.graphql', '.gql', '.proto',
+        '.vue', '.svelte', '.astro',
+    ])
+
+    /** 从文件 url 提取扩展名（优先 pathname 查询参数） */
+    function getFileUrlExt(url: string): string {
+        try {
+            const u = new URL(url, window.location.origin)
+            const p = u.searchParams.get('pathname') || u.pathname
+            const clean = decodeURIComponent(p).split('?')[0]
+            const ext = clean.split('.').pop()?.toLowerCase() || ''
+            return '.' + ext
+        } catch {
+            return ''
+        }
+    }
+
+    function isPreviewableFile(url: string): boolean {
+        return PREVIEWABLE_EXTS.has(getFileUrlExt(url))
+    }
+
     return {
         open, rows, pending, extraColumns, defaultSort, scoreMap, commentMap, excellentMap,
-        onScoreBlur, onQuickScore, onCommentBlur, toggleExcellent,
-        detailOpen, detailData, openHomeworkDetail, isRichDoc, strFromComment,
+        fetchRecords, onScoreBlur, onQuickScore, onCommentBlur, toggleExcellent,
+        detailOpen, detailData, detailRecord, detailIndex, detailTotal,
+        openHomeworkDetail, prevSubmission, nextSubmission,
+        isRichDoc, strFromComment, isPreviewableFile,
     }
 }

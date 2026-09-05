@@ -74,4 +74,43 @@ describe('question/render/html.vue', () => {
     expect(typeof vm.reset).toBe('function')
     expect(typeof vm.fillCorrectAnswer).toBe('function')
   })
+
+  it('正确率 >0 时 hasAnswer 为 true，且实时显示正确率（未提交也显示）', async () => {
+    const { default: HtmlRender } = await import(
+      '../../../../../../components/ueditor/extensions/nodes/vue/question/render/html.vue'
+    )
+    const wrapper = mount(HtmlRender, {
+      props: { question: { ...sampleQuestion, record: [1] }, questionId: 1 },
+      global: _globalConfig,
+    })
+    const vm = wrapper.vm as any
+    expect(vm.hasAnswer).toBe(true)
+    // 未提交仍实时显示正确率
+    expect(wrapper.text()).toContain('question.htmlCorrectRate')
+    expect(wrapper.text()).toContain('100%')
+  })
+
+  it('正确率为 0 时 hasAnswer 为 false（submit 不可用）', async () => {
+    const { default: HtmlRender } = await import(
+      '../../../../../../components/ueditor/extensions/nodes/vue/question/render/html.vue'
+    )
+    const wrapper = mount(HtmlRender, {
+      props: { question: { ...sampleQuestion, record: [0] }, questionId: 1 },
+      global: _globalConfig,
+    })
+    const vm = wrapper.vm as any
+    expect(vm.hasAnswer).toBe(false)
+  })
+
+  it('无正确率时 hasAnswer 为 false', async () => {
+    const { default: HtmlRender } = await import(
+      '../../../../../../components/ueditor/extensions/nodes/vue/question/render/html.vue'
+    )
+    const wrapper = mount(HtmlRender, {
+      props: { question: sampleQuestion, questionId: 1 },
+      global: _globalConfig,
+    })
+    const vm = wrapper.vm as any
+    expect(vm.hasAnswer).toBe(false)
+  })
 })
