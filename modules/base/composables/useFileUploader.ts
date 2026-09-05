@@ -14,9 +14,11 @@ export function useFileUploader(
   }
 
   async function uploadSingleFile(file: File) {
+    // 图片文件先压缩为 webp（compressImage 对非图片/GIF/SVG 返回原文件）
+    const uploadFile = file.type.startsWith('image/') ? await compressImage(file) : file
     const fileItem = reactive({
-      name: file.name,
-      size: file.size,
+      name: uploadFile.name,
+      size: uploadFile.size,
       status: 'uploading',
       url: '',
     })
@@ -24,7 +26,7 @@ export function useFileUploader(
 
     try {
       const formData = new FormData()
-      formData.append('files', file)
+      formData.append('files', uploadFile)
 
       const response = await fetch('/api/files/upload', {
         method: 'POST',
@@ -36,6 +38,9 @@ export function useFileUploader(
       if (result.success) {
         fileItem.status = 'success'
         fileItem.url = result.data.url
+        // 用服务端返回的原始文件名与大小覆盖（压缩/重命名后更准确）
+        if (result.data?.name) fileItem.name = result.data.name
+        if (result.data?.size != null) fileItem.size = Number(result.data.size)
         updateModelValue()
       } else {
         fileItem.status = 'error'

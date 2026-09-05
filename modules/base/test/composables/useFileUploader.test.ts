@@ -8,6 +8,10 @@ import { resetAllStubs } from '../../../../test/setup/nuxt-stubs'
 beforeEach(() => {
   resetAllStubs()
   ;(globalThis as any).fetch = vi.fn()
+  // 图片上传会调用 compressImage（auto-import）：默认返回一个 webp 命名的压缩文件
+  ;(globalThis as any).compressImage = vi.fn(async (file: File) =>
+    new File(['compressed'], file.name.replace(/\.(png|jpe?g|gif|bmp|webp)$/i, '.webp'), { type: 'image/webp' }),
+  )
 })
 
 describe('composables/useFileUploader - fileList & addUrl', () => {
@@ -102,6 +106,34 @@ describe('composables/useFileUploader - uploadFiles', () => {
     expect(fileList.value[0].status).toBe('success')
     expect(fileList.value[0].url).toBe('https://cdn.com/x.jpg')
     expect(calls).toEqual(['https://cdn.com/x.jpg'])
+  })
+
+  it('图片文件上传前先压缩为 webp', async () => {
+    const compressMock = (globalThis as any).compressImage
+    ;(globalThis as any).fetch = vi.fn().mockResolvedValue({
+      json: async () => ({ success: true, data: { url: 'https://cdn.com/x.webp' } }),
+    })
+    const { useFileUploader } = await import('../../composables/useFileUploader')
+    const { fileList, uploadFiles } = useFileUploader(() => false, () => {})
+    const file = new File(['data'], 'pic.png', { type: 'image/png' })
+    await uploadFiles([file])
+    // 调用了 compressImage
+    expect(compressMock).toHaveBeenCalledWith(file)
+    // 列表项使用压缩后的 webp 文件名
+    expect(fileList.value[0].name).toBe('pic.webp')
+    expect(fileList.value[0].status).toBe('success')
+  })
+
+  it('非图片文件不调用 compressImage', async () => {
+    const compressMock = (globalThis as any).compressImage
+    ;(globalThis as any).fetch = vi.fn().mockResolvedValue({
+      json: async () => ({ success: true, data: { url: 'https://cdn.com/x.zip' } }),
+    })
+    const { useFileUploader } = await import('../../composables/useFileUploader')
+    const { fileList, uploadFiles } = useFileUploader(() => false, () => {})
+    await uploadFiles([new File(['x'], 'a.zip', { type: 'application/zip' })])
+    expect(compressMock).not.toHaveBeenCalled()
+    expect(fileList.value[0].status).toBe('success')
   })
 
   it('上传失败时设置 status=error', async () => {

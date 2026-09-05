@@ -57,8 +57,25 @@ watch(() => props.modelValue, (val) => {
   const existing = new Set(fileList.value.map(f => f.url).filter(Boolean))
   for (const url of urls) {
     if (url && !existing.has(url)) {
-      fileList.value.push({ name: getFileNameFromUrl(url), size: 0, status: 'success', url })
+      const item = { name: getFileNameFromUrl(url), size: 0, status: 'success', url }
+      fileList.value.push(item)
+      // 历史 url 只含哈希路径：异步从服务端补全原始文件名与大小（失败保留 url 解析名）
+      fetchFileMeta(url, item)
     }
   }
 }, { immediate: true, deep: true })
+
+// 通过 /api/files/meta 按 pathname 补全文件元数据（name/size）
+async function fetchFileMeta(url, item) {
+  try {
+    const u = new URL(url, window.location.origin)
+    const pathname = u.searchParams.get('pathname')
+    if (!pathname) return
+    const data = await cRequest(`/api/files/meta?pathname=${encodeURIComponent(pathname)}`)
+    if (data?.name) item.name = data.name
+    if (data?.size != null) item.size = Number(data.size)
+  } catch {
+    // 补全失败保持 url 解析名
+  }
+}
 </script>

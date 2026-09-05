@@ -80,7 +80,13 @@ export default eventHandler(async (event) => {
       userId: user.id, uploadRoot: UPLOAD_ROOT,
     })
     return cResp(
-      { id, url: `/api/files/serve?pathname=${encodeURIComponent(finalDbPath.replace(/^\/+/, ''))}` },
+      {
+        id,
+        url: `/api/files/serve?pathname=${encodeURIComponent(finalDbPath.replace(/^\/+/, ''))}`,
+        // 原始文件名 + 落盘字节数：前端列表展示用（历史数据可经 /api/files/meta 补全）
+        name: originalName,
+        size: buffer.length,
+      },
       deduplicated ? '文件已存在' : '上传成功', true,
     )
   } catch (err: any) {

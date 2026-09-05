@@ -701,3 +701,30 @@ describe('API: files/usage.get', () => {
     expect(result.data.free).toBe(0)
   })
 })
+
+// ====================== files/meta.get.ts ======================
+describe('API: files/meta.get', () => {
+  it('未登录返回 401', async () => {
+    setMockAuthState(null)
+    const handler = (await import('../../server/api/files/meta.get')).default
+    await expect(handler(makeEvent(undefined, { pathname: '2026/x.png' }))).rejects.toThrow()
+  })
+
+  it('按 pathname 返回原始文件名与大小', async () => {
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    _mockDb.query.files.findFirst = vi.fn().mockResolvedValue({ name: '原图.png', size: 2048, path: '2026/x.png' })
+    const handler = (await import('../../server/api/files/meta.get')).default
+    const r = await handler(makeEvent(undefined, { pathname: '2026%2Fx.png' }))
+    expect(r.success).toBe(true)
+    expect(r.data.name).toBe('原图.png')
+    expect(r.data.size).toBe(2048)
+  })
+
+  it('文件不存在返回失败', async () => {
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    _mockDb.query.files.findFirst = vi.fn().mockResolvedValue(null)
+    const handler = (await import('../../server/api/files/meta.get')).default
+    const r = await handler(makeEvent(undefined, { pathname: '2026/none.png' }))
+    expect(r.success).toBe(false)
+  })
+})
