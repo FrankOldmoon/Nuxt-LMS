@@ -31,13 +31,20 @@ export async function updateUserQuizBestScore(args: {
   quizCid: number
   records: any
   bestScore: number
+  /** 本次提交的得分（用于判断是否刷新了最高分） */
+  totalScore: number
+  /** 历史最高分（null 表示无记录，但本函数只在已有记录时调用） */
+  existingScore: number
   newSubmitCount: number
   existingStartedAt: Date
   now: Date
 }) {
-  const { userId, courseId, quizCid, records, bestScore, newSubmitCount, existingStartedAt, now } = args
+  const { userId, courseId, quizCid, records, bestScore, totalScore, existingScore, newSubmitCount, existingStartedAt, now } = args
+  // 只有本次提交刷新了最高分时才覆盖每题明细（records），
+  // 否则保留历史最高分那次的明细，避免"总分与每题对错"自相矛盾
+  const scoreHigher = totalScore > existingScore
   await db.update(schema.userQuizzes).set({
-    records,
+    records: scoreHigher ? records : undefined,
     score: String(bestScore),
     submitCount: newSubmitCount,
     startedAt: existingStartedAt,

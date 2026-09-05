@@ -230,6 +230,13 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
     }
 
     function startQuiz() {
+        // 防止重复调用（连点/重复进入时重复发送 start_only）
+        if (started.value) return
+        // 未登录不能开始答题（与提交时校验一致，避免游客白答题倒计时）
+        if (!isLoggedIn.value) {
+            toast.add({ title: t('common.loginRequired'), color: 'warning' })
+            return
+        }
         started.value = true
         submitted.value = false
         resultScore.value = null
@@ -248,7 +255,7 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
         cRequest('/api/quizzes/submit', {
             method: 'POST',
             body: {
-                course_id: courseId.value,
+                course_id: effectiveCourseId.value,
                 quiz_cid: quizId.value,
                 records: [],
                 start_only: true,
@@ -336,7 +343,7 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
             const result = await cRequest('/api/quizzes/submit', {
                 method: 'POST',
                 body: {
-                    course_id: courseId.value,
+                    course_id: effectiveCourseId.value,
                     chapter_id: chapterId?.value || 0,
                     quiz_cid: quizId.value,
                     records,
@@ -374,16 +381,19 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
                 description: err?.message,
                 color: 'error',
             })
-            if (remainingTime.value > 0) {
-                timerInterval = setInterval(() => {
-                    remainingTime.value = Math.max(0, remainingTime.value - 1)
-                    updateAnsweredSet()
-                    if (remainingTime.value <= 0) {
-                        clearInterval(timerInterval)
-                        submitQuiz()
-                    }
-                }, 1000)
+            // 超时自动提交失败：给 60 秒缓冲重新计时，避免卡在 00:00 无法再提交
+            if (remainingTime.value <= 0) {
+                remainingTime.value = 60
+                totalTime.value = Math.max(totalTime.value, 60)
             }
+            timerInterval = setInterval(() => {
+                remainingTime.value = Math.max(0, remainingTime.value - 1)
+                updateAnsweredSet()
+                if (remainingTime.value <= 0) {
+                    clearInterval(timerInterval)
+                    submitQuiz()
+                }
+            }, 1000)
         } finally {
             submitting.value = false
         }

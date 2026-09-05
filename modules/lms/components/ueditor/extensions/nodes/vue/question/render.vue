@@ -65,6 +65,7 @@ const props = defineProps({
     question: Object,
     inQuiz: { type: Boolean, default: false },
     courseId: { type: Number, default: undefined },
+    initialRecord: { type: Object, default: undefined },
 })
 const emit = defineEmits(['init', 'submitted'])
 

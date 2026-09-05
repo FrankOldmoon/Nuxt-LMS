@@ -214,7 +214,12 @@
     "passScore": "通过分",
     "passed": "已通过",
     "notPassed": "未通过",
-    "submitCount": "已提交 {n} 次"
+    "submitCount": "已提交 {n} 次",
+    "submittedCount": "已提交 {n}/{total}",
+    "avgScore": "平均分 {n}",
+    "passRate": "及格率 {n}%",
+    "topScore": "最高分 {n}",
+    "question": "题目"
   },
   "race": {
     "label": "抢答",

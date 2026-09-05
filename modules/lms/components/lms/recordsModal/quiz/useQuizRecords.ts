@@ -23,21 +23,37 @@ export function useQuizRecords(props: QuizRecordsProps, emit: QuizRecordsEmit) {
     const rows = ref<any[]>([])
     const pending = ref(false)
 
-    // 额外列：总分 + 正确率 + 提交次数 + 每道题一列
+    // 额外列：总分 + 正确率 + 提交次数 + 每道题一列 + 答卷
+    // canSort 时通过 accessorFn 从 row.record 嵌套字段取值（TanStack 默认按 accessorKey 取顶层字段，取不到值排序会失效）
     const extraColumns = computed(() => {
         const cols = [
-            { id: 'score', header: t('quiz.score'), canSort: true },
-            { id: 'correctRate', header: t('quiz.correctRate'), canSort: true },
-            { id: 'submitCount', header: t('quiz.submitLimit'), canSort: true },
+            {
+                id: 'score', header: t('quiz.score'), canSort: true,
+                accessorFn: (row: any) => (row.record ? Number(row.record.score) : -1),
+            },
+            {
+                id: 'correctRate', header: t('quiz.correctRate'), canSort: true,
+                accessorFn: (row: any) => (row.record && props.quizPoint > 0 ? (Number(row.record.score) || 0) / props.quizPoint : -1),
+            },
+            {
+                id: 'submitCount', header: t('quiz.submitLimit'), canSort: true,
+                accessorFn: (row: any) => (row.record?.submitCount ?? -1),
+            },
         ]
-        // 每道题一列，列名为 Q1/Q2/...
+        // 每道题一列，列名为 Q1/Q2/...（未作答/无记录取 -1 排在最后）
         props.questions.forEach((q, idx) => {
             cols.push({
                 id: `q${q.id}`,
                 header: `Q${idx + 1}`,
                 canSort: true,
+                accessorFn: (row: any) => {
+                    const r = getQuestionRecord(row, q.id)
+                    return r ? Number(r.rate) || 0 : -1
+                },
             })
         })
+        // 答卷操作列
+        cols.push({ id: 'detail', header: t('record.viewDetail') })
         return cols
     })
 
@@ -49,6 +65,22 @@ export function useQuizRecords(props: QuizRecordsProps, emit: QuizRecordsEmit) {
         if (!Array.isArray(records)) return null
         return records.find(r => Number(r.questionCid) === Number(questionCid)) || null
     }
+
+    // ====================== 统计概览 ======================
+    const summary = computed(() => {
+        const total = rows.value.length
+        const submitted = rows.value.filter(r => r.record)
+        const scores = submitted.map(r => Number(r.record.score) || 0)
+        const passed = submitted.filter(r => r.record.isPassed).length
+        return {
+            total,
+            submitted: submitted.length,
+            avgScore: scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length * 10) / 10 : 0,
+            passCount: passed,
+            passRate: submitted.length ? Math.round((passed / submitted.length) * 100) : 0,
+            topScore: scores.length ? Math.max(...scores) : 0,
+        }
+    })
 
     function buildRows(recordsData) {
         const recordMap = new Map((recordsData || []).map(r => [r.userId, r.record]))
@@ -94,21 +126,45 @@ export function useQuizRecords(props: QuizRecordsProps, emit: QuizRecordsEmit) {
         if (val) fetchRecords()
     })
 
+    // ====================== 答卷详情弹窗 ======================
+    const detailOpen = ref(false)
+    const detailRow = ref<any>(null)
+
+    function openDetail(row) {
+        if (!row?.record) return
+        detailRow.value = row
+        detailOpen.value = true
+    }
+    function closeDetail() {
+        detailOpen.value = false
+        detailRow.value = null
+    }
+
+    // 该生某道题的作答（传给 QuestionRender 预填）
+    function getInitialRecord(questionCid: number) {
+        const r = detailRow.value ? getQuestionRecord(detailRow.value, questionCid) : null
+        return r ? { record: Array.isArray(r.answer) ? r.answer : [], rate: Number(r.rate) || 0 } : null
+    }
+
+    // 及格判定：优先用后端 isPassed（与判分 passScore 一致），兜底按 60%
     function scoreClass(record: any) {
-        const score = Number(record.score) || 0
+        if (record?.isPassed !== undefined) {
+            return record.isPassed ? 'text-green-600 dark:text-green-300' : 'text-red-600 dark:text-red-300'
+        }
+        const score = Number(record?.score) || 0
         const passScore = props.quizPoint * 0.6
-        if (score >= passScore) return 'text-green-600 dark:text-green-300'
-        return 'text-red-600 dark:text-red-300'
+        return score >= passScore ? 'text-green-600 dark:text-green-300' : 'text-red-600 dark:text-red-300'
     }
 
     function formatRate(record) {
-        const score = Number(record.score) || 0
+        const score = Number(record?.score) || 0
         const rate = props.quizPoint > 0 ? score / props.quizPoint : 0
         return `${Math.round(rate * 100)}%`
     }
 
     function rateIcon(record) {
-        const score = Number(record.score) || 0
+        if (record?.isPassed !== undefined && record.isPassed) return 'i-heroicons-check-circle'
+        const score = Number(record?.score) || 0
         const rate = props.quizPoint > 0 ? score / props.quizPoint : 0
         if (rate >= 0.6) return 'i-heroicons-check-circle'
         if (rate > 0) return 'i-heroicons-exclamation-circle'
@@ -116,7 +172,8 @@ export function useQuizRecords(props: QuizRecordsProps, emit: QuizRecordsEmit) {
     }
 
     function rateIconClass(record) {
-        const score = Number(record.score) || 0
+        if (record?.isPassed !== undefined && record.isPassed) return 'text-green-500'
+        const score = Number(record?.score) || 0
         const rate = props.quizPoint > 0 ? score / props.quizPoint : 0
         if (rate >= 0.6) return 'text-green-500'
         if (rate > 0) return 'text-yellow-500'
@@ -126,5 +183,6 @@ export function useQuizRecords(props: QuizRecordsProps, emit: QuizRecordsEmit) {
     return {
         open, rows, pending, extraColumns, defaultSort,
         getQuestionRecord, scoreClass, formatRate, rateIcon, rateIconClass,
+        summary, detailOpen, detailRow, openDetail, closeDetail, getInitialRecord,
     }
 }

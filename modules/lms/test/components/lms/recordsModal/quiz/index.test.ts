@@ -36,6 +36,12 @@ vi.mock('../../../../../components/lms/recordsModal/quiz/useQuizRecords', () => 
       formatRate: () => '0%',
       rateIcon: () => 'i-lucide-check',
       rateIconClass: () => '',
+      summary: computed(() => ({ total: 0, submitted: 0, avgScore: 0, passCount: 0, passRate: 0, topScore: 0 })),
+      detailOpen: ref(false),
+      detailRow: ref(null),
+      openDetail: () => {},
+      closeDetail: () => {},
+      getInitialRecord: () => null,
     }
   },
 }))

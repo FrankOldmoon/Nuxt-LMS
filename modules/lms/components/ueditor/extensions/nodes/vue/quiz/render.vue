@@ -19,11 +19,11 @@
 
         <!-- 记录弹窗（仅教师） -->
         <LmsRecordsModalQuiz v-if="isTeacher" v-model="recordsOpen"
-            :course-id="courseId" :cid="quizId"
+            :course-id="effectiveCourseId" :cid="quizId"
             :quiz-point="quiz.point || 100" :questions="quizQuestions" />
 
         <!-- 编辑弹窗 -->
-        <Edit v-model="editOpen" :quiz-id="quizId" :quiz="quiz" @saved="onSaved" />
+        <Edit v-model="editOpen" :quiz-id="quizId" :quiz="quiz" :course-id="effectiveCourseId" @saved="onSaved" />
     </div>
 </template>
 
@@ -41,7 +41,7 @@ const props = defineProps({
 const emit = defineEmits(['saved'])
 
 const {
-    t, courseId, moduleLms, QuizRecordsModal, quiz, pending, quizId,
+    t, effectiveCourseId, moduleLms, QuizRecordsModal, quiz, pending, quizId,
     isTeacher, editOpen, recordsOpen, quizQuestions, userRecord,
     started, submitted, resultScore, onHover, onSaved, refresh,
 } = useQuizRender(props, emit)

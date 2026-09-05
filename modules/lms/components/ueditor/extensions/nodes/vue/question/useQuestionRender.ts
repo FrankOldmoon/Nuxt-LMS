@@ -25,6 +25,8 @@ export interface QuestionRenderProps {
     question?: any
     inQuiz?: boolean
     courseId?: number
+    /** 预先回填的学生作答（答卷回显）：{ record: 答案数组, rate?: 得分比 } */
+    initialRecord?: { record: any[]; rate?: number }
 }
 
 export type QuestionRenderEmit = (event: 'init' | 'submitted', ...args: any[]) => void
@@ -48,10 +50,13 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
     const chapterTask = useChapterTask()
     const toast = useToast()
 
-    // race 模式：显示提交按钮但不向后端提交 question 记录
+    // race 模式：判分由 useRaceRender 走 verify 接口（show 不下发答案，本地无法判定），
+    // 这里仅进入"已提交"状态 + 通知 race 显式提交
     const inRace = inject('inRace', false)
     // evaluation 评估对话内联题目答题回调
     const onEvaluationAnswered = inject('onEvaluationAnswered', null)
+    // race 提交回调：由 race/useRaceRender 注入（inRace 模式下点击提交时调用）
+    const onRaceSubmit = inject('onRaceSubmit', null)
 
     const isLoggedIn = computed(() => !!user.value)
 
@@ -157,9 +162,10 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
         if (!renderRef.value) return
         if (inRace) {
             // 竞赛模式：判分由 useRaceRender 走 verify 接口（show 不下发答案，本地无法判定），
-            // 这里仅进入"已提交"状态
+            // 这里仅进入"已提交"状态并通知 race 显式提交
             submitted.value = true
             fromRecord.value = false
+            onRaceSubmit?.()
             return
         }
         const result = await renderRef.value.submit()
@@ -234,6 +240,8 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
     })
 
     const question = ref<any>(props.question || defaultQuestion)
+    // 答卷回显：每题只应用一次 initialRecord（key = questionId）
+    const appliedInitialKey = ref<string | null>(null)
     watch([() => props.question, () => inlineQuestion.value, fetchedQuestion, questionId], () => {
         if (props.question) { question.value = props.question; return }
         if (inlineQuestion.value) {
@@ -251,6 +259,11 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
         } else if (fetchedQuestion.value) {
             // show 已按角色剥离 answer/explanation（教师视角有明文，学生无）
             question.value = fetchedQuestion.value
+            // 答卷回显：题目数据就绪后预填学生作答（组件挂载时 immediate watch 会同步到题型 UI）
+            if (props.initialRecord && appliedInitialKey.value !== String(questionId.value)) {
+                appliedInitialKey.value = String(questionId.value)
+                fillFromRecord(props.initialRecord.record, props.initialRecord.rate)
+            }
         }
     }, { immediate: true, flush: 'sync' })
 

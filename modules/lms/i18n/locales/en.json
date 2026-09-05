@@ -214,7 +214,12 @@
     "passScore": "Pass Score",
     "passed": "Passed",
     "notPassed": "Not passed",
-    "submitCount": "Submitted {n} times"
+    "submitCount": "Submitted {n} times",
+    "submittedCount": "Submitted {n}/{total}",
+    "avgScore": "Avg {n}",
+    "passRate": "Pass rate {n}%",
+    "topScore": "Top {n}",
+    "question": "Question"
   },
   "race": {
     "label": "Race",

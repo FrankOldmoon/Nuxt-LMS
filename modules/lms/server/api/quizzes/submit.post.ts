@@ -36,7 +36,16 @@ export default eventHandler(async (event) => {
   })
   if (!quiz) return cResp(null, '测验不存在', false)
 
-  // 2. 查找已有记录
+  // 2.5 开放时间校验（start_only 与正常提交都生效，与前端 canStart 对齐）
+  const nowTs = new Date()
+  if (quiz.startAt && nowTs < new Date(quiz.startAt)) {
+    return cResp(null, '测验尚未开始', false)
+  }
+  if (quiz.endAt && nowTs > new Date(quiz.endAt)) {
+    return cResp(null, '测验已结束', false)
+  }
+
+  // 3. 查找已有记录
   const existing = await db.query.userQuizzes.findFirst({
     where: and(
       eq(schema.userQuizzes.userId, user.id),
@@ -71,13 +80,21 @@ export default eventHandler(async (event) => {
       })
     : []
   const questionMap = new Map(quizQuestions.map(q => [Number(q.cid), q]))
+  // 测验内每题的配置分值（优先于 questions 表自身的 point，同一题可在不同测验配不同分值）
+  const quizPointMap = new Map(
+    (Array.isArray(quiz.questions) ? quiz.questions : [])
+      .filter((q: any) => q && typeof q === 'object')
+      .map((q: any) => [Number(q.id), Number(q.point) || 0]),
+  )
 
   const verifiedRecords = (Array.isArray(records) ? records : [])
     .filter((r: any) => r && questionMap.has(Number(r.questionCid)))
     .map((r: any) => {
       const q = questionMap.get(Number(r.questionCid))!
       const rate = computeServerRate(q, r.answer)
-      return { questionCid: Number(r.questionCid), answer: r.answer ?? [], rate, point: Number(q.point) || 0 }
+      // 分值优先用测验内配置，未配置时回退 questions 表分值
+      const point = quizPointMap.get(Number(r.questionCid)) || Number(q.point) || 0
+      return { questionCid: Number(r.questionCid), answer: r.answer ?? [], rate, point }
     })
 
   // 6. 计算分数 + 经验
@@ -96,7 +113,8 @@ export default eventHandler(async (event) => {
     const bestScore = Math.max(existingBestScore!, totalScore)
     await updateUserQuizBestScore({
       userId: user.id, courseId, quizCid, records: verifiedRecords,
-      bestScore, newSubmitCount, existingStartedAt: existing.startedAt, now,
+      bestScore, totalScore, existingScore: existingBestScore!,
+      newSubmitCount, existingStartedAt: existing.startedAt, now,
     })
   } else {
     await insertUserQuiz({ userId: user.id, courseId, quizCid, records: verifiedRecords, totalScore, now })

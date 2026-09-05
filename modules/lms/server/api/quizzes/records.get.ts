@@ -43,13 +43,23 @@ export default eventHandler(async (event) => {
     ),
   })
 
+  // 及格判定与判分保持一致：lms_config.quiz.passScore（绝对分数，默认 60）
+  const config = await getCourseLmsConfig(courseId)
+  const passScore = Number(config?.quiz?.passScore) || 60
+
   const recordMap = new Map(records.map(r => [r.userId, r]))
   const result = studentIds
     .filter(id => recordMap.has(id))
-    .map(id => ({
-      userId: id,
-      record: recordMap.get(id),
-    }))
+    .map(id => {
+      const rec = recordMap.get(id)!
+      return {
+        userId: id,
+        record: {
+          ...rec,
+          isPassed: (Number(rec.score) || 0) >= passScore,
+        },
+      }
+    })
 
   return cResp(result)
 })
