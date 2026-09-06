@@ -91,7 +91,7 @@ export default defineNuxtModule({
     nuxt.options.nitro = {
       ...nuxt.options.nitro,
       compressPublicAssets: {
-        gzip: true,
+        gzip: false,
         brotli: true,
       },
       experimental: {
