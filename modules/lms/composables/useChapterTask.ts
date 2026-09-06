@@ -84,7 +84,9 @@ export function setupChapterTask(opts: {
   const { checkMedals } = useMedals()
 
   const taskMap = computed(() => {
-    const map = extractChapterTasks(opts.content.value)
+    // preHeadingId = 合成 h1 的 id（chapterId）：第一个 heading 之前就出现的
+    // question/homework 等可提交任务归属章节标题 heading，正确阻塞其完成
+    const map = extractChapterTasks(opts.content.value, String(opts.chapterId.value))
     // 将章节标题（h1）作为第一个 heading 加入任务列表，id 为 chapterId
     // 这样 TOC 进度汇总和 isPass 计算都会包含章节标题
     if (opts.chapterTitle?.value) {
@@ -253,8 +255,10 @@ export function setupChapterTask(opts: {
   /**
    * hover 章节标题（一级标题）即完成该标题。
    * 与"自动完成"并存：sticky，一旦完成不再回退。
+   * 未登录时不高亮不记录（与 markBlockRead 的登录门控一致）。
    */
   function completeChapterHeading() {
+    if (!user.value) return
     const hid = String(opts.chapterId.value)
     if (taskStatus.value[hid]) return
     taskStatus.value = { ...taskStatus.value, [hid]: true }

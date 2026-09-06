@@ -36,11 +36,18 @@ export interface ChapterTaskMap {
 
 /**
  * 从 tiptap JSON content 中提取 heading 列表与每个 heading 下的可提交任务
+ *
+ * @param preHeadingId 第一个 heading 之前内容的归属 heading id
+ *   （章节页传合成 h1 的 id = chapterId，使开头就出现的 question/homework
+ *   等可提交任务正确阻塞章节标题的完成；不传则丢弃，保持旧行为）
  */
-export function extractChapterTasks(content: Record<string, any> | null | undefined): ChapterTaskMap {
+export function extractChapterTasks(
+  content: Record<string, any> | null | undefined,
+  preHeadingId?: string,
+): ChapterTaskMap {
   const headings: HeadingInfo[] = []
   const tasksByHeading: Record<string, HeadingTask[]> = {}
-  let currentHeadingId: string | null = null
+  let currentHeadingId: string | null = preHeadingId ?? null
 
   function walk(node: any) {
     if (!node) return
