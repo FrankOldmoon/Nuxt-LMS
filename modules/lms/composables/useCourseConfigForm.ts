@@ -54,7 +54,7 @@ export function useCourseConfigForm(form?: Ref<CourseBasicForm>) {
 
   async function loadGlobalLmsConfig() {
     try {
-      const data = await cRequest<any>('/api/config/get')
+      const data = await cRequest<any>('/api/config/lms')
       globalLmsConfig.value = data || {}
     } catch {
       globalLmsConfig.value = {}

@@ -53,6 +53,8 @@ export function useConfigEditor(props: ConfigEditorProps, emit: (e: 'update:mode
     },
     // OJ 在线评测平台基址（fetchOj / getOjStatus 拼接地址用）
     oj: { url: 'http://10.28.1.155' },
+    // 站点统计（与服务端 defaults/analytics.ts 对齐：留空 = 不注入统计脚本）
+    analytics: { googleTrackingId: '', baiduTrackingId: '' },
   }
 
   const aiModeOpts = computed(() => [

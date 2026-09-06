@@ -75,19 +75,19 @@ describe('API: config/ai.get', () => {
 describe('API: config/get', () => {
   it('未登录返回 401', async () => {
     setMockAuthState(null)
-    const handler = (await import('../../server/api/config/get')).default
+    const handler = (await import('../../server/api/config/lms.get')).default
     await expect(handler(makeEvent())).rejects.toThrow()
   })
 
   it('非教师抛 403', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
-    const handler = (await import('../../server/api/config/get')).default
+    const handler = (await import('../../server/api/config/lms.get')).default
     await expect(handler(makeEvent())).rejects.toThrow()
   })
 
   it('教师：返回全局配置', async () => {
     setMockAuthState({ id: 1, username: 'teacher', roles: ['teacher'], permissions: [] })
-    const handler = (await import('../../server/api/config/get')).default
+    const handler = (await import('../../server/api/config/lms.get')).default
     const result = await handler(makeEvent())
     expect(result.success).toBe(true)
     expect(result.data.ai).toBeDefined()
@@ -95,7 +95,7 @@ describe('API: config/get', () => {
 
   it('教师：传 course_id 返回合并后的配置', async () => {
     setMockAuthState({ id: 1, username: 'teacher', roles: ['teacher'], permissions: [] })
-    const handler = (await import('../../server/api/config/get')).default
+    const handler = (await import('../../server/api/config/lms.get')).default
     const result = await handler(makeEvent({ query: { course_id: 5 } }))
     expect(result.success).toBe(true)
     expect(result.data.courseId).toBe(5)
@@ -103,7 +103,7 @@ describe('API: config/get', () => {
 
   it('管理员：返回全局配置', async () => {
     setMockAuthState({ id: 1, username: 'admin', roles: ['admin'], permissions: [] })
-    const handler = (await import('../../server/api/config/get')).default
+    const handler = (await import('../../server/api/config/lms.get')).default
     const result = await handler(makeEvent())
     expect(result.success).toBe(true)
   })
