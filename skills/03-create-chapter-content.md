@@ -120,6 +120,9 @@ heading 补 `id`/`data-toc-id`（右侧 TOC 可用）。例：
     `{ "type": "code" }` / `{ "type": "textStyle", "attrs": { "color": "#f00", "fontSize": "18px" } }`
 - **行内节点**：image / inlineImage / video / audio / file / iframe / tag / datetime /
   mention / optionBox / footnoteReference / inlineMath / vue（行内版）
+- **图片等资源引用**：一律使用站内 URL（`/api/files/serve?pathname=...`）。外部图片
+  先经 `POST /api/files/upload` 上传（JSON body 直接传 `{ "url": "<外部图片地址>" }`，
+  服务端下载转 webp），拿到 `data.url` 再填入节点 —— 详细见 **skills/07-file-upload.md**
 
 ## 常用节点示例
 

@@ -64,6 +64,14 @@
 供后续"给课程创建目录"使用。每创建一个课程会广播 home-changed 刷新首页导航。
 ```
 
+## 🖼️ 配图：先上传转站内 URL（skills/07）
+
+content / coverImg 里引用的图片**不要直接用外部 URL**。先用文件上传接口把远程图片
+转成站内 URL 再引用——支持直接传外部图片地址让服务端下载并压缩为 webp：
+
+`POST /api/files/upload`，JSON body `{ "url": "<外部图片地址>", "group": "course-<id>" }`，
+返回 `data.url`（站内 `/api/files/serve?pathname=...`），详细规则与查重行为见 **skills/07-file-upload.md**。
+
 ## 重要：创建后可能不显示在 header 菜单
 
 顶部导航（useHeaderNav）通过 **分类的 `orders`** 决定显示哪些课程：
