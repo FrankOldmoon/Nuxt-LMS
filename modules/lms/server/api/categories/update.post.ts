@@ -17,7 +17,9 @@ export default eventHandler(async (event) => {
     // 若更新了 orders，同步更新 course 的 name
     if (setData.orders !== undefined && Array.isArray(setData.orders)) {
       const courseUpdates = (setData.orders as any[])
-        .filter(o => o.id && !o.id.startsWith('custom-') && !isNaN(Number(o.id)))
+        // id 可能是数字（课程）或字符串（'custom-xxx'），统一转字符串判断
+        .filter(o => o.id !== undefined && o.id !== null
+          && !String(o.id).startsWith('custom-') && !isNaN(Number(o.id)))
         .map(o => ({ id: Number(o.id), name: o.label }))
 
       for (const item of courseUpdates) {

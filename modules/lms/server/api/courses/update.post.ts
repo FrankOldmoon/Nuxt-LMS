@@ -26,7 +26,10 @@ export default eventHandler(async (event) => {
     // 若更新了 orders，同步更新 chapter 的 name
     if (setData.orders !== undefined && Array.isArray(setData.orders)) {
       const chapterUpdates = (setData.orders as any[])
-        .filter(o => o.id && !o.id.startsWith('custom-') && o.id !== 'course' && !isNaN(Number(o.id)))
+        // id 可能是数字（章节）或字符串（'course' / 'custom-xxx'），统一转字符串判断
+        .filter(o => o.id !== undefined && o.id !== null
+          && !String(o.id).startsWith('custom-') && String(o.id) !== 'course'
+          && !isNaN(Number(o.id)))
         .map(o => ({ id: Number(o.id), name: o.label }))
 
       for (const item of chapterUpdates) {
