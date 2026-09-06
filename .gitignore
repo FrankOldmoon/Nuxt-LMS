@@ -26,3 +26,4 @@ logs
 ecosystem.config.cjs
 game_assets
 modules/mmo
+.workbuddy

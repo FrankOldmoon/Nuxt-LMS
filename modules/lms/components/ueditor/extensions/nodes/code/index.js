@@ -16,8 +16,8 @@ export default Node.create({
     },
     addKeyboardShortcuts() {
         return {
-            // Cmd/Ctrl+Shift+T：把当前选中块放进 blockquote（再次按下可取消）
-            'Mod-Shift-t': () => this.editor.commands.toggleBlockquote(),
+            // Cmd/Ctrl+Shift+K：把当前选中块放进 blockquote（再次按下可取消）
+            'Mod-Shift-k': () => this.editor.commands.toggleBlockquote(),
         }
     },
 })
