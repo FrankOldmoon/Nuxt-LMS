@@ -18,7 +18,7 @@ import { applyEnvOverride } from './cache/env-override'
  * 1. 读 configs 表所有 lms:* 行（拍平存储）
  * 2. 首次加载时若发现旧版单行 json (id='lms_config')，自动迁移为 lms:* 拍平行
  * 3. 合并 FLAT_DEFAULTS + DB 值 → unflatten 为树 → 写入 _lmsConfig
- * 4. 应用 env 变量覆盖（AI_API_KEY / AI_API_URL / AI_MODEL）
+ * 4. 应用 env 变量兜底（AI_API_KEY / AI_API_URL / AI_MODEL，仅补空字段，DB 值优先）
  */
 export async function reloadLmsConfig(): Promise<any> {
   await migrateLegacyLmsConfigIfNeeded()

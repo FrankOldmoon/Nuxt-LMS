@@ -4,7 +4,7 @@
  *
  * body: { messages, model?, thinking? }
  *
- * API Key / API URL 从 lms_config.ai 读取（env AI_API_KEY / AI_API_URL / AI_MODEL 可覆盖），
+ * API Key / API URL 从 lms_config.ai 读取（DB 优先，env AI_API_KEY / AI_API_URL / AI_MODEL 仅在为空时兜底），
  * 前端不再传递敏感信息；model 可由前端覆盖，默认取 lms_config.ai.model 或 glm-4.5-air
  * 返回 SSE 流式响应（逐块透传，不缓冲），并在流结束前附加 model 与 usage 元数据
  */
@@ -28,7 +28,7 @@ export default eventHandler(async (event) => {
     const body = await readBody(event)
     const { messages, model, thinking } = body
 
-    // 从 lms_config.ai 读取敏感配置（reloadLmsConfig 中已应用 env 覆盖）
+    // 从 lms_config.ai 读取敏感配置（reloadLmsConfig 中已应用 env 兜底：DB 值优先）
     const aiConfig = getLmsConfigSync().ai || {}
     const apiKey = aiConfig.llmApiKey
     const apiUrl = aiConfig.llmApiUrl

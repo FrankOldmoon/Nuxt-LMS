@@ -1,7 +1,7 @@
 /**
  * LMS AI 助手默认配置
  *
- * ai.llmApiKey / ai.llmApiUrl / ai.model 可被 process.env 覆盖（cache.ts 优先级最高）。
+ * ai.llmApiKey / ai.llmApiUrl / ai.model：DB（系统设置）优先，process.env 仅在为空时兜底。
  */
 export const aiDefaults = {
   enabled: true,

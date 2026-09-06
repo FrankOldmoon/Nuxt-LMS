@@ -179,3 +179,31 @@ describe('server/utils/lmsConfig - buildLmsConfigPairs', () => {
     expect(result).toEqual([{ key: 'lms:tags', value: ['a', 'b'] }])
   })
 })
+
+describe('server/utils/lmsConfig - applyEnvOverride（DB 优先，env 仅兜底）', () => {
+  it('DB 已填写的字段不被 env 覆盖', async () => {
+    process.env.AI_API_KEY = 'env-key'
+    process.env.AI_API_URL = 'https://env-url'
+    process.env.AI_MODEL = 'env-model'
+    const { applyEnvOverride } = await import('../../server/utils/lmsConfig/cache/env-override')
+    const cfg: any = { ai: { llmApiKey: 'db-key', llmApiUrl: '', model: undefined } }
+    applyEnvOverride(cfg)
+    expect(cfg.ai.llmApiKey).toBe('db-key') // DB 值优先
+    expect(cfg.ai.llmApiUrl).toBe('https://env-url') // 为空时 env 兜底
+    expect(cfg.ai.model).toBe('env-model')
+    delete process.env.AI_API_KEY
+    delete process.env.AI_API_URL
+    delete process.env.AI_MODEL
+  })
+
+  it('ai 段不存在时创建并全部走 env 兜底', async () => {
+    delete process.env.AI_API_KEY
+    process.env.AI_API_URL = 'https://env-url'
+    const { applyEnvOverride } = await import('../../server/utils/lmsConfig/cache/env-override')
+    const cfg: any = {}
+    applyEnvOverride(cfg)
+    expect(cfg.ai.llmApiKey).toBeUndefined()
+    expect(cfg.ai.llmApiUrl).toBe('https://env-url')
+    delete process.env.AI_API_URL
+  })
+})
