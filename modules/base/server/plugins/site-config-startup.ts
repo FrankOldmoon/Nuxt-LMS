@@ -19,6 +19,11 @@ const OBSERVER_USERNAME = 'observer'
 const OBSERVER_PASSWORD = 'REDACTED'
 const OBSERVER_CLASS = 'observer'
 
+// 固定测试账号配置：test01 ~ test30，班级 test
+const TEST_ACCOUNT_COUNT = 30
+const TEST_CLASS = 'test'
+const TEST_PASSWORD = 'REDACTED'
+
 export default defineNitroPlugin(async () => {
   // 1. 拍平播种：每个 site:* key 独立一行
   try {
@@ -250,5 +255,89 @@ export default defineNitroPlugin(async () => {
     console.log(`[startup] observer 账号就绪 (用户名: ${OBSERVER_USERNAME}, 密码: ${OBSERVER_PASSWORD}, 班级: ${OBSERVER_CLASS})`)
   } catch (e) {
     console.error('[startup] observer 初始化失败', e)
+  }
+
+  // 5. 初始化 30 个测试账号（test01 ~ test30）：学生角色 + 班级 test（全程幂等）
+  try {
+    // 5.1 确保 test 班级存在
+    const testClassRows = await db
+      .select({ id: schema.classes.id })
+      .from(schema.classes)
+      .where(eq(schema.classes.code, TEST_CLASS))
+      .limit(1)
+    let testClassId = testClassRows[0]?.id
+    if (!testClassId) {
+      await db.insert(schema.classes).values({ name: TEST_CLASS, code: TEST_CLASS }).onConflictDoNothing()
+      testClassId = (await db
+        .select({ id: schema.classes.id })
+        .from(schema.classes)
+        .where(eq(schema.classes.code, TEST_CLASS))
+        .limit(1))[0]?.id
+    }
+
+    // 5.2 确保 student 角色存在
+    const studentRoleRows = await db
+      .select({ id: schema.roles.id })
+      .from(schema.roles)
+      .where(eq(schema.roles.code, 'student'))
+      .limit(1)
+    let studentRoleId = studentRoleRows[0]?.id
+    if (!studentRoleId) {
+      await db.insert(schema.roles).values({ name: '学生', code: 'student' }).onConflictDoNothing()
+      studentRoleId = (await db
+        .select({ id: schema.roles.id })
+        .from(schema.roles)
+        .where(eq(schema.roles.code, 'student'))
+        .limit(1))[0]?.id
+    }
+
+    if (!testClassId || !studentRoleId) {
+      console.error('[startup] test 班级或 student 角色创建失败')
+      return
+    }
+
+    // 5.3 逐个创建 test01 ~ test30 账号（不存在才创建）
+    const hashedPwd = await hashPassword(TEST_PASSWORD)
+    let created = 0
+    for (let i = 1; i <= TEST_ACCOUNT_COUNT; i++) {
+      const username = `test${String(i).padStart(2, '0')}`
+
+      const existing = await db
+        .select({ id: schema.users.id })
+        .from(schema.users)
+        .where(eq(schema.users.username, username))
+        .limit(1)
+      if (existing.length > 0) continue
+
+      await db.insert(schema.users).values({
+        username,
+        password: hashedPwd,
+        name: username,
+        preferName: username,
+        englishName: username,
+        gender: 'other',
+        email: `${username}@university.edu.cn`,
+        strongPwd: false,
+        defaultLocale: 'zh-CN',
+        avatarImg: '/avatar.webp',
+        classId: testClassId,
+      }).onConflictDoNothing()
+
+      const [newUser] = await db
+        .select({ id: schema.users.id })
+        .from(schema.users)
+        .where(eq(schema.users.username, username))
+        .limit(1)
+      if (!newUser) continue
+
+      // 绑定 student 角色 + 加入 test 班级（幂等）
+      await db.insert(schema.userRoles).values({ userId: newUser.id, roleId: studentRoleId }).onConflictDoNothing()
+      await db.insert(schema.userClasses).values({ userId: newUser.id, classId: testClassId, isTeacher: false }).onConflictDoNothing()
+      created++
+    }
+
+    console.log(`[startup] test 测试账号就绪 (test01 ~ test${String(TEST_ACCOUNT_COUNT).padStart(2, '0')}, 本次新建 ${created} 个, 密码: ${TEST_PASSWORD}, 班级: ${TEST_CLASS})`)
+  } catch (e) {
+    console.error('[startup] test 测试账号初始化失败', e)
   }
 })
