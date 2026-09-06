@@ -58,7 +58,9 @@ export default eventHandler(async (event) => {
         return m
     })
 
-    const url = apiUrl.replace(/\/$/, '') + '/chat/completions'
+    // 兼容两种配置写法：base URL（https://host/v1）或完整端点（已含 /chat/completions）
+    const trimmed = apiUrl.replace(/\/$/, '')
+    const url = /\/chat\/completions$/.test(trimmed) ? trimmed : trimmed + '/chat/completions'
     const defaultModel = safeModel || aiConfig.model || "glm-4.5-air";
 
     // 构建请求体
@@ -70,8 +72,9 @@ export default eventHandler(async (event) => {
         stream_options: { include_usage: true },
     }
 
-    // 开启思考模式（GLM 等模型支持）
-    requestBody.thinking = { type: thinking ? 'enabled' : 'disabled' }
+    // 开启思考模式（GLM 等模型支持）。仅显式开启时发送；
+    // 部分模型（如 glm-5.3-flash）始终思考、不支持 disabled，省略字段以兼容
+    if (thinking) requestBody.thinking = { type: 'enabled' }
 
     // 转发到 OpenAI 兼容接口，请求流式响应
     const upstream = await fetch(url, {
