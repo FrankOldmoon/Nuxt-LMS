@@ -164,13 +164,27 @@ export function useClassUsersTable(
     return group.startsWith('c_') ? group.slice(2) : group
   }
 
-  async function fetchGroupData() {
+  // 分组数据缓存 key：classId:courseId + students 内容签名。
+  // students 每 2 秒被章节得分轮询更新（新数组引用），但内容未变时不应重复请求，
+  // 因此用稳定的内容签名代替引用比较，内容一致则复用上次结果。
+  let _groupCacheKey = ''
+  let _groupLoaded = false
+  function groupCacheKey(): string {
+    const sig = students.value.map((s: any) => s.id).join(',')
+    return `${props.classId || ''}:${currentCourseId.value || ''}:${sig}`
+  }
+
+  async function fetchGroupData(force = false) {
     if (!currentCourseId.value || !props.classId) return
+    if (!force && _groupLoaded && _groupCacheKey === groupCacheKey()) return
+    _groupCacheKey = groupCacheKey()
     try {
       const data = await cRequest(`/api/courses/groups?courseId=${currentCourseId.value}&classId=${props.classId}`)
       buildGroupRows(data || [])
+      _groupLoaded = true
     } catch {
       groupRows.value = []
+      _groupLoaded = true
     }
   }
 
@@ -272,11 +286,22 @@ export function useClassUsersTable(
     }
   })
 
-  watch([() => props.classId, currentCourseId, students], () => {
+  // 切换班级/课程时强制重新拉取分组；students 内容变化时按缓存 key 判断是否需刷新
+  const watchStudentKey = ref('')
+  watch([() => props.classId, currentCourseId], () => {
     if (props.showGroup && props.classId && currentCourseId.value) {
+      _groupCacheKey = ''
+      _groupLoaded = false
       fetchGroupData()
     }
   }, { immediate: true })
+  watch(students, (list) => {
+    if (!props.showGroup || !props.classId) return
+    const key = list.map((s: any) => s.id).join(',')
+    if (key === watchStudentKey.value) return
+    watchStudentKey.value = key
+    fetchGroupData()
+  })
 
   // ====================== 编辑弹窗 ======================
   const editModal = ref<{ show: () => void } | null>(null)

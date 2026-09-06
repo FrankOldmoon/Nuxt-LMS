@@ -2,7 +2,7 @@ import { ref, computed, watch, onBeforeUnmount, nextTick } from 'vue'
 
 export function useToc() {
     const { hasRole, user } = useAuth()
-    const { isCourseEditor } = useAuthLms()
+    const { isCourseEditor, isCourseTeacher } = useAuthLms()
     const toast = useToast()
     const { t } = useI18n()
     const ueditorRef = ref()
@@ -303,13 +303,22 @@ export function useToc() {
     // 聚合 loading + 下拉菜单项
     const downloading = computed(() => exportingPpt.value || exportingPdf.value || exportingJson.value)
 
-    const downloadItems = computed(() => [
-        [
+    // 下载 JSON 仅限本课老师（课程任课教师或管理员）可见
+    const canExportJson = computed(() => {
+        if (hasRole('admin')) return true
+        return courseId.value ? isCourseTeacher(Number(courseId.value)) : false
+    })
+
+    const downloadItems = computed(() => {
+        const items = [
             { label: t('chapter.exportPpt'), icon: 'i-lucide-presentation', onSelect: handleExportPpt },
             { label: t('chapter.exportPdf'), icon: 'i-lucide-file-text', onSelect: handleExportPdf },
-            { label: t('chapter.exportJson'), icon: 'i-lucide-braces', onSelect: handleExportJson },
-        ],
-    ])
+        ]
+        if (canExportJson.value) {
+            items.push({ label: t('chapter.exportJson'), icon: 'i-lucide-braces', onSelect: handleExportJson })
+        }
+        return [items]
+    })
 
     return {
         chapterBtnsConfig, chapterPageCfg, playFullscreen, togglePlay,

@@ -1,5 +1,6 @@
 <template>
-  <component :is="tag" :class="containerClass" :data-type="dataType" :data-latex="latex" v-html="html"></component>
+  <div v-if="isBlock" :class="containerClass" :data-type="dataType" :data-latex="latex" v-html="html"></div>
+  <span v-else :class="containerClass" :data-type="dataType" :data-latex="latex" v-html="html"></span>
 </template>
 
 <script setup>
@@ -12,7 +13,6 @@ const props = defineProps({
 
 const isBlock = computed(() => props.node.type === 'blockMath')
 const latex = computed(() => props.node.attrs?.latex || '')
-const tag = computed(() => (isBlock.value ? 'div' : 'span'))
 
 function renderKatex(source) {
   return katex.renderToString(source, {

@@ -15,7 +15,7 @@ export async function saveContentVersion(
   type: 'course' | 'chapter',
   id: number,
   content: any,
-  maxKeep = 10,
+  maxKeep = 50,
 ) {
   const table = type === 'course' ? schema.courseVersions : schema.chapterVersions
   const fk = type === 'course' ? schema.courseVersions.courseId : schema.chapterVersions.chapterId

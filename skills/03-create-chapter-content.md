@@ -219,3 +219,37 @@
 ## 顺序建议
 
 1. 建题目（收集 cid）→ 2. 组 tiptap JSON（vue 节点引用 cid）→ 3. `POST /api/chapters/update` 保存 content
+
+## 生成后自检（必做，AI 生成 JSON 后逐条校验）
+
+生成章节内容或题目后，**保存前**用脚本递归检查以下规则，任一不满足即视为错误需修正：
+
+| 规则 | 错误示例 | 正确示例 |
+| --- | --- | --- |
+| ① text 节点 `text` 必须是字符串 | `{"type":"text","text":{"type":"text","text":"内容"}}`（双重嵌套） | `{"type":"text","text":"内容"}` |
+| ② heading 必须带 `id` 和 `data-toc-id` | `{"type":"heading","attrs":{"level":2}}`（TOC 不显示） | `{"type":"heading","attrs":{"level":2,"id":"abc...","data-toc-id":"abc..."}}` |
+| ③ codeBlock 必须带 `language` | `{"type":"codeBlock","content":[...]}`（按纯文本） | `{"type":"codeBlock","attrs":{"language":"markdown"},...}` |
+| ④ text 的 `marks` 必须是数组 | `marks: {marks:[{type:'bold'}]}`（marks is not iterable） | `marks: [{type:'bold'}]` |
+| ⑤ fill 题干须含 `inputs` 节点；select 题干须含 `select` 节点 | 题干只有文本（无输入框） | `{"type":"inputs","attrs":{"content":"答案"}}` / `{"type":"select","attrs":{"content":"选项"}}` |
+| ⑥ 单选/多选选项含 markdown 语法时用 ```markdown 围栏包裹 | 选项直接写 `---`、`**文字**`（被渲染） | `"```markdown\n**文字**\n```"` |
+
+### 快速校验脚本（递归检查 ①②③④⑤）
+
+可对最终 content JSON 运行，输出违规列表：
+
+```js
+function validateContent(node, issues = []) {
+  if (!node || typeof node !== 'object') return issues
+  if (node.type === 'text') {
+    if (typeof node.text !== 'string') issues.push('text.text 非字符串')
+    if (node.marks !== undefined && !Array.isArray(node.marks)) issues.push('marks 不是数组')
+  }
+  if (node.type === 'heading' && !node.attrs?.id) issues.push('heading 缺 id')
+  if (node.type === 'codeBlock' && !node.attrs?.language) issues.push('codeBlock 缺 language')
+  if (Array.isArray(node.content)) node.content.forEach(n => validateContent(n, issues))
+  else if (node.content && typeof node.content === 'object') validateContent(node.content, issues)
+  return issues
+}
+```
+
+> ⑤ 用题目层校验：fill 的 content 里 `JSON.stringify(content).includes('"inputs"')` 必须为 true；select 同理查 `'"select"'`。

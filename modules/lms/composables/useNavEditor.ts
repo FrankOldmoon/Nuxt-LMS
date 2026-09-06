@@ -375,6 +375,79 @@ Item B
         })
       })
     )
+
+    // 删除保存后已不在列表中的分类（被用户在编辑器里移除的 Category）
+    await deleteRemovedCategories()
+    // 软删除被移除的既有课程（header/首页不再显示，记录保留可恢复）
+    await softDeleteRemovedCourses()
+  }
+
+  // 软删除在编辑中被移除的课程（对比原始导航与当前列表中的课程 id）
+  // 软删（batch action=delete）仅置 deleted_at，记录保留可从回收站恢复
+  async function softDeleteRemovedCourses() {
+    const originalCourseIds = new Set<string>()
+    // 原始导航中的课程：depth>0 的子项（分类下的课程）
+    function collectCourseIds(items: NavigationMenuItem[]) {
+      for (const item of items) {
+        const children = (item as any).children
+        if (Array.isArray(children)) {
+          for (const child of children) {
+            const id = (child as any)._meta?.id ? String((child as any)._meta.id) : extractId(child)
+            if (id && !id.startsWith('custom-') && !id.startsWith('new-') && !isNaN(Number(id)) && id !== 'course') {
+              originalCourseIds.add(id)
+            }
+          }
+        }
+      }
+    }
+    collectCourseIds(props.navigation)
+    if (originalCourseIds.size === 0) return
+
+    // 保存后仍保留的课程 id（所有非新建层级节点中的数字 id）
+    const keptCourseIds = new Set(
+      flatItems.value
+        .filter((f) => !f.isNew && f.id && f.id !== 'course' && !f.id.startsWith('custom-') && !isNaN(Number(f.id)))
+        .map((f) => String(f.id)),
+    )
+
+    const toDelete = [...originalCourseIds].filter((id) => !keptCourseIds.has(id)).map(Number)
+    if (toDelete.length === 0) return
+
+    await cRequest('/api/courses/batch', {
+      method: 'POST',
+      body: { ids: toDelete, action: 'delete' },
+    })
+  }
+
+  // 找出并硬删除在编辑中被移除的分类（对比原始导航与当前列表的顶层分类 id）
+  async function deleteRemovedCategories() {
+    const originalIds = new Set<string>()
+    function collectCatIds(items: NavigationMenuItem[]) {
+      for (const item of items) {
+        const meta = (item as any)._meta
+        const id = meta?.id ? String(meta.id) : extractId(item)
+        if (!id || id.startsWith('custom-') || id.startsWith('new-') || isNaN(Number(id))) continue
+        originalIds.add(id)
+      }
+    }
+    collectCatIds(props.navigation)
+
+    if (originalIds.size === 0) return
+
+    // 保存后仍保留的顶层分类 id
+    const keptIds = new Set(
+      flatItems.value
+        .filter((f) => f.depth === 0 && !f.isNew && f.id && !f.id.startsWith('custom-') && !isNaN(Number(f.id)))
+        .map((f) => String(f.id)),
+    )
+
+    const toDelete = [...originalIds].filter((id) => !keptIds.has(id)).map(Number)
+    if (toDelete.length === 0) return
+
+    await cRequest('/api/categories/batch', {
+      method: 'POST',
+      body: { ids: toDelete, action: 'remove' },
+    })
   }
 
   async function save() {

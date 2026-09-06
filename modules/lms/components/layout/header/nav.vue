@@ -15,7 +15,7 @@
     <NavEditor
       v-if="hasRole('admin')"
       mode="category"
-      :navigation="links.slice(1)"
+      :navigation="links"
       @saved="handleSaved"
     />
     <!-- 课程导入（仅管理员） -->

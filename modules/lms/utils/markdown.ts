@@ -84,7 +84,7 @@ export function markdownToTiptap(markdown: string): TiptapNode {
   function isBlockStart(line: string): boolean {
     return /^```/.test(line)
       || /^#{1,6}\s+/.test(line)
-      || /^>\s?/.test(line)
+      || /^>\s+\S/.test(line)
       || /^[-*+]\s+/.test(line)
       || /^\d+\.\s+/.test(line)
       || /^---+$/.test(line.trim())
@@ -404,11 +404,11 @@ export function markdownToTiptap(markdown: string): TiptapNode {
         continue;
       }
 
-      // 引用块
-      if (/^>\s?/.test(line)) {
+      // 引用块（要求 > 后有空格和内容，如 "> content"；单个 ">" 不识别为引用）
+      if (/^>\s+\S/.test(line)) {
         const quoteLines: string[] = [];
-        while (i < lines.length && /^>\s?/.test(lines[i])) {
-          quoteLines.push(lines[i].replace(/^>\s?/, ''));
+        while (i < lines.length && /^>\s+\S/.test(lines[i])) {
+          quoteLines.push(lines[i].replace(/^>\s+/, ''));
           i++;
         }
         blocks.push({
