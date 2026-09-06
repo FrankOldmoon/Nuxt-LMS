@@ -38,7 +38,9 @@ vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
 import { resetAllStubs, setMockAuthState } from '../../../../test/setup/nuxt-stubs'
 
 beforeEach(() => {
-  resetAllStubs()
+    // 本文件的教师场景均假定为该课程的任课教师（requireCourseTeacher 守卫通过）
+  ;(globalThis as any).isCourseTeacher = async () => true
+resetAllStubs()
   vi.clearAllMocks()
   // 默认链式调用重置
   _mockDb.select = vi.fn().mockReturnThis()

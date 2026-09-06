@@ -683,6 +683,29 @@ export async function isCourseTeacher(_userId: number, _courseId: number): Promi
   return false
 }
 
+/** isClassTeacher 桩（LMS 扩展用） */
+export async function isClassTeacher(_userId: number, _classId: number): Promise<boolean> {
+  return false
+}
+
+/** requireClassTeacher 桩 — admin 直接通过，其他角色需 isClassTeacher 验证
+ *  优先使用 globalThis 上的覆盖（测试可注入 mock），否则用默认实现 */
+export async function requireClassTeacher(_event: any, _classId?: number) {
+  if (!_mockAuthState) {
+    const err: any = new Error('请先登录')
+    err.statusCode = 401
+    throw err
+  }
+  if (_mockAuthState.roles.includes('admin')) return _mockAuthState
+  if (_mockAuthState.roles.includes('teacher')) {
+    const _isClassTeacher = (globalThis as any).isClassTeacher ?? isClassTeacher
+    if (await _isClassTeacher(_mockAuthState.id, _classId ?? 0)) return _mockAuthState
+  }
+  const err: any = new Error('无权限操作此班级')
+  err.statusCode = 403
+  throw err
+}
+
 /** broadcastToClass / classRooms 桩（LMS 章节班级广播） */
 const _classRooms = new Map<number, Set<any>>()
 export const classRooms = _classRooms

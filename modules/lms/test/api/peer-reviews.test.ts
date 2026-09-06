@@ -40,7 +40,7 @@ beforeEach(async () => {
     peerReviewConfigs: { findFirst: vi.fn(), findMany: vi.fn() },
     peerReviews: { findFirst: vi.fn(), findMany: vi.fn() },
   })
-  installLmsAutoImports()
+  installLmsAutoImports({ isCourseTeacher: vi.fn().mockResolvedValue(true) })
   // 重置工具 mock
   const mod = await import('../../server/utils/peerReview') as any
   mod.getCourseStudents.mockImplementation(async () => [{ userId: 2, name: 'Bob', avatarImg: null }])

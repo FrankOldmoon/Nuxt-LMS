@@ -185,15 +185,19 @@ describe('API: comments/list.get', () => {
     expect(result.data.children[0].userId).toBe(1)
   })
 
-  it('学生新增评论默认 status 为 audit（待审核）', async () => {
+  it('学生新增顶层评论默认 status 为 published（立即可见），回复默认 audit（待审核）', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
-    _mockDb.returning = vi.fn().mockResolvedValue([{ id: 1, userId: 1, courseId: 1, cid: 1, content: 'X', status: 'audit' }])
+    _mockDb.returning = vi.fn().mockResolvedValue([{ id: 1, userId: 1, courseId: 1, cid: 1, content: 'X', status: 'published' }])
     const handler = (await import('../../server/api/comments/add.post')).default
+    // 顶层评论：创建即发布
     await handler(makeEvent({ body: { course_id: 1, content: 'X' } }))
-    // 写入的 insertData.status 必须是 audit
     expect(_mockDb.values).toHaveBeenCalled()
-    const insertData = _mockDb.values.mock.calls[0][0]
-    expect(insertData).toHaveProperty('status', 'audit')
+    const topInsert = _mockDb.values.mock.calls[0][0]
+    expect(topInsert).toHaveProperty('status', 'published')
+    // 回复：默认待审核
+    await handler(makeEvent({ body: { course_id: 1, content: 'Y', parentId: 1 } }))
+    const replyInsert = _mockDb.values.mock.calls[1][0]
+    expect(replyInsert).toHaveProperty('status', 'audit')
   })
 })
 
@@ -229,7 +233,7 @@ describe('API: comments/add.post', () => {
     expect(_mockDb.values).not.toHaveBeenCalled()
   })
 
-  it('发顶层评论：提交时不再加分（审核通过后才发放）', async () => {
+  it('发顶层评论：提交时不再加分（奖励延后到 approve 发放）', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
     _mockDb.returning = vi.fn().mockResolvedValue([{ id: 1, userId: 1, courseId: 1, cid: 1, content: 'X' }])
     const { addCourseScore } = await import('../../server/utils/userScore/course')
@@ -238,10 +242,10 @@ describe('API: comments/add.post', () => {
     expect(r.success).toBe(true)
     // 提交不立即加分：奖励延后到 approve（审核通过）时发放，防止未过审灌水刷分
     expect(addCourseScore).not.toHaveBeenCalled()
-    // 新评论默认待审核
+    // 顶层评论创建即发布
     expect(_mockDb.values).toHaveBeenCalled()
     const insertData = _mockDb.values.mock.calls[0][0]
-    expect(insertData).toHaveProperty('status', 'audit')
+    expect(insertData).toHaveProperty('status', 'published')
   })
 
   it('评论在章节内（带 chapter_id）时不立即加章节分，审核通过后由请求自动注入累加', async () => {

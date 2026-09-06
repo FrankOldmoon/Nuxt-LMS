@@ -46,7 +46,8 @@ beforeEach(() => {
   resetDb(_mockDb, {
     classRaces: { findFirst: vi.fn(), findMany: vi.fn() },
   })
-  installLmsAutoImports()
+  // 教师场景：courses/homeworks 假定任课教师、classes 假定班级教师（权限守卫通过）
+  installLmsAutoImports({ isCourseTeacher: vi.fn().mockResolvedValue(true), isClassTeacher: vi.fn().mockResolvedValue(true) })
   clearWsBroadcasts()
   // 默认 orderBy 链：返回 orderBy 函数，orderBy 又返回 Promise<[]>
   // 这样 .where().orderBy() 或 .from().where().orderBy() 链都能解析

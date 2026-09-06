@@ -82,7 +82,7 @@ import { resetAllStubs, setMockAuthState } from '../../../../test/setup/nuxt-stu
 beforeEach(() => {
   resetAllStubs()
   resetDb(_mockDb)
-  installLmsAutoImports()
+  installLmsAutoImports({ isCourseTeacher: vi.fn().mockResolvedValue(true) })
   // 默认可访问的 db 事务：直接执行回调
   _mockDb.transaction = vi.fn().mockImplementation(async (fn: any) => fn(_mockDb))
 })
