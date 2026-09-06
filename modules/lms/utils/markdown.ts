@@ -71,6 +71,20 @@ function buildFenceBlock(lang: string, raw: string): TiptapNode | null {
 }
 
 /**
+ * 纯文本 → 简单 tiptap doc JSON（按换行拆段落，不做任何 markdown 解析）。
+ * richEditor 关闭 markdown 开关时把字符串固化为 doc JSON，
+ * 使「纯文本」与「markdown 字符串」在数据层面天然可区分（字符串=markdown，对象=tiptap JSON）。
+ */
+export function plainTextToDoc(text: string): TiptapNode {
+  const normalized = String(text ?? '').replace(/\r\n/g, '\n');
+  const paragraphs = normalized.split('\n').map((line) => ({
+    type: 'paragraph',
+    content: line ? [{ type: 'text', text: line }] : undefined,
+  }));
+  return { type: 'doc', content: paragraphs };
+}
+
+/**
  * Markdown 转 Tiptap JSON 格式（TypeScript 版）
  * 新增支持 {{xxx}} 占位符语法 → 转为 inputs 节点（丢弃括号内内容）
  * 新增支持 ```question {json}``` 围栏 → 转为 vue 节点（content 为解析后的 JSON 对象）

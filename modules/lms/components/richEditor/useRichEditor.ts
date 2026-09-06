@@ -1,10 +1,21 @@
-import { ref, computed, type Ref } from 'vue'
+import { ref, computed, watch, type Ref } from 'vue'
+import { plainTextToDoc } from '../../utils/markdown'
 
-export function useRichEditor(props: any, model: Ref<string | Record<string, any>>) {
+export function useRichEditor(props: any, model: Ref<string | Record<string, any>>, markdown: Ref<boolean>) {
     // 判断当前值是否为 JSON 对象（非数组、非 null、非字符串）
     const isJson = computed(
         () => typeof model.value === 'object' && model.value !== null && !Array.isArray(model.value)
     )
+
+    // 关闭 markdown 开关：把当前字符串固化为「纯文本 doc JSON」。
+    // 纯文本可无损表达为 tiptap JSON（普通段落），因此无需额外存储开关状态——
+    // 数据层面天然区分：字符串 = markdown（默认），对象 = tiptap JSON（含纯文本）。
+    watch(markdown, (v) => {
+        if (v === false && typeof model.value === 'string') {
+            console.debug('[richEditor] markdown 关闭 → 字符串固化为纯文本 doc JSON')
+            model.value = plainTextToDoc(model.value)
+        }
+    })
 
     // 弹窗控制
     const isModalOpen = ref(false)

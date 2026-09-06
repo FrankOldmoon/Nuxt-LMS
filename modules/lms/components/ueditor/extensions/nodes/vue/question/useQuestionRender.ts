@@ -236,6 +236,8 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
                 tags: Array.isArray(raw.tags) ? [...raw.tags] : [],
                 record: Array.isArray(raw.record) ? JSON.parse(JSON.stringify(raw.record)) : [],
                 correct_rate: 0,
+                // extra：扩展字段（含 optionMarkdown 选项级 markdown 开关）
+                extra: raw.extra ?? null,
             })
         },
     })
@@ -252,6 +254,7 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
                 type: q.type || 'single', point: Number(q.point) || 0,
                 answer: Array.isArray(q.answer) ? [...q.answer] : [], explanation: q.explanation ?? '',
                 tags: Array.isArray(q.tags) ? [...q.tags] : [], record: [], correct_rate: 0,
+                extra: q.extra ?? null,
             })
             return
         }

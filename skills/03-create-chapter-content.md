@@ -15,6 +15,29 @@
 - **每个二级/三级标题下的内容不能太多**（建议 1~2 个段落或 1 个代码块），便于分屏播放与跟读
 - 代码示例的 codeBlock 必须带语言，如 `{ "type": "codeBlock", "attrs": { "language": "python" }, ... }`（不带 language 会按纯文本渲染）
 
+### 多写 emoji（重要）
+
+标题、段落、列表、提示框等处要**多用 emoji**，让内容更生动、易扫读（面向中小学生阅读尤其有效）：
+
+- **标题带 emoji**：每个二级/三级标题前加一个贴题 emoji，如 `## 🚀 变量与赋值`、`### 🔁 for 循环`
+- **段落/列表点缀**：讲解段落和列表项适当用 emoji 开头或点缀（如 `✅` 正确做法、`❌` 常见错误、`⚠️` 注意事项、`💡` 小技巧、`🎯` 学习目标、`📦` 示例、`🧪` 动手试试）
+- **callout 图标**：`:::callout icon=💡` 的 icon 参数直接用 emoji，与内容语义匹配
+- **适度原则**：以帮助理解为目的，正文不要堆砌，一般每段 0~2 个 emoji，避免影响阅读
+
+示例（markdown 传参时）：
+
+```markdown
+## 🎯 学习目标
+
+本节你将学会：
+- ✅ 用 `print()` 输出内容
+- ⚠️ 避免中英文引号混用
+
+:::callout icon=💡
+小提示：代码里的空格不影响运行，但能让代码更易读。
+:::
+```
+
 ### 标题必须带 id（否则右侧 TOC 不显示）
 
 右侧 TOC（`utils/toc.ts` 的 `extractTocFromContent`）**只收录带 `attrs.id`（或
@@ -270,6 +293,8 @@ print("你好，Python")
 - 以上所有组件对应的 markdown 语法已写入 `ueditor/prompt.js`，AI 生成文档时即可产出
 
 ## 嵌入互动节点（vue 节点）——题目/作业/测验/评论
+
+> homework / quiz / race / comment **实体的创建 API** 见 skills/06（本文只讲 question 的创建）。
 
 ```json
 {

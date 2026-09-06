@@ -138,7 +138,9 @@ export function useCourseProgress(
           }),
           orig?.to && orig?.accessible
             ? h(NuxtLink, {
-              to: orig.to, class: 'text-primary hover:underline truncate',
+              to: orig.to,
+              // 章节名：完成后才变绿色（与 ✓ 图标同色 text-success），未完成保持默认文字色
+              class: ['truncate hover:underline', orig?.isPass ? 'text-success' : 'text-default'],
               onClick: (e: Event) => { e.stopPropagation(); isOpen.value = false },
             }, { default: () => row.getValue('label') as string })
             : h('span', { class: orig?.isParent ? 'font-semibold' : '' }, row.getValue('label') as string),

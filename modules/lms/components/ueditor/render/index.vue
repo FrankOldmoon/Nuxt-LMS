@@ -48,6 +48,11 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // 是否按 markdown 渲染字符串内容：关闭时字符串按纯文本段落渲染（不做 markdown 解析）
+  markdown: {
+    type: Boolean,
+    default: true,
+  },
 })
 
 const {

@@ -102,6 +102,41 @@
   }
 }
 
+// 修复：分割线（--- / horizontalRule）在窄容器（如题目选项）里溢出屏幕。
+// umo 的分割线不用 border，而是「空格字符 + letter-spacing:100vw + line-through」画的：
+// ::before 有 ~100vw 的 min-content，flex item（min-width:auto）不能收缩到内容最小宽度以下，
+// 于是整个容器被撑到视口宽（overflow:hidden 只裁 hr 自身，裁不住已被撑大的父级链）。
+// 这里改用 border 画线：宽度始终 100% 受限于容器，常见线型用 border-style 映射。
+.umo-editor-render .umo-page-divider {
+  letter-spacing: normal;
+  white-space: normal;
+  height: auto;
+  margin-inline: 0;
+  padding-inline: 0;
+
+  &:before,
+  &:after {
+    content: none;
+  }
+
+  border-top: 0.1em solid currentColor;
+
+  &[data-type='double'] {
+    border-top: 0.3em double currentColor;
+  }
+  &[data-type='dashed'],
+  &[data-type='dashed-double'] {
+    border-top-style: dashed;
+  }
+  &[data-type='dotted'] {
+    border-top-style: dotted;
+  }
+  // border 无 wavy，降级为实线
+  &[data-type='wavy'] {
+    border-top-style: solid;
+  }
+}
+
 // Nuxt 暗黑模式：UMO 自身的暗黑变量挂在 [theme-mode=dark]，
 // 而 Nuxt 用 <html>.dark 类，两者不互通，导致暗黑下文字仍是深色。
 // 这里在 .dark 下把 UMO 文字变量桥接到白色（无闪烁，首帧即生效）。

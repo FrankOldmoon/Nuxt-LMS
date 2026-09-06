@@ -199,6 +199,8 @@ export function useQuestionEdit(props: QuestionEditProps, emit: QuestionEditEmit
             tags: Array.isArray(props.question.tags) ? [...props.question.tags] : [],
             record: Array.isArray(props.question.record) ? JSON.parse(JSON.stringify(props.question.record)) : [],
             content: Array.isArray(props.question.content) ? JSON.parse(JSON.stringify(props.question.content)) : props.question.content,
+            // extra：扩展字段（含 optionMarkdown 选项级 markdown 开关，缺省/true = markdown）
+            extra: props.question.extra ?? null,
         }
         form.value = normalized
         originalData = JSON.parse(JSON.stringify(normalized))
@@ -211,7 +213,7 @@ export function useQuestionEdit(props: QuestionEditProps, emit: QuestionEditEmit
         const q = props.question
         q.name = newForm.name; q.type = newForm.type; q.point = newForm.point
         q.content = newForm.content; q.options = newForm.options; q.answer = newForm.answer
-        q.explanation = newForm.explanation; q.tags = newForm.tags
+        q.explanation = newForm.explanation; q.tags = newForm.tags; q.extra = newForm.extra
     }, { deep: true })
 
     function onTypeChange() {
@@ -311,6 +313,7 @@ export function useQuestionEdit(props: QuestionEditProps, emit: QuestionEditEmit
                 q.answer = Array.isArray(originalData.answer) ? [...originalData.answer] : []
                 q.explanation = originalData.explanation || ''
                 q.tags = Array.isArray(originalData.tags) ? [...originalData.tags] : []
+                q.extra = originalData.extra ?? null
             }
             justSaved = false
             form.value = null

@@ -1119,8 +1119,10 @@
   "richEditor": {
     "title": "富文本编辑器",
     "placeholder": "输入文本内容…",
+    "placeholderMd": "输入 Markdown 文本…（右下角开关可关闭）",
     "openEditor": "打开富文本编辑器",
-    "switchToText": "切换为文本输入"
+    "switchToText": "切换为文本输入",
+    "markdown": "Markdown"
   },
   "searchModal": {
     "knowledgeCount": "{count} 个知识点",

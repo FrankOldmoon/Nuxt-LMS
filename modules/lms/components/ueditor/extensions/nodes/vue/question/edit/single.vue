@@ -43,6 +43,18 @@ function selectAnswer(idx) {
   props.form.answer = [idx]
 }
 
+// 选项级 markdown 开关（存 extra.optionMarkdown[idx]，缺省/true = markdown）
+function isOptionMarkdown(idx) {
+  return props.form.extra?.optionMarkdown?.[idx] !== false
+}
+
+function setOptionMarkdown(idx, val) {
+  if (!props.form.extra || typeof props.form.extra !== 'object') props.form.extra = {}
+  if (!Array.isArray(props.form.extra.optionMarkdown)) props.form.extra.optionMarkdown = []
+  props.form.extra.optionMarkdown[idx] = val
+  console.debug('[question edit] option', idx, 'markdown =', val)
+}
+
 function addOption() {
   if (!Array.isArray(props.form.options)) props.form.options = []
   props.form.options.push('')

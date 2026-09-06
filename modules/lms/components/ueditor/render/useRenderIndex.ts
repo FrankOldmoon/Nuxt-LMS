@@ -20,6 +20,10 @@ export interface RenderIndexProps {
   courseId: {
     type: [Number, String],
     default: undefined
+  },
+  markdown: {
+    type: Boolean,
+    default: true
   }
 }
 
@@ -43,12 +47,19 @@ export function useRenderIndex(props: any, emit: any) {
     if (props.json === null || props.json === undefined || props.json === '') {
       return null
     }
-    // 字符串：转 TipTap JSON（支持纯文本 / markdown）
+    // 字符串：markdown 开启时转 TipTap JSON（支持纯文本 / markdown）；关闭时按纯文本段落渲染
     if (typeof props.json === 'string') {
+      if (props.markdown === false) {
+        console.debug('[useRenderIndex] markdown 关闭，字符串按纯文本渲染')
+        return plainTextToDoc(props.json)
+      }
       return markdownToTiptap(props.json)
     }
     // 数字 / 布尔：jsonb 纯数字字符串会被驱动解析为 number，需转回字符串
     if (typeof props.json === 'number' || typeof props.json === 'boolean') {
+      if (props.markdown === false) {
+        return plainTextToDoc(String(props.json))
+      }
       return markdownToTiptap(String(props.json))
     }
     // 对象：空对象不渲染

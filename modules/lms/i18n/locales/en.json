@@ -1119,8 +1119,10 @@
   "richEditor": {
     "title": "Rich Text Editor",
     "placeholder": "Enter text content...",
+    "placeholderMd": "Enter Markdown text... (toggle at bottom-right to disable)",
     "openEditor": "Open rich text editor",
-    "switchToText": "Switch to text input"
+    "switchToText": "Switch to text input",
+    "markdown": "Markdown"
   },
   "searchModal": {
     "knowledgeCount": "{count} knowledge points",

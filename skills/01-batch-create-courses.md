@@ -51,6 +51,7 @@
 `POST /api/courses/update` 更新（同样自动存旧版本快照）。
 
 - 结构、节点、富组件（`:::` 转 tiptap）、题目嵌入等规则 **与 chapter content 完全一致**，见 skills/03
+- **多写 emoji**：课程简介的标题、段落、列表要多用 emoji（规范见 skills/03「多写 emoji」），如 `## 📚 课程介绍`、`- ✅ 适合零基础`
 - **无需本机转 JSON**：add/update 接口的 `content` 可以直接传 **markdown 字符串**，
   服务端自动 `markdownToTiptap` 转 doc 并补 heading id（见 skills/03「保存入口直接支持 markdown」）
 - 推荐做法：直接把课程简介的 markdown 文本作为 `content` 传入即可
