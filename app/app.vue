@@ -9,33 +9,29 @@ useHead(() => ({
 }))
 
 // Global startup access password
-// Hostnames that are IP addresses (e.g. 192.168.x.x, IPv6) or localhost are
-// allowed in without a password; other cases (e.g. domain access) require the
-// access password before the app is formally loaded. The password is verified
-// on the SERVER side; the client only asks the server whether it is unlocked.
-const isIpAddress = (hostname: string) => {
-  if (!hostname) return false
-  const host = hostname.replace(/^\[|\]$/g, '')
-  // localhost and loopback addresses are password-free for local development
-  if (/^localhost$/i.test(host)) return true
-  // IPv4
-  if (/^(\d{1,3}\.){3}\d{1,3}$/.test(host)) return true
-  // IPv6
-  if (host.includes(':')) return true
-  return false
-}
+// 仅当访问域名等于 NUXT_VERIFICATION_URL（如 mxlms.oldmoon.cn）时才需要访问密码；
+// 其他访问（IP / localhost / 其余域名）直接放行。密码在 SERVER 端校验，
+// 客户端只询问服务端是否已解锁。
+const config = useRuntimeConfig()
+const verificationUrl = String(config.verificationUrl || '').toLowerCase()
+
+// 是否需要对当前访问域名做 Access Verification
+const needsVerification = computed(() => {
+  if (!verificationUrl) return false
+  const host = useRequestURL().hostname.replace(/^\[|\]$/g, '').toLowerCase()
+  return host === verificationUrl
+})
 
 // `useRequestURL()` resolves the same hostname on both server and client, so
-// IP/localhost visitors are unlocked synchronously at render time and SSR
-// renders the homepage directly - no password-gate flash before entry.
-const requestHost = useRequestURL().hostname
-const appUnlocked = ref(isIpAddress(requestHost))
+// verification is decided synchronously at render time — no password-gate flash
+// for hosts that don't need verification.
+const appUnlocked = ref(!needsVerification.value)
 
 onMounted(async () => {
-  // IP/localhost are already unlocked via the initial value; nothing to do.
+  // 无需验证的访问（IP/localhost/非指定域名）已直接解锁；nothing to do.
   if (appUnlocked.value) return
-  // Non-IP/localhost access: confirm unlock status with the server via the
-  // HttpOnly startup cookie. The gate stays locked until the server confirms.
+  // 目标域名访问：与服务器确认解锁状态（HttpOnly startup cookie）。
+  // The gate stays locked until the server confirms.
   try {
     const res = await $fetch<{ data: { unlocked: boolean } }>('/api/auth/startup', {
       credentials: 'include',
