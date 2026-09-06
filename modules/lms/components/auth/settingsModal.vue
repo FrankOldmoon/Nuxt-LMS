@@ -40,7 +40,10 @@ watch(isOpen, async (val) => {
 async function loadLmsConfig() {
   loading.value = true
   try {
-    const data = await cRequest<any>('/api/config/lms-public')
+    // 必须用完整配置接口（教师/管理员）：lms-public 是公开白名单子集，
+    // 不含 question/homework/.../peerReview 等经验值段，会导致编辑器
+    // 显示默认值而非 DB 实际值（保存时还会用默认值覆盖回去）
+    const data = await cRequest<any>('/api/config/get')
     lmsConfig.value = data || {}
   } catch {
     lmsConfig.value = {}
