@@ -3,6 +3,10 @@
 > 用途：把章节正文写成 tiptap JSON 并保存。JSON 结构与渲染器
 > `modules/lms/components/ueditor/render/`（nodes/ 下每个文件一种节点）一一对应，
 > 写之前可对照对应节点组件确认 attrs/content 要求。
+>
+> **本 skill 的 content 规则同样适用于"课程首页 content"**（`courses.content`，渲染在
+> `/course/<id>` 的"关于课程"区）——结构完全一致：根节点 `{ "type": "doc", "content": [...] }`。
+> 创建课程时必须带 content（见 skills/01），写法按本 skill 规则来。
 
 ## 章节内容标题与篇幅规范（重要）
 
@@ -58,6 +62,27 @@
 - 保存时服务端自动：①旧内容存版本快照；②从 content 提取 vue 节点里的
   question/homework/comment/quiz 的 id 写入章节对应字段（questionIds 等）
 - 可选同 body 携带其它字段（如 `isOpen`）
+
+### ⭐ 保存入口直接支持 markdown 字符串（无需本机跑脚本）
+
+`courses` 与 `chapters` 的 **add / update** 接口，`content` 都可以**直接传 markdown
+字符串**（不只是 tiptap JSON）。服务端（`server/utils/content.ts` 的
+`normalizeContent`）会调用 `markdownToTiptap` 自动转成 doc JSON，并给所有
+heading 补 `id`/`data-toc-id`（右侧 TOC 可用）。例：
+
+```json
+{
+  "id": 11,
+  "content": "## 小节标题\n\n这是一段 **markdown**。\n\n:::callout icon=💡\n提示内容\n:::\n"
+}
+```
+
+- 传字符串 → 自动转 tiptap；传对象（已是 doc JSON）→ 原样保存
+- 富组件 `:::` 围栏 / 表格 / 公式等 markdown 语法与 AI 生成一致，均可直接写在字符串里
+- 需要嵌题目时：先 `POST /api/questions/add` 建题拿 cid，再把
+  `:::question {json}:::` 或字符串里的问题按章节方式处理——注意题目本身仍需走
+  `/api/questions/add`，`:::question` 语法只在编辑器/AI 流式里可用
+- 适用于：普通用户（无源代码、无法跑 node 脚本）或脚本直接以 markdown 交付内容
 
 ## Tiptap JSON 通用结构
 
@@ -125,6 +150,124 @@
 - 数学公式（KaTeX 渲染）：公式内容存在 **`attrs.latex`**（不是 content）：
   - 块级：`{ "type": "blockMath", "attrs": { "latex": "x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}" } }`
   - 行内：`{ "type": "inlineMath", "attrs": { "latex": "\\alpha^2 + \\beta^2 = \\gamma^2" } }`（作为 paragraph 的 content 子节点）
+
+## 富组件节点（render/nodes 下的扩展块）与 markdown 语法
+
+这些扩展组件（callout/details/iframe/image/taskList/columns/echarts/html/tabs/stepper/vfiles/sheet/mindmap 等）
+**普通 markdown 表达不了**，编辑器用 `:::类型 参数 ... :::` 围栏语法承载
+（`utils/markdown.ts` 解析，AI 生成文档时用同一语法触达它们）：
+
+### 基础富组件（正文块级节点）
+
+| 组件 | markdown 写法 | 生成的 tiptap 节点 |
+| --- | --- | --- |
+| callout 提示框 | `:::callout icon=💡 bg=#eff6ff` `内容` `:::` | `{type:"callout", attrs:{icon,backgroundColor,fontColor}, content:[块]}` |
+| details 折叠 | `:::details title=展开查看 open=1` `内容` `:::` | `{type:"details", content:[{type:"detailsSummary",content:[块]},{type:"detailsContent",content:[块]}]}` |
+| iframe 内嵌 | `:::iframe src=https://... height=300` `:::` | `{type:"iframe", attrs:{src,height}}`（height 默认 200） |
+| image 图片 | `:::image src=https://... alt=说明` `:::` | `{type:"image", attrs:{src,alt,title}}` |
+| taskList 任务列表 | `:::tasklist` `- [x] 已完成` `- [ ] 待办` `:::` | `{type:"taskList", content:[{type:"taskItem",attrs:{checked},content:[块]}]}` |
+| blockquote 引用 | `> 内容` | `{type:"blockquote", content:[块]}` |
+
+### 富组件（column / echarts）
+
+| 组件 | markdown 写法 | 生成的 tiptap 节点 |
+| --- | --- | --- |
+| column 分栏 | `:::columns` 内多个 `:::col width=200` `内容` `:::` 再 `:::` | `{type:"columnContainer", content:[{type:"column",attrs:{colWidth},content:[块]},...]}` |
+| echarts 图表 | `:::echarts height=300` + `ECharts option JSON` `:::` | `{type:"echarts", attrs:{chartOptions:<obj>, height}}` |
+
+分栏写法示例（`:::` 支持嵌套，`:::col` 内可放任意 markdown）：
+
+```
+:::columns
+:::col width=260
+**左列**：要点列表
+- 苹果
+- 香蕉
+:::
+:::col width=200
+**右列**：引用
+> Python 很棒
+:::
+:::
+```
+
+echarts 写法示例（正文是完整 ECharts option，JSON 对象）：
+
+```
+:::echarts height=280
+{"tooltip":{},"series":[{"name":"得分","type":"pie","radius":"55%","data":[{"value":80,"name":"语文"},{"value":72,"name":"英语"}]}]}
+:::
+```
+
+### 富组件（自定义 vue 式组件，tabs / stepper / vfiles / html / sheet）
+
+这几个生成的是 `vue` 节点：`{ "type": "vue", "attrs": { "type": "<子类型>", "content": "<JSON 字符串>" } }`。
+子类型名 = 围栏类型名（`tabs`/`stepper`/`vfiles`/`html`/`sheet`）。
+
+| 组件 | markdown 写法 | content 里的 JSON（attrs.content） |
+| --- | --- | --- |
+| tabs 标签页 | `:::tabs` 内每个 `## 标签名` + 自己内容的 markdown `:::` | `{"tabs":[{"label":"...","content":<doc tiptap>}]}` |
+| stepper 分步 | `:::stepper orientation=horizontal` 内每个 `## 步标题` + 描述 `:::` | `{"orientation":"horizontal","steps":[{"title":"...","description":<doc tiptap>}]}` |
+| vfiles 文件 | `:::vfiles` 内每个 `## 文件名` + 内容 `:::` | `{"items":[{"id":"<短id>","label":"...","type":"file","content":<doc tiptap>}]}` |
+| html 代码块 | `:::html height=150` + 原始 HTML `:::` | attrs.content = HTML **字符串**（非 JSON） |
+| sheet 电子表格 | `:::sheet height=220` + markdown 表格 `:::` | `{"height":220,"cellData":{<row>:{<col>:{"v":".."}}}}` |
+| mindmap 思维导图 | `:::mindmap` + markdown（`# 标题` 或缩进 `- 列表` 表达层级）`:::` | attrs.content = 原始 **markdown 字符串**（simple-mind-map 解析） |
+
+写法示例：
+
+````
+:::tabs
+## 概览
+这是**概览**标签页的内容。
+## 代码
+```python
+print("hi")
+```
+:::
+
+:::stepper orientation=horizontal
+## 打字
+先学会打开编辑器
+## 运行
+点击运行看结果
+:::
+
+:::vfiles
+## main.py
+print("你好，Python")
+## 说明.md
+这是一份说明文件。
+:::
+
+:::html height=160
+<h3 style="color:#1d7d48">HTML 卡片</h3>
+:::
+
+:::sheet height=220
+| 姓名 | 语文 | 数学 |
+| --- | --- | --- |
+| 小明 | 95 | 90 |
+| 小红 | 88 | 85 |
+:::
+
+:::mindmap
+# Python 学习
+## 基础
+### 变量
+### 循环
+## 进阶
+### 函数
+#### return
+:::
+````
+
+> 说明：`tabs`/`stepper`/`vfiles` 里的 `## 小标题` 只用于切分区块，**不会**变成正文标题；
+> 每个区块内部再用 `###`（或 `##`）写正文标题。`html` 的 content 是原始 HTML 字符串。
+
+- 开围栏格式：`:::类型 参数`，参数用 `key=value` 空格分隔（如 `title=展开 open=1` `bg=#eff6ff`）；闭合用单独一行的 `:::`
+- `:::` 围栏**可嵌套**（仅 `:::columns/:::col` 需要嵌套；嵌套计数：`:::xxx` 开 +1，单独 `:::` -1 到 0 才结束）
+- 围栏内可以是任意 markdown（标题/列表/公式等），会整体作为该组件的 `content`
+- 以上所有组件对应的 markdown 语法已写入 `ueditor/prompt.js`，AI 生成文档时即可产出
 
 ## 嵌入互动节点（vue 节点）——题目/作业/测验/评论
 

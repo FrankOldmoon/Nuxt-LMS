@@ -73,40 +73,47 @@ function loadScript(url: string) {
 }
 
 export function useMindmapRender(props: MindmapRenderProps) {
-    const mindmapRef = ref<any>(null)
+    const wrapEl = ref<any>(null)       // 外层容器（用于全屏）
+    const mindmapRef = ref<any>(null)   // 内层 SVG 容器
     const dynamicHeight = ref(400)
     const dynamicWidth = ref('100%')
+    const isFullscreen = ref(false)
     let mindMap: any = null
 
     /**
-     * 渲染完成后，根据 SVG 实际内容的 boundingBox 调整容器和 SVG 尺寸，
-     * 确保所有节点都完整呈现。
-     * mindMap 布局以 root 为中心向左右展开，bbox.x 可能为负数。
+     * 根据 SVG 实际内容 boundingBox 调整 svg 尺寸/viewBox，确保所有节点完整呈现。
+     * - fitScreen=true：全屏模式，svg 100% 撑满并让 viewBox 缩放居中（root 在中心）
+     * - fitScreen=false：普通模式，svg 取内容尺寸（+padding），整体宽度恰好容纳全部节点
      */
-    function fitToContent() {
+    function setSvgSize(fitScreen: boolean) {
         if (!mindmapRef.value || !mindMap) return
         const svg = mindmapRef.value.querySelector('svg')
         if (!svg) return
-
         try {
             const bbox = svg.getBBox()
             if (bbox.width <= 0 || bbox.height <= 0) return
 
             const padding = 60
-            const vbX = bbox.x - padding
-            const vbY = bbox.y - padding
-            const vbW = Math.ceil(bbox.width + padding * 2)
-            const vbH = Math.ceil(bbox.height + padding * 2)
-
-            svg.setAttribute('width', vbW)
-            svg.setAttribute('height', vbH)
-            svg.setAttribute('viewBox', `${vbX} ${vbY} ${vbW} ${vbH}`)
+            svg.setAttribute('viewBox', `${bbox.x - padding} ${bbox.y - padding} ${bbox.width + padding * 2} ${bbox.height + padding * 2}`)
             svg.style.overflow = 'visible'
 
-            dynamicWidth.value = vbW + 'px'
-            dynamicHeight.value = Math.max(300, vbH)
+            if (fitScreen) {
+                svg.setAttribute('width', '100%')
+                svg.setAttribute('height', '100%')
+                svg.style.width = '100%'
+                svg.style.height = '100%'
+                dynamicWidth.value = '100%'
+                dynamicHeight.value = '100%'
+            } else {
+                const vbW = Math.ceil(bbox.width + padding * 2)
+                const vbH = Math.ceil(bbox.height + padding * 2)
+                svg.setAttribute('width', vbW)
+                svg.setAttribute('height', vbH)
+                dynamicWidth.value = vbW + 'px'
+                dynamicHeight.value = Math.max(300, vbH)
+            }
         } catch (e) {
-            // getBBox 在 SVG 未完全渲染时可能失败，保持默认尺寸
+            // SVG 未完全渲染时 getBBox 可能失败，保持默认尺寸
         }
     }
 
@@ -124,7 +131,7 @@ export function useMindmapRender(props: MindmapRenderProps) {
         const data = markdownToTree(props.node?.attrs?.content || '')
 
         dynamicWidth.value = '100%'
-        dynamicHeight.value = 400
+        dynamicHeight.value = isFullscreen.value ? '100%' : 400
 
         await nextTick()
 
@@ -139,7 +146,7 @@ export function useMindmapRender(props: MindmapRenderProps) {
         let lastH = 0
         let retries = 0
         const tryFit = () => {
-            fitToContent()
+            setSvgSize(isFullscreen.value)
             const svg = mindmapRef.value?.querySelector('svg')
             if (svg) {
                 try {
@@ -156,13 +163,40 @@ export function useMindmapRender(props: MindmapRenderProps) {
         setTimeout(tryFit, 500)
     }
 
-    onMounted(() => nextTick(() => renderMindMap()))
+    async function toggleFullscreen() {
+        const el = wrapEl.value
+        if (!el) return
+        if (!document.fullscreenElement) {
+            try { await (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el) } catch (_) { /* noop */ }
+        } else {
+            try { await (document.exitFullscreen || document.webkitExitFullscreen)?.call(document) } catch (_) { /* noop */ }
+        }
+    }
+
+    function onFsChange() {
+        isFullscreen.value = !!document.fullscreenElement
+        // 全屏后重新按屏幕 fit（等布局稳定再执行，多试几次）
+        let retries = 0
+        const fit = () => {
+            setSvgSize(isFullscreen.value)
+            if (retries < 5) { retries++; setTimeout(fit, 200) }
+        }
+        nextTick(fit)
+    }
+
+    onMounted(() => {
+        document.addEventListener('fullscreenchange', onFsChange)
+        nextTick(() => renderMindMap())
+    })
 
     watch(() => props.node?.attrs?.content, () => {
         nextTick(() => renderMindMap())
     })
 
-    onBeforeUnmount(() => mindMap?.destroy?.())
+    onBeforeUnmount(() => {
+        document.removeEventListener('fullscreenchange', onFsChange)
+        mindMap?.destroy?.()
+    })
 
-    return { mindmapRef, dynamicHeight, dynamicWidth }
+    return { wrapEl, mindmapRef, dynamicHeight, dynamicWidth, isFullscreen, toggleFullscreen }
 }

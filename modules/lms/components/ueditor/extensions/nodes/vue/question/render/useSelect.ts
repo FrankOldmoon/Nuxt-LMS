@@ -1,5 +1,6 @@
 import { ref, watch, computed, onMounted, onBeforeUnmount, inject, nextTick } from 'vue'
 import { submitQuestion, recordAnswer } from './shared'
+import { getSelectBindings, getSelectRevision } from './selectStore'
 
 export function useSelect(props: any) {
   const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')!
@@ -7,50 +8,39 @@ export function useSelect(props: any) {
   const fromRecord = inject<import('vue').Ref<boolean>>('questionFromRecord')!
   const { courseId, chapterId } = useLmsContext()
   const selectAnswers = ref<any[]>([])
-  let selectEls: HTMLSelectElement[] = []
+  const qid = Number(props.questionId)
 
-  // 找到当前题目区域下的所有 select 元素容器
-  function getContainer(): Element | null {
-    return document.querySelector(`[data-question-id="${props.questionId}"] .prose`)
-  }
-
-  // 收集 DOM 中所有 select 元素并绑定事件
-  function bindSelects() {
-    const container = getContainer()
-    if (!container) return
-    unbindSelects()
-    selectEls = Array.from(container.querySelectorAll('select')) as HTMLSelectElement[]
-    selectEls.forEach((el, idx) => {
-      el.dataset.fillIndex = String(idx)
-      el.addEventListener('change', onChange)
-    })
-  }
-
-  function unbindSelects() {
-    selectEls.forEach(el => {
-      el.removeEventListener('change', onChange)
-    })
-    selectEls = []
-  }
-
-  function onChange(e: Event) {
-    const target = e.target as HTMLSelectElement
-    const idx = Number(target.dataset.fillIndex)
-    // 提交后重新作答，清除判断状态
-    if (submitted.value) {
-      submitted.value = false
-    }
-    if (fromRecord.value) {
-      fromRecord.value = false
-    }
-    clearSelectStyles()
-    selectAnswers.value[idx] = target.value
-    recordAnswer(props.question, selectAnswers.value.map((v: any) => (v || '').trim()))
-  }
-
-  onMounted(() => {
-    setTimeout(bindSelects, 0)
+  // revision 建立响应式依赖：下拉框新增/卸载时 bindings 列表会变化；
+  // binding 里的 value 是独立 ref，解包/取值不受影响
+  const bindings = computed(() => {
+    getSelectRevision().value // eslint-disable-line no-unused-expressions
+    return getSelectBindings(qid)
   })
+
+  function currentValues(): string[] {
+    return bindings.value.map((b) => (b.value.value || '').trim())
+  }
+
+  // 用户选择/重置/回填任一变化 → 清除已提交状态并记录当前作答
+  // applying 用于区分"程序回填"和"用户点选"，避免回填时重复 record
+  let applying = false
+  watch(
+    () => {
+      getSelectRevision().value // 成员增减也要触发重算
+      return bindings.value.map((b) => b.value.value)
+    },
+    () => {
+      if (applying) return
+      const vals = currentValues()
+      // 空值（下拉框刚挂载/全被清空）不触发 record，避免挂载即提交空答案
+      if (vals.every((v) => v === '')) return
+      if (submitted.value) submitted.value = false
+      if (fromRecord.value) fromRecord.value = false
+      clearSelectStyles()
+      selectAnswers.value = vals
+      recordAnswer(props.question, vals)
+    },
+  )
 
   // 初始化
   watch(() => props.question, (q: any) => {
@@ -59,53 +49,34 @@ export function useSelect(props: any) {
     }
   }, { immediate: true })
 
-  // 监听 record 变化，同步到 selectAnswers 和 DOM（fetchRecord 回填场景）
-  watch(() => props.question?.record, (record: any) => {
+  // 回填 record（fetchRecord 场景 + 初始加载）：设置值但不触发 record 上报
+  function applyRecord() {
+    const record = props.question?.record
     if (!Array.isArray(record) || record.length === 0) return
+    applying = true
     selectAnswers.value = [...record]
-    // DOM 可能还未渲染，用 nextTick 确保已挂载
-    nextTick(() => {
-      const container = getContainer()
-      if (!container) return
-      const els = container.querySelectorAll('select')
-      els.forEach((el, idx) => {
-        if (record[idx] !== undefined) {
-          ;(el as HTMLSelectElement).value = record[idx]
-        }
-      })
+    bindings.value.forEach((b, idx) => {
+      if (record[idx] !== undefined) b.value.value = String(record[idx])
     })
-  }, { immediate: true })
+    nextTick(() => { applying = false })
+  }
+  watch(() => props.question?.record, applyRecord, { immediate: true })
+  onMounted(() => { setTimeout(applyRecord, 0) })
 
-  const hasAnswer = computed(() => selectAnswers.value.some((a: any) => a && a.trim() !== ''))
+  const hasAnswer = computed(() => selectAnswers.value.some((a: any) => a && (a || '').trim() !== ''))
 
-  // submit 后给 select 着色：正确绿、错误红
+  // submit 后给下拉框着色：正确绿、错误红
   function styleSelects() {
-    const container = getContainer()
-    if (!container) return
-    const els = container.querySelectorAll('select')
     const qAnswer = props.question.answer || []
-    els.forEach((el, idx) => {
-      const selectEl = el as HTMLSelectElement
-      const userVal = (selectEl.value || '').trim()
+    bindings.value.forEach((b, idx) => {
+      const userVal = (b.value.value || '').trim()
       const correctVal = String(qAnswer[idx] || '').trim()
-      if (userVal === correctVal) {
-        selectEl.style.borderColor = '#4ade80'
-        selectEl.style.backgroundColor = 'rgba(74, 222, 128, 0.1)'
-      } else {
-        selectEl.style.borderColor = '#f87171'
-        selectEl.style.backgroundColor = 'rgba(248, 113, 113, 0.1)'
-      }
+      b.mark(userVal === correctVal ? 'correct' : 'wrong')
     })
   }
 
   function clearSelectStyles() {
-    const container = getContainer()
-    if (!container) return
-    container.querySelectorAll('select').forEach(el => {
-      const selectEl = el as HTMLSelectElement
-      selectEl.style.borderColor = ''
-      selectEl.style.backgroundColor = ''
-    })
+    bindings.value.forEach((b) => b.mark(''))
   }
 
   watch(submitted, (val) => {
@@ -114,17 +85,11 @@ export function useSelect(props: any) {
 
   async function submit() {
     if (!props.question) return
-    const container = getContainer()
-    if (container) {
-      const els = container.querySelectorAll('select')
-      els.forEach((el, idx) => {
-        selectAnswers.value[idx] = (el as HTMLSelectElement).value
-      })
-    }
+    selectAnswers.value = currentValues()
     // 服务端判分（show 不下发答案，本地无法判定）
     const result = await submitQuestion({
       questionId: props.questionId,
-      userAnswer: selectAnswers.value.map((a: any) => (a || '').trim()),
+      userAnswer: selectAnswers.value,
       courseId: courseId.value,
       chapterId: chapterId.value,
       point: props.question.point,
@@ -132,38 +97,32 @@ export function useSelect(props: any) {
     })
     if (!result) return null
     isCorrect.value = result.isCorrect
-    // 答案已由响应合并进 question，着色依赖它
     styleSelects()
     return { isCorrect: result.isCorrect }
   }
 
   function reset() {
     selectAnswers.value = (props.question.answer || []).map(() => '')
-    const container = getContainer()
-    if (container) {
-      container.querySelectorAll('select').forEach(el => { (el as HTMLSelectElement).value = '' })
-    }
+    applying = true
+    bindings.value.forEach((b) => { b.value.value = '' })
+    nextTick(() => { applying = false })
     clearSelectStyles()
     props.question.record = []
   }
 
   function fillCorrectAnswer() {
     if (props.question?.answer && props.question.answer.length > 0) {
-      const container = getContainer()
-      if (container) {
-        const els = container.querySelectorAll('select')
-        props.question.answer.forEach((ans: any, idx: number) => {
-          if (els[idx]) {
-            ;(els[idx] as HTMLSelectElement).value = ans
-          }
-        })
-      }
+      applying = true
+      props.question.answer.forEach((ans: any, idx: number) => {
+        if (bindings.value[idx]) bindings.value[idx].value.value = String(ans)
+      })
+      nextTick(() => { applying = false })
       clearSelectStyles()
       props.question.record = [...props.question.answer]
     }
   }
 
-  onBeforeUnmount(() => { unbindSelects() })
+  onBeforeUnmount(() => {})
 
   return {
     hasAnswer,

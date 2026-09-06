@@ -88,7 +88,9 @@ export function markdownToTiptap(markdown: string): TiptapNode {
       || /^[-*+]\s+/.test(line)
       || /^\d+\.\s+/.test(line)
       || /^---+$/.test(line.trim())
-      || /^\$\$/.test(line);
+      || /^\$\$/.test(line)
+      || /^\s*\|.+/.test(line) // 表格行（含表头/分隔/数据行）
+      || /^:::/.test(line); // 扩展组件围栏（callout/columns/html 等）
   }
 
   // 解析行内元素
@@ -313,6 +315,148 @@ export function markdownToTiptap(markdown: string): TiptapNode {
     while (i < lines.length) {
       const line = lines[i];
 
+      // 扩展围栏节点构建器（可访问 parseBlocks / parseInline / parseParams 等）
+      // extType 小写；extParams 为开围栏行 "类型 参数" 中的参数串
+      function buildExtFenceBlock(extType: string, extParams: string, raw: string): TiptapNode | null {
+        const attrs = parseParams(extParams);
+        const body = raw.trim();
+        // 子内容转 doc（供 tabs/stepper/vfiles 的富文本 content 使用）
+        const sub = (md: string): TiptapNode => ({ type: 'doc', content: parseBlocks(md) });
+        // 生成短唯一 id
+        const uid = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-3);
+        // vue 包装节点
+        const vueWrap = (type: string, content: any, extra?: Record<string, any>): TiptapNode => ({
+          type: 'vue',
+          attrs: { type, content: typeof content === 'string' ? content : JSON.stringify(content), ...(extra || {}) },
+        });
+
+        switch (extType) {
+          case 'callout': {
+            const node: TiptapNode = { type: 'callout', content: parseBlocks(body) };
+            const icon = attrs['icon']; const bg = attrs['bg'] || attrs['backgroundColor'];
+            const fc = attrs['color'] || attrs['fontColor'];
+            if (icon || fc || bg) {
+              node.attrs = {};
+              if (icon) node.attrs.icon = icon;
+              if (bg) node.attrs.backgroundColor = bg;
+              if (fc) node.attrs.fontColor = fc;
+            }
+            return node;
+          }
+          case 'details': {
+            const titleBlocks = parseBlocks(attrs['title'] || '更多详情') || [];
+            return {
+              type: 'details',
+              attrs: attrs['open'] === '1' || attrs['open'] === 'true' ? { open: true } : undefined,
+              content: [
+                { type: 'detailsSummary', content: titleBlocks },
+                { type: 'detailsContent', content: parseBlocks(body) },
+              ],
+            };
+          }
+          case 'iframe': {
+            return { type: 'iframe', attrs: { src: attrs['src'] || body.trim(), height: attrs['height'] ? Number(attrs['height']) : 200 } };
+          }
+          case 'image': {
+            const node: TiptapNode = { type: 'image', attrs: { src: attrs['src'] || body.trim() } };
+            if (attrs['alt']) node.attrs.alt = attrs['alt'];
+            if (attrs['title']) node.attrs.title = attrs['title'];
+            return node;
+          }
+          case 'tasklist': {
+            const items = body.split('\n').map((ln) => ln.trim()).filter(Boolean)
+              .filter((ln) => /^[-*+]\s*\[[ xX]\]/.test(ln))
+              .map((ln) => {
+                const checked = /\[[xX]\]/.test(ln);
+                const text = ln.replace(/^[-*+]\s*\[[ xX]\]\s*/, '');
+                return { type: 'taskItem', attrs: { checked }, content: parseBlocks(text) };
+              });
+            if (!items.length) return null;
+            return { type: 'taskList', content: items };
+          }
+          case 'blockquote':
+            return { type: 'blockquote', content: parseBlocks(body) };
+          // ===== 新增：column / echarts / 自定义 vue 组件 =====
+          case 'columns': {
+            // :::columns 内用 :::col width=200 ... ::: 划分左右分栏
+            const colNodes: TiptapNode[] = [];
+            const lines = body.split('\n');
+            let ci = 0;
+            let guard = 0;
+            while (ci < lines.length && guard++ < 1000) {
+              const m = lines[ci].match(/^:::\s*col(?:\s+(.*))?$/i);
+              if (m) {
+                const colAttrs = parseParams(m[1] || '');
+                const fb = readFenceBody(lines, ci);
+                ci = fb.nextIndex;
+                colNodes.push({
+                  type: 'column',
+                  attrs: { colWidth: colAttrs['width'] ? Number(colAttrs['width']) : 200 },
+                  content: parseBlocks(fb.inner.join('\n')),
+                });
+              } else {
+                ci++;
+              }
+            }
+            if (!colNodes.length) return null;
+            return { type: 'columnContainer', content: colNodes };
+          }
+          case 'echarts': {
+            // :::echarts height=300  正文为该 ECharts option JSON :::
+            let option: any = null;
+            try { option = JSON.parse(body); } catch { option = null; }
+            if (!option || typeof option !== 'object') return null;
+            const node: TiptapNode = { type: 'echarts', attrs: { chartOptions: option } };
+            if (attrs['height']) node.attrs = { chartOptions: option, height: Number(attrs['height']) || 200 };
+            return node;
+          }
+          case 'html': {
+            // :::html height=300  正文为一段 HTML 代码 :::（渲染为 iframe 沙箱页面）
+            const extra: Record<string, any> = {};
+            if (attrs['height']) extra.height = Number(attrs['height']) || 300;
+            return vueWrap('html', body, extra);
+          }
+          case 'tabs': {
+            // :::tabs  每个 ## 小标题是一个标签页，正文为该页 markdown :::
+            const sections = splitByH2(body);
+            if (!sections.length) return null;
+            const tabs = sections.map((s) => ({ label: s.title || 'Tab', content: sub(s.lines.join('\n')) }));
+            return vueWrap('tabs', { tabs });
+          }
+          case 'stepper': {
+            // :::stepper orientation=horizontal  每个 ## 小标题是一步（title+description） :::
+            const sections = splitByH2(body);
+            if (!sections.length) return null;
+            const steps = sections.map((s) => ({ title: s.title || '', description: sub(s.lines.join('\n')) }));
+            return vueWrap('stepper', { orientation: attrs['orientation'] || 'horizontal', steps });
+          }
+          case 'vfiles': {
+            // :::vfiles  每个 ## 小标题是一个文件（label + 富文本 content） :::
+            const sections = splitByH2(body);
+            if (!sections.length) return null;
+            const items = sections.map((s) => ({
+              id: uid(),
+              label: s.title || 'untitled',
+              type: 'file',
+              content: sub(s.lines.join('\n')),
+            }));
+            return vueWrap('vfiles', { items });
+          }
+          case 'sheet': {
+            // :::sheet height=300  正文为 markdown 表格，转为 Univer 单元格数据 :::
+            const cellData = tableToCellData(body);
+            return vueWrap('sheet', { height: attrs['height'] ? Number(attrs['height']) : 300, cellData });
+          }
+          case 'mindmap': {
+            // :::mindmap  正文为 markdown（一级标题 # / 缩进列表 - 表达节点层级），
+            // content 存原始 markdown 字符串，由 simple-mind-map 解析渲染 :::
+            return vueWrap('mindmap', body);
+          }
+          default:
+            return null;
+        }
+      }
+
       // 代码块处理：支持 3+ 反引号围栏（如 ````doc ... ````）
       // 4 反引号围栏允许内部包含 3 反引号 question 块而不冲突
       const fenceMatch = line.match(/^(`{3,})(\w*)$/);
@@ -341,6 +485,93 @@ export function markdownToTiptap(markdown: string): TiptapNode {
         codeContent.push(line);
         i++;
         continue;
+      }
+
+      // ===== 扩展节点围栏：:::类型 参数 ... ::: =====
+      // 用于编辑器支持的富组件（callout/details/image/iframe/taskList/columns/
+      // html/tabs/stepper/vfiles/sheet/echarts 等），普通 markdown 语法表达不了，
+      // 用统一围栏语法承载：
+      //   :::callout icon=💡 bg=#eff6ff
+      //   内容段落
+      //   :::
+      // 嵌套感知：:::word 开头 depth+1，单独 ::: 结束 depth-1（支持 :::columns/:::col）
+      const extFenceOpen = line.match(/^:::\s*([A-Za-z][\w-]*)(?:\s+(.*))?$/);
+      if (extFenceOpen) {
+        const extType = extFenceOpen[1].toLowerCase();
+        const extParams = extFenceOpen[2] || '';
+        const { inner, nextIndex } = readFenceBody(lines, i);
+        i = nextIndex;
+        const block = buildExtFenceBlock(extType, extParams, inner.join('\n'));
+        if (block) blocks.push(block);
+        continue;
+      }
+
+      // 各处可复用的 `:::` 围栏读取（嵌套计数，返回围栏内行与结束后的索引）
+      function readFenceBody(lines: string[], startIdx: number): { inner: string[]; nextIndex: number } {
+        let depth = 1;
+        let j = startIdx + 1;
+        const inner: string[] = [];
+        while (j < lines.length) {
+          const l = lines[j];
+          if (/^:::\s*([A-Za-z][\w-]*)/.test(l)) {
+            depth++; // 嵌套开围栏，保留用于后续解析
+            inner.push(l);
+          } else if (/^:::\s*$/.test(l)) {
+            depth--;
+            if (depth === 0) { j++; break; }
+            inner.push(l);
+          } else {
+            inner.push(l);
+          }
+          j++;
+        }
+        return { inner, nextIndex: j };
+      }
+
+      // 解析 "k=v k=v" 参数
+      function parseParams(extParams: string): Record<string, string> {
+        const attrs: Record<string, string> = {};
+        const pm = extParams.match(/(\w+)=("([^"]*)"|'([^']*)'|[^\s]+)/g);
+        (pm || []).forEach((kv: string) => {
+          const eq = kv.indexOf('=');
+          if (eq > 0) { const k = kv.slice(0, eq).trim(); const v = kv.slice(eq + 1).replace(/^["']|["']$/g, '').trim(); attrs[k] = v; }
+        });
+        return attrs;
+      }
+
+      // 按 ## 二级标题切分围栏正文为若干小节
+      function splitByH2(body: string): { title: string; lines: string[] }[] {
+        const lines = body.split('\n');
+        const sections: { title: string; lines: string[] }[] = [];
+        let cur: { title: string; lines: string[] } | null = null;
+        for (const ln of lines) {
+          const m = ln.match(/^#{2}\s+(.*)$/);
+          if (m) {
+            if (cur) sections.push(cur);
+            cur = { title: m[1].trim(), lines: [] };
+          } else if (cur) {
+            cur.lines.push(ln);
+          }
+        }
+        if (cur) sections.push(cur);
+        return sections;
+      }
+
+      // markdown 表格 → sheet 的 cellData（Record<行, Record<列, {v}>>）
+      function tableToCellData(body: string): Record<number, Record<number, { v: string }>> {
+        const cellData: Record<number, Record<number, { v: string }>> = {};
+        const rows = body.split('\n').map((s) => s.trim()).filter(Boolean);
+        let r = 0;
+        for (const ln of rows) {
+          if (!ln.startsWith('|') || !ln.includes('|')) continue;
+          const cells = ln.replace(/^\|/, '').replace(/\|\s*$/, '').split('|').map((c) => c.trim());
+          if (cells.every((c) => /^:?-{2,}:?$/.test(c))) continue; // 表头分隔行
+          const row: Record<number, { v: string }> = {};
+          cells.forEach((v, c) => { row[c] = { v }; });
+          cellData[r] = row;
+          r++;
+        }
+        return cellData;
       }
 
       // 块级数学公式 $$...$$（单行或多行）
@@ -415,6 +646,51 @@ export function markdownToTiptap(markdown: string): TiptapNode {
           type: 'blockquote',
           content: parseBlocks(quoteLines.join('\n'))
         });
+        continue;
+      }
+
+      // 表格：| 列1 | 列2 |（首行为表头，第二行为 --- 分隔符行）
+      if (/^\s*\|/.test(line) && line.includes('|')) {
+        const rawRows: string[] = [line];
+        i++;
+        while (i < lines.length && /^\s*\|/.test(lines[i]) && lines[i].includes('|')) {
+          rawRows.push(lines[i]);
+          i++;
+        }
+        // 拆分一行单元格：去掉首尾竖线后按 | 切开并 trim
+        const splitRow = (s: string): string[] => {
+          const t = s.trim();
+          return t
+            .replace(/^\|/, '')
+            .replace(/\|\s*$/, '')
+            .split('|')
+            .map((c) => c.trim());
+        };
+        // 分隔符行：每个单元格都是 :?---+:?（含冒号对齐符号）
+        const isSep = (cells: string[]): boolean =>
+          cells.length > 0 && cells.every((c) => /^:?-{2,}:?$/.test(c));
+        const makeCell = (type: string, text: string): TiptapNode => ({
+          type,
+          content: [{ type: 'paragraph', content: parseInline(text) }],
+        });
+        const tableRows: TiptapNode[] = [];
+        let bodyStart = 0;
+        // 第二行是分隔符 → 第一行为表头
+        if (rawRows.length >= 2 && isSep(splitRow(rawRows[1]))) {
+          tableRows.push({
+            type: 'tableRow',
+            content: splitRow(rawRows[0]).map((c) => makeCell('tableHeader', c)),
+          });
+          bodyStart = 2;
+        }
+        for (let ri = bodyStart; ri < rawRows.length; ri++) {
+          if (isSep(splitRow(rawRows[ri]))) continue; // 跳过可能的额外分隔行
+          tableRows.push({
+            type: 'tableRow',
+            content: splitRow(rawRows[ri]).map((c) => makeCell('tableCell', c)),
+          });
+        }
+        if (tableRows.length > 0) blocks.push({ type: 'table', content: tableRows });
         continue;
       }
 

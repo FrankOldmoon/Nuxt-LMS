@@ -106,6 +106,7 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
     provide('questionSubmitted', submitted)
     provide('questionIsCorrect', isCorrect)
     provide('questionFromRecord', fromRecord)
+    provide('questionId', questionId)
 
     const hasAnswer = computed(() => renderRef.value?.hasAnswer ?? false)
     const isTeacher = computed(() => hasRole('teacher') || hasRole('admin'))

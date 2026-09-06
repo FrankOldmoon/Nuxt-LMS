@@ -1,5 +1,6 @@
 import { db, schema } from '@nuxthub/db'
 import { eq } from 'drizzle-orm'
+import { normalizeContent } from '../../utils/content'
 
 
 export default eventHandler(async (event) => {
@@ -11,6 +12,11 @@ export default eventHandler(async (event) => {
   }
 
   await requireCourseTeacher(event, Number(id))
+
+  // content 支持直接传 markdown 字符串（自动转 tiptap doc）
+  if (setData.content !== undefined) {
+    setData.content = normalizeContent(setData.content)
+  }
 
   try {
     // 若更新了 content，先将旧内容保存为版本快照

@@ -45,9 +45,22 @@ Question JSON schema and per-type formats:
 
 ${allPrompts()}
 
-Important:
-- The \`type\` field must be one of the supported types listed above.
-- The \`answer\` field must be logically correct and consistent with the question.
-- The \`content\`, \`options\` and \`explanation\` fields may use markdown syntax for text-based types.
-- Keep prose concise and well-structured.`
+Rendered component fences: you can embed special UI components with \`:::\` fences (opened by \`:::type key=val\` and closed by a lone \`:::\`). Supported:
+
+- Callout box: \`:::callout icon=💡 bg=#eff6ff\` then normal markdown content, close with \`:::\`. Optional keys: \`icon\`, \`bg\` (background CSS color), \`color\` (font color).
+- Collapsible details: \`:::details title=展开查看\` then content, close with \`:::\`. Optional \`open=1\` to expand by default.
+- Task list: \`:::tasklist\`, then lines like \`- [x] 已完成\` / \`- [ ] 待办\`, close with \`:::\`. Rendered as checkable todo items.
+- Inline iframe: \`:::iframe src=https://... height=300\`, close with \`:::\`. \`src\` required, \`height\` optional (default 200).
+- Image: \`:::image src=https://... alt=说明 title=悬停标题\`, close with \`:::\`. \`src\` required; \`alt\`/optional.
+- Markdown table: a header row then a separator row of \`---\`, e.g. \`| 名称 | 说明 |\` then \`| --- | --- |\` then data rows; each column separated by \`|\`. Rendered as a real table.
+- Columns: \`:::columns\` ... inside it use \`:::col width=200\` ... \`:::\` per column ... \`:::\`. Each \`:::col\` body is markdown; \`width\` is px. Rendered as side-by-side columns.
+- Chart (ECharts): \`:::echarts height=300\` then an ECharts option JSON on its own lines and close with \`:::\`. E.g. a bar/line/pie option with \`xAxis\`/\`yAxis\`/\`series\`.
+- HTML block: \`:::html height=150\` then raw HTML markup, close with \`:::\`. Rendered in a sandboxed iframe.
+- Tabs: \`:::tabs\` then each tab as a \`## 标签名\` heading followed by that tab's markdown content, close with \`:::\`.
+- Stepper (分步): \`:::stepper orientation=horizontal\` then each step as \`## 步骤标题\` followed by its description markdown, close with \`:::\`. \`orientation\` can be \`horizontal\`/\`vertical\`.
+- Files (vfiles): \`:::vfiles\` then each file as \`## 文件名\` followed by that file's markdown content, close with \`:::\`.
+- Sheet (表格编辑): \`:::sheet height=220\` then a markdown table (header + \`---\` rows), close with \`:::\`. Rendered as a spreadsheet.
+- Mind map (思维导图): \`:::mindmap\` then markdown expressing the hierarchy (use level-1 \`# 中心主题\` plus nested headings, OR an indented bullet list), close with \`:::\`. Rendered as a mind map where heading/bullet indentation becomes node levels.
+
+Use these fences sparingly for emphasis (callouts/tasklists) and only when they genuinely help the reader. Keep prose concise and well-structured.`
 }

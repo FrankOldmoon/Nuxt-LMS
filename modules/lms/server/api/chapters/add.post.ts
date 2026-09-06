@@ -5,6 +5,7 @@
  */
 import { db, schema } from '@nuxthub/db'
 import { eq } from 'drizzle-orm'
+import { normalizeContent } from '../../utils/content'
 
 export default eventHandler(async (event) => {
   const body = await readBody(event)
@@ -17,6 +18,10 @@ export default eventHandler(async (event) => {
   }
 
   try {
+    // content 支持直接传 markdown 字符串（自动转 tiptap doc）
+    if (body.content !== undefined) {
+      body.content = normalizeContent(body.content)
+    }
     // 读取课程 lmsConfig.course.defaultChapterOpen，若未显式传 isOpen 则用合并后的默认值
     if (body.isOpen === undefined && body.courseId) {
       const course = await db

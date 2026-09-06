@@ -30,14 +30,31 @@
   "code": "COURSE-CODE",
   "categoryId": 1,
   "tags": ["标签1", "标签2"],
-  "config": {}
+  "config": {},
+  "content": {
+    "type": "doc",
+    "content": []
+  }
 }
 ```
 
 - `name` 必填；`categoryId` 必填（数字）
 - 可选：`code`、`tags`（数组）、`config`（JSON，可含 `lmsConfig` 课程级配置）
-- `content`（课程首页内容，tiptap JSON）与 `orders`（章节目录）不在此步骤设置
+- `orders`（章节目录）不在此步骤设置（见 skills/02）
 - 成功响应 `data` 为数组，含新记录一行，取 `data[0].id` 作为课程 id
+
+## ⚠️ 课程首页 content（必写，与 chapter 相同 JSON 结构）
+
+课程必须有 `content`（课程首页/简介，渲染在 `/course/<id>` 顶部"关于课程"区，
+由 `UeditorRender` 渲染，结构**与 chapter 的 content 完全一致**：根节点
+`{ "type": "doc", "content": [块级节点...] }`）。创建时直接随 body 带上，或创建后
+`POST /api/courses/update` 更新（同样自动存旧版本快照）。
+
+- 结构、节点、富组件（`:::` 转 tiptap）、题目嵌入等规则 **与 chapter content 完全一致**，见 skills/03
+- **无需本机转 JSON**：add/update 接口的 `content` 可以直接传 **markdown 字符串**，
+  服务端自动 `markdownToTiptap` 转 doc 并补 heading id（见 skills/03「保存入口直接支持 markdown」）
+- 推荐做法：直接把课程简介的 markdown 文本作为 `content` 传入即可
+- 不写 content → 课程首页"关于课程"区不显示（`hasContent` 为假），视为漏写
 
 ## 批量创建
 

@@ -37,9 +37,16 @@ pnpm dev              # 自动 nuxt-hub db migrate 后启动 dev，默认 http:/
   "name": "Markdown 语法入门",
   "code": "MARKDOWN-101",
   "categoryId": <分类id>,
-  "tags": ["Markdown", "写作"]
+  "tags": ["Markdown", "写作"],
+  "content": {
+    "type": "doc",
+    "content": []
+  }
 }
 ```
+
+**必须带 `content`**（课程首页简介，tiptap doc JSON，结构与 chapter 完全一致，规则见 skills/03）。
+推荐先用 markdown 写课程简介（含富组件 `:::` 围栏），再用 `markdownToTiptap()` 转成 doc JSON 填入。
 
 记录返回的课程 `id`（记为 COURSE_ID）。
 

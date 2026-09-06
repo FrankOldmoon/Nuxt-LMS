@@ -1,7 +1,10 @@
+import { normalizeContent } from '../../utils/content'
+
 /**
  * 更新章节：更新时自动从 content 中提取 question/homework/comment 的 ID 存入 chapter
  * POST /api/chapters/update
  * body: { id, content?, ...其他字段 }
+ * content 支持直接传 markdown 字符串（自动转 tiptap doc）
  */
 // 需要提取的 vue 类型及其对应的 chapter 字段
 
@@ -59,6 +62,11 @@ export default eventHandler(async (event) => {
   }
 
   await requireChapterTeacher(event, Number(id))
+
+  // content 支持直接传 markdown 字符串（自动转 tiptap doc）
+  if (setData.content !== undefined) {
+    setData.content = normalizeContent(setData.content)
+  }
 
   // 查询章节当前数据（用于内容版本快照 + courseId 用于 WS 同步通知）
   const current = await showTable('chapters', Number(id))
