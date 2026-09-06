@@ -87,3 +87,33 @@ export async function requireChapterTeacher(event: any, chapterId: number): Prom
 
   throw createError({ statusCode: 403, message: '无权限：仅管理员或该课程的编辑者可操作' })
 }
+
+/**
+ * 检查当前用户是否是某班级的教师（userClasses.isTeacher 标志）
+ */
+export async function isClassTeacher(userId: number, classId: number): Promise<boolean> {
+  const rows = await db
+    .select({ isTeacher: schema.userClasses.isTeacher })
+    .from(schema.userClasses)
+    .where(
+      and(
+        eq(schema.userClasses.userId, userId),
+        eq(schema.userClasses.classId, classId),
+      ),
+    )
+    .limit(1)
+  return rows.length > 0 && !!rows[0].isTeacher
+}
+
+/**
+ * 要求是管理员或是目标班级的教师，否则抛 403
+ * @param classId - 班级 ID
+ */
+export async function requireClassTeacher(event: any, classId: number): Promise<ReturnType<typeof requireAuth>> {
+  const user = await requireAuth(event)
+  if (user.roles.includes('admin')) return user
+
+  if (await isClassTeacher(user.id, classId)) return user
+
+  throw createError({ statusCode: 403, message: '无权限：仅管理员或该班级的教师可操作' })
+}

@@ -1,7 +1,4 @@
 export default eventHandler(async (event) => {
-  // 仅教师/管理员可更新
-  await requireRole(event, ['teacher', 'admin'])
-
   const table = 'classes'
   const body = await readBody(event)
   const { id, ...setData } = body
@@ -9,6 +6,9 @@ export default eventHandler(async (event) => {
   if (!id) {
     return cResp(null, '缺少 id 参数', false)
   }
+
+  // 仅管理员或该班级的教师可更新
+  await requireClassTeacher(event, Number(id))
 
   try {
     const result = await updateTable(table, Number(id), setData)

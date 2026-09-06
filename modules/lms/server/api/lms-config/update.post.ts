@@ -20,7 +20,8 @@ import { reloadLmsConfig, getLmsConfigSync } from '../../utils/lmsConfig/cache'
  *       不需要前端适配。如前端已有 lms:* 拍平对象可改用 /api/config/update-batch。
  */
 export default eventHandler(async (event) => {
-  await requireRole(event, ['teacher', 'admin'])
+  // 全局 LMS 配置仅管理员可修改（课程级配置走 /api/lms-config/course，由 requireCourseTeacher 把关）
+  await requireAdmin(event)
 
   const body = await readBody(event)
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
