@@ -5,17 +5,16 @@ import { eq, and } from "drizzle-orm"
  * 更新同伴互评活动配置
  * POST /api/peer-reviews/update
  * body: { course_id, cid, name?, options? }
- * 权限：教师/管理员
+ * 权限：管理员或该课程的教师/编辑者
  */
 export default eventHandler(async (event) => {
-  await requireRole(event, ['teacher', 'admin'])
-
   const body = await readBody(event)
   const courseId = Number(body?.course_id)
   const peerCid = Number(body?.cid)
   if (!courseId || !peerCid) {
     return cResp(null, '缺少 course_id 或 cid 参数', false)
   }
+  await requireCourseTeacher(event, courseId)
 
   const updateData: Record<string, any> = {}
   if (typeof body.name === 'string') updateData.name = body.name.trim()

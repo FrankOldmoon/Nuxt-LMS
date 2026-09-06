@@ -2,14 +2,15 @@ import { db, schema } from "@nuxthub/db"
 import { eq, desc } from "drizzle-orm"
 
 export default eventHandler(async (event) => {
-  await requireRole(event, ['teacher', 'admin'])
-
   const body = await readBody(event)
   const { course_id } = body
 
   if (!course_id) {
     return cResp(null, '缺少 course_id 参数', false)
   }
+
+  // 仅管理员或该课程的教师/编辑者可新增
+  await requireCourseTeacher(event, Number(course_id))
 
   try {
     const maxCidResult = await db.select({ cid: schema.quizzes.cid })

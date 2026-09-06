@@ -2,14 +2,15 @@ import { db, schema } from "@nuxthub/db"
 import { eq, and } from "drizzle-orm"
 
 export default eventHandler(async (event) => {
-  await requireRole(event, ['teacher', 'admin'])
-
   const body = await readBody(event)
   const { course_id, cid, type } = body
 
   if (!course_id || !cid || !type) {
     return cResp(null, '缺少参数', false)
   }
+
+  // 仅管理员或该课程的教师/编辑者可删除题目类内容
+  await requireCourseTeacher(event, Number(course_id))
 
   const courseId = Number(course_id)
   const itemCid = Number(cid)

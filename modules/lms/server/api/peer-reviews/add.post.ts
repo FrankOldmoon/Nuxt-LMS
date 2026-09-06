@@ -5,16 +5,15 @@ import { eq, desc } from "drizzle-orm"
  * 新建同伴互评活动（配置）
  * POST /api/peer-reviews/add
  * body: { course_id, name, options: [{ key, label, maxScore }] }
- * 权限：教师/管理员
+ * 权限：管理员或该课程的教师/编辑者
  */
 export default eventHandler(async (event) => {
-  await requireRole(event, ['teacher', 'admin'])
-
   const body = await readBody(event)
   const courseId = Number(body?.course_id)
   if (!courseId) {
     return cResp(null, '缺少 course_id 参数', false)
   }
+  await requireCourseTeacher(event, courseId)
   const name = String(body?.name || '').trim()
   const options = Array.isArray(body?.options) ? body.options : []
   if (!name) return cResp(null, '缺少活动名称', false)
