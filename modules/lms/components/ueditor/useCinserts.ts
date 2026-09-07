@@ -48,6 +48,7 @@ export function useCinserts(props: any, emit: any) {
             { label: t('ueditor.insertOffice'), icon: 'i-lucide-file-spreadsheet', onSelect: () => insertTypedSheet('office') },
             { label: t('ueditor.insert3d'), icon: 'i-lucide-box', onSelect: () => insertVueNode('3d') },
             { label: t('ueditor.insertMindmap'), icon: 'i-lucide-network', onSelect: () => insertVueNode('mindmap') },
+            { label: t('ueditor.insertPintora'), icon: 'i-lucide-workflow', onSelect: () => insertPintora() },
             { label: t('ueditor.insertAichat'), icon: 'i-lucide-bot', onSelect: () => insertAichat() },
             { label: t('ueditor.insertAigenerator'), icon: 'i-lucide-sparkles', onSelect: () => insertAigenerator() },
             { label: t('ueditor.insertCondition'), icon: 'i-lucide-shield-check', onSelect: () => insertTypedSheet('condition') },
@@ -114,6 +115,19 @@ export function useCinserts(props: any, emit: any) {
         editor.chain().focus().insertContent({
             type: 'vue',
             attrs: { content: "", type },
+        }).run()
+    }
+
+    // 插入 Pintora 图节点（带默认示例 DSL，编辑器设置面板可修改）
+    function insertPintora() {
+        const editor = props.editor?.useEditor()
+        if (!editor) return
+        const defaultCode = `sequenceDiagram
+  Alice->>John: Hello John, how are you?
+  John-->>Alice: Great!`
+        editor.chain().focus().insertContent({
+            type: 'vue',
+            attrs: { content: defaultCode, type: 'pintora' },
         }).run()
     }
 

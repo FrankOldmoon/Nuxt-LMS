@@ -779,6 +779,13 @@
       "height": "高度",
       "heightPlaceholder": "自适应内容（留空）"
     },
+    "pintora": {
+      "loading": "图表渲染中…",
+      "empty": "点击设置，编写 Pintora DSL（如 sequenceDiagram）",
+      "height": "高度",
+      "heightPlaceholder": "自适应内容（留空）",
+      "liveEditor": "打开 Pintora 在线编辑器（示例参考）"
+    },
     "json": {
       "title": "管理 JSON 内容",
       "insert": "插入"
@@ -825,6 +832,7 @@
     "insertOffice": "Office",
     "insert3d": "3D 模型",
     "insertMindmap": "思维导图",
+    "insertPintora": "Pintora 图",
     "insertAichat": "AI 聊天",
     "insertAigenerator": "AI 出题器",
     "insertCondition": "条件",

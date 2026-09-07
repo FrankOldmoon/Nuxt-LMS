@@ -61,6 +61,7 @@ Rendered component fences: you can embed special UI components with \`:::\` fenc
 - Files (vfiles): \`:::vfiles\` then each file as \`## 文件名\` followed by that file's markdown content, close with \`:::\`.
 - Sheet (表格编辑): \`:::sheet height=220\` then a markdown table (header + \`---\` rows), close with \`:::\`. Rendered as a spreadsheet.
 - Mind map (思维导图): \`:::mindmap\` then markdown expressing the hierarchy (use level-1 \`# 中心主题\` plus nested headings, OR an indented bullet list), close with \`:::\`. Rendered as a mind map where heading/bullet indentation becomes node levels.
+- Pintora diagram (文本转图表): \`:::pintora height=300\` then Pintora DSL code, close with \`:::\`. Rendered as an SVG diagram. Example DSL: \`sequenceDiagram\` with \`participant\` and \`Alice->>Bob: 消息\` arrows; also supports \`activityDiagram\`, \`mindmap\`, \`componentDiagram\`, \`er\`, \`classDiagram\`, \`gitGraph\`.
 
 Use these fences sparingly for emphasis (callouts/tasklists) and only when they genuinely help the reader. Keep prose concise and well-structured.`
 }

@@ -779,6 +779,13 @@
       "height": "Height",
       "heightPlaceholder": "Auto-fit content (leave blank)"
     },
+    "pintora": {
+      "loading": "Rendering diagram...",
+      "empty": "Open settings and write Pintora DSL (e.g. sequenceDiagram)",
+      "height": "Height",
+      "heightPlaceholder": "Auto-fit content (leave blank)",
+      "liveEditor": "Open Pintora live editor (examples)"
+    },
     "json": {
       "title": "Manage JSON Content",
       "insert": "Insert"
@@ -825,6 +832,7 @@
     "insertOffice": "Office",
     "insert3d": "3D Model",
     "insertMindmap": "Mind Map",
+    "insertPintora": "Pintora Diagram",
     "insertAichat": "AI Chat",
     "insertAigenerator": "AI Question Generator",
     "insertCondition": "Condition",

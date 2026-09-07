@@ -466,6 +466,13 @@ export function markdownToTiptap(markdown: string): TiptapNode {
             // content 存原始 markdown 字符串，由 simple-mind-map 解析渲染 :::
             return vueWrap('mindmap', body);
           }
+          case 'pintora': {
+            // :::pintora height=300  正文为 Pintora DSL（sequenceDiagram / activityDiagram / mindmap 等），
+            // content 存原始 DSL 字符串，由 Pintora（CDN 加载）渲染为 SVG :::
+            const extra: Record<string, any> = {};
+            if (attrs['height']) extra.height = Number(attrs['height']) || 300;
+            return vueWrap('pintora', body, extra);
+          }
           default:
             return null;
         }
