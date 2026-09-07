@@ -127,7 +127,12 @@ cRequest.use = <T = any>(url: string | (() => string) | Ref<string>, options: Re
       // 且因 null !== undefined 触发 "hydration success" 分支，跳过重新请求，
       // 导致教师客户端 data 永久为 null、页面内容消失
       const nuxtApp = useNuxtApp()
-      return nuxtApp.payload.data[key] ?? nuxtApp.static.data[key]
+      const v = nuxtApp.payload.data[key] ?? nuxtApp.static.data[key]
+      // 缓存值为 null 时视为"无缓存"（返回 undefined 走正常请求路径）：
+      // 若直接返回 null，useAsyncData.execute 的 getCachedData 分支
+      // （cachedData !== void 0）会短路并跳过请求，data 保持 null，
+      // 导致客户端路由跳转到课程/章节时误显示 not found（刷新才恢复）。
+      return v === null ? undefined : v
     },
     transform: (raw: any) => {
       if (raw && typeof raw === 'object' && 'data' in raw && 'success' in raw) {
@@ -144,6 +149,16 @@ cRequest.use = <T = any>(url: string | (() => string) | Ref<string>, options: Re
     if (instance) {
       onMounted(() => {
         if (isTeacherPlus()) {
+          fetchResult.refresh()
+        }
+      })
+      // 客户端请求失败（瞬时网络错误等）自动重试一次，避免路由跳转后
+      // 课程/章节页面因一次失败误显示 not found（data 为 null）。
+      // 仅对 fetch 被拒绝（网络/HTTP 错误）触发；API 正常返回"不存在"不会进入 error 状态。
+      let retried = false
+      watch(() => fetchResult.status.value, (s) => {
+        if (!retried && s === 'error') {
+          retried = true
           fetchResult.refresh()
         }
       })
