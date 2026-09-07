@@ -278,8 +278,11 @@ export function setupChapterTask(opts: {
     }
     taskStatus.value = merged
     if (serverIsPass && !isPass.value) isPass.value = true
-    // 服务端状态已同步：同步通知水位，避免下次 persist 重复 notify/checkMedals
-    lastNotifiedPass = isPass.value
+    // 服务端状态已同步：同步通知水位，避免下次 persist 重复 notify/checkMedals。
+    // 水位应反映「服务端已知的通过状态」（左侧章节列表展示的正是服务端 is_pass）：
+    // 若本地已通过但 me 仍返回旧值（答题/作业刚完成、task-status 尚未落库），
+    // 不能把水位提前到 true，否则 persist 后 passChanged=false，不会通知侧边栏刷新打钩。
+    if (serverIsPass !== undefined) lastNotifiedPass = !!serverIsPass
     // 用已完成的 heading 反推 node 级状态（只补 true 不回退）。
     // 必须基于现有 nodeStatus 合并：me 可能返回旧进度（答题/作业刚上报尚未落库），
     // 直接覆盖会清空本地已答对但服务端还不知道的任务记录，导致 heading 永远无法完成。
