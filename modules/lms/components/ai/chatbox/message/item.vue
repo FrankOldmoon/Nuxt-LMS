@@ -14,8 +14,8 @@
         </div>
         <div v-if="msg._reasoningExpanded" class="mt-1 text-xs text-gray-500 dark:text-gray-400 leading-relaxed" v-html="renderContent(msg.reasoning)" />
       </div>
-      <!-- 消息内容 -->
-      <ueditorRender :json="msg.content" />
+      <!-- 消息内容：流式期间用轻量纯文本渲染（避免每 delta 全量 markdown 解析重建富文本卡死），结束后富文本化 -->
+      <ueditorRender :json="msg.content" :markdown="!msg._streaming" />
       <!-- 朗读按钮（仅 assistant 文本消息） -->
       <div v-if="canSpeak(msg)" class="flex justify-end mt-1">
         <button type="button" class="text-xs flex items-center gap-1 transition-colors"

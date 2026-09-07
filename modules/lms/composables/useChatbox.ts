@@ -7,6 +7,9 @@ export interface ChatMessage {
   content: string | any
   reasoning?: string
   _reasoningExpanded?: boolean
+  _userToggled?: boolean
+  /** 是否为流式进行中的消息：流式期间 content 用轻量渲染，结束后富文本化 */
+  _streaming?: boolean
   _isJson?: boolean
   _spoken?: boolean
 }
@@ -121,6 +124,8 @@ export function useChatbox(
 
     if (messages.value[idx]) {
       messages.value[idx]._reasoningExpanded = !messages.value[idx]._reasoningExpanded
+      // 标记用户已主动操作过，后续流式自动展开/折叠不再覆盖该消息
+      messages.value[idx]._userToggled = true
       messages.value = [...messages.value]
 
       nextTick(() => {
@@ -276,24 +281,41 @@ export function useChatbox(
 
     try {
       if (props.customSend) {
-        let assistantMsg: ChatMessage = { role: 'assistant', content: '', reasoning: '', _reasoningExpanded: false }
+        let assistantMsg: ChatMessage = { role: 'assistant', content: '', reasoning: '', _reasoningExpanded: false, _streaming: true }
         messages.value.push(assistantMsg)
+        // 注意：push 后局部 assistantMsg 仍是原始对象，写入不触发 Vue 响应式
+        // 必须通过 messages.value 里的 reactive proxy 修改，消息组件才会计依赖并实时重渲染
+        const liveMsg = messages.value[messages.value.length - 1] as ChatMessage
 
         const result = await props.customSend(apiMessages, (content, reasoning) => {
-          assistantMsg.content += content
-          if (reasoning) assistantMsg.reasoning += reasoning
+          if (reasoning) {
+            liveMsg.reasoning += reasoning
+            // 思考中自动展开：仅当正文尚未开始（content 为空）时展开，避免反复横跳
+            if (!liveMsg._userToggled && !liveMsg.content) liveMsg._reasoningExpanded = true
+          }
+          if (content) {
+            liveMsg.content += content
+            // 正文一旦开始，折叠思考过程并锁定；之后 reasoning 到来也不会再展开
+            if (!liveMsg._userToggled && liveMsg.content && liveMsg.reasoning) {
+              liveMsg._reasoningExpanded = false
+            }
+          }
           messages.value = [...messages.value]
           scrollToBottom()
           emit('chunk', content)
         })
 
         if (result && typeof result === 'object' && 'content' in result) {
-          assistantMsg.content = result.content
-          assistantMsg.reasoning = result.reasoning || ''
+          liveMsg.content = result.content
+          liveMsg.reasoning = result.reasoning || ''
           messages.value = [...messages.value]
         }
 
-        emit('message', assistantMsg)
+        // 流式结束：切换为富文本渲染
+        liveMsg._streaming = false
+        messages.value = [...messages.value]
+
+        emit('message', liveMsg)
         return
       }
 
@@ -318,6 +340,7 @@ export function useChatbox(
 
       const decoder = new TextDecoder()
       let assistantMsg: ChatMessage | null = null
+      let liveMsg: ChatMessage | null = null
       let buffer = ''
 
       while (true) {
@@ -337,18 +360,27 @@ export function useChatbox(
             if (!delta) continue
 
             if (!assistantMsg) {
-              assistantMsg = { role: 'assistant', content: '', reasoning: '', _reasoningExpanded: false }
+              assistantMsg = { role: 'assistant', content: '', reasoning: '', _reasoningExpanded: false, _streaming: true }
               messages.value.push(assistantMsg)
             }
+            // push 后局部 assistantMsg 仍是原始对象，写入不触发 Vue 响应式；
+            // 必须通过 messages.value 里的 reactive proxy 修改，消息组件才会计依赖并实时重渲染
+            if (!liveMsg) liveMsg = messages.value[messages.value.length - 1] as ChatMessage
 
             if (delta.reasoning_content) {
-              assistantMsg.reasoning += delta.reasoning_content
+              liveMsg.reasoning += delta.reasoning_content
+              // 思考中自动展开：仅当正文尚未开始（content 为空）时展开，避免反复横跳
+              if (!liveMsg._userToggled && !liveMsg.content) liveMsg._reasoningExpanded = true
               messages.value = [...messages.value]
               scrollToBottom()
             }
 
             if (delta.content) {
-              assistantMsg.content += delta.content
+              liveMsg.content += delta.content
+              // 正文一旦开始，折叠思考过程并锁定；之后 reasoning 到来也不会再展开
+              if (!liveMsg._userToggled && liveMsg.content && liveMsg.reasoning) {
+                liveMsg._reasoningExpanded = false
+              }
               messages.value = [...messages.value]
               scrollToBottom()
               emit('chunk', delta.content)
@@ -357,8 +389,11 @@ export function useChatbox(
         }
       }
 
-      if (assistantMsg) {
-        emit('message', assistantMsg)
+      if (liveMsg) {
+        // 流式结束：切换为富文本渲染
+        liveMsg._streaming = false
+        messages.value = [...messages.value]
+        emit('message', liveMsg)
       }
     } catch (e: any) {
       messages.value.push({ role: 'assistant', content: `Error: ${e.message}` })
