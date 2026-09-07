@@ -32,20 +32,24 @@
   </BaseMain>
 
   <!--
-    班级弹幕覆盖层（仅客户端）：
+    班级弹幕覆盖层（仅客户端，仅教师/管理员接收）：
     - 监听 WebSocket { type: 'danmaku' } 消息，渲染漂浮弹幕
     - 由 question/homework/quiz/comment 等提交后服务端广播触发
     - position: fixed 覆盖全屏，不影响布局流
+    - 学生端不再渲染本覆盖层，仅教师/管理员可见；课程配置 showDanmaku=false 时全局关闭
   -->
   <ClientOnly>
-    <ChapterDanmaku />
+    <ChapterDanmaku v-if="canReceiveDanmaku && showDanmaku" />
   </ClientOnly>
 </template>
 
 <script setup lang="ts">
 import BaseMain from '../../../base/components/layout/main.vue'
 
-const { showSidebar, mobileTocOpen } = useLayoutState()
+const { showSidebar, mobileTocOpen, showDanmaku } = useLayoutState()
+const { hasRole } = useAuth()
+// 仅教师/管理员接收弹幕（学生端不渲染覆盖层、不订阅弹幕广播）
+const canReceiveDanmaku = computed(() => hasRole('teacher') || hasRole('admin'))
 const { playFullscreen } = useChapterBtns()
 const asideOpen = ref(false)
 

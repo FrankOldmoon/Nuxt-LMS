@@ -40,13 +40,6 @@
     </UTooltip>
   </div>
 
-  <!-- 弹幕开关（所有已登录用户可见，位于章节按钮下方） -->
-  <div v-if="isLoggedIn && chapterBtnsConfig.showDanmaku && chapterPageCfg.showDanmakuPanel"
-    class="flex items-center gap-2 mb-3 pl-1">
-    <span class="text-sm text-muted">{{ $t('chapter.danmakuToggle') }}</span>
-    <USwitch v-model="showDanmaku" />
-  </div>
-
   <!-- 弹窗 -->
   <ChapterScoreModal v-model:open="scoreOpen" :course-id="courseIdNum" :chapter-id="chapterIdNum"
     :class-id="classIdNum" />
@@ -61,9 +54,9 @@
 const route = useRoute()
 const { hasRole, user } = useAuth()
 const { isCourseEditor, isCourseTeacher } = useAuthLms()
-const { showDanmaku, chapterBtnsConfig } = useLayoutState()
-const { sendInvite: wsSendInvite } = useWebSocket()
+const { chapterBtnsConfig } = useLayoutState()
 const { chapterPage: chapterPageCfg } = useLmsPublicConfig()
+const { sendInvite: wsSendInvite } = useWebSocket()
 const toast = useToast()
 const { t } = useI18n()
 
