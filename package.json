@@ -65,5 +65,15 @@
     "typescript": "^6.0.3",
     "vitest": "^4.1.9",
     "vuedraggable": "^4.1.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@vue-office/docx",
+      "@vue-office/excel",
+      "@vue-office/pptx",
+      "vue-demi",
+      "esbuild",
+      "sharp"
+    ]
   }
 }
