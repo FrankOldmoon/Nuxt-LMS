@@ -23,7 +23,7 @@
                     {{ t('common.reset') }}
                 </UButton>
                 <UButton color="primary" size="sm" :loading="submitting"
-                    :disabled="!submittedFiles || (Array.isArray(submittedFiles) && submittedFiles.length === 0)"
+                    :disabled="submitLocked || !submittedFiles || (Array.isArray(submittedFiles) && submittedFiles.length === 0)"
                     @click="onSubmit">
                     {{ submitted ? t('homework.resubmit') : t('homework.submit') }}
                 </UButton>
@@ -72,7 +72,7 @@ import { useHomeworkRenderContext } from '../useHomeworkRender'
 const {
     t, effectiveCourseId,
     submittedContent, submittedFiles, submitted, submittedFileList,
-    submitting, submitMsg, submitOk,
+    submitting, submitLocked, submitMsg, submitOk,
     selfScore, selfComment,
     onSubmit, onReset, isRichDoc,
 } = useHomeworkRenderContext()

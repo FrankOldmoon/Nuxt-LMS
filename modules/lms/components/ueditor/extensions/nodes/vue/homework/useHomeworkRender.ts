@@ -89,6 +89,14 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
     const submitting = ref(false)
     const submitMsg = ref('')
     const submitOk = ref(true)
+    // 提交后 3 秒禁用提交按钮（防止连点/重复提交）
+    const submitLocked = ref(false)
+    let submitLockTimer: ReturnType<typeof setTimeout> | null = null
+    function lockSubmit() {
+        submitLocked.value = true
+        if (submitLockTimer) clearTimeout(submitLockTimer)
+        submitLockTimer = setTimeout(() => { submitLocked.value = false }, 3000)
+    }
 
     // 判断是否为富文本 JSON
     function isRichDoc(content: any) {
@@ -151,6 +159,8 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
             submittedFileList.value = files
             submitOk.value = true
             submitMsg.value = t('homework.submitSuccess')
+            // 提交后 3 秒禁用提交按钮
+            lockSubmit()
             // 提交后 toast 提示：成功 + 经验
             const gainedExp = Number(result?.gainedExp) || 0
             toast.add({
@@ -230,7 +240,7 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
         homework, pending, homeworkId, isTeacher,
         editOpen, recordsOpen, refresh,
         submittedContent, submittedFiles, submitted, submittedFileList,
-        submitting, submitMsg, submitOk,
+        submitting, submitLocked, submitMsg, submitOk,
         selfScore, selfComment, featuredList, featuredPending,
         fetchFeatured, strFromComment,
         onSubmit, onReset, fetchRecord, onSaved, isRichDoc,

@@ -96,6 +96,15 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
     const fromRecord = ref(false)
     const showFireworks = ref(false)
 
+    // 提交后 3 秒禁用提交按钮（防止连点/重复提交）
+    const submitLocked = ref(false)
+    let submitLockTimer: ReturnType<typeof setTimeout> | null = null
+    function lockSubmit() {
+        submitLocked.value = true
+        if (submitLockTimer) clearTimeout(submitLockTimer)
+        submitLockTimer = setTimeout(() => { submitLocked.value = false }, 3000)
+    }
+
     const containerBorderClass = computed(() => {
         if (submitted.value && isCorrect.value) return 'border-green-400 dark:border-green-500'
         if (submitted.value && !isCorrect.value) return 'border-red-400 dark:border-red-500'
@@ -166,6 +175,7 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
             // 这里仅进入"已提交"状态并通知 race 显式提交
             submitted.value = true
             fromRecord.value = false
+            lockSubmit()
             onRaceSubmit?.()
             return
         }
@@ -175,6 +185,7 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
             submitted.value = true
             fromRecord.value = false
             showFireworks.value = result.isCorrect
+            lockSubmit()
             // 提交后 toast 提示：答对/已提交
             toast.add({
                 title: result.isCorrect ? t('question.correct') : t('question.wrong'),
@@ -340,6 +351,7 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
         question, pending, questionId, isTeacher, typeLabel,
         submitted, isCorrect, showAnswer, fromRecord, showFireworks,
         containerBorderClass, hasAnswer, scoreDisplay, formattedAnswers,
+        submitLocked,
         renderComponent, renderRef, editOpen, recordsOpen,
         onSubmit, onReset, onShowAnswer, onHover, onSaved,
         getQuestionData() { return question.value },

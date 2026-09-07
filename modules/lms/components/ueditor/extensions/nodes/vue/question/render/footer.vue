@@ -12,7 +12,7 @@
             <UButton variant="soft" size="sm" :disabled="!hasAnswer" @click="onReset">
                 {{ t('common.reset') }}
             </UButton>
-            <UButton color="primary" size="sm" :disabled="!hasAnswer" @click="onSubmit">
+            <UButton color="primary" size="sm" :disabled="!hasAnswer || submitLocked" @click="onSubmit">
                 {{ t('question.submit') }}
             </UButton>
         </div>
@@ -64,7 +64,7 @@ import ExplanationBlock from './explanation-block.vue'
 import { useQuestionRenderContext } from '../useQuestionRender'
 const {
     t, question, isTeacher, submitted, isCorrect, showAnswer,
-    hasAnswer, formattedAnswers, onSubmit, onReset, onShowAnswer,
+    hasAnswer, formattedAnswers, submitLocked, onSubmit, onReset, onShowAnswer,
 } = useQuestionRenderContext()
 
 // inQuiz 来自 render.vue 的 provide('inQuiz', props.inQuiz)
