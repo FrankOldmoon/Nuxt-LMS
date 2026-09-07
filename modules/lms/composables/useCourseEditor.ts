@@ -23,6 +23,7 @@ export function useCourseEditor(
     name: '',
     code: '',
     tags: [] as string[],
+    status: 'published' as string,
   })
 
   const contentJson = ref<any>(null)
@@ -43,6 +44,7 @@ export function useCourseEditor(
         name: data?.title || '',
         code: data?.code || '',
         tags: (data?.tags as string[]) || [],
+        status: data?.status || 'published',
       }
       contentJson.value = data?.content || null
       const cfg = (data?.config as Record<string, any>) || {}
@@ -67,6 +69,7 @@ export function useCourseEditor(
           name: form.value.name,
           code: form.value.code,
           tags: form.value.tags,
+          status: form.value.status,
           config: finalConfig,
           content: contentJson.value,
         },

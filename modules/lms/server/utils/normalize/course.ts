@@ -39,6 +39,7 @@ export function normalizeCourseDetail(course: any): LmsCourseDetail {
     coverImg: cfg.coverImg || null,
     content: (course.content as Record<string, any>) || {},
     config: cfg,
+    status: course.status || 'published',
     chapters,
     grade_criteria: course.grade_criteria || [],
     orders: (course.orders as { id: string; label: string; order: number; parentId?: string | null }[]) || [],

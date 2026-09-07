@@ -24,11 +24,11 @@
                     {{ $t('common.loading') }}
                 </div>
 
-                <!-- 排行榜表格（学生/小组 Tab + 图表） -->
+                <!-- 排行榜表格（学生/小组 Tab + 图表），前三名显示金银铜奖杯 -->
                 <ClassUsersTable v-else :rows="tableRows" :class-id="Number(props.classId)"
                     :course-id="Number(props.courseId)" :hide-actions="true" :hide-teachers="true"
                     :hide-number="true" :default-sort="[{ id: 'score', desc: true }]"
-                    show-chart show-group
+                    show-chart show-group show-medal
                     :extra-columns="extraColumns">
                     <template #lv-cell="{ row }">
                         <span class="font-semibold text-xs">Lv.{{ row.original.lv ?? 1 }}</span>

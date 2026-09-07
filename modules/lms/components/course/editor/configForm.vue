@@ -15,6 +15,11 @@
       <UInputTags v-model="form.tags" :placeholder="$t('courseEditor.tagsPlaceholder')" class="w-full" />
     </UFormField>
 
+    <!-- 课程状态（仅管理员可见） -->
+    <UFormField v-if="isAdmin" :label="$t('courseEditor.status')" class="w-full">
+      <USelect v-model="form.status" :items="statusOpts" class="w-full" />
+    </UFormField>
+
     <USeparator :label="$t('courseEditor.configSection')" class="my-4" />
 
     <UFormField :label="$t('courseEditor.icon')" class="w-full">
@@ -50,6 +55,16 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n()
+const { hasRole } = useAuth()
+const isAdmin = computed(() => hasRole('admin'))
+
+const statusOpts = computed(() => [
+  { label: t('courseEditor.statusPublished'), value: 'published' },
+  { label: t('courseEditor.statusDraft'), value: 'draft' },
+  { label: t('courseEditor.statusArchived'), value: 'archived' },
+])
+
 const {
   form,
   config,

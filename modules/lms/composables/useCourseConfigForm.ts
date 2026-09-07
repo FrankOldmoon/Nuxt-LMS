@@ -164,11 +164,12 @@ export function useCourseConfigForm(form?: Ref<CourseBasicForm>) {
 type CourseConfigFormCtx = ReturnType<typeof useCourseConfigForm>
 export const CourseConfigFormKey: InjectionKey<CourseConfigFormCtx> = Symbol('CourseConfigForm')
 
-/** 课程基本信息（name / code / tags），由 useCourseEditor 提供、configForm.vue 展示 */
+/** 课程基本信息（name / code / tags / status），由 useCourseEditor 提供、configForm.vue 展示 */
 export interface CourseBasicForm {
   name: string
   code: string
   tags: string[]
+  status?: string
 }
 
 /** 创建并 provide 配置表单上下文（由 course/editor/index.vue 调用一次） */
