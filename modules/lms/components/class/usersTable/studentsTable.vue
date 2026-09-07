@@ -34,9 +34,9 @@
           @click="openStats(row.original)">
           <UAvatar :src="row.original.avatarImg || undefined" :alt="row.original.name" size="2xs" :text="row.original.name?.charAt(0)" />
           <span class="text-sm text-primary group-hover:underline cursor-pointer">{{ row.original.name }}</span>
-          <!-- 前三名金银铜奖杯（当前显示排名） -->
+          <!-- 前三名金银铜奖杯（按当前表格显示顺序取前 3 行） -->
           <span v-if="showMedal()" class="text-sm leading-none">
-            {{ ['🥇', '🥈', '🥉'][students.indexOf(row.original)] ?? '' }}
+            {{ ['🥇', '🥈', '🥉'][row.index] ?? '' }}
           </span>
         </button>
       </template>

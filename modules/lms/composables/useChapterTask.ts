@@ -280,9 +280,11 @@ export function setupChapterTask(opts: {
     if (serverIsPass && !isPass.value) isPass.value = true
     // 服务端状态已同步：同步通知水位，避免下次 persist 重复 notify/checkMedals
     lastNotifiedPass = isPass.value
-    // 用已完成的 heading 反推 node 级状态，避免后续 recompute 丢失已完成任务
+    // 用已完成的 heading 反推 node 级状态（只补 true 不回退）。
+    // 必须基于现有 nodeStatus 合并：me 可能返回旧进度（答题/作业刚上报尚未落库），
+    // 直接覆盖会清空本地已答对但服务端还不知道的任务记录，导致 heading 永远无法完成。
     const map = taskMap.value
-    const ns: Record<string, boolean> = {}
+    const ns: Record<string, boolean> = { ...nodeStatus.value }
     for (const h of map.headings) {
       if (merged[h.id]) {
         for (const t of (map.tasksByHeading[h.id] || [])) ns[t.key] = true

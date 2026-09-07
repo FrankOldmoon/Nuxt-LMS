@@ -102,6 +102,8 @@ export function useClassify(props: any) {
 
   // 拖拽时更新 record
   watch([pool, catBuckets], () => {
+    // 记录回填中：不清除 submitted/fromRecord，避免已提交状态丢失（边框变灰）
+    if (restoring) return
     if (submitted.value) {
       submitted.value = false
     }

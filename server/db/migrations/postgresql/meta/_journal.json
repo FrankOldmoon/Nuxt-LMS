@@ -64,6 +64,13 @@
       "when": 1795000000000,
       "tag": "0008_excellent_homework",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795190400000,
+      "tag": "0009_course_status",
+      "breakpoints": true
     }
   ]
 }

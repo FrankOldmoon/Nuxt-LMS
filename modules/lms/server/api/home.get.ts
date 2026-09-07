@@ -1,16 +1,23 @@
 import { db, schema } from "@nuxthub/db";
-import { asc, eq, and, isNull, sql, inArray, or } from "drizzle-orm";
+import { asc, eq, and, isNull, sql, inArray, or, ne } from "drizzle-orm";
 
 export default eventHandler(async (event) => {
+  // 当前登录用户（可选登录）；用于课程可见性控制
+  const user = await getCurrentUser(event)
+  const isAdmin = !!user?.roles.includes('admin')
+
   // 查询所有分类（按 order 排序）
   const categories = await db.query.categories.findMany({
     orderBy: [asc(schema.categories.order)],
   });
 
-  // 查询所有课程（带章节关系，用于计算章节数）
+  // 查询课程（按状态过滤 + 带章节关系，用于计算章节数）
+  // 可见性：归档(archived) 所有角色均不展示；草稿(draft) 仅管理员可见；已发布(published) 全员可见
   // 课程排序由分类的 orders 字段控制，前端按 category.orders 排序
   const courses = await db.query.courses.findMany({
-    where: isNull(schema.courses.deletedAt),
+    where: isAdmin
+      ? and(isNull(schema.courses.deletedAt), ne(schema.courses.status, 'archived'))
+      : and(isNull(schema.courses.deletedAt), eq(schema.courses.status, 'published')),
     with: { chapters: true },
   });
 
@@ -59,7 +66,6 @@ export default eventHandler(async (event) => {
   // 未读计数（登录用户才有意义，未登录返回 0）
   let notifyUnread = 0
   let msgUnread = 0
-  const user = await getCurrentUser(event)
   if (user) {
     const [notifyRow] = await db
       .select({ count: sql<number>`COUNT(*)` })

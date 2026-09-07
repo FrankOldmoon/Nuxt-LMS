@@ -9,6 +9,7 @@
  */
 import {
   pgTable,
+  pgEnum,
   serial,
   varchar,
   integer,
@@ -22,6 +23,9 @@ import {
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { withTimestamps, classes } from '../../../base/server/db/schema';
+
+/** 课程状态枚举 */
+export const courseStatusEnum = pgEnum('course_status', ['published', 'draft', 'archived']);
 
 export const categories = pgTable('categories', {
   id: serial('id').primaryKey(),
@@ -44,6 +48,8 @@ export const courses = pgTable(
     gradeCriteria: jsonb('grade_criteria'),
     tags: jsonb('tags').default('[]'),
     config: jsonb('config'),
+    // 课程状态：published(已发布)/draft(草稿)/archived(归档)，默认已发布
+    status: courseStatusEnum('status').default('published').notNull(),
     ...withTimestamps,
   },
   (t) => ({

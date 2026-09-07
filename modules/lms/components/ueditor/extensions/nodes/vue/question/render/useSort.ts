@@ -11,6 +11,8 @@ export function useSort(props: any) {
   const dragList = ref([])
   // 防止 dragList watcher → recordAnswer → record watcher → dragList 循环
   let isRecording = false
+  // 记录回填中：由 record watcher 设置，期间 dragList watcher 不应清除 submitted/fromRecord
+  let restoring = false
   // userOrder: 从 dragList 派生的原始索引数组
   const userOrder = computed(() => dragList.value.map(item => item.originalIndex))
 
@@ -42,13 +44,16 @@ export function useSort(props: any) {
   watch(() => props.question?.record, (record) => {
     if (isRecording) return
     if (!Array.isArray(record) || record.length === 0) return
+    restoring = true
     dragList.value = record.map(idx => ({ originalIndex: idx }))
+    nextTick(() => { restoring = false })
   }, { immediate: true })
 
 
 
   // dragList 变化时实时记录
   watch(dragList, () => {
+    if (restoring) return
     if (submitted.value) {
       submitted.value = false
     }
