@@ -61,6 +61,7 @@ export function useChapterAccess(props: ChapterAccessProps) {
         method: 'POST',
         body: { id: props.chapterId, isOpen: val },
       })
+      invalidateChapterShowCache()
       toast.add({ title: t('chapter.openUpdated'), color: 'success' })
     } catch (e: any) {
       toast.add({ title: e.message || t('chapter.openUpdateFailed'), color: 'error' })
@@ -81,10 +82,25 @@ export function useChapterAccess(props: ChapterAccessProps) {
         method: 'POST',
         body: { chapterId: props.chapterId, classes: classList },
       })
+      invalidateChapterShowCache()
       toast.add({ title: t('chapter.openUpdated'), color: 'success' })
     } catch (e: any) {
       toast.add({ title: e.message || t('chapter.openUpdateFailed'), color: 'error' })
     }
+  }
+
+  /**
+   * 使 /api/chapters/show 的 useFetch 缓存失效（getCachedData 会回退到
+   * payload/static 缓存返回旧数据，导致重进章节后 isOpen/classChapters 仍是旧值）。
+   * 复用 useChapterPage 中 contentVersion 清缓存的同款做法：按精确 key 删除后，
+   * 下次进入该章节会重新请求服务端拿到最新开放状态。
+   */
+  function invalidateChapterShowCache() {
+    if (import.meta.server) return
+    const nuxtApp = useNuxtApp()
+    const key = `/api/chapters/show?id=${props.chapterId}`
+    delete nuxtApp.payload.data[key]
+    if (nuxtApp.static?.data) delete nuxtApp.static.data[key]
   }
 
   // 首次加载班级列表（全局缓存）

@@ -41,5 +41,5 @@ export function useNotifications(isOpen: Ref<boolean>) {
     return new Date(ts).toLocaleString()
   }
 
-  return { t, page, list, pending, formatTime }
+  return { t, page, list, pending, formatTime, refresh }
 }

@@ -162,8 +162,8 @@ async function resolveUserClassContext(userId: number): Promise<{ classId: numbe
     if (!u || !u.classId) return null
     return {
       classId: Number(u.classId),
-      // 弹幕来源显示 preferName > name > username
-      name: String(u.preferName || u.name || u.username || 'anonymous'),
+      // 弹幕来源显示 users.name（需求：作答弹幕最前面用 user.name）
+      name: String(u.name || u.username || 'anonymous'),
     }
   } catch {
     return null

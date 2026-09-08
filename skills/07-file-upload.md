@@ -1,48 +1,48 @@
-# Skill: 文件上传（含外部 URL 传入）
+# Skill: File upload (including external URL pass-through)
 
-> 用途：把图片等资源上传到站内网盘，拿到 `/api/files/serve?pathname=...` 的站内 URL，
-> 供课程封面、章节/课程 content 里的 `<img>`、富组件等引用。
-> **不要在 content 里直接引用外部图片 URL**（防盗链/失效风险），一律先上传转站内 URL。
+> Purpose: upload images and other assets to the in-site drive and get an in-site URL
+> (`/api/files/serve?pathname=...`) for course covers, `<img>` in chapter/course content, rich components etc.
+> **Never reference external image URLs directly in content** (hotlink protection / link rot risk) — always upload first and use the in-site URL.
 
-## 接口
+## Endpoint
 
-`POST /api/files/upload`（需登录，管理员或普通用户均可，受网盘配额限制）
+`POST /api/files/upload` (login required, admin or regular user, subject to drive quota)
 
-两种来源模式：
+Two source modes:
 
-### 模式一：外部 URL 传入（推荐给 AI/脚本流程）
+### Mode 1: external URL pass-through (recommended for AI/script flows)
 
-JSON body 直接传远程图片地址，服务端负责下载、压缩、落盘：
+JSON body takes a remote image URL directly; the server downloads, compresses and stores it:
 
 ```bash
 curl -X POST http://localhost:3000/api/files/upload \
   -H 'Content-Type: application/json' \
-  -b <登录 cookie> \
+  -b <login cookie> \
   -d '{"url": "https://example.com/some-image.png", "group": "course-8"}'
 ```
 
-- 仅支持**图片**：服务端按 magic number 白名单校验真实图片格式，非图片内容直接拒绝
-- 下载后自动用 sharp 压缩为 **webp**；GIF 会转为保留动画的 animated webp
-- 内置 SSRF 防护：禁止 http/https 以外的协议，禁止内网/保留地址（IP 字面量与 DNS 解析后均校验）
-- `group` 可选：网盘分组目录名（不传则入默认组）
+- **Images only**: the server validates the real format against a magic-number whitelist; non-image content is rejected
+- After download it compresses to **webp** with sharp; GIFs become animated webp (animation preserved)
+- Built-in SSRF protection: protocols other than http/https are forbidden; intranet/reserved addresses are blocked (checked both for IP literals and after DNS resolution)
+- `group` is optional: the drive group/folder name (omitted → default group)
 
-### 模式二：multipart 表单上传（任意文件）
+### Mode 2: multipart form upload (any file)
 
 ```bash
 curl -X POST http://localhost:3000/api/files/upload \
-  -b <登录 cookie> \
+  -b <login cookie> \
   -F 'files=@/path/to/file.pdf' \
   -F 'group=course-8'
 ```
 
-- 字段名必须是 `files`；`group` 为可选 form 字段
-- 类型约束：危险后缀黑名单（.exe/.sh/.bat/.cmd/.ps1/.php）拒绝；
-  若站点配置了 `site:allowedFileTypes` 白名单则按白名单限制；大小上限 `site:maxFileSize`（默认 50MB）
-- SVG 会做内容消毒（移除 script / on* 事件 / javascript: URL）
+- The field name must be `files`; `group` is an optional form field
+- Type constraints: a dangerous-extension blacklist (.exe/.sh/.bat/.cmd/.ps1/.php) is rejected;
+  if the site configures a `site:allowedFileTypes` whitelist, that whitelist applies; size cap is `site:maxFileSize` (default 50MB)
+- SVG is sanitised (script / on* event handlers / javascript: URLs removed)
 
-## 响应与查重
+## Response and dedupe
 
-成功（含"已存在"）返回：
+Success (including "already exists") returns:
 
 ```json
 {
@@ -56,16 +56,16 @@ curl -X POST http://localhost:3000/api/files/upload \
 }
 ```
 
-- 服务端按内容 sha256 查重：**相同内容重复上传不占配额**，直接返回已存在文件的
-  `url`，`msg` 为「文件已存在」——脚本流程可直接拿 `data.url` 用，无需特判
-- `data.url` 是站内 URL，可直接放进 content 的 image 节点 `attrs.src`、
-  课程 `config.coverImg`、富组件资源等
+- The server dedupes by content sha256: **re-uploading identical content does not consume quota**; it returns the
+  existing file's `url` directly and `msg` reads "file already exists" — scripts can just take `data.url`, no special-casing
+- `data.url` is an in-site URL, usable directly as `attrs.src` of an image node in content,
+  as course `config.coverImg`, or in rich-component assets
 
-## 典型用法：批量建课/写章节时配图
+## Typical usage: illustrations when batch-creating courses / writing chapters
 
-1. 对每张外部图片调用本接口（url 模式），收集返回的站内 `url`
-2. 把 `url` 填入 markdown 图片语法 `![](url)` 或 tiptap image 节点，
-   再走 skills/01 / skills/03 的正常创建流程
+1. Call this endpoint (url mode) for each external image and collect the returned in-site `url`
+2. Put the `url` into the markdown image syntax `![](url)` or a tiptap image node,
+   then follow the normal creation flow in skills/01 / skills/03
 
-> 注意：url 模式只能传**图片**；PDF/压缩包等任意文件请用 multipart 模式。
-> 上传本身不校验 group 是否属于某课程，`group` 仅作目录分组用途。
+> Note: url mode accepts **images only**; use multipart mode for PDFs, archives and any other files.
+> Upload does not validate whether `group` belongs to a course; `group` is only a folder grouping.

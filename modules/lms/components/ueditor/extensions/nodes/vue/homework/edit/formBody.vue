@@ -8,9 +8,9 @@
         <UInput v-model.number="form.point" type="number" :placeholder="t('question.pointPlaceholder')" size="sm" class="w-20" />
     </div>
 
-    <!-- 作业内容 -->
+    <!-- 作业内容（编辑时为 Content） -->
     <div>
-        <label class="text-xs text-gray-500 mb-1 block">{{ t('homework.contentLabel') }}</label>
+        <label class="text-xs text-gray-500 mb-1 block">{{ t('homework.editContentLabel') }}</label>
         <richEditor v-model="form.content" />
     </div>
 

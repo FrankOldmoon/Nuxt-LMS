@@ -466,6 +466,65 @@ export const userRaces = pgTable(
   })
 );
 
+// ====================== 学生作品展示 showcase ======================
+export const showcases = pgTable(
+  'showcases',
+  {
+    id: serial('id').primaryKey(),
+    userId: integer('user_id').notNull(),
+    title: varchar('title', { length: 255 }).notNull(),
+    category: varchar('category', { length: 30 }).default('software'),
+    cover: varchar('cover', { length: 500 }),
+    content: jsonb('content'),
+    tags: jsonb('tags').default([]),
+    status: varchar('status', { length: 30 }).default('pending'),
+    likeCount: integer('like_count').default(0),
+    approvedBy: integer('approved_by'),
+    approvedAt: timestamp('approved_at', { withTimezone: true }),
+    ...withTimestamps,
+  },
+  (t) => ({
+    userIdx: index('idx_showcases_user_id').on(t.userId),
+    statusIdx: index('idx_showcases_status').on(t.status),
+    categoryIdx: index('idx_showcases_category').on(t.category),
+  })
+);
+
+export const showcaseLikes = pgTable(
+  'showcase_likes',
+  {
+    userId: integer('user_id').notNull(),
+    showcaseId: integer('showcase_id').notNull(),
+    like: boolean('like').default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.showcaseId] }),
+    showcaseFk: foreignKey({ columns: [t.showcaseId], foreignColumns: [showcases.id] }).onDelete('cascade'),
+    userIdx: index('idx_showcase_likes_user_id').on(t.userId),
+  })
+);
+
+export const showcaseComments = pgTable(
+  'showcase_comments',
+  {
+    id: serial('id').primaryKey(),
+    showcaseId: integer('showcase_id').notNull(),
+    userId: integer('user_id').notNull(),
+    parentId: integer('parent_id'),
+    content: jsonb('content'),
+    status: varchar('status', { length: 30 }).default('published'),
+    likeCount: integer('like_count').default(0),
+    ...withTimestamps,
+  },
+  (t) => ({
+    showcaseFk: foreignKey({ columns: [t.showcaseId], foreignColumns: [showcases.id] }).onDelete('cascade'),
+    parentFk: foreignKey({ columns: [t.parentId], foreignColumns: [t.id] }).onDelete('set null'),
+    showcaseIdx: index('idx_showcase_comments_showcase_id').on(t.showcaseId),
+    userIdx: index('idx_showcase_comments_user_id').on(t.userId),
+  })
+);
+
 export const userQuizzes = pgTable(
   'user_quizzes',
   {

@@ -2,7 +2,11 @@
   <UModal v-model:open="isOpen" :ui="{ content: 'sm:max-w-lg' }" scrollable>
     <template #content>
       <div class="p-6">
-        <h3 class="text-lg font-semibold mb-4">{{ $t('notification.title') }}</h3>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold">{{ $t('notification.title') }}</h3>
+          <UButton v-if="isAdmin" size="xs" color="primary" variant="soft" icon="i-lucide-megaphone"
+            :label="$t('notification.broadcast')" @click="broadcastOpen = true" />
+        </div>
 
         <div v-if="pending" class="flex justify-center py-8 text-muted-foreground">
           <UIcon name="i-lucide-loader-2" class="size-5 animate-spin mr-2" />
@@ -57,10 +61,24 @@
       </div>
     </template>
   </UModal>
+
+  <!-- 管理员：发通知给所有人 -->
+  <LayoutNotificationBroadcastModal v-model:open="broadcastOpen" @sent="afterBroadcast" />
 </template>
 
 <script setup lang="ts">
 const isOpen = defineModel<boolean>('open', { default: false })
 
-const { page, list, pending, formatTime } = useNotifications(isOpen)
+const { page, list, pending, formatTime, refresh } = useNotifications(isOpen)
+const { hasRole } = useAuth()
+const isAdmin = computed(() => hasRole('admin'))
+
+const broadcastOpen = ref(false)
+const { refresh: refreshUnread } = useUnreadCounts()
+
+// 广播发送成功后：通知弹窗列表刷新 + 未读角标即时更新
+async function afterBroadcast() {
+  await refresh()
+  await refreshUnread()
+}
 </script>

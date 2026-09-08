@@ -215,7 +215,13 @@
     "noNotifications": "You have no notifications yet",
     "page": "Page {page} of {total}",
     "prev": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "broadcast": "Broadcast",
+    "broadcastTitle": "Send notification to everyone",
+    "titleLabel": "Title",
+    "contentLabel": "Content",
+    "send": "Send",
+    "sent": "Notification sent to all users"
   },
   "message": {
     "title": "Messages",

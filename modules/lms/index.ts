@@ -79,6 +79,17 @@ export default defineNuxtModule({
         path: '/course/:id/:cid',
         file: resolve('./pages/course/[id]/[cid].vue'),
       })
+      // 学生作品展示
+      pages.push({
+        name: 'lms-showcase',
+        path: '/showcase',
+        file: resolve('./pages/showcase/index.vue'),
+      })
+      pages.push({
+        name: 'lms-showcase-detail',
+        path: '/showcase/:id',
+        file: resolve('./pages/showcase/[id].vue'),
+      })
     })
 
     addServerScanDir(resolve('./server'))

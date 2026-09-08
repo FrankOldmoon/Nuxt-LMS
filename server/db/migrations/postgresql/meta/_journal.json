@@ -71,6 +71,27 @@
       "when": 1795190400000,
       "tag": "0009_course_status",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795600000000,
+      "tag": "0010_showcase",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1795605000000,
+      "tag": "0011_showcase_tags",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1795606000000,
+      "tag": "0012_drop_showcase_files",
+      "breakpoints": true
     }
   ]
 }
