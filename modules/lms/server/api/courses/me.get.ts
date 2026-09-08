@@ -27,6 +27,7 @@ export default eventHandler(async (event) => {
       score: schema.userCourses.score,
       exp: schema.userCourses.exp,
       coin: schema.userCourses.coin,
+      number: schema.userCourses.number,
     })
     .from(schema.userCourses)
     .where(and(
@@ -90,6 +91,7 @@ export default eventHandler(async (event) => {
     courseScore: courseRow ? Number(courseRow.score) || 0 : 0,
     exp: courseRow ? Number(courseRow.exp) || 0 : 0,
     coin: courseRow ? Number(courseRow.coin) || 0 : 0,
+    number: courseRow?.number ?? null,
     chapterScore,
     medals: medalRows,
     chapterTaskStatus,

@@ -160,8 +160,9 @@ describe('API: comments/list.get', () => {
     expect(JSON.stringify(whereArgs)).not.toContain('status')
   })
 
-  it('学生只看到本班同学的回复（按作者主班级过滤）', async () => {
+  it('学生只看到本班同学的回复（按作者主班级 defaultClass.id || classId 过滤）', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    // 当前用户主班级 = 3
     vi.mocked(getUserClassId).mockResolvedValue(3)
     const { db } = await import('@nuxthub/db')
     vi.mocked(db.query.comments.findFirst).mockResolvedValue({
@@ -173,14 +174,76 @@ describe('API: comments/list.get', () => {
       { id: 1, userId: 1, courseId: 1, cid: 2, parentId: 1, status: 'published' },
       { id: 2, userId: 2, courseId: 1, cid: 3, parentId: 1, status: 'published' },
     ] as any)
-    // 第一次 users.findMany：班级(3)成员 -> 只有 id=1；第二次：作者信息
+    // 第一次 users.findMany：按作者 id 取班级信息（defaultClass.id || classId）
+    //  user1 主班级=3（defaultClass），user2 主班级=2
     vi.mocked(db.query.users.findMany)
-      .mockResolvedValueOnce([{ id: 1 }] as any)
+      .mockResolvedValueOnce([
+        { id: 1, defaultClass: { id: 3 }, classId: null },
+        { id: 2, defaultClass: null, classId: 2 },
+      ] as any)
+      // 第二次：作者展示信息
       .mockResolvedValueOnce([{ id: 1, name: 'Alice' }, { id: 2, name: 'Bob' }] as any)
     vi.mocked(db.query.userComments.findMany).mockResolvedValue([] as any)
     const handler = (await import('../../server/api/comments/list.get')).default
     const result = await handler(makeEvent({ query: { course_id: 1, cid: 1 } }))
     expect(result.success).toBe(true)
+    expect(result.data.children.length).toBe(1)
+    expect(result.data.children[0].userId).toBe(1)
+  })
+
+  it('老师也只看到本班同学的子评论（主评论始终返回）', async () => {
+    setMockAuthState({ id: 9, username: 'teacher', roles: ['teacher'], permissions: [] })
+    vi.mocked(getUserClassId).mockResolvedValue(3)
+    const { db } = await import('@nuxthub/db')
+    vi.mocked(db.query.comments.findFirst).mockResolvedValue({
+      id: 1, userId: 8, courseId: 1, cid: 1, content: 'Root', parentId: null, status: 'published',
+      createdAt: new Date(), updatedAt: new Date(),
+    } as any)
+    vi.mocked(db.query.comments.findMany).mockResolvedValue([
+      { id: 1, userId: 1, courseId: 1, cid: 2, parentId: 1, status: 'published' }, // 同班
+      { id: 2, userId: 2, courseId: 1, cid: 3, parentId: 1, status: 'published' }, // 异班
+    ] as any)
+    // 第一次：作者班级信息；第二次：作者展示信息
+    vi.mocked(db.query.users.findMany)
+      .mockResolvedValueOnce([
+        { id: 1, defaultClass: null, classId: 3 },
+        { id: 2, defaultClass: null, classId: 2 },
+      ] as any)
+      .mockResolvedValueOnce([{ id: 1, name: 'Alice' }, { id: 2, name: 'Bob' }] as any)
+    vi.mocked(db.query.userComments.findMany).mockResolvedValue([] as any)
+    const handler = (await import('../../server/api/comments/list.get')).default
+    const result = await handler(makeEvent({ query: { course_id: 1, cid: 1 } }))
+    expect(result.success).toBe(true)
+    // 主评论始终返回（不做班级过滤）
+    expect(result.data.root).toBeTruthy()
+    // 子评论只剩同班 userId=1
+    expect(result.data.children.length).toBe(1)
+    expect(result.data.children[0].userId).toBe(1)
+  })
+
+  it('管理员也只看到本班同学的子评论（主评论始终返回）', async () => {
+    setMockAuthState({ id: 99, username: 'admin', roles: ['admin'], permissions: [] })
+    vi.mocked(getUserClassId).mockResolvedValue(3)
+    const { db } = await import('@nuxthub/db')
+    vi.mocked(db.query.comments.findFirst).mockResolvedValue({
+      id: 1, userId: 8, courseId: 1, cid: 1, content: 'Root', parentId: null, status: 'audit',
+      createdAt: new Date(), updatedAt: new Date(),
+    } as any)
+    vi.mocked(db.query.comments.findMany).mockResolvedValue([
+      { id: 1, userId: 1, courseId: 1, cid: 2, parentId: 1, status: 'audit' }, // 同班
+      { id: 2, userId: 2, courseId: 1, cid: 3, parentId: 1, status: 'audit' }, // 异班
+    ] as any)
+    vi.mocked(db.query.users.findMany)
+      .mockResolvedValueOnce([
+        { id: 1, defaultClass: null, classId: 3 },
+        { id: 2, defaultClass: null, classId: 2 },
+      ] as any)
+      .mockResolvedValueOnce([{ id: 1, name: 'Alice' }, { id: 2, name: 'Bob' }] as any)
+    vi.mocked(db.query.userComments.findMany).mockResolvedValue([] as any)
+    const handler = (await import('../../server/api/comments/list.get')).default
+    const result = await handler(makeEvent({ query: { course_id: 1, cid: 1 } }))
+    expect(result.success).toBe(true)
+    expect(result.data.root).toBeTruthy()
     expect(result.data.children.length).toBe(1)
     expect(result.data.children[0].userId).toBe(1)
   })

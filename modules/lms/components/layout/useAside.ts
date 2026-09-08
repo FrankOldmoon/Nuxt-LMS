@@ -17,7 +17,7 @@ export function useAside() {
   // 监听导航版本变化，清除缓存并刷新
   watch(courseNavVersion, () => {
     const nuxtApp = useNuxtApp()
-    const key = courseApiUrl.value
+    const key = 'side:' + courseApiUrl.value
     if (nuxtApp.payload.data[key]) {
       delete nuxtApp.payload.data[key]
     }
@@ -26,7 +26,7 @@ export function useAside() {
 
   async function handleSaved() {
     const nuxtApp = useNuxtApp()
-    const key = courseApiUrl.value
+    const key = 'side:' + courseApiUrl.value
     if (nuxtApp.payload.data[key]) {
       delete nuxtApp.payload.data[key]
     }

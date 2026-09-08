@@ -9,7 +9,8 @@
         <div class="flex-1 min-w-0">
             <!-- 时间 + 操作按钮 -->
             <div class="flex items-center gap-2 mb-1">
-                <span v-if="comment.createdAt" class="text-xs text-gray-400">{{ formatTime(comment.createdAt) }}</span>
+                <!-- 时间只应在客户端(浏览器本地时区)渲染；SSR 阶段留空避免服务端/客户端时区不一致导致显示 UTC -->
+                <span v-if="comment.createdAt && hydratedTime" class="text-xs text-gray-400">{{ formatTime(comment.createdAt) }}</span>
                 <!-- 操作按钮靠右 -->
                 <div class="flex items-center gap-2 ml-auto">
                     <!-- 点赞 -->
@@ -60,6 +61,8 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
+
 const props = defineProps({
     comment: { type: Object, required: true },
     isRoot: { type: Boolean, default: false },
@@ -69,6 +72,10 @@ const props = defineProps({
 const emit = defineEmits(['toggle-like', 'delete', 'approve'])
 
 const { hasRole } = useAuth()
+
+// 仅客户端渲染时间（浏览器本地时区），避免 SSR 阶段按服务器时区输出导致时区不一致
+const hydratedTime = ref(false)
+onMounted(() => { hydratedTime.value = true })
 
 // 是否老师/管理员
 const isTeacher = computed(() => hasRole('teacher') || hasRole('admin'))

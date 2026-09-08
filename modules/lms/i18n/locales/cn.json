@@ -1115,7 +1115,8 @@
     "confirmDelete": "确定删除这条评论？",
     "approve": "批准",
     "approveSuccess": "评论已通过审核",
-    "approveFailed": "审核失败"
+    "approveFailed": "审核失败",
+    "perPageUnit": "条/页"
   },
   "ide": {
     "title": "Python IDE",

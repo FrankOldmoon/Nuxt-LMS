@@ -16,7 +16,7 @@ export default eventHandler(async (event) => {
   // 审核可见性：老师/管理员可看到全部（含待审核），普通用户只看到已过审（published）的评论
   const isStaff = user.roles?.some((r) => ['teacher', 'admin'].includes(r))
 
-  // 1. 查询该评论自身（root comment，课程级共享，不做班级过滤）
+  // 1. 查询该评论自身（root comment / 主评论，课程级共享，始终显示，不做班级过滤）
   const root = await db.query.comments.findFirst({
     where: and(
       eq(schema.comments.courseId, courseId),
@@ -36,18 +36,26 @@ export default eventHandler(async (event) => {
     )
   })
 
-  // 3. 普通用户按班级隔离回复：仅显示"作者主班级 = 当前用户主班级"的回复
-  //    （评论跟用户走，用户班级由 users.classId 决定）
-  if (!isStaff) {
-    const userClassId = await getUserClassId(user.id)
-    let classUserIds = new Set<number>()
-    if (userClassId) {
-      const classUsers = await db.query.users.findMany({
-        where: eq(schema.users.classId, userClassId),
-      })
-      classUserIds = new Set(classUsers.map((u: any) => u.id))
+  // 3. 学生/老师/管理员都只显示「本班级」的子评论（主评论始终显示，见上方 root 不做班级过滤）：
+  //    用户主班级 = users.defaultClass.id || users.classId（getUserClassId）。
+  //    取每条回复作者的「主班级」，与当前用户主班级相等才显示。
+  {
+    const viewerClassId = await getUserClassId(user.id)
+    if (viewerClassId) {
+      const authorIds = [...new Set(children.map((c: any) => c.userId))]
+      const authorRows = authorIds.length
+        ? await db.query.users.findMany({
+            where: inArray(schema.users.id, authorIds),
+          })
+        : []
+      const authorClassMap = new Map(
+        (authorRows as any[]).map((u: any) => [u.id, (u.defaultClass?.id ?? u.classId ?? null)]),
+      )
+      // 只保留作者主班级 = 当前用户主班级的回复
+      children = children.filter((c) => authorClassMap.get(c.userId) === viewerClassId)
+    } else {
+      children = []
     }
-    children = children.filter((c) => classUserIds.has(c.userId))
   }
 
   // 3. 收集所有 userId，批量查询用户信息
@@ -94,10 +102,14 @@ export default eventHandler(async (event) => {
     }
   }
 
-  // 6. 子评论排序：先按赞数降序，再按发表时间升序
+  // 6. 子评论排序：已批准（published）优先，再按赞数降序，最后按发表时间升序
   const sortedChildren = (children as any[])
     .map(combine)
     .sort((a, b) => {
+      // 已批准(老师能看到的 published)排在最前，待审核(audit)排在后面
+      const pa = a.status === 'published' ? 0 : 1
+      const pb = b.status === 'published' ? 0 : 1
+      if (pa !== pb) return pa - pb
       if (b.likeCount !== a.likeCount) return b.likeCount - a.likeCount
       const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0
       const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0

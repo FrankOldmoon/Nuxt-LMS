@@ -31,7 +31,18 @@ const _globalConfig = {
 }
 
 describe('comment/render/pagination.vue', () => {
-  it('does not render when children count <= pageSize', async () => {
+  it('no children => does not render', async () => {
+    const { default: Pagination } = await import(
+      '../../../../../../components/ueditor/extensions/nodes/vue/comment/render/pagination.vue'
+    )
+    const ctx = makeMockContext(0, 5)
+    const wrapper = mount(Pagination, {
+      global: { ..._globalConfig, provide: { [CommentRenderKey as any]: ctx } },
+    })
+    expect(wrapper.find('.flex.items-center.justify-between').exists()).toBe(false)
+  })
+
+  it('renders even when children count <= pageSize (so students can see the page controls)', async () => {
     const { default: Pagination } = await import(
       '../../../../../../components/ueditor/extensions/nodes/vue/comment/render/pagination.vue'
     )
@@ -39,7 +50,9 @@ describe('comment/render/pagination.vue', () => {
     const wrapper = mount(Pagination, {
       global: { ..._globalConfig, provide: { [CommentRenderKey as any]: ctx } },
     })
-    expect(wrapper.find('.flex.items-center.justify-between').exists()).toBe(false)
+    expect(wrapper.find('.flex.items-center.justify-between').exists()).toBe(true)
+    expect(wrapper.text()).toContain('1-3')
+    expect(wrapper.text()).toContain('1 / 1')
   })
 
   it('renders pagination controls when children > pageSize', async () => {

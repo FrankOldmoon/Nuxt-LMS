@@ -83,7 +83,7 @@ async function cRequest<T = any>(url: string, options: Record<string, any> = {})
 }
 
 cRequest.use = <T = any>(url: string | (() => string) | Ref<string>, options: Record<string, any> = {}) => {
-  const { transform: customTransform, skipInjectIds, ...rest } = options
+  const { transform: customTransform, skipInjectIds, keyPrefix = '', ...rest } = options
 
   // 解析 url 为 getter 函数，支持 string / function / Ref 三种类型
   const urlGetter = () => {
@@ -96,7 +96,11 @@ cRequest.use = <T = any>(url: string | (() => string) | Ref<string>, options: Re
   // 对于函数式 url（如 useChapterPage 的 /api/chapters/show?id=chapterId），
   // 章节切换时 urlGetter 返回值变化 → key 随之变化 → Nuxt 重新请求最新章节，
   // 而不会命中首次 URL 的固定 key 缓存导致数据不更新。（纯字符串 url 不受影响）
-  const key = computed(() => urlGetter())
+  //
+  // keyPrefix：为同一 URL 但生命周期不同的调用（如持久侧边栏导航 vs 路由页面详情）
+  // 提供独立的 Nuxt asyncData key，避免共用 key 导致的路由切换时
+  // 一方 unmount/abort 让另一方读到空数据（课程页误显示 not found）。
+  const key = computed(() => keyPrefix + urlGetter())
 
   // 自动注入 course_id 和 chapter_id 到 URL（响应式，路由变化时重新计算）。
   // skipInjectIds=true 时跳过注入（用于"课程级、与当前章节无关"的请求，如侧边栏导航，

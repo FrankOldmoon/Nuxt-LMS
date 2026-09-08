@@ -218,8 +218,28 @@ export function useCourseProgress(
     }
   }
 
-  const totalCount = computed(() => Object.keys(chapterData.value).length)
-  const passedCount = computed(() => Object.values(chapterData.value as Record<number, ChapterData>).filter(ch => ch.isPass).length)
+  // 整体进度只统计「课程目录里的章节」：
+  // tableData 来自 props.navigation（目录树），而 /api/courses/progress 返回的是课程全部章节
+  // （含未出现在目录里的章节）。为避免整体进度把目录外章节也算进去，按 tableData 统计。
+  // 有 to（指向具体章节 /course/:id/:cid）的目录项才计为一个章节。
+  const dirStats = computed(() => {
+    let count = 0
+    let passed = 0
+    const walk = (rows: ProgressRow[]) => {
+      for (const r of rows) {
+        if (r.to) {
+          count++
+          if (r.isPass) passed++
+        }
+        if (r.children?.length) walk(r.children)
+      }
+    }
+    walk(tableData.value)
+    return { count, passed }
+  })
+
+  const totalCount = computed(() => dirStats.value.count)
+  const passedCount = computed(() => dirStats.value.passed)
   const overallProgress = computed(() => {
     if (totalCount.value === 0) return null
     return Math.round((passedCount.value / totalCount.value) * 100)

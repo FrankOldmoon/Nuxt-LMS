@@ -256,9 +256,10 @@ describe('API: comments/list', () => {
       { courseId: 1, cid: 3, userId: 30, content: 'c2', parentId: 1, createdAt: '2024-01-03' },
     ])
     _mockDb.query.users.findMany = vi.fn().mockResolvedValue([
-      { id: 10, name: 'Alice', avatarImg: 'a' },
-      { id: 20, name: 'Bob', avatarImg: 'b' },
-      { id: 30, name: 'Carol', avatarImg: 'c' },
+      // classId 让作者属于当前用户主班级(5)，使本班过滤后仍保留这些回复
+      { id: 10, name: 'Alice', avatarImg: 'a', classId: 5 },
+      { id: 20, name: 'Bob', avatarImg: 'b', classId: 5 },
+      { id: 30, name: 'Carol', avatarImg: 'c', classId: 5 },
     ])
     _mockDb.query.userComments.findMany = vi.fn().mockResolvedValue([
       { userId: 99, courseId: 1, commentCid: 2, like: true },

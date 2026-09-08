@@ -5,6 +5,7 @@ type MyStats = {
     exp: number
     coin: number
     chapterScore: number | null
+    number?: string | null
     medals?: MyMedal[]
     chapterTaskStatus?: Record<string, boolean> | null
     chapterIsPass?: boolean
@@ -41,6 +42,7 @@ export function useUserCardSetup() {
         exp: 0,
         coin: 0,
         chapterScore: null,
+        number: null,
     }))
 
     // fetchStats 的乱序保护 + 并发去重
@@ -56,7 +58,7 @@ export function useUserCardSetup() {
 
     async function fetchStats() {
         if (!courseId.value) {
-            stats.value = { courseScore: 0, exp: 0, coin: 0, chapterScore: null }
+            stats.value = { courseScore: 0, exp: 0, coin: 0, chapterScore: null, number: null }
             return
         }
         // 章节竞态防护：记录请求时的章节 id，响应到达时若已切换章节则丢弃
@@ -135,6 +137,7 @@ export function useUserCardSetup() {
     const courseScore = computed(() => stats.value.courseScore)
     const exp = computed(() => stats.value.exp)
     const coin = computed(() => stats.value.coin)
+    const number = computed(() => stats.value.number)
     const chapterScore = computed(() => stats.value.chapterScore)
 
     // 经验 → 等级换算（不存库，按 exp 动态计算）
@@ -173,6 +176,6 @@ export function useUserCardSetup() {
 
     return {
         user, myMedals, medalIconColor, hasCourse, levelInfo, hasChapter,
-        courseScoreDisplay, coinDisplay, chapterScoreDisplay, refresh,
+        courseScoreDisplay, coinDisplay, chapterScoreDisplay, number, refresh,
     }
 }

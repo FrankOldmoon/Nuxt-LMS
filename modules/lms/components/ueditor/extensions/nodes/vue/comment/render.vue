@@ -55,6 +55,9 @@
                     <span class="text-xs">{{ $t('comment.loading') }}</span>
                 </div>
                 <template v-else>
+                    <!-- 分页控件：放在所有评论上方 -->
+                    <CommentPagination />
+
                     <!-- 回复表单 -->
                     <CommentForm :parent-cid="commentId" :placeholder="$t('comment.replyPlaceholder')"
                         @submit="onReply" />
@@ -62,9 +65,6 @@
                     <!-- 子评论列表（分页） -->
                     <CommentList :comments="pagedChildren" :current-user-id="user?.id"
                         @toggle-like="toggleLike" @delete="onDelete" @approve="onApprove" />
-
-                    <!-- 分页控件 -->
-                    <CommentPagination />
                 </template>
             </div>
         </template>

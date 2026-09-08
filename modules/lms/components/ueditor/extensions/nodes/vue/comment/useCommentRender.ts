@@ -85,7 +85,7 @@ export function useCommentRender(props: CommentRenderProps) {
     }
 
     // 子评论分页（前端分页，API 一次性获取全部）
-    const pageSize = 10
+    const pageSize = ref(10)
     const page = ref(1)
 
     // 评论列表数据（自身 + 子评论）
@@ -93,13 +93,13 @@ export function useCommentRender(props: CommentRenderProps) {
     const children = ref<any[]>([])
     const listPending = ref(false)
 
-    const totalPages = computed(() => Math.max(1, Math.ceil(children.value.length / pageSize)))
+    const totalPages = computed(() => Math.max(1, Math.ceil(children.value.length / pageSize.value)))
     const pagedChildren = computed(() => {
-        const start = (page.value - 1) * pageSize
-        return children.value.slice(start, start + pageSize)
+        const start = (page.value - 1) * pageSize.value
+        return children.value.slice(start, start + pageSize.value)
     })
 
-    // 新增/删除评论后校正页码
+    // 新增/删除评论/修改每页数量后校正页码
     watch([children, totalPages], () => {
         if (page.value > totalPages.value) page.value = totalPages.value
     })

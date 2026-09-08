@@ -15,6 +15,10 @@
         <div v-if="user.username" class="text-xs text-muted truncate font-mono mt-0.5">
           {{ user.username }}
         </div>
+        <!-- 本课程的编号（user_course.number） -->
+        <div v-if="hasCourse && number" class="text-xs text-muted truncate font-mono mt-0.5">
+          <UIcon name="i-lucide-hash" class="size-3" /> {{ number }}
+        </div>
         <!-- 已获得的奖章 -->
         <div v-if="myMedals.length" class="flex flex-wrap gap-1 mt-1">
           <UTooltip v-for="medal in myMedals" :key="medal.medalId"
@@ -83,7 +87,7 @@ import { useUserCardSetup } from './useUserCard'
 
 const {
   user, myMedals, medalIconColor, hasCourse, levelInfo, hasChapter,
-  courseScoreDisplay, coinDisplay, chapterScoreDisplay, refresh,
+  courseScoreDisplay, coinDisplay, chapterScoreDisplay, number, refresh,
 } = useUserCardSetup()
 
 defineExpose({ refresh })

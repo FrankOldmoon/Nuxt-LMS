@@ -39,13 +39,15 @@ describe('composables/useCourseProgress', () => {
     expect(overallProgress.value).toBeNull()
   })
 
-  it('loadData 加载进度数据', async () => {
+  it('整体进度只统计目录里的章节，目录外章节不计入', async () => {
     setMockFetchHandler(async (url) => {
       if (url.includes('/api/courses/progress')) {
         return {
           data: [
-            { chapterId: 1, score: 80, isPass: true, isOpen: true, accessible: true, items: [] },
-            { chapterId: 2, score: 50, isPass: false, isOpen: true, accessible: true, items: [] },
+            { chapterId: 2, score: 80, isPass: true, isOpen: true, accessible: true, items: [] },
+            { chapterId: 3, score: 50, isPass: false, isOpen: true, accessible: true, items: [] },
+            // 不在目录里的章节（chapterId 99）：不应被计入整体进度
+            { chapterId: 99, score: 100, isPass: true, isOpen: true, accessible: true, items: [] },
           ],
           success: true,
           msg: '',
@@ -56,12 +58,19 @@ describe('composables/useCourseProgress', () => {
     const { useCourseProgress } = await import('../../composables/useCourseProgress')
     const isOpen = ref(false)
     const ui = { UButton: {}, UTooltip: {}, UIcon: {}, NuxtLink: {} }
-    const { loadData, totalCount, passedCount, overallProgress } = useCourseProgress(
-      { courseId: '1', navigation: [] },
+    // 目录（navigation）：Home 会被 slice(1) 跳过，只有 /course/1/2、/course/1/3 两个章节
+    const nav = [
+      { label: 'Home', to: '/course/1' },
+      { label: 'Ch2', to: '/course/1/2' },
+      { label: 'Ch3', to: '/course/1/3' },
+    ]
+    const { loadData, totalCount, passedCount, overallProgress, tableData } = useCourseProgress(
+      { courseId: '1', navigation: nav },
       isOpen,
       ui,
     )
     await loadData()
+    expect(tableData.value).toHaveLength(2)
     expect(totalCount.value).toBe(2)
     expect(passedCount.value).toBe(1)
     expect(overallProgress.value).toBe(50)

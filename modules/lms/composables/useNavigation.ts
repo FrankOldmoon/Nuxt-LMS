@@ -149,7 +149,9 @@ export function useSidebarNav() {
     () => courseApiUrl.value,
     // 侧边栏导航是课程级数据（不含章节维度），跳过 course_id/chapter_id 自动注入，
     // 避免切章节时 chapter_id 变化导致 URL 变化而重复请求 /api/courses/show
-    { default: () => null, skipInjectIds: true }
+    // keyPrefix：与课程详情页的 /api/courses/show 使用不同 asyncData key，
+    // 避免路由切换（章节页→课程页）时侧边栏成员 unmount/abort 让课程详情页读到空数据而误判课程不存在
+    { default: () => null, skipInjectIds: true, keyPrefix: 'side:' }
   )
 
   const navigation = computed<NavigationMenuItem[]>(() => {
