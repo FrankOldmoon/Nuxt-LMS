@@ -17,7 +17,6 @@
 import { UmoEditor } from '@umoteam/editor'
 import Cinserts from './cinserts.vue'
 import UeditorWs from './ws.vue'
-import AiFloat from './ai-float.vue'
 import { useUeditorIndex } from './useUeditorIndex'
 
 const json = defineModel()

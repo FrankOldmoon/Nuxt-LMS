@@ -92,6 +92,13 @@
       "when": 1795606000000,
       "tag": "0012_drop_showcase_files",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1795606080000,
+      "tag": "0013_drop_race_score",
+      "breakpoints": true
     }
   ]
 }

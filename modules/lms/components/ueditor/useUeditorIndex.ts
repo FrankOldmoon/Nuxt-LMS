@@ -71,6 +71,35 @@ export function useUeditorIndex(props: any, json: any) {
         ribbonObserver = null
     })
 
+    // 未配置 PeerTube 时的普通视频上传：走原文件上传接口
+    async function ordinaryVideoUpload(file: any) {
+        const formData = new FormData()
+        formData.append('files', file)
+        const res = await $fetch('/api/files/upload', {
+            method: 'POST',
+            body: formData,
+        })
+        return { url: res.data.url, id: res.data.id }
+    }
+
+    // 上传视频到 PeerTube，成功返回 embed URL；未配置或上传失败返回 null
+    async function uploadVideoToPeerTube(file: any): Promise<string | null> {
+        try {
+            const formData = new FormData()
+            formData.append('files', file)
+            const res = await $fetch<{ data: any }>('/api/peertube/upload', {
+                method: 'POST',
+                body: formData,
+            })
+            const d = res?.data
+            if (d?.embedUrl) return d.embedUrl
+            // 未配置 PeerTube（enabled:false）或其它失败 → 让调用方回退普通上传
+            return null
+        } catch {
+            return null
+        }
+    }
+
     const options = computed(() => ({
         document: {
             content: json.value,
@@ -87,6 +116,32 @@ export function useUeditorIndex(props: any, json: any) {
         },
         async onFileUpload(file: any) {
             if (!file) throw new Error('File not found')
+
+            // 视频：优先上传 PeerTube 得到 embed URL；
+            // 将编辑器里刚创建的待上传 video 节点原位替换为 iframe 节点（embed 是网页地址，
+            // 原生 <video> 无法播放，iframe 节点在编辑时才能正常显示）
+            // 未配置 PeerTube（服务端返回 enabled:false / 上传失败）时回退为普通视频上传
+            if (String(file.type || '').startsWith('video/')) {
+                const embedUrl = await uploadVideoToPeerTube(file)
+                if (embedUrl) {
+                    const editor = editorRef.value?.useEditor?.()
+                    if (editor) {
+                        let replaced = false
+                        editor.state.doc.nodesBetween(0, editor.state.doc.nodeSize, (node: any, pos: number) => {
+                            if (!replaced && node.type.name === 'video' && node.attrs?.uploaded === false) {
+                                const iframeNode = editor.schema.nodes.iframe?.create({ src: embedUrl, width: null, height: 400, clickable: true })
+                                if (iframeNode) {
+                                    editor.view.dispatch(editor.state.tr.replaceWith(pos, pos + node.nodeSize, iframeNode))
+                                    replaced = true
+                                }
+                            }
+                            return true
+                        })
+                    }
+                    return { url: embedUrl, id: null }
+                }
+                return ordinaryVideoUpload(file)
+            }
 
             // 图片压缩处理
             const processedFile = file.type.startsWith('image/')

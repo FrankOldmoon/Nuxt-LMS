@@ -92,12 +92,12 @@ export default withSubmitHandler('提交竞赛成绩失败', async (event) => {
     })
   }
 
-  // 3. 更新 userCourses.raceScore（最高分模式 + 参与经验）
+  // 3. 更新 userCourses.questionScore（竞赛分数计入做题分，最高分模式 + 参与经验）
   await notifyCourseProgressMax({
     userId: user.id,
     courseId,
     score: bestScore,
-    scoreKey: 'raceScore',
+    scoreKey: 'questionScore',
     exp: gainedExp,
     coin: gainedCoin,
   })
@@ -117,7 +117,7 @@ export default withSubmitHandler('提交竞赛成绩失败', async (event) => {
       parentCourseId,
       selfCourseId: courseId,
       score: bestScore,
-      scoreKey: 'raceScore',
+      scoreKey: 'questionScore',
       exp: gainedExp,
       coin: gainedCoin,
       mode: 'max',

@@ -54,7 +54,7 @@ export function handleRaceEnd(_peer: any, data: any) {
  * 竞赛结算：
  *  1. 按学生聚合本场所有作答，写入 userRaces（取该生最高分）
  *  2. 首次参与发放 participateExp / participateCoin
- *  3. userCourses.raceScore 最高分模式更新
+ *  3. userCourses.questionScore 最高分模式更新
  *  4. 前 3 名发排名奖励 rank1/2/3 exp/coin
  * 各段独立容错：成绩落库失败不影响排名奖励发放。
  */
@@ -92,7 +92,7 @@ async function settleRace(race: any, summary: any[]) {
       for (const q of qrows) pointMap.set(Number(q.cid), Number(q.point) || 1)
     } catch { /* 题目分值加载失败回退每题 1 分 */ }
 
-    // 2/3. 逐学生落库 + raceScore/参与奖（单个失败不影响其他学生）
+    // 2/3. 逐学生落库 + questionScore/参与奖（单个失败不影响其他学生）
     for (const [uid, d] of perUser) {
       try {
         let score = 0
@@ -129,19 +129,19 @@ async function settleRace(race: any, summary: any[]) {
           })
         }
 
-        // raceScore 最高分模式 + 参与经验/金币
+        // questionScore 最高分模式 + 参与经验/金币
         await notifyCourseProgressMax({
           userId: uid,
           courseId: race.courseId,
           score: bestScore,
-          scoreKey: 'raceScore',
+          scoreKey: 'questionScore',
           exp,
           coin,
         })
       } catch { /* 单个学生结算失败静默 */ }
     }
 
-    // 4. 排名奖励（前 3 名按最终成绩）— 只加经验金币，不改 raceScore 分项
+    // 4. 排名奖励（前 3 名按最终成绩）— 只加经验金币，不改 questionScore 分项
     const ranks = [
       { exp: rConfig.rank1Exp, coin: rConfig.rank1Coin },
       { exp: rConfig.rank2Exp, coin: rConfig.rank2Coin },
@@ -153,7 +153,7 @@ async function settleRace(race: any, summary: any[]) {
       const exp = Number(ranks[i].exp) || 0
       const coin = Number(ranks[i].coin) || 0
       if (exp <= 0 && coin <= 0) continue
-      await addCourseScore(entry.userId, race.courseId, 0, 'raceScore', exp, coin)
+      await addCourseScore(entry.userId, race.courseId, 0, 'questionScore', exp, coin)
       await checkAndAwardMedals(entry.userId, race.courseId)
     }
   } catch { /* 结算失败静默，不影响广播 */ }

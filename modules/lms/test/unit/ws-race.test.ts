@@ -311,7 +311,7 @@ describe('ws/race: questionEnd / end', () => {
     expect(byUser.get(1)![4]).toBe(100) // rank1
     expect(byUser.get(2)![4]).toBe(80)  // rank2
     expect(byUser.get(3)![4]).toBe(60)  // rank3
-    // 结算不改变 raceScore 分项与总分（score 增量为 0）
+    // 结算不改变 questionScore 分项与总分（score 增量为 0）
     for (const c of calls) expect(c[2]).toBe(0)
     // raceStates 已清理，重复 raceEnd 不会重发奖励
     const { checkAndAwardMedals } = await import('../../server/utils/medals/checker')

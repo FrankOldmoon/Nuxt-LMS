@@ -1,11 +1,8 @@
 <script setup lang="ts">
 const { favicon } = useSiteConfig()
-const { analytics } = useLmsPublicConfig()
 
 useHead(() => ({
   link: [{ rel: 'icon', type: 'image/x-icon', href: favicon.value }],
-  // 站点统计脚本（谷歌分析 / 百度统计），token 留空则不注入
-  script: buildAnalyticsScripts(analytics.value.googleTrackingId, analytics.value.baiduTrackingId),
 }))
 
 // Global startup access password

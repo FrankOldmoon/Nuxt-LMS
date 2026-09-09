@@ -13,7 +13,6 @@ export async function collectUserMetrics(userId: number, courseId: number): Prom
       homeworkScore: schema.userCourses.homeworkScore,
       commentScore: schema.userCourses.commentScore,
       quizScore: schema.userCourses.quizScore,
-      raceScore: schema.userCourses.raceScore,
     })
     .from(schema.userCourses)
     .where(and(eq(schema.userCourses.userId, userId), eq(schema.userCourses.courseId, courseId)))
@@ -68,7 +67,6 @@ export async function collectUserMetrics(userId: number, courseId: number): Prom
     homeworkScore: Number(row.homeworkScore) || 0,
     commentScore: Number(row.commentScore) || 0,
     quizScore: Number(row.quizScore) || 0,
-    raceScore: Number(row.raceScore) || 0,
     questionCount: Number(qCount[0]?.c) || 0,
     homeworkCount: Number(hCount[0]?.c) || 0,
     commentCount: Number(cCount[0]?.c) || 0,

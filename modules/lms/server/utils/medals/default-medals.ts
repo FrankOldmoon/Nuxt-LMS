@@ -52,8 +52,8 @@ export const DEFAULT_MEDALS: { name: string; content: MedalContent }[] = [
     name: 'Race Champion',
     content: {
       icon: 'i-lucide-trophy', color: 'error', tier: 3,
-      description: 'Score 100 in races',
-      conditions: [{ metric: 'raceScore', op: '>=', value: 100 }],
+      description: 'Score 100 in questions',
+      conditions: [{ metric: 'questionScore', op: '>=', value: 100 }],
       logic: 'all',
     },
   },

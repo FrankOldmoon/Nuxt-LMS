@@ -9,6 +9,8 @@
       class="w-full p-3 rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors resize-y"
       :class="inputClass"
       @input="onInput"
+      @paste.prevent
+      @drop.prevent
     />
     <p v-if="submitted && !isCorrect" class="text-xs text-gray-400 mt-1">
       {{ $t('question.shortAnswerCorrectPattern') }}: <code class="font-mono text-blue-500">{{ correctPattern }}</code>

@@ -43,8 +43,8 @@ describe('composables/useStudentGrades', () => {
         return {
           data: {
             grades: [
-              { userId: 1, questionScore: 80, homeworkScore: 70, quizScore: 90, raceScore: 50, commentScore: 60, altitudeScore: 85, externalScore: 5 },
-              { userId: 2, questionScore: 30, homeworkScore: 40, quizScore: 50, raceScore: 10, commentScore: 20, altitudeScore: 25, externalScore: 0 },
+              { userId: 1, questionScore: 80, homeworkScore: 70, quizScore: 90, commentScore: 60, altitudeScore: 85, externalScore: 5 },
+              { userId: 2, questionScore: 30, homeworkScore: 40, quizScore: 50, commentScore: 20, altitudeScore: 25, externalScore: 0 },
             ],
           },
           success: true,

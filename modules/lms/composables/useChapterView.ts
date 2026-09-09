@@ -145,19 +145,12 @@ export function useChapterView(props: ChapterViewProps) {
     }, 1000)
   }
 
-  const CHAPTER_KB_MAX_CHARS = 6000
-
   const assistantPreset = computed(() => {
     const chapter = props.data?.chapter
     if (!chapter) return ''
     const title = chapter.title || ''
-    const chapterText = extractPlainText(chapter.content, CHAPTER_KB_MAX_CHARS)
     return [
       `You are a professional lecturer for the chapter <${title}>, proficient in all knowledge points in this chapter.`,
-      '',
-      'Below is the full content of this chapter, which shall serve as the only basis for your answers:',
-      '',
-      chapterText,
       '',
       'Answer Specifications:',
       '1. Be concise and to the point, avoid lengthy elaboration.',

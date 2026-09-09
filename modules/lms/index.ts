@@ -120,6 +120,9 @@ export default defineNuxtModule({
     addPlugin(resolve('./plugins/home-data.ts'))
     addPlugin(resolve('./plugins/lms-public-config.ts'))
 
+    // 客户端站点统计（谷歌分析 / 百度统计）：配置就绪后注入脚本并执行
+    addPlugin(resolve('./plugins/analytics.ts'))
+
     nuxt.hook('i18n:registerModule', (registerModule) => {
       registerModule({
         langDir: resolve('./i18n/locales'),

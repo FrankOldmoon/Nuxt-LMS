@@ -226,12 +226,12 @@ describe('server/utils/userScore - addCourseScoreMax（最高分模式，用于 
     expect(valsArg.exp).toBe(5)
   })
 
-  it('不同 scoreKey 取 max 互不影响（raceScore 单独算）', async () => {
+  it('不同 scoreKey 取 max 互不影响（externalScore 单独算）', async () => {
     vi.mocked(db.query.userCourses.findFirst).mockResolvedValue({
-      score: '100', quizScore: '50', raceScore: '30', exp: 20,
+      score: '100', quizScore: '50', externalScore: '30', exp: 20,
     } as any)
-    await addCourseScoreMax(1, 3, 20, 'raceScore', 0)
-    // 30 > 20，不写 raceScore；总分不动；exp=0 也不写
+    await addCourseScoreMax(1, 3, 20, 'externalScore', 0)
+    // 30 > 20，不写 externalScore；总分不动；exp=0 也不写
     // 所有增量都为 0，应直接跳过 update/insert
     expect(db.update).not.toHaveBeenCalled()
     expect(db.insert).not.toHaveBeenCalled()

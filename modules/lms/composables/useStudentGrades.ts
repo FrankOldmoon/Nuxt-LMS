@@ -39,13 +39,12 @@ export function useStudentGrades(
   const { t } = useI18n()
 
   const pending = ref(false)
-  const stats = ref({ questionCount: 0, homeworkCount: 0, quizCount: 0, raceCount: 0, commentCount: 0 })
+  const stats = ref({ questionCount: 0, homeworkCount: 0, quizCount: 0, commentCount: 0 })
   // 该学生该课程的成绩（按 userId 过滤）
   const score = ref({
     questionScore: 0,
     homeworkScore: 0,
     quizScore: 0,
-    raceScore: 0,
     commentScore: 0,
     altitudeScore: 0,
     externalScore: 0,
@@ -55,7 +54,6 @@ export function useStudentGrades(
     { label: t('coursePanel.question'), value: stats.value.questionCount },
     { label: t('coursePanel.homework'), value: stats.value.homeworkCount },
     { label: t('coursePanel.quizScore'), value: stats.value.quizCount },
-    { label: t('coursePanel.raceScore'), value: stats.value.raceCount },
     { label: t('coursePanel.comment'), value: stats.value.commentCount },
   ])
 
@@ -66,7 +64,6 @@ export function useStudentGrades(
       { name: t('coursePanel.homeworkScore'), value: Number(score.value.homeworkScore) || 0 },
       { name: t('coursePanel.quizScore'), value: Number(score.value.quizScore) || 0 },
       { name: t('coursePanel.commentScore'), value: Number(score.value.commentScore) || 0 },
-      { name: t('coursePanel.raceScore'), value: Number(score.value.raceScore) || 0 },
       { name: t('coursePanel.altitudeScore'), value: Number(score.value.altitudeScore) || 0 },
     ]
     const peak = Math.max(...dims.map((d) => d.value), 10)
@@ -116,7 +113,6 @@ export function useStudentGrades(
           questionScore: Number(mine.questionScore) || 0,
           homeworkScore: Number(mine.homeworkScore) || 0,
           quizScore: Number(mine.quizScore) || 0,
-          raceScore: Number(mine.raceScore) || 0,
           commentScore: Number(mine.commentScore) || 0,
           altitudeScore: Number(mine.altitudeScore) || 0,
           externalScore: Number(mine.externalScore) || 0,

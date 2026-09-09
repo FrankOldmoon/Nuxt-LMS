@@ -2,7 +2,7 @@
 
 /** 奖章条件：某个指标达到某个值 */
 export interface MedalCondition {
-  /** 指标名：courseScore / exp / level / questionScore / homeworkScore / commentScore / quizScore / raceScore / questionCount / homeworkCount / commentCount / chapterPassCount */
+  /** 指标名：courseScore / exp / level / questionScore / homeworkScore / commentScore / quizScore / questionCount / homeworkCount / commentCount / chapterPassCount */
   metric: string
   /** 运算符：>= / > / <= / < / == */
   op: string
@@ -35,7 +35,6 @@ export interface UserMetrics {
   homeworkScore: number
   commentScore: number
   quizScore: number
-  raceScore: number
   questionCount: number
   homeworkCount: number
   commentCount: number

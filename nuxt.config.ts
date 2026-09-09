@@ -33,6 +33,17 @@ export default defineNuxtConfig({
   // 其他访问（IP/localhost/其余域名）直接放行。环境变量 NUXT_VERIFICATION_URL 覆盖。
   runtimeConfig: {
     verificationUrl: '',
+    // PeerTube 视频上传（ueditor 视频走 PeerTube，插入 embed iframe）。
+    // 全部凭证通过 .env 的环境变量提供，不写入代码仓库：
+    // NUXT_PEERTUBE_URL / NUXT_PEERTUBE_USERNAME / NUXT_PEERTUBE_PASSWORD / NUXT_PEERTUBE_PRIVACY / NUXT_PEERTUBE_CHANNEL_ID
+    // 未配置（url/username/password 任一为空）时，ueditor 视频上传回退为普通文件上传方式。
+    peertube: {
+      url: '',
+      username: '',
+      password: '',
+      privacy: '1',
+      channelId: '1',
+    },
   },
   vite: {
     server: {

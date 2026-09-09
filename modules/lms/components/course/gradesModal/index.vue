@@ -56,12 +56,6 @@
                             {{ row.original.quizScore.toFixed(1) }}
                         </span>
                     </template>
-                    <!-- raceScore 列 -->
-                    <template #raceScore-cell="{ row }">
-                        <span class="font-mono text-xs" :class="!row.original._hasGrade && 'opacity-40'">
-                            {{ row.original.raceScore.toFixed(1) }}
-                        </span>
-                    </template>
                     <!-- commentScore 列 -->
                     <template #commentScore-cell="{ row }">
                         <span class="font-mono text-xs" :class="!row.original._hasGrade && 'opacity-40'">

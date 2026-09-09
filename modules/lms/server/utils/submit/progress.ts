@@ -13,13 +13,13 @@
 
 /**
  * 累加模式：分项 scoreKey 累加 + 总分累加 + 经验值 + 金币 + 奖章检查
- * @param scoreKey 分项字段：questionScore / homeworkScore / quizScore / raceScore
+ * @param scoreKey 分项字段：questionScore / homeworkScore / quizScore
  */
 export async function notifyCourseProgress(args: {
   userId: number
   courseId: number
   score: number
-  scoreKey: 'questionScore' | 'homeworkScore' | 'quizScore' | 'raceScore' | string
+  scoreKey: 'questionScore' | 'homeworkScore' | 'quizScore' | string
   exp: number
   coin?: number
 }) {
@@ -40,7 +40,7 @@ export async function notifyParentCourse(args: {
   parentCourseId: number
   selfCourseId: number
   score: number
-  scoreKey: 'questionScore' | 'homeworkScore' | 'quizScore' | 'raceScore' | string
+  scoreKey: 'questionScore' | 'homeworkScore' | 'quizScore' | string
   exp: number
   coin?: number
   mode?: 'acc' | 'max'
@@ -74,7 +74,7 @@ export async function notifyCourseProgressMax(args: {
   userId: number
   courseId: number
   score: number
-  scoreKey: 'questionScore' | 'homeworkScore' | 'quizScore' | 'raceScore' | string
+  scoreKey: 'questionScore' | 'homeworkScore' | 'quizScore' | string
   exp: number
   coin?: number
 }) {

@@ -31,7 +31,7 @@ const _mockSchema = {
   quizzes: { courseId: 'courseId', cid: 'cid', deletedAt: 'deletedAt', submitLimit: 'submitLimit', submitCount: 'submitCount' },
   questions: { courseId: 'courseId', cid: 'cid', type: 'type', answer: 'answer', point: 'point' },
   userQuizzes: { userId: 'userId', courseId: 'courseId', quizCid: 'quizCid', score: 'score', submitCount: 'submitCount', startedAt: 'startedAt', submitedAt: 'submitedAt', records: 'records' },
-  userCourses: { userId: 'userId', courseId: 'courseId', score: 'score', exp: 'exp', quizScore: 'quizScore', raceScore: 'raceScore' },
+  userCourses: { userId: 'userId', courseId: 'courseId', score: 'score', exp: 'exp', quizScore: 'quizScore' },
   users: { id: 'id', defaultClass: 'defaultClass' },
 }
 vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))

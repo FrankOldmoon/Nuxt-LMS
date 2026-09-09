@@ -218,7 +218,8 @@ export function useMatch(props: any) {
 
   function getLineColor(leftIdx: number, rightPos: number) {
     if (!submitted?.value) return '#3b82f6'
-    const isCorrectConn = rightItems.value[rightPos]?.originalIndex === leftIdx
+    // leftIdx 可能来自对象 key（字符串），与 originalIndex（数字）比较需统一转数字
+    const isCorrectConn = rightItems.value[rightPos]?.originalIndex === Number(leftIdx)
     return isCorrectConn ? '#4ade80' : '#f87171'
   }
 

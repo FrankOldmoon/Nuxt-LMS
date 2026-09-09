@@ -20,7 +20,7 @@ vi.mock('@nuxthub/db', () => ({
   schema: {
     medals: { id: 'id', deletedAt: 'deletedAt', content: 'content', name: 'name' },
     userMedals: { userId: 'userId', medalId: 'medalId' },
-    userCourses: { userId: 'userId', courseId: 'courseId', score: 'score', exp: 'exp', questionScore: 'questionScore', homeworkScore: 'homeworkScore', commentScore: 'commentScore', quizScore: 'quizScore', raceScore: 'raceScore' },
+    userCourses: { userId: 'userId', courseId: 'courseId', score: 'score', exp: 'exp', questionScore: 'questionScore', homeworkScore: 'homeworkScore', commentScore: 'commentScore', quizScore: 'quizScore' },
     userQuestions: { userId: 'userId', courseId: 'courseId' },
     userHomeworks: { userId: 'userId', courseId: 'courseId' },
     userComments: { userId: 'userId', courseId: 'courseId' },
@@ -60,7 +60,7 @@ beforeEach(() => {
 describe('server/utils/medals - shouldAwardMedal', () => {
   const baseMetrics: UserMetrics = {
     courseScore: 0, exp: 0, level: 1,
-    questionScore: 0, homeworkScore: 0, commentScore: 0, quizScore: 0, raceScore: 0,
+    questionScore: 0, homeworkScore: 0, commentScore: 0, quizScore: 0,
     questionCount: 0, homeworkCount: 0, commentCount: 0, chapterPassCount: 0,
   }
 
@@ -181,7 +181,7 @@ describe('server/utils/medals - shouldAwardMedal', () => {
 describe('server/utils/medals - collectUserMetrics', () => {
   it('正常返回各项指标 + level 计算', async () => {
     vi.mocked(db.select)
-      .mockReturnValueOnce(chainReturning([{ score: '500', exp: 300, questionScore: '100', homeworkScore: '80', commentScore: '40', quizScore: '90', raceScore: '60' }])) // userCourses
+      .mockReturnValueOnce(chainReturning([{ score: '500', exp: 300, questionScore: '100', homeworkScore: '80', commentScore: '40', quizScore: '90' }])) // userCourses
       .mockReturnValueOnce(chainReturning([{ c: 15 }]))  // questionCount
       .mockReturnValueOnce(chainReturning([{ c: 5 }]))   // homeworkCount
       .mockReturnValueOnce(chainReturning([{ c: 20 }]))  // commentCount

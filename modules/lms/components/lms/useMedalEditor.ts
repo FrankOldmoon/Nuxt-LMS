@@ -38,7 +38,6 @@ export function useMedalEditor() {
         { label: t('medal.metricHomeworkScore'), value: 'homeworkScore' },
         { label: t('medal.metricCommentScore'), value: 'commentScore' },
         { label: t('medal.metricQuizScore'), value: 'quizScore' },
-        { label: t('medal.metricRaceScore'), value: 'raceScore' },
         { label: t('medal.metricQuestionCount'), value: 'questionCount' },
         { label: t('medal.metricHomeworkCount'), value: 'homeworkCount' },
         { label: t('medal.metricCommentCount'), value: 'commentCount' },

@@ -16,10 +16,9 @@ export function useGradesContext() {
 // grade_criteria 为空时的初始值：每项分满分(maxScore) + 占比(percent)，百分比之和应为 100
 // 等第阈值按百分制换算：finalScore = Σ( subscore / maxScore × percent )
 const DEFAULT_PERCENTS: Record<string, number> = {
-  questionScore: 20,
+  questionScore: 30,
   homeworkScore: 20,
   quizScore: 20,
-  raceScore: 10,
   commentScore: 10,
   altitudeScore: 20,
   externalScore: 0,
@@ -27,7 +26,7 @@ const DEFAULT_PERCENTS: Record<string, number> = {
 
 export const GRADE_WEIGHT_KEYS = [
   'questionScore', 'homeworkScore', 'quizScore',
-  'raceScore', 'commentScore', 'altitudeScore', 'externalScore',
+  'commentScore', 'altitudeScore', 'externalScore',
 ] as const
 
 export const DEFAULT_GRADE_CRITERIA = {
@@ -157,11 +156,6 @@ export function useCourseGrades(
       sortingFn: (a: any, b: any) => (b.original.quizScore ?? 0) - (a.original.quizScore ?? 0),
     },
     {
-      id: 'raceScore',
-      header: t('coursePanel.raceScore'),
-      sortingFn: (a: any, b: any) => (b.original.raceScore ?? 0) - (a.original.raceScore ?? 0),
-    },
-    {
       id: 'commentScore',
       header: t('coursePanel.commentScore'),
       sortingFn: (a: any, b: any) => (b.original.commentScore ?? 0) - (a.original.commentScore ?? 0),
@@ -197,7 +191,6 @@ export function useCourseGrades(
         questionScore: g?.questionScore ?? 0,
         homeworkScore: g?.homeworkScore ?? 0,
         quizScore: g?.quizScore ?? 0,
-        raceScore: g?.raceScore ?? 0,
         commentScore: g?.commentScore ?? 0,
         altitudeScore: g?.altitudeScore ?? 0,
         externalScore: g?.externalScore ?? 0,
@@ -214,7 +207,7 @@ export function useCourseGrades(
   }
 
   // 学生端：学习数据统计
-  const stats = ref({ questionCount: 0, homeworkCount: 0, quizCount: 0, raceCount: 0, commentCount: 0 })
+  const stats = ref({ questionCount: 0, homeworkCount: 0, quizCount: 0, commentCount: 0 })
   async function loadStats() {
     try {
       const data = await cRequest(`/api/courses/stats?courseId=${props.courseId}`)
@@ -227,7 +220,6 @@ export function useCourseGrades(
     { label: t('coursePanel.question'), value: stats.value.questionCount },
     { label: t('coursePanel.homework'), value: stats.value.homeworkCount },
     { label: t('coursePanel.quizScore'), value: stats.value.quizCount },
-    { label: t('coursePanel.raceScore'), value: stats.value.raceCount },
     { label: t('coursePanel.comment'), value: stats.value.commentCount },
   ])
 
@@ -240,7 +232,6 @@ export function useCourseGrades(
       { name: t('coursePanel.homeworkScore'), value: Number(r.homeworkScore) || 0 },
       { name: t('coursePanel.quizScore'), value: Number(r.quizScore) || 0 },
       { name: t('coursePanel.commentScore'), value: Number(r.commentScore) || 0 },
-      { name: t('coursePanel.raceScore'), value: Number(r.raceScore) || 0 },
       { name: t('coursePanel.altitudeScore'), value: Number(r.altitudeScore) || 0 },
     ]
     const peak = Math.max(...dims.map((d) => d.value), 10)
