@@ -387,7 +387,7 @@ export const userCourses = pgTable(
     isEditor: boolean('is_editor'),
     grade: varchar('grade', { length: 50 }),
     score: numeric('score', { precision: 10, scale: 2 }).default('0'),
-    altitudeScore: numeric('altitude_score', { precision: 10, scale: 2 }).default('0'),
+    attitudeScore: numeric('attitude_score', { precision: 10, scale: 2 }).default('0'),
     questionScore: numeric('question_score', { precision: 10, scale: 2 }).default('0'),
     quizScore: numeric('quiz_score', { precision: 10, scale: 2 }).default('0'),
     homeworkScore: numeric('homework_score', { precision: 10, scale: 2 }).default('0'),

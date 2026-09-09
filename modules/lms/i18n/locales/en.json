@@ -726,7 +726,7 @@
     "groupFiles": "Group Files",
     "selectGroup": "Select Group",
     "noGroups": "No groups",
-    "altitudeScore": "Altitude",
+    "attitudeScore": "Attitude",
     "externalScore": "External",
     "ability": "Ability",
     "learningStats": "Learning Stats",

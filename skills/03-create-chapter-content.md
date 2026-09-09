@@ -22,6 +22,9 @@ Use **plenty of emoji** in headings, paragraphs, lists, callouts etc. to make th
 - **Emoji in headings**: add a fitting emoji before every level-2/3 heading, e.g. `## 🚀 Variables and Assignment`, `### 🔁 for Loops`
 - **Sprinkle in paragraphs/lists**: start or decorate explanatory paragraphs and list items with emoji (e.g. `✅` correct usage, `❌` common mistakes, `⚠️` cautions, `💡` tips, `🎯` learning goals, `📦` examples, `🧪` hands-on)
 - **Callout icons**: the `icon` parameter of `:::callout icon=💡` takes an emoji directly, matching the content semantics
+- **⚠️ Callout icon is rendered once by the `icon` attribute — do NOT repeat the same emoji inside the callout body**.
+  The callout node renders the `icon` attr as a separate leading icon, so writing the same emoji again in the body text
+  makes it appear **twice**. Keep the body as plain text, e.g. `:::callout icon=💡\n这里是提示\n:::`.
 - **Moderation first**: emoji should aid understanding; generally 0–2 per paragraph, avoid hurting readability
 
 Markdown example (when passing markdown):

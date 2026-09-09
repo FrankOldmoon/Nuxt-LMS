@@ -127,7 +127,7 @@ describe('composables/useCourseGrades', () => {
     // 全部满分 → finalScore = 30+20+20+10+20+0 = 100 → A
     const row = {
       questionScore: 100, homeworkScore: 100, quizScore: 100,
-      commentScore: 100, altitudeScore: 100, externalScore: 0,
+      commentScore: 100, attitudeScore: 100, externalScore: 0,
     }
     const g = r.computeGrade(row)
     expect(g.finalScore).toBeCloseTo(100, 1)
@@ -141,7 +141,7 @@ describe('composables/useCourseGrades', () => {
     const r = useCourseGrades({ courseId: 1, classId: 1 }, isOpen)
     const row = {
       questionScore: 0, homeworkScore: 0, quizScore: 0,
-      commentScore: 0, altitudeScore: 0, externalScore: 0,
+      commentScore: 0, attitudeScore: 0, externalScore: 0,
     }
     const g = r.computeGrade(row)
     expect(g.finalScore).toBe(0)

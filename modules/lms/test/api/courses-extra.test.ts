@@ -32,7 +32,7 @@ const _mockSchema: any = {
   comments: { courseId: 'courseId', cid: 'cid', name: 'name', content: 'content', tags: 'tags', point: 'point', userId: 'userId', parentId: 'parentId', status: 'status' },
   quizzes: { courseId: 'courseId', cid: 'cid', name: 'name', content: 'content', tags: 'tags', point: 'point', questions: 'questions', timeLimit: 'timeLimit', submitLimit: 'submitLimit', startAt: 'startAt', endAt: 'endAt' },
   races: { courseId: 'courseId', cid: 'cid', name: 'name', content: 'content', tags: 'tags', point: 'point', questionIds: 'questionIds', gapTime: 'gapTime' },
-  userCourses: { userId: 'userId', courseId: 'courseId', group: 'group', score: 'score', altitudeScore: 'altitudeScore', isTeacher: 'isTeacher' },
+  userCourses: { userId: 'userId', courseId: 'courseId', group: 'group', score: 'score', attitudeScore: 'attitudeScore', isTeacher: 'isTeacher' },
   userQuestions: { userId: 'userId', courseId: 'courseId' },
   userHomeworks: { userId: 'userId', courseId: 'courseId' },
   userQuizzes: { userId: 'userId', courseId: 'courseId' },

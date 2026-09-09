@@ -29,7 +29,7 @@ describe('composables/useStudentGrades', () => {
     expect(r.pending.value).toBe(false)
     expect(r.stats.value.questionCount).toBe(0)
     expect(r.score.value.questionScore).toBe(0)
-    expect(r.score.value.altitudeScore).toBe(0)
+    expect(r.score.value.attitudeScore).toBe(0)
     expect(r.statCards.value.length).toBe(5)
     expect(r.radarOption.value).toHaveProperty('radar')
   })
@@ -43,8 +43,8 @@ describe('composables/useStudentGrades', () => {
         return {
           data: {
             grades: [
-              { userId: 1, questionScore: 80, homeworkScore: 70, quizScore: 90, commentScore: 60, altitudeScore: 85, externalScore: 5 },
-              { userId: 2, questionScore: 30, homeworkScore: 40, quizScore: 50, commentScore: 20, altitudeScore: 25, externalScore: 0 },
+              { userId: 1, questionScore: 80, homeworkScore: 70, quizScore: 90, commentScore: 60, attitudeScore: 85, externalScore: 5 },
+              { userId: 2, questionScore: 30, homeworkScore: 40, quizScore: 50, commentScore: 20, attitudeScore: 25, externalScore: 0 },
             ],
           },
           success: true,
@@ -61,7 +61,7 @@ describe('composables/useStudentGrades', () => {
     expect(r.stats.value.questionCount).toBe(7)
     expect(r.stats.value.homeworkCount).toBe(3)
     expect(r.score.value.questionScore).toBe(80)
-    expect(r.score.value.altitudeScore).toBe(85)
+    expect(r.score.value.attitudeScore).toBe(85)
     expect(r.score.value.externalScore).toBe(5)
     expect(r.pending.value).toBe(false)
   })

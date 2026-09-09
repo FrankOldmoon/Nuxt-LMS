@@ -1,0 +1,1 @@
+ALTER TABLE "user_courses" RENAME COLUMN "altitude_score" TO "attitude_score";

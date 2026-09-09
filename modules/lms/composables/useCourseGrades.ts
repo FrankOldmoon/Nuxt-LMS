@@ -20,13 +20,13 @@ const DEFAULT_PERCENTS: Record<string, number> = {
   homeworkScore: 20,
   quizScore: 20,
   commentScore: 10,
-  altitudeScore: 20,
+  attitudeScore: 20,
   externalScore: 0,
 }
 
 export const GRADE_WEIGHT_KEYS = [
   'questionScore', 'homeworkScore', 'quizScore',
-  'commentScore', 'altitudeScore', 'externalScore',
+  'commentScore', 'attitudeScore', 'externalScore',
 ] as const
 
 export const DEFAULT_GRADE_CRITERIA = {
@@ -161,9 +161,9 @@ export function useCourseGrades(
       sortingFn: (a: any, b: any) => (b.original.commentScore ?? 0) - (a.original.commentScore ?? 0),
     },
     {
-      id: 'altitudeScore',
-      header: t('coursePanel.altitudeScore'),
-      sortingFn: (a: any, b: any) => (b.original.altitudeScore ?? 0) - (a.original.altitudeScore ?? 0),
+      id: 'attitudeScore',
+      header: t('coursePanel.attitudeScore'),
+      sortingFn: (a: any, b: any) => (b.original.attitudeScore ?? 0) - (a.original.attitudeScore ?? 0),
     },
     {
       id: 'externalScore',
@@ -192,7 +192,7 @@ export function useCourseGrades(
         homeworkScore: g?.homeworkScore ?? 0,
         quizScore: g?.quizScore ?? 0,
         commentScore: g?.commentScore ?? 0,
-        altitudeScore: g?.altitudeScore ?? 0,
+        attitudeScore: g?.attitudeScore ?? 0,
         externalScore: g?.externalScore ?? 0,
         progress: g?.progress ?? 0,
         _hasGrade: !!g,
@@ -232,7 +232,7 @@ export function useCourseGrades(
       { name: t('coursePanel.homeworkScore'), value: Number(r.homeworkScore) || 0 },
       { name: t('coursePanel.quizScore'), value: Number(r.quizScore) || 0 },
       { name: t('coursePanel.commentScore'), value: Number(r.commentScore) || 0 },
-      { name: t('coursePanel.altitudeScore'), value: Number(r.altitudeScore) || 0 },
+      { name: t('coursePanel.attitudeScore'), value: Number(r.attitudeScore) || 0 },
     ]
     const peak = Math.max(...dims.map((d) => d.value), 10)
     const maxVal = Math.ceil((peak * 1.2) / 10) * 10

@@ -62,10 +62,10 @@
                             {{ row.original.commentScore.toFixed(1) }}
                         </span>
                     </template>
-                    <!-- altitudeScore 列 -->
-                    <template #altitudeScore-cell="{ row }">
+                    <!-- attitudeScore 列 -->
+                    <template #attitudeScore-cell="{ row }">
                         <span class="font-mono text-xs" :class="!row.original._hasGrade && 'opacity-40'">
-                            {{ row.original.altitudeScore.toFixed(1) }}
+                            {{ row.original.attitudeScore.toFixed(1) }}
                         </span>
                     </template>
                     <!-- externalScore 列：教师可输入并保存，学生只读 -->

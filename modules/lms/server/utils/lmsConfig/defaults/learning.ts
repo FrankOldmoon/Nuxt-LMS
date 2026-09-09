@@ -37,7 +37,7 @@ export const learningDefaults = {
     // heading 任务完成时奖励（hover 阅读 + 互动组件提交全部答对）
     // - headingExp: 经验值
     // - headingCoin: 金币
-    // - headingScore: 课程 altitudeScore（用于总分计算）
+    // - headingScore: 课程 attitudeScore（用于总分计算）
     // - headingChapterScore: 章节分（user_chapters.score）
     headingExp: 5,
     headingCoin: 5,

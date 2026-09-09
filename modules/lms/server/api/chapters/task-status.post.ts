@@ -12,7 +12,7 @@ import { eq, and, inArray, sql } from "drizzle-orm"
  *  - is_pass 由服务端根据「全部合法 heading 是否完成」重算，不信任客户端
  *
  * 当某个 heading 从未完成变为完成时，奖励 chapter.headingExp 经验 + chapter.headingCoin 金币 +
- * chapter.headingScore 课程分（计入 userCourses.altitudeScore，参与总分计算）。
+ * chapter.headingScore 课程分（计入 userCourses.attitudeScore，参与总分计算）。
  * 当 is_pass 从 false 变为 true 时，触发奖章检查。
  *
  * 当 is_pass 状态发生变化时，同步更新 user_courses.records.progress
@@ -118,7 +118,7 @@ export default eventHandler(async (event) => {
         gainedCoin = headingCoin * newHeadingIds.length
         const scoreDelta = headingScore * newHeadingIds.length
         gainedScore = scoreDelta
-        await addCourseScore(user.id, courseId, scoreDelta, 'altitudeScore', gainedExp, gainedCoin)
+        await addCourseScore(user.id, courseId, scoreDelta, 'attitudeScore', gainedExp, gainedCoin)
         // 章节标题完成同时计入章节分（可调参数 chapter.headingChapterScore）
         if (headingChapterScore > 0) {
           await addChapterScore(user.id, chapterId, headingChapterScore * newHeadingIds.length)

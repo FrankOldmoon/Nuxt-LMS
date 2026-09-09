@@ -46,7 +46,7 @@ export function useStudentGrades(
     homeworkScore: 0,
     quizScore: 0,
     commentScore: 0,
-    altitudeScore: 0,
+    attitudeScore: 0,
     externalScore: 0,
   })
 
@@ -64,7 +64,7 @@ export function useStudentGrades(
       { name: t('coursePanel.homeworkScore'), value: Number(score.value.homeworkScore) || 0 },
       { name: t('coursePanel.quizScore'), value: Number(score.value.quizScore) || 0 },
       { name: t('coursePanel.commentScore'), value: Number(score.value.commentScore) || 0 },
-      { name: t('coursePanel.altitudeScore'), value: Number(score.value.altitudeScore) || 0 },
+      { name: t('coursePanel.attitudeScore'), value: Number(score.value.attitudeScore) || 0 },
     ]
     const peak = Math.max(...dims.map((d) => d.value), 10)
     const maxVal = Math.ceil((peak * 1.2) / 10) * 10
@@ -114,7 +114,7 @@ export function useStudentGrades(
           homeworkScore: Number(mine.homeworkScore) || 0,
           quizScore: Number(mine.quizScore) || 0,
           commentScore: Number(mine.commentScore) || 0,
-          altitudeScore: Number(mine.altitudeScore) || 0,
+          attitudeScore: Number(mine.attitudeScore) || 0,
           externalScore: Number(mine.externalScore) || 0,
         }
       }

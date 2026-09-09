@@ -124,20 +124,26 @@ export function useUeditorIndex(props: any, json: any) {
             if (String(file.type || '').startsWith('video/')) {
                 const embedUrl = await uploadVideoToPeerTube(file)
                 if (embedUrl) {
-                    const editor = editorRef.value?.useEditor?.()
-                    if (editor) {
-                        let replaced = false
+                    // 让 UmoEditor 先完成它自己的上传收尾（把 video 节点的 src 设为 embedUrl），
+                    // 收尾完成后再用 macrotask 把该 video 节点原位替换为 iframe 节点。
+                    // 若在 onFileUpload 内部同步 replace，UmoEditor 收尾时会按旧 getPos() 去更新一个
+                    // 已不存在的节点，触发 "Cannot read properties of undefined (reading 'nodeSize')"。
+                    setTimeout(() => {
+                        const editor = editorRef.value?.useEditor?.()
+                        if (!editor) return
+                        let target: { pos: number; node: any } | null = null
                         editor.state.doc.nodesBetween(0, editor.state.doc.nodeSize, (node: any, pos: number) => {
-                            if (!replaced && node.type.name === 'video' && node.attrs?.uploaded === false) {
-                                const iframeNode = editor.schema.nodes.iframe?.create({ src: embedUrl, width: null, height: 400, clickable: true })
-                                if (iframeNode) {
-                                    editor.view.dispatch(editor.state.tr.replaceWith(pos, pos + node.nodeSize, iframeNode))
-                                    replaced = true
-                                }
+                            if (!target && node.type.name === 'video' && node.attrs?.src === embedUrl) {
+                                target = { pos, node }
                             }
-                            return true
                         })
-                    }
+                        if (target) {
+                            const iframeNode = editor.schema.nodes.iframe?.create({ src: embedUrl, height: 400 })
+                            if (iframeNode) {
+                                editor.view.dispatch(editor.state.tr.replaceWith(target.pos, target.pos + target.node.nodeSize, iframeNode))
+                            }
+                        }
+                    }, 0)
                     return { url: embedUrl, id: null }
                 }
                 return ordinaryVideoUpload(file)
