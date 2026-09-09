@@ -51,8 +51,8 @@ export function useConfigEditor(props: ConfigEditorProps, emit: (e: 'update:mode
       questionOnlyOnCorrect: true,
       onlyOnReward: true,
     },
-    // OJ 在线评测平台基址（fetchOj / getOjStatus 拼接地址用）
-    oj: { url: 'http://10.28.1.155' },
+    // OJ 在线评测平台基址（fetchOj / getOjStatus 拼接地址用，只从 config/env 加载，不硬编码）
+    oj: { url: '' },
     // 站点统计（与服务端 defaults/analytics.ts 对齐：留空 = 不注入统计脚本）
     analytics: { googleTrackingId: '', baiduTrackingId: '' },
   }

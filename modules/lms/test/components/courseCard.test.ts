@@ -225,4 +225,22 @@ describe('course/card.vue', () => {
     })
     expect(wrapper.exists()).toBe(true)
   })
+
+  it('draft 状态课程显示草稿徽章', async () => {
+    const { default: CourseCard } = await import('../../components/course/card.vue')
+    const wrapper = mount(CourseCard, {
+      props: { course: { ...sampleCourse, status: 'draft' } },
+      global: _globalConfig,
+    })
+    expect(wrapper.text()).toContain('courseEditor.statusDraft')
+  })
+
+  it('published 状态课程不显示草稿徽章', async () => {
+    const { default: CourseCard } = await import('../../components/course/card.vue')
+    const wrapper = mount(CourseCard, {
+      props: { course: { ...sampleCourse, status: 'published' } },
+      global: _globalConfig,
+    })
+    expect(wrapper.text()).not.toContain('courseEditor.statusDraft')
+  })
 })

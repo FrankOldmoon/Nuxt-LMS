@@ -29,6 +29,15 @@
             size="sm"
           />
         </div>
+        <!-- 草稿状态徽章（仅草稿课程显示，覆盖在图片左下角） -->
+        <div v-if="course.status === 'draft'" class="absolute top-3 right-3">
+          <UBadge
+            :label="$t('courseEditor.statusDraft')"
+            color="warning"
+            variant="solid"
+            size="sm"
+          />
+        </div>
       </div>
 
       <!-- 内容区域 -->

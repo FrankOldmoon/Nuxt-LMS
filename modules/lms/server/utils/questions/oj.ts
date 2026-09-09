@@ -1,19 +1,21 @@
 /**
  * OJ（在线评测）平台对接
  *
- * 基址来自 LMS 配置 oj.url（默认 http://10.28.1.155），可在管理后台覆盖。
+ * 基址只来自 LMS 配置 oj.url（默认由环境变量 OJ 提供，可在管理后台覆盖），不硬编码。
  * getLmsConfigSync 通过 Nuxt auto-import 引入（不显式 import），与其它 server util 一致。
  */
 
-/** 获取 OJ 平台基址（去掉末尾斜杠） */
+/** 获取 OJ 平台基址（去掉末尾斜杠）；未配置时返回空串 */
 function getOjUrl(): string {
   const cfg = (typeof getLmsConfigSync === 'function') ? getLmsConfigSync() : null
-  const url = (cfg?.oj?.url || 'http://10.28.1.155') as string
+  const url = (cfg?.oj?.url || '') as string
   return String(url).replace(/\/+$/, '')
 }
 
 export const fetchOj = async (pid: string) => {
-    const url = `${getOjUrl()}/p/${pid}`
+    const base = getOjUrl()
+    if (!base || !pid) return null
+    const url = `${base}/p/${pid}`
     const data: any = await $fetch(url, {
         headers: {
             'Accept': 'application/json',
@@ -36,7 +38,9 @@ export const fetchOj = async (pid: string) => {
  * @returns true 表示已通过（rdocs 中存在 status=1 的记录），false 表示未通过，null 表示查询失败
  */
 export const getOjStatus = async (pid: string, username: string): Promise<boolean | null> => {
-    const url = `${getOjUrl()}/record?uidOrName=${username}&pid=${pid}&status=1`
+    const base = getOjUrl()
+    if (!base || !pid || !username) return null
+    const url = `${base}/record?uidOrName=${username}&pid=${pid}&status=1`
     const data: any = await $fetch(url, {
         headers: {
             'Accept': 'application/json',

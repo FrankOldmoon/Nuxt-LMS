@@ -33,6 +33,8 @@ const _globalStubs = {
     props: ['modelValue', 'items', 'multiple', 'size'],
   },
   USeparator: { template: '<div class="useparator" />', props: ['orientation'] },
+  UButton: { template: '<button class="ubtn" @click="$emit(\'click\')">{{ label }}<slot /></button>', props: ['icon', 'label', 'color', 'variant', 'size'] },
+  ChapterClassOpenMatrixModal: { template: '<div class="matrix-modal" />', props: ['open', 'uuid'] },
 }
 
 const _globalConfig = {
@@ -111,5 +113,32 @@ describe('chapter/accessBar.vue', () => {
     })
     await flushPromises()
     expect(wrapper.find('.uselect').exists()).toBe(true)
+  })
+
+  it('管理员显示「班级开放矩阵」按钮', async () => {
+    setMockAuthUser({ id: 1, name: 'admin' }, [{ code: 'admin' }], [])
+    const { default: AccessBar } = await import('../../../components/chapter/accessBar.vue')
+    const wrapper = mount(AccessBar, {
+      props: { chapterId: 10, courseId: 1, chapterData: { isOpen: true, classChapters: [] } },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    expect(wrapper.text()).toContain('chapter.classOpenMatrix')
+  })
+
+  it('非管理员（即使是教师）不显示「班级开放矩阵」按钮', async () => {
+    setMockAuthUser(
+      { id: 3, name: 'teacher', username: 'teacher' },
+      [{ code: 'teacher' }],
+      [],
+      { teacherCourseIds: [1] },
+    )
+    const { default: AccessBar } = await import('../../../components/chapter/accessBar.vue')
+    const wrapper = mount(AccessBar, {
+      props: { chapterId: 10, courseId: 1, chapterData: { isOpen: false, classChapters: [] } },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    expect(wrapper.text()).not.toContain('chapter.classOpenMatrix')
   })
 })

@@ -23,7 +23,23 @@
       />
       <span v-if="isOpen" class="text-xs text-muted whitespace-nowrap">{{ $t('chapter.openClassesHint') }}</span>
     </div>
+
+    <USeparator orientation="vertical" class="h-6" />
+
+    <!-- 章节×班级开放矩阵（仅管理员） -->
+    <UButton
+      v-if="isAdmin"
+      icon="i-lucide-grid-3x3"
+      color="primary"
+      variant="soft"
+      size="sm"
+      :label="$t('chapter.classOpenMatrix')"
+      @click="matrixOpen = true"
+    />
   </div>
+
+  <!-- 章节×班级开放矩阵弹窗 -->
+  <ChapterClassOpenMatrixModal v-model:open="matrixOpen" :course-id="props.courseId" />
 </template>
 
 <script setup lang="ts">
@@ -40,4 +56,8 @@ const {
   updateOpen,
   updateClassOpen,
 } = useChapterAccess(props)
+
+const { hasRole } = useAuth()
+const isAdmin = hasRole('admin')
+const matrixOpen = ref(false)
 </script>

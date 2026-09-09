@@ -19,6 +19,7 @@ export function normalizeCourseSummary(course: any, chapterCount?: number, teach
     categoryId: course.categoryId,
     chapterCount: chapterCount ?? course.chapters?.length ?? 0,
     coverImg: cfg.coverImg || null,
+    status: course.status || 'published',
     teachers,
   }
 }

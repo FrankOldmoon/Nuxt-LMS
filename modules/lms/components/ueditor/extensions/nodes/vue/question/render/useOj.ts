@@ -23,8 +23,8 @@ export function useOj(props: any) {
     return typeof props.question?.content === 'string' ? props.question.content : ''
   })
 
-  const ojUrl = computed(() => String(ojCfg.value?.url || 'http://10.28.1.155').replace(/\/+$/, ''))
-  const ojLink = computed(() => pid.value ? `${ojUrl.value}/p/${pid.value}` : '')
+  const ojUrl = computed(() => String(ojCfg.value?.url || '').replace(/\/+$/, ''))
+  const ojLink = computed(() => (pid.value && ojUrl.value) ? `${ojUrl.value}/p/${pid.value}` : '')
 
   // 题目内容（show.ts 已替换 content）
   const contentIsString = computed(() => typeof props.question?.content === 'string')

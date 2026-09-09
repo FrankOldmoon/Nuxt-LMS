@@ -26,6 +26,8 @@ export interface LmsCourseSummary {
   categoryId: number
   chapterCount: number
   coverImg: string | null
+  /** 课程状态：published / draft / archived */
+  status?: 'published' | 'draft' | 'archived'
   teachers: LmsMember[]
 }
 

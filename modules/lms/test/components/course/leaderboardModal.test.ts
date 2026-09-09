@@ -32,6 +32,12 @@ const _globalStubs = {
     props: ['src', 'alt', 'text', 'size'],
   },
   UIcon: { template: '<span class="uicon" />', props: ['name'] },
+  UTooltip: { template: '<span class="utooltip"><slot /></span>', props: ['text'] },
+  UButton: { template: '<button class="ubtn" @click="$emit(\'click\')"><slot /></button>', props: ['icon', 'label', 'color', 'variant', 'size'] },
+  CourseClassAvgLeaderboardModal: {
+    template: '<div class="class-avg-modal" />',
+    props: ['open', 'courseId'],
+  },
   ClassUsersTable: {
     template: '<div class="class-users-table"><slot /></div>',
     props: ['rows', 'classId', 'courseId', 'hideActions', 'hideTeachers', 'hideNumber', 'defaultSort', 'showChart', 'showGroup', 'extraColumns'],

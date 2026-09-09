@@ -2,7 +2,13 @@
     <UModal v-model:open="isOpen" :ui="{ content: 'max-w-3xl' }" scrollable>
         <template #content>
             <div class="p-6 space-y-4">
-                <h3 class="text-lg font-semibold">{{ $t('coursePanel.leaderboard') }}</h3>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold">{{ $t('coursePanel.leaderboard') }}</h3>
+                    <UTooltip :text="$t('coursePanel.classAvg')">
+                        <UButton icon="i-lucide-bar-chart-3" color="primary" variant="soft" size="xs"
+                            :label="$t('coursePanel.classAvg')" @click="classAvgOpen = true" />
+                    </UTooltip>
+                </div>
 
                 <!-- 我的排名 -->
                 <div v-if="myRank" class="p-3 bg-primary/10 rounded-lg flex items-center gap-3">
@@ -40,6 +46,9 @@
             </div>
         </template>
     </UModal>
+
+    <!-- 各班生均得分排行 -->
+    <CourseClassAvgLeaderboardModal v-model:open="classAvgOpen" :course-id="props.courseId" />
 </template>
 
 <script setup lang="ts">
@@ -51,4 +60,6 @@ const props = defineProps<{
 }>()
 
 const { loading, myStudent, myRank, myLv, tableRows, extraColumns } = useCourseLeaderboard(props, isOpen)
+
+const classAvgOpen = ref(false)
 </script>

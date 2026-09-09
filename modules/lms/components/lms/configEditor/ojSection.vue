@@ -5,7 +5,7 @@
     <div class="grid grid-cols-2 gap-2">
       <UFormField :label="$t('lmsConfig.ojUrl')" size="xs" class="col-span-2">
         <template #hint>{{ $t('lmsConfig.ojUrlHint') }}</template>
-        <UInput v-model="config.oj.url" placeholder="http://10.28.1.155" size="xs" class="w-full" />
+        <UInput v-model="config.oj.url" :placeholder="$t('lmsConfig.ojUrlPlaceholder')" size="xs" class="w-full" />
       </UFormField>
     </div>
   </div>
