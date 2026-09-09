@@ -9,6 +9,17 @@ interface UserProfileForm {
   avatarImg: string
   telephone: string
   classId: number | null
+  /** 界面语言：''=跟随站点默认，'cn'=中文，'en'=英文 */
+  defaultLocale: string
+}
+
+/** 归一化个人语言值为表单取值（'' / 'cn' / 'en'） */
+function normalizeLocale(raw: string | null | undefined): string {
+  const v = (raw || '').trim().toLowerCase()
+  if (!v) return ''
+  if (v === 'zh-cn' || v === 'zh' || v === 'cn' || v === '中文') return 'cn'
+  if (v === 'en-us' || v === 'en' || v === '英文') return 'en'
+  return ''
 }
 
 /**
@@ -25,6 +36,7 @@ export function useProfileModal(isOpen: Ref<boolean>) {
     name: '', preferName: '', englishName: '', email: '',
     gender: '', avatarImg: '', telephone: '',
     classId: null,
+    defaultLocale: '',
   })
 
   watch(isOpen, (val) => {
@@ -43,6 +55,7 @@ export function useProfileModal(isOpen: Ref<boolean>) {
       avatarImg: user.value?.avatarImg || '',
       telephone: user.value?.telephone || '',
       classId: user.value?.classId ?? null,
+      defaultLocale: normalizeLocale(user.value?.defaultLocale),
     }
   }
 
@@ -53,9 +66,12 @@ export function useProfileModal(isOpen: Ref<boolean>) {
   async function saveProfile() {
     saving.value = true
     try {
+      const body: any = { ...form.value }
+      // 个人语言：''=跟随站点默认 → 存 null
+      body.defaultLocale = body.defaultLocale ? body.defaultLocale : null
       await cRequest('/api/auth/me', {
         method: 'PUT',
-        body: form.value,
+        body,
       })
       await refreshUser()
       isOpen.value = false

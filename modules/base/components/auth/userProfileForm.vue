@@ -43,6 +43,9 @@
       <USelect v-model="form.gender" :items="genderOptions" :placeholder="$t('profile.genderPlaceholder')"
         class="w-full" :disabled="!canEditGeneral" />
     </UFormField>
+    <UFormField :label="$t('profile.language')" class="w-full">
+      <USelect v-model="form.defaultLocale" :items="localeOptions" class="w-full" />
+    </UFormField>
     <UFormField :label="$t('profile.class')" class="w-full">
       <USelect v-model="form.classId" :items="classOptions" :placeholder="$t('profile.classPlaceholder')"
         class="w-full" :disabled="!canEditClass" />
@@ -72,13 +75,15 @@ interface UserProfileForm {
   avatarImg: string
   telephone: string
   classId: number | null
+  /** 界面语言：''=跟随站点默认，'cn'=中文，'en'=英文 */
+  defaultLocale: string
 }
 
 const form = defineModel<UserProfileForm>({ required: true })
 
 const {
   canEditGeneral, canEditAvatar, canEditClass, canEditEmail, canEditPassword,
-  genderOptions, classOptions,
+  genderOptions, localeOptions, classOptions,
   fileInputRef, uploading, cropperRef, showPwdModal,
   triggerFileInput, onFileSelect, onCropped,
 } = useUserProfileForm(form)

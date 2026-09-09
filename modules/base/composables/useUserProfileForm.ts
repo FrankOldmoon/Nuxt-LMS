@@ -9,6 +9,8 @@ interface UserProfileForm {
   avatarImg: string
   telephone: string
   classId: number | null
+  /** 界面语言：''=跟随站点默认，'cn'=中文，'en'=英文 */
+  defaultLocale: string
 }
 
 /**
@@ -38,6 +40,13 @@ export function useUserProfileForm(form: Ref<UserProfileForm>) {
     { label: t('profile.genderMale'), value: 'male' },
     { label: t('profile.genderFemale'), value: 'female' },
     { label: t('profile.genderOther'), value: 'other' },
+  ])
+
+  // 界面语言选项：空值 = 跟随站点默认语言
+  const localeOptions = computed(() => [
+    { label: t('profile.localeFollowSite'), value: '' },
+    { label: t('profile.localeChinese'), value: 'cn' },
+    { label: t('profile.localeEnglish'), value: 'en' },
   ])
 
   const classOptions = computed(() => {
@@ -94,6 +103,7 @@ export function useUserProfileForm(form: Ref<UserProfileForm>) {
     canEditEmail,
     canEditPassword,
     genderOptions,
+    localeOptions,
     classOptions,
     fileInputRef,
     uploading,

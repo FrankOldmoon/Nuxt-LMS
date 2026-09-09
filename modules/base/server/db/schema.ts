@@ -114,7 +114,7 @@ export const users = pgTable(
     pwdQuestions: jsonb('pwd_questions'),
     classId: integer('class_id'),
     defaultClass: jsonb('default_class'),
-    defaultLocale: varchar('default_locale', { length: 20 }).default('zh-CN'),
+    defaultLocale: varchar('default_locale', { length: 20 }),
     birthday: timestamp('birthday', { withTimezone: true }),
     loginAt: timestamp('login_at', { withTimezone: true }),
     verifyAt: timestamp('verify_at', { withTimezone: true }),
