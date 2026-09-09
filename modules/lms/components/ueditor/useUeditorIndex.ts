@@ -125,26 +125,31 @@ export function useUeditorIndex(props: any, json: any) {
                 const embedUrl = await uploadVideoToPeerTube(file)
                 if (embedUrl) {
                     // 让 UmoEditor 先完成它自己的上传收尾（把 video 节点的 src 设为 embedUrl），
-                    // 收尾完成后再用 macrotask 把该 video 节点原位替换为 iframe 节点。
-                    // 若在 onFileUpload 内部同步 replace，UmoEditor 收尾时会按旧 getPos() 去更新一个
-                    // 已不存在的节点，触发 "Cannot read properties of undefined (reading 'nodeSize')"。
+                    // 收尾完成后再用一个 macrotask 把该 video 节点原位替换为 iframe 节点。
+                    // 注意：返回的 id 必须是"非空"，否则 UmoEditor 把 video 节点写成 id:null
+                    // 会破坏文档结构，之后遍历文档会报 "Cannot read properties of undefined (reading 'nodeSize')"。
+                    const placeholderId = `pt-${Math.random().toString(36).slice(2, 10)}`
                     setTimeout(() => {
-                        const editor = editorRef.value?.useEditor?.()
-                        if (!editor) return
-                        let target: { pos: number; node: any } | null = null
-                        editor.state.doc.nodesBetween(0, editor.state.doc.nodeSize, (node: any, pos: number) => {
-                            if (!target && node.type.name === 'video' && node.attrs?.src === embedUrl) {
-                                target = { pos, node }
+                        try {
+                            const editor = editorRef.value?.useEditor?.()
+                            if (!editor) return
+                            let target: { pos: number; nodeSize: number } | null = null
+                            editor.state.doc.descendants((node: any, pos: number) => {
+                                if (!target && node.type.name === 'video' && node.attrs?.src === embedUrl) {
+                                    target = { pos, nodeSize: node.nodeSize }
+                                }
+                            })
+                            if (target) {
+                                const iframeNode = editor.schema.nodes.iframe?.create({ src: embedUrl, height: 400 })
+                                if (iframeNode) {
+                                    editor.view.dispatch(editor.state.tr.replaceWith(target.pos, target.pos + target.nodeSize, iframeNode))
+                                }
                             }
-                        })
-                        if (target) {
-                            const iframeNode = editor.schema.nodes.iframe?.create({ src: embedUrl, height: 400 })
-                            if (iframeNode) {
-                                editor.view.dispatch(editor.state.tr.replaceWith(target.pos, target.pos + target.node.nodeSize, iframeNode))
-                            }
+                        } catch (e) {
+                            console.warn('[ueditor] video->iframe replace skipped:', e)
                         }
                     }, 0)
-                    return { url: embedUrl, id: null }
+                    return { url: embedUrl, id: placeholderId }
                 }
                 return ordinaryVideoUpload(file)
             }
