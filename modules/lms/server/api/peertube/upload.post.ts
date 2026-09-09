@@ -9,10 +9,19 @@
 import { uploadVideoToPeerTube } from '../../utils/peertube/upload'
 
 const ALLOWED_VIDEO_MIME = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska']
-const MAX_SIZE = 2048 * 1024 * 1024 // 2GB
 
 export default eventHandler(async (event) => {
-  await requireAuth(event)
+  const user = await requireAuth(event)
+  // 仅教师/管理员可上传视频
+  const isAllowed = user.roles.includes('admin') || user.roles.includes('teacher')
+  if (!isAllowed) {
+    return cResp(null, '仅教师和管理员可上传视频', false)
+  }
+
+  const peertube = useRuntimeConfig(event).peertube
+  // 视频大小上限（MB，可配 NUXT_PEERTUBE_MAX_SIZE_MB），默认 2GB
+  const maxSizeMB = Number(peertube?.maxSizeMB) || 2048
+  const MAX_SIZE = maxSizeMB * 1024 * 1024
 
   const parts = await readMultipartFormData(event)
   const file = parts?.find((p) => p.name === 'files' || (p.filename && p.type?.startsWith('video/')))
@@ -24,10 +33,9 @@ export default eventHandler(async (event) => {
     return cResp(null, `不支持的视频类型: ${file.type}`, false)
   }
   if (file.data.byteLength > MAX_SIZE) {
-    return cResp(null, '视频文件超过 2GB 限制', false)
+    return cResp(null, `视频文件超过 ${maxSizeMB}MB 限制`, false)
   }
 
-  const peertube = useRuntimeConfig(event).peertube
   if (!peertube?.url || !peertube?.username || !peertube?.password) {
     // 未配置 PeerTube → 前端据此回退为普通视频上传
     return cResp({ enabled: false }, '未配置 PeerTube，使用普通视频上传', false)

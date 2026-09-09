@@ -117,11 +117,14 @@ export function useUeditorIndex(props: any, json: any) {
         async onFileUpload(file: any) {
             if (!file) throw new Error('File not found')
 
-            // 视频：优先上传 PeerTube 得到 embed URL；
-            // 将编辑器里刚创建的待上传 video 节点原位替换为 iframe 节点（embed 是网页地址，
-            // 原生 <video> 无法播放，iframe 节点在编辑时才能正常显示）
-            // 未配置 PeerTube（服务端返回 enabled:false / 上传失败）时回退为普通视频上传
+            // 视频：仅教师/管理员可上传；优先上传 PeerTube 得到 embed URL
             if (String(file.type || '').startsWith('video/')) {
+                if (!(hasRole('admin') || hasRole('teacher'))) {
+                    throw new Error('仅教师和管理员可上传视频')
+                }
+                // 将编辑器里刚创建的待上传 video 节点原位替换为 iframe 节点（embed 是网页地址，
+                // 原生 <video> 无法播放，iframe 节点在编辑时才能正常显示）
+                // 未配置 PeerTube（服务端返回 enabled:false / 上传失败）时回退为普通视频上传
                 const embedUrl = await uploadVideoToPeerTube(file)
                 if (embedUrl) {
                     // 让 UmoEditor 先完成它自己的上传收尾（把 video 节点的 src 设为 embedUrl），

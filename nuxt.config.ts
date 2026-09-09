@@ -43,6 +43,8 @@ export default defineNuxtConfig({
       password: '',
       privacy: '1',
       channelId: '1',
+      // 视频大小上限（MB），用 NUXT_PEERTUBE_MAX_SIZE_MB 覆盖，默认 2GB
+      maxSizeMB: 2048,
     },
   },
   vite: {
