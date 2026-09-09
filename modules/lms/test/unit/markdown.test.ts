@@ -356,4 +356,25 @@ describe('utils/markdown - markdownToTiptap', () => {
     expect(result.type).toBe('doc')
     expect(result.content!.length).toBeGreaterThan(0)
   })
+
+  it('callout 围栏：attrs 与编辑器产出结构对齐（含默认背景色）', async () => {
+    const { markdownToTiptap } = await import('../../utils/markdown')
+    // 未指定 bg：应补全 icon/type/margin/backgroundColor 默认值，保证渲染层有背景色
+    const r1 = markdownToTiptap(':::callout icon=🧑‍🏫\n教学建议\n:::')
+    expect(r1.content![0].type).toBe('callout')
+    expect(r1.content![0].attrs).toEqual({
+      icon: '🧑‍🏫',
+      type: 'primary',
+      margin: null,
+      backgroundColor: 'rgb(217, 231, 255)',
+    })
+
+    // 显式指定 bg：使用指定值
+    const r2 = markdownToTiptap(':::callout icon=💡 bg=#eff6ff\n提示\n:::')
+    expect(r2.content![0].attrs.backgroundColor).toBe('#eff6ff')
+
+    // 未指定 icon：默认 💡
+    const r3 = markdownToTiptap(':::callout\n提示\n:::')
+    expect(r3.content![0].attrs.icon).toBe('💡')
+  })
 })

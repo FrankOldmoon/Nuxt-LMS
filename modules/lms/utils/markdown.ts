@@ -349,12 +349,15 @@ export function markdownToTiptap(markdown: string): TiptapNode {
             const node: TiptapNode = { type: 'callout', content: parseBlocks(body) };
             const icon = attrs['icon']; const bg = attrs['bg'] || attrs['backgroundColor'];
             const fc = attrs['color'] || attrs['fontColor'];
-            if (icon || fc || bg) {
-              node.attrs = {};
-              if (icon) node.attrs.icon = icon;
-              if (bg) node.attrs.backgroundColor = bg;
-              if (fc) node.attrs.fontColor = fc;
-            }
+            // 与编辑器产出的 callout 结构对齐：icon/backgroundColor 缺省时用编辑器默认值，
+            // 否则渲染层直接读 attrs（不走 schema 默认值）会没有背景色
+            node.attrs = {
+              icon: icon || '💡',
+              type: 'primary',
+              margin: null,
+              backgroundColor: bg || 'rgb(217, 231, 255)',
+            };
+            if (fc) node.attrs.fontColor = fc;
             return node;
           }
           case 'details': {

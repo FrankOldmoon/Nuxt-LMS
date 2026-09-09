@@ -28,16 +28,21 @@ export default defineNuxtPlugin(() => {
 
   const config = useState<{ [key: string]: any }>('site-config', () => ({}))
   const siteCode = normalizeLocale(String(config.value?.defaultLocale || ''))
+  const i18n = useI18n()
+
+  // @nuxtjs/i18n v10：请用 Nuxt 实例的 $i18n.setLocale（同步更新翻译并写入 cookie），
+  // 直接给 useI18n().locale.value 赋值在部分版本不触发翻译刷新。
+  const nuxtApp = useNuxtApp()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const setLocaleI18n = (nuxtApp.$i18n as any)?.setLocale?.bind(nuxtApp.$i18n)
+    || ((code: string) => { i18n.locale.value = code })
 
   function applyLocale() {
     const user = useAuth().user?.value
     // 个人显式设置的语言（非空）优先；否则跟随站点默认；再否则回退英文
     const code = normalizeLocale(String(user?.defaultLocale || '')) || siteCode || 'en'
-    const i18n = useI18n()
     if (i18n.locale.value === code) return
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const setLocale = (i18n as any).setLocale || ((c: string) => { i18n.locale.value = c })
-    setLocale(code)
+    setLocaleI18n(code)
   }
 
   applyLocale()

@@ -25,6 +25,11 @@ Use **plenty of emoji** in headings, paragraphs, lists, callouts etc. to make th
 - **⚠️ Callout icon is rendered once by the `icon` attribute — do NOT repeat the same emoji inside the callout body**.
   The callout node renders the `icon` attr as a separate leading icon, so writing the same emoji again in the body text
   makes it appear **twice**. Keep the body as plain text, e.g. `:::callout icon=💡\n这里是提示\n:::`.
+- **Callout background is applied automatically** (since `utils/markdown.ts` fix, 2026-09): when `bg=` is omitted,
+  the conversion fills in the editor-default attrs (`type:"primary"`, `margin:null`,
+  `backgroundColor:"rgb(217, 231, 255)"` light blue, `icon:"💡"` if missing). The render component
+  (`render/nodes/callout.vue`) binds `attrs.backgroundColor` directly and does **not** apply schema defaults,
+  so these attrs must always be present in the JSON. Only pass `bg=` when you want a color other than the default.
 - **Moderation first**: emoji should aid understanding; generally 0–2 per paragraph, avoid hurting readability
 
 Markdown example (when passing markdown):
@@ -189,7 +194,7 @@ These extension components (callout/details/iframe/image/taskList/columns/echart
 
 | Component | Markdown syntax | Generated tiptap node |
 | --- | --- | --- |
-| callout | `:::callout icon=💡 bg=#eff6ff` `content` `:::` | `{type:"callout", attrs:{icon,backgroundColor,fontColor}, content:[blocks]}` |
+| callout | `:::callout icon=💡 bg=#eff6ff` `content` `:::` | `{type:"callout", attrs:{icon, type:"primary", margin:null, backgroundColor, fontColor?}, content:[blocks]}` — `bg` 默认 `rgb(217, 231, 255)`，`icon` 默认 `💡`；attrs 恒与编辑器产出结构对齐 |
 | details (collapsible) | `:::details title=Expand open=1` `content` `:::` | `{type:"details", content:[{type:"detailsSummary",content:[blocks]},{type:"detailsContent",content:[blocks]}]}` |
 | iframe embed | `:::iframe src=https://... height=300` `:::` | `{type:"iframe", attrs:{src,height}}` (height defaults to 200) |
 | image | `:::image src=https://... alt=caption` `:::` | `{type:"image", attrs:{src,alt,title}}` |
