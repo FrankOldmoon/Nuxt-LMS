@@ -39,7 +39,7 @@ export default eventHandler(async (event) => {
     isEditor: !!t.isEditor,
   }))
 
-  // 查询学生人数（非教师/编辑者的有效选课记录）
+  // 查询在学人数：统计该课程 user_courses 内的全部用户（排除软删除记录）
   const studentRows = await db
     .select({ count: sql<number>`count(*)` })
     .from(schema.userCourses)
@@ -47,10 +47,6 @@ export default eventHandler(async (event) => {
       and(
         eq(schema.userCourses.courseId, id),
         isNull(schema.userCourses.deletedAt),
-        not(or(
-          eq(schema.userCourses.isTeacher, true),
-          eq(schema.userCourses.isEditor, true),
-        )!),
       ),
     )
   result.studentCount = Number(studentRows[0]?.count ?? 0)

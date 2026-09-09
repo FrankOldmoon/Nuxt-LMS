@@ -816,6 +816,8 @@
       "download": "Download",
       "preview": "Preview",
       "officeOfficial": "Open in official Office online preview",
+      "run": "Run HTML in fullscreen",
+      "runFailed": "Failed to load HTML file",
       "loadingZip": "Parsing archive…",
       "zipSummary": "{files} files",
       "zipError": "Failed to parse archive",

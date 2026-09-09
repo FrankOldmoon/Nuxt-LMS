@@ -27,6 +27,17 @@
             :aria-label="$t('ueditor.file.officeOfficial')"
           />
         </UTooltip>
+        <!-- HTML 运行：全屏独立 iframe 运行该 HTML 代码 -->
+        <UTooltip v-if="isHtmlRun" :text="$t('ueditor.file.run')">
+          <UButton
+            icon="i-lucide-play"
+            variant="ghost"
+            color="neutral"
+            size="2xs"
+            :aria-label="$t('ueditor.file.run')"
+            @click="openRun"
+          />
+        </UTooltip>
         <!-- 本地预览 -->
         <UTooltip v-if="attrs.url" :text="$t('ueditor.file.preview')">
           <UButton
@@ -75,6 +86,29 @@
             <TextPreview v-else-if="previewKind === 'text'" :url="attrs.url" :name="attrs.name" />
             <div v-else class="py-10 text-center text-sm text-gray-400">{{ $t('common.loading') }}</div>
           </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- HTML 运行层：全屏独立 iframe 运行该 HTML -->
+    <Teleport to="body">
+      <div
+        v-if="runOpen"
+        class="fixed inset-0 z-[110] bg-white flex flex-col"
+      >
+        <div class="flex items-center justify-between px-4 py-2 bg-white text-gray-800 border-b border-gray-200 shrink-0">
+          <span class="text-sm font-medium truncate pr-3">{{ attrs.name }}</span>
+          <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" @click="runOpen = false" />
+        </div>
+        <iframe
+          v-if="runHtml"
+          :srcdoc="runHtml"
+          class="flex-1 w-full min-h-0 border-0 bg-white"
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-pointer-lock"
+        ></iframe>
+        <div v-else class="flex-1 flex items-center justify-center text-sm text-gray-400 bg-white">
+          {{ runLoading ? $t('common.loading') : $t('ueditor.file.runFailed') }}
         </div>
       </div>
     </Teleport>
@@ -223,6 +257,33 @@ const TEXT_EXT = [
 const previewKind = ref('')
 const previewOpen = ref(false)
 
+// HTML 文件：是否显示「运行」按钮（全屏 iframe 独立运行）
+const HTML_EXT = ['html', 'htm', 'mht']
+const isHtml = computed(() => HTML_EXT.includes(ext.value) && !!attrs.value.url)
+const isHtmlRun = computed(() => isHtml.value && attrs.value.uploaded !== false)
+const runOpen = ref(false)
+const runHtml = ref('')
+
+// 打开运行层：抓取 HTML 文本用 srcdoc 运行（服务端对 .html 以 text/plain 返回防止存储型 XSS，
+// 直接 iframe src 会显示源码而非运行效果，故需取回内容后用 srcdoc 渲染）
+const runLoading = ref(false)
+async function openRun() {
+  if (!attrs.value.url) return
+  runOpen.value = true
+  runLoading.value = true
+  runHtml.value = ''
+  try {
+    const res = await fetch(attrs.value.url, { method: 'GET', credentials: 'include' })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    runHtml.value = await res.text()
+  } catch (e) {
+    console.warn('[ueditor] html run fetch failed:', e)
+    runHtml.value = ''
+  } finally {
+    runLoading.value = false
+  }
+}
+
 const is3d = computed(() => previewKind.value === '3d')
 
 // 3D / Office 预览用「假节点」复用已有渲染组件
@@ -271,6 +332,15 @@ function openPreview() {
     window.open(attrs.value.url, '_blank')
   }
 }
+
+// 按 Esc 退出 HTML 全屏运行层
+onMounted(() => {
+  const onKey = (e) => {
+    if (e.key === 'Escape' && runOpen.value) runOpen.value = false
+  }
+  window.addEventListener('keydown', onKey)
+  onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
+})
 </script>
 
 <style scoped>

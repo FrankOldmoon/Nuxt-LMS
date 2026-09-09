@@ -816,6 +816,8 @@
       "download": "下载",
       "preview": "预览",
       "officeOfficial": "用 Office 官方在线预览打开",
+      "run": "全屏运行 HTML",
+      "runFailed": "HTML 文件加载失败",
       "loadingZip": "正在解析压缩包…",
       "zipSummary": "共 {files} 个文件",
       "zipError": "压缩包解析失败",
