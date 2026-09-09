@@ -5,9 +5,9 @@ useHead(() => ({
   link: [{ rel: 'icon', type: 'image/x-icon', href: favicon.value }],
 }))
 
-// Global startup access password
-// 仅当访问域名等于 NUXT_VERIFICATION_URL（如 mxlms.oldmoon.cn）时才需要访问密码；
-// 其他访问（IP / localhost / 其余域名）直接放行。密码在 SERVER 端校验，
+// Global startup access gate: 需要访问验证的域名须用真实用户账号才能解锁。
+// 仅当访问域名等于 NUXT_VERIFICATION_URL（如 mxlms.oldmoon.cn）时才需要账号验证；
+// 其他访问（IP / localhost / 其余域名）直接放行。账号密码在 SERVER 端校验，
 // 客户端只询问服务端是否已解锁。
 const config = useRuntimeConfig()
 const verificationUrl = String(config.verificationUrl || '').toLowerCase()
@@ -23,6 +23,8 @@ const needsVerification = computed(() => {
 // verification is decided synchronously at render time — no password-gate flash
 // for hosts that don't need verification.
 const appUnlocked = ref(!needsVerification.value)
+
+const { refreshUser } = useAuth()
 
 onMounted(async () => {
   // 无需验证的访问（IP/localhost/非指定域名）已直接解锁；nothing to do.
@@ -43,6 +45,8 @@ onMounted(async () => {
 
 function handleUnlocked() {
   appUnlocked.value = true
+  // 门通过即已登录（startup 已下发 auth_token），刷新用户态让界面进入登录状态
+  refreshUser()
 }
 </script>
 

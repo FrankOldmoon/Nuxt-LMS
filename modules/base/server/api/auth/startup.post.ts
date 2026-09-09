@@ -1,14 +1,22 @@
-import { verifyStartupPassword } from '../../utils/startup'
+import { verifyStartupLogin } from '../../utils/startup'
+import { createAuthSession } from '../../utils/auth/session'
 
-// 提交启动密码，服务端校验通过后签发 HttpOnly cookie
+// 提交访问门账号密码 → 校验通过即建立登录会话（gate 等于登录，保留登录状态）
 export default defineEventHandler(async (event) => {
   const body = await readBody(event).catch(() => null)
-  const { password } = (body || {}) as { password?: string }
-  if (!password) {
-    return cResp(null, 'Password is required', false)
+  const { username, password } = (body || {}) as { username?: string; password?: string }
+  if (!username || !password) {
+    return cResp(null, 'Username and password are required', false)
   }
-  if (!verifyStartupPassword(event, password)) {
-    return cResp(null, 'Incorrect access password', false)
+  // 校验账号密码并签发 startup 解锁 cookie，返回用户
+  const user = await verifyStartupLogin(event, username, password)
+  if (!user) {
+    return cResp(null, 'Invalid username or password', false)
   }
-  return cResp({ unlocked: true })
+  // 等价登录：建立登录会话（auth_token cookie），后登录态保持
+  await createAuthSession(event, user)
+  return cResp({
+    unlocked: true,
+    user: { id: user.id, username: user.username, name: user.name },
+  })
 })

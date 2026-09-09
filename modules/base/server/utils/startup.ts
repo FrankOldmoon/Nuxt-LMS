@@ -1,7 +1,10 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
+import { db, schema } from '@nuxthub/db'
+import { eq } from 'drizzle-orm'
+import { verifyPassword } from './auth/password'
 
-// 全局启动访问密码（默认 Minxin1314，可通过环境变量覆盖）
-const STARTUP_PASSWORD = process.env.NUXT_STARTUP_PASSWORD || 'Minxin1314'
+// 启动访问门（StartupGate）：用真实用户账号/密码校验，不再使用硬编码密码。
+// 校验通过后签发 HttpOnly cookie，凭签名判断已解锁（不代表已登录）。
 // HMAC 签名密钥（生产环境建议通过 NUXT_STARTUP_SECRET 覆盖）
 const SECRET = process.env.NUXT_STARTUP_SECRET || 'lms-startup-secret'
 const COOKIE_NAME = 'startup_token'
@@ -26,9 +29,18 @@ function verifyToken(token: string | undefined): boolean {
   return Date.now() - ts < TTL_MS
 }
 
-/** 校验密码并签发 HttpOnly cookie（返回是否成功） */
-export function verifyStartupPassword(event: StartupEvent, password: string): boolean {
-  if (password !== STARTUP_PASSWORD) return false
+/** 用真实账号密码校验访问门，等价于登录的开锁：通过后签发 startup cookie，返回校验通过的用户；否则 null */
+export async function verifyStartupLogin(event: StartupEvent, username: string, password: string): Promise<any | null> {
+  if (!username || !password) return null
+  const users = await db
+    .select()
+    .from(schema.users)
+    .where(eq(schema.users.username, username))
+    .limit(1)
+  if (users.length === 0) return null
+  const user = users[0]
+  const ok = await verifyPassword(password, user.password)
+  if (!ok) return null
   const token = sign(String(Date.now()))
   setCookie(event, COOKIE_NAME, token, {
     httpOnly: true,
@@ -37,7 +49,7 @@ export function verifyStartupPassword(event: StartupEvent, password: string): bo
     maxAge: Math.floor(TTL_MS / 1000),
     path: '/',
   })
-  return true
+  return user
 }
 
 /** 判断当前请求是否已通过启动校验（凭 HttpOnly cookie 的签名） */
