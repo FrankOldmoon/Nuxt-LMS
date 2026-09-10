@@ -28,7 +28,14 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
             header: t('record.colRecord'),
             sortingFn: (a, b) => (a.original.record ? 1 : 0) - (b.original.record ? 1 : 0),
         },
-        { id: 'score', header: t('record.score'), canSort: true },
+        // score 行数据无顶层字段（分数在 record.score），用自定义 sortingFn 按真实分数排序
+        {
+            id: 'score',
+            header: t('record.score'),
+            canSort: true,
+            sortingFn: (a: any, b: any) =>
+                (Number(a.original.record?.score) || 0) - (Number(b.original.record?.score) || 0),
+        },
         { id: 'comment', header: t('homework.comment'), canSort: false },
         { id: 'excellent', header: t('homework.excellent'), canSort: false },
     ])

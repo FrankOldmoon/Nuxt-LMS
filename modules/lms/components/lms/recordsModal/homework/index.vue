@@ -26,7 +26,7 @@
                     <template #score-cell="{ row }">
                         <div v-if="row.original.record" class="flex items-center gap-1">
                             <UInput v-model.number="scoreMap[row.original.id]" type="number"
-                                size="xs" class="w-16" :max="maxScore" :placeholder="maxScore"
+                                size="xs" class="w-16" :max="maxScore"
                                 @blur="onScoreBlur(row.original)" @keydown.enter="$event.target.blur()" />
                             <UTooltip :text="$t('homework.quickScore')">
                                 <UButton icon="i-heroicons-check" color="primary" variant="soft" size="xs"
