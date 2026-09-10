@@ -30,9 +30,12 @@ export default defineNuxtConfig({
   ],
   ui: { fonts: false },
   // 顶层 runtimeConfig：仅该域名（如 mxlms.oldmoon.cn）在首页做 Access Verification，
-  // 其他访问（IP/localhost/其余域名）直接放行。环境变量 NUXT_VERIFICATION_URL 覆盖。
+  // 其他访问（IP/localhost/其余域名）直接放行。
+  // 放在 public 段（客户端需判断）：环境变量用 NUXT_PUBLIC_VERIFICATION_URL 覆盖。
   runtimeConfig: {
-    verificationUrl: '',
+    public: {
+      verificationUrl: '',
+    },
     // PeerTube 视频上传（ueditor 视频走 PeerTube，插入 embed iframe）。
     // 全部凭证通过 .env 的环境变量提供，不写入代码仓库：
     // NUXT_PEERTUBE_URL / NUXT_PEERTUBE_USERNAME / NUXT_PEERTUBE_PASSWORD / NUXT_PEERTUBE_PRIVACY / NUXT_PEERTUBE_CHANNEL_ID

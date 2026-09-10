@@ -10,7 +10,7 @@ useHead(() => ({
 // 其他访问（IP / localhost / 其余域名）直接放行。账号密码在 SERVER 端校验，
 // 客户端只询问服务端是否已解锁。
 const config = useRuntimeConfig()
-const verificationUrl = String(config.verificationUrl || '').toLowerCase()
+const verificationUrl = String(config.public.verificationUrl || '').toLowerCase()
 
 // 是否需要对当前访问域名做 Access Verification
 const needsVerification = computed(() => {
