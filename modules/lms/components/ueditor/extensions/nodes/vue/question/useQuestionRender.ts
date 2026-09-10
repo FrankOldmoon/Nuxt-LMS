@@ -192,7 +192,8 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
                 color: result.isCorrect ? 'success' : 'error',
             })
             if (!props.inQuiz) {
-                chapterTask?.reportNodeDone('question', questionId.value, isCorrect.value)
+                // heading 完成以 100% 正确为准（加分仍按 isCorrect = rate>0 单独判定）
+                chapterTask?.reportNodeDone('question', questionId.value, (result.rate || 0) >= 1)
             }
             emit('submitted', { isCorrect: isCorrect.value, questionId: questionId.value })
             if (onEvaluationAnswered) {
@@ -340,7 +341,7 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
                 submitted.value = true
                 fromRecord.value = true
                 isCorrect.value = (question.value.correct_rate || 0) > 0
-                chapterTask?.reportNodeDone('question', questionId.value, isCorrect.value)
+                chapterTask?.reportNodeDone('question', questionId.value, (question.value.correct_rate || 0) >= 1)
                 emit('submitted', { isCorrect: isCorrect.value, questionId: questionId.value })
             }
         } catch (err) { /* 静默忽略 */ }

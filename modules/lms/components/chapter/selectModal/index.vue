@@ -46,24 +46,24 @@
               <UInput v-model.number="customScore" type="number" size="sm" class="w-24" />
               <UPopover :modal="true">
                 <UButton icon="i-lucide-minus" color="error" variant="solid" size="sm" :label="$t('chapter.subScore')" />
-                <template #content>
+                <template #content="{ close }">
                   <div class="p-3 space-y-2 w-40">
                     <p class="text-sm text-muted">{{ $t('chapter.scoreConfirm', { delta: '-' + Math.abs(Number(customScore) || 0), n: selectedIds.length }) }}</p>
                     <div class="flex justify-end gap-2">
-                      <UButton size="xs" variant="ghost" @click="closePopovers">{{ $t('common.cancel') }}</UButton>
-                      <UButton size="xs" color="error" :loading="saving" @click="adjustScore(-Math.abs(Number(customScore) || 0))">{{ $t('common.save') }}</UButton>
+                      <UButton size="xs" variant="ghost" @click="onCancel(close)">{{ $t('common.cancel') }}</UButton>
+                      <UButton size="xs" color="error" :loading="saving" @click="onAdjust(close, -Math.abs(Number(customScore) || 0))">{{ $t('common.save') }}</UButton>
                     </div>
                   </div>
                 </template>
               </UPopover>
               <UPopover :modal="true">
                 <UButton icon="i-lucide-plus" color="success" variant="solid" size="sm" :label="$t('chapter.addScore')" />
-                <template #content>
+                <template #content="{ close }">
                   <div class="p-3 space-y-2 w-40">
                     <p class="text-sm text-muted">{{ $t('chapter.scoreConfirm', { delta: '+' + Math.abs(Number(customScore) || 0), n: selectedIds.length }) }}</p>
                     <div class="flex justify-end gap-2">
-                      <UButton size="xs" variant="ghost" @click="closePopovers">{{ $t('common.cancel') }}</UButton>
-                      <UButton size="xs" color="success" :loading="saving" @click="adjustScore(Math.abs(Number(customScore) || 0))">{{ $t('common.save') }}</UButton>
+                      <UButton size="xs" variant="ghost" @click="onCancel(close)">{{ $t('common.cancel') }}</UButton>
+                      <UButton size="xs" color="success" :loading="saving" @click="onAdjust(close, Math.abs(Number(customScore) || 0))">{{ $t('common.save') }}</UButton>
                     </div>
                   </div>
                 </template>
@@ -87,4 +87,13 @@ const {
   loading, saving, randomizing, students, selectedIds, randomCount, customScore,
   closePopovers, toggleSelect, selectAll, clearSelection, randomSelect, adjustScore,
 } = useChapterSelect(props, isOpen)
+
+// 确认后立即关闭本 popover，再执行加减分
+function onAdjust(close?: () => void, delta?: number) {
+  close?.()
+  if (delta) adjustScore(delta)
+}
+function onCancel(close?: () => void) {
+  close?.()
+}
 </script>
