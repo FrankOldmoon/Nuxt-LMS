@@ -20,6 +20,8 @@ interface ClassUsersTableProps {
   hideActions?: boolean
   hideTeachers?: boolean
   hideNumber?: boolean
+  /** 编号列是否可编辑（仅 select class 弹窗为 true，其它只读显示） */
+  editableNumber?: boolean
   loading?: boolean
   defaultSort?: { id: string, desc: boolean }[]
   showChart?: boolean
@@ -69,7 +71,17 @@ export function useClassUsersTable(
   const sorting = ref(props.defaultSort ?? [{ id: 'name', desc: false }])
 
   const teachers = computed(() => users.value.filter((u) => u.isTeacher === true))
-  const students = computed(() => users.value.filter((u) => u.isTeacher !== true))
+  // 学生行：若外部 rows 未带课程编号，则从全局班级用户缓存按 id 兜底补全 number，
+  // 保证只要组件在有课程上下文（fetch 走 classes/users?course_id 或缓存含 number）时默认带上编号
+  const students = computed(() => {
+    return users.value
+      .filter((u) => u.isTeacher !== true)
+      .map((s: any) => {
+        if (s.number) return s
+        const cached = classUsers.value.find((c: any) => c.id === s.id)
+        return cached ? { ...s, number: (cached as any).number || '' } : s
+      })
+  })
 
   const onlineMap = reactive<Record<number, boolean>>({})
 
@@ -567,6 +579,7 @@ export function useClassUsersTable(
     hideNumber: () => props.hideNumber,
     hideActions: () => props.hideActions,
     hideTeachers: () => props.hideTeachers,
+    editableNumber: () => props.editableNumber,
     extraColumns: () => props.extraColumns,
     classId: () => props.classId,
     currentCourseId,

@@ -13,18 +13,19 @@
       :columns="columns"
       :ui="{ td: 'py-1.5' }"
     >
-      <!-- number 列 -->
+      <!-- number 列：仅 select class 弹窗可编辑（editableNumber），其它只读 -->
       <template v-if="!hideNumber()" #number-cell="{ row }">
-        <UInput v-model="numberMap[row.original.id]" size="xs" class="w-16"
+        <UInput v-if="editableNumber()" v-model="numberMap[row.original.id]" size="xs" class="w-16"
           :placeholder="'-'"
           @blur="onNumberBlur(row.original.id)"
           @keydown.enter="$event.target.blur()" />
+        <span v-else class="text-sm text-muted font-mono">{{ row.original.number || '-' }}</span>
       </template>
-      <!-- number 表头：排序按钮 + 一键填充 -->
+      <!-- number 表头：排序按钮 + 一键填充（仅 select class 弹窗可编辑时显示） -->
       <template v-if="!hideNumber()" #number-header="{ column }">
         <div class="flex items-center gap-1">
           <component :is="sortableHeader(t('classSelector.colNumber'))({ column })" />
-          <UButton icon="i-lucide-list-ordered" size="xs" color="neutral" variant="ghost"
+          <UButton v-if="editableNumber()" icon="i-lucide-list-ordered" size="xs" color="neutral" variant="ghost"
             :title="$t('classSelector.autoFillNumber')" @click="autoFillNumbers" />
         </div>
       </template>
@@ -87,7 +88,7 @@ const { t } = useI18n()
 const {
   showGroup, activeTab, sorting, students, columns,
   hideNumber, hideActions, extraColumns, classId, currentCourseId,
-  numberMap, sortableHeader, showMedal,
+  numberMap, sortableHeader, showMedal, editableNumber,
   onNumberBlur, autoFillNumbers, openEdit, openReset, openStats,
   statsOpen, statsUserId, statsUser,
 } = useClassUsersTableContext()

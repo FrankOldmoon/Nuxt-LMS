@@ -33,6 +33,7 @@ const _mockSchema: any = {
     isTeacher: 'isTeacher', isEditor: 'isEditor', deletedAt: 'deletedAt',
   },
   userClasses: { userId: 'userId', classId: 'classId' },
+  users: { id: 'id', name: 'name', username: 'username', classId: 'classId', deletedAt: 'deletedAt' },
   classChapters: { classId: 'classId', chapterId: 'chapterId', open: 'open' },
   userChapters: { userId: 'userId', chapterId: 'chapterId', isPass: 'isPass' },
 }
@@ -79,8 +80,8 @@ describe('API: courses/add.post', () => {
 
 describe('API: courses/list', () => {
   it('公开端点返回课程列表', async () => {
-    const { setMockListTableResult } = await import('../../../../test/setup/nuxt-stubs')
-    setMockListTableResult([{ id: 1, name: 'C1' }, { id: 2, name: 'C2' }])
+    // list API 直接读 db.query.courses.findMany
+    _mockDb.query.courses.findMany = vi.fn().mockResolvedValue([{ id: 1, name: 'C1' }, { id: 2, name: 'C2' }])
     const handler = (await import('../../server/api/courses/list')).default
     const r = await handler(makeEvent())
     expect(r.success).toBe(true)
@@ -88,8 +89,7 @@ describe('API: courses/list', () => {
   })
 
   it('无课程返回空数组', async () => {
-    const { setMockListTableResult } = await import('../../../../test/setup/nuxt-stubs')
-    setMockListTableResult([])
+    _mockDb.query.courses.findMany = vi.fn().mockResolvedValue([])
     const handler = (await import('../../server/api/courses/list')).default
     const r = await handler(makeEvent())
     expect(r.success).toBe(true)
@@ -239,13 +239,14 @@ describe('API: courses/show.get', () => {
     })
     ;(globalThis as any).getCourseMembers = vi.fn().mockResolvedValue([])
     ;(globalThis as any).isCourseTeacher = vi.fn().mockResolvedValue(false)
-    // 4 次 where：studentCount / userClasses / classChapters / userChapters
+    // 5 次 where：studentCount / userClasses / users(直接归属) / classChapters / userChapters
     let whereCall = 0
     _mockDb.where = vi.fn().mockImplementation(function () {
       whereCall++
       if (whereCall === 1) return [{ count: 3 }]        // studentCount
-      if (whereCall === 2) return [{ classId: 1 }]      // userClasses
-      if (whereCall === 3) return [{ chapterId: 11 }]   // classChapters (open)
+      if (whereCall === 2) return []                    // userClasses（学生未在 user_classes）
+      if (whereCall === 3) return [{ classId: 1 }]      // users.classId 直接归属（修复核心）
+      if (whereCall === 4) return [{ chapterId: 11 }]   // classChapters (open)
       return [{ chapterId: 11, isPass: true }]           // userChapters
     })
     const handler = (await import('../../server/api/courses/show.get')).default

@@ -54,7 +54,7 @@
                   size="xs"
                   variant="soft"
                   :loading="buyingId === good.id"
-                  :disabled="good.stock === 0 || coin < good.price"
+                  :disabled="purchaseDisabled || good.stock === 0 || coin < good.price"
                   @click="buy(good.id)"
                 >
                   {{ $t('shop.buy') }}
@@ -120,6 +120,8 @@ const {
 } = useShop(courseIdRef)
 
 const activeTab = ref<'shop' | 'bag'>('shop')
+// 临时禁用购买（商店暂不可购买，后续恢复时改为 false 即可）
+const purchaseDisabled = true
 const tabItems = computed(() => [
   { label: t('shop.tabShop'), value: 'shop', icon: 'i-lucide-store' },
   { label: t('shop.tabBag'), value: 'bag', icon: 'i-lucide-backpack' },

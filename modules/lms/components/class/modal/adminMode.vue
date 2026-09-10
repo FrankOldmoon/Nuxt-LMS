@@ -27,7 +27,7 @@
 
   <!-- 班级用户表格 -->
   <div v-if="selectedClassId" class="mt-4">
-    <ClassUsersTable ref="classUsersTableRef" :class-id="selectedClassId" show-online />
+    <ClassUsersTable ref="classUsersTableRef" :class-id="selectedClassId" show-online editable-number />
   </div>
 
   <!-- 添加学生/教师到班级 -->

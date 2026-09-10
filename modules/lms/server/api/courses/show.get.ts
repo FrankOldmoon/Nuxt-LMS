@@ -71,13 +71,23 @@ export default eventHandler(async (event) => {
       if (ch.isOpen) accessibleIds.add(ch.id)
     }
 
-    // 2. 用户班级 open 的章节
+    // 2. 用户班级 open 的章节（合并 user_classes 关联 + users.class_id 直接归属，
+    //    与 getClassUsers 一致，覆盖仅设 users.classId 的学生）
     if (user) {
-      const userClassRows = await db
-        .select({ classId: schema.userClasses.classId })
-        .from(schema.userClasses)
-        .where(eq(schema.userClasses.userId, user.id))
-      const userClassIds = userClassRows.map(r => r.classId)
+      const [userClassRows, userRow] = await Promise.all([
+        db
+          .select({ classId: schema.userClasses.classId })
+          .from(schema.userClasses)
+          .where(eq(schema.userClasses.userId, user.id)),
+        db
+          .select({ classId: schema.users.classId })
+          .from(schema.users)
+          .where(eq(schema.users.id, user.id)),
+      ])
+      const userClassIds = [...new Set([
+        ...userClassRows.map(r => r.classId),
+        ...(userRow[0]?.classId ? [userRow[0].classId] : []),
+      ])]
 
       if (userClassIds.length > 0) {
         const allChapterIds = (course.chapters || []).map(c => c.id)

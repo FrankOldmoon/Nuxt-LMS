@@ -64,5 +64,8 @@ export default eventHandler(async (event) => {
   ])
 
   // 5. 装配（含每学生 taskStatus；progress 由前端用章节 headings 计算）
-  return cResp(assembleChapterScores(studentIds, qIds, hIds, cIds, scoreMap, questionStatusMap, homeworkStatusMap, commentStatusMap))
+  // 并携带每个学生在课程里的编号（number），供 usersTable 默认展示编号列
+  const numberByUser = new Map(classUsers.map((u: any) => [u.id, u.number || '']))
+  const rows = assembleChapterScores(studentIds, qIds, hIds, cIds, scoreMap, questionStatusMap, homeworkStatusMap, commentStatusMap)
+  return cResp(rows.map((r: any) => ({ ...r, number: numberByUser.get(r.userId) || '' })))
 })

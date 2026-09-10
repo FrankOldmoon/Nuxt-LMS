@@ -21,6 +21,8 @@ export function useChapterAccess(props: ChapterAccessProps) {
   const { hasRole } = useAuth()
   const { isCourseTeacher } = useAuthLms()
   const { classes, loadClasses } = useClasses()
+  // 开放状态变更后刷新侧边导航（accessible 缓存），使该班级用户立即可见对应章节
+  const { notifyCourseNavUpdate } = useLayoutState()
 
   const canEdit = computed(() => {
     if (hasRole('admin')) return true
@@ -62,6 +64,7 @@ export function useChapterAccess(props: ChapterAccessProps) {
         body: { id: props.chapterId, isOpen: val },
       })
       invalidateChapterShowCache()
+      notifyCourseNavUpdate() // 刷新侧边导航的章节可访问性
       toast.add({ title: t('chapter.openUpdated'), color: 'success' })
     } catch (e: any) {
       toast.add({ title: e.message || t('chapter.openUpdateFailed'), color: 'error' })
@@ -83,6 +86,7 @@ export function useChapterAccess(props: ChapterAccessProps) {
         body: { chapterId: props.chapterId, classes: classList },
       })
       invalidateChapterShowCache()
+      notifyCourseNavUpdate() // 刷新侧边导航的章节可访问性
       toast.add({ title: t('chapter.openUpdated'), color: 'success' })
     } catch (e: any) {
       toast.add({ title: e.message || t('chapter.openUpdateFailed'), color: 'error' })

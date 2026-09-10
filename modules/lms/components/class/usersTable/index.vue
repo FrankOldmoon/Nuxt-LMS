@@ -40,6 +40,8 @@ const props = defineProps<{
   hideActions?: boolean
   hideTeachers?: boolean
   hideNumber?: boolean
+  /** 编号列是否可编辑（仅 select class 弹窗） */
+  editableNumber?: boolean
   loading?: boolean
   defaultSort?: { id: string, desc: boolean }[]
   showChart?: boolean

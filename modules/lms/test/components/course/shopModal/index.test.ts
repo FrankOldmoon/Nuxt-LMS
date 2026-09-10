@@ -137,7 +137,7 @@ describe('course/shopModal/index.vue', () => {
     expect(globalBadge).toBeTruthy()
   })
 
-  it('点击买入按钮调用 buy(goodId)', async () => {
+  it('购买暂时禁用：买入按钮始终 disabled，点击不调用 buy', async () => {
     const { default: ShopModal } = await import('../../../../components/course/shopModal/index.vue')
     const wrapper = mount(ShopModal, {
       props: { open: true, courseId: 1 },
@@ -147,8 +147,10 @@ describe('course/shopModal/index.vue', () => {
     const buttons = wrapper.findAll('.ubutton')
     const buyBtn = buttons.find((b) => b.text().includes('shop.buy'))
     expect(buyBtn).toBeTruthy()
+    // 购买功能暂禁用 → 买入按钮必须为禁用状态
+    expect(buyBtn!.attributes('disabled')).toBeDefined()
     await buyBtn!.trigger('click')
-    expect(_shopMock.current.buy).toHaveBeenCalledWith(1) // 第一个商品 id=1
+    expect(_shopMock.current.buy).not.toHaveBeenCalled()
   })
 
   it('coin < price 时买入按钮 disabled', async () => {

@@ -5,7 +5,7 @@
  * 章节访问控制条：开放开关 + 班级多选。canEdit=true 时渲染。
  * 逻辑由 useChapterAccess() 提供，测试中导入真实 composable + 依赖 useAuthLms/useClasses。
  */
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { resetAllStubs, setMockI18n, setMockAuthUser, setMockFetchHandler } from '../../../../../test/setup/nuxt-stubs'
 import { useChapterAccess } from '../../../composables/useChapterAccess'
@@ -15,6 +15,12 @@ import { useClasses } from '../../../../base/composables/useClasses'
 ;(globalThis as any).useChapterAccess = useChapterAccess
 ;(globalThis as any).useAuthLms = useAuthLms
 ;(globalThis as any).useClasses = useClasses
+// stub useLayoutState（useChapterAccess 内部调用 notifyCourseNavUpdate）
+;(globalThis as any).useLayoutState = () => ({
+  courseNavVersion: ref(0),
+  notifyCourseNavUpdate: vi.fn(),
+  notifyContentSaved: vi.fn(),
+})
 
 beforeEach(() => {
   resetAllStubs()

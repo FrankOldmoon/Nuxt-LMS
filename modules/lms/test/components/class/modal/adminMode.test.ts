@@ -24,11 +24,20 @@ const _globalStubs = {
     template: '<select :value="modelValue" @change="$emit(\'change\', $event)"><option v-for="o in items" :key="o.value" :value="o.value">{{ o.label }}</option></select>',
     props: ['modelValue', 'items', 'valueKey', 'labelKey', 'placeholder', 'loading', 'icon'],
   },
+  // 模板实际用 USelectMenu（区别于旧 stub 名 UInputMenu）
+  USelectMenu: {
+    template: '<select :value="modelValue" @change="$emit(\'change\', $event)"><option v-for="o in items" :key="o.value" :value="o.value">{{ o.label }}</option></select>',
+    props: ['modelValue', 'items', 'valueKey', 'labelKey', 'optionAttribute', 'placeholder', 'loading', 'icon'],
+  },
   UButton: {
     template: '<button :disabled="loading" @click="$emit(\'click\')">{{ label }}<slot /></button>',
     props: ['label', 'icon', 'size', 'color', 'variant', 'loading', 'aria-label'],
   },
   UIcon: { template: '<span />', props: ['name'] },
+  ClassUsersTable: {
+    template: '<div class="class-users-table" />',
+    props: ['classId', 'courseId', 'rows', 'showOnline', 'editableNumber'],
+  },
 }
 
 const _globalConfig = {
