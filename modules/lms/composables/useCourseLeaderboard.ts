@@ -97,6 +97,9 @@ export function useCourseLeaderboard(
     if (val) loadData()
   })
 
+  // 弹窗内切换班级（defaultClass 变化 → props.classId 变化）后立即重拉该班数据
+  watch(() => props.classId, () => { loadData() })
+
   return {
     loading,
     scoreRows,

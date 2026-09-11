@@ -76,11 +76,7 @@ export function useClassModal(open: Ref<boolean>) {
 
   async function switchClass(classId: number, className: string) {
     try {
-      await cRequest('/api/auth/me', {
-        method: 'PUT',
-        body: { defaultClass: { id: classId, name: className } },
-      })
-      await refreshUser()
+      await switchDefaultClass(classId, className, courseId.value)
       await fetchUsers(classId, courseId.value)
       toast.add({ title: t('classSelector.updateSuccess'), color: 'success' })
     } catch (e: any) {

@@ -192,8 +192,10 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
                 color: result.isCorrect ? 'success' : 'error',
             })
             if (!props.inQuiz) {
-                // heading 完成以 100% 正确为准（加分仍按 isCorrect = rate>0 单独判定）
-                chapterTask?.reportNodeDone('question', questionId.value, (result.rate || 0) >= 1)
+                // heading 完成以 100% 正确为准（加分仍按 isCorrect = rate>0 单独判定）。
+                // rate 取 submitQuestion 写回 question.correct_rate（服务端返回），
+                // 与刷新/记录恢复路径同源；各题型 submit() 只回传 isCorrect，不含 rate。
+                chapterTask?.reportNodeDone('question', questionId.value, (question.value?.correct_rate || 0) >= 1)
             }
             emit('submitted', { isCorrect: isCorrect.value, questionId: questionId.value })
             if (onEvaluationAnswered) {

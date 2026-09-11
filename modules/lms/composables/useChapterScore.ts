@@ -115,6 +115,9 @@ export function useChapterScore(props: { courseId: number; chapterId: number; cl
     }
   })
 
+  // 弹窗内切换班级（defaultClass 变化 → props.classId 变化）后立即重拉该班数据
+  watch(() => props.classId, () => { loadData() })
+
   onBeforeUnmount(stopPolling)
 
   return {

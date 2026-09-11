@@ -47,8 +47,10 @@ export function useAuthLms() {
     return editorCourseIds.value.includes(courseId)
   }
 
-  /** 检查当前用户是否是某课程的教师或编辑者（编辑者隐含教师权限） */
+  /** 检查当前用户是否是某课程的教师或编辑者（编辑者隐含教师权限）。
+      observer 视为所有课程的非 editor 教师。 */
   function isCourseTeacher(courseId: number): boolean {
+    if (hasRole('observer')) return true
     return teacherCourseIds.value.includes(courseId) || editorCourseIds.value.includes(courseId)
   }
 

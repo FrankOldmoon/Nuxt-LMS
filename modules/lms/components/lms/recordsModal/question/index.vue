@@ -4,9 +4,12 @@
       <div class="p-6 space-y-4 min-w-[600px]">
         <div class="flex items-center justify-between">
           <h2 class="text-lg font-semibold">{{ $t('record.questionRecords') }}</h2>
-          <UTooltip :text="$t('common.refresh')">
-            <UButton icon="i-lucide-refresh-cw" variant="soft" size="sm" :loading="pending" @click="fetchRecords" />
-          </UTooltip>
+          <div class="flex items-center gap-2">
+            <LmsClassSelector :course-id="courseId" />
+            <UTooltip :text="$t('common.refresh')">
+              <UButton icon="i-lucide-refresh-cw" variant="soft" size="sm" :loading="pending" @click="fetchRecords" />
+            </UTooltip>
+          </div>
         </div>
 
         <ClassUsersTable :rows="rows" :loading="pending" :extra-columns="extraColumns" :hide-actions="true"

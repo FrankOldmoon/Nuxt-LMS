@@ -141,10 +141,10 @@ export function setupChapterTask(opts: {
         const id = child.attrs?.id || child.attrs?.['data-toc-id']
         if (id) curHeading = String(id)
         const info = belowInfo.get(index)
-        // 标题下无受监控阅读块但仍存在其他内容（段落/互动 vue 等）：
-        //   标题自身作为可阅读块，hover 标题即完成
-        // 标题下完全无任何内容：不作为可阅读块 → 空标题进章节自动完成
-        if (id && info && info.hasTracked === false && info.hasAny === true) {
+        // 标题自身始终作为可阅读块（hover 标题即标记已读、变绿并计入完成）。
+        // 无论其下是否有代码块/引用/互动任务，标题都在 byHeading 中登记。
+        // 标题下完全无任何内容（空标题）：不作为可阅读块，进章节自动完成。
+        if (id && info && info.hasAny === true) {
           const key = String(index)
           blockToHeading[key] = curHeading
           ;(byHeading[curHeading] ||= []).push(key)
@@ -454,8 +454,12 @@ export function setupChapterTask(opts: {
     // 同时覆盖空 heading（无任务且无可阅读块）自动完成的原始需求。
     // 门控 serverSynced：等 /api/courses/me 填充服务端进度后才自动完成，
     // 避免重访已完成章节时立即触发多余的 task-status POST（3s 兜底放行）。
+    //
+    // 依赖 nodeStatus / readBlocks：防止“最后一步是答对题目或读完代码块，但其 checkHeading
+    // 因布局/映射尚未就绪而被跳过”的竞态——任务或阅读块任何一次变化都会全量复核，
+    // 满足条件时随即完成（checkHeading 幂等，已完成的不回退）。
     watch(
-      [taskMap, blockLayout, serverSynced],
+      [taskMap, blockLayout, serverSynced, nodeStatus, readBlocks],
       () => {
         if (!user.value || !serverSynced.value) return
         for (const h of taskMap.value.headings) {

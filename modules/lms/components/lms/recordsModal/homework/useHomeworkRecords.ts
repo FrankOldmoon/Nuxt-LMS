@@ -168,8 +168,11 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
     }
 
     watch(open, (val) => {
-        if (val) fetchRecords()
+      if (val) fetchRecords()
     })
+
+    // 弹窗内切换班级：useClassUsers 全局 students 变化后重建该班记录
+    watch(() => students.value, () => fetchRecords())
 
     // 作业详情弹窗（全屏逐份评阅）
     const detailOpen = ref(false)

@@ -50,6 +50,21 @@ describe('composables/useAuthLms', () => {
     expect(auth.isCourseTeacher(1)).toBe(true) // editor 包含 teacher 权限
   })
 
+  it('observer 视为所有课程的非 editor 教师', async () => {
+    setMockAuthUser(
+      { id: 2, username: 'obs', name: 'Obs' },
+      [{ code: 'observer', name: 'Observer' }],
+      [],
+      { editorCourseIds: [], teacherCourseIds: [], classIds: [] }
+    )
+    const { useAuthLms } = await import('../../composables/useAuthLms')
+    const auth = useAuthLms()
+    await flushPromises()
+    expect(auth.hasRole('observer')).toBe(true)
+    expect(auth.isCourseTeacher(999)).toBe(true) // 全局教师，不依赖课程身份
+    expect(auth.isCourseEditor(999)).toBe(false) // 非 editor
+  })
+
   it('login 调用 /api/auth/login 并 refresh', async () => {
     let loginCalled = false
     setMockFetchHandler(async (url, opts: any) => {

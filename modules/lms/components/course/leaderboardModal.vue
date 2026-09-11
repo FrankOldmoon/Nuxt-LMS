@@ -4,10 +4,13 @@
             <div class="p-6 space-y-4">
                 <div class="flex items-center justify-between">
                     <h3 class="text-lg font-semibold">{{ $t('coursePanel.leaderboard') }}</h3>
-                    <UTooltip :text="$t('coursePanel.classAvg')">
-                        <UButton icon="i-lucide-bar-chart-3" color="primary" variant="soft" size="xs"
-                            :label="$t('coursePanel.classAvg')" @click="classAvgOpen = true" />
-                    </UTooltip>
+                    <div class="flex items-center gap-2">
+                        <LmsClassSelector v-if="canEdit" :course-id="courseId" />
+                        <UTooltip :text="$t('coursePanel.classAvg')">
+                            <UButton icon="i-lucide-bar-chart-3" color="primary" variant="soft" size="xs"
+                                :label="$t('coursePanel.classAvg')" @click="classAvgOpen = true" />
+                        </UTooltip>
+                    </div>
                 </div>
 
                 <!-- 我的排名 -->
@@ -59,6 +62,8 @@ const props = defineProps<{
     classId: string | number
 }>()
 
+const { isCourseTeacher, hasRole } = useAuthLms()
+const canEdit = computed(() => hasRole('admin') || isCourseTeacher(Number(props.courseId)))
 const { loading, myStudent, myRank, myLv, tableRows, extraColumns } = useCourseLeaderboard(props, isOpen)
 
 const classAvgOpen = ref(false)

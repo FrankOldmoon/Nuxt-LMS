@@ -77,6 +77,9 @@ export function useQuestionRecords(props: QuestionRecordsProps, emit: QuestionRe
         if (val) fetchRecords()
     })
 
+    // 弹窗内切换班级：useClassUsers 全局 students 变化后重建该班记录
+    watch(() => students.value, () => fetchRecords())
+
     // 格式化作答内容
     function formatUserAnswer(record: any) {
         const userAns = Array.isArray(record?.records) ? record.records : []

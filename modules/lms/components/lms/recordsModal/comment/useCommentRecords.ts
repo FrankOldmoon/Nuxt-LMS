@@ -68,5 +68,8 @@ export function useCommentRecords(props: CommentRecordsProps, emit: CommentRecor
         if (val) fetchRecords()
     })
 
+    // 弹窗内切换班级：useClassUsers 全局 students 变化后重建该班记录
+    watch(() => students.value, () => fetchRecords())
+
     return { open, rows, pending, extraColumns, defaultSort }
 }

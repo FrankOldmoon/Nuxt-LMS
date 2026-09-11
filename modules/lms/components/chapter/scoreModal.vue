@@ -4,6 +4,7 @@
       <div class="p-6 space-y-4 min-w-[600px]">
         <div class="flex items-center justify-between">
           <h3 class="text-lg font-semibold">{{ $t('chapter.score') }}</h3>
+          <LmsClassSelector v-if="canEdit" :course-id="courseId" />
         </div>
 
         <div v-if="!classId" class="py-8 text-center text-muted text-sm">
@@ -75,6 +76,8 @@ const props = defineProps({
   classId: { type: Number, default: 0 },
 })
 const isOpen = defineModel<boolean>('open', { default: false })
+const { isCourseTeacher, hasRole } = useAuthLms()
+const canEdit = computed(() => hasRole('admin') || isCourseTeacher(props.courseId))
 const {
   students, loading, taskModalOpen, taskModalItem,
   onItemClick, tableRows, extraColumns, loadData,

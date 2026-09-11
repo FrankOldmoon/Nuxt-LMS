@@ -45,18 +45,12 @@ const props = defineProps({
 
 const { currentComponent } = useNodeDispatcher(props)
 
-// 无可监控块（codeBlock/blockquote）的标题：hover 一瞬间即完成
-// 判断依据：该标题到下一个标题之间没有 codeBlock / blockquote（与 useChapterTask.blockLayout 一致）
+// 带 id 的标题都作为可阅读块（instant：hover 标题即标记已读）。
+// 无论其下是否有代码块/引用/互动任务，标题 hover 都会变绿并计入完成；
+// 与 useChapterTask.blockLayout 一致（标题始终登记为 byHeading 可读块）。
 function isAutoCompleteHeading(child, index) {
   if (child.type !== 'heading') return false
   if (!child.attrs?.id && !child.attrs?.['data-toc-id']) return false
-  const blocks = props.node.content || []
-  for (let i = index + 1; i < blocks.length; i++) {
-    const c = blocks[i]
-    if (!c) continue
-    if (c.type === 'heading') break
-    if (c.type === 'codeBlock' || c.type === 'blockquote') return false
-  }
   return true
 }
 

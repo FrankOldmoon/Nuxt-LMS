@@ -11,7 +11,8 @@ import { db, schema } from '@nuxthub/db'
 import { eq, and } from 'drizzle-orm'
 
 /**
- * 检查当前用户是否是某课程的教师/编辑者（教师或编辑者均可）
+ * 检查当前用户是否是某课程的教师/编辑者（教师或编辑者均可）。
+ * observer 角色视为所有课程的非 editor 教师（仅 when 无课程身份时兜底）。
  */
 export async function isCourseTeacher(userId: number, courseId: number): Promise<boolean> {
   if (!(schema as any).userCourses) return false
@@ -25,7 +26,21 @@ export async function isCourseTeacher(userId: number, courseId: number): Promise
       ),
     )
     .limit(1)
-  return rows.length > 0 && !!(rows[0].isTeacher || rows[0].isEditor)
+  const isCourseStaff = rows.length > 0 && !!(rows[0].isTeacher || rows[0].isEditor)
+  if (isCourseStaff) return true
+  // 兜底：observer 为全局观察教师（非 editor），对所有课程视为教师
+  return await isObserver(userId)
+}
+
+/** 判断用户是否拥有 observer（只读观察者）角色 */
+async function isObserver(userId: number): Promise<boolean> {
+  const rows = await db
+    .select({ code: schema.roles.code })
+    .from(schema.userRoles)
+    .innerJoin(schema.roles, eq(schema.userRoles.roleId, schema.roles.id))
+    .where(and(eq(schema.userRoles.userId, userId), eq(schema.roles.code, 'observer')))
+    .limit(1)
+  return rows.length > 0
 }
 
 /**

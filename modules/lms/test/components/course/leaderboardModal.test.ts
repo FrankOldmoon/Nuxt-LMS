@@ -12,6 +12,8 @@ import { resetAllStubs, setMockI18n } from '../../../../../test/setup/nuxt-stubs
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
+  // stub useAuthLms（canEdit 用 isCourseTeacher/hasRole 判定）
+  ;(globalThis as any).useAuthLms = () => ({ isCourseTeacher: () => true, hasRole: () => true })
   // stub useCourseLeaderboard
   ;(globalThis as any).useCourseLeaderboard = (_props: any, _isOpen: any) => ({
     loading: ref(false),
@@ -42,6 +44,7 @@ const _globalStubs = {
     template: '<div class="class-users-table"><slot /></div>',
     props: ['rows', 'classId', 'courseId', 'hideActions', 'hideTeachers', 'hideNumber', 'defaultSort', 'showChart', 'showGroup', 'extraColumns'],
   },
+  LmsClassSelector: { template: '<div class="lms-class-selector" />' },
 }
 
 const _globalConfig = {

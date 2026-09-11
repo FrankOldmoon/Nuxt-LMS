@@ -321,6 +321,11 @@ describe('composables/useChapterTask', () => {
     })
     expect(ctx.isHeadingDone('h1')).toBe(false)
     ctx.markBlockRead('1')
+    // 标题自身也是可读块（新逻辑），仅读代码块还不足以完成
+    expect(ctx.isHeadingDone('h1')).toBe(false)
+    // 标题（index 0）+ 代码块（index 1）都已读 → 1s 后完成
+    ctx.markBlockRead('0')
+    ctx.markBlockRead('1')
     // markBlockRead 内部 setTimeout 延迟 1s 才真正置 heading 完成
     expect(ctx.isHeadingDone('h1')).toBe(false)
     await vi.advanceTimersByTimeAsync(1000)

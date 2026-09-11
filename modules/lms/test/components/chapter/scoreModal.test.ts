@@ -14,6 +14,8 @@ import { resetAllStubs, setMockI18n } from '../../../../../test/setup/nuxt-stubs
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
+  // stub useAuthLms（canEdit 用 isCourseTeacher/hasRole 判定）
+  ;(globalThis as any).useAuthLms = () => ({ isCourseTeacher: () => true, hasRole: () => true })
 })
 
 function mockChapterScore(overrides: any = {}) {
@@ -49,6 +51,7 @@ const _globalStubs = {
   TaskModal: { template: '<div class="task-modal" />', props: ['open', 'courseId', 'type', 'id', 'status'] },
   UProgress: { template: '<div class="uprogress" />', props: ['modelValue', 'size'] },
   UTooltip: { template: '<span class="utooltip"><slot /></span>', props: ['text'] },
+  LmsClassSelector: { template: '<div class="lms-class-selector" />' },
 }
 
 const _globalConfig = {

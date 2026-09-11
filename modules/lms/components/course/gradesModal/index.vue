@@ -2,7 +2,10 @@
     <UModal v-model:open="isOpen" :ui="{ content: 'max-w-6xl' }" scrollable>
         <template #content>
             <div class="p-6 space-y-4 min-w-[700px]">
-                <h3 class="text-lg font-semibold">{{ t('coursePanel.grades') }}</h3>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold">{{ t('coursePanel.grades') }}</h3>
+                    <LmsClassSelector v-if="canEdit" :course-id="courseId" />
+                </div>
 
                 <!-- 评分标准：可收缩配置（教师/管理员） / 学生只读展示 -->
                 <CourseGradesModalCriteria v-if="canEdit" />
