@@ -1233,7 +1233,8 @@
     "hide": "隐藏",
     "stop": "停止",
     "unsaved": "未保存",
-    "fullscreen": "全屏"
+    "fullscreen": "全屏",
+    "download": "下载"
   },
   "danmaku": {
     "questionCorrect": "🎉 答对了题目 (+{exp}经验)",

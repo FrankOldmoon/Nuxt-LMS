@@ -1233,7 +1233,8 @@
     "hide": "Hide",
     "stop": "Stop",
     "unsaved": "Unsaved",
-    "fullscreen": "Fullscreen"
+    "fullscreen": "Fullscreen",
+    "download": "Download"
   },
   "danmaku": {
     "questionCorrect": "🎉 answered the question correctly (+{exp} exp)",

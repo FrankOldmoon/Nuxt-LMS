@@ -2,8 +2,7 @@
   <UHeader :title="siteTitle" to="/">
     <template #left>
       <ULink to="/" class="flex items-center gap-2 font-bold text-lg text-highlighted" :aria-label="siteTitle">
-        <img v-if="logo" :src="logo" alt="Logo" class="size-6 object-contain" />
-        <UIcon v-else name="i-lucide-boxes" class="size-6 text-primary" />
+        <img src="/logo.webp" alt="Logo" class="size-6 object-contain" />
         <span class="hidden sm:inline">{{ siteTitle }}</span>
       </ULink>
     </template>
