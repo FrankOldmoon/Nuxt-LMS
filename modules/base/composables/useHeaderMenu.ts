@@ -93,6 +93,10 @@ export function useHeaderMenu() {
         onSelect: async () => {
           await logout()
           toast.add({ title: t('auth.logout'), color: 'neutral' })
+          // 登出后整页重载回首页：清除 SSR 渲染留下的登录态缓存，避免需手动刷新
+          if (import.meta.client) {
+            window.location.replace('/')
+          }
         },
       },
     ])

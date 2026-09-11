@@ -18,11 +18,13 @@ export default defineNuxtPlugin(async () => {
 
   try {
     await login(username, password)
-    // 清除 URL 中的账号密码参数
+    // 登录成功后 cookie 已下发到浏览器。首屏为 SSR 渲染（基于无 cookie 的未登录态），
+    // 仅靠客户端内存刷新 authData 无法让依赖 SSR 数据的组件重渲染登录态，
+    // 因此整页重载到清除参数后的 URL，让 SSR 携带 cookie 直接渲染出登录态，避免手动刷新一次。
     const url = new URL(window.location.href)
     url.searchParams.delete('username')
     url.searchParams.delete('password')
-    window.history.replaceState({}, '', url.toString())
+    window.location.replace(url.toString())
   } catch {
     // 登录失败时静默忽略，用户仍可手动登录
   }

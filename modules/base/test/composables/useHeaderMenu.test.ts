@@ -170,7 +170,7 @@ describe('composables/useHeaderMenu - userMenuItems', () => {
     )
     const logoutItem = logoutGroup.find((i: any) => i.label === 'auth.logout')
     await logoutItem.onSelect()
-    // 不抛错即视为成功
+    // 不抛错即视为成功（客户端才执行整页 reload）
   })
 })
 
