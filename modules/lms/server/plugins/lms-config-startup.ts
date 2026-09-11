@@ -1,12 +1,13 @@
 /**
  * 服务启动时：
  *   1. 加载 lms 配置到内存缓存（reloadLmsConfig 内部自动迁移旧 lms_config 单行）
- *   2. 首次启动时初始化 1 个 test 班级 + 30 个 test 学生账号
+ *   2. 播种初始全局商品（按版本号，仅一次）
+ *   3. 首次启动时初始化 1 个 test 班级 + 30 个 test 学生账号
  *      - 标记位使用拍平存储：configs(id='lms:_system.testAccountsSeeded', value=true)
  *      - 不再写入 lms_config 单行 json
  */
 import { db, schema } from "@nuxthub/db"
-import { eq } from "drizzle-orm"
+import { and, eq, inArray } from "drizzle-orm"
 const TEST_PASSWORD = 'REDACTED'
 const TEST_COUNT = 30
 const TEST_CLASS_NAME = 'test'
@@ -17,6 +18,58 @@ const SEED_FLAG_KEY = 'lms:_system.testAccountsSeeded'
 
 export default defineNitroPlugin(async () => {
   await reloadLmsConfig()
+
+  // 播种初始全局商品（按版本号，版本变化时重播）
+  try {
+    const GOODS_SEED_VERSION = 2
+    const GOODS_SEED_FLAG = 'lms:_system.goodsSeeded'
+    const goodsFlag = await db.query.configs.findFirst({
+      where: eq(schema.configs.id, GOODS_SEED_FLAG),
+    })
+
+    if (goodsFlag?.value !== GOODS_SEED_VERSION) {
+      const initialGoods = [
+        // 头像框
+        { name: 'Bronze Avatar Frame', content: { icon: 'i-lucide-circle-user', color: 'bronze', description: 'Bronze avatar frame', emoji: '🥉' }, price: 1000, sellPrice: 500 },
+        { name: 'Silver Avatar Frame', content: { icon: 'i-lucide-circle-user', color: 'silver', description: 'Silver avatar frame', emoji: '🥈' }, price: 2000, sellPrice: 1000 },
+        { name: 'Gold Avatar Frame', content: { icon: 'i-lucide-circle-user', color: 'gold', description: 'Gold avatar frame', emoji: '🥇' }, price: 3000, sellPrice: 1500 },
+        // 零食卡
+        { name: 'Small Snack Card', content: { icon: 'i-lucide-candy', color: 'success', description: 'Redeem for a small snack', emoji: '🍬' }, price: 1000, sellPrice: 500 },
+        { name: 'Medium Snack Card', content: { icon: 'i-lucide-cookie', color: 'warning', description: 'Redeem for a medium snack', emoji: '🍪' }, price: 2000, sellPrice: 1000 },
+        { name: 'Large Snack Card', content: { icon: 'i-lucide-cake-slice', color: 'primary', description: 'Redeem for a large snack', emoji: '🍰' }, price: 3000, sellPrice: 1500 },
+        // 礼品卡
+        { name: 'Small Gift Card', content: { icon: 'i-lucide-gift', color: 'info', description: 'Redeem for a small gift', emoji: '🎁' }, price: 1000, sellPrice: 500 },
+        { name: 'Medium Gift Card', content: { icon: 'i-lucide-gift', color: 'success', description: 'Redeem for a medium gift', emoji: '🎀' }, price: 2000, sellPrice: 1000 },
+        { name: 'Large Gift Card', content: { icon: 'i-lucide-party-popper', color: 'gold', description: 'Redeem for a large gift', emoji: '🎉' }, price: 3000, sellPrice: 1500 },
+      ]
+
+      // 清除旧版默认商品，避免残留；仅匹配已知默认商品名，不影响用户自建商品
+      const LEGACY_GOODS = ['Homework Pass', 'Snack Card', 'Hint Card', 'Revive Card', 'Bonus Card']
+      await db.delete(schema.goods).where(
+        and(eq(schema.goods.courseId, 0), inArray(schema.goods.name, LEGACY_GOODS))
+      )
+
+      await db.insert(schema.goods).values(
+        initialGoods.map((g, i) => ({
+          name: g.name,
+          content: g.content,
+          courseId: 0,
+          price: g.price,
+          sellPrice: g.sellPrice,
+          stock: -1,
+          type: 'item',
+          order: i,
+        }))
+      ).onConflictDoNothing()
+
+      await db.insert(schema.configs).values({ id: GOODS_SEED_FLAG, value: GOODS_SEED_VERSION })
+        .onConflictDoUpdate({ target: schema.configs.id, set: { value: GOODS_SEED_VERSION } })
+
+      console.log(`[lms-config-startup] 已播种 ${initialGoods.length} 个全局商品（v${GOODS_SEED_VERSION}）`)
+    }
+  } catch (e) {
+    console.error('[lms-config-startup] 商品播种失败', e)
+  }
 
   // 首次启动时初始化 test 班级 + 30 个 test 账号（仅一次）
   try {
@@ -111,44 +164,5 @@ export default defineNitroPlugin(async () => {
     console.log(`[lms-config-startup] 已初始化 ${insertedUsers.length}/${TEST_COUNT} 个 test 账号（密码: ${TEST_PASSWORD}，全部归属 class_id=1）`)
   } catch (e) {
     console.error('[lms-config-startup] test 账号初始化失败', e)
-  }
-
-  // 首次启动时播种初始全局商品（仅一次）
-  try {
-    const GOODS_SEED_FLAG = 'lms:_system.goodsSeeded'
-    const goodsFlag = await db.query.configs.findFirst({
-      where: eq(schema.configs.id, GOODS_SEED_FLAG),
-    })
-    if (goodsFlag?.value === true) {
-      return
-    }
-
-    const initialGoods = [
-      { name: 'Homework Pass', content: { icon: 'i-lucide-file-x', color: 'warning', description: 'Skip one homework assignment', emoji: '📝' }, price: 50, sellPrice: 25 },
-      { name: 'Snack Card', content: { icon: 'i-lucide-cookie', color: 'success', description: 'Redeem for a snack', emoji: '🍪' }, price: 20, sellPrice: 10 },
-      { name: 'Hint Card', content: { icon: 'i-lucide-lightbulb', color: 'primary', description: 'Get a hint for a question', emoji: '💡' }, price: 30, sellPrice: 15 },
-      { name: 'Revive Card', content: { icon: 'i-lucide-heart-pulse', color: 'error', description: 'Revive once after failure', emoji: '❤️' }, price: 100, sellPrice: 50 },
-      { name: 'Bonus Card', content: { icon: 'i-lucide-star', color: 'gold', description: 'Get extra points', emoji: '⭐' }, price: 80, sellPrice: 40 },
-    ]
-
-    await db.insert(schema.goods).values(
-      initialGoods.map((g, i) => ({
-        name: g.name,
-        content: g.content,
-        courseId: 0,
-        price: g.price,
-        sellPrice: g.sellPrice,
-        stock: -1,
-        type: 'item',
-        order: i,
-      }))
-    ).onConflictDoNothing()
-
-    await db.insert(schema.configs).values({ id: GOODS_SEED_FLAG, value: true })
-      .onConflictDoUpdate({ target: schema.configs.id, set: { value: true } })
-
-    console.log(`[lms-config-startup] 已播种 ${initialGoods.length} 个全局商品`)
-  } catch (e) {
-    console.error('[lms-config-startup] 商品播种失败', e)
   }
 })
