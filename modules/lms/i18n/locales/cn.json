@@ -112,6 +112,12 @@
     "exportJson": "JSON",
     "exportJsonSuccess": "JSON 导出成功",
     "exportJsonFailed": "JSON 导出失败",
+    "exportMarkdown": "Markdown",
+    "exportMarkdownSuccess": "Markdown 导出成功",
+    "exportMarkdownFailed": "Markdown 导出失败",
+    "exportWord": "Word",
+    "exportWordSuccess": "Word 导出成功",
+    "exportWordFailed": "Word 导出失败",
     "download": "下载"
   },
   "classSelector": {

@@ -301,7 +301,56 @@ export function useToc() {
     }
 
     // 聚合 loading + 下拉菜单项
-    const downloading = computed(() => exportingPpt.value || exportingPdf.value || exportingJson.value)
+    const downloading = computed(() => exportingPpt.value || exportingPdf.value || exportingJson.value || exportingMarkdown.value || exportingWord.value)
+
+    // ── Markdown 导出（tiptap JSON → markdown 文本文件）──
+    const exportingMarkdown = ref(false)
+    async function handleExportMarkdown() {
+        if (!chapterContent.value) return
+        exportingMarkdown.value = true
+        try {
+            const title = tocLinks.value[0]?.text || 'Chapter'
+            const safeName = title.replace(/[\\/:*?"<>|]/g, '_')
+            const { tiptapToMarkdown } = await import('../../../utils/tiptapToMarkdown')
+            const text = tiptapToMarkdown(chapterContent.value)
+            const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `${safeName}.md`
+            a.click()
+            URL.revokeObjectURL(url)
+            toast.add({ title: t('chapter.exportMarkdownSuccess'), color: 'success' })
+        } catch (e: any) {
+            toast.add({ title: e?.message || t('chapter.exportMarkdownFailed'), color: 'error' })
+        } finally {
+            exportingMarkdown.value = false
+        }
+    }
+
+    // ── Word 导出（tiptap JSON → .docx，docx.js 纯前端生成）──
+    const exportingWord = ref(false)
+    async function handleExportWord() {
+        if (!chapterContent.value) return
+        exportingWord.value = true
+        try {
+            const title = tocLinks.value[0]?.text || 'Chapter'
+            const safeName = title.replace(/[\\/:*?"<>|]/g, '_')
+            const { tiptapToDocxBlob } = await import('../../../utils/exportDocx')
+            const blob = await tiptapToDocxBlob(chapterContent.value, title, { courseId: Number(courseId.value) || undefined })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `${safeName}.docx`
+            a.click()
+            URL.revokeObjectURL(url)
+            toast.add({ title: t('chapter.exportWordSuccess'), color: 'success' })
+        } catch (e: any) {
+            toast.add({ title: e?.message || t('chapter.exportWordFailed'), color: 'error' })
+        } finally {
+            exportingWord.value = false
+        }
+    }
 
     // 下载 JSON 仅限本课老师（课程任课教师或管理员）可见
     const canExportJson = computed(() => {
@@ -313,6 +362,8 @@ export function useToc() {
         const items = [
             { label: t('chapter.exportPpt'), icon: 'i-lucide-presentation', onSelect: handleExportPpt },
             { label: t('chapter.exportPdf'), icon: 'i-lucide-file-text', onSelect: handleExportPdf },
+            { label: t('chapter.exportWord'), icon: 'i-lucide-file-type', onSelect: handleExportWord },
+            { label: t('chapter.exportMarkdown'), icon: 'i-lucide-file-code', onSelect: handleExportMarkdown },
         ]
         if (canExportJson.value) {
             items.push({ label: t('chapter.exportJson'), icon: 'i-lucide-braces', onSelect: handleExportJson })
@@ -328,6 +379,7 @@ export function useToc() {
         canEditContent, editModalOpen, chapterContent, handleSave,
         lockId, ueditorRef, saving, handleSaveClick, chapterId,
         exportingPdf, handleExportPdf, exportingJson, handleExportJson,
+        exportingMarkdown, handleExportMarkdown, exportingWord, handleExportWord,
         downloading, downloadItems,
     }
 }

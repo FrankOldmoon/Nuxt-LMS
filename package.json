@@ -34,6 +34,7 @@
     "chevrotain": "^13.2.0",
     "colyseus": "^0.15.0",
     "colyseus.js": "^0.15.28",
+    "docx": "^9.7.1",
     "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.45.2",
     "edge-tts-universal": "^1.4.0",

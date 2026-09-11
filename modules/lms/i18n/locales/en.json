@@ -112,6 +112,12 @@
     "exportJson": "JSON",
     "exportJsonSuccess": "JSON exported successfully",
     "exportJsonFailed": "Failed to export JSON",
+    "exportMarkdown": "Markdown",
+    "exportMarkdownSuccess": "Markdown exported successfully",
+    "exportMarkdownFailed": "Failed to export Markdown",
+    "exportWord": "Word",
+    "exportWordSuccess": "Word exported successfully",
+    "exportWordFailed": "Failed to export Word",
     "download": "Download"
   },
   "classSelector": {

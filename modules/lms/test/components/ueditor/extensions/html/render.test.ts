@@ -71,7 +71,10 @@ describe('html/render.vue', () => {
     })
     await flushPromises()
     const srcdoc = wrapper.find('iframe').attributes('srcdoc') || ''
-    expect(srcdoc).toBe(fullDoc)
+    // 完整文档保留原内容，并在 </body> 前注入高度上报脚本
+    expect(srcdoc).toContain('<p>full</p>')
+    expect(srcdoc).toContain('html-node-height')
+    expect(srcdoc.indexOf('html-node-height')).toBeLessThan(srcdoc.indexOf('</body>'))
   })
 
   it('renders fullscreen button', async () => {

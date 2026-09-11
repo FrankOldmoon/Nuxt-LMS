@@ -1,4 +1,5 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { buildSrcdocWithHeightReport } from './buildSrcdoc'
 
 export interface HtmlRenderProps {
     node?: any
@@ -19,39 +20,7 @@ export function useHtmlRender(props: HtmlRenderProps) {
     const iframeHeight = computed(() => fixedHeight.value > 0 ? fixedHeight.value : autoHeight.value)
 
     /** 构造 iframe srcdoc：包裹为基础 HTML 文档 + 高度上报脚本 */
-    const iframeContent = computed(() => {
-      const html = userHtml.value
-      // 已是完整 HTML 文档则直接使用
-      const isFullDoc = /<html[\s>]/i.test(html) || /<!DOCTYPE/i.test(html)
-      if (isFullDoc) return html
-
-      return `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-* { box-sizing: border-box; }
-img { max-width: 100%; height: auto; }
-body { margin: 0; padding: 8px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-</style>
-</head><body>${html}
-<script>
-(function () {
-  function reportHeight() {
-    var h = Math.max(
-      document.body.scrollHeight,
-      document.documentElement.scrollHeight
-    );
-    if (h > 0) parent.postMessage({ type: 'html-node-height', height: h }, '*');
-  }
-  if (document.readyState === 'complete') reportHeight();
-  else window.addEventListener('load', reportHeight);
-  new MutationObserver(reportHeight).observe(document.body, {
-    childList: true,
-    subtree: true,
-  });
-})();
-<\/script>
-</body></html>`
-    })
+    const iframeContent = computed(() => buildSrcdocWithHeightReport(userHtml.value))
 
     function onMessage(e) {
       if (e.data?.type === 'html-node-height' && e.data.height > 0) {

@@ -61,6 +61,11 @@ describe('composables/useChapterAccess', () => {
 
   it('从 chapterData 同步 isOpen 与 selectedClassIds', async () => {
     setMockAuthUser({ id: 1, name: 'admin' }, [{ code: 'admin', name: 'Admin' }])
+    const classesRef = (globalThis as any).__classesRef
+    classesRef.value = [
+      { id: 10, name: 'Class A' },
+      { id: 30, name: 'Class C' },
+    ]
     const { useChapterAccess } = await import('../../composables/useChapterAccess')
     const r = useChapterAccess({
       chapterId: 1,
@@ -74,6 +79,7 @@ describe('composables/useChapterAccess', () => {
         ],
       },
     })
+    await new Promise((resolve) => setTimeout(resolve, 0))
     expect(r.isOpen.value).toBe(true)
     expect(r.selectedClassIds.value).toEqual([10, 30])
   })
@@ -100,6 +106,55 @@ describe('composables/useChapterAccess', () => {
       { label: 'Class A', value: 10 },
       { label: 'Class B', value: 20 },
     ])
+  })
+
+  it('selectedClassIds 过滤掉当前用户不可见的班级，classOptions 不含不可见班级', async () => {
+    setMockAuthUser({ id: 1, name: 'admin' }, [{ code: 'admin', name: 'Admin' }])
+    const { useChapterAccess } = await import('../../composables/useChapterAccess')
+    const r = useChapterAccess({
+      chapterId: 1,
+      courseId: 1,
+      chapterData: {
+        isOpen: true,
+        classChapters: [
+          { classId: 10, open: true },
+          { classId: 99, open: true }, // 用户不可见班级
+        ],
+      },
+    })
+    const classesRef = (globalThis as any).__classesRef
+    classesRef.value = [{ id: 10, name: 'Class A' }]
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    // 已选值只含可见班级，用户不知情不可见班级
+    expect(r.selectedClassIds.value).toEqual([10])
+    expect(r.classOptions.value).toEqual([{ label: 'Class A', value: 10 }])
+  })
+
+  it('updateClassOpen 只提交用户可见的班级', async () => {
+    setMockAuthUser({ id: 1, name: 'admin' }, [{ code: 'admin', name: 'Admin' }])
+    let sentBody: any = null
+    setMockFetchHandler(async (url, opts: any) => {
+      if (url === '/api/chapters/classes' && opts?.method === 'POST') {
+        sentBody = opts.body
+      }
+      return { data: null, success: true, msg: '' }
+    })
+    const classesRef = (globalThis as any).__classesRef
+    classesRef.value = [{ id: 10, name: 'A' }]
+    const { useChapterAccess } = await import('../../composables/useChapterAccess')
+    const r = useChapterAccess({
+      chapterId: 1,
+      courseId: 1,
+      chapterData: {
+        isOpen: true,
+        classChapters: [
+          { classId: 10, open: true },
+          { classId: 99, open: true }, // 用户不可见班级，不提交
+        ],
+      },
+    })
+    await r.updateClassOpen([10])
+    expect(sentBody.classes).toEqual([{ classId: 10, open: true }])
   })
 
   it('updateOpen 成功时 toast 提示', async () => {

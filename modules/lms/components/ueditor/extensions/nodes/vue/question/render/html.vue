@@ -3,13 +3,15 @@
         <!-- HTML 预览 iframe -->
         <div ref="containerRef" class="html-preview-container border border-gray-200 dark:border-gray-600 rounded overflow-hidden relative">
             <iframe ref="iframeRef" :srcdoc="htmlContent" sandbox="allow-scripts" class="w-full html-preview-iframe"
-                style="min-height: 300px; border: 0;" />
+                :style="{ height: isFullscreen ? '100vh' : iframeHeight + 'px', minHeight: isFullscreen ? '100vh' : '300px', border: 0 }" />
             <!-- 全屏按钮 -->
-            <UButton
-                :icon="isFullscreen ? 'i-lucide-minimize' : 'i-lucide-maximize'"
-                variant="ghost" size="2xs"
-                class="absolute top-2 right-2 z-10 opacity-50 hover:opacity-100 transition-opacity bg-white/80 dark:bg-gray-800/80"
-                @click="toggleFullscreen" />
+            <button
+                @click="toggleFullscreen"
+                :class="isFullscreen ? 'opacity-10 hover:opacity-100' : ''"
+                class="absolute top-2 right-2 text-xs px-2.5 py-1 bg-gray-100 text-green-600 rounded hover:bg-green-200 transition-colors cursor-pointer z-10"
+            >
+                {{ $t('common.fullscreen') }}
+            </button>
         </div>
 
         <!-- 正确率实时显示（iframe 通报的最新正确率） -->
@@ -31,6 +33,7 @@ const {
     iframeRef,
     containerRef,
     isFullscreen,
+    iframeHeight,
     htmlContent,
     submitted,
     latestRate,

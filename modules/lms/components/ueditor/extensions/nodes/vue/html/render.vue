@@ -6,6 +6,7 @@
     <!-- 右上角全屏按钮 -->
     <button
       @click="toggleFullscreen"
+      :class="isFullscreen ? 'opacity-10 hover:opacity-100' : ''"
       class="absolute top-2 right-2 text-xs px-2.5 py-1 bg-gray-100 text-green-600 rounded hover:bg-green-200 transition-colors cursor-pointer z-10"
     >
       {{ $t('common.fullscreen') }}

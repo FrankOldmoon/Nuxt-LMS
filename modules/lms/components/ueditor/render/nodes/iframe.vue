@@ -2,6 +2,7 @@
   <div class="umo-node-view" :style="nodeStyle" data-node-view-wrapper="">
     <div ref="containerRef" class="umo-node-container umo-select-outline umo-node-iframe" style="width: 100%">
       <iframe
+        ref="iframeRef"
         :src="attrs.src"
         :style="iframeStyle"
       ></iframe>
@@ -40,7 +41,10 @@ const props = defineProps({
 const attrs = computed(() => props.node.attrs || {})
 
 const containerRef = ref(null)
+const iframeRef = ref(null)
 const isFullscreen = ref(false)
+// 内容自适应高度（0 表示未获取到，使用默认/手动高度）
+const autoHeight = ref(0)
 
 const nodeStyle = computed(() => ({
   display: 'flex',
@@ -50,13 +54,57 @@ const nodeStyle = computed(() => ({
 const iframeStyle = computed(() => ({
   display: 'block',
   width: '100%',
-  // 全屏时撑满容器，避免下方留白
-  height: isFullscreen.value ? '100%' : `${attrs.value.height || 200}px`,
+  // 全屏时撑满容器，避免下方留白；否则优先内容自适应高度
+  height: isFullscreen.value ? '100%' : `${autoHeight.value > 0 ? autoHeight.value : (attrs.value.height || 200)}px`,
   border: isFullscreen.value ? 'none' : '1px solid #e5e7eb',
   borderRadius: isFullscreen.value ? '0' : '4px',
   backgroundColor: '#fff',
   pointerEvents: 'auto',
 }))
+
+// 同步 iframe 内容实际高度（同源可读取；跨域抛 SecurityError，保持默认高度）
+function syncHeight() {
+  const iframe = iframeRef.value
+  if (!iframe) return
+  try {
+    const doc = iframe.contentDocument
+    if (!doc?.body) return
+    const viewH = iframe.contentWindow?.innerHeight || 0
+    // 视口自适应内容（html/body height:100% 全屏布局）无法测量自然高度，当前视口过小时给默认高度
+    const DEFAULT_HEIGHT = 600
+    // body 内容实际高度（不受 iframe 视口高度影响）
+    const bodyH = doc.body.getBoundingClientRect().height
+    const scrollH = Math.max(
+      doc.body.scrollHeight,
+      doc.documentElement?.scrollHeight || 0,
+    )
+    let h = bodyH
+    if (scrollH > viewH) {
+      // 内容溢出视口时 scrollHeight 才是真实所需高度
+      h = Math.max(h, scrollH)
+    } else if (bodyH >= viewH && viewH < DEFAULT_HEIGHT) {
+      // 内容被拉伸填满视口且未溢出 → 视口自适应布局，使用默认高度
+      h = DEFAULT_HEIGHT
+    }
+    if (h > 0) autoHeight.value = h
+  } catch {
+    // 跨域 iframe 无法读取，忽略
+  }
+}
+
+// 同源时监听内容动态变化（子元素增删/尺寸变化）
+let contentObserver = null
+function watchContentHeight() {
+  try {
+    const doc = iframeRef.value?.contentDocument
+    if (!doc?.body) return
+    contentObserver?.disconnect()
+    contentObserver = new MutationObserver(syncHeight)
+    contentObserver.observe(doc.body, { childList: true, subtree: true })
+  } catch {
+    // 跨域无法观察，忽略
+  }
+}
 
 function toggleFullscreen() {
   const el = containerRef.value
@@ -93,10 +141,21 @@ function onFullscreenChange() {
 
 onMounted(() => {
   document.addEventListener('fullscreenchange', onFullscreenChange)
+  const iframe = iframeRef.value
+  if (!iframe) return
+  // SSR/hydration：iframe 可能已在挂载前加载完成（load 不再触发），先主动同步一次
+  syncHeight()
+  watchContentHeight()
+  iframe.addEventListener('load', () => {
+    syncHeight()
+    watchContentHeight()
+  })
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('fullscreenchange', onFullscreenChange)
+  contentObserver?.disconnect()
+  contentObserver = null
 })
 </script>
 

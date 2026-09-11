@@ -1,5 +1,6 @@
 import { ref, computed, inject, watch, onMounted, onBeforeUnmount } from 'vue'
 import { submitQuestion, recordAnswer } from './shared'
+import { buildSrcdocWithHeightReport } from '../../html/buildSrcdoc'
 
 export function useHtml(props: any) {
   const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')
@@ -10,6 +11,8 @@ export function useHtml(props: any) {
   const iframeRef = ref(null)
   const containerRef = ref(null)
   const isFullscreen = ref(false)
+  // 内容自适应高度（默认 300，由 iframe 内部上报实际高度）
+  const iframeHeight = ref(300)
 
   // 全屏切换
   function toggleFullscreen() {
@@ -27,15 +30,17 @@ export function useHtml(props: any) {
     isFullscreen.value = document.fullscreenElement === containerRef.value
   }
 
-  // HTML 内容
+  // HTML 内容：包裹为基础文档 + 高度上报脚本（自动上报实际高度）
   const htmlContent = computed(() => {
     const c = props.question.content
-    if (typeof c === 'string') return c
+    if (typeof c === 'string') return buildSrcdocWithHeightReport(c)
     return ''
   })
 
   // iframe 传来的正确率
   const latestRate = ref(null)
+  // 上一次收到的正确率，用于 detect 0→1 的跳变以自动提交（避免重复触发）
+  let prevRate: number | null = null
 
   // 正确率不为 0 时才有可提交的内容：0 视为未答对，submit 保持不可用
   const hasAnswer = computed(() => latestRate.value !== null && latestRate.value > 0)
@@ -44,6 +49,12 @@ export function useHtml(props: any) {
   function onMessage(event) {
     // 只处理来自当前 iframe 的消息
     if (event.source !== iframeRef.value?.contentWindow) return
+    // 内容高度上报 → 自适应高度
+    if (event.data && typeof event.data === 'object' && event.data.type === 'html-node-height') {
+      const h = Number(event.data.height)
+      if (!isNaN(h) && h > 0) iframeHeight.value = h
+      return
+    }
     if (event.data && typeof event.data === 'object' && event.data.type === 'correct_rate') {
       const rate = Number(event.data.rate)
       if (!isNaN(rate) && rate >= 0 && rate <= 1) {
@@ -56,6 +67,11 @@ export function useHtml(props: any) {
         }
         // 实时记录到 record
         recordAnswer(props.question, [rate])
+        // correct_rate=1 时自动提交（仅从非 1 变为 1 时触发一次）
+        if (rate === 1 && prevRate !== 1) {
+          submit()
+        }
+        prevRate = rate
       }
     }
   }
@@ -102,6 +118,7 @@ export function useHtml(props: any) {
 
   function reset() {
     latestRate.value = null
+    prevRate = null
     props.question.record = []
   }
 
@@ -115,6 +132,7 @@ export function useHtml(props: any) {
     iframeRef,
     containerRef,
     isFullscreen,
+    iframeHeight,
     htmlContent,
     submitted,
     latestRate,

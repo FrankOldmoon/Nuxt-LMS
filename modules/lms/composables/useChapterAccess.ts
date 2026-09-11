@@ -31,12 +31,22 @@ export function useChapterAccess(props: ChapterAccessProps) {
 
   const isOpen = ref(false)
   const savingOpen = ref(false)
-  const selectedClassIds = ref<number[]>([])
+  // 原始已选（含用户不可见班级），用于数据同步与提交
+  const rawSelectedClassIds = ref<number[]>([])
 
-  // 班级选项（来自全局缓存）
+  // 班级选项：仅当前用户可见的班级
   const classOptions = computed(() =>
     classes.value.map(c => ({ label: c.name, value: c.id })),
   )
+
+  // 暴露给 UI 的已选值：过滤掉用户不可见的班级，避免下拉框匹配不到，也不让用户知情不可见班级的开放状态
+  const selectedClassIds = computed<number[]>({
+    get: () => {
+      const visible = new Set(classes.value.map(c => c.id))
+      return rawSelectedClassIds.value.filter(id => visible.has(id))
+    },
+    set: (ids) => { rawSelectedClassIds.value = ids },
+  })
 
   // 从 props.chapterData 同步本地状态
   // 关键修复：
@@ -49,7 +59,7 @@ export function useChapterAccess(props: ChapterAccessProps) {
 
   function syncFromChapterData(data: ChapterAccessProps['chapterData']) {
     isOpen.value = !!data?.isOpen
-    selectedClassIds.value = (data?.classChapters || []).filter(c => c.open).map(c => c.classId)
+    rawSelectedClassIds.value = (data?.classChapters || []).filter(c => c.open).map(c => c.classId)
   }
 
   watch(chapterDataRef, syncFromChapterData, { immediate: true, deep: true })
@@ -77,6 +87,7 @@ export function useChapterAccess(props: ChapterAccessProps) {
   // 更新班级开放状态
   async function updateClassOpen(ids: number[]) {
     try {
+      // 仅提交用户可见的班级；不可见班级未在列表中，后端 upsert 不会改动其开放状态
       const classList = classes.value.map(c => ({
         classId: c.id,
         open: ids.includes(c.id),
