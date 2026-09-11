@@ -47,11 +47,22 @@ export default eventHandler(async (event) => {
   if (!isAdmin && !isTeacher && !chapter.isOpen) {
     let classAccessible = false
     if (user) {
-      const userClassRows = await db
-        .select({ classId: schema.userClasses.classId })
-        .from(schema.userClasses)
-        .where(eq(schema.userClasses.userId, user.id))
-      const userClassIds = userClassRows.map(r => r.classId)
+      // 合并 user_classes 关联 + users.class_id 主班级，与 computeChapterAccessibility 一致：
+      // 仅把学生设了主班级（users.classId）、未进 user_classes 关联表的场景也能访问
+      const [userClassRows, userRow] = await Promise.all([
+        db
+          .select({ classId: schema.userClasses.classId })
+          .from(schema.userClasses)
+          .where(eq(schema.userClasses.userId, user.id)),
+        db
+          .select({ classId: schema.users.classId })
+          .from(schema.users)
+          .where(eq(schema.users.id, user.id)),
+      ])
+      const userClassIds = [...new Set([
+        ...userClassRows.map(r => r.classId),
+        ...(userRow[0]?.classId ? [userRow[0].classId] : []),
+      ])]
 
       if (userClassIds.length > 0) {
         const classChapters = await db

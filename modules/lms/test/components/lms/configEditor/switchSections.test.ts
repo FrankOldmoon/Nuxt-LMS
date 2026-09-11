@@ -87,7 +87,7 @@ describe('lms/configEditor/switchSections.vue', () => {
     const { default: SwitchSections } = await import('../../../../components/lms/configEditor/switchSections.vue')
     const wrapper = mount(SwitchSections, { global: _globalConfig })
     const switches = wrapper.findAll('.uswitch')
-    // course(5) + chapterBtns(8) + courseBtns(6) + home(4) + chapterPage(4) = 27
-    expect(switches.length).toBe(27)
+    // course(5) + chapterBtns(8) + courseBtns(7) + home(4) + chapterPage(4) = 28
+    expect(switches.length).toBe(28)
   })
 })

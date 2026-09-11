@@ -6,10 +6,12 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
-import { resetAllStubs, setMockI18n } from '../../../../../../test/setup/nuxt-stubs'
+import { resetAllStubs, setMockI18n, setMockLayoutState } from '../../../../../../test/setup/nuxt-stubs'
 
 beforeEach(() => {
   resetAllStubs()
+  // header.vue 通过 useLayoutState 读取 courseBtnsConfig.showShop 控制商店按钮显隐
+  setMockLayoutState({ courseBtnsConfig: { showShop: true } })
   setMockI18n({ locale: { value: 'en' }, t: (k: string, params?: any) => {
     if (params) {
       let s = k

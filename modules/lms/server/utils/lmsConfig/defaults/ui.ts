@@ -28,6 +28,7 @@ export const uiDefaults = {
     showGrades: true,
     showAnnouncements: true,
     showWrongBook: true,
+    showShop: true,
   },
   chapterBtns: {
     showPlay: true,

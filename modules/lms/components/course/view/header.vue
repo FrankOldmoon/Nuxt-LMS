@@ -55,7 +55,7 @@
       <div v-if="firstChapterUrl || canEdit" class="flex items-center gap-2 mt-2">
         <UButton :label="$t('course.startLearning')" icon="i-lucide-play" color="primary" size="lg"
           :loading="creatingChapter" @click="startLearning" />
-        <UButton :label="$t('shop.title')" icon="i-lucide-shopping-bag" color="neutral" variant="outline" size="lg"
+        <UButton :label="$t('shop.title')" v-if="courseBtnsConfig.showShop" icon="i-lucide-shopping-bag" color="neutral" variant="outline" size="lg"
           @click="openShop" />
       </div>
     </div>
@@ -79,6 +79,7 @@ const emit = defineEmits<{ saved: [], export: [] }>()
 
 const { t } = useI18n()
 const toast = useToast()
+const { courseBtnsConfig } = useLayoutState()
 const creatingChapter = ref(false)
 const shopOpen = ref(false)
 

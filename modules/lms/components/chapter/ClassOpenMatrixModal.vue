@@ -111,7 +111,7 @@ const columns = computed<TableColumn<MatrixRow>[]>(() => [
     // 每个开放班级一列，单元格显示该章对该班的开放状态
     ...classes.value.map((c) => ({
         id: `open-${c.id}`,
-        header: () => c.name,
+        header: () => h('div', { class: 'text-center' }, c.name),
         cell: ({ row }) => {
             const orig = row.original as MatrixRow
             // 父分组无章节 id，单元格留空

@@ -531,7 +531,8 @@
     "emptyBag": "背包为空",
     "emptyShop": "暂无商品",
     "quantity": "x{count}",
-    "owned": "已拥有"
+    "owned": "已拥有",
+    "showShop": "显示商店"
   },
   "goods": {
     "editorTitle": "商品管理",

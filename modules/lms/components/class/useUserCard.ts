@@ -20,6 +20,7 @@ type MyStats = {
  */
 export function useUserCardSetup() {
     const { user } = useAuth()
+    const { authData } = useAuth()
     const route = useRoute()
     const { myMedals, checkMedals } = useMedals()
 
@@ -140,6 +141,17 @@ export function useUserCardSetup() {
     const number = computed(() => stats.value.number)
     const chapterScore = computed(() => stats.value.chapterScore)
 
+    // 学生班级文本：优先当前班级 defaultClass.name，缺失时按主班级 classId 在 me-enrich 注入的
+    // classes（userClasses ∪ users.classId 主班级）里查班级名。数据已随 /api/auth/me 下发，
+    // 无需再单独请求 /api/classes/mine。
+    const userClass = computed(() => {
+        const dc = user.value?.defaultClass
+        if (dc?.name) return dc.name
+        const cid = user.value?.classId
+        if (!cid) return ''
+        return authData.value?.classes?.find((c: { id: number }) => c.id === cid)?.name || ''
+    })
+
     // 经验 → 等级换算（不存库，按 exp 动态计算）
     // 曲线系数 base = levelStep / 2：等级 n 的累计经验阈值 = base * (n-1) * n
     // Lv.1: 0   Lv.2: 100   Lv.3: 300   Lv.4: 600   Lv.5: 1000 ...（levelStep 默认 100）
@@ -176,6 +188,6 @@ export function useUserCardSetup() {
 
     return {
         user, myMedals, medalIconColor, hasCourse, levelInfo, hasChapter,
-        courseScoreDisplay, coinDisplay, chapterScoreDisplay, number, refresh,
+        courseScoreDisplay, coinDisplay, chapterScoreDisplay, number, userClass, refresh,
     }
 }

@@ -531,7 +531,8 @@
     "emptyBag": "Your bag is empty",
     "emptyShop": "No goods available",
     "quantity": "x{count}",
-    "owned": "Owned"
+    "owned": "Owned",
+    "showShop": "Show Shop"
   },
   "goods": {
     "editorTitle": "Goods Management",

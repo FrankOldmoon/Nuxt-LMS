@@ -47,6 +47,27 @@ export default defineNitroPlugin(() => {
 
     const classIds = classRows.map((r) => r.classId)
 
-    return { teacherCourseIds, editorCourseIds, classIds }
+    // 班级名单（含名称）：userClasses 关联班级 ∪ users.classId 主班级，去重、排除已删除。
+    // 前端 usercard 等直接读取，无需再单独请求 /api/classes/mine。
+    const associated = await db
+      .select({ id: schema.classes.id, name: schema.classes.name })
+      .from(schema.userClasses)
+      .innerJoin(schema.classes, eq(schema.userClasses.classId, schema.classes.id))
+      .where(and(
+        eq(schema.userClasses.userId, userId),
+        isNull(schema.classes.deletedAt),
+      ))
+    let classes: { id: number; name: string }[] = associated
+    const primaryClassId = user.classId
+    if (primaryClassId && !associated.some((c) => c.id === primaryClassId)) {
+      const primary = await db
+        .select({ id: schema.classes.id, name: schema.classes.name })
+        .from(schema.classes)
+        .where(and(eq(schema.classes.id, primaryClassId), isNull(schema.classes.deletedAt)))
+        .limit(1)
+      if (primary[0]) classes = [primary[0], ...classes]
+    }
+
+    return { teacherCourseIds, editorCourseIds, classIds, classes }
   })
 })

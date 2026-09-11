@@ -30,7 +30,7 @@ export function useLmsBtnsConfig(
 
   const DEFAULT_COURSE_BTNS: Record<string, boolean> = {
     showProgress: true, showLeaderboard: true, showGroups: true,
-    showGrades: true, showAnnouncements: true, showWrongBook: true,
+    showGrades: true, showAnnouncements: true, showWrongBook: true, showShop: true,
   }
   const DEFAULT_CHAPTER_BTNS: Record<string, boolean> = {
     showPlay: true, showScore: true, showSelect: true, showTimer: true,

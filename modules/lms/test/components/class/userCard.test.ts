@@ -31,6 +31,11 @@ beforeEach(() => {
     refreshTrigger: ref(0),
     statsOnlyTrigger: ref(0),
   })
+  // stub useClasses（班级列表，userClass 兜底查询用）
+  ;(globalThis as any).useClasses = () => ({
+    classes: ref([]),
+    loadClasses: vi.fn(),
+  })
   // stub useLmsPublicConfig（等级换算读取 levelStep，默认 100）
   ;(globalThis as any).useLmsPublicConfig = () => ({
     levelStep: ref(100),
