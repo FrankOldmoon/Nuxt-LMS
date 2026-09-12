@@ -37,6 +37,7 @@ export async function searchUsers(keyword: string, limit = 100) {
       username: schema.users.username,
       name: schema.users.name,
       avatarImg: schema.users.avatarImg,
+      avatarFrame: schema.users.avatarFrame,
     })
     .from(schema.users)
     .where(

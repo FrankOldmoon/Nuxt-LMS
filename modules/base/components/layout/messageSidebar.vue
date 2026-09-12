@@ -11,7 +11,7 @@
         <button v-for="u in searchResults" :key="u.id"
           class="flex items-center gap-2 w-full px-2 py-1 rounded hover:bg-muted text-left"
           @click="startConversation(u)">
-          <UAvatar :src="u.avatarImg || undefined" :alt="u.name" size="2xs" :text="u.name?.charAt(0)" />
+          <AvatarWithFrame :src="u.avatarImg || undefined" :alt="u.name" size="2xs" :text="u.name?.charAt(0)" :frame="u.avatarFrame || null" :userId="u.id" />
           <span class="text-xs truncate">{{ u.name }}</span>
         </button>
       </div>
@@ -23,7 +23,7 @@
         :class="selectedUserId === conv.userId ? 'bg-primary/10' : ''"
         @click="selectConversation(conv.userId)">
         <div class="relative shrink-0">
-          <UAvatar :src="conv.avatarImg || undefined" :alt="conv.name" size="xs" :text="conv.name?.charAt(0)" />
+          <AvatarWithFrame :src="conv.avatarImg || undefined" :alt="conv.name" size="xs" :text="conv.name?.charAt(0)" :frame="conv.avatarFrame || null" :userId="conv.userId" />
           <span v-if="conv.unreadCount > 0"
             class="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center font-bold">
             {{ conv.unreadCount > 9 ? '9+' : conv.unreadCount }}

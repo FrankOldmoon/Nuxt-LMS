@@ -33,6 +33,7 @@ export default eventHandler(async (event) => {
           username: schema.users.username,
           name: schema.users.name,
           avatarImg: schema.users.avatarImg,
+          avatarFrame: schema.users.avatarFrame,
         })
         .from(schema.userCourses)
         .innerJoin(schema.users, eq(schema.userCourses.userId, schema.users.id))
@@ -53,6 +54,7 @@ export default eventHandler(async (event) => {
       username: m.username,
       name: m.name,
       avatarImg: m.avatarImg,
+      avatarFrame: m.avatarFrame,
       isTeacher: !!m.isTeacher,
       isEditor: !!m.isEditor,
     })

@@ -68,6 +68,7 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
                 rollNumber: s.rollNumber,
                 username: s.username,
                 avatarImg: s.avatarImg,
+                avatarFrame: s.avatarFrame,
                 record,
             }
         })

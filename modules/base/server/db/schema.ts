@@ -105,6 +105,8 @@ export const users = pgTable(
     name: varchar('name', { length: 255 }).notNull(),
     preferName: varchar('prefer_name', { length: 255 }),
     avatarImg: varchar('avatar_img', { length: 500 }),
+    // 佩戴的头像框（'bronze' | 'silver' | 'gold'，null=未佩戴）
+    avatarFrame: varchar('avatar_frame', { length: 50 }),
     englishName: varchar('english_name', { length: 255 }),
     gender: varchar('gender', { length: 50 }),
     rollNumber: varchar('roll_number', { length: 255 }),

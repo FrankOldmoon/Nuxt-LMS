@@ -62,13 +62,18 @@
         <!-- 教师信息 -->
         <div v-if="course.teachers?.length" class="flex items-center gap-2 mb-4">
           <div class="flex -space-x-2">
-            <img
+            <div
               v-for="teacher in course.teachers.slice(0, 4)"
               :key="teacher.userId"
-              :src="teacher.avatarImg || ''"
-              :alt="teacher.name"
-              class="size-7 rounded-full border-2 border-default object-cover bg-elevated"
-            />
+              class="relative size-7 shrink-0"
+            >
+              <img
+                :src="teacher.avatarImg || ''"
+                :alt="teacher.name"
+                class="size-7 rounded-full border-2 border-default object-cover bg-elevated"
+              />
+              <AvatarFrame :frame="teacher.avatarFrame" class="absolute inset-0 h-full w-full" />
+            </div>
             <div
               v-if="course.teachers.length > 4"
               class="size-7 rounded-full border-2 border-default bg-elevated flex items-center justify-center text-xs text-muted"

@@ -26,7 +26,13 @@
             <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div v-for="good in goods" :key="good.id"
                 class="flex items-center gap-3 p-3 rounded-lg border border-default bg-elevated/30">
-                <div class="size-10 rounded-lg bg-elevated flex items-center justify-center shrink-0">
+                <!-- 头像框商品用 SVG 框预览，其余用图标 -->
+                <div v-if="good.type === 'avatar_frame'"
+                  class="size-12 rounded-full bg-elevated flex items-center justify-center shrink-0 relative overflow-hidden">
+                  <UAvatar :src="userAvatarSrc" :alt="good.name" size="md" />
+                  <AvatarFrame :frame="good.content?.frame" class="absolute inset-0 h-full w-full" />
+                </div>
+                <div v-else class="size-10 rounded-lg bg-elevated flex items-center justify-center shrink-0">
                   <UIcon :name="fullIconName(good.content.icon)" :class="iconColorClass(good.content.color)" class="size-5" />
                 </div>
                 <div class="flex-1 min-w-0">
@@ -69,20 +75,40 @@
             <div v-else class="space-y-2">
               <div v-for="item in bags" :key="`${item.goodId}-${item.courseId}`"
                 class="flex items-center gap-3 p-3 rounded-lg border border-default bg-elevated/30">
-                <div class="size-10 rounded-lg bg-elevated flex items-center justify-center shrink-0">
+                <div v-if="item.type === 'avatar_frame'"
+                  class="size-12 rounded-full bg-elevated flex items-center justify-center shrink-0 relative overflow-hidden">
+                  <UAvatar :src="userAvatarSrc" :alt="item.name" size="md" />
+                  <AvatarFrame :frame="item.content?.frame" class="absolute inset-0 h-full w-full" />
+                </div>
+                <div v-else class="size-10 rounded-lg bg-elevated flex items-center justify-center shrink-0">
                   <UIcon :name="fullIconName(item.content.icon)" :class="iconColorClass(item.content.color)" class="size-5" />
                 </div>
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2">
                     <p class="text-sm font-medium truncate">{{ item.name }}</p>
                     <UBadge :label="$t('shop.quantity', { count: item.quantity })" size="xs" color="primary" variant="subtle" />
+                    <UBadge v-if="item.type === 'avatar_frame' && myFrame === item.content?.frame"
+                      :label="$t('shop.inUse')" size="xs" color="success" variant="subtle" />
                   </div>
                   <p v-if="item.content.description" class="text-xs text-muted truncate">{{ item.content.description }}</p>
                   <span class="flex items-center gap-0.5 text-xs font-mono text-success mt-1">
                     <UIcon name="i-lucide-coins" class="size-3" />{{ item.sellPrice }}
                   </span>
                 </div>
+                <!-- 头像框：佩戴 / 取消佩戴 -->
                 <UButton
+                  v-if="item.type === 'avatar_frame'"
+                  :icon="myFrame === item.content?.frame ? 'i-lucide-minus-circle' : 'i-lucide-circle-check'"
+                  :color="myFrame === item.content?.frame ? 'neutral' : 'success'"
+                  size="xs"
+                  variant="soft"
+                  :loading="equipping"
+                  @click="toggleFrame(item.content?.frame)"
+                >
+                  {{ myFrame === item.content?.frame ? $t('shop.unequip') : $t('shop.equip') }}
+                </UButton>
+                <UButton
+                  v-else
                   icon="i-lucide-rotate-ccw"
                   color="neutral"
                   size="xs"
@@ -119,9 +145,26 @@ const {
   fetchAll, buy, sell, getOwnedQuantity,
 } = useShop(courseIdRef)
 
+// 头像框佩戴
+const { user } = useAuth()
+const { frame: myFrame, equip } = useAvatarFrame()
+const equipping = ref(false)
+const userAvatarSrc = computed(() => user.value?.avatarImg || undefined)
+
+async function toggleFrame(frame?: string) {
+  if (!frame) return
+  equipping.value = true
+  try {
+    await equip(myFrame.value === frame ? null : frame)
+    await fetchAll()
+  } finally {
+    equipping.value = false
+  }
+}
+
 const activeTab = ref<'shop' | 'bag'>('shop')
-// 临时禁用购买（商店暂不可购买，后续恢复时改为 false 即可）
-const purchaseDisabled = true
+// 购买按钮（头像框等商品可正常购买）
+const purchaseDisabled = false
 const tabItems = computed(() => [
   { label: t('shop.tabShop'), value: 'shop', icon: 'i-lucide-store' },
   { label: t('shop.tabBag'), value: 'bag', icon: 'i-lucide-backpack' },

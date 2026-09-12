@@ -97,6 +97,7 @@ export default eventHandler(async (event) => {
       ...c,
       userName: u?.name || '',
       avatarImg: u?.avatarImg || null,
+      avatarFrame: u?.avatarFrame || null,
       liked: likedMap.get(c.cid) === true,
       likeCount: likeCountMap.get(c.cid) || 0,
     }

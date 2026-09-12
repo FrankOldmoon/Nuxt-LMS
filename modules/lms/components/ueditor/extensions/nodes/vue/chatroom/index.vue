@@ -25,8 +25,8 @@
                 {{ $t('chatroom.empty') }}
             </div>
             <div v-for="(msg, idx) in messages" :key="idx" class="chatroom-msg" :class="{ 'is-self': msg.userId === userId }">
-                <UAvatar :src="msg.avatarImg || undefined" :alt="msg.from" size="sm"
-                    :text="msg.from?.charAt(0)" class="shrink-0" />
+                <AvatarWithFrame :src="msg.avatarImg || undefined" :alt="msg.from" size="sm"
+                    :text="msg.from?.charAt(0)" class="shrink-0" :frame="msg.avatarFrame || null" :userId="msg.userId" />
                 <div class="chatroom-msg-body">
                     <div class="chatroom-msg-meta">
                         <span class="chatroom-msg-name">{{ msg.from }}</span>

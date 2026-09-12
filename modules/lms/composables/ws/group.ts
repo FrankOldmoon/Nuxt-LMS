@@ -19,8 +19,8 @@ export function useWsGroup() {
     send({ type: 'leaveGroup', groupId })
   }
 
-  function sendGroupChat(groupId: string, userId: number, from: string, avatarImg: string | null, text: string) {
-    send({ type: 'groupChat', groupId, userId, from, avatarImg, text })
+  function sendGroupChat(groupId: string, userId: number, from: string, avatarImg: string | null, text: string, avatarFrame?: string | null) {
+    send({ type: 'groupChat', groupId, userId, from, avatarImg, avatarFrame, text })
   }
 
   function onGroupChat(callback: (data: any) => void) {

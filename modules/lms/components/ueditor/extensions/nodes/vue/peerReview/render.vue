@@ -38,7 +38,7 @@
                     :class="isTeacher ? '' : (s.userId === (selectedTarget?.userId || 0) ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-800')"
                     @click="isTeacher ? null : openRating(s)"
                 >
-                    <UAvatar :src="s.avatarImg" :alt="s.name" size="sm" />
+                    <AvatarWithFrame :src="s.avatarImg" :alt="s.name" size="sm" :frame="s.avatarFrame || null" :userId="s.userId" />
                     <span class="flex-1 min-w-0 text-sm truncate">{{ s.name }}</span>
                     <!-- 教师：显示均分 -->
                     <span v-if="isTeacher" class="text-xs text-gray-500">
@@ -91,7 +91,7 @@
                         <div class="space-y-2 max-h-[50vh] overflow-auto pr-1">
                             <div v-for="s in resultData.students" :key="s.userId"
                                 class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                                <UAvatar :src="s.avatarImg" :alt="s.name" size="sm" />
+                                <AvatarWithFrame :src="s.avatarImg" :alt="s.name" size="sm" :frame="s.avatarFrame || null" :userId="s.userId" />
                                 <span class="flex-1 min-w-0 text-sm truncate">{{ s.name }}</span>
                                 <span class="text-xs text-gray-500">{{ t('peerReview.received', { n: s.receivedCount }) }}</span>
                                 <span class="text-sm font-semibold tabular-nums">{{ s.peerScore }}</span>

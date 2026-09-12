@@ -85,8 +85,8 @@ export function useWsClass() {
   }
 
   // ====================== 班级聊天室 ======================
-  function sendChatroom(classId: number, userId: number, from: string, avatarImg: string | null, text: string) {
-    send({ type: 'chatroom', classId, userId, from, avatarImg, text })
+  function sendChatroom(classId: number, userId: number, from: string, avatarImg: string | null, text: string, avatarFrame?: string | null) {
+    send({ type: 'chatroom', classId, userId, from, avatarImg, avatarFrame, text })
   }
   function onChatroom(callback: (data: any) => void) {
     return registerWsHandler('chatroom', callback)

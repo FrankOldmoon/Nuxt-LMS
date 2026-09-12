@@ -22,6 +22,7 @@ export async function getCourseStudents(courseId: number) {
       username: schema.users.username,
       name: schema.users.name,
       avatarImg: schema.users.avatarImg,
+      avatarFrame: schema.users.avatarFrame,
     })
     .from(schema.userCourses)
     .innerJoin(schema.users, eq(schema.userCourses.userId, schema.users.id))

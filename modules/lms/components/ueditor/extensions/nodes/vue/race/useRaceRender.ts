@@ -238,6 +238,8 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         questionTop3.value = (data.scores || data.leaderboard || []).slice(0, 3).map((s: any) => ({
             userId: s.userId,
             from: s.from,
+            avatarImg: s.avatarImg || null,
+            avatarFrame: s.avatarFrame || null,
             display: `${Number(s.score) || 0}${t('question.points')}`,
         }))
         showPodium.value = true
@@ -339,7 +341,8 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
 
         sendRaceAnswer(
             pin.value, raceId.value, currentQuestionCid.value,
-            record, rate, correct, user.value?.name || 'anonymous', user.value?.id || 0
+            record, rate, correct, user.value?.name || 'anonymous', user.value?.id || 0,
+            user.value?.avatarImg || null, user.value?.avatarFrame || null
         )
         // 显示结果 UI（传入服务端判定的 rate）
         comp.showResult?.(rate)

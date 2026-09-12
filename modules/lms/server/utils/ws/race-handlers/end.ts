@@ -21,7 +21,7 @@ export function handleRaceQuestionEnd(_peer: any, data: any) {
   if (qAnswers) {
     for (const [uid, info] of qAnswers) {
       const timeUsed = Math.round((info.submittedAt - race.questionStartedAt) / 100) / 10
-      results.push({ userId: uid, from: info.from, correct: info.correct, rate: info.rate, timeUsed })
+      results.push({ userId: uid, from: info.from, avatarImg: info.avatarImg || null, avatarFrame: info.avatarFrame || null, correct: info.correct, rate: info.rate, timeUsed })
     }
   }
   results.sort((a, b) => a.correct !== b.correct ? (a.correct ? -1 : 1) : a.timeUsed - b.timeUsed)

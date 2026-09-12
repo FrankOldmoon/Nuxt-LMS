@@ -1,6 +1,6 @@
 <template>
     <div class="flex gap-3 p-3 rounded-lg border border-default bg-white dark:bg-gray-900">
-        <UAvatar :src="comment.avatarImg || undefined" :alt="comment.userName || '?'" :text="(comment.userName || '?').charAt(0)" size="sm" />
+        <AvatarWithFrame :src="comment.avatarImg || undefined" :alt="comment.userName || '?'" :text="(comment.userName || '?').charAt(0)" size="sm" :frame="comment.avatarFrame || null" :userId="comment.userId" />
         <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 mb-1">
                 <span class="text-sm font-medium">{{ comment.userName || '…' }}</span>

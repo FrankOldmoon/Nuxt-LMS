@@ -28,7 +28,7 @@ export function handleGroupMessage(peer: any, data: any): boolean {
       broadcastToGroup(groupId, JSON.stringify({
         type: 'groupChat', groupId,
         userId: Number(data.userId), from: String(data.from || 'anonymous'),
-        avatarImg: data.avatarImg || null, text, ts: Date.now(),
+        avatarImg: data.avatarImg || null, avatarFrame: data.avatarFrame || null, text, ts: Date.now(),
       }))
       return true
     }

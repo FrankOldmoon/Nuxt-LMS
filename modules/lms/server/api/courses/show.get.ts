@@ -35,6 +35,7 @@ export default eventHandler(async (event) => {
     username: t.username,
     name: t.name,
     avatarImg: t.avatarImg,
+    avatarFrame: t.avatarFrame,
     isTeacher: !!t.isTeacher,
     isEditor: !!t.isEditor,
   }))

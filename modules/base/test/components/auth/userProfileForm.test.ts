@@ -23,6 +23,10 @@ beforeEach(() => {
 
 const _stubs = {
   ..._globalStubs,
+  AvatarWithFrame: {
+    template: '<div class="avatar-with-frame"><UAvatar :src="src" :alt="alt" :text="text" :size="size" /></div>',
+    props: ['src', 'alt', 'text', 'size', 'frame'],
+  },
   FormImageCropperModal: {
     template: '<div class="stub-cropper" />',
     props: ['title', 'aspectRatio', 'stencilType'],

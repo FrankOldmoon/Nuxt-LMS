@@ -46,7 +46,7 @@
       <UDropdownMenu v-else :items="userMenuItems">
         <UButton color="neutral" variant="ghost" :label="user?.name" class="font-medium">
           <template #leading>
-            <UAvatar :src="user?.avatarImg ?? undefined" :alt="user?.name" size="2xs" :text="user?.name?.charAt(0)" />
+            <AvatarWithFrame :src="user?.avatarImg ?? undefined" :alt="user?.name" size="2xs" :text="user?.name?.charAt(0)" />
           </template>
         </UButton>
       </UDropdownMenu>

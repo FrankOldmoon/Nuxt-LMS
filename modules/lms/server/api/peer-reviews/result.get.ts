@@ -38,8 +38,8 @@ export default eventHandler(async (event) => {
       ),
   ])
 
-  const nameMap = new Map<number, { name: string; avatarImg: string | null }>()
-  for (const s of students) nameMap.set(s.userId, { name: s.name, avatarImg: s.avatarImg })
+  const nameMap = new Map<number, { name: string; avatarImg: string | null; avatarFrame: string | null }>()
+  for (const s of students) nameMap.set(s.userId, { name: s.name, avatarImg: s.avatarImg, avatarFrame: s.avatarFrame })
 
   // 每个被评学生收到的记录数
   const receivedCountMap = new Map<number, number>()
@@ -66,6 +66,7 @@ export default eventHandler(async (event) => {
     userId: s.userId,
     name: s.name,
     avatarImg: s.avatarImg,
+    avatarFrame: s.avatarFrame,
     receivedCount: receivedCountMap.get(s.userId) || 0,
     peerScore: peerScores[s.userId] ?? 0,
   }))

@@ -20,7 +20,7 @@
                 </div>
                 <div class="flex items-center justify-between mt-2 text-xs text-muted">
                     <span class="flex items-center gap-1.5 min-w-0">
-                        <UAvatar :src="work.avatarImg || undefined" :alt="work.userName || '?'" :text="(work.userName || '?').charAt(0)" size="xs" />
+                        <AvatarWithFrame :src="work.avatarImg || undefined" :alt="work.userName || '?'" :text="(work.userName || '?').charAt(0)" size="xs" :frame="work.avatarFrame || null" :userId="work.userId" />
                         <span class="truncate">{{ work.userName || '…' }}</span>
                     </span>
                     <span class="flex items-center gap-1 shrink-0">

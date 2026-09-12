@@ -32,6 +32,7 @@ export default defineEventHandler(async (event) => {
       name: schema.users.name,
       email: schema.users.email,
       avatarImg: schema.users.avatarImg,
+      avatarFrame: schema.users.avatarFrame,
       preferName: schema.users.preferName,
       englishName: schema.users.englishName,
       gender: schema.users.gender,
@@ -51,6 +52,19 @@ export default defineEventHandler(async (event) => {
   }
 
   const userId = userRecord.id
+
+  // 查询用户主班级名（普通用户 profile 只读展示用；classes/list 对非教师不可见）
+  let className: string | null = null
+  const classId = userRecord.classId
+  if (classId != null) {
+    const classRows = await db
+      .select({ name: schema.classes.name })
+      .from(schema.classes)
+      .where(eq(schema.classes.id, classId))
+      .limit(1)
+    className = classRows[0]?.name ?? null
+  }
+  ;(userRecord as any).className = className
 
   // 查询用户角色
   const roleRows = await db

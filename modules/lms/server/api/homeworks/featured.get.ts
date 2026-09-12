@@ -44,6 +44,7 @@ export default eventHandler(async (event) => {
           username: true,
           rollNumber: true,
           avatarImg: true,
+          avatarFrame: true,
         },
       })
     : []
@@ -58,6 +59,7 @@ export default eventHandler(async (event) => {
       username: u?.username || null,
       rollNumber: u?.rollNumber || null,
       avatarImg: u?.avatarImg || null,
+      avatarFrame: u?.avatarFrame || null,
     }
   }))
 })

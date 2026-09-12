@@ -37,6 +37,7 @@ export async function handleRaceAnswer(_peer: any, data: any) {
 
   qAnswers.set(userId, {
     answer: data.answer, from: String(data.from || 'anonymous'), userId,
+    avatarImg: data.avatarImg || null, avatarFrame: data.avatarFrame || null,
     rate, correct, submittedAt: Date.now(),
   })
   broadcastToRace(pin, JSON.stringify({ type: 'raceAnswerUpdate',

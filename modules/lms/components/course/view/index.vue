@@ -19,7 +19,7 @@
       <div v-if="course.teachers?.length" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         <div v-for="teacher in course.teachers" :key="teacher.userId"
           class="flex items-center gap-3 p-3 rounded-xl border border-default">
-          <UAvatar :src="teacher.avatarImg || undefined" :alt="teacher.name" size="md" :text="teacher.name?.charAt(0)" />
+          <AvatarWithFrame :src="teacher.avatarImg || undefined" :alt="teacher.name" size="md" :text="teacher.name?.charAt(0)" :frame="teacher.avatarFrame || null" :userId="teacher.userId" />
           <div class="min-w-0">
             <p class="text-sm font-medium truncate">{{ teacher.name }}</p>
             <p class="text-xs text-muted truncate">{{ teacher.username }}</p>

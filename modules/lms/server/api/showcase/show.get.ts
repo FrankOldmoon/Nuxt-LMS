@@ -39,6 +39,7 @@ export default eventHandler(async (event) => {
     ...work,
     userName: author?.name || '',
     avatarImg: author?.avatarImg || null,
+    avatarFrame: author?.avatarFrame || null,
     liked,
   })
 })

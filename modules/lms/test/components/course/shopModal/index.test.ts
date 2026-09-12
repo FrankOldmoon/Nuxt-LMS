@@ -19,6 +19,17 @@ vi.mock('../../../../components/course/shopModal/useShop', () => ({
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
+  // stub useAvatarFrame（自动导入 composable 测试环境需手动注册）
+  ;(globalThis as any).useAvatarFrame = () => ({
+    frame: ref(null),
+    equip: vi.fn(),
+  })
+  // stub useAuth
+  ;(globalThis as any).useAuth = () => ({
+    user: ref(null),
+    roles: ref([]),
+    permissions: ref([]),
+  })
   _shopMock.current = {
     coin: ref(100),
     goods: ref([
@@ -60,6 +71,8 @@ const _globalStubs = {
     template: '<span class="ubadge">{{ label }}</span>',
     props: ['label', 'size', 'color', 'variant'],
   },
+  AvatarFrame: { template: '<span class="avatar-frame" />', props: ['frame'] },
+  UAvatar: { template: '<span class="uavatar" />', props: ['src', 'alt', 'text', 'size'] },
 }
 
 const _globalConfig = {
@@ -137,7 +150,7 @@ describe('course/shopModal/index.vue', () => {
     expect(globalBadge).toBeTruthy()
   })
 
-  it('购买暂时禁用：买入按钮始终 disabled，点击不调用 buy', async () => {
+  it('购买可用：金币充足时买入按钮可点击并调用 buy', async () => {
     const { default: ShopModal } = await import('../../../../components/course/shopModal/index.vue')
     const wrapper = mount(ShopModal, {
       props: { open: true, courseId: 1 },
@@ -147,10 +160,10 @@ describe('course/shopModal/index.vue', () => {
     const buttons = wrapper.findAll('.ubutton')
     const buyBtn = buttons.find((b) => b.text().includes('shop.buy'))
     expect(buyBtn).toBeTruthy()
-    // 购买功能暂禁用 → 买入按钮必须为禁用状态
-    expect(buyBtn!.attributes('disabled')).toBeDefined()
+    // 金币充足（100 >= 50）→ 买入按钮可点击
+    expect(buyBtn!.attributes('disabled')).toBeUndefined()
     await buyBtn!.trigger('click')
-    expect(_shopMock.current.buy).not.toHaveBeenCalled()
+    expect(_shopMock.current.buy).toHaveBeenCalledWith(1)
   })
 
   it('coin < price 时买入按钮 disabled', async () => {

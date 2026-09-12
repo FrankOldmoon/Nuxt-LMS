@@ -1,7 +1,8 @@
 <template>
   <div class="flex items-center justify-between gap-2 p-2 rounded-lg border border-default hover:bg-elevated/50">
     <div class="flex items-center gap-2 min-w-0">
-      <UAvatar :src="user.avatarImg || undefined" :alt="user.name" size="xs" :text="user.name?.charAt(0)" />
+      <AvatarWithFrame :src="user.avatarImg || undefined" :alt="user.name" size="xs" :text="user.name?.charAt(0)"
+        :frame="user.avatarFrame || null" :userId="user.id" />
       <span class="text-sm truncate">{{ user.name }} <span class="text-muted">({{ user.username }})</span></span>
     </div>
     <div class="flex items-center gap-1 shrink-0">

@@ -3,8 +3,8 @@
     <template v-if="selectedUserId">
       <!-- 聊天头部 -->
       <div class="flex items-center gap-2 p-3 border-b border-default">
-        <UAvatar :src="selectedUser?.avatarImg || undefined" :alt="selectedUser?.name" size="xs"
-          :text="selectedUser?.name?.charAt(0)" />
+        <AvatarWithFrame :src="selectedUser?.avatarImg || undefined" :alt="selectedUser?.name" size="xs"
+          :text="selectedUser?.name?.charAt(0)" :frame="selectedUser?.avatarFrame || null" :userId="selectedUserId" />
         <span class="text-sm font-medium">{{ selectedUser?.name }}</span>
       </div>
       <!-- 消息列表 -->

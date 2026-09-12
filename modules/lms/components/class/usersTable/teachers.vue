@@ -7,7 +7,8 @@
         :key="t.id"
         class="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-muted"
       >
-        <UAvatar :src="t.avatarImg || undefined" :alt="t.name" size="2xs" :text="t.name?.charAt(0)" />
+        <AvatarWithFrame :src="t.avatarImg || undefined" :alt="t.name" size="2xs" :text="t.name?.charAt(0)"
+          :frame="t.avatarFrame || null" :userId="t.id" />
         <span class="text-sm flex-1">{{ t.name }}</span>
         <UButton
           icon="i-lucide-trash-2"

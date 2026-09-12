@@ -5,7 +5,7 @@
       <div class="relative cursor-pointer group" :class="{ 'pointer-events-none opacity-60': !canEditAvatar }"
         @click="triggerFileInput" role="button" tabindex="0" @keydown.enter.prevent="triggerFileInput"
         @keydown.space.prevent="triggerFileInput">
-        <UAvatar :src="form.avatarImg" :alt="form.name" size="2xl" :text="form.name?.charAt(0)"
+        <AvatarWithFrame :src="form.avatarImg" :alt="form.name" size="2xl" :text="form.name?.charAt(0)"
           class="transition-opacity group-hover:opacity-70" />
         <div v-if="canEditAvatar"
           class="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -23,6 +23,14 @@
     <FormImageCropperModal ref="cropperRef" :title="$t('profile.cropAvatar')" :aspect-ratio="1"
       stencil-type="circle" :output-size="{ width: 128, height: 128 }" @uploaded="onCropped" />
 
+    <UFormField :label="$t('profile.class')" class="w-full">
+      <!-- 普通用户仅展示班级名，不显示下拉框；admin 可编辑班级 -->
+      <USelect v-if="canEditClass" v-model="form.classId" :items="classOptions" :placeholder="$t('profile.classPlaceholder')"
+        class="w-full" />
+      <div v-else class="w-full px-3 py-2 rounded-md bg-muted/40 text-sm text-highlighted">
+        {{ currentClassName }}
+      </div>
+    </UFormField>
     <UFormField :label="$t('profile.name')" class="w-full">
       <UInput v-model="form.name" :placeholder="$t('profile.namePlaceholder')" class="w-full"
         :disabled="!canEditGeneral" />
@@ -45,10 +53,6 @@
     </UFormField>
     <UFormField :label="$t('profile.language')" class="w-full">
       <USelect v-model="form.defaultLocale" :items="localeOptions" class="w-full" />
-    </UFormField>
-    <UFormField :label="$t('profile.class')" class="w-full">
-      <USelect v-model="form.classId" :items="classOptions" :placeholder="$t('profile.classPlaceholder')"
-        class="w-full" :disabled="!canEditClass" />
     </UFormField>
     <UFormField :label="$t('profile.telephone')" class="w-full">
       <UInput v-model="form.telephone" :placeholder="$t('profile.telephonePlaceholder')" class="w-full" />
@@ -83,7 +87,7 @@ const form = defineModel<UserProfileForm>({ required: true })
 
 const {
   canEditGeneral, canEditAvatar, canEditClass, canEditEmail, canEditPassword,
-  genderOptions, localeOptions, classOptions,
+  genderOptions, localeOptions, classOptions, currentClassName,
   fileInputRef, uploading, cropperRef, showPwdModal,
   triggerFileInput, onFileSelect, onCropped,
 } = useUserProfileForm(form)

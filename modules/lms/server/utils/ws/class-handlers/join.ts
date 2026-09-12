@@ -80,6 +80,6 @@ export function handleClassChatroom(_peer: any, data: any) {
   broadcastToClass(cid, JSON.stringify({
     type: 'chatroom', classId: cid,
     userId: Number(data.userId), from: String(data.from || 'anonymous'),
-    avatarImg: data.avatarImg || null, text, ts: Date.now(),
+    avatarImg: data.avatarImg || null, avatarFrame: data.avatarFrame || null, text, ts: Date.now(),
   }))
 }

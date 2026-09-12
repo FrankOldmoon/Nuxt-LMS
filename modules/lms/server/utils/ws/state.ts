@@ -93,11 +93,11 @@ export function getRaceOnlineUsers(pin: string) {
   return out
 }
 export function computeRaceScores(race: RaceState) {
-  const totals = new Map<number, { userId: number; from: string; score: number }>()
+  const totals = new Map<number, { userId: number; from: string; avatarImg: string | null; avatarFrame: string | null; score: number }>()
   for (const [questionCid, answers] of race.answers) {
     const point = race.questionPoints.get(questionCid) || 1
     for (const [uid, info] of answers) {
-      const cur = totals.get(uid) || { userId: uid, from: info.from, score: 0 }
+      const cur = totals.get(uid) || { userId: uid, from: info.from, avatarImg: info.avatarImg || null, avatarFrame: info.avatarFrame || null, score: 0 }
       cur.score += info.rate * point
       totals.set(uid, cur)
     }

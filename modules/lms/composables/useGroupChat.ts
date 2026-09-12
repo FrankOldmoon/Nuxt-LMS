@@ -9,6 +9,7 @@ export function useGroupChat(props: { groupId: string }) {
   const userId = computed(() => user.value?.id || 0)
   const userName = computed(() => user.value?.name || 'anonymous')
   const avatarImg = computed(() => user.value?.avatarImg || null)
+  const avatarFrame = computed(() => user.value?.avatarFrame || null)
 
   const canChat = computed(() => !!userId.value && !!props.groupId && wsConnected.value)
   const cannotChatReason = computed(() => {
@@ -18,7 +19,7 @@ export function useGroupChat(props: { groupId: string }) {
     return ''
   })
 
-  const messages = ref<Array<{ userId: number; from: string; avatarImg: string | null; text: string; ts: number }>>([])
+  const messages = ref<Array<{ userId: number; from: string; avatarImg: string | null; avatarFrame: string | null; text: string; ts: number }>>([])
   const inputText = ref('')
   const msgListRef = ref<HTMLElement | null>(null)
 
@@ -28,6 +29,7 @@ export function useGroupChat(props: { groupId: string }) {
       userId: data.userId,
       from: data.from,
       avatarImg: data.avatarImg,
+      avatarFrame: data.avatarFrame || null,
       text: data.text,
       ts: data.ts,
     })
@@ -40,7 +42,7 @@ export function useGroupChat(props: { groupId: string }) {
   function sendMessage() {
     const text = inputText.value.trim()
     if (!text || !canChat.value) return
-    sendGroupChat(props.groupId, userId.value, userName.value, avatarImg.value, text)
+    sendGroupChat(props.groupId, userId.value, userName.value, avatarImg.value, text, avatarFrame.value)
     inputText.value = ''
   }
 

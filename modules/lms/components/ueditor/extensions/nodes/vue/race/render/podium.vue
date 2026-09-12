@@ -5,7 +5,7 @@
         <div class="flex items-end justify-center gap-4">
             <!-- 第2名 -->
             <div v-if="questionTop3[1]" class="flex flex-col items-center" style="margin-bottom: 20px;">
-                <UAvatar :src="questionTop3[1].avatarImg" :alt="questionTop3[1].from" size="lg" :text="questionTop3[1].from?.charAt(0)" class="mb-2" />
+                <AvatarWithFrame :src="questionTop3[1].avatarImg" :alt="questionTop3[1].from" size="lg" :text="questionTop3[1].from?.charAt(0)" class="mb-2" :frame="questionTop3[1].avatarFrame || null" :userId="questionTop3[1].userId" />
                 <span class="text-sm font-medium mb-1">{{ questionTop3[1].from }}</span>
                 <span class="text-xs text-gray-400 mb-2">{{ questionTop3[1].display }}</span>
                 <div class="w-20 rounded-t-lg flex items-center justify-center text-white font-bold text-2xl"
@@ -16,7 +16,9 @@
             <!-- 第1名 -->
             <div v-if="questionTop3[0]" class="flex flex-col items-center">
                 <UIcon name="i-lucide-crown" class="size-6 text-yellow-400 mb-1" />
-                <UAvatar :src="questionTop3[0].avatarImg" :alt="questionTop3[0].from" size="xl" :text="questionTop3[0].from?.charAt(0)" class="mb-2 ring-4 ring-yellow-400" />
+                <div class="mb-2 rounded-full ring-4 ring-yellow-400">
+                    <AvatarWithFrame :src="questionTop3[0].avatarImg" :alt="questionTop3[0].from" size="xl" :text="questionTop3[0].from?.charAt(0)" :frame="questionTop3[0].avatarFrame || null" :userId="questionTop3[0].userId" />
+                </div>
                 <span class="text-sm font-bold mb-1">{{ questionTop3[0].from }}</span>
                 <span class="text-xs text-gray-400 mb-2">{{ questionTop3[0].display }}</span>
                 <div class="w-24 rounded-t-lg flex items-center justify-center text-white font-bold text-3xl"
@@ -26,7 +28,7 @@
             </div>
             <!-- 第3名 -->
             <div v-if="questionTop3[2]" class="flex flex-col items-center" style="margin-bottom: 40px;">
-                <UAvatar :src="questionTop3[2].avatarImg" :alt="questionTop3[2].from" size="md" :text="questionTop3[2].from?.charAt(0)" class="mb-2" />
+                <AvatarWithFrame :src="questionTop3[2].avatarImg" :alt="questionTop3[2].from" size="md" :text="questionTop3[2].from?.charAt(0)" class="mb-2" :frame="questionTop3[2].avatarFrame || null" :userId="questionTop3[2].userId" />
                 <span class="text-sm font-medium mb-1">{{ questionTop3[2].from }}</span>
                 <span class="text-xs text-gray-400 mb-2">{{ questionTop3[2].display }}</span>
                 <div class="w-16 rounded-t-lg flex items-center justify-center text-white font-bold text-xl"

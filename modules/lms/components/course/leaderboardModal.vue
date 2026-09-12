@@ -18,8 +18,8 @@
                     <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">
                         {{ myRank.rank }}
                     </div>
-                    <UAvatar :src="myStudent?.avatarImg" :alt="myStudent?.name" size="xs"
-                        :text="myStudent?.name?.charAt(0)" />
+                    <AvatarWithFrame :src="myStudent?.avatarImg" :alt="myStudent?.name" size="xs"
+                        :text="myStudent?.name?.charAt(0)" :frame="myStudent?.avatarFrame || null" :userId="myStudent?.id" />
                     <span class="flex-1 font-medium">
                         {{ myStudent?.name || `User ${myRank.userId}` }}
                         <span class="text-xs text-muted">({{ $t('coursePanel.you') }})</span>

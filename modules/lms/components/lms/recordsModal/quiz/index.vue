@@ -141,6 +141,7 @@ const detailUser = computed(() => {
         username: d.username || null,
         rollNumber: d.rollNumber || null,
         avatarImg: d.avatarImg || null,
+        avatarFrame: d.avatarFrame || null,
     }
 })
 </script>

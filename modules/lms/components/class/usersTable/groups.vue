@@ -15,8 +15,9 @@
       </template>
       <template #leader-cell="{ row }">
         <div v-if="row.original.leader" class="flex items-center gap-2">
-          <UAvatar :src="row.original.leader.avatarImg || undefined" :alt="row.original.leader.name"
-            size="2xs" :text="row.original.leader.name?.charAt(0)" />
+          <AvatarWithFrame :src="row.original.leader.avatarImg || undefined" :alt="row.original.leader.name"
+            size="2xs" :text="row.original.leader.name?.charAt(0)" :frame="row.original.leader.avatarFrame || null"
+            :userId="row.original.leader.id" />
           <span class="text-sm">{{ row.original.leader.name }}</span>
           <UBadge color="primary" variant="subtle" size="xs">{{ $t('coursePanel.leader') }}</UBadge>
         </div>

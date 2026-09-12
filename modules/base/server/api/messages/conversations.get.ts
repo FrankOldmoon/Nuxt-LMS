@@ -32,7 +32,7 @@ export default eventHandler(async (event) => {
     .orderBy(desc(schema.messages.createdAt))
 
   // 按对话对象分组
-  const conversations = new Map<number, { userId: number, name: string, avatarImg: string | null, lastMessage: any, lastTime: string, unreadCount: number }>()
+  const conversations = new Map<number, { userId: number, name: string, avatarImg: string | null, avatarFrame: string | null, lastMessage: any, lastTime: string, unreadCount: number }>()
   for (const m of msgs) {
     const otherUserId = m.senderUserId === user.id ? m.receiverUserId : m.senderUserId
     if (!conversations.has(otherUserId)) {
@@ -40,6 +40,7 @@ export default eventHandler(async (event) => {
         userId: otherUserId,
         name: m.name,
         avatarImg: null,
+        avatarFrame: null,
         lastMessage: m.content,
         lastTime: m.createdAt,
         unreadCount: 0,
@@ -56,7 +57,7 @@ export default eventHandler(async (event) => {
   const userIds = [...conversations.keys()]
   if (userIds.length > 0) {
     const users = await db
-      .select({ id: schema.users.id, name: schema.users.name, avatarImg: schema.users.avatarImg })
+      .select({ id: schema.users.id, name: schema.users.name, avatarImg: schema.users.avatarImg, avatarFrame: schema.users.avatarFrame })
       .from(schema.users)
       .where(or(...userIds.map(id => eq(schema.users.id, id))))
     const userMap = new Map(users.map(u => [u.id, u]))
@@ -65,6 +66,7 @@ export default eventHandler(async (event) => {
       if (u) {
         conv.name = u.name
         conv.avatarImg = u.avatarImg
+        conv.avatarFrame = u.avatarFrame
       }
     }
   }

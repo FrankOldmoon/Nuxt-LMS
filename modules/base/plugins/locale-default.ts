@@ -24,18 +24,18 @@ function normalizeLocale(raw: string): string {
   return v
 }
 
-export default defineNuxtPlugin(() => {
+export default defineNuxtPlugin((nuxtApp) => {
   if (!import.meta.client) return
 
   const config = useState<{ [key: string]: any }>('site-config', () => ({}))
-  const i18n = useI18n()
+  // plugin 非组件 setup 上下文，用 Nuxt 实例访问 i18n（useI18n() 会报 "top of setup"）
+  const i18n = (nuxtApp.$i18n as any)
+  const currentLocale = computed(() => i18n?.locale?.value)
 
   // @nuxtjs/i18n v10：请用 Nuxt 实例的 $i18n.setLocale（同步更新翻译并写入 cookie），
   // 直接给 useI18n().locale.value 赋值在部分版本不触发翻译刷新。
-  const nuxtApp = useNuxtApp()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const setLocaleI18n = (nuxtApp.$i18n as any)?.setLocale?.bind(nuxtApp.$i18n)
-    || ((code: string) => { i18n.locale.value = code })
+  const setLocaleI18n = i18n?.setLocale?.bind(i18n)
+    || ((code: string) => { if (i18n?.locale) i18n.locale.value = code })
 
   const { user } = useAuth()
 
@@ -43,15 +43,19 @@ export default defineNuxtPlugin(() => {
     // 个人显式设置的语言（非空）优先；否则跟随站点默认（site:defaultLocale）；再否则回退英文
     const siteCode = normalizeLocale(String(config.value?.defaultLocale || ''))
     const code = normalizeLocale(String(user.value?.defaultLocale || '')) || siteCode || 'en'
-    if (i18n.locale.value === code) return
+    if (currentLocale.value === code) return
     setLocaleI18n(code)
   }
 
   // 站点默认语言异步填充、用户语言随登录/设置变化 → 监听两者，immediate 覆盖启动初始值，
   // flush:'sync' 让 site-config 填充后立即应用，避免偶发读到空配置而停留在 'en'。
-  watch(
-    [() => user.value?.defaultLocale, () => config.value?.defaultLocale],
-    () => applyLocale(),
-    { immediate: true, flush: 'sync' },
-  )
+  // plugin 顶层 watch 需挂到 effectScope，避免脱离组件实例告警。
+  const scope = effectScope()
+  scope.run(() => {
+    watch(
+      [() => user.value?.defaultLocale, () => config.value?.defaultLocale],
+      () => applyLocale(),
+      { immediate: true, flush: 'sync' },
+    )
+  })
 })

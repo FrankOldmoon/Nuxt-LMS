@@ -21,6 +21,10 @@ const _globalStubs = {
     template: '<span class="avatar">{{ alt || text }}</span>',
     props: ['src', 'alt', 'text', 'size'],
   },
+  AvatarWithFrame: {
+    template: '<span class="avatar-with-frame"><UAvatar :src="src" :alt="alt" :text="text" :size="size" /></span>',
+    props: ['src', 'alt', 'text', 'size', 'frame', 'userId'],
+  },
   ClientOnly: { template: '<div><slot /></div>' },
 }
 

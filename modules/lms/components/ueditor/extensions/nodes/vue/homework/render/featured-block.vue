@@ -49,6 +49,7 @@ function userOf(item) {
         username: item.username || null,
         rollNumber: item.rollNumber || null,
         avatarImg: item.avatarImg || null,
+        avatarFrame: item.avatarFrame || null,
     }
 }
 </script>

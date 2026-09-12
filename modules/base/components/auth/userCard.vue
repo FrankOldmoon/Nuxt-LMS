@@ -3,7 +3,8 @@
         :class="[cardSizeClass, selected
             ? 'bg-primary/15 border-primary ring-2 ring-primary/30 scale-[1.02]'
             : 'bg-muted/30 border-default hover:bg-muted/50']" @click="$emit('click')">
-        <UAvatar :src="user.avatarImg || undefined" :alt="user.name" :text="user.name?.charAt(0)" :size="avatarSize" />
+        <AvatarWithFrame :src="user.avatarImg || undefined" :alt="user.name" :text="user.name?.charAt(0)" :size="avatarSize"
+          :frame="user.avatarFrame || null" :userId="user.id" />
         <span class="truncate w-full leading-tight" :class="textClass">
             {{ user.name || user.preferName }}
         </span>
@@ -22,6 +23,7 @@ const props = withDefaults(defineProps<{
         preferName?: string | null
         username?: string | null
         avatarImg?: string | null
+        avatarFrame?: string | null
         rollNumber?: string | null
     }
     selected?: boolean

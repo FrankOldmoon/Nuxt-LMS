@@ -39,9 +39,12 @@
         <div v-if="course.teachers?.length" class="flex items-center gap-2">
           <UIcon name="i-lucide-user" class="size-4" />
           <div class="flex -space-x-2">
-            <img v-for="teacher in course.teachers.slice(0, 5)" :key="teacher.userId"
-              :src="teacher.avatarImg || ''" :alt="teacher.name"
-              class="size-6 rounded-full border-2 border-default object-cover bg-elevated" />
+            <div v-for="teacher in course.teachers.slice(0, 5)" :key="teacher.userId"
+              class="relative size-6 shrink-0">
+              <img :src="teacher.avatarImg || ''" :alt="teacher.name"
+                class="size-6 rounded-full border-2 border-default object-cover bg-elevated" />
+              <AvatarFrame :frame="teacher.avatarFrame" class="absolute inset-0 h-full w-full" />
+            </div>
             <div v-if="course.teachers.length > 5"
               class="size-6 rounded-full border-2 border-default bg-elevated flex items-center justify-center text-xs text-muted">
               +{{ course.teachers.length - 5 }}

@@ -149,7 +149,10 @@ export default defineNuxtModule({
     nuxt.hook('i18n:registerModule', (registerModule) => {
       registerModule({
         langDir: resolve('./i18n/locales'),
-        locales: [{ code: 'en', file: 'en.json' }],
+        locales: [
+          { code: 'en', file: 'en.json' },
+          { code: 'cn', file: 'cn.json' },
+        ],
       })
     })
 
@@ -160,5 +163,7 @@ export default defineNuxtModule({
 
     // 注册插件：站点配置单例预拉取（应用启动时调一次 /api/config/get，结果存 useState）
     addPlugin(resolve('./plugins/site-config.ts'))
+    // 注册插件：界面语言决策（个人语言 > 站点默认语言 > en）
+    addPlugin(resolve('./plugins/locale-default.ts'))
   },
 })

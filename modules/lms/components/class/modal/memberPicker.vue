@@ -9,8 +9,8 @@
           :class="{ 'opacity-50': isSelected(user.id) }" @click="emit('toggle', user)">
           <UIcon :name="isSelected(user.id) ? 'i-lucide-check-square' : 'i-lucide-square'"
             class="size-4 text-primary shrink-0" />
-          <UAvatar :src="user.avatarImg || undefined" :alt="user.name" size="2xs"
-            :text="user.name?.charAt(0)" />
+          <AvatarWithFrame :src="user.avatarImg || undefined" :alt="user.name" size="2xs"
+            :text="user.name?.charAt(0)" :frame="user.avatarFrame || null" :userId="user.id" />
           <span class="truncate">{{ user.name }}</span>
         </div>
       </div>

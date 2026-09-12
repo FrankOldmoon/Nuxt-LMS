@@ -9,8 +9,8 @@
       <div v-for="(msg, idx) in messages" :key="idx"
         class="flex gap-2 items-start"
         :class="{ 'flex-row-reverse': msg.userId === userId }">
-        <UAvatar :src="msg.avatarImg || undefined" :alt="msg.from" size="sm"
-          :text="msg.from?.charAt(0)" class="shrink-0" />
+        <AvatarWithFrame :src="msg.avatarImg || undefined" :alt="msg.from" size="sm"
+          :text="msg.from?.charAt(0)" class="shrink-0" :frame="msg.avatarFrame || null" :userId="msg.userId" />
         <div class="min-w-0 max-w-[80%] flex flex-col">
           <div class="flex items-center gap-1.5 mb-0.5"
             :class="{ 'flex-row-reverse': msg.userId === userId }">

@@ -91,6 +91,7 @@ export function useQuizRecords(props: QuizRecordsProps, emit: QuizRecordsEmit) {
             rollNumber: s.rollNumber,
             username: s.username,
             avatarImg: s.avatarImg,
+            avatarFrame: s.avatarFrame,
             record: recordMap.get(s.id) || null,
         }))
         // 有记录的排前面，按分数降序

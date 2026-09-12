@@ -57,7 +57,10 @@ export default defineNuxtModule({
     nuxt.hook('i18n:registerModule', (registerModule) => {
       registerModule({
         langDir: resolve('./i18n/locales'),
-        locales: [{ code: 'en', file: 'en.json' }],
+        locales: [
+          { code: 'en', file: 'en.json' },
+          { code: 'cn', file: 'cn.json' },
+        ],
       })
     })
 

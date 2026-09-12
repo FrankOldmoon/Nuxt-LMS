@@ -30,8 +30,8 @@ export function useWsRace() {
     return registerWsHandler('raceQuestion', callback)
   }
 
-  function sendRaceAnswer(pin: string, raceCid: number, questionCid: number, answer: any, rate: number, correct: boolean, from: string, userId: number) {
-    send({ type: 'raceAnswer', pin, raceCid, questionCid, answer, rate, correct, from, userId })
+  function sendRaceAnswer(pin: string, raceCid: number, questionCid: number, answer: any, rate: number, correct: boolean, from: string, userId: number, avatarImg?: string | null, avatarFrame?: string | null) {
+    send({ type: 'raceAnswer', pin, raceCid, questionCid, answer, rate, correct, from, userId, avatarImg, avatarFrame })
   }
   function onRaceAnswerUpdate(callback: (data: any) => void) {
     return registerWsHandler('raceAnswerUpdate', callback)

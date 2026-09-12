@@ -538,7 +538,14 @@
     "emptyShop": "暂无商品",
     "quantity": "x{count}",
     "owned": "已拥有",
-    "showShop": "显示商店"
+    "showShop": "显示商店",
+    "equip": "佩戴",
+    "unequip": "取消",
+    "inUse": "使用中"
+  },
+  "avatarFrame": {
+    "equipped": "头像框已佩戴",
+    "unequipped": "已取消佩戴"
   },
   "goods": {
     "editorTitle": "商品管理",

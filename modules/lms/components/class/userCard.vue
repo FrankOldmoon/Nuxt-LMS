@@ -2,7 +2,7 @@
   <UCard v-if="user" :ui="{ body: 'p-3 sm:p-4', root: 'rounded-lg' }">
     <!-- 用户基本信息：头像 / 姓名 / 学号 -->
     <div class="flex items-center gap-3">
-      <UAvatar
+      <AvatarWithFrame
         :src="user.avatarImg || undefined"
         :alt="user.name"
         :text="user.name?.charAt(0)"

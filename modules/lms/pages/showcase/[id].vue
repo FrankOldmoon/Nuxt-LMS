@@ -24,7 +24,7 @@
 
                 <div class="flex items-center justify-between gap-3 mt-3 flex-wrap">
                     <div class="flex items-center gap-2 text-sm text-muted">
-                        <UAvatar :src="work.avatarImg || undefined" :text="(work.userName || '?').charAt(0)" size="sm" />
+                        <AvatarWithFrame :src="work.avatarImg || undefined" :text="(work.userName || '?').charAt(0)" size="sm" :frame="work.avatarFrame || null" :userId="work.userId" />
                         <span>{{ work.userName || '…' }}</span>
                     </div>
                     <div class="flex items-center gap-2">

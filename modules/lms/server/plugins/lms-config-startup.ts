@@ -21,18 +21,21 @@ export default defineNitroPlugin(async () => {
 
   // 播种初始全局商品（按版本号，版本变化时重播）
   try {
-    const GOODS_SEED_VERSION = 2
+    const GOODS_SEED_VERSION = 3
     const GOODS_SEED_FLAG = 'lms:_system.goodsSeeded'
     const goodsFlag = await db.query.configs.findFirst({
       where: eq(schema.configs.id, GOODS_SEED_FLAG),
     })
 
     if (goodsFlag?.value !== GOODS_SEED_VERSION) {
-      const initialGoods = [
-        // 头像框
-        { name: 'Bronze Avatar Frame', content: { icon: 'i-lucide-circle-user', color: 'bronze', description: 'Bronze avatar frame', emoji: '🥉' }, price: 1000, sellPrice: 500 },
-        { name: 'Silver Avatar Frame', content: { icon: 'i-lucide-circle-user', color: 'silver', description: 'Silver avatar frame', emoji: '🥈' }, price: 2000, sellPrice: 1000 },
-        { name: 'Gold Avatar Frame', content: { icon: 'i-lucide-circle-user', color: 'gold', description: 'Gold avatar frame', emoji: '🥇' }, price: 3000, sellPrice: 1500 },
+      // 头像框商品：type='avatar_frame' + content.frame（商店 SVG 预览 / 佩戴）
+      const frameGoods = [
+        { name: 'Bronze Avatar Frame', frame: 'bronze', price: 1000, sellPrice: 500, color: 'bronze', emoji: '🥉' },
+        { name: 'Silver Avatar Frame', frame: 'silver', price: 2000, sellPrice: 1000, color: 'silver', emoji: '🥈' },
+        { name: 'Gold Avatar Frame', frame: 'gold', price: 3000, sellPrice: 1500, color: 'gold', emoji: '🥇' },
+      ]
+      // 其他初始商品
+      const otherGoods = [
         // 零食卡
         { name: 'Small Snack Card', content: { icon: 'i-lucide-candy', color: 'success', description: 'Redeem for a small snack', emoji: '🍬' }, price: 1000, sellPrice: 500 },
         { name: 'Medium Snack Card', content: { icon: 'i-lucide-cookie', color: 'warning', description: 'Redeem for a medium snack', emoji: '🍪' }, price: 2000, sellPrice: 1000 },
@@ -49,8 +52,28 @@ export default defineNitroPlugin(async () => {
         and(eq(schema.goods.courseId, 0), inArray(schema.goods.name, LEGACY_GOODS))
       )
 
+      // 头像框商品：幂等 upsert（按 name 更新已存在记录为 avatar_frame 类型）
+      for (const [i, g] of frameGoods.entries()) {
+        const existing = await db
+          .select({ id: schema.goods.id })
+          .from(schema.goods)
+          .where(and(eq(schema.goods.courseId, 0), eq(schema.goods.name, g.name)))
+          .limit(1)
+        const content = { frame: g.frame, color: g.color, description: `${g.emoji} Avatar frame`, emoji: g.emoji }
+        if (existing[0]) {
+          await db.update(schema.goods)
+            .set({ content, type: 'avatar_frame', price: g.price, sellPrice: g.sellPrice, stock: -1, order: i })
+            .where(eq(schema.goods.id, existing[0].id))
+        } else {
+          await db.insert(schema.goods).values({
+            name: g.name, content, courseId: 0, price: g.price, sellPrice: g.sellPrice,
+            stock: -1, type: 'avatar_frame', order: i,
+          })
+        }
+      }
+
       await db.insert(schema.goods).values(
-        initialGoods.map((g, i) => ({
+        otherGoods.map((g, i) => ({
           name: g.name,
           content: g.content,
           courseId: 0,
@@ -58,14 +81,14 @@ export default defineNitroPlugin(async () => {
           sellPrice: g.sellPrice,
           stock: -1,
           type: 'item',
-          order: i,
+          order: frameGoods.length + i,
         }))
       ).onConflictDoNothing()
 
       await db.insert(schema.configs).values({ id: GOODS_SEED_FLAG, value: GOODS_SEED_VERSION })
         .onConflictDoUpdate({ target: schema.configs.id, set: { value: GOODS_SEED_VERSION } })
 
-      console.log(`[lms-config-startup] 已播种 ${initialGoods.length} 个全局商品（v${GOODS_SEED_VERSION}）`)
+      console.log(`[lms-config-startup] 已播种 ${frameGoods.length + otherGoods.length} 个全局商品（v${GOODS_SEED_VERSION}）`)
     }
   } catch (e) {
     console.error('[lms-config-startup] 商品播种失败', e)

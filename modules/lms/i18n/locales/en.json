@@ -538,7 +538,14 @@
     "emptyShop": "No goods available",
     "quantity": "x{count}",
     "owned": "Owned",
-    "showShop": "Show Shop"
+    "showShop": "Show Shop",
+    "equip": "Equip",
+    "unequip": "Unequip",
+    "inUse": "In Use"
+  },
+  "avatarFrame": {
+    "equipped": "Avatar frame equipped",
+    "unequipped": "Avatar frame unequipped"
   },
   "goods": {
     "editorTitle": "Goods Management",

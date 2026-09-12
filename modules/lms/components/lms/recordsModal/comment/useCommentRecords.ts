@@ -38,6 +38,7 @@ export function useCommentRecords(props: CommentRecordsProps, emit: CommentRecor
             rollNumber: s.rollNumber,
             username: s.username,
             avatarImg: s.avatarImg,
+            avatarFrame: s.avatarFrame,
             record: recordMap.get(s.id) || null,
         }))
         rows.value.sort((a, b) => {

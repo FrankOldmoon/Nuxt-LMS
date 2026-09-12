@@ -86,6 +86,7 @@ const userObj = computed(() => ({
     name: props.comment.name || props.comment.userName || 'U',
     preferName: props.comment.userName || props.comment.name || null,
     avatarImg: props.comment.avatarImg || null,
+    avatarFrame: props.comment.avatarFrame || null,
     rollNumber: null,
 }))
 

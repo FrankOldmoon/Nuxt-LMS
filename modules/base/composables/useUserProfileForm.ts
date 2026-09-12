@@ -19,7 +19,7 @@ interface UserProfileForm {
 export function useUserProfileForm(form: Ref<UserProfileForm>) {
   const toast = useToast()
   const { t } = useI18n()
-  const { hasRole } = useAuth()
+  const { hasRole, user } = useAuth()
   const { classes, loadClasses } = useClasses()
 
   const {
@@ -52,6 +52,16 @@ export function useUserProfileForm(form: Ref<UserProfileForm>) {
   const classOptions = computed(() => {
     const opts = classes.value.map((c: any) => ({ label: c.name, value: c.id }))
     return [{ label: '', value: null }, ...opts]
+  })
+
+  // 当前班级名（普通用户只读展示用）
+  // 教师/admin 从 classes 缓存取；普通用户 classes 不可见，用 me 下发的 className 回退
+  const currentClassName = computed(() => {
+    const id = form.value.classId
+    if (id == null) return ''
+    const cls = classes.value.find((c: any) => c.id === Number(id))
+    if (cls?.name) return cls.name
+    return (user.value as any)?.className || `#${id}`
   })
 
   // 当前班级未出现在已缓存的班级列表时，强制刷新班级列表，
@@ -105,6 +115,7 @@ export function useUserProfileForm(form: Ref<UserProfileForm>) {
     genderOptions,
     localeOptions,
     classOptions,
+    currentClassName,
     fileInputRef,
     uploading,
     cropperRef,

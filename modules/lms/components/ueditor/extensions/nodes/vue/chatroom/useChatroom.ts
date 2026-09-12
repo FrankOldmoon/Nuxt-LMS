@@ -14,6 +14,7 @@ export function useChatroom(props: ChatroomProps) {
     const classId = computed(() => user.value?.defaultClass?.id || user.value?.classId || 0)
     const userName = computed(() => user.value?.name || 'anonymous')
     const avatarImg = computed(() => user.value?.avatarImg || null)
+    const avatarFrame = computed(() => user.value?.avatarFrame || null)
 
     // lms 未启用或未加入班级时不显示
     const canShow = computed(() => !!moduleLms && !!classId.value)
@@ -46,6 +47,7 @@ export function useChatroom(props: ChatroomProps) {
             userId: data.userId,
             from: data.from,
             avatarImg: data.avatarImg,
+            avatarFrame: data.avatarFrame || null,
             text: data.text,
             ts: data.ts,
         })
@@ -59,7 +61,7 @@ export function useChatroom(props: ChatroomProps) {
     function sendMessage() {
         const text = inputText.value.trim()
         if (!text || !canChat.value) return
-        sendChatroom(classId.value, userId.value, userName.value, avatarImg.value, text)
+        sendChatroom(classId.value, userId.value, userName.value, avatarImg.value, text, avatarFrame.value)
         inputText.value = ''
     }
 

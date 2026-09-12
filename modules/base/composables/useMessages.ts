@@ -51,7 +51,7 @@ export function useMessages(isOpen: Ref<boolean>) {
 
   function startConversation(u: any) {
     selectedUserId.value = u.id
-    selectedUserCache.value = { name: u.name, avatarImg: u.avatarImg }
+    selectedUserCache.value = { name: u.name, avatarImg: u.avatarImg, avatarFrame: u.avatarFrame }
     searchKeyword.value = ''
     searchResults.value = []
     loadMessages()
@@ -65,7 +65,7 @@ export function useMessages(isOpen: Ref<boolean>) {
 
   const selectedUser = computed(() => {
     const conv = conversations.value.find(c => c.userId === selectedUserId.value)
-    if (conv) return { name: conv.name, avatarImg: conv.avatarImg }
+    if (conv) return { name: conv.name, avatarImg: conv.avatarImg, avatarFrame: conv.avatarFrame }
     if (selectedUserCache.value) return selectedUserCache.value
     const sr = searchResults.value.find(s => s.id === selectedUserId.value)
     return sr || null

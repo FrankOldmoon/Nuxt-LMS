@@ -26,6 +26,7 @@ export default eventHandler(async (event) => {
     ...r,
     userName: userMap.get(r.userId)?.name || '',
     avatarImg: userMap.get(r.userId)?.avatarImg || null,
+    avatarFrame: userMap.get(r.userId)?.avatarFrame || null,
     children: [] as any[],
   }))
 
