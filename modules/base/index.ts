@@ -140,6 +140,12 @@ export default defineNuxtModule({
         path: '/reset-password',
         file: resolve('./pages/reset-password.vue'),
       })
+      // 服务监控页（admin，展示 ecosystem 多实例运行状态/日志/数据）
+      pages.push({
+        name: 'base-monitor',
+        path: '/monitor',
+        file: resolve('./pages/monitor.vue'),
+      })
     })
 
     // 注册 server 路由 / utils / middleware / plugins / tasks

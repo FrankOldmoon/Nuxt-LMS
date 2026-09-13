@@ -49,6 +49,12 @@ export default defineNuxtConfig({
       // 视频大小上限（MB），用 NUXT_PEERTUBE_MAX_SIZE_MB 覆盖，默认 2GB
       maxSizeMB: 2048,
     },
+    // 监控页 /monitor：PM2 ecosystem 配置文件路径与日志目录
+    // 可用 NUXT_MONITOR_ECOSYSTEM_CONFIG / NUXT_MONITOR_LOG_DIR 覆盖
+    monitor: {
+      ecosystemConfig: '',
+      logDir: '',
+    },
   },
   vite: {
     server: {
