@@ -8,11 +8,12 @@ import {
   resolveLogFile,
   logFileInfo,
   checkPort,
+  assertMonitorPassword,
 } from '../../utils/monitor'
 
 export default defineEventHandler(async (event) => {
-  await requireAdmin(event)
   const config = useRuntimeConfig(event)
+  assertMonitorPassword(event, config.monitor?.viewPassword || '')
   const cfgPath = resolveEcosystemConfigPath(config.monitor?.ecosystemConfig)
   const logDir = config.monitor?.logDir || ''
   const instances = loadEcosystemConfig(cfgPath)

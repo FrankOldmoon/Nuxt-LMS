@@ -1,5 +1,22 @@
 <template>
-  <div class="container mx-auto max-w-7xl px-4 py-6 space-y-6">
+  <!-- 未验证：输入查看密码 -->
+  <div v-if="!verified" class="min-h-[60vh] flex items-center justify-center px-4">
+    <UCard class="w-full max-w-sm">
+      <div class="space-y-4 text-center">
+        <UIcon name="i-lucide-shield-check" class="size-10 text-primary mx-auto" />
+        <div>
+          <h1 class="text-lg font-bold text-highlighted">服务监控</h1>
+          <p class="text-sm text-muted mt-1">请输入查看密码</p>
+        </div>
+        <UInput v-model="pwdInput" type="password" size="lg" placeholder="查看密码"
+          autofocus @keydown.enter="unlock" />
+        <UButton color="primary" block size="lg" :loading="unlocking" @click="unlock">进入</UButton>
+      </div>
+    </UCard>
+  </div>
+
+  <!-- 已验证：监控面板 -->
+  <div v-else class="container mx-auto max-w-7xl px-4 py-6 space-y-6">
     <!-- 标题栏 -->
     <div class="flex items-center justify-between flex-wrap gap-3">
       <div>
@@ -31,6 +48,47 @@
         <div class="mt-1 text-lg font-bold text-highlighted">{{ card.value }}</div>
       </UCard>
     </div>
+
+    <!-- 数据库状态 -->
+    <UCard>
+      <template #header>
+        <div class="flex items-center justify-between">
+          <span class="font-semibold text-highlighted">数据库状态</span>
+          <span class="text-xs text-muted">检查时间：{{ dbCheckedAtText || '-' }}</span>
+        </div>
+      </template>
+
+      <div v-if="!db" class="py-8 flex justify-center">
+        <UProgress indeterminate class="w-40" />
+      </div>
+
+      <div v-else-if="!db.ok" class="py-8 text-center">
+        <UBadge color="error" variant="soft" size="lg">
+          <UIcon name="i-lucide-database-zap" class="size-4" /> 连接异常
+        </UBadge>
+        <p class="text-sm text-red-500 mt-3 break-all font-mono">{{ db.error }}</p>
+      </div>
+
+      <template v-else>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+          <div v-for="s in dbStats" :key="s.label" class="flex items-center gap-3 rounded-md border border-(--ui-border) p-3">
+            <UIcon :name="s.icon" class="size-5 text-primary shrink-0" />
+            <div class="min-w-0">
+              <div class="text-xs text-muted">{{ s.label }}</div>
+              <div class="text-sm font-bold text-highlighted truncate" :title="s.value">{{ s.value }}</div>
+            </div>
+          </div>
+        </div>
+        <UTable :data="db.tables" :columns="dbColumns" :ui="{ td: 'py-1.5' }">
+          <template #rows-cell="{ row }">
+            <span class="font-mono text-sm">{{ row.original.rows.toLocaleString() }}</span>
+          </template>
+          <template #size-cell="{ row }">
+            <span class="font-mono text-sm">{{ row.original.size }}</span>
+          </template>
+        </UTable>
+      </template>
+    </UCard>
 
     <!-- 实例状态表 -->
     <UCard>
@@ -125,10 +183,39 @@
 <script setup lang="ts">
 useHead(() => ({ title: '服务监控' }))
 
-// ---------- 管理员守卫 ----------
-const { hasRole } = useAuth()
-if (import.meta.client && !hasRole('admin')) {
-  navigateTo('/')
+// ---------- 查看密码验证 ----------
+const verified = ref(false)
+const unlocking = ref(false)
+const pwdInput = ref('')
+const pwd = ref('')
+const toast = useToast()
+
+async function unlock() {
+  const value = pwdInput.value.trim()
+  if (!value) return
+  unlocking.value = true
+  pwd.value = value
+  try {
+    await fetchStatus(true)
+    verified.value = true
+    refreshAll()
+  } catch (e: any) {
+    // 密码错误（403）时清除已填密码
+    if (e?.response?.status === 403) {
+      toast.add({ title: '查看密码错误', color: 'error' })
+      pwd.value = ''
+      pwdInput.value = ''
+    } else {
+      toast.add({ title: '监控服务暂不可用', color: 'error' })
+    }
+  } finally {
+    unlocking.value = false
+  }
+}
+
+/** 监控 API 请求头（携带查看密码） */
+function monitorHeaders() {
+  return pwd.value ? { 'x-monitor-pwd': pwd.value } : {}
 }
 
 // ---------- 通用格式化 ----------
@@ -172,6 +259,40 @@ const statCards = computed(() => {
   return items
 })
 
+// ---------- 数据库状态 ----------
+const db = ref<any>(null)
+
+const dbCheckedAtText = computed(() => (db.value?.checkedAt ? new Date(db.value.checkedAt).toLocaleString() : ''))
+
+const dbStats = computed(() => {
+  const d = db.value
+  if (!d?.ok) return []
+  return [
+    { label: '状态', value: '正常', icon: 'i-lucide-circle-check' },
+    { label: '版本', value: `PostgreSQL ${d.version}`, icon: 'i-lucide-database' },
+    { label: '响应延迟', value: `${d.latencyMs} ms`, icon: 'i-lucide-zap' },
+    { label: '库大小', value: formatBytes(d.databaseSize), icon: 'i-lucide-hard-drive' },
+    { label: '活动连接', value: String(d.activeConnections), icon: 'i-lucide-plug' },
+    { label: '数据表', value: `${d.tables.length} 张`, icon: 'i-lucide-table' },
+  ]
+})
+
+const dbColumns = [
+  { id: 'name', accessorKey: 'name', header: '数据表' },
+  { id: 'rows', accessorKey: 'rows', header: '行数' },
+  { id: 'size', accessorKey: 'size', header: '大小' },
+]
+
+async function fetchDb() {
+  try {
+    const res = await cRequest<any>('/api/monitor/db', { headers: monitorHeaders() })
+    db.value = res
+  } catch (e: any) {
+    console.error('[monitor] db failed', e)
+    if (e?.response?.status === 403) verified.value = false
+  }
+}
+
 // ---------- 实例状态 ----------
 interface LogInfo { path: string; exists: boolean; sizeBytes: number; modifiedAt: string | null }
 interface Instance {
@@ -196,15 +317,21 @@ const columns = [
   { id: 'actions', accessorKey: 'actions', header: '操作' },
 ]
 
-async function fetchStatus() {
-  loading.value = true
+async function fetchStatus(silent = false) {
+  if (!silent) loading.value = true
   try {
-    const res = await cRequest<{ configFile: string; checkedAt: string; instances: Instance[] }>('/api/monitor/status')
+    const res = await cRequest<{ configFile: string; checkedAt: string; instances: Instance[] }>(
+      '/api/monitor/status', { headers: monitorHeaders() },
+    )
     instances.value = res.instances || []
     configFile.value = res.configFile || ''
     checkedAt.value = res.checkedAt || ''
   } catch (e: any) {
     console.error('[monitor] status failed', e)
+    if (e?.response?.status === 403) {
+      verified.value = false
+      throw e // 重新抛出，供 unlock() 弹出密码错误提示
+    }
   } finally {
     loading.value = false
   }
@@ -212,16 +339,22 @@ async function fetchStatus() {
 
 async function fetchData() {
   try {
-    const res = await cRequest<any>('/api/monitor/data')
+    const res = await cRequest<any>('/api/monitor/data', { headers: monitorHeaders() })
     data.value = res
   } catch (e: any) {
     console.error('[monitor] data failed', e)
+    if (e?.response?.status === 403) verified.value = false
   }
 }
 
 async function refreshAll() {
+  if (!verified.value) return
   refreshing.value = true
-  await Promise.all([fetchStatus(), fetchData()])
+  try {
+    await Promise.all([fetchStatus(), fetchData(), fetchDb()])
+  } catch {
+    // 403 等已由 fetch 内部处理（重置 verified / 弹出提示），此处兜底避免未捕获异常
+  }
   refreshing.value = false
 }
 
@@ -243,10 +376,7 @@ function restartTimer() {
 }
 watch(autoRefreshSec, restartTimer)
 
-onMounted(() => {
-  refreshAll()
-  restartTimer()
-})
+onMounted(restartTimer)
 onBeforeUnmount(() => { if (timer) clearInterval(timer) })
 
 // ---------- 日志查看 ----------
@@ -278,11 +408,13 @@ async function fetchLogs() {
   try {
     const res = await cRequest<{ path: string; exists: boolean; lines: string[]; truncated: boolean }>(
       `/api/monitor/logs?name=${logTarget.value.name}&type=${logType.value}&lines=${logLines.value}&grep=${encodeURIComponent(logGrep.value)}`,
+      { headers: monitorHeaders() },
     )
     logData.value = res
     logPath.value = res.path || ''
   } catch (e: any) {
     console.error('[monitor] logs failed', e)
+    if (e?.response?.status === 403) verified.value = false
     logData.value = null
   } finally {
     logLoading.value = false

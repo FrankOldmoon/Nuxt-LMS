@@ -7,17 +7,18 @@ import {
   loadEcosystemConfig,
   resolveLogFile,
   tailFile,
+  assertMonitorPassword,
 } from '../../utils/monitor'
 
 export default defineEventHandler(async (event) => {
-  await requireAdmin(event)
+  const config = useRuntimeConfig(event)
+  assertMonitorPassword(event, config.monitor?.viewPassword || '')
   const query = getQuery(event)
   const name = String(query.name || '')
   const type = query.type === 'error' ? 'error' : 'out'
   const lines = Math.min(Math.max(Number(query.lines) || 100, 1), 2000)
   const grep = String(query.grep || '')
 
-  const config = useRuntimeConfig(event)
   const cfgPath = resolveEcosystemConfigPath(config.monitor?.ecosystemConfig)
   const logDir = config.monitor?.logDir || ''
   const instances = loadEcosystemConfig(cfgPath)

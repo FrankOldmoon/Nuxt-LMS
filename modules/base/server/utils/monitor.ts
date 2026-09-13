@@ -141,3 +141,15 @@ export async function checkPort(port: number, timeoutMs = 3000) {
     }
   }
 }
+
+/**
+ * 监控查看密码校验（密码为空时放行）。
+ * 密码从 Header `x-monitor-pwd` 或 query `pwd` 读取，不匹配则抛 403。
+ */
+export function assertMonitorPassword(event: any, password: string) {
+  if (!password) return
+  const provided = getHeader(event, 'x-monitor-pwd') || String(getQuery(event).pwd || '')
+  if (provided !== password) {
+    throw createError({ statusCode: 403, statusMessage: '监控查看密码错误' })
+  }
+}

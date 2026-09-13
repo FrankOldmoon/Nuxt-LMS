@@ -14,7 +14,8 @@ async function countTable(table: any): Promise<number> {
 }
 
 export default defineEventHandler(async (event) => {
-  await requireAdmin(event)
+  const config = useRuntimeConfig(event)
+  assertMonitorPassword(event, config.monitor?.viewPassword || '')
 
   const countTasks: Record<string, Promise<number>> = {
     users: countTable(schema.users),

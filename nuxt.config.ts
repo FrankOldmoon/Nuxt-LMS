@@ -50,10 +50,12 @@ export default defineNuxtConfig({
       maxSizeMB: 2048,
     },
     // 监控页 /monitor：PM2 ecosystem 配置文件路径与日志目录
-    // 可用 NUXT_MONITOR_ECOSYSTEM_CONFIG / NUXT_MONITOR_LOG_DIR 覆盖
+    // 可用 NUXT_MONITOR_ECOSYSTEM_CONFIG / NUXT_MONITOR_LOG_DIR / NUXT_MONITOR_VIEW_PASSWORD 覆盖
     monitor: {
       ecosystemConfig: '',
       logDir: '',
+      // 监控查看密码（留空则无需密码）
+      viewPassword: 'REDACTED',
     },
   },
   vite: {
