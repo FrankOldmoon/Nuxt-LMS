@@ -1,17 +1,17 @@
 <template>
-  <FormFieldDate v-if="widget === 'date'" :col :form />
-  <FormFieldBoolean v-else-if="widget === 'boolean'" :col :form />
-  <FormFieldSelect v-else-if="widget === 'select'" :col :form />
-  <FormFieldFk v-else-if="widget === 'fk'" :col :form :fk-options :fk-loading />
-  <FormFieldNumber v-else-if="widget === 'number'" :col :form />
-  <FormFieldRichEditor v-else-if="widget === 'richEditor'" :col :form :json-strings :json-errors :row-course-id />
-  <FormFieldJson v-else-if="widget === 'json'" :col :json-strings :json-errors />
-  <FormFieldIcon v-else-if="widget === 'icon'" :col :form />
-  <FormFieldFile v-else-if="widget === 'file'" :col :form />
-  <FormFieldImageCropper v-else-if="widget === 'imageCropper'" :col :form />
-  <FormFieldImage v-else-if="widget === 'image'" :col :form />
-  <FormFieldPassword v-else-if="widget === 'password'" :col :form />
-  <FormFieldText v-else :col :form />
+  <TableFormFieldDateField v-if="widget === 'date'" :col :form />
+  <TableFormFieldBooleanField v-else-if="widget === 'boolean'" :col :form />
+  <TableFormFieldSelectField v-else-if="widget === 'select'" :col :form />
+  <TableFormFieldFkField v-else-if="widget === 'fk'" :col :form :fk-options :fk-loading />
+  <TableFormFieldNumberField v-else-if="widget === 'number'" :col :form />
+  <TableFormFieldRichEditorField v-else-if="widget === 'richEditor'" :col :form :json-strings :json-errors :row-course-id />
+  <TableFormFieldJsonField v-else-if="widget === 'json'" :col :json-strings :json-errors />
+  <TableFormFieldIconField v-else-if="widget === 'icon'" :col :form />
+  <TableFormFieldFileField v-else-if="widget === 'file'" :col :form />
+  <TableFormFieldImageCropperField v-else-if="widget === 'imageCropper'" :col :form />
+  <TableFormFieldImageField v-else-if="widget === 'image'" :col :form />
+  <TableFormFieldPasswordField v-else-if="widget === 'password'" :col :form />
+  <TableFormFieldTextField v-else :col :form />
 </template>
 
 <script setup lang="ts">

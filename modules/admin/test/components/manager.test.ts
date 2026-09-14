@@ -14,15 +14,15 @@ beforeEach(baseBeforeEach)
 const _stubs = {
   ..._globalStubs,
   TableFilterBar: { template: '<div class="filter-bar" />', props: ['columns', 'filters', 'search'] },
-  ManagerToolbar: { template: '<div class="manager-toolbar" />', props: ['canEdit', 'exporting', 'includeDeleted', 'total', 'columns', 'hiddenColumns'] },
-  ManagerBatchBar: { template: '<div class="manager-batch-bar" />', props: ['selectedRows', 'includeDeleted'] },
+  TableManagerToolbar: { template: '<div class="manager-toolbar" />', props: ['canEdit', 'exporting', 'includeDeleted', 'total', 'columns', 'hiddenColumns'] },
+  TableManagerBatchBar: { template: '<div class="manager-batch-bar" />', props: ['selectedRows', 'includeDeleted'] },
   TableView: { template: '<div class="table-view" />', props: ['visibleColumns', 'rows', 'selectedKeys', 'allSelected', 'sort', 'includeDeleted', 'canEdit', 'canDelete', 'hasId', 'pending', 'fkLabels', 'rowKeyOf'] },
-  ManagerPagination: { template: '<div class="manager-pagination" />', props: ['page', 'pageSize', 'total'] },
+  TableManagerPagination: { template: '<div class="manager-pagination" />', props: ['page', 'pageSize', 'total'] },
   TableCForm: { template: '<div class="c-form" />', props: ['open', 'tableName', 'columns', 'row'] },
   TableCShow: { template: '<div class="c-show" />', props: ['open', 'tableName', 'columns', 'row', 'fkLabels'] },
   TableImportSheet: { template: '<div class="import-sheet" />', props: ['open', 'columns'] },
   TableExportSheet: { template: '<div class="export-sheet" />', props: ['open', 'columns', 'rows'] },
-  ManagerConfirmDialog: { template: '<div class="confirm-dialog" />', props: ['open', 'text', 'color', 'loading'] },
+  TableManagerConfirmDialog: { template: '<div class="confirm-dialog" />', props: ['open', 'text', 'color', 'loading'] },
 }
 
 const _config = { ..._globalConfig, stubs: _stubs }

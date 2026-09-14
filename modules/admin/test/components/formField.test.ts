@@ -2,20 +2,20 @@
  * formField 组件测试（wrapper）
  * @see modules/admin/components/table/formField.vue
  *
- * 根据 widgetFor(col) 返回的 widget 类型分发到对应的子组件：
- * - 'date' → FormFieldDate
- * - 'boolean' → FormFieldBoolean
- * - 'select' → FormFieldSelect
- * - 'fk' → FormFieldFk
- * - 'number' → FormFieldNumber
- * - 'richEditor' → FormFieldRichEditor
- * - 'json' → FormFieldJson
- * - 'icon' → FormFieldIcon
- * - 'file' → FormFieldFile
- * - 'imageCropper' → FormFieldImageCropper
- * - 'image' → FormFieldImage
- * - 'password' → FormFieldPassword
- * - 其他（'text' / 'readonly'）→ FormFieldText
+ * 根据 widgetFor(col) 返回的 widget 类型分发到对应的子组件（组件带 Table 前缀 + Field 后缀）：
+ * - 'date' → TableFormFieldDateField
+ * - 'boolean' → TableFormFieldBooleanField
+ * - 'select' → TableFormFieldSelectField
+ * - 'fk' → TableFormFieldFkField
+ * - 'number' → TableFormFieldNumberField
+ * - 'richEditor' → TableFormFieldRichEditorField
+ * - 'json' → TableFormFieldJsonField
+ * - 'icon' → TableFormFieldIconField
+ * - 'file' → TableFormFieldFileField
+ * - 'imageCropper' → TableFormFieldImageCropperField
+ * - 'image' → TableFormFieldImageField
+ * - 'password' → TableFormFieldPasswordField
+ * - 其他（'text' / 'readonly'）→ TableFormFieldTextField
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -35,19 +35,19 @@ beforeEach(() => {
  * 便于断言 wrapper 实际渲染了哪个子组件。
  */
 const _globalStubs = {
-  FormFieldDate: { template: '<div data-widget="date" />' },
-  FormFieldBoolean: { template: '<div data-widget="boolean" />' },
-  FormFieldSelect: { template: '<div data-widget="select" />' },
-  FormFieldFk: { template: '<div data-widget="fk" />' },
-  FormFieldNumber: { template: '<div data-widget="number" />' },
-  FormFieldRichEditor: { template: '<div data-widget="richEditor" />' },
-  FormFieldJson: { template: '<div data-widget="json" />' },
-  FormFieldIcon: { template: '<div data-widget="icon" />' },
-  FormFieldFile: { template: '<div data-widget="file" />' },
-  FormFieldImageCropper: { template: '<div data-widget="imageCropper" />' },
-  FormFieldImage: { template: '<div data-widget="image" />' },
-  FormFieldPassword: { template: '<div data-widget="password" />' },
-  FormFieldText: { template: '<div data-widget="text" />' },
+  TableFormFieldDateField: { template: '<div data-widget="date" />' },
+  TableFormFieldBooleanField: { template: '<div data-widget="boolean" />' },
+  TableFormFieldSelectField: { template: '<div data-widget="select" />' },
+  TableFormFieldFkField: { template: '<div data-widget="fk" />' },
+  TableFormFieldNumberField: { template: '<div data-widget="number" />' },
+  TableFormFieldRichEditorField: { template: '<div data-widget="richEditor" />' },
+  TableFormFieldJsonField: { template: '<div data-widget="json" />' },
+  TableFormFieldIconField: { template: '<div data-widget="icon" />' },
+  TableFormFieldFileField: { template: '<div data-widget="file" />' },
+  TableFormFieldImageCropperField: { template: '<div data-widget="imageCropper" />' },
+  TableFormFieldImageField: { template: '<div data-widget="image" />' },
+  TableFormFieldPasswordField: { template: '<div data-widget="password" />' },
+  TableFormFieldTextField: { template: '<div data-widget="text" />' },
 }
 
 const _globalConfig = {

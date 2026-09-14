@@ -4,14 +4,14 @@
 
     <TableFilterBar :columns="columns" :filters="filters" :search="search" @update:filters="applyFilters" @update:search="(v) => applySearch(v)" />
 
-    <ManagerToolbar
+    <TableManagerToolbar
       :can-edit="canEdit" :can-import="canImport" :exporting="exporting" :include-deleted="includeDeleted"
       :total="total" :columns="columns" :hidden-columns="hiddenColumns"
       @add="openAdd" @import="importOpen = true" @export="openExport"
       @toggle-column="toggleColumn" @show-all="showAllColumns" @toggle-trash="toggleTrash"
     />
 
-    <ManagerBatchBar :selected-rows="selectedRows" :include-deleted="includeDeleted" @batch="(a) => confirmBatch(a, selectedRows)" />
+    <TableManagerBatchBar :selected-rows="selectedRows" :include-deleted="includeDeleted" @batch="(a) => confirmBatch(a, selectedRows)" />
 
     <TableView
       :visible-columns="visibleColumns" :rows="rows" :selected-keys="selectedKeys"
@@ -22,14 +22,14 @@
       @view="onView" @edit="onEdit" @delete="onSingleDelete" @restore="onSingleRestore" @remove="onSingleRemove"
     />
 
-    <ManagerPagination :page="page" :page-size="pageSize" :total="total" @set-page="setPage" @set-page-size="setPageSize" />
+    <TableManagerPagination :page="page" :page-size="pageSize" :total="total" @set-page="setPage" @set-page-size="setPageSize" />
 
     <TableCForm v-model:open="formOpen" :table-name="tableName" :columns="visibleColumns" :row="editingRow" @submit="onFormSubmit" @saved="onOverrideSaved" @cancel="formOpen = false" />
     <TableCShow v-model:open="showOpen" :table-name="tableName" :columns="visibleColumns" :row="viewingRow" :fk-labels="fkLabels" />
     <TableImportSheet v-model:open="importOpen" :columns="columns" @import="onImport" />
     <TableExportSheet v-model:open="exportOpen" :columns="columns" :rows="exportRows" />
 
-    <ManagerConfirmDialog v-model:open="confirmOpen" :text="confirmText" :color="confirmColor" :loading="confirmLoading" @confirm="executeConfirm" />
+    <TableManagerConfirmDialog v-model:open="confirmOpen" :text="confirmText" :color="confirmColor" :loading="confirmLoading" @confirm="executeConfirm" />
   </div>
 </template>
 
