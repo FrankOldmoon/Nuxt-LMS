@@ -11,8 +11,9 @@ import {
   openSync,
   closeSync,
   readSync,
+  readdirSync,
 } from 'node:fs'
-import { join } from 'node:path'
+import { join, dirname, basename } from 'node:path'
 import os from 'node:os'
 
 export interface MonitorInstance {
@@ -63,17 +64,57 @@ export function loadEcosystemConfig(configPath: string): MonitorInstance[] {
   })
 }
 
-/** 解析实例日志文件路径：配置路径存在则用；否则依次尝试 logDir 覆盖、~/.pm2/logs/{name}-{type}.log */
+/**
+ * 解析实例日志文件路径。
+ * 注意：PM2 会在配置的 out_file/error_file 文件名中插入进程 id 后缀，
+ * 例如配置 `nuxt_3001-out.log` 实际落盘为 `nuxt_3001-out-0.log`。
+ * 因此按优先级查找：配置路径原样 → 同目录下带 `-<id>` 后缀的最新文件 →
+ * logDir 覆盖路径 → ~/.pm2/logs/{name}-{type}.log，同样兼容后缀。
+ */
 export function resolveLogFile(app: MonitorInstance, type: 'out' | 'error', logDir = ''): string {
   const configured = type === 'out' ? app.outFile : app.errorFile
   if (configured && existsSync(configured)) return configured
-  const candidates: string[] = []
-  if (logDir) candidates.push(join(logDir, `${app.name}-${type}.log`))
-  candidates.push(join(os.homedir(), '.pm2', 'logs', `${app.name}-${type}.log`))
-  for (const c of candidates) {
-    if (existsSync(c)) return c
+  const bases: string[] = []
+  if (configured) bases.push(configured)
+  if (logDir) bases.push(join(logDir, `${app.name}-${type}.log`))
+  bases.push(join(os.homedir(), '.pm2', 'logs', `${app.name}-${type}.log`))
+  for (const base of bases) {
+    const found = findPm2LogFile(dirname(base), basename(base).replace(/\.log$/, ''))
+    if (found) return found
   }
-  return configured || candidates[0] || ''
+  return configured || bases[0] || ''
+}
+
+/** 在目录中查找 `<stem>.log` 或 PM2 追加了进程 id 的 `<stem>-<id>.log`，返回修改时间最新者 */
+function findPm2LogFile(dir: string, stem: string): string {
+  if (!dir || !existsSync(dir)) return ''
+  const exact = join(dir, `${stem}.log`)
+  if (existsSync(exact)) return exact
+  const re = new RegExp(`^${escapeRegExp(stem)}-\\d+\\.log$`)
+  let names: string[] = []
+  try {
+    names = readdirSync(dir)
+  } catch {
+    return ''
+  }
+  let best = ''
+  let bestMtime = -1
+  for (const name of names) {
+    if (!re.test(name)) continue
+    const p = join(dir, name)
+    if (!existsSync(p)) continue
+    const mtime = statSync(p).mtimeMs
+    if (mtime > bestMtime) {
+      bestMtime = mtime
+      best = p
+    }
+  }
+  return best
+}
+
+/** 转义正则元字符 */
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
 /** 日志文件元信息（路径/是否存在/大小/最后修改时间） */

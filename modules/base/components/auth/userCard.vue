@@ -49,28 +49,28 @@ const cardSizeClass = computed(() => {
 
 const avatarSize = computed(() => {
     switch (props.size) {
-        case 'sm': return 'lg'
+        case 'sm': return 'sm'
         case 'md': return 'lg'
         case 'lg': return 'xl'
-        default: return 'lg'
+        default: return 'sm'
     }
 })
 
 const textClass = computed(() => {
     switch (props.size) {
-        case 'sm': return 'text-[10px]'
+        case 'sm': return 'text-[11px]'
         case 'md': return 'text-xs'
         case 'lg': return 'text-sm'
-        default: return 'text-[10px]'
+        default: return 'text-[11px]'
     }
 })
 
 const subTextClass = computed(() => {
     switch (props.size) {
-        case 'sm': return 'text-[8px]'
+        case 'sm': return 'text-[9px]'
         case 'md': return 'text-[10px]'
         case 'lg': return 'text-xs'
-        default: return 'text-[8px]'
+        default: return 'text-[9px]'
     }
 })
 </script>
