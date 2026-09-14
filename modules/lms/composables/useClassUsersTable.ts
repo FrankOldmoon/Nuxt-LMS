@@ -506,11 +506,14 @@ export function useClassUsersTable(
       cols.push({
         accessorKey: 'number',
         header: sortableHeader(t('classSelector.colNumber')),
-        sortingFn: (a: any, b: any) => {
-          const va = Number(a.original?.number) || 0
-          const vb = Number(b.original?.number) || 0
-          return va - vb
-        },
+        // 编号可能是纯数字（ICT，如 1/2/10）或字母编号（STEAM，如 1A/2B/10C），
+        // 统一用自然排序（numeric），不能用 Number() 转换——'1A' 会变成 0 导致排序失效
+        sortingFn: (a: any, b: any) =>
+          String(a.original?.number ?? '').localeCompare(
+            String(b.original?.number ?? ''),
+            undefined,
+            { numeric: true, sensitivity: 'base' },
+          ),
       })
     }
     cols.push(
