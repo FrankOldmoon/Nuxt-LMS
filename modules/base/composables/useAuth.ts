@@ -97,6 +97,16 @@ export function useAuth() {
 
   // ====================== 变更方法（仅客户端调用） ======================
 
+  /**
+   * 广播登录状态变化：useAuth 各实例的 authData 相互独立，
+   * 登录/登出后仅调用方实例会更新，这里通知其他实例（如全局 Dify 聊天）刷新自身
+   */
+  function broadcastAuthChanged() {
+    if (import.meta.client) {
+      window.dispatchEvent(new Event('auth:changed'))
+    }
+  }
+
   /** 登录 */
   async function login(username: string, password: string) {
     const result = await cRequest<{ user: User; token: string }>('/api/auth/login', {
@@ -104,6 +114,7 @@ export function useAuth() {
       body: { username, password },
     })
     await refreshUser()
+    broadcastAuthChanged()
     return result
   }
 
@@ -114,6 +125,7 @@ export function useAuth() {
       body: { username, password, name, email },
     })
     await refreshUser()
+    broadcastAuthChanged()
     return result
   }
 
@@ -121,6 +133,7 @@ export function useAuth() {
   async function logout() {
     await cRequest('/api/auth/logout', { method: 'POST' })
     await refreshUser()
+    broadcastAuthChanged()
   }
 
   return {

@@ -3,14 +3,16 @@
 </template>
 
 <script setup lang="ts">
-import { watch, onBeforeUnmount } from 'vue'
+import { watch, onMounted, onBeforeUnmount } from 'vue'
 
-const { user, isLoggedIn } = useAuth()
+const { user, isLoggedIn, refreshUser } = useAuth()
 
 // Dify Web 嵌入配置（与 Dify 后台「嵌入网站」提供的代码一致）
 const DIFY_CONFIG = {
   token: 'REDACTED',
   baseUrl: 'http://10.28.1.153',
+  // 页面加载完成后动态注入脚本时必须开启，否则脚本会等待已触发过的 body.onload 而永不创建气泡
+  dynamicScript: true,
   inputs: {},
   systemVariables: {
     // 登录后由当前用户填充，便于 Dify 区分会话
@@ -50,7 +52,30 @@ watch(isLoggedIn, (val) => {
   else unloadDify()
 }, { immediate: true })
 
-onBeforeUnmount(unloadDify)
+// useAuth 各实例数据相互独立：登录/登出由 useAuth 广播 auth:changed，
+// 这里刷新本实例的 auth 数据后再决定注入/清理（无需整页刷新）
+let authTimer: ReturnType<typeof setTimeout> | null = null
+async function onAuthChanged() {
+  if (authTimer) clearTimeout(authTimer)
+  authTimer = setTimeout(async () => {
+    await refreshUser()
+    if (isLoggedIn.value) loadDify()
+    else unloadDify()
+  }, 100)
+}
+
+onMounted(() => {
+  if (typeof window !== 'undefined') {
+    window.addEventListener('auth:changed', onAuthChanged)
+  }
+})
+
+onBeforeUnmount(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('auth:changed', onAuthChanged)
+  }
+  unloadDify()
+})
 </script>
 
 <style>
