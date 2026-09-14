@@ -33,7 +33,6 @@ const _globalStubs = {
   RichEditor: { template: '<div class="rich-editor" />', props: ['modelValue', 'allowTextMode'] },
   UPageAside: { template: '<div class="upage-aside"><slot /></div>' },
   LayoutToc: { template: '<div class="layout-toc" />' },
-  ChapterViewAiAssistant: { template: '<div class="ai-assistant" />' },
 }
 
 const _globalConfig = {
@@ -125,14 +124,5 @@ describe('chapter/view/index.vue', () => {
       global: _globalConfig,
     })
     expect(wrapper.find('.layout-toc').exists()).toBe(true)
-  })
-
-  it('渲染 AI 助教组件', async () => {
-    const { default: View } = await import('../../../../components/chapter/view/index.vue')
-    const wrapper = mount(View, {
-      props: { data: sampleData, pending: false, notFound: false, chapterId: '1', courseId: '10' },
-      global: _globalConfig,
-    })
-    expect(wrapper.find('.ai-assistant').exists()).toBe(true)
   })
 })

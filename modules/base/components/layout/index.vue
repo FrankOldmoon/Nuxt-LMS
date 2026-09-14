@@ -13,4 +13,7 @@
   </UMain>
 
   <LayoutFooter />
+
+  <!-- 登录后全站显示的 Dify 悬浮聊天机器人 -->
+  <LayoutDifyChat />
 </template>

@@ -63,10 +63,6 @@
       </div>
     </div>
 
-    <div class="fixed bottom-16 right-6 z-50 flex flex-col items-end gap-3">
-      <!-- AI 章节助教 + VRM 数字人 -->
-      <ChapterViewAiAssistant />
-    </div>
   </div>
 
   <!-- 章节不存在 -->
