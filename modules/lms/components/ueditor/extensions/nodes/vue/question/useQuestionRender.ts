@@ -342,7 +342,7 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
                 question.value.correct_rate = Math.max(0, Math.min(1, Number((data as any).correctRate) || 0))
                 submitted.value = true
                 fromRecord.value = true
-                isCorrect.value = (question.value.correct_rate || 0) > 0
+                isCorrect.value = (question.value.correct_rate || 0) >= 1
                 chapterTask?.reportNodeDone('question', questionId.value, (question.value.correct_rate || 0) >= 1)
                 emit('submitted', { isCorrect: isCorrect.value, questionId: questionId.value })
             }
@@ -364,7 +364,7 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
                 question.value.correct_rate = rate !== undefined ? rate : computeCorrectRate(question.value)
                 submitted.value = true
                 fromRecord.value = true
-                isCorrect.value = (question.value.correct_rate || 0) > 0
+                isCorrect.value = (question.value.correct_rate || 0) >= 1
             }
         },
         showResult(rate?: number) {

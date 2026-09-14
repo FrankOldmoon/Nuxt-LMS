@@ -32,7 +32,8 @@ export function computeCorrectRate(question: any): number {
     if (!answer.length) return 0
     const matching = record.filter((r: any) => answer.includes(r)).length
     const wrong = record.filter((r: any) => !answer.includes(r)).length
-    return Math.max(0, (matching - wrong) / answer.length)
+    // 错选清零：选中了错误项即为 0 分（防全选白嫖）；漏选仍按 选对项数/答案总数 给部分分
+    return wrong > 0 ? 0 : matching / answer.length
   }
   if (type === 'fill' || type === 'select') {
     if (!answer.length) return 0
