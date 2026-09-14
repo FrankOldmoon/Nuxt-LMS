@@ -1,1 +1,0 @@
-ALTER TABLE "showcases" DROP COLUMN "files";
