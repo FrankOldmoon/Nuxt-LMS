@@ -24,11 +24,22 @@ const DIFY_CONFIG = {
 // 嵌入脚本的 DOM id（同时用于防重复注入）
 const SCRIPT_ID = 'dify-chatbot-script'
 
+// Dify 会按 user_id 把「最近一次会话 id」存到浏览器 localStorage（key: conversationIdInfo），
+// 下次打开会自动续上该会话的历史。这里给 user_id 加一个「每次页面加载唯一」的后缀，
+// 让 Dify 每次进入/刷新都查不到旧会话，从而始终是全新对话（代价：Dify 后台会把同一学生
+// 视为多个 user，会话列表与统计会分散）。
+const SESSION_SUFFIX = Math.random().toString(36).slice(2, 10)
+
+function buildUserId() {
+  const id = user.value?.id
+  return id ? `${id}_${SESSION_SUFFIX}` : ''
+}
+
 function loadDify() {
   if (typeof window === 'undefined') return
   // 同一页面重复挂载/重复进入时不重复注入
   if (document.getElementById(SCRIPT_ID)) return
-  DIFY_CONFIG.systemVariables.user_id = user.value?.id ? String(user.value.id) : ''
+  DIFY_CONFIG.systemVariables.user_id = buildUserId()
   ;(window as any).difyChatbotConfig = DIFY_CONFIG
   const script = document.createElement('script')
   script.id = SCRIPT_ID
