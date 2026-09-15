@@ -1,7 +1,9 @@
 <template>
     <div class="space-y-2">
-        <!-- 富文本编辑器（回帖禁用粘贴） -->
-        <richEditor v-model="content" :placeholder="placeholder" :pasteable="false" />
+        <!-- 纯文本框（回帖禁止复制/粘贴/剪切/拖放） -->
+        <textarea v-model="content" :rows="3" :placeholder="placeholder"
+            class="w-full p-3 rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors resize-y"
+            @paste.prevent @copy.prevent @cut.prevent @drop.prevent />
         <!-- 提交按钮 -->
         <div class="flex justify-end">
             <UButton size="sm" color="primary" variant="soft" :disabled="!hasContent"
@@ -22,26 +24,7 @@ const emit = defineEmits(['submit'])
 
 const content = ref('')
 
-const hasContent = computed(() => {
-    if (!content.value) return false
-    if (typeof content.value === 'string') return content.value.trim().length > 0
-    // UMO 文档：递归收集文本节点，无可见文本视为空（按钮禁用）
-    if (typeof content.value === 'object') {
-        let text = ''
-        const collect = (n) => {
-            if (!n) return
-            if (typeof n === 'string') { text += n; return }
-            if (Array.isArray(n)) { n.forEach(collect); return }
-            if (typeof n === 'object') {
-                if (typeof n.text === 'string') text += n.text
-                if (Array.isArray(n.content)) n.content.forEach(collect)
-            }
-        }
-        collect(content.value)
-        return text.trim().length > 0
-    }
-    return false
-})
+const hasContent = computed(() => !!content.value?.trim())
 
 function submit() {
     if (!hasContent.value) return
