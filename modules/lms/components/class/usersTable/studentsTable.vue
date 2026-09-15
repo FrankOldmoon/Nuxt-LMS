@@ -33,7 +33,7 @@
         <button type="button" class="flex items-center gap-2 group"
           :title="$t('classSelector.viewStudentStats')"
           @click="openStats(row.original)">
-          <AvatarWithFrame :src="row.original.avatarImg || undefined" :alt="row.original.name" size="2xs"
+          <AvatarWithFrame :src="row.original.avatarImg || undefined" :alt="row.original.name" size="md"
             :text="row.original.name?.charAt(0)" :frame="row.original.avatarFrame || null" :userId="row.original.id" />
           <span class="text-sm text-primary group-hover:underline cursor-pointer">{{ row.original.name }}</span>
           <!-- 前三名金银铜奖杯（按当前表格显示顺序取前 3 行） -->
