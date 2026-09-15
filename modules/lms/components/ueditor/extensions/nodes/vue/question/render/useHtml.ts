@@ -17,6 +17,10 @@ export function useHtml(props: any) {
   // 内容自适应高度（默认 300，由 iframe 内部上报实际高度）
   const iframeHeight = ref(300)
 
+  // 模式：'url' 以 src 加载外部页面；'html' 用 srcdoc 渲染代码
+  const isUrlMode = computed(() => props.question?.extra?.mode === 'url')
+  const urlSrc = computed(() => (props.question?.extra?.url || '').trim())
+
   // 全屏切换
   function toggleFullscreen() {
     if (!import.meta.client) return
@@ -34,7 +38,9 @@ export function useHtml(props: any) {
   }
 
   // HTML 内容：包裹为基础文档 + 高度上报脚本（自动上报实际高度）
+  // URL 模式不用 srcdoc（改用 src）
   const htmlContent = computed(() => {
+    if (isUrlMode.value) return ''
     const c = props.question.content
     if (typeof c === 'string') return buildSrcdocWithHeightReport(c)
     return ''
@@ -137,6 +143,8 @@ export function useHtml(props: any) {
     iframeRef,
     containerRef,
     isFullscreen,
+    isUrlMode,
+    urlSrc,
     iframeHeight,
     htmlContent,
     submitted,

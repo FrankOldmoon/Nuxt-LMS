@@ -227,7 +227,7 @@ export function useQuestionEdit(props: QuestionEditProps, emit: QuestionEditEmit
             case 'sort': form.value.options = ['', '', '']; form.value.answer = [0, 1, 2]; break
             case 'classify': form.value.options = [{ name: '', items: ['', ''] }, { name: '', items: ['', ''] }]; form.value.answer = [0, 0, 1, 1]; break
             case 'puzzle': form.value.options = { url: '', split: 3 }; form.value.answer = [0, 1, 2, 3, 4, 5, 6, 7, 8]; break
-            case 'html': form.value.options = []; form.value.answer = [1]; form.value.content = ''; break
+            case 'html': form.value.options = []; form.value.answer = [1]; form.value.content = ''; form.value.extra = { mode: 'html', url: '' }; break
             case 'short-answer': form.value.options = []; form.value.answer = ['']; break
             case 'match': form.value.options = [{ left: '', right: '' }, { left: '', right: '' }]; form.value.answer = [0, 1]; break
             case 'composite': form.value.options = []; form.value.answer = []; form.value.content = []; break

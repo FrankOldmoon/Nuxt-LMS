@@ -102,7 +102,26 @@ describe('question/render/html.vue', () => {
     expect(vm.hasAnswer).toBe(false)
   })
 
-  it('无正确率时 hasAnswer 为 false', async () => {
+  it('url 模式：iframe 使用 src 而非 srcdoc，并给定固定高度', async () => {
+    const { default: HtmlRender } = await import(
+      '../../../../../../components/ueditor/extensions/nodes/vue/question/render/html.vue'
+    )
+    const urlQuestion = {
+      ...sampleQuestion,
+      content: '<p>ignored</p>',
+      extra: { mode: 'url', url: 'https://example.com' },
+    }
+    const wrapper = mount(HtmlRender, {
+      props: { question: urlQuestion, questionId: 1 },
+      global: _globalConfig,
+    })
+    const iframe = wrapper.find('iframe')
+    expect(iframe.exists()).toBe(true)
+    expect(iframe.attributes('src')).toBe('https://example.com')
+    expect(iframe.attributes('srcdoc')).toBeUndefined()
+  })
+
+  it('html 默认模式：extra 缺失时依旧使用 srcdoc', async () => {
     const { default: HtmlRender } = await import(
       '../../../../../../components/ueditor/extensions/nodes/vue/question/render/html.vue'
     )
@@ -110,7 +129,8 @@ describe('question/render/html.vue', () => {
       props: { question: sampleQuestion, questionId: 1 },
       global: _globalConfig,
     })
-    const vm = wrapper.vm as any
-    expect(vm.hasAnswer).toBe(false)
+    const iframe = wrapper.find('iframe')
+    expect(iframe.attributes('srcdoc')).toContain('<p>Hello World</p>')
+    expect(iframe.attributes('src')).toBeUndefined()
   })
 })

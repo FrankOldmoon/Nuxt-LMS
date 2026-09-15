@@ -83,7 +83,7 @@ onBeforeUnmount(() => {
    窗口会停在文档顶部而不跟随视口。这里强制钉到视口右下角（fixed）。 */
 #dify-chatbot-bubble-button {
   position: fixed !important;
-  bottom: 1rem !important;
+  bottom: calc(1rem + 50px) !important;
   right: 1rem !important;
   top: auto !important;
   left: auto !important;
@@ -91,7 +91,7 @@ onBeforeUnmount(() => {
 }
 #dify-chatbot-bubble-window {
   position: fixed !important;
-  bottom: calc(1rem + 56px) !important;
+  bottom: calc(1rem + 106px) !important;
   right: 1rem !important;
   top: auto !important;
   left: auto !important;

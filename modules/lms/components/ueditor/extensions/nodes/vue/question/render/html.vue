@@ -1,9 +1,10 @@
 <template>
     <div>
         <!-- HTML 预览 iframe -->
-        <div ref="containerRef" class="html-preview-container border border-gray-200 dark:border-gray-600 rounded overflow-hidden relative">
-            <iframe ref="iframeRef" :srcdoc="htmlContent" sandbox="allow-scripts" class="w-full html-preview-iframe"
-                :style="{ height: isFullscreen ? '100vh' : iframeHeight + 'px', minHeight: isFullscreen ? '100vh' : '300px', border: 0 }" />
+        <div ref="containerRef" class="html-preview-container border border-neutral-900 dark:border-neutral-900 rounded overflow-hidden relative">
+            <iframe ref="iframeRef" :src="isUrlMode ? urlSrc : undefined" :srcdoc="isUrlMode ? undefined : htmlContent"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups" class="w-full html-preview-iframe"
+                :style="{ height: isFullscreen ? '100vh' : (isUrlMode ? urlHeight : iframeHeight) + 'px', minHeight: isFullscreen ? '100vh' : (isUrlMode ? urlMinHeight : 300) + 'px', border: 0 }" />
             <!-- 全屏按钮 -->
             <button
                 @click="toggleFullscreen"
@@ -33,6 +34,8 @@ const {
     iframeRef,
     containerRef,
     isFullscreen,
+    isUrlMode,
+    urlSrc,
     iframeHeight,
     htmlContent,
     submitted,
@@ -43,6 +46,10 @@ const {
     reset,
     fillCorrectAnswer,
 } = useHtml(props)
+
+// URL 模式：跨域页面无法上报高度，使用固定高度
+const urlMinHeight = 500
+const urlHeight = 600
 
 defineExpose({ submit, reset, hasAnswer, fillCorrectAnswer })
 </script>
