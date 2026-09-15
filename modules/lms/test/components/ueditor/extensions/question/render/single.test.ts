@@ -53,13 +53,37 @@ describe('question/render/single.vue', () => {
     const { default: SingleRender } = await import(
       '../../../../../../components/ueditor/extensions/nodes/vue/question/render/single.vue'
     )
+    const question = { ...sampleQuestion, record: [] }
     const wrapper = mount(SingleRender, {
-      props: { question: sampleQuestion, questionId: 1 },
+      props: { question, questionId: 1 },
       global: _globalConfig,
     })
     const labels = wrapper.findAll('label')
-    await labels[1].trigger('click')
-    expect(sampleQuestion.record).toEqual([1])
+    // 选项为随机展示顺序：按选项文本定位，record 应写回该选项的原始下标
+    const target = labels.find((l) => l.text().includes('Option B'))!
+    expect(target).toBeTruthy()
+    await target.trigger('click')
+    expect(question.record).toEqual([1])
+  })
+
+  it('maps shuffled display position back to original option index in record', async () => {
+    const { default: SingleRender } = await import(
+      '../../../../../../components/ueditor/extensions/nodes/vue/question/render/single.vue'
+    )
+    const question = { ...sampleQuestion, record: [] }
+    const wrapper = mount(SingleRender, {
+      props: { question, questionId: 1 },
+      global: _globalConfig,
+    })
+    const labels = wrapper.findAll('label')
+    expect(labels.length).toBe(question.options.length)
+    // 无论展示顺序如何，点击某选项后 record 必须是对应的原始下标
+    for (const label of labels) {
+      const text = label.text()
+      const expected = question.options.findIndex((o) => text.includes(o))
+      await label.trigger('click')
+      expect(question.record).toEqual([expected])
+    }
   })
 
   it('exposes submit/reset/fillCorrectAnswer methods', async () => {

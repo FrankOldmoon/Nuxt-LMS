@@ -1,4 +1,39 @@
 /**
+ * 选项随机展示顺序缓存（WeakMap：以 question 对象为键）
+ *
+ * single / multiple 题型的答案与 record 均以「选项原始下标」为准，
+ * 这里只决定「展示顺序」——返回一个由原始下标组成的数组，
+ * 数组第 pos 位存放该展示位置对应的原始下标。
+ * 渲染时按该数组遍历，作答时把原始下标写回 record，
+ * 即可保证展示随机而判分/记录完全不受影响。
+ */
+const optionOrderCache = new WeakMap<object, number[]>()
+
+export function getShuffledOptionOrder(question: any): number[] {
+  const options = Array.isArray(question?.options) ? question.options : []
+  const n = options.length
+  if (n <= 1) return options.map((_: any, i: number) => i)
+
+  const cached = optionOrderCache.get(question)
+  if (cached && cached.length === n) return cached
+
+  const order = Array.from({ length: n }, (_: any, i: number) => i)
+  // Fisher-Yates 洗牌；若恰好洗回原顺序则重洗，尽量让展示顺序与出题顺序不同
+  const isIdentity = (arr: number[]) => arr.every((v, i) => v === i)
+  for (let attempt = 0; attempt < 8; attempt++) {
+    for (let i = n - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      const tmp = order[i]
+      order[i] = order[j]
+      order[j] = tmp
+    }
+    if (!isIdentity(order)) break
+  }
+  optionOrderCache.set(question, order)
+  return order
+}
+
+/**
  * 实时记录作答到 question.record（用户选择/输入时立即调用）
  * record 只存答案数组，如 [1]、[2,3]、["122","444"]
  */

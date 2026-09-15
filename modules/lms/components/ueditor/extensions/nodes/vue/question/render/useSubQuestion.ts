@@ -1,5 +1,5 @@
 import { ref, computed, provide, watch } from 'vue'
-import { computeCorrectRate } from './shared'
+import { computeCorrectRate, getShuffledOptionOrder } from './shared'
 import SingleRender from './single.vue'
 import JudgeRender from './judge.vue'
 import MultipleRender from './multiple.vue'
@@ -78,7 +78,11 @@ export function useSubQuestion(props: any, emit: (event: string, ...args: any[])
     const answer = props.subQuestion.answer || []
     const type = props.subQuestion.type
     if (type === 'single' || type === 'multiple') {
-      return answer.map((idx: number) => String.fromCharCode(65 + idx)).join(', ')
+      // 选项随机展示：答案存原始下标，需映射为展示位置字母；
+      // 这里必须用子题实际渲染的 localQuestion 对象，才能拿到同一份随机顺序
+      const order = getShuffledOptionOrder(localQuestion.value)
+      const posOf = new Map(order.map((ori: number, pos: number) => [ori, pos]))
+      return answer.map((idx: number) => String.fromCharCode(65 + (posOf.has(idx) ? posOf.get(idx)! : idx))).join(', ')
     }
     if (type === 'judge') {
       return answer.map((idx: number) => idx === 0 ? t('question.correct') : t('question.wrong')).join(', ')

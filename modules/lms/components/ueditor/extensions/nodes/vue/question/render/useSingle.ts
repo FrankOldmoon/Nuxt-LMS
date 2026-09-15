@@ -1,5 +1,5 @@
 import { ref, computed, inject, watch } from 'vue'
-import { submitQuestion, recordAnswer } from './shared'
+import { submitQuestion, recordAnswer, getShuffledOptionOrder } from './shared'
 
 export function useSingle(props: any) {
   const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')
@@ -7,6 +7,13 @@ export function useSingle(props: any) {
   const fromRecord = inject<import('vue').Ref<boolean>>('questionFromRecord')
   const { courseId, chapterId } = useLmsContext()
   const selected = ref(-1)
+
+  // 选项随机展示顺序（原始下标数组）；selected/record 始终存原始下标
+  const optionOrder = computed(() => getShuffledOptionOrder(props.question))
+  // 展示位置字母：按展示顺序 A/B/C/D...
+  function optionLabel(pos: number) {
+    return String.fromCharCode(65 + pos)
+  }
 
   const hasAnswer = computed(() => selected.value >= 0)
 
@@ -92,6 +99,8 @@ export function useSingle(props: any) {
 
   return {
     selected,
+    optionOrder,
+    optionLabel,
     hasAnswer,
     select,
     optionClass,

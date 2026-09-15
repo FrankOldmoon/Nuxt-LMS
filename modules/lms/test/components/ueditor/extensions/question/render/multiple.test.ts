@@ -53,14 +53,38 @@ describe('question/render/multiple.vue', () => {
     const { default: MultipleRender } = await import(
       '../../../../../../components/ueditor/extensions/nodes/vue/question/render/multiple.vue'
     )
+    const question = { ...sampleQuestion, record: [] }
     const wrapper = mount(MultipleRender, {
-      props: { question: sampleQuestion, questionId: 1 },
+      props: { question, questionId: 1 },
       global: _globalConfig,
     })
     const labels = wrapper.findAll('label')
-    await labels[0].trigger('click')
-    await labels[2].trigger('click')
-    expect(sampleQuestion.record).toEqual([0, 2])
+    // 选项为随机展示顺序：按选项文本定位，record 应写回对应的原始下标
+    const labelA = labels.find((l) => l.text().includes('Option A'))!
+    const labelC = labels.find((l) => l.text().includes('Option C'))!
+    await labelA.trigger('click')
+    await labelC.trigger('click')
+    expect(question.record).toEqual([0, 2])
+  })
+
+  it('maps shuffled display position back to original option index in record', async () => {
+    const { default: MultipleRender } = await import(
+      '../../../../../../components/ueditor/extensions/nodes/vue/question/render/multiple.vue'
+    )
+    const question = { ...sampleQuestion, record: [] }
+    const wrapper = mount(MultipleRender, {
+      props: { question, questionId: 1 },
+      global: _globalConfig,
+    })
+    const labels = wrapper.findAll('label')
+    expect(labels.length).toBe(question.options.length)
+    // 无论展示顺序如何，点击某选项后 record 必须包含对应的原始下标
+    for (const label of labels) {
+      const text = label.text()
+      const expected = question.options.findIndex((o) => text.includes(o))
+      await label.trigger('click')
+      expect(question.record).toContain(expected)
+    }
   })
 
   it('exposes submit/reset/fillCorrectAnswer methods', async () => {

@@ -1,5 +1,5 @@
 import { reactive, ref, computed, provide, inject, watch, type InjectionKey } from 'vue'
-import { computeCorrectRate } from './render/shared'
+import { computeCorrectRate, getShuffledOptionOrder } from './render/shared'
 import SingleRender from './render/single.vue'
 import JudgeRender from './render/judge.vue'
 import MultipleRender from './render/multiple.vue'
@@ -129,7 +129,10 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
         const answer = question.value.answer
         const type = question.value.type
         if (type === 'single' || type === 'multiple') {
-            return answer.map((idx: number) => String.fromCharCode(65 + idx))
+            // 选项随机展示：答案存的是原始下标，这里映射为展示位置字母，与题面选项标号一致
+            const order = getShuffledOptionOrder(question.value)
+            const posOf = new Map(order.map((ori: number, pos: number) => [ori, pos]))
+            return answer.map((idx: number) => String.fromCharCode(65 + (posOf.has(idx) ? posOf.get(idx)! : idx)))
         } else if (type === 'judge') {
             return answer.map((idx: number) => idx === 0 ? t('question.correct') : t('question.wrong'))
         } else if (type === 'sort') {
