@@ -44,9 +44,12 @@ export function useClassify(props: any) {
   }
 
   // 从当前 pool/catBuckets 构建 record 数组
+  // 注意：record 长度按真实可拖拽项数 flatItems 决定，而不是 answer.length。
+  // 学生端 show 会剥离 answer（undefined），若按 answer 定长会导致 record 变稀疏数组、
+  // 未分类项变 hole/undefined，进而造成 doSyncRecord 与 record 回填反复打架（界面卡顿/项乱跳）。
   function buildRecord() {
-    const answer = props.question.answer || []
-    const record = new Array(answer.length).fill(-1)
+    const n = flatItems.value.length
+    const record = new Array(n).fill(-1)
     // 池子中的项：-1（默认值，无需显式设置）
     // 分类桶中的项：对应的分类索引
     catBuckets.value.forEach((bucket, ci) => {
@@ -152,7 +155,7 @@ export function useClassify(props: any) {
     initBuckets()
   }
 
-  // 填充正确答案：将每项放入正确的分类
+  // 填充正确答案：将每项放入正确的分类，answer 未覆盖的项（长度不足或越界）留在池子兜底
   function fillCorrectAnswer() {
     const answer = props.question.answer || []
     if (!answer.length) return
@@ -160,15 +163,17 @@ export function useClassify(props: any) {
     const items = flatItems.value.map(item => ({ ...item }))
     const options = props.question.options || []
     catBuckets.value = options.map(() => [])
-    pool.value = []
-    answer.forEach((catIdx: any, flatIdx: number) => {
-      const item = items.find(it => it.flatIndex === flatIdx)
-      if (!item) return
+    const remaining: any[] = []
+    items.forEach((item: any) => {
+      const catIdx = Number(answer[item.flatIndex])
       if (catIdx >= 0 && catBuckets.value[catIdx]) {
         catBuckets.value[catIdx].push(item)
+      } else {
+        remaining.push(item)
       }
     })
-    recordAnswer(props.question, [...answer])
+    pool.value = remaining
+    recordAnswer(props.question, buildRecord())
     nextTick(() => { restoring = false })
   }
 
