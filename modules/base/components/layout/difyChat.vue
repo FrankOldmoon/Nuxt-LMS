@@ -79,10 +79,22 @@ onBeforeUnmount(() => {
 </script>
 
 <style>
+/* Dify embed 的窗口默认 position: absolute 且无 scroll 监听，长页面滚动时
+   窗口会停在文档顶部而不跟随视口。这里强制钉到视口右下角（fixed）。 */
 #dify-chatbot-bubble-button {
+  position: fixed !important;
+  bottom: 1rem !important;
+  right: 1rem !important;
+  top: auto !important;
+  left: auto !important;
   background-color: #1C64F2 !important;
 }
 #dify-chatbot-bubble-window {
+  position: fixed !important;
+  bottom: calc(1rem + 56px) !important;
+  right: 1rem !important;
+  top: auto !important;
+  left: auto !important;
   width: 24rem !important;
   height: 40rem !important;
 }
