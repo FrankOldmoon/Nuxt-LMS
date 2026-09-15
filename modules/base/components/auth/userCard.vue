@@ -1,8 +1,11 @@
 <template>
-    <div class="aspect-square flex flex-col items-center justify-center gap-0.5 rounded-lg cursor-pointer transition-all border-2 p-1 text-center select-none"
+    <div class="aspect-square flex flex-col items-center justify-center gap-0.5 rounded-lg cursor-pointer transition-all border-2 p-1 text-center select-none relative"
         :class="[cardSizeClass, selected
             ? 'bg-primary/15 border-primary ring-2 ring-primary/30 scale-[1.02]'
             : 'bg-muted/30 border-default hover:bg-muted/50']" @click="$emit('click')">
+        <!-- 课程内编号角标（user_course.number，仅在有值时显示） -->
+        <span v-if="user.number" class="absolute top-0.5 right-0.5 text-[9px] font-mono leading-none z-10 px-1 py-px rounded bg-primary/10 text-primary"
+            :title="$t('userCard.number')">{{ user.number }}</span>
         <AvatarWithFrame :src="user.avatarImg || undefined" :alt="user.name" :text="user.name?.charAt(0)" :size="avatarSize"
           :frame="user.avatarFrame || null" :userId="user.id" />
         <span class="truncate w-full leading-tight" :class="textClass">
@@ -25,6 +28,7 @@ const props = withDefaults(defineProps<{
         avatarImg?: string | null
         avatarFrame?: string | null
         rollNumber?: string | null
+        number?: string | null
     }
     selected?: boolean
     size?: 'sm' | 'md' | 'lg'

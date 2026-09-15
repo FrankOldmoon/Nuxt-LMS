@@ -138,6 +138,10 @@ export interface LmsClassUser {
   email: string | null
   telephone: string | null
   isTeacher: boolean | null
+  /** 课程内编号（user_course.number，传 course_id 时由服务端合并返回） */
+  number?: string | null
+  /** 课程内分组（user_course.group） */
+  group?: string | null
 }
 
 /** 用户资料表单数据 */

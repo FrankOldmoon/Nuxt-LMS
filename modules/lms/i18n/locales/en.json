@@ -186,7 +186,8 @@
   "userCard": {
     "courseScore": "Course Score",
     "chapterScore": "Chapter Score",
-    "coin": "Coin"
+    "coin": "Coin",
+    "number": "Course No."
   },
   "quiz": {
     "label": "Quiz",

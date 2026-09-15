@@ -186,7 +186,8 @@
   "userCard": {
     "courseScore": "课程分",
     "chapterScore": "章节分",
-    "coin": "金币"
+    "coin": "金币",
+    "number": "课程编号"
   },
   "quiz": {
     "label": "测验",
