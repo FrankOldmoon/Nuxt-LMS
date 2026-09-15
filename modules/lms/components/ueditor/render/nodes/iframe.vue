@@ -56,7 +56,7 @@ const iframeStyle = computed(() => ({
   width: '100%',
   // 全屏时撑满容器，避免下方留白；否则优先内容自适应高度
   height: isFullscreen.value ? '100%' : `${autoHeight.value > 0 ? autoHeight.value : (attrs.value.height || 200)}px`,
-  border: isFullscreen.value ? 'none' : '1px solid #e5e7eb',
+  border: isFullscreen.value ? 'none' : '1px solid #1f2937',
   borderRadius: isFullscreen.value ? '0' : '4px',
   backgroundColor: '#fff',
   pointerEvents: 'auto',
