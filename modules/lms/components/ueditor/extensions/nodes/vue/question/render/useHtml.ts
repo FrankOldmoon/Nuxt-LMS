@@ -6,6 +6,9 @@ export function useHtml(props: any) {
   const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')
   const isCorrect = inject<import('vue').Ref<boolean>>('questionIsCorrect')
   const fromRecord = inject<import('vue').Ref<boolean>>('questionFromRecord')
+  // 外层"真正提交按钮"回调（useQuestionRender 提供）。rate=1 时走它而非本组件叶子 submit，
+  // 让提交状态/toast/烟花/进度上报等完整流程一并触发（保留叶子 submit 作为兜底）。
+  const triggerAutoSubmit = inject<(() => void) | null>('questionTriggerAutoSubmit', null)
   const { courseId, chapterId } = useLmsContext()
 
   const iframeRef = ref(null)
@@ -67,9 +70,11 @@ export function useHtml(props: any) {
         }
         // 实时记录到 record
         recordAnswer(props.question, [rate])
-        // correct_rate=1 时自动提交（仅从非 1 变为 1 时触发一次）
+        // correct_rate=1 时自动提交（仅从非 1 变为 1 时触发一次）：
+        // 触发外层"真正提交按钮"onSubmit 以走完整提交流程；若上下文中没有（如单测直接挂载），回退到本组件 submit
         if (rate === 1 && prevRate !== 1) {
-          submit()
+          if (triggerAutoSubmit) triggerAutoSubmit()
+          else submit()
         }
         prevRate = rate
       }

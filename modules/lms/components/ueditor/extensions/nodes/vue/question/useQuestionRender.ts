@@ -116,6 +116,9 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
     provide('questionIsCorrect', isCorrect)
     provide('questionFromRecord', fromRecord)
     provide('questionId', questionId)
+    // html 题在 iframe 上报 rate=1 时触发的"真正提交按钮"路径（走 onSubmit 全流程，
+    // 而非子组件叶子 submit，确保提交状态/toast/烟花/进度上报同步触发）。onSubmit 为函数声明，已被提升。
+    provide('questionTriggerAutoSubmit', onSubmit)
 
     const hasAnswer = computed(() => renderRef.value?.hasAnswer ?? false)
     const isTeacher = computed(() => hasRole('teacher') || hasRole('admin'))
