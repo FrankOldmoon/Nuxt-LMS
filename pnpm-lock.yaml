@@ -89,6 +89,9 @@ importers:
       lowlight:
         specifier: ^3.3.0
         version: 3.3.0
+      monaco-editor:
+        specifier: 0.52.2
+        version: 0.52.2
       nodemailer:
         specifier: ^9.0.3
         version: 9.0.3
@@ -101,6 +104,9 @@ importers:
       postgres:
         specifier: ^3.4.9
         version: 3.4.9
+      pyodide:
+        specifier: 0.26.2
+        version: 0.26.2
       sharp:
         specifier: ^0.35.3
         version: 0.35.3(@types/node@26.1.0)
@@ -5923,6 +5929,9 @@ packages:
   mocked-exports@0.1.1:
     resolution: {integrity: sha512-aF7yRQr/Q0O2/4pIXm6PZ5G+jAd7QS4Yu8m+WEeEHGnbo+7mE36CbLSDQiXYV8bVL3NfmdeqPJct0tUlnjVSnA==}
 
+  monaco-editor@0.52.2:
+    resolution: {integrity: sha512-GEQWEZmfkOGLdd3XK8ryrfWz3AIP8YymVXiPHEdewrUq7mh0qrKrfHLNCXcbB6sTnMLnOZ3ztSiKcciFUkIJwQ==}
+
   motion-dom@12.42.0:
     resolution: {integrity: sha512-M63h4n8R+quJdNhBwuLlgxM+OLYa9+I/T2pzDRboB9fLXRdbou+Gw7Zury+SkpaCyACP1JHSjHgZ1EgTkBr30w==}
 
@@ -6553,6 +6562,10 @@ packages:
 
   pure-svg-code@1.0.6:
     resolution: {integrity: sha512-uxq2BMTdnKW7jDghpLJrczCd9KDOdyghFtEEpfomqMJkUM83/N+W7sFJPJ3AxBf0mJ3xtxAycl6NW8p6F53jEw==}
+
+  pyodide@0.26.2:
+    resolution: {integrity: sha512-8VCRdFX83gBsWs6XP2rhG8HMaB+JaVyyav4q/EMzoV8fXH8HN6T5IISC92SNma6i1DRA3SVXA61S1rJcB8efgA==}
+    engines: {node: '>=18.0.0'}
 
   qs@6.15.3:
     resolution: {integrity: sha512-O9gl3zCl5h5blw1KGUzQKhA5oUXSl8rwUIM5o0S3nCXMliSvy5Dzx7/DJcI+SwgICv+IneSZwhBh1oSyEHA71A==}
@@ -13591,6 +13604,8 @@ snapshots:
 
   mocked-exports@0.1.1: {}
 
+  monaco-editor@0.52.2: {}
+
   motion-dom@12.42.0:
     dependencies:
       motion-utils: 12.39.0
@@ -14537,6 +14552,13 @@ snapshots:
   punycode@2.3.1: {}
 
   pure-svg-code@1.0.6: {}
+
+  pyodide@0.26.2:
+    dependencies:
+      ws: 8.21.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   qs@6.15.3:
     dependencies:

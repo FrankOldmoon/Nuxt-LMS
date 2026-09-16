@@ -21,12 +21,10 @@
           @keydown.enter="$event.target.blur()" />
         <span v-else class="text-sm text-muted font-mono">{{ row.original.number || '-' }}</span>
       </template>
-      <!-- number 表头：排序按钮 + 一键填充（仅 select class 弹窗可编辑时显示） -->
+      <!-- number 表头：仅排序 -->
       <template v-if="!hideNumber()" #number-header="{ column }">
         <div class="flex items-center gap-1">
           <component :is="sortableHeader(t('classSelector.colNumber'))({ column })" />
-          <UButton v-if="editableNumber()" icon="i-lucide-list-ordered" size="xs" color="neutral" variant="ghost"
-            :title="$t('classSelector.autoFillNumber')" @click="autoFillNumbers" />
         </div>
       </template>
       <template #name-cell="{ row }">
@@ -90,7 +88,7 @@ const {
   showGroup, activeTab, sorting, students, columns,
   hideNumber, hideActions, extraColumns, classId, currentCourseId,
   numberMap, sortableHeader, showMedal, editableNumber,
-  onNumberBlur, autoFillNumbers, openEdit, openReset, openStats,
+  onNumberBlur, openEdit, openReset, openStats,
   statsOpen, statsUserId, statsUser,
 } = useClassUsersTableContext()
 

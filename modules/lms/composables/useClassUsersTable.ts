@@ -68,7 +68,8 @@ export function useClassUsersTable(
   const users = ref<any[]>([])
   const _pending = ref(false)
   const pending = computed(() => props.loading ?? _pending.value)
-  const sorting = ref(props.defaultSort ?? [{ id: 'name', desc: false }])
+  // 默认按 number 列升序排序
+  const sorting = ref(props.defaultSort ?? [{ id: 'number', desc: false }])
 
   const teachers = computed(() => users.value.filter((u) => u.isTeacher === true))
   // 学生行：若外部 rows 未带课程编号，则从全局班级用户缓存按 id 兜底补全 number，
@@ -403,29 +404,6 @@ export function useClassUsersTable(
     return list
   })
 
-  async function autoFillNumbers() {
-    sortedStudents.value.forEach((s: any, idx) => {
-      numberMap[s.id] = String(idx + 1)
-      s.number = String(idx + 1)
-    })
-    if (!currentCourseId.value) return
-    try {
-      await Promise.all(sortedStudents.value.map((s: any) =>
-        cRequest('/api/courses/number', {
-          method: 'POST',
-          body: {
-            course_id: currentCourseId.value,
-            user_id: s.id,
-            number: numberMap[s.id],
-          },
-        })
-      ))
-      toast.add({ title: t('classSelector.numberSaveSuccess'), color: 'success' })
-    } catch {
-      toast.add({ title: t('classSelector.numberSaveFailed'), color: 'error' })
-    }
-  }
-
   const savingNumber = ref<Record<number, boolean>>({})
   async function onNumberBlur(userId: number) {
     const val = numberMap[userId]
@@ -586,7 +564,7 @@ export function useClassUsersTable(
     extraColumns: () => props.extraColumns,
     classId: () => props.classId,
     currentCourseId,
-    openEdit, openReset, openStats, autoFillNumbers, onNumberBlur,
+    openEdit, openReset, openStats, onNumberBlur,
     editModal, editingUserId,
     confirmRemoveTeacher, doRemoveTeacher,
     removeTeacherOpen, removeTeacherUserId, removeTeacherName, removingTeacher,

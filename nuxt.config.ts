@@ -1,6 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 // npx nuxt db generate
 import { existsSync, copyFileSync } from 'node:fs'
+import { execSync } from 'node:child_process'
 
 // nuxt prepare（含 postinstall）时，若 .env / ecosystem.config.cjs 缺失，则从 example 复制生成
 function ensureFromExample(file: string, example: string) {
@@ -10,12 +11,24 @@ function ensureFromExample(file: string, example: string) {
   console.log(`[nuxt] generated ${file} from ${example}`)
 }
 
+// 将 pyodide 运行时复制到 public/pyodide（脚本内含版本标记，幂等），构建/启动时同步本地资源
+function syncPyodide() {
+  try {
+    execSync(`node "${new URL('./scripts/copy-pyodide.mjs', import.meta.url).pathname}"`, {
+      stdio: 'inherit',
+    })
+  } catch {
+    // 复制脚本内部已打印错误，这里静默避免打断后续命令
+  }
+}
+
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
   hooks: {
-    // 仅 nuxt prepare（含 postinstall 触发）时，若 .env / ecosystem.config.cjs 缺失则从 example 复制生成
+    // 每次构建/启动前同步 pyodide 本地资源
     "modules:done": () => {
+      syncPyodide()
       if (!process.argv.includes('prepare')) return
       ensureFromExample('.env', '.env.example')
       ensureFromExample('ecosystem.config.cjs', 'ecosystem.config.example.cjs')

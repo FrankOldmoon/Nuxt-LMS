@@ -51,7 +51,6 @@ function setupMockContext(overrides: any = {}) {
     numberMap: reactive({}),
     sortableHeader: (label: string) => ({ column }: any) => label,
     onNumberBlur: vi.fn(),
-    autoFillNumbers: vi.fn(),
     openEdit: vi.fn(),
     openReset: vi.fn(),
     openStats: vi.fn(),

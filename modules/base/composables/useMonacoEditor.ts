@@ -1,61 +1,48 @@
 /**
- * Monaco Editor：CDN 加载 + 初始化 + 格式化
+ * Monaco Editor：本地 npm 包 + Vite worker 加载 + 初始化 + 格式化
+ *
+ * 不再走 CDN：动态 import('monaco-editor') 由 Vite 打包进本地产物，
+ * 各类语言 worker 通过 Vite 的 ?worker 语法独立分包加载。
+ * 动态导入保证在 SSR（服务端）阶段不会执行浏览器相关代码。
  */
-const CDN_BASE = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs'
 
-// 进行中的脚本加载 Promise，避免并发实例重复加载 / 在脚本未执行完就 resolve
-const scriptLoadPromises = new Map<string, Promise<void>>()
-
-// Monaco 全局加载 Promise（单例），保证 AMD loader 引导流程只执行一次
+// Monaco 全局加载 Promise（单例），避免并发实例重复加载
 let monacoLoadPromise: Promise<any> | null = null
-
-function loadScript(url: string): Promise<void> {
-  if (scriptLoadPromises.has(url)) return scriptLoadPromises.get(url)!
-
-  const promise = new Promise<void>((resolve, reject) => {
-    const existing = document.querySelector(`script[src="${url}"]`) as HTMLScriptElement | null
-    if (existing) {
-      // 标签已存在：若已加载完成直接 resolve，否则等待其 onload（修复竞态）
-      if (existing.dataset.loaded === 'true') {
-        resolve()
-        return
-      }
-      existing.addEventListener('load', () => resolve())
-      existing.addEventListener('error', () => reject(new Error(`Failed to load ${url}`)))
-      return
-    }
-    const script = document.createElement('script')
-    script.src = url
-    script.onload = () => {
-      script.dataset.loaded = 'true'
-      resolve()
-    }
-    script.onerror = () => reject(new Error(`Failed to load ${url}`))
-    document.head.appendChild(script)
-  })
-  scriptLoadPromises.set(url, promise)
-  return promise
-}
 
 function loadMonaco(): Promise<any> {
   if (monacoLoadPromise) return monacoLoadPromise
+  if ((window as any).monaco) return Promise.resolve((window as any).monaco)
+  if (typeof window === 'undefined') {
+    return Promise.reject(new Error('Monaco 仅在浏览器环境可用'))
+  }
 
   monacoLoadPromise = (async () => {
-    if ((window as any).monaco) return (window as any).monaco
+    // Monaco 基础样式（ESM 不自动注入，需手动加载；动态导入避免 SSR 污染）
+    await import('monaco-editor/min/vs/editor/editor.main.css')
+    // 显式指定 ESM 入口（monaco-editor 只有 module 字段，无 main/exports，裸导入无法解析）
+    const monaco = await import('monaco-editor/esm/vs/editor/editor.main')
 
-    await loadScript(`${CDN_BASE}/loader.js`)
+    // 配置各类语言的 Web Worker（本地打包，独立 chunk）
+    const [{ default: editorWorker }, { default: jsonWorker }, { default: cssWorker }, { default: htmlWorker }, { default: tsWorker }] = await Promise.all([
+      import('monaco-editor/esm/vs/editor/editor.worker?worker'),
+      import('monaco-editor/esm/vs/language/json/json.worker?worker'),
+      import('monaco-editor/esm/vs/language/css/css.worker?worker'),
+      import('monaco-editor/esm/vs/language/html/html.worker?worker'),
+      import('monaco-editor/esm/vs/language/typescript/ts.worker?worker'),
+    ])
 
-    const req = (window as any).require
-    if (!req || typeof req.config !== 'function') {
-      throw new Error('Monaco AMD loader 未能注册 window.require')
+    ;(self as any).MonacoEnvironment = {
+      getWorker(_workerId: string, label: string) {
+        if (label === 'json') return new jsonWorker()
+        if (label === 'css' || label === 'scss' || label === 'less') return new cssWorker()
+        if (label === 'html' || label === 'handlebars' || label === 'razor') return new htmlWorker()
+        if (label === 'typescript' || label === 'javascript') return new tsWorker()
+        return new editorWorker()
+      },
     }
 
-    return new Promise((resolve) => {
-      req.config({ paths: { vs: CDN_BASE } })
-      req(['vs/editor/editor.main'], () => {
-        resolve((window as any).monaco)
-      })
-    })
+    ;(window as any).monaco = monaco
+    return monaco
   })()
 
   // 失败时清空缓存以便后续可重试

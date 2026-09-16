@@ -63,7 +63,7 @@ describe('composables/useClassUsersTable', () => {
     const r = useClassUsersTable(makeProps(), { UButton: () => {} })
     expect(r.users.value).toEqual([])
     expect(r.pending.value).toBe(false)
-    expect(r.sorting.value).toEqual([{ id: 'name', desc: false }])
+    expect(r.sorting.value).toEqual([{ id: 'number', desc: false }])
     expect(r.activeTab.value).toBe('students')
   })
 
@@ -213,23 +213,6 @@ describe('composables/useClassUsersTable', () => {
     r.openReset(7)
     expect(r.resetOpen.value).toBe(true)
     expect(r.resetPassword.value).toBe('')
-  })
-
-  it('autoFillNumbers 按排序顺序编号', async () => {
-    setMockFetchHandler(async () => ({ data: null, success: true, msg: '' }))
-    const { useClassUsersTable } = await import('../../composables/useClassUsersTable')
-    const r = useClassUsersTable(makeProps(), { UButton: () => {} })
-    // 默认按 name 升序排序：a(id=2) 在前 → number '1'，b(id=1) → number '2'
-    r.users.value = [
-      { id: 1, name: 'b', isTeacher: false },
-      { id: 2, name: 'a', isTeacher: false },
-    ]
-    await new Promise((resolve) => setTimeout(resolve, 0))
-    await r.autoFillNumbers()
-    expect(r.numberMap[2]).toBe('1')
-    expect(r.numberMap[1]).toBe('2')
-    const toasts = getToastCalls()
-    expect(toasts.some((t) => t.color === 'success')).toBe(true)
   })
 
   it('doResetPassword 空密码不调用', async () => {

@@ -9,6 +9,9 @@ dist
 # Node dependencies
 node_modules
 
+# pyodide 运行时（从 node_modules/pyodide 自动同步，勿入库）
+public/pyodide
+
 # Logs
 logs
 *.log

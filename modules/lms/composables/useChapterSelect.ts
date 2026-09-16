@@ -14,7 +14,17 @@ export function useChapterSelect(
 ) {
   const { t } = useI18n()
   const toast = useToast()
-  const { students, fetchUsers } = useClassUsers()
+  const { students: _students, fetchUsers } = useClassUsers()
+
+  // 学生按 number 列升序自然排序（支持 1A/10C 混合格式），空号排在最前
+  const students = computed(() =>
+    [..._students.value].sort((a: any, b: any) =>
+      String(a?.number ?? '').localeCompare(String(b?.number ?? ''), undefined, {
+        numeric: true,
+        sensitivity: 'base',
+      }),
+    ),
+  )
 
   const loading = ref(false)
   const saving = ref(false)
