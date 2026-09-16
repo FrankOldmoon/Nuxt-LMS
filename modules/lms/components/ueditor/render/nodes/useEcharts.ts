@@ -1,23 +1,9 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { calbaseConfigData, calbaseConfigOptions } from '../cal-service'
-
-const CDN_URL = 'https://cdn.jsdelivr.net/npm/@umoteam/editor-external@latest'
+import { getECharts } from '../../../../../base/utils/getECharts'
 
 const shortId = (length = 8) =>
   Math.random().toString(36).substring(2, length + 2)
-
-// ---- CDN 资源加载 ----
-const loadScript = (url: string, id: string) =>
-  new Promise<void>((resolve) => {
-    if (document.getElementById(id)) return resolve()
-    const script = document.createElement('script')
-    script.src = url
-    script.id = id
-    script.type = 'text/javascript'
-    script.onload = () => resolve()
-    script.onerror = () => resolve()
-    document.head.appendChild(script)
-  })
 
 export function useEcharts(props: any) {
   const attrs = computed(() => props.node.attrs || {})
@@ -45,40 +31,12 @@ export function useEcharts(props: any) {
     }
   })
 
-  const waitForECharts = () => {
-    return new Promise<void>((resolve) => {
-      if (typeof (window as any).echarts !== 'undefined') {
-        resolve()
-        return
-      }
-      let attempts = 0
-      const maxAttempts = 40
-      const checkECharts = () => {
-        if (typeof (window as any).echarts !== 'undefined') {
-          resolve()
-        } else if (attempts < maxAttempts) {
-          attempts++
-          setTimeout(checkECharts, 50)
-        } else {
-          resolve()
-        }
-      }
-      checkECharts()
-    })
-  }
-
   const loadData = async () => {
     await nextTick()
     if (!chartRef.value) return
 
-    await loadScript(
-      `${CDN_URL}/libs/echarts/echarts.min.js`,
-      'echarts-script',
-    )
-    await waitForECharts()
-
-    const echartsGlobal = (window as any).echarts
-    if (typeof echartsGlobal === 'undefined' || !chartRef.value) return
+    const echarts = await getECharts()
+    if (!echarts || !chartRef.value) return
 
     const { chartOptions, chartConfig, mode } = attrs.value
     if (chart !== null) {
@@ -92,18 +50,14 @@ export function useEcharts(props: any) {
     if (mode === 1) {
       if (chartConfig !== null) {
         const newData = calbaseConfigData(chartConfig.data)
-        finalOptions = calbaseConfigOptions(
-          newData,
-          chartConfig.config,
-          { cdnUrl: CDN_URL },
-        )
+        finalOptions = calbaseConfigOptions(newData, chartConfig.config, {})
       }
     } else if (chartOptions !== null) {
       finalOptions = chartOptions
     }
 
     if (finalOptions && Object.keys(finalOptions).length > 0) {
-      chart = echartsGlobal.init(chartRef.value)
+      chart = echarts.init(chartRef.value)
       chart.setOption(finalOptions)
       chartOption.value = finalOptions
     }

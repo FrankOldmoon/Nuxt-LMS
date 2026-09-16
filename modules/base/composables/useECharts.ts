@@ -1,6 +1,8 @@
 /**
- * ECharts 封装：CDN 加载 + 初始化 + 自适应 + 暴露方法
+ * ECharts 封装：本地 npm 加载 + 初始化 + 自适应 + 暴露方法
  */
+import { getECharts } from '../utils/getECharts'
+
 export function useECharts(
   option: () => any,
   theme: () => string | object,
@@ -14,7 +16,6 @@ export function useECharts(
   initOptions: () => any,
   notMerge: () => boolean,
   lazyUpdate: () => boolean,
-  cdnUrl: () => string,
   onReady: (chart: any) => void,
   onClick: (params: any) => void,
   onRendered: () => void,
@@ -22,8 +23,6 @@ export function useECharts(
   const chartRef = ref<HTMLElement | null>(null)
   let chart: any = null
   let resizeObserver: ResizeObserver | null = null
-
-  const CDN_SCRIPT_ID = 'chart-echarts-script'
 
   // ========== 尺寸处理 ==========
   function normalizeSize(val: string | number | null | undefined): string | undefined {
@@ -37,58 +36,13 @@ export function useECharts(
     height: normalizeSize(height()),
   }))
 
-  // ========== CDN 加载 ==========
-  function loadScript(url: string, id: string): Promise<boolean> {
-    return new Promise((resolve) => {
-      if ((window as any).echarts || document.getElementById(id)) {
-        resolve(true)
-        return
-      }
-      const script = document.createElement('script')
-      script.src = url
-      script.id = id
-      script.type = 'text/javascript'
-      script.onload = () => resolve(true)
-      script.onerror = () => resolve(false)
-      document.head.appendChild(script)
-    })
-  }
-
-  function waitForECharts(): Promise<boolean> {
-    return new Promise((resolve) => {
-      if (typeof (window as any).echarts !== 'undefined') {
-        resolve(true)
-        return
-      }
-      let attempts = 0
-      const maxAttempts = 40
-      const check = () => {
-        if (typeof (window as any).echarts !== 'undefined') {
-          resolve(true)
-        } else if (attempts < maxAttempts) {
-          attempts++
-          setTimeout(check, 50)
-        } else {
-          resolve(false)
-        }
-      }
-      check()
-    })
-  }
-
   // ========== 初始化 ==========
   async function initChart() {
     await nextTick()
     if (!chartRef.value) return
 
-    const ok = await loadScript(cdnUrl(), CDN_SCRIPT_ID)
-    if (!ok) {
-      console.error('[Chart] ECharts CDN 加载失败')
-      return
-    }
-    await waitForECharts()
-
-    if (typeof (window as any).echarts === 'undefined' || !chartRef.value) return
+    const echarts = await getECharts()
+    if (!echarts || !chartRef.value) return
 
     disposeChart()
 
@@ -99,8 +53,8 @@ export function useECharts(
 
     const t = theme()
     chart = t
-      ? (window as any).echarts.init(chartRef.value, t, initOpts)
-      : (window as any).echarts.init(chartRef.value, null, initOpts)
+      ? echarts.init(chartRef.value, t, initOpts)
+      : echarts.init(chartRef.value, null, initOpts)
 
     if (group()) chart.group = group()
 

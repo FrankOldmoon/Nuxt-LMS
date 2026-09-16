@@ -11,43 +11,27 @@
 
 import type { MathImage } from './types'
 import { loadHtml2Canvas } from './mathRender'
+import { getECharts } from '../../../base/utils/getECharts'
 
 /** 幻灯片内容区最大宽度（英寸） */
 const MAX_CONTENT_WIDTH = 12.33
 
 // ═══════════════════════════════════════
-// CDN 加载
+// 本地加载
 // ═══════════════════════════════════════
 
-const ECHARTS_CDN = 'https://cdn.jsdelivr.net/npm/@umoteam/editor-external@latest/libs/echarts/echarts.min.js'
 let echartsLoadPromise: Promise<void> | null = null
 
-/** 加载 echarts（幂等） */
+/** 加载 echarts（幂等，设置 window.echarts 供全局兼容） */
 export function loadEcharts(): Promise<void> {
   if (typeof window !== 'undefined' && (window as any).echarts) {
     return Promise.resolve()
   }
   if (echartsLoadPromise) return echartsLoadPromise
 
-  echartsLoadPromise = new Promise<void>((resolve, reject) => {
-    if (document.getElementById('pptx-export-echarts')) {
-      const existing = document.getElementById('pptx-export-echarts') as HTMLScriptElement
-      if ((window as any).echarts) return resolve()
-      existing.addEventListener('load', () => resolve())
-      existing.addEventListener('error', () => reject(new Error('Failed to load echarts')))
-      return
-    }
-    const script = document.createElement('script')
-    script.src = ECHARTS_CDN
-    script.id = 'pptx-export-echarts'
-    script.type = 'text/javascript'
-    script.onload = () => {
-      if ((window as any).echarts) resolve()
-      else reject(new Error('echarts loaded but not found'))
-    }
-    script.onerror = () => reject(new Error('Failed to load echarts from CDN'))
-    document.head.appendChild(script)
-  })
+  echartsLoadPromise = getECharts()
+    .then(() => { /* echarts 已由 getECharts 写入 window.echarts，此处仅等待完成 */ })
+  echartsLoadPromise.catch(() => { echartsLoadPromise = null })
 
   return echartsLoadPromise
 }

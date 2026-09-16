@@ -74,6 +74,9 @@ importers:
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@cloudflare/workers-types@4.20260628.1)(@electric-sql/pglite@0.5.3)(postgres@3.4.9)
+      echarts:
+        specifier: 5.6.0
+        version: 5.6.0
       edge-tts-universal:
         specifier: ^1.4.0
         version: 1.4.0

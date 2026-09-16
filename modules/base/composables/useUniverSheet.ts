@@ -1,6 +1,8 @@
 /**
- * Univer 在线表格：CDN 加载 + 初始化 + 数据读写
+ * Univer 在线表格：本地加载 + 初始化 + 数据读写
  */
+import { getECharts } from '../utils/getECharts'
+
 export function useUniverSheet(
   headers: () => any[],
   colWidths: () => Record<string, number>,
@@ -49,7 +51,6 @@ export function useUniverSheet(
       'https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js',
       'https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js',
       'https://cdn.jsdelivr.net/npm/rxjs@latest/dist/bundles/rxjs.umd.min.js',
-      'https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js',
       'https://cdn.jsdelivr.net/npm/@univerjs/presets/lib/umd/index.js',
       'https://cdn.jsdelivr.net/npm/@univerjs/preset-sheets-core/lib/umd/index.js',
     ],
@@ -70,6 +71,9 @@ export function useUniverSheet(
     if (!sheetContainer.value) return
 
     await loadCss(UNIVER_CDN.css)
+
+    // 先确保本地 echarts 就绪并写入 window.echarts（Univer 图表扩展依赖全局 echarts）
+    try { await getECharts() } catch (_) { /* echarts 加载失败不阻塞基础表格 */ }
 
     // 按顺序加载必需脚本（存在依赖关系）
     for (const url of UNIVER_CDN.scripts) {

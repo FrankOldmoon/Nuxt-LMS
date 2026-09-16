@@ -31,7 +31,6 @@ beforeEach(() => {
     _initOptions: () => any,
     _notMerge: () => boolean,
     _lazyUpdate: () => boolean,
-    _cdnUrl: () => string,
     _onReady: (chart: any) => void,
     _onClick: (params: any) => void,
     _onRendered: () => void,

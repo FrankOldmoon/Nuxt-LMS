@@ -26,7 +26,6 @@ function makeArgs(overrides: Partial<Record<string, () => any>> = {}) {
     initOptions: () => ({}),
     notMerge: () => false,
     lazyUpdate: () => false,
-    cdnUrl: () => 'https://cdn.example.com/echarts.js',
     onReady: (_chart: any) => {},
     onClick: (_p: any) => {},
     onRendered: () => {},

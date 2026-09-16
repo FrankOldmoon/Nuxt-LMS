@@ -16,7 +16,6 @@ const props = defineProps({
   initOptions: { type: Object, default: () => ({}) },
   notMerge: { type: Boolean, default: false },
   lazyUpdate: { type: Boolean, default: false },
-  cdnUrl: { type: String, default: 'https://cdn.jsdelivr.net/npm/@umoteam/editor-external@latest/libs/echarts/echarts.min.js' },
 })
 
 const emit = defineEmits(['ready', 'click', 'rendered'])
@@ -41,7 +40,6 @@ const {
   () => props.initOptions,
   () => props.notMerge,
   () => props.lazyUpdate,
-  () => props.cdnUrl,
   (chart) => emit('ready', chart),
   (params) => emit('click', params),
   () => emit('rendered'),
