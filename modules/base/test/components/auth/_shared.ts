@@ -97,6 +97,12 @@ export const _globalStubs: Record<string, any> = {
     props: ['modelValue', 'rows'],
   },
   UBadge: { template: '<span class="ubadge"><slot /></span>', props: ['color', 'variant', 'size'] },
+  // 多 Tab 容器：渲染可点击的 tab 按钮，用于测试「切换 Tab → 渲染对应内容」
+  UTabs: {
+    template: '<div class="utabs"><button v-for="i in items" :key="i.value" class="utab" @click="$emit(\'update:modelValue\', i.value)">{{ i.label }}</button></div>',
+    props: ['items', 'modelValue'],
+    emits: ['update:modelValue'],
+  },
   UAvatar: {
     template: '<div class="uavatar" :data-src="src" :data-alt="alt" :data-text="text">{{ text || alt }}</div>',
     props: ['src', 'alt', 'size', 'text'],

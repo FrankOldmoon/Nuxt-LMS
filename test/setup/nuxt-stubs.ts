@@ -15,7 +15,7 @@
  * setupNuxtStubs()
  * ```
  */
-import { ref, computed, reactive, watch, watchEffect, onMounted, onBeforeUnmount, onUnmounted, onBeforeMount, nextTick, getCurrentInstance, toValue, resolveComponent } from 'vue'
+import { ref, computed, reactive, shallowRef, shallowReactive, toRef, toRefs, unref, isRef, markRaw, triggerRef, watch, watchEffect, onMounted, onBeforeUnmount, onUnmounted, onBeforeMount, nextTick, getCurrentInstance, toValue, resolveComponent } from 'vue'
 
 // ===================== 1. Nuxt auto-imports =====================
 
@@ -226,6 +226,12 @@ import { useRaceEditContext } from '../../modules/lms/components/ueditor/extensi
 
 /** formatTime — base auto-import from modules/base/utils/format.ts (pure function) */
 import { formatTime } from '../../modules/base/utils/format'
+
+/** compressImage — base auto-import from modules/base/utils/compressImage.ts
+ *  测试环境没有 canvas / Image，桩成「原样返回文件」，保证上传链路可测 */
+export async function compressImage(file: File, _options?: any): Promise<File> {
+  return file
+}
 
 /** useReadingTracker 桩 — 返回默认的 hover 追踪接口（list-item / task-item / readingBlock 用） */
 export function useReadingTracker(_blockKey: string) {
@@ -1195,6 +1201,15 @@ const _stubsToExpose: Record<string, any> = {
   ref,
   computed,
   reactive,
+  // Nuxt 会自动 import 的 Vue reactivity API：组件在测试环境挂载时同样需要
+  shallowRef,
+  shallowReactive,
+  toRef,
+  toRefs,
+  unref,
+  isRef,
+  markRaw,
+  triggerRef,
   watch,
   watchEffect,
   onMounted,
@@ -1239,6 +1254,7 @@ const _stubsToExpose: Record<string, any> = {
   useEmbeddingParentCourse,
   // base utils auto-imports
   formatTime,
+  compressImage,
   // Nitro auto-imports
   defineEventHandler,
   eventHandler,

@@ -13,7 +13,16 @@ beforeEach(() => {
 
 const _globalConfig = {
   mocks: { $t: (k: string) => k, $i18n: { t: (k: string) => k, locale: { value: 'en' } } },
-  stubs: {},
+  stubs: {
+    // 操作区改用 Nuxt UI 的 UButton（带 href 时 Nuxt UI 渲染为 <a>），测试里照此桩掉
+    UButton: {
+      template: '<a v-if="href" class="ubutton" :href="href" :download="download" :target="target"><slot /></a>'
+        + '<button v-else class="ubutton" :aria-label="ariaLabel"><slot /></button>',
+      props: ['icon', 'size', 'color', 'variant', 'href', 'download', 'target', 'aria-label'],
+    },
+    UTooltip: { template: '<span class="utooltip"><slot /></span>', props: ['text'] },
+    UIcon: { template: '<span class="uicon" />', props: ['name'] },
+  },
 }
 
 describe('ueditor/render/nodes/file.vue', () => {
@@ -25,9 +34,10 @@ describe('ueditor/render/nodes/file.vue', () => {
     })
     expect(wrapper.find('.umo-node-file').exists()).toBe(true)
     expect(wrapper.text()).toContain('doc.pdf')
-    const link = wrapper.find('a')
+    // 下载按钮带 href（Nuxt UI 的 UButton 带 href 时渲染为 <a>）
+    const link = wrapper.find(`a[href="https://example.com/doc.pdf"]`)
     expect(link.exists()).toBe(true)
-    expect(link.attributes('href')).toBe('https://example.com/doc.pdf')
+    expect(link.attributes('download')).toBe('doc.pdf')
   })
 
   it('shows file icon image based on extension', async () => {

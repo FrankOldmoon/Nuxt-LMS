@@ -41,7 +41,8 @@ describe('layout/difyChat.vue', () => {
     expect(document.getElementById(SCRIPT_ID)).toBeTruthy()
     expect((window as any).difyChatbotConfig?.baseUrl).toBe('http://10.28.1.153')
     expect((window as any).difyChatbotConfig?.token).toBe('REDACTED')
-    expect((window as any).difyChatbotConfig?.systemVariables?.user_id).toBe('42')
+    // user_id 带「每次页面加载唯一」的后缀，让 Dify 每次刷新都开新会话（不续旧会话历史）
+    expect((window as any).difyChatbotConfig?.systemVariables?.user_id).toMatch(/^42_[a-z0-9]+$/)
   })
 
   it('登出时清理脚本与配置', async () => {

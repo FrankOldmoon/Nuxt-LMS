@@ -182,10 +182,20 @@ describe('submitBroadcast: 文本生成（i18n key + 参数）', () => {
 })
 
 describe('submitBroadcast: 端到端', () => {
-  it('从 from 字段读取用户显示名', async () => {
+  it('显示名取 user.name（name 优先）', async () => {
+    mocks._mockDb.limit.mockResolvedValue([{ classId: 5, name: '张三', preferName: '老师', username: 't1' }])
+    await broadcastSubmitDanmaku({ userId: 1, kind: 'homework', gainedExp: 5 })
+    expect(lastBroadcast()!.from).toBe('张三')
+  })
+
+  it('name 为空时回退 preferName，再回退 username', async () => {
     mocks._mockDb.limit.mockResolvedValue([{ classId: 5, name: '', preferName: '老师', username: 't1' }])
     await broadcastSubmitDanmaku({ userId: 1, kind: 'homework', gainedExp: 5 })
     expect(lastBroadcast()!.from).toBe('老师')
+
+    mocks._mockDb.limit.mockResolvedValue([{ classId: 5, name: '', preferName: '', username: 't1' }])
+    await broadcastSubmitDanmaku({ userId: 1, kind: 'homework', gainedExp: 5 })
+    expect(lastBroadcast()!.from).toBe('t1')
   })
 
   it('用户无 classId → 静默跳过', async () => {

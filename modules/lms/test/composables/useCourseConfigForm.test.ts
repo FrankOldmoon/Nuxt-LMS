@@ -68,7 +68,7 @@ describe('composables/useCourseConfigForm', () => {
 
   it('loadGlobalLmsConfig 通过 initFromConfig 间接拉取配置', async () => {
     setMockFetchHandler(async (url) => {
-      if (url === '/api/config/get') {
+      if (url === '/api/config/lms') {
         return { data: { course: { showDanmaku: false, showProgress: true } }, success: true, msg: '' }
       }
       return { data: null, success: true, msg: '' }
@@ -83,7 +83,7 @@ describe('composables/useCourseConfigForm', () => {
 
   it('initFromConfig 从 cfg 初始化', async () => {
     setMockFetchHandler(async (url) => {
-      if (url === '/api/config/get') {
+      if (url === '/api/config/lms') {
         return { data: { course: { showDanmaku: true, showProgress: true } }, success: true, msg: '' }
       }
       return { data: null, success: true, msg: '' }
@@ -142,7 +142,7 @@ describe('composables/useCourseConfigForm', () => {
 
   it('deepMerge 通过 initFromConfig 间接测试合并行为', async () => {
     setMockFetchHandler(async (url) => {
-      if (url === '/api/config/get') {
+      if (url === '/api/config/lms') {
         return { data: { course: { showDanmaku: true } }, success: true, msg: '' }
       }
       return { data: null, success: true, msg: '' }

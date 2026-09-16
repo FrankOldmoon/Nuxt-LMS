@@ -14,9 +14,10 @@ beforeEach(() => {
 })
 
 const _globalStubs = {
-  UAvatar: {
-    template: '<span class="uavatar">{{ alt || text }}</span>',
-    props: ['src', 'alt', 'text', 'size'],
+  // 组件内头像走 AvatarWithFrame（UAvatar + 头像框），测试里桩掉并暴露关键 props
+  AvatarWithFrame: {
+    template: '<span class="avatar-with-frame" :data-src="src" :data-frame="frame">{{ text }}</span>',
+    props: ['src', 'alt', 'text', 'size', 'frame', 'userId', 'shape'],
   },
   UButton: {
     template: '<button class="ubutton" :disabled="loading" @click="$emit(\'click\', $event)"><slot /></button>',
@@ -81,14 +82,15 @@ describe('course/editor/memberRow.vue', () => {
     expect(btn.attributes('disabled')).toBeDefined()
   })
 
-  it('渲染 UAvatar（首字母）', async () => {
+  it('渲染头像（AvatarWithFrame，含首字母）', async () => {
     const { default: MemberRow } = await import('../../../../components/course/editor/memberRow.vue')
     const wrapper = mount(MemberRow, {
       props: { member: sampleMember, role: 'teacher', updating: false },
       global: _globalConfig,
     })
-    const avatar = wrapper.find('.uavatar')
+    const avatar = wrapper.find('.avatar-with-frame')
     expect(avatar.exists()).toBe(true)
     expect(avatar.text()).toContain('张')
+    expect(avatar.attributes('data-src')).toBe('https://example.com/a.png')
   })
 })

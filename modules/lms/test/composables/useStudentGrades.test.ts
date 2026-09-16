@@ -30,7 +30,7 @@ describe('composables/useStudentGrades', () => {
     expect(r.stats.value.questionCount).toBe(0)
     expect(r.score.value.questionScore).toBe(0)
     expect(r.score.value.attitudeScore).toBe(0)
-    expect(r.statCards.value.length).toBe(5)
+    expect(r.statCards.value.length).toBe(4)
     expect(r.radarOption.value).toHaveProperty('radar')
   })
 
@@ -115,7 +115,7 @@ describe('composables/useStudentGrades', () => {
     expect(calls.some(u => u.includes('classId=99'))).toBe(true)
   })
 
-  it('statCards 包含 5 项且 label/value 来自 stats', async () => {
+  it('statCards 包含 4 项（race 已移除）且 label/value 来自 stats', async () => {
     setMockFetchHandler(async (url: string) => {
       if (String(url).includes('/api/courses/stats')) {
         return { data: { questionCount: 1, homeworkCount: 2, quizCount: 3, raceCount: 4, commentCount: 5 }, success: true, msg: '' }
@@ -129,17 +129,18 @@ describe('composables/useStudentGrades', () => {
     const isOpen = ref(true)
     const r = useStudentGrades({ courseId: 1, userId: 1 }, isOpen)
     await new Promise(res => setTimeout(res, 0))
-    expect(r.statCards.value).toHaveLength(5)
+    expect(r.statCards.value).toHaveLength(4)
     const values = r.statCards.value.map((c: any) => c.value)
-    expect(values).toEqual([1, 2, 3, 4, 5])
+    // 卡片顺序：题目 / 作业 / 测验 / 评论（raceCount 不再展示）
+    expect(values).toEqual([1, 2, 3, 5])
   })
 
-  it('radarOption 包含 6 个维度的 indicator', async () => {
+  it('radarOption 包含 5 个维度的 indicator（raceScore 已移除）', async () => {
     const { useStudentGrades } = await import('../../composables/useStudentGrades')
     const isOpen = ref(false)
     const r = useStudentGrades({ courseId: 1, userId: 1 }, isOpen)
     const opt: any = r.radarOption.value
-    expect(opt.radar.indicator).toHaveLength(6)
-    expect(opt.series[0].data[0].value).toHaveLength(6)
+    expect(opt.radar.indicator).toHaveLength(5)
+    expect(opt.series[0].data[0].value).toHaveLength(5)
   })
 })

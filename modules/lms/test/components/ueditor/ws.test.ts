@@ -18,14 +18,16 @@ const _globalConfig = {
 }
 
 describe('ueditor/ws.vue', () => {
-  it('mounts without error with no lockId (empty template)', async () => {
+  it('mounts without error with no lockId (renders only a hidden placeholder)', async () => {
     const { default: Ws } = await import('../../../components/ueditor/ws.vue')
     const wrapper = mount(Ws, {
       props: {},
       global: _globalConfig,
     })
     expect(wrapper.exists()).toBe(true)
-    expect(wrapper.html()).toBe('')
+    // 纯逻辑组件：只渲染一个 hidden 占位节点（避免 SSR 空输出导致水合错位），不产生可见内容
+    expect(wrapper.find('span[hidden]').exists()).toBe(true)
+    expect(wrapper.text()).toBe('')
   })
 
   it('exposes isLockedByOther ref (initially false)', async () => {

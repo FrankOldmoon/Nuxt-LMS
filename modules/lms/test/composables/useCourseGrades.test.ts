@@ -53,14 +53,15 @@ describe('composables/useCourseGrades', () => {
     expect(r.externalScoreSaving.value).toBe(null)
   })
 
-  it('导出 DEFAULT_GRADE_CRITERIA 与 GRADE_WEIGHT_KEYS', async () => {
+  it('导出 DEFAULT_GRADE_CRITERIA 与 GRADE_WEIGHT_KEYS（raceScore 已移除，共 6 项）', async () => {
     const mod = await import('../../composables/useCourseGrades')
     expect(mod.DEFAULT_GRADE_CRITERIA).toBeDefined()
-    expect(mod.DEFAULT_GRADE_CRITERIA.weights.length).toBe(7)
+    expect(mod.DEFAULT_GRADE_CRITERIA.weights.length).toBe(6)
     expect(mod.DEFAULT_GRADE_CRITERIA.levels.length).toBe(5)
-    expect(mod.GRADE_WEIGHT_KEYS.length).toBe(7)
+    expect(mod.GRADE_WEIGHT_KEYS.length).toBe(6)
     expect(mod.GRADE_WEIGHT_KEYS).toContain('questionScore')
     expect(mod.GRADE_WEIGHT_KEYS).toContain('externalScore')
+    expect(mod.GRADE_WEIGHT_KEYS).not.toContain('raceScore')
   })
 
   it('gradeCriteria 初始为 DEFAULT_GRADE_CRITERIA 副本', async () => {
@@ -96,12 +97,12 @@ describe('composables/useCourseGrades', () => {
     expect(r.canEdit.value).toBe(false)
   })
 
-  it('extraColumns 有 11 列', async () => {
+  it('extraColumns 有 10 列（raceScore 已移除）', async () => {
     setMockAuthUser({ id: 1, name: 'admin' }, [{ code: 'admin', name: 'Admin' }])
     const isOpen = ref(false)
     const { useCourseGrades } = await import('../../composables/useCourseGrades')
     const r = useCourseGrades({ courseId: 1, classId: 1 }, isOpen)
-    expect(r.extraColumns.value.length).toBe(11)
+    expect(r.extraColumns.value.length).toBe(10)
     const ids = r.extraColumns.value.map((c: any) => c.id)
     expect(ids).toContain('group')
     expect(ids).toContain('grade')
@@ -201,12 +202,12 @@ describe('composables/useCourseGrades', () => {
     expect(r.rows.value[0].id).toBe(2)
   })
 
-  it('statCards 有 5 项', async () => {
+  it('statCards 有 4 项（race 已移除）', async () => {
     setMockAuthUser({ id: 1, name: 'admin' }, [{ code: 'admin', name: 'Admin' }])
     const isOpen = ref(false)
     const { useCourseGrades } = await import('../../composables/useCourseGrades')
     const r = useCourseGrades({ courseId: 1, classId: 1 }, isOpen)
-    expect(r.statCards.value.length).toBe(5)
+    expect(r.statCards.value.length).toBe(4)
   })
 
   it('radarOption：无行时返回空对象', async () => {
@@ -228,7 +229,7 @@ describe('composables/useCourseGrades', () => {
     const radar = r.radarOption.value
     expect(radar.radar).toBeDefined()
     expect(radar.series).toBeDefined()
-    expect(radar.radar.indicator.length).toBe(6)
+    expect(radar.radar.indicator.length).toBe(5)
   })
 
   it('resetCriteria：设为默认并标记 dirty', async () => {

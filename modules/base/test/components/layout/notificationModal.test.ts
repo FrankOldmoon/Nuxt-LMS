@@ -8,11 +8,14 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { resetAllStubs, setMockI18n, setMockFetchHandler } from '../../../../../test/setup/nuxt-stubs'
 import { useNotifications } from '../../../composables/useNotifications'
+import { useUnreadCounts } from '../../../composables/useUnreadCounts'
 
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
   ;(globalThis as any).useNotifications = useNotifications
+  // 组件里还用了 useUnreadCounts（广播发送后刷新未读角标），auto-import 需要显式暴露
+  ;(globalThis as any).useUnreadCounts = useUnreadCounts
 })
 
 const _globalStubs = {

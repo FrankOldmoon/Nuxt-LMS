@@ -31,7 +31,7 @@ describe('composables/useCourseEditor', () => {
     expect(r.open.value).toBe(false)
     expect(r.loading.value).toBe(false)
     expect(r.saving.value).toBe(false)
-    expect(r.form.value).toEqual({ name: '', code: '', tags: [] })
+    expect(r.form.value).toEqual({ name: '', code: '', tags: [], status: 'published' })
     expect(r.contentJson.value).toBeNull()
     expect(r.lockId.value).toBe('courses_1')
   })

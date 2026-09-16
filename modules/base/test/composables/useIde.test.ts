@@ -11,12 +11,12 @@ beforeEach(() => {
 })
 
 describe('composables/useIde - langItems', () => {
-  it('返回 4 种语言选项', async () => {
+  it('返回 6 种语言选项', async () => {
     const { useIde } = await import('../../composables/useIde')
     const { langItems } = useIde(() => undefined, () => 'python', () => {})
-    expect(langItems.value).toHaveLength(4)
+    expect(langItems.value).toHaveLength(6)
     const values = langItems.value.map((i: any) => i.value)
-    expect(values).toEqual(['python', 'javascript', 'cpp', 'java'])
+    expect(values).toEqual(['python', 'javascript', 'cpp', 'java', 'pseudocode', 'sql'])
   })
 })
 

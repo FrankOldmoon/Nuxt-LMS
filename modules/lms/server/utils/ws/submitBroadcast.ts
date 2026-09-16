@@ -143,7 +143,7 @@ function buildDanmakuText(args: BroadcastSubmitDanmakuArgs): { key: string; para
 }
 
 /**
- * 异步查 user 的 classId + 显示名（preferName > name > username）。
+ * 异步查 user 的 classId + 显示名（name > preferName > username）。
  * 任何错误都吞掉（返回 null），由调用方静默跳过广播。
  */
 async function resolveUserClassContext(userId: number): Promise<{ classId: number; name: string } | null> {
@@ -162,8 +162,9 @@ async function resolveUserClassContext(userId: number): Promise<{ classId: numbe
     if (!u || !u.classId) return null
     return {
       classId: Number(u.classId),
-      // 弹幕来源显示 users.name（需求：作答弹幕最前面用 user.name）
-      name: String(u.name || u.username || 'anonymous'),
+      // 弹幕来源显示 users.name（需求：作答弹幕最前面用 user.name）；
+      // name 为空时回退 preferName，再回退 username
+      name: String(u.name || u.preferName || u.username || 'anonymous'),
     }
   } catch {
     return null
