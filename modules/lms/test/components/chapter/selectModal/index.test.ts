@@ -45,6 +45,14 @@ function mockChapterSelect(overrides: any = {}) {
   }
 }
 
+const WheelStub = {
+  template: '<div class="wheel-stub" />',
+  props: ['users', 'selectedIds', 'winner', 'celebrate', 'spinning'],
+  emits: ['spin', 'pick', 'celebrateEnd'],
+  // 与真实组件 defineExpose 的 spinTo 对齐：父组件 await 转盘旋转结束
+  methods: { spinTo: async () => {} },
+}
+
 const _globalStubs = {
   UModal: {
     template: '<div v-if="open" class="modal"><slot name="content" /></div>',
@@ -53,12 +61,16 @@ const _globalStubs = {
   UButton: {
     template: '<button class="ubtn" :disabled="loading" @click="$emit(\'click\', $event)">{{ label }}<slot /></button>',
     props: ['label', 'color', 'size', 'variant', 'icon', 'loading', 'disabled'],
+    // 声明 emits 后 onClick 不再透传到根元素，避免一次点击触发两次
+    emits: ['click'],
   },
   UInput: {
     template: '<input :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" :type="type" />',
     props: ['modelValue', 'type', 'min', 'max', 'size', 'placeholder'],
   },
   UIcon: { template: '<span class="uicon" />', props: ['name'] },
+  UTooltip: { template: '<div class="utooltip"><slot /></div>', props: ['text'] },
+  ChapterSelectModalWheel: WheelStub,
   UPopover: { template: '<div class="upopover"><slot /><slot name="content" /></div>', props: ['modal'] },
   AuthUserCard: {
     template: '<div class="user-card" :class="{ selected }" @click="$emit(\'click\')" />',
@@ -165,5 +177,64 @@ describe('chapter/selectModal/index.vue', () => {
     })
     // 10 个 score-btn（+1..+5, -1..-5）
     expect(wrapper.findAll('.score-btn').length).toBe(10)
+  })
+
+  it('右上角模式切换按钮：切到转盘模式并隐藏卡片网格', async () => {
+    ;(globalThis as any).useChapterSelect = () =>
+      mockChapterSelect({
+        loading: ref(false),
+        students: ref([{ id: 1, name: '张三' }, { id: 2, name: '李四' }]),
+      })
+    const { default: SelectModal } = await import('../../../../components/chapter/selectModal/index.vue')
+    const wrapper = mount(SelectModal, {
+      props: { open: true, courseId: 1, classId: 1 },
+      global: _globalConfig,
+    })
+    expect(wrapper.find('.wheel-stub').exists()).toBe(false)
+    expect(wrapper.findAll('.user-card').length).toBe(2)
+
+    await wrapper.find('.picker-mode-btn').trigger('click')
+
+    expect(wrapper.find('.wheel-stub').exists()).toBe(true)
+    expect(wrapper.findAll('.user-card').length).toBe(0)
+  })
+
+  it('转盘模式随机抽取：转盘转完后选中中奖学生', async () => {
+    const ctx = mockChapterSelect({
+      loading: ref(false),
+      students: ref([{ id: 7, name: '张三' }]),
+    })
+    ;(globalThis as any).useChapterSelect = () => ctx
+    const { default: SelectModal } = await import('../../../../components/chapter/selectModal/index.vue')
+    const wrapper = mount(SelectModal, {
+      props: { open: true, courseId: 1, classId: 1 },
+      global: _globalConfig,
+    })
+    await wrapper.find('.picker-mode-btn').trigger('click')
+
+    const spinBtn = wrapper.findAll('button').find(b => b.text().includes('chapter.wheelSpin'))!
+    await spinBtn.trigger('click')
+    await flushPromises()
+
+    expect(ctx.selectedIds.value).toEqual([7])
+  })
+
+  it('转盘模式手动点选扇区：切换该学生选中状态', async () => {
+    const ctx = mockChapterSelect({
+      loading: ref(false),
+      students: ref([{ id: 1, name: '张三' }]),
+    })
+    ;(globalThis as any).useChapterSelect = () => ctx
+    const { default: SelectModal } = await import('../../../../components/chapter/selectModal/index.vue')
+    const wrapper = mount(SelectModal, {
+      props: { open: true, courseId: 1, classId: 1 },
+      global: _globalConfig,
+    })
+    await wrapper.find('.picker-mode-btn').trigger('click')
+
+    wrapper.findComponent(WheelStub).vm.$emit('pick', { id: 1, name: '张三' })
+    await flushPromises()
+
+    expect(ctx.toggleSelect).toHaveBeenCalledWith(1)
   })
 })
