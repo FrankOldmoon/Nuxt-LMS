@@ -17,7 +17,8 @@ const _mockDb = {
   set: vi.fn().mockReturnThis(),
 }
 const _mockSchema = {
-  userClasses: { userId: 'userId', classId: 'classId' },
+  users: { id: 'id', classId: 'classId', defaultClass: 'defaultClass' },
+  userClasses: { userId: 'userId', classId: 'classId', deletedAt: 'deletedAt' },
   userQuestions: { userId: 'userId', questionCid: 'questionCid' },
   userHomeworks: { userId: 'userId', homeworkCid: 'homeworkCid' },
   userComments: { userId: 'userId', commentCid: 'commentCid' },
@@ -79,17 +80,38 @@ describe('API: condition/check.post', () => {
     expect(result.data.met).toBe(false)
   })
 
-  it('class 条件：属于该班级返回 met=true', async () => {
+  it('class 条件：userClasses 关联命中返回 met=true', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
-    _mockDb.limit = vi.fn().mockResolvedValue([{ userId: 1 }])
+    // 第 1 次 limit：users 主班级查询（无主班级）；第 2 次 limit：userClasses 关联命中
+    _mockDb.limit = vi.fn()
+      .mockResolvedValueOnce([{ classId: null, defaultClass: null }])
+      .mockResolvedValueOnce([{ userId: 1 }])
     const handler = (await import('../../server/api/condition/check.post')).default
     const result = await handler(makeEvent({ conditions: [{ type: 'class', value: 5 }] }))
     expect(result.data.met).toBe(true)
   })
 
+  it('class 条件：仅设 users.classId 主班级也命中（无需 userClasses 关联行）', async () => {
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    _mockDb.limit = vi.fn().mockResolvedValueOnce([{ classId: 5, defaultClass: null }])
+    const handler = (await import('../../server/api/condition/check.post')).default
+    const result = await handler(makeEvent({ conditions: [{ type: 'class', value: 5 }] }))
+    expect(result.data.met).toBe(true)
+  })
+
+  it('class 条件：仅设 users.defaultClass.id 当前班级也命中', async () => {
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    _mockDb.limit = vi.fn().mockResolvedValueOnce([{ classId: null, defaultClass: { id: 5, name: '5A' } }])
+    const handler = (await import('../../server/api/condition/check.post')).default
+    const result = await handler(makeEvent({ conditions: [{ type: 'class', value: '5' }] }))
+    expect(result.data.met).toBe(true)
+  })
+
   it('class 条件：不属于该班级返回 met=false', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
-    _mockDb.limit = vi.fn().mockResolvedValue([])
+    _mockDb.limit = vi.fn()
+      .mockResolvedValueOnce([{ classId: 9, defaultClass: null }])
+      .mockResolvedValueOnce([])
     const handler = (await import('../../server/api/condition/check.post')).default
     const result = await handler(makeEvent({ conditions: [{ type: 'class', value: 5 }] }))
     expect(result.data.met).toBe(false)

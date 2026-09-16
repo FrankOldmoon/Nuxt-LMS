@@ -3,6 +3,9 @@
  *
  * base 模块的 /api/auth/me 通过 runOnMeEnrich 调用本钩子，
  * 将课程/班级关联 ID 注入认证数据，供前端 useAuthLms 使用。
+ *
+ * classIds 口径（前端 condition 等本地判定的唯一数据源）：
+ *   userClasses 关联 ∪ users.classId 主班级 ∪ users.defaultClass.id 当前班级（去重、排除已删除）
  */
 import { db, schema } from '@nuxthub/db'
 import { eq, and, isNull, or } from 'drizzle-orm'
@@ -39,14 +42,6 @@ export default defineNitroPlugin(() => {
       .filter((r) => r.isEditor)
       .map((r) => r.courseId)
 
-    // 查询用户关联的班级
-    const classRows = await db
-      .select({ classId: schema.userClasses.classId })
-      .from(schema.userClasses)
-      .where(eq(schema.userClasses.userId, userId))
-
-    const classIds = classRows.map((r) => r.classId)
-
     // 班级名单（含名称）：userClasses 关联班级 ∪ users.classId 主班级，去重、排除已删除。
     // 前端 usercard 等直接读取，无需再单独请求 /api/classes/mine。
     const associated = await db
@@ -55,6 +50,7 @@ export default defineNitroPlugin(() => {
       .innerJoin(schema.classes, eq(schema.userClasses.classId, schema.classes.id))
       .where(and(
         eq(schema.userClasses.userId, userId),
+        isNull(schema.userClasses.deletedAt),
         isNull(schema.classes.deletedAt),
       ))
     let classes: { id: number; name: string }[] = associated
@@ -67,6 +63,16 @@ export default defineNitroPlugin(() => {
         .limit(1)
       if (primary[0]) classes = [primary[0], ...classes]
     }
+
+    // classIds：班级归属判定口径 = userClasses 关联 ∪ users.classId 主班级 ∪ users.defaultClass.id 当前班级。
+    // 与 courses/show.get.ts、getClassUsers、条件判断 checkClass 保持一致
+    // （此前只取 userClasses，导致仅设 users 表班级字段的学生 class 条件永不通过）。
+    const defaultClassId = Number((user.defaultClass as any)?.id) || 0
+    const classIds = [...new Set([
+      ...classes.map((c) => c.id),
+      ...(defaultClassId ? [defaultClassId] : []),
+    ])]
+    console.log('[me-enrich] classIds', classIds, 'defaultClassId', defaultClassId)
 
     return { teacherCourseIds, editorCourseIds, classIds, classes }
   })
