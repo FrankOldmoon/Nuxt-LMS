@@ -7,6 +7,9 @@ export function useVideo(props: any) {
   const fromRecord = inject<import('vue').Ref<boolean>>('questionFromRecord')
   const { courseId, chapterId } = useLmsContext()
   const chapterTask = useChapterTask()
+  // 外层"真正提交按钮"回调（useQuestionRender 提供）。无子题时看完视频自动走它，
+  // 让提交状态/toast/烟花/进度上报等完整流程一并触发（保留叶子 submit 作为兜底）。
+  const triggerAutoSubmit = inject<(() => void) | null>('questionTriggerAutoSubmit', null)
 
   // ── 配置解析 ──
   const videoSrc = computed(() => {
@@ -55,9 +58,13 @@ export function useVideo(props: any) {
     return Object.values(subRecords).filter(s => s.correct).length
   })
 
-  // 整体是否通过（同时满足：watchedRatio >= 0.95 + 所有子题答对）
+  // 整体是否通过：
+  // - 无子题：只要看完视频（watchedRatio >= 0.95）即通过
+  // - 有子题：看完视频 + 所有子题答对
   const allPassed = computed(() => {
-    return watchedRatio.value >= 0.95 && correctSubCount.value >= subQuestions.value.length && subQuestions.value.length > 0
+    if (watchedRatio.value < 0.95) return false
+    if (subQuestions.value.length === 0) return true
+    return correctSubCount.value >= subQuestions.value.length
   })
 
   const statusText = computed(() => {
@@ -94,10 +101,25 @@ export function useVideo(props: any) {
     }
   }
 
+  // 无子题时的自动提交：仅从"未通过"到"通过"触发一次
+  let autoSubmitted = false
+  function autoSubmitIfNeeded() {
+    if (autoSubmitted || submitted?.value) return
+    if (subQuestions.value.length > 0 || !allPassed.value) return
+    autoSubmitted = true
+    if (triggerAutoSubmit) triggerAutoSubmit()
+    else submit()
+  }
+
   function onVideoEnded() {
     // 视频结束时，确保 watchedRatio = 1
     if (duration.value > 0) {
       watchedRatio.value = 1
+    }
+    // 无子题：看完视频即自动触发提交（走外层真正提交按钮流程）
+    if (subQuestions.value.length === 0) {
+      autoSubmitIfNeeded()
+      return
     }
     // 如果有子题未弹出，强制弹出
     if (!activeQuestion.value) {
@@ -172,6 +194,7 @@ export function useVideo(props: any) {
   }
 
   function reset() {
+    autoSubmitted = false
     watchedRatio.value = 0
     Object.keys(subRecords).forEach(k => delete subRecords[Number(k)])
     Object.keys(triggered).forEach(k => delete triggered[Number(k)])
