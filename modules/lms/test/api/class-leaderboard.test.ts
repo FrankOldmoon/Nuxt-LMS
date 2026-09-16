@@ -13,7 +13,7 @@ const _mockSchema: any = {
   userCourses: { userId: 'userId', courseId: 'courseId', score: 'score', deletedAt: 'deletedAt' },
   userClasses: { userId: 'userId', classId: 'classId', isTeacher: 'isTeacher', deletedAt: 'deletedAt' },
   users: { id: 'id', classId: 'classId', deletedAt: 'deletedAt' },
-  classes: { id: 'id', name: 'name' },
+  classes: { id: 'id', name: 'name', code: 'code' },
 }
 vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
 
@@ -125,5 +125,52 @@ describe('API: courses/class-leaderboard.get', () => {
     expect(rows[0].studentCount).toBe(2)
     expect(rows[1].classId).toBe(2)
     expect(rows[1].avg).toBe(60)
+  })
+
+  it('教师/测试/观察者系统班级不参与排名', async () => {
+    setMockAuthState({ id: 1, username: 's', name: 'S', roles: ['student'], permissions: [] })
+    mockWhereSeq([
+      // 1. 选课：已含教师班/测试班/观察者班的成员
+      [
+        { userId: 1, score: '100' },
+        { userId: 2, score: '200' },
+        { userId: 3, score: '300' },
+        { userId: 4, score: '400' },
+        { userId: 5, score: '50' },
+      ],
+      // 2. user_classes 成员（均非教师）
+      [
+        { userId: 1, classId: 1, isTeacher: false },
+        { userId: 2, classId: 2, isTeacher: false },
+        { userId: 3, classId: 3, isTeacher: false },
+        { userId: 4, classId: 4, isTeacher: false },
+        { userId: 5, classId: 5, isTeacher: false },
+      ],
+      // 3. users 直接归属
+      [
+        { id: 1, classId: 1 },
+        { id: 2, classId: 2 },
+        { id: 3, classId: 3 },
+        { id: 4, classId: 4 },
+        { id: 5, classId: 5 },
+      ],
+      // 4. classes：teacher/test/observer 为系统班级，应被排除
+      [
+        { id: 1, name: 'ClassA', code: 'classa' },
+        { id: 2, name: 'teacher', code: 'teacher' },
+        { id: 3, name: 'test', code: 'test' },
+        { id: 4, name: 'observer', code: 'observer' },
+        { id: 5, name: '10V', code: '10v' },
+      ],
+    ])
+    const handler = (await import('../../server/api/courses/class-leaderboard.get')).default
+    const r = await handler(makeEvent({ query: { courseId: '1' } }))
+    expect(r.success).toBe(true)
+    const rows = r.data.rows
+    // 仅保留 ClassA 与 10V，teacher/test/observer 三个班被剔除
+    expect(rows.map((x: any) => x.classId)).toEqual([1, 5])
+    expect(rows.map((x: any) => x.rank)).toEqual([1, 2])
+    expect(rows[0]).toMatchObject({ classId: 1, name: 'ClassA', avg: 100 })
+    expect(rows[1]).toMatchObject({ classId: 5, name: '10V', avg: 50 })
   })
 })

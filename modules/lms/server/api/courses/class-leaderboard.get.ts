@@ -5,9 +5,14 @@
  * 生均得分 = 该班在本课程选课学生的 score 之和 ÷ 选课学生人数。
  * 仅统计学生成员（排除教师），未在该课程选课的学生不计入该班。
  * 一个用户如属于多个班级，则其得分计入每个所属班。
+ *
+ * 教师 / 测试 / 观察者等系统班级（class code = teacher / test / observer）不参与班级排名。
  */
 import { db, schema } from '@nuxthub/db'
 import { eq, and, inArray, isNull } from 'drizzle-orm'
+
+// 系统/教工班级编码：不参与班级排行（教师班、测试班、观察者班）
+const NON_STUDENT_CLASS_CODES = new Set(['teacher', 'test', 'observer'])
 
 export default eventHandler(async (event) => {
     await requireAuth(event)
@@ -80,12 +85,20 @@ export default eventHandler(async (event) => {
 
     const classIds = [...agg.keys()]
     const classes = await db
-        .select({ id: schema.classes.id, name: schema.classes.name })
+        .select({ id: schema.classes.id, name: schema.classes.name, code: schema.classes.code })
         .from(schema.classes)
         .where(inArray(schema.classes.id, classIds))
     const nameMap = new Map(classes.map(c => [c.id, c.name]))
 
+    // 教师/测试/观察者等系统班级不参与排名（按 code 判断，code 缺失时回退班级名）
+    const excludedClassIds = new Set(
+        classes
+            .filter(c => NON_STUDENT_CLASS_CODES.has(String(c.code || c.name || '').toLowerCase()))
+            .map(c => c.id),
+    )
+
     const rows = [...agg.entries()]
+        .filter(([classId]) => !excludedClassIds.has(classId))
         .map(([classId, a]) => ({
             classId,
             name: nameMap.get(classId) || `Class ${classId}`,
