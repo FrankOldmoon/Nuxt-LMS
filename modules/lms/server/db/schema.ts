@@ -504,6 +504,20 @@ export const showcaseLikes = pgTable(
   })
 );
 
+export const showcaseUsers = pgTable(
+  'showcase_users',
+  {
+    showcaseId: integer('showcase_id').notNull(),
+    userId: integer('user_id').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.showcaseId, t.userId] }),
+    showcaseFk: foreignKey({ columns: [t.showcaseId], foreignColumns: [showcases.id] }).onDelete('cascade'),
+    userIdx: index('idx_showcase_users_user_id').on(t.userId),
+  })
+);
+
 export const showcaseComments = pgTable(
   'showcase_comments',
   {
