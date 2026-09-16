@@ -1,4 +1,4 @@
-import { computed, ref, reactive, watch, nextTick, onBeforeUnmount, inject } from 'vue'
+import { computed, ref, reactive, watch, nextTick, onMounted, onBeforeUnmount, inject } from 'vue'
 
 export function useVideo(props: any) {
   const { t } = useI18n()
@@ -81,6 +81,54 @@ export function useVideo(props: any) {
   // 已触发的题目 cid 集合（用于回放时不再弹）
   const triggered = reactive<Record<number, boolean>>({})
 
+  // ── 不可见即自动暂停 ──
+  // 视频滚出页面视口、或浏览器标签页被切走时暂停播放。
+  // 只暂停、不自动恢复（避免"后台刷观看进度"），用户回到页面后手动点继续。
+  const videoInView = ref(true)   // 视频是否有足够面积留在视口内
+  const pageVisible = ref(true)   // 浏览器标签页是否可见
+  /** 视口可见判定阈值：至少一半面积可见才算"在看" */
+  const MIN_VISIBLE_RATIO = 0.5
+
+  let viewObserver: IntersectionObserver | null = null
+
+  /** 暂停播放；pause() 对已暂停的视频是空操作，不会破坏用户的手动暂停 */
+  function pauseWhileInvisible() {
+    videoEl.value?.pause()
+  }
+
+  function onPageVisibilityChange() {
+    pageVisible.value = !document.hidden
+    if (!pageVisible.value) pauseWhileInvisible()
+  }
+
+  function startViewObserver(el: any) {
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    viewObserver = new IntersectionObserver((entries) => {
+      const entry = entries[entries.length - 1]
+      if (!entry) return
+      videoInView.value = entry.intersectionRatio >= MIN_VISIBLE_RATIO
+      if (!videoInView.value) pauseWhileInvisible()
+    }, { threshold: [0, MIN_VISIBLE_RATIO, 1] })
+    viewObserver.observe(el)
+  }
+
+  function stopViewObserver() {
+    viewObserver?.disconnect()
+    viewObserver = null
+  }
+
+  // 视频元素出现/切换 src 时重建监听（视频配置是异步加载的，元素可能晚于 setup 才出现）
+  watch(videoEl, (el) => {
+    stopViewObserver()
+    startViewObserver(el)
+  }, { immediate: true, flush: 'post' })
+
+  onMounted(() => {
+    if (typeof document === 'undefined') return
+    pageVisible.value = !document.hidden
+    document.addEventListener('visibilitychange', onPageVisibilityChange)
+  })
+
   function onLoadedMetadata() {
     duration.value = videoEl.value?.duration || 0
   }
@@ -148,6 +196,8 @@ export function useVideo(props: any) {
             return
           }
           // 没有新的题目需要弹出时，恢复播放
+          // 不可见（标签页被切走 / 视频滚出视口）时不恢复，避免后台继续播放
+          if (!pageVisible.value || !videoInView.value) return
           v.play().catch(() => { /* 用户未交互时 play 可能被拒绝，忽略 */ })
         }
       }
@@ -233,6 +283,10 @@ export function useVideo(props: any) {
   }
 
   onBeforeUnmount(() => {
+    stopViewObserver()
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', onPageVisibilityChange)
+    }
     activeQuestion.value = null
   })
 
@@ -245,6 +299,8 @@ export function useVideo(props: any) {
     allPassed,
     statusText,
     videoEl,
+    videoInView,
+    pageVisible,
     activeQuestion,
     activeSubCorrect,
     onLoadedMetadata,

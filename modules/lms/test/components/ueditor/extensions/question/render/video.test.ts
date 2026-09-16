@@ -4,25 +4,59 @@
  *
  * video.vue 导入 QuestionRender (render.vue)，需 stub
  * useVideo 使用 useChapterTask，需 expose 到 globalThis
+ * 不可见自动暂停依赖 IntersectionObserver + visibilitychange，测试内自建桩
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import { resetAllStubs, setMockI18n } from '../../../../../../../../test/setup/nuxt-stubs'
+
+/** IntersectionObserver 桩：记录回调与观察目标，供测试手动派发可见比例变化 */
+let mockIoCallback: ((entries: any[]) => void) | null = null
+let mockIoObserved: any[] = []
+
+class MockIntersectionObserver {
+  constructor(cb: (entries: any[]) => void) {
+    mockIoCallback = cb
+  }
+  observe(el: any) { mockIoObserved.push(el) }
+  unobserve() { /* noop */ }
+  disconnect() { mockIoObserved = [] }
+  takeRecords() { return [] }
+}
+
+/** 派发一次视口交集变化（ratio 为可见面积比例） */
+function triggerViewport(ratio: number) {
+  mockIoCallback?.([{ intersectionRatio: ratio, isIntersecting: ratio > 0 }])
+}
+
+/** 模拟标签页可见性（document.hidden 在 happy-dom 里是只读 getter，需自行覆盖） */
+function setDocumentHidden(hidden: boolean) {
+  Object.defineProperty(document, 'hidden', { configurable: true, get: () => hidden })
+  document.dispatchEvent(new Event('visibilitychange'))
+}
 
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
-  // stub useChapterTask (used by useVideo)
+  mockIoCallback = null
+  mockIoObserved = []
+  ;(globalThis as any).IntersectionObserver = MockIntersectionObserver
   ;(globalThis as any).useChapterTask = () => ({
     reportNodeDone: () => {},
     reset: () => {},
   })
 })
 
+afterEach(() => {
+  if (Object.prototype.hasOwnProperty.call(document, 'hidden')) {
+    delete (document as any).hidden
+  }
+})
+
 const _globalStubs = {
   UIcon: { template: '<span class="uicon" />', props: ['name'] },
-  UButton: { template: '<button @click="$emit(\'click\', $event)">{{ label }}<slot /></button>', props: ['icon', 'color', 'variant', 'size', 'label', 'disabled'] },
+  UButton: { template: '<button @click="$emit(\'click\', $event)">{{ label }}<slot /></button>', props: ['icon', 'color', 'variant', 'size', 'label', 'disabled'], emits: ['click'] },
   QuestionRender: { template: '<div class="question-render-stub" />', props: ['node'] },
 }
 
@@ -152,5 +186,92 @@ describe('question/render/video.vue', () => {
     ;(wrapper.vm as any).reset()
     await wrapper.find('video').trigger('ended')
     expect(trigger).toHaveBeenCalledTimes(2)
+  })
+
+  // ── 不可见自动暂停 ──
+
+  it('视频滚出视口后自动暂停，可见时不暂停', async () => {
+    const wrapper = await mountVideo(sampleQuestion, vi.fn())
+    await nextTick()
+    const el = wrapper.find('video').element as any
+    expect(mockIoObserved).toContain(el)          // 已开始监听视口
+    const pauseSpy = vi.spyOn(el, 'pause').mockImplementation(() => {})
+
+    triggerViewport(1)
+    expect(pauseSpy).not.toHaveBeenCalled()
+
+    triggerViewport(0.2)                          // 大半滚出视口
+    expect(pauseSpy).toHaveBeenCalledTimes(1)
+
+    triggerViewport(0.8)                          // 回到视口只恢复"可见"，不自动播放
+    expect(pauseSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('标签页被切走时自动暂停，回到前台不自动恢复', async () => {
+    const wrapper = await mountVideo(sampleQuestion, vi.fn())
+    await nextTick()
+    const el = wrapper.find('video').element as any
+    const pauseSpy = vi.spyOn(el, 'pause').mockImplementation(() => {})
+
+    setDocumentHidden(true)
+    expect(pauseSpy).toHaveBeenCalledTimes(1)
+
+    setDocumentHidden(false)
+    expect(pauseSpy).toHaveBeenCalledTimes(1)
+  })
+
+  const SubQuestionStub = {
+    template: '<button class="sub-answer-correct" @click="$emit(\'submitted\', { isCorrect: true, questionId: 2 })" />',
+    props: ['node'],
+    emits: ['submitted'],
+  }
+
+  /** 播放到 5s 触发子题弹层并答对，返回 wrapper 与 video 元素 */
+  async function openAndAnswerSubQuestion() {
+    const withSubs = {
+      ...sampleQuestion,
+      options: { src: 'https://example.com/video.mp4', questions: [{ cid: 2, at: 5 }] },
+    }
+    const { default: VideoRender } = await import(
+      '../../../../../../components/ueditor/extensions/nodes/vue/question/render/video.vue'
+    )
+    const wrapper = mount(VideoRender, {
+      props: { question: withSubs, questionId: 1 },
+      global: {
+        ..._globalConfig,
+        stubs: { ..._globalStubs, QuestionRender: SubQuestionStub },
+        provide: { ..._globalConfig.provide, questionTriggerAutoSubmit: vi.fn() },
+      },
+    })
+    await primeDuration(wrapper, 120)
+    const el = wrapper.find('video').element as any
+    el.currentTime = 5
+    await wrapper.find('video').trigger('timeupdate')
+    await wrapper.find('.sub-answer-correct').trigger('click')
+    return { wrapper, el }
+  }
+
+  it('可见时关闭子题弹层会恢复播放', async () => {
+    const { wrapper, el } = await openAndAnswerSubQuestion()
+    const playSpy = vi.spyOn(el, 'play').mockResolvedValue(undefined as any)
+
+    const continueBtn = wrapper.findAll('button').find(b => b.text().includes('question.videoContinue'))!
+    await continueBtn.trigger('click')
+    await nextTick()
+
+    expect(playSpy).toHaveBeenCalled()
+  })
+
+  it('切屏后关闭子题弹层不恢复播放', async () => {
+    const { wrapper, el } = await openAndAnswerSubQuestion()
+    const playSpy = vi.spyOn(el, 'play').mockResolvedValue(undefined as any)
+
+    setDocumentHidden(true)
+
+    const continueBtn = wrapper.findAll('button').find(b => b.text().includes('question.videoContinue'))!
+    await continueBtn.trigger('click')
+    await nextTick()
+
+    expect(playSpy).not.toHaveBeenCalled()
   })
 })
