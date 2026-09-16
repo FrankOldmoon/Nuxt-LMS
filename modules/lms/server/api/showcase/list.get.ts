@@ -9,6 +9,7 @@
  */
 import { db, schema } from '@nuxthub/db'
 import { eq, and, or, ilike, desc, sql, isNull, inArray } from 'drizzle-orm'
+import { getShowcaseMembersMap } from '../../utils/db/showcaseMembers'
 
 export default eventHandler(async (event) => {
   // 登录可选：游客也能浏览已过审作品
@@ -91,11 +92,15 @@ export default eventHandler(async (event) => {
     for (const l of likes) likedMap.set(l.showcaseId, true)
   }
 
+  // 参与用户（多对多）
+  const membersMap = await getShowcaseMembersMap(rows.map((r) => r.id))
+
   const items = rows.map((r) => ({
     ...r,
     userName: userMap.get(r.userId)?.name || '',
     avatarImg: userMap.get(r.userId)?.avatarImg || null,
     avatarFrame: userMap.get(r.userId)?.avatarFrame || null,
+    members: membersMap.get(r.id) || [],
     liked: likedMap.has(r.id),
   }))
 

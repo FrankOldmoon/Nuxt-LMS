@@ -4,6 +4,7 @@
  */
 import { db, schema } from '@nuxthub/db'
 import { eq, and, isNull } from 'drizzle-orm'
+import { getShowcaseMembers } from '../../utils/db/showcaseMembers'
 
 export default eventHandler(async (event) => {
   const id = Number(getQuery(event).id)
@@ -21,6 +22,9 @@ export default eventHandler(async (event) => {
 
   // 作者信息
   const author = await db.query.users.findFirst({ where: eq(schema.users.id, work.userId) })
+
+  // 参与用户（多对多）
+  const members = await getShowcaseMembers(id)
 
   // 当前用户点赞状态
   let liked = false
@@ -40,6 +44,7 @@ export default eventHandler(async (event) => {
     userName: author?.name || '',
     avatarImg: author?.avatarImg || null,
     avatarFrame: author?.avatarFrame || null,
+    members,
     liked,
   })
 })
