@@ -5,6 +5,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { resetAllStubs, setMockI18n } from '../../../../../../../test/setup/nuxt-stubs'
+import { buildCodeflowUrl, toBase64UrlUtf8, CODEFLOW_BASE_URL } from '../../../../../components/ueditor/render/nodes/useCodeBlock'
 
 beforeEach(() => {
   resetAllStubs()
@@ -13,6 +14,7 @@ beforeEach(() => {
 
 const _globalStubs = {
   IdeModal: { template: '<div class="ide-modal-stub" />', props: ['open', 'code', 'language'] },
+  UModal: { template: '<div v-if="open" class="umodal"><slot name="content" /></div>', props: ['open', 'ui'] },
 }
 
 const _globalConfig = {
@@ -132,5 +134,67 @@ describe('ueditor/render/nodes/code-block.vue', () => {
     const html = wrapper.find('.cb-code').html()
     expect(html).not.toContain('<script>')
     expect(html).toContain('&lt;script&gt;')
+  })
+
+  // ── Python run 按钮 → codeflow iframe ──
+
+  const pythonNode = {
+    type: 'codeBlock',
+    attrs: { language: 'python' },
+    content: [{ type: 'text', text: 'print("你好")\n# 这是中文说明' }],
+  }
+
+  async function mountCodeBlock(node: any) {
+    const { default: CodeBlockView } = await import('../../../../../components/ueditor/render/nodes/code-block.vue')
+    return mount(CodeBlockView, { props: { node }, global: _globalConfig })
+  }
+
+  it('Python：点击运行按钮打开 codeflow iframe，不再打开内置 IDE', async () => {
+    const wrapper = await mountCodeBlock(pythonNode)
+    expect(wrapper.find('.cb-codeflow-frame').exists()).toBe(false)
+
+    await wrapper.find('.cb-run').trigger('click')
+
+    const iframe = wrapper.find('.cb-codeflow-frame')
+    expect(iframe.exists()).toBe(true)
+    expect(iframe.attributes('src')).toBe(buildCodeflowUrl('print("你好")\n# 这是中文说明'))
+    expect(iframe.attributes('src')!.startsWith(`${CODEFLOW_BASE_URL}?code=`)).toBe(true)
+    expect(iframe.attributes('src')!.endsWith('&run=1')).toBe(true)
+    expect(wrapper.findComponent(_globalStubs.IdeModal).props('open')).toBe(false)
+  })
+
+  it('JavaScript：点击运行按钮仍走内置 IDE，不出现 iframe', async () => {
+    const wrapper = await mountCodeBlock({
+      type: 'codeBlock',
+      attrs: { language: 'javascript' },
+      content: [{ type: 'text', text: 'console.log(1)' }],
+    })
+
+    await wrapper.find('.cb-run').trigger('click')
+
+    expect(wrapper.findComponent(_globalStubs.IdeModal).props('open')).toBe(true)
+    expect(wrapper.find('.cb-codeflow-frame').exists()).toBe(false)
+  })
+})
+
+describe('codeflow 运行链接', () => {
+  it('code 为 UTF-8 base64url（无 + / = ），run=1 齐全', () => {
+    const code = 'print("你好")\n# 这是中文说明'
+    const raw = buildCodeflowUrl(code)
+    const url = new URL(raw)
+
+    expect(`${url.origin}${url.pathname}`).toBe(CODEFLOW_BASE_URL)
+    expect(url.searchParams.get('run')).toBe('1')
+
+    // base64url：query 里不会出现会被破坏/需转义的 + / =
+    const param = url.searchParams.get('code')!
+    expect(param).toBe(toBase64UrlUtf8(code))
+    expect(param).not.toMatch(/[+/=]/)
+
+    // 中文按 UTF-8 编码，还原后与源码一致
+    const std = param.replace(/-/g, '+').replace(/_/g, '/')
+    const padded = std + '='.repeat((4 - (std.length % 4)) % 4)
+    const bytes = Uint8Array.from(atob(padded), ch => ch.charCodeAt(0))
+    expect(new TextDecoder().decode(bytes)).toBe(code)
   })
 })

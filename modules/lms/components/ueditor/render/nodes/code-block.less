@@ -134,3 +134,18 @@
     white-space: inherit !important;
   }
 }
+
+// Python 走外部在线运行器（codeflow）时的 iframe 宿主；
+// 弹窗内容会 teleport 到 body，故沿用文件顶部「非 scoped」的写法
+.cb-codeflow {
+  height: 85vh;
+  padding: 0;
+  overflow: hidden;
+}
+
+.cb-codeflow-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}

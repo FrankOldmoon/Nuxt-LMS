@@ -18,6 +18,27 @@ const LANG_ALIASES: Record<string, string> = {
   'jsonc': 'json',
 }
 
+/** 外部 Python 在线运行器（codeflow）地址；换环境改这里即可 */
+export const CODEFLOW_BASE_URL = 'http://10.28.1.151:3010/apps/codeflow/'
+
+/**
+ * UTF-8 安全的 base64url（无 padding）。
+ * - btoa 只能处理 Latin-1，代码里的中文注释/字符串需先按 UTF-8 取字节；
+ * - 转成 base64url 后只剩 A-Za-z0-9-_，放进 query 不会被 "+"（会被解码成空格）
+ *   和 "/" 破坏，也不需要再做 URL 转义，与 codeflow 自身 share 链接的格式一致。
+ */
+export function toBase64UrlUtf8(text: string): string {
+  const bytes = new TextEncoder().encode(String(text ?? ''))
+  let binary = ''
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i] as number)
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+/** 拼 codeflow 运行链接：{base}?code=<base64url>&run=1 */
+export function buildCodeflowUrl(code: string): string {
+  return `${CODEFLOW_BASE_URL}?code=${toBase64UrlUtf8(code)}&run=1`
+}
+
 export function useCodeBlock(props: { node: any }) {
     const inQuiz = inject('inQuiz', false)
     const inQuestion = inject('inQuestion', false)
@@ -43,6 +64,21 @@ export function useCodeBlock(props: { node: any }) {
     })
 
     const ideOpen = ref(false)
+
+    // ── 运行入口 ──
+    // Python 改走外部在线运行器（codeflow，iframe 打开）；其余语言仍用内置 IDE
+    const isPython = computed(() => ['python', 'py', 'python3'].includes(normLang.value))
+    const codeflowOpen = ref(false)
+    const codeflowSrc = ref('')
+
+    function openRunner() {
+        if (!isPython.value) {
+            ideOpen.value = true
+            return
+        }
+        codeflowSrc.value = buildCodeflowUrl(codeText.value)
+        codeflowOpen.value = true
+    }
 
     const codeText = computed(() =>
         (props.node.content || []).map((c: any) => c.text || '').join(''),
@@ -113,5 +149,5 @@ export function useCodeBlock(props: { node: any }) {
         copyTimer = setTimeout(() => { copied.value = false }, 2000)
     }
 
-    return { hideActions, language, theme, canRun, ideLanguage, ideOpen, codeText, lineCount, highlightedHtml, copied, copyIcon, checkIcon, copyCode }
+    return { hideActions, language, theme, canRun, ideLanguage, ideOpen, codeText, lineCount, highlightedHtml, copied, copyIcon, checkIcon, copyCode, isPython, codeflowOpen, codeflowSrc, openRunner }
 }
