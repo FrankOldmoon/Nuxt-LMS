@@ -2,7 +2,7 @@
     <div class="mx-auto max-w-6xl px-4 py-6">
         <div class="flex items-center justify-between gap-2 mb-6">
             <h1 class="text-2xl font-bold">{{ $t('showcase.title') }}</h1>
-            <UButton v-if="isLoggedIn" color="primary" icon="i-heroicons-plus" @click="openCreate">
+            <UButton v-if="isAdmin" color="primary" icon="i-heroicons-plus" @click="openCreate">
                 {{ $t('showcase.create') }}
             </UButton>
         </div>
@@ -54,7 +54,7 @@
         <div v-else-if="!items.length" class="py-16 text-center text-muted">{{ $t('showcase.empty') }}</div>
 
         <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            <ShowcaseCard v-for="w in items" :key="w.id" :work="w" :can-edit="isStaff" @edit="openEdit" />
+            <ShowcaseCard v-for="w in items" :key="w.id" :work="w" :can-edit="isAdmin" @edit="openEdit" />
         </div>
 
         <!-- 分页（+ 每页数量） -->
@@ -72,8 +72,8 @@
 </template>
 
 <script setup>
-const { user, hasRole } = useAuth()
-const isLoggedIn = computed(() => !!user.value)
+const { hasRole } = useAuth()
+const isAdmin = computed(() => hasRole('admin'))
 const isStaff = computed(() => hasRole('admin') || hasRole('teacher'))
 
 const page = ref(1)

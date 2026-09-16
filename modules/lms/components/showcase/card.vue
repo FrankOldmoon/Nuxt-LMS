@@ -20,8 +20,17 @@
                 </div>
                 <div class="flex items-center justify-between mt-2 text-xs text-muted">
                     <span class="flex items-center gap-1.5 min-w-0">
-                        <AvatarWithFrame :src="work.avatarImg || undefined" :alt="work.userName || '?'" :text="(work.userName || '?').charAt(0)" size="xs" :frame="work.avatarFrame || null" :userId="work.userId" />
-                        <span class="truncate">{{ work.userName || '…' }}</span>
+                        <template v-if="memberList.length">
+                            <span class="flex -space-x-1.5 shrink-0">
+                                <AvatarWithFrame v-for="m in memberList.slice(0, 3)" :key="m.id" :src="m.avatarImg || undefined"
+                                    :alt="m.name" :text="(m.name || '?').charAt(0)" size="xs" :frame="m.avatarFrame || null" :userId="m.id" />
+                            </span>
+                            <span class="truncate">{{ memberNames }}</span>
+                        </template>
+                        <template v-else>
+                            <AvatarWithFrame :src="work.avatarImg || undefined" :alt="work.userName || '?'" :text="(work.userName || '?').charAt(0)" size="xs" :frame="work.avatarFrame || null" :userId="work.userId" />
+                            <span class="truncate">{{ work.userName || '…' }}</span>
+                        </template>
                     </span>
                     <span class="flex items-center gap-1 shrink-0">
                         <UIcon name="i-heroicons-heart" class="size-3.5 text-red-400" />
@@ -49,6 +58,14 @@ const { t } = useI18n()
 
 const categoryLabel = computed(() => props.work.category === 'hardware' ? t('showcase.hardware') : t('showcase.software'))
 function isArray(v) { return Array.isArray(v) }
+
+// 参与用户（多对多）：有成员则展示成员，否则回退到单一作者
+const memberList = computed(() => Array.isArray(props.work.members) ? props.work.members : [])
+const memberNames = computed(() => {
+    const names = memberList.value.map((m) => m.name).filter(Boolean)
+    if (!names.length) return ''
+    return names.length > 3 ? `${names.slice(0, 3).join(', ')} +${names.length - 3}` : names.join(', ')
+})
 
 const showStatus = computed(() => !!props.work.status && props.work.status !== 'approved')
 const statusLabel = computed(() => {

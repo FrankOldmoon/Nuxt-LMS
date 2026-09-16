@@ -23,9 +23,18 @@
                 </div>
 
                 <div class="flex items-center justify-between gap-3 mt-3 flex-wrap">
-                    <div class="flex items-center gap-2 text-sm text-muted">
-                        <AvatarWithFrame :src="work.avatarImg || undefined" :text="(work.userName || '?').charAt(0)" size="sm" :frame="work.avatarFrame || null" :userId="work.userId" />
-                        <span>{{ work.userName || '…' }}</span>
+                    <div class="flex items-center gap-2 text-sm text-muted min-w-0">
+                        <template v-if="memberList.length">
+                            <span class="flex -space-x-2 shrink-0">
+                                <AvatarWithFrame v-for="m in memberList.slice(0, 6)" :key="m.id" :src="m.avatarImg || undefined"
+                                    :alt="m.name" :text="(m.name || '?').charAt(0)" size="sm" :frame="m.avatarFrame || null" :userId="m.id" />
+                            </span>
+                            <span class="truncate">{{ memberNames }}</span>
+                        </template>
+                        <template v-else>
+                            <AvatarWithFrame :src="work.avatarImg || undefined" :text="(work.userName || '?').charAt(0)" size="sm" :frame="work.avatarFrame || null" :userId="work.userId" />
+                            <span>{{ work.userName || '…' }}</span>
+                        </template>
                     </div>
                     <div class="flex items-center gap-2">
                         <!-- 点赞 -->
@@ -90,9 +99,11 @@ const editOpen = ref(false)
 const editId = ref(0)
 
 const isLoggedIn = computed(() => !!user.value)
+const isAdmin = computed(() => hasRole('admin'))
 const isStaff = computed(() => hasRole('admin') || hasRole('teacher'))
-const isOwner = computed(() => !!user.value && work.value && work.value.userId === user.value.id)
-const canEdit = computed(() => isOwner.value || isStaff.value)
+const canEdit = computed(() => isAdmin.value)
+const memberList = computed(() => Array.isArray(work.value?.members) ? work.value.members : [])
+const memberNames = computed(() => memberList.value.map((m) => m.name).filter(Boolean).join(', '))
 const hasContent = computed(() => !!work.value?.content && Object.keys(work.value.content || {}).length > 0)
 const categoryLabel = computed(() => work.value?.category === 'hardware' ? t('showcase.hardware') : t('showcase.software'))
 const statusLabel = computed(() => ({ pending: t('showcase.pending'), rejected: t('showcase.rejected') }[work.value?.status] || work.value?.status))

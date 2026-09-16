@@ -14,6 +14,34 @@
                         <USelect v-model="category" :items="categoryItems" class="w-full sm:w-64" />
                     </UFormField>
 
+                    <!-- 参与用户（多选，多对多） -->
+                    <UFormField :label="$t('showcase.members')" :hint="$t('showcase.membersHint')">
+                        <div class="flex flex-col gap-2">
+                            <div v-if="members.length" class="flex flex-wrap gap-1.5">
+                                <UBadge v-for="m in members" :key="m.id" :label="m.name" color="primary" variant="subtle" size="xs">
+                                    <template #leading>
+                                        <UIcon name="i-heroicons-x-mark" class="size-3 cursor-pointer hover:text-error"
+                                            @click="removeMember(m.id)" />
+                                    </template>
+                                </UBadge>
+                            </div>
+                            <UInput v-model="memberSearch" icon="i-heroicons-magnifying-glass"
+                                :placeholder="$t('showcase.membersPlaceholder')" :loading="memberSearching"
+                                @update:model-value="onMemberSearch" />
+                            <div v-if="memberResults.length" class="max-h-44 overflow-y-auto border border-default rounded-md">
+                                <div v-for="u in memberResults" :key="u.id"
+                                    class="flex items-center gap-2 px-3 py-1.5 hover:bg-muted cursor-pointer text-sm"
+                                    :class="{ 'opacity-50': isMember(u.id) }" @click="toggleMember(u)">
+                                    <UIcon :name="isMember(u.id) ? 'i-heroicons-check-circle' : 'i-heroicons-plus-circle'"
+                                        class="size-4 text-primary shrink-0" />
+                                    <AvatarWithFrame :src="u.avatarImg || undefined" :alt="u.name" size="2xs"
+                                        :text="u.name?.charAt(0)" :frame="u.avatarFrame || null" :userId="u.id" />
+                                    <span class="truncate">{{ u.name }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </UFormField>
+
                     <!-- 标签 -->
                     <UFormField :label="$t('showcase.tags')" :hint="$t('showcase.tagsHint')">
                         <div class="flex flex-col gap-2">
@@ -87,6 +115,11 @@ const toast = useToast()
 
 const title = ref('')
 const category = ref('software')
+const members = ref([])
+const memberSearch = ref('')
+const memberResults = ref([])
+const memberSearching = ref(false)
+let memberSearchTimer = null
 const tags = ref([])
 const tagInput = ref('')
 const cover = ref('')
@@ -111,11 +144,49 @@ function addTag() {
     tagInput.value = ''
 }
 
+// ── 参与用户（多选，多对多） ──
+function isMember(id) {
+    return members.value.some((m) => m.id === id)
+}
+function toggleMember(u) {
+    const i = members.value.findIndex((m) => m.id === u.id)
+    if (i >= 0) members.value.splice(i, 1)
+    else members.value.push({ id: u.id, name: u.name, username: u.username, avatarImg: u.avatarImg || null })
+}
+function removeMember(id) {
+    const i = members.value.findIndex((m) => m.id === id)
+    if (i >= 0) members.value.splice(i, 1)
+}
+function onMemberSearch(v) {
+    clearTimeout(memberSearchTimer)
+    const kw = String(v ?? '').trim()
+    if (!kw) {
+        memberResults.value = []
+        return
+    }
+    memberSearchTimer = setTimeout(async () => {
+        memberSearching.value = true
+        try {
+            const data = await cRequest(`/api/users/search?keyword=${encodeURIComponent(kw)}`)
+            memberResults.value = Array.isArray(data) ? data : []
+        } catch {
+            memberResults.value = []
+        } finally {
+            memberSearching.value = false
+        }
+    }, 300)
+}
+
 async function load(id) {
     const d = await cRequest(`/api/showcase/show?id=${id}`)
     if (!d) return
     title.value = d.title || ''
     category.value = d.category === 'hardware' ? 'hardware' : 'software'
+    members.value = Array.isArray(d.members)
+        ? d.members.map((m) => ({ id: m.id, name: m.name, username: m.username, avatarImg: m.avatarImg || null }))
+        : []
+    memberSearch.value = ''
+    memberResults.value = []
     tags.value = Array.isArray(d.tags) ? d.tags : []
     cover.value = d.cover || ''
     content.value = d.content || {}
@@ -124,6 +195,9 @@ async function load(id) {
 function reset() {
     title.value = ''
     category.value = 'software'
+    members.value = []
+    memberSearch.value = ''
+    memberResults.value = []
     tags.value = []
     tagInput.value = ''
     cover.value = ''
@@ -155,6 +229,7 @@ async function save() {
     const payload = {
         title: title.value.trim(),
         category: category.value === 'hardware' ? 'hardware' : 'software',
+        userIds: members.value.map((m) => m.id),
         tags: tags.value,
         cover: cover.value || null,
         content: content.value || null,
