@@ -1,9 +1,7 @@
 <template>
+    <!-- 条件未满足的占位：只显示锁与条件标签，正文内容一个字都不渲染（不做模糊预览） -->
     <div class="condition-locked">
-        <div class="condition-locked-content">
-            <ueditorRender :json="config.content" />
-        </div>
-        <div class="condition-locked-overlay">
+        <div class="condition-locked-body">
             <UIcon name="i-lucide-lock" class="size-5 text-gray-400" />
             <span class="text-xs text-gray-400 mt-1">{{ t('ueditor.conditionDenied') }}</span>
             <div v-if="config.conditions?.length" class="condition-tags">
@@ -25,25 +23,18 @@ const { t } = useI18n()
 
 <style scoped>
 .condition-locked {
-    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
 }
 
-.condition-locked-content {
-    filter: blur(4px);
-    user-select: none;
-    pointer-events: none;
-}
-
-.condition-locked-overlay {
-    position: absolute;
-    inset: 0;
+.condition-locked-body {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.6);
-    border-radius: 8px;
-    pointer-events: none;
+    padding: 8px 0;
 }
 
 .condition-tags {

@@ -27,7 +27,7 @@ const _globalConfig = {
 describe('condition/render/locked.vue', () => {
   const formatCondition = (c: any) => `${c.type}: ${c.value}`
 
-  it('renders locked overlay with denied message', async () => {
+  it('renders locked placeholder with denied message and no content', async () => {
     const { default: ConditionLocked } = await import(
       '../../../../../../components/ueditor/extensions/nodes/vue/condition/render/locked.vue'
     )
@@ -39,8 +39,10 @@ describe('condition/render/locked.vue', () => {
       global: _globalConfig,
     })
     expect(wrapper.find('.condition-locked').exists()).toBe(true)
-    expect(wrapper.find('.condition-locked-overlay').exists()).toBe(true)
+    expect(wrapper.find('.condition-locked-body').exists()).toBe(true)
     expect(wrapper.text()).toContain('ueditor.conditionDenied')
+    // 条件未满足时正文内容完全不渲染（不露模糊预览）
+    expect(wrapper.find('.ueditor-render-stub').exists()).toBe(false)
   })
 
   it('renders condition tags when conditions exist', async () => {

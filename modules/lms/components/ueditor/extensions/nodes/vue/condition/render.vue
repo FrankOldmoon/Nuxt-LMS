@@ -6,7 +6,7 @@
             <ueditorRender :json="config.content" />
         </div>
 
-        <!-- 未满足：显示模糊内容 + 条件标签 -->
+        <!-- 未满足：只显示条件占位，内容完全不渲染 -->
         <ConditionLocked v-else-if="config.content" :config="config" :format-condition="formatCondition" />
 
         <!-- 检查中 -->

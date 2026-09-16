@@ -6,7 +6,7 @@ export interface ConditionRenderProps {
 
 export function useConditionRender(props: ConditionRenderProps) {
     const { t } = useI18n()
-    const { roles } = useAuth()
+    const { roles, isLoggedIn } = useAuth()
     const { classIds } = useAuthLms()
 
     const config = computed(() => {
@@ -18,7 +18,6 @@ export function useConditionRender(props: ConditionRenderProps) {
     })
 
     const checking = ref(false)
-    const checked = ref(false)
     const conditionMet = ref(false)
 
     // role 和 class 条件可从用户信息本地判断，无需 hover + API
@@ -44,7 +43,8 @@ export function useConditionRender(props: ConditionRenderProps) {
         })
     }
 
-    // 检查 class 条件（本地判断，用户 classIds 已包含所有所属班级）
+    // 检查 class 条件（本地判断）
+    // classIds 由 me-enrich 注入：userClasses 关联 ∪ users.classId 主班级 ∪ users.defaultClass.id 当前班级
     function checkClassConditions(conditions: any[]) {
         const classConds = conditions.filter(c => c.type === 'class')
         if (classConds.length === 0) return true
@@ -57,30 +57,27 @@ export function useConditionRender(props: ConditionRenderProps) {
         const conditions = config.value.conditions
         if (!conditions || !conditions.length) {
             conditionMet.value = true
-            checked.value = true
             return
         }
 
         const localMet = checkRoleConditions(conditions) && checkClassConditions(conditions)
         const hoverConditions = conditions.filter((c: any) => !LOCAL_CHECK_TYPES.has(c.type))
+        console.log('[condition] 本地判定', { conditions, localMet, hoverConditions, classIds: classIds.value })
 
         // 全部是本地条件（role + class），直接判断
         if (hoverConditions.length === 0) {
             conditionMet.value = localMet
-            checked.value = true
             return
         }
 
         // 本地条件不满足，直接 denied（不需要 hover）
         if (!localMet) {
             conditionMet.value = false
-            checked.value = true
             return
         }
 
         // 本地条件满足但有其他条件（question/homework/comment/quiz/race），需要 hover 检查
         conditionMet.value = false
-        checked.value = false
     }, { immediate: true })
 
     const conditionTypeLabels: Record<string, any> = {
@@ -98,11 +95,16 @@ export function useConditionRender(props: ConditionRenderProps) {
         return `${conditionTypeLabels[c.type] || c.type}: ${label}`
     }
 
-    // hover 时检查非 role 条件（间隔 5 秒以上才允许再次 check）
+    // hover 时检查非本地条件（间隔 5 秒以上才允许再次 check）
     let lastCheckTime = 0
     async function checkCondition() {
         if (conditionMet.value || checking.value) return
         if (!needsHoverCheck.value) return
+        // 未登录不请求（接口需要登录，避免无意义的 401）
+        if (!isLoggedIn.value) {
+            console.log('[condition] 未登录，跳过检查')
+            return
+        }
 
         const now = Date.now()
         if (now - lastCheckTime < 5000) return
@@ -117,10 +119,8 @@ export function useConditionRender(props: ConditionRenderProps) {
                 method: 'POST',
                 body: { conditions },
             })
-            if (data) {
-                conditionMet.value = data.met
-                checked.value = true
-            }
+            console.log('[condition] 检查结果', data)
+            if (data) conditionMet.value = data.met
         } catch (e) {
             console.error('[condition] 检查失败', e)
         } finally {
