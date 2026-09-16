@@ -30,8 +30,9 @@
         block
         size="lg"
         :loading="loading"
+        :disabled="disabled"
       >
-        {{ $t('auth.login') }}
+        {{ cooldown > 0 ? `${$t('auth.login')} (${cooldown}s)` : $t('auth.login') }}
       </UButton>
     </UForm>
 
@@ -66,6 +67,35 @@ const username = ref('')
 const password = ref('')
 const loading = ref(false)
 
+// 登录冷却：点击一次后倒计时 3 秒才允许再次点击
+const COOLDOWN_SECONDS = 3
+const cooldown = ref(0)
+let cooldownTimer: ReturnType<typeof setInterval> | null = null
+
+const disabled = computed(() => loading.value || cooldown.value > 0)
+
+function startCooldown() {
+  cooldown.value = COOLDOWN_SECONDS
+  if (cooldownTimer) clearInterval(cooldownTimer)
+  cooldownTimer = setInterval(() => {
+    cooldown.value -= 1
+    if (cooldown.value <= 0) {
+      cooldown.value = 0
+      if (cooldownTimer) {
+        clearInterval(cooldownTimer)
+        cooldownTimer = null
+      }
+    }
+  }, 1000)
+}
+
+onBeforeUnmount(() => {
+  if (cooldownTimer) {
+    clearInterval(cooldownTimer)
+    cooldownTimer = null
+  }
+})
+
 const emit = defineEmits<{
   success: []
   switchToRegister: []
@@ -73,8 +103,10 @@ const emit = defineEmits<{
 }>()
 
 async function handleLogin() {
+  if (disabled.value) return
   if (!username.value.trim() || !password.value) return
 
+  startCooldown()
   loading.value = true
   try {
     await login(username.value.trim(), password.value)
