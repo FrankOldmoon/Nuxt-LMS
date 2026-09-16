@@ -86,4 +86,37 @@ describe('comment/render.vue', () => {
     expect(wrapper.text()).toContain('comment.label')
     expect(wrapper.text()).toContain('10')
   })
+
+  it('待审核的主题评论显示「审核中」标识（非教师也看得到）', async () => {
+    const { default: CommentRender } = await import(
+      '../../../../../components/ueditor/extensions/nodes/vue/comment/render.vue'
+    )
+    const wrapper = mount(CommentRender, {
+      props: {
+        node: { attrs: { content: '1' } },
+        comment: { name: 'Test', content: '', tags: [], point: 5, status: 'audit' },
+        courseId: 1,
+      },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    expect(wrapper.text()).toContain('comment.auditPending')
+    expect(wrapper.text()).not.toContain('comment.approve')
+  })
+
+  it('已过审的主题评论不显示「审核中」标识', async () => {
+    const { default: CommentRender } = await import(
+      '../../../../../components/ueditor/extensions/nodes/vue/comment/render.vue'
+    )
+    const wrapper = mount(CommentRender, {
+      props: {
+        node: { attrs: { content: '1' } },
+        comment: { name: 'Test', content: '', tags: [], point: 5, status: 'published' },
+        courseId: 1,
+      },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    expect(wrapper.text()).not.toContain('comment.auditPending')
+  })
 })

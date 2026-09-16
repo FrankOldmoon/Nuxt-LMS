@@ -1,5 +1,5 @@
 import { db, schema } from "@nuxthub/db"
-import { eq, and, inArray } from "drizzle-orm"
+import { eq, and, inArray, or, isNull } from "drizzle-orm"
 import { getUserClassId } from "../../utils/comment/classId"
 
 export default eventHandler(async (event) => {
@@ -13,15 +13,24 @@ export default eventHandler(async (event) => {
   const courseId = Number(course_id)
   const commentCid = Number(cid)
 
-  // 审核可见性：老师/管理员可看到全部（含待审核），普通用户只看到已过审（published）的评论
+  // 审核可见性：
+  // - 老师/管理员：可看到全部（含待审核）
+  // - 普通用户：可看到「已过审的」+「自己发的」（自己发的评论无论是否过审都要能看到）
   const isStaff = user.roles?.some((r) => ['teacher', 'admin'].includes(r))
+  const visibleWhere = isStaff
+    ? []
+    : [or(eq(schema.comments.status, 'published'), eq(schema.comments.userId, user.id))]
+
+  // 软删除（batch delete 写入 deletedAt）的评论对所有人都不再返回
+  const notDeleted = isNull(schema.comments.deletedAt)
 
   // 1. 查询该评论自身（root comment / 主评论，课程级共享，始终显示，不做班级过滤）
   const root = await db.query.comments.findFirst({
     where: and(
       eq(schema.comments.courseId, courseId),
       eq(schema.comments.cid, commentCid),
-      ...(isStaff ? [] : [eq(schema.comments.status, 'published')]),
+      notDeleted,
+      ...visibleWhere,
     )
   })
 
@@ -32,13 +41,15 @@ export default eventHandler(async (event) => {
     where: and(
       eq(schema.comments.courseId, courseId),
       eq(schema.comments.parentId, commentCid),
-      ...(isStaff ? [] : [eq(schema.comments.status, 'published')]),
+      notDeleted,
+      ...visibleWhere,
     )
   })
 
   // 3. 学生/老师/管理员都只显示「本班级」的子评论（主评论始终显示，见上方 root 不做班级过滤）：
   //    用户主班级 = users.defaultClass.id || users.classId（getUserClassId）。
-  //    取每条回复作者的「主班级」，与当前用户主班级相等才显示。
+  //    取每条回复作者的「主班级」，与当前用户主班级相等才显示；
+  //    例外：自己发的回复始终显示，不受班级影响（否则无班级/跨班时连自己的评论都看不到）。
   {
     const viewerClassId = await getUserClassId(user.id)
     if (viewerClassId) {
@@ -51,10 +62,11 @@ export default eventHandler(async (event) => {
       const authorClassMap = new Map(
         (authorRows as any[]).map((u: any) => [u.id, (u.defaultClass?.id ?? u.classId ?? null)]),
       )
-      // 只保留作者主班级 = 当前用户主班级的回复
-      children = children.filter((c) => authorClassMap.get(c.userId) === viewerClassId)
+      // 保留「自己的回复」或「作者主班级 = 当前用户主班级」的回复
+      children = children.filter((c) => c.userId === user.id || authorClassMap.get(c.userId) === viewerClassId)
     } else {
-      children = []
+      // 无主班级：看不到同学的回复，但自己发的仍可见
+      children = children.filter((c) => c.userId === user.id)
     }
   }
 

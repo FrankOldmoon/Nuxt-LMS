@@ -21,7 +21,12 @@
                             class="w-3.5 h-3.5" />
                         <span>{{ comment.likeCount || 0 }}</span>
                     </button>
-                    <!-- 待审核标记 + 批准（仅老师/管理员） -->
+                    <!-- 待审核标识：作者本人也能看到自己未过审的评论，需要知道它还没公开 -->
+                    <span v-if="comment.status === 'audit'" class="flex items-center gap-1 text-xs text-amber-500">
+                        <UIcon name="i-heroicons-clock" class="w-3.5 h-3.5" />
+                        <span>{{ $t('comment.auditPending') }}</span>
+                    </span>
+                    <!-- 批准（仅老师/管理员） -->
                     <template v-if="isTeacher && comment.status === 'audit'">
                         <button
                             class="flex items-center gap-1 text-xs text-amber-500 hover:text-emerald-500 transition-colors"

@@ -100,4 +100,30 @@ describe('comment/render/comment-card.vue', () => {
     })
     expect(wrapper.text()).not.toContain('common.delete')
   })
+
+  it('待审核评论显示「审核中」标识（非教师作者本人也看得到）', async () => {
+    // 学生作者：没有 teacher/admin 角色
+    setMockAuthUser({ id: 10, name: 'Alice' }, [{ code: 'student' }])
+    const { default: CommentCard } = await import(
+      '../../../../../../components/ueditor/extensions/nodes/vue/comment/render/comment-card.vue'
+    )
+    const wrapper = mount(CommentCard, {
+      props: { comment: { ...sampleComment, status: 'audit' }, isRoot: false, currentUserId: 10 },
+      global: _globalConfig,
+    })
+    expect(wrapper.text()).toContain('comment.auditPending')
+    // 学生不显示「批准」按钮
+    expect(wrapper.text()).not.toContain('comment.approve')
+  })
+
+  it('已过审评论不显示「审核中」标识', async () => {
+    const { default: CommentCard } = await import(
+      '../../../../../../components/ueditor/extensions/nodes/vue/comment/render/comment-card.vue'
+    )
+    const wrapper = mount(CommentCard, {
+      props: { comment: { ...sampleComment, status: 'published' }, isRoot: false, currentUserId: 10 },
+      global: _globalConfig,
+    })
+    expect(wrapper.text()).not.toContain('comment.auditPending')
+  })
 })

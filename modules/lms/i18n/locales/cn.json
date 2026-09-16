@@ -1146,6 +1146,7 @@
     "anonymous": "匿名",
     "noReplies": "暂无回复",
     "confirmDelete": "确定删除这条评论？",
+    "auditPending": "审核中",
     "approve": "批准",
     "approveSuccess": "评论已通过审核",
     "approveFailed": "审核失败",

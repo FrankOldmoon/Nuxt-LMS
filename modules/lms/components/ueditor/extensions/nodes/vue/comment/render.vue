@@ -15,6 +15,11 @@
                 <span class="font-semibold text-gray-800 dark:text-gray-200">{{ comment.name }}</span>
                 <span v-if="commentId" class="text-xs text-gray-400">#{{ commentId }}</span>
                 <div class="flex items-center gap-2 ml-auto">
+                    <!-- 待审核标识：作者本人也能看到自己未过审的评论，需要知道它还没公开 -->
+                    <span v-if="comment.status === 'audit'" class="flex items-center gap-1 text-xs text-amber-500">
+                        <UIcon name="i-heroicons-clock" class="w-3.5 h-3.5" />
+                        <span>{{ $t('comment.auditPending') }}</span>
+                    </span>
                     <UButton v-if="isTeacher && comment.status === 'audit'" icon="i-heroicons-check-badge"
                         color="amber" variant="ghost" size="2xs"
                         class="opacity-70 hover:opacity-100 transition-opacity"

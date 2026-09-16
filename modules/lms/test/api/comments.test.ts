@@ -160,6 +160,99 @@ describe('API: comments/list.get', () => {
     expect(JSON.stringify(whereArgs)).not.toContain('status')
   })
 
+  it('普通用户可看到自己未过审的评论（where 放行「published 或 自己发的」）', async () => {
+    setMockAuthState({ id: 7, username: 'alice', roles: ['student'], permissions: [] })
+    const { db } = await import('@nuxthub/db')
+    vi.mocked(db.query.comments.findFirst).mockResolvedValue({
+      id: 1, userId: 7, courseId: 1, cid: 1, content: 'Root', parentId: null, status: 'audit',
+      createdAt: new Date(), updatedAt: new Date(),
+    } as any)
+    vi.mocked(db.query.comments.findMany).mockResolvedValue([])
+    vi.mocked(db.query.users.findMany).mockResolvedValue([])
+    vi.mocked(db.query.userComments.findMany).mockResolvedValue([])
+    const handler = (await import('../../server/api/comments/list.get')).default
+    const result = await handler(makeEvent({ query: { course_id: 1, cid: 1 } }))
+    // root 与 children 的 where 都必须同时含 status 与作者放行的 userId
+    for (const where of [
+      vi.mocked(db.query.comments.findFirst).mock.calls[0][0].where,
+      vi.mocked(db.query.comments.findMany).mock.calls[0][0].where,
+    ]) {
+      const json = JSON.stringify(where)
+      expect(json).toContain('status')
+      expect(json).toContain('userId')
+    }
+    // 自己发的待审核主评论不再被 status 过滤掉
+    expect(result.data.root?.status).toBe('audit')
+  })
+
+  it('自己发的待审核回复始终可见（不受班级过滤影响）', async () => {
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    vi.mocked(getUserClassId).mockResolvedValue(3)
+    const { db } = await import('@nuxthub/db')
+    vi.mocked(db.query.comments.findFirst).mockResolvedValue({
+      id: 99, userId: 99, courseId: 1, cid: 1, content: 'Root', parentId: null, status: 'published',
+      createdAt: new Date(), updatedAt: new Date(),
+    } as any)
+    vi.mocked(db.query.comments.findMany).mockResolvedValue([
+      { id: 1, userId: 1, courseId: 1, cid: 2, parentId: 1, status: 'audit' },      // 自己发的：待审核且主班级≠查看者
+      { id: 2, userId: 2, courseId: 1, cid: 3, parentId: 1, status: 'published' },  // 别人的：异班
+    ] as any)
+    vi.mocked(db.query.users.findMany)
+      .mockResolvedValueOnce([
+        { id: 1, defaultClass: { id: 9 }, classId: null },
+        { id: 2, defaultClass: null, classId: 2 },
+      ] as any)
+      .mockResolvedValueOnce([{ id: 1, name: 'Alice' }, { id: 2, name: 'Bob' }] as any)
+    vi.mocked(db.query.userComments.findMany).mockResolvedValue([] as any)
+    const handler = (await import('../../server/api/comments/list.get')).default
+    const result = await handler(makeEvent({ query: { course_id: 1, cid: 1 } }))
+    expect(result.data.children.map((c: any) => c.userId)).toEqual([1])
+    expect(result.data.children[0].status).toBe('audit')
+  })
+
+  it('无主班级的学生仍能看到自己发的回复', async () => {
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    vi.mocked(getUserClassId).mockResolvedValue(null)
+    const { db } = await import('@nuxthub/db')
+    vi.mocked(db.query.comments.findFirst).mockResolvedValue({
+      id: 99, userId: 99, courseId: 1, cid: 1, content: 'Root', parentId: null, status: 'published',
+      createdAt: new Date(), updatedAt: new Date(),
+    } as any)
+    vi.mocked(db.query.comments.findMany).mockResolvedValue([
+      { id: 1, userId: 1, courseId: 1, cid: 2, parentId: 1, status: 'published' },
+      { id: 2, userId: 2, courseId: 1, cid: 3, parentId: 1, status: 'published' },
+    ] as any)
+    vi.mocked(db.query.users.findMany).mockResolvedValue([
+      { id: 1, name: 'Alice' }, { id: 2, name: 'Bob' },
+    ] as any)
+    vi.mocked(db.query.userComments.findMany).mockResolvedValue([] as any)
+    const handler = (await import('../../server/api/comments/list.get')).default
+    const result = await handler(makeEvent({ query: { course_id: 1, cid: 1 } }))
+    expect(result.data.children.map((c: any) => c.userId)).toEqual([1])
+  })
+
+  it('软删除的评论不返回（where 含 deletedAt is null）', async () => {
+    setMockAuthState({ id: 7, username: 'alice', roles: ['student'], permissions: [] })
+    const { db } = await import('@nuxthub/db')
+    vi.mocked(db.query.comments.findFirst).mockResolvedValue({
+      id: 1, userId: 7, courseId: 1, cid: 1, content: 'Root', parentId: null, status: 'published',
+      deletedAt: null, createdAt: new Date(), updatedAt: new Date(),
+    } as any)
+    vi.mocked(db.query.comments.findMany).mockResolvedValue([])
+    vi.mocked(db.query.users.findMany).mockResolvedValue([])
+    vi.mocked(db.query.userComments.findMany).mockResolvedValue([])
+    const handler = (await import('../../server/api/comments/list.get')).default
+    await handler(makeEvent({ query: { course_id: 1, cid: 1 } }))
+    for (const where of [
+      vi.mocked(db.query.comments.findFirst).mock.calls[0][0].where,
+      vi.mocked(db.query.comments.findMany).mock.calls[0][0].where,
+    ]) {
+      const json = JSON.stringify(where)
+      expect(json).toContain('deletedAt')
+      expect(json).toContain('is null')
+    }
+  })
+
   it('学生只看到本班同学的回复（按作者主班级 defaultClass.id || classId 过滤）', async () => {
     setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
     // 当前用户主班级 = 3

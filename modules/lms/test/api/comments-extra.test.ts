@@ -349,6 +349,40 @@ describe('API: comments/show', () => {
     expect(r.success).toBe(true)
     expect(r.data).toBeNull()
   })
+
+  it('已登录普通用户：放行自己未过审的评论（where 含 userId）', async () => {
+    setMockAuthState({ id: 7, username: 's', name: 's', roles: ['student'], permissions: [] })
+    _mockDb.query.comments.findFirst = vi.fn().mockResolvedValue(
+      { courseId: 1, cid: 1, userId: 7, status: 'audit', content: 'mine' },
+    )
+    const handler = (await import('../../server/api/comments/show')).default
+    const r = await handler(makeEvent({ query: { course_id: '1', cid: '1' } }))
+    expect(r.success).toBe(true)
+    expect(r.data.status).toBe('audit')
+    const where = JSON.stringify(_mockDb.query.comments.findFirst.mock.calls[0][0].where)
+    expect(where).toContain('status')
+    expect(where).toContain('userId')
+  })
+
+  it('未登录：只按 published 过滤（不含作者放行）', async () => {
+    setMockAuthState(null)
+    _mockDb.query.comments.findFirst = vi.fn().mockResolvedValue(null)
+    const handler = (await import('../../server/api/comments/show')).default
+    await handler(makeEvent({ query: { course_id: '1', cid: '1' } }))
+    const where = JSON.stringify(_mockDb.query.comments.findFirst.mock.calls[0][0].where)
+    expect(where).toContain('status')
+    expect(where).not.toContain('userId')
+  })
+
+  it('软删除的评论不返回（where 含 deletedAt is null）', async () => {
+    setMockAuthState({ id: 1, username: 's', name: 's', roles: ['student'], permissions: [] })
+    _mockDb.query.comments.findFirst = vi.fn().mockResolvedValue(null)
+    const handler = (await import('../../server/api/comments/show')).default
+    await handler(makeEvent({ query: { course_id: '1', cid: '1' } }))
+    const where = JSON.stringify(_mockDb.query.comments.findFirst.mock.calls[0][0].where)
+    expect(where).toContain('deletedAt')
+    expect(where).toContain('is null')
+  })
 })
 
 // ====================== update.post.ts ======================
