@@ -62,7 +62,6 @@ export function useConditionRender(props: ConditionRenderProps) {
 
         const localMet = checkRoleConditions(conditions) && checkClassConditions(conditions)
         const hoverConditions = conditions.filter((c: any) => !LOCAL_CHECK_TYPES.has(c.type))
-        console.log('[condition] 本地判定', { conditions, localMet, hoverConditions, classIds: classIds.value })
 
         // 全部是本地条件（role + class），直接判断
         if (hoverConditions.length === 0) {
@@ -101,10 +100,7 @@ export function useConditionRender(props: ConditionRenderProps) {
         if (conditionMet.value || checking.value) return
         if (!needsHoverCheck.value) return
         // 未登录不请求（接口需要登录，避免无意义的 401）
-        if (!isLoggedIn.value) {
-            console.log('[condition] 未登录，跳过检查')
-            return
-        }
+        if (!isLoggedIn.value) return
 
         const now = Date.now()
         if (now - lastCheckTime < 5000) return
@@ -119,10 +115,9 @@ export function useConditionRender(props: ConditionRenderProps) {
                 method: 'POST',
                 body: { conditions },
             })
-            console.log('[condition] 检查结果', data)
             if (data) conditionMet.value = data.met
-        } catch (e) {
-            console.error('[condition] 检查失败', e)
+        } catch (_) {
+            /* noop */
         } finally {
             checking.value = false
         }

@@ -119,6 +119,29 @@ describe('condition/render.vue', () => {
     expect(wrapper.find('.ueditor-render-stub').exists()).toBe(true)
   })
 
+  it('远端条件：检查请求进行中显示 loading 而非锁定占位', async () => {
+    let resolveCheck: (v: any) => void = () => {}
+    setMockFetchHandler(vi.fn().mockImplementation(
+      () => new Promise((resolve) => { resolveCheck = resolve }),
+    ))
+    const wrapper = await mountRender({
+      conditions: [{ type: 'question', value: ['1'], label: '#1' }],
+      content: CONTENT,
+    })
+    await flushPromises()
+    await wrapper.find('.condition-render-container').trigger('mouseenter')
+
+    expect(wrapper.find('.condition-checking').exists()).toBe(true)
+    expect(wrapper.find('.condition-locked').exists()).toBe(false)
+
+    resolveCheck({ data: { met: false, details: [] }, success: true })
+    await flushPromises()
+    await flushPromises()
+
+    expect(wrapper.find('.condition-checking').exists()).toBe(false)
+    expect(wrapper.find('.condition-locked').exists()).toBe(true)
+  })
+
   it('远端条件：met=false → 内容完全不渲染', async () => {
     setMockFetchHandler(vi.fn().mockResolvedValue({ data: { met: false, details: [] }, success: true }))
     const wrapper = await mountRender({

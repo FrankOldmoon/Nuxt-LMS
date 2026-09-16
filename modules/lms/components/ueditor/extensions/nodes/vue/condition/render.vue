@@ -6,14 +6,14 @@
             <ueditorRender :json="config.content" />
         </div>
 
-        <!-- 未满足：只显示条件占位，内容完全不渲染 -->
-        <ConditionLocked v-else-if="config.content" :config="config" :format-condition="formatCondition" />
-
-        <!-- 检查中 -->
+        <!-- 检查中：优先于锁定占位，否则该状态永远不可达 -->
         <div v-else-if="checking" class="condition-checking">
             <UIcon name="i-lucide-loader-2" class="animate-spin text-gray-400" />
             <span class="text-xs text-gray-400 ml-1">{{ t('ueditor.conditionChecking') }}</span>
         </div>
+
+        <!-- 未满足：只显示条件占位，内容完全不渲染 -->
+        <ConditionLocked v-else-if="config.content" :config="config" :format-condition="formatCondition" />
 
         <!-- 无内容时的 hover 提示 -->
         <div v-else-if="needsHoverCheck" class="condition-hint">
