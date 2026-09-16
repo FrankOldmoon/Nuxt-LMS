@@ -36,6 +36,12 @@ vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
 vi.mock('h3', () => ({
   sendStream: async (_e: any, s: any) => s,
   setResponseHeader: vi.fn(() => {}),
+  setResponseStatus: vi.fn(() => {}),
+  // 从 event.headers 读取（测试里用 event.headers.range 模拟 Range 请求头）
+  getRequestHeader: vi.fn((e: any, name: string) => {
+    const headers = e?.headers || {}
+    return headers[String(name).toLowerCase()] ?? headers[name]
+  }),
   createError: (opts: any) => {
     const err = new Error(opts.message || opts.statusMessage || 'Error')
     ;(err as any).statusCode = opts.statusCode ?? 500
@@ -51,6 +57,7 @@ vi.mock('fs', async (importActual) => {
     ...actual,
     access: vi.fn((_path: any, cb: any) => cb(null)),
     createReadStream: vi.fn(() => 'mock-stream' as any),
+    statSync: vi.fn(() => ({ size: 1024 }) as any),
   }
 })
 
@@ -79,7 +86,7 @@ vi.mock('../../server/utils/upload/persist', () => ({
 }))
 
 import { resetAllStubs, setMockAuthState, setMockDriveSpace, setMockDriveQuota, setMockDriveUsed } from '../../../../test/setup/nuxt-stubs'
-import { access } from 'fs'
+import { access, statSync } from 'fs'
 import { resolveUploadSource, UploadError } from '../../server/utils/upload/parse'
 import { validateUpload } from '../../server/utils/upload/validate'
 import { persistUploadedFile } from '../../server/utils/upload/persist'
@@ -112,6 +119,8 @@ function resetChain() {
   vi.mocked(persistUploadedFile).mockReset()
   // 重置 fs.access 默认行为（文件存在）
   vi.mocked(access).mockImplementation(((_p: any, cb: any) => cb(null)) as any)
+  // 重置 fs.statSync 默认行为（文件大小 1024）
+  vi.mocked(statSync).mockImplementation((() => ({ size: 1024 })) as any)
 }
 
 describe('API: files/delete.post (soft delete)', () => {
@@ -726,5 +735,93 @@ describe('API: files/meta.get', () => {
     const handler = (await import('../../server/api/files/meta.get')).default
     const r = await handler(makeEvent(undefined, { pathname: '2026/none.png' }))
     expect(r.success).toBe(false)
+  })
+})
+
+// ====================== serve.get / file.ts — HTTP Range ======================
+// 视频拖动进度条依赖 206 分段响应；这里锁定 Range 解析与头部行为。
+
+function makeRangeEvent(range: string, pathname = 'dir/v.mp4') {
+  return { ...makeEvent(undefined, { pathname }), headers: { range } } as any
+}
+
+describe('API: files/serve.get — HTTP Range', () => {
+  beforeEach(resetChain)
+
+  it('无 Range：Accept-Ranges + Content-Length，不设 206', async () => {
+    setMockAuthState(null)
+    const h3 = await import('h3')
+    const handler = (await import('../../server/api/files/serve.get')).default
+    const result = await handler(makeEvent(undefined, { pathname: 'dir/v.mp4' }))
+    expect(result).toBe('mock-stream')
+    expect(vi.mocked(h3.setResponseHeader).mock.calls).toContainEqual([expect.anything(), 'Accept-Ranges', 'bytes'])
+    expect(vi.mocked(h3.setResponseHeader).mock.calls).toContainEqual([expect.anything(), 'Content-Length', 1024])
+    expect(h3.setResponseStatus).not.toHaveBeenCalled()
+  })
+
+  it('bytes=100-199 → 206 + Content-Range，只读该段', async () => {
+    setMockAuthState(null)
+    const h3 = await import('h3')
+    const fs = await import('fs')
+    const handler = (await import('../../server/api/files/serve.get')).default
+    const result = await handler(makeRangeEvent('bytes=100-199'))
+    expect(result).toBe('mock-stream')
+    expect(vi.mocked(h3.setResponseStatus)).toHaveBeenCalledWith(expect.anything(), 206)
+    expect(vi.mocked(h3.setResponseHeader).mock.calls).toContainEqual([expect.anything(), 'Content-Range', 'bytes 100-199/1024'])
+    expect(vi.mocked(h3.setResponseHeader).mock.calls).toContainEqual([expect.anything(), 'Content-Length', 100])
+    expect(vi.mocked(fs.createReadStream)).toHaveBeenCalledWith(expect.any(String), { start: 100, end: 199 })
+  })
+
+  it('bytes=100- → 206，读到文件末尾', async () => {
+    setMockAuthState(null)
+    const h3 = await import('h3')
+    const handler = (await import('../../server/api/files/serve.get')).default
+    await handler(makeRangeEvent('bytes=100-'))
+    expect(vi.mocked(h3.setResponseHeader).mock.calls).toContainEqual([expect.anything(), 'Content-Range', 'bytes 100-1023/1024'])
+    expect(vi.mocked(h3.setResponseHeader).mock.calls).toContainEqual([expect.anything(), 'Content-Length', 924])
+  })
+
+  it('bytes=-50 → 206，取最后 50 字节', async () => {
+    setMockAuthState(null)
+    const h3 = await import('h3')
+    const fs = await import('fs')
+    const handler = (await import('../../server/api/files/serve.get')).default
+    await handler(makeRangeEvent('bytes=-50'))
+    expect(vi.mocked(h3.setResponseHeader).mock.calls).toContainEqual([expect.anything(), 'Content-Range', 'bytes 974-1023/1024'])
+    expect(vi.mocked(fs.createReadStream)).toHaveBeenCalledWith(expect.any(String), { start: 974, end: 1023 })
+  })
+
+  it('越界 Range（start >= size）→ 416 + Content-Range: bytes */size', async () => {
+    setMockAuthState(null)
+    const h3 = await import('h3')
+    const handler = (await import('../../server/api/files/serve.get')).default
+    const result = await handler(makeRangeEvent('bytes=2000-3000'))
+    expect(vi.mocked(h3.setResponseStatus)).toHaveBeenCalledWith(expect.anything(), 416)
+    expect(vi.mocked(h3.setResponseHeader).mock.calls).toContainEqual([expect.anything(), 'Content-Range', 'bytes */1024'])
+    expect(result).toBe('')
+  })
+
+  it('无法识别的 Range 头按整文件返回（200）', async () => {
+    setMockAuthState(null)
+    const h3 = await import('h3')
+    const handler = (await import('../../server/api/files/serve.get')).default
+    const result = await handler(makeRangeEvent('bytes=abc-def'))
+    expect(result).toBe('mock-stream')
+    expect(h3.setResponseStatus).not.toHaveBeenCalled()
+    expect(vi.mocked(h3.setResponseHeader).mock.calls).toContainEqual([expect.anything(), 'Content-Length', 1024])
+  })
+})
+
+describe('API: file.ts (legacy /api/file) — HTTP Range', () => {
+  beforeEach(resetChain)
+
+  it('带 Range 返回 206 分段', async () => {
+    setMockAuthState(null)
+    const h3 = await import('h3')
+    const handler = (await import('../../server/api/file')).default
+    const result = await handler(makeRangeEvent('bytes=0-9'))
+    expect(result).toBe('mock-stream')
+    expect(vi.mocked(h3.setResponseStatus)).toHaveBeenCalledWith(expect.anything(), 206)
+    expect(vi.mocked(h3.setResponseHeader).mock.calls).toContainEqual([expect.anything(), 'Content-Range', 'bytes 0-9/1024'])
   })
 })

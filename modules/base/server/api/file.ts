@@ -1,6 +1,7 @@
 import { resolve, extname, basename } from 'node:path'
-import { createReadStream, access } from 'node:fs'
-import { sendStream, setResponseHeader, createError } from 'h3'
+import { access } from 'node:fs'
+import { setResponseHeader, createError } from 'h3'
+import { serveFileWithRange } from '../utils/files/serveFile'
 
 /**
  * 按 pathname 流式返回上传文件（兼容旧路由 /api/file，等价于 /api/files/serve）
@@ -64,6 +65,6 @@ export default eventHandler(async (event) => {
     `inline; filename="${fileName}"; filename*=UTF-8''${encodeURIComponent(fileName)}`,
   )
 
-  const stream = createReadStream(absolutePath)
-  return sendStream(event, stream)
+  // Range 支持：视频/音频拖动进度条需要 206 分段响应
+  return serveFileWithRange(event, absolutePath)
 })
