@@ -478,6 +478,7 @@
     "ojCheckStatus": "Check Status",
     "ojPassed": "OJ problem passed",
     "ojNotPassed": "Not passed yet",
+    "ojNotPassedHint": "Click 'Solve on OJ' to solve it on the OJ platform, then check the status again.",
     "ojLoadFailed": "Failed to load OJ problem content. Click the link above to view it on the OJ.",
     "ojDeterminedByOj": "Determined by OJ submission status"
   },

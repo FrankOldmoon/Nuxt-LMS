@@ -15,6 +15,11 @@ export function useOj(props: any) {
   const fromRecord = inject<import('vue').Ref<boolean>>('questionFromRecord')
   const { courseId } = useLmsContext()
   const { oj: ojCfg } = useLmsPublicConfig()
+  const chapterTask = useChapterTask()
+  // quiz 模式下由 quiz 统一上报，与 useQuestionRender 的 inQuiz 门控保持一致
+  const inQuiz = inject<boolean>('inQuiz', false)
+  const { t } = useI18n()
+  const toast = useToast()
 
   // pid：优先 options.pid，回退 content（未被替换时即 pid 本身）
   const pid = computed(() => {
@@ -48,13 +53,34 @@ export function useOj(props: any) {
     checking.value = true
     try {
       const data = await cRequest(`/api/questions/record?course_id=${cid}&cid=${props.questionId}`)
-      if (data && props.question && Array.isArray(data.records) && data.records.length > 0) {
-        props.question.record = [...data.records]
-        props.question.correct_rate = computeCorrectRate(props.question)
-        if (submitted) submitted.value = true
-        if (fromRecord) fromRecord.value = true
-        if (isCorrect) isCorrect.value = (props.question.correct_rate || 0) > 0
+      if (!data || !props.question || !Array.isArray(data.records)) return
+      // OJ 通过时 record.get.ts 才写入 records=[1]；未通过则返回空数组
+      const passed = data.records.length > 0 && Number(data.records[0]) === 1
+      if (!passed) {
+        // 未通过：提示去 OJ 解题，不改变已提交/正确状态
+        toast.add({
+          title: t('question.ojNotPassed'),
+          description: t('question.ojNotPassedHint'),
+          color: 'warning',
+          icon: 'i-lucide-alert-circle',
+        })
+        return
       }
+      props.question.record = [...data.records]
+      props.question.correct_rate = computeCorrectRate(props.question)
+      if (submitted) submitted.value = true
+      if (fromRecord) fromRecord.value = true
+      if (isCorrect) isCorrect.value = (props.question.correct_rate || 0) > 0
+      // 与 hover（useQuestionRender.fetchRecord）保持一致：上报 heading 完成，
+      // 使点击「查询状态」判为通过后也能触发 heading 进度统计
+      if (!inQuiz) {
+        chapterTask?.reportNodeDone('question', props.questionId, (props.question.correct_rate || 0) >= 1)
+      }
+      toast.add({
+        title: t('question.ojPassed'),
+        color: 'success',
+        icon: 'i-lucide-check-circle',
+      })
     } catch { /* 静默 */ } finally {
       checking.value = false
     }

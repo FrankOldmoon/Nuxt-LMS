@@ -2,11 +2,11 @@
  * ueditor/render/nodes/code-block.vue 组件测试
  * @see modules/lms/components/ueditor/render/nodes/code-block.vue
  */
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { ref, computed } from 'vue'
 import { resetAllStubs, setMockI18n } from '../../../../../../../test/setup/nuxt-stubs'
-import { buildCodeflowUrl, toBase64UrlUtf8, CODEFLOW_BASE_URL } from '../../../../../components/ueditor/render/nodes/useCodeBlock'
+import { buildCodeflowUrl, toBase64UrlUtf8, CODEFLOW_BASE_URL, CODE_RUN_MESSAGE, isEmbeddedInLmsFrame, isPythonLang, ideLanguageOf, postCodeRunToParent } from '../../../../../components/ueditor/render/nodes/useCodeBlock'
 
 // 系统配置中的 Python 运行器基址（模拟 useLmsPublicConfig().codeflow.url）
 let _codeflowUrl = ref('')
@@ -270,5 +270,66 @@ describe('codeflow 运行链接', () => {
     const padded = std + '='.repeat((4 - (std.length % 4)) % 4)
     const bytes = Uint8Array.from(atob(padded), ch => ch.charCodeAt(0))
     expect(new TextDecoder().decode(bytes)).toBe(code)
+  })
+})
+
+describe('被 iframe 嵌入时的运行转发', () => {
+  it('语言归一化：isPythonLang / ideLanguageOf', () => {
+    expect(isPythonLang('py')).toBe(true)
+    expect(isPythonLang('python3')).toBe(true)
+    expect(isPythonLang('javascript')).toBe(false)
+    expect(ideLanguageOf('node')).toBe('javascript')
+    expect(ideLanguageOf('c++')).toBe('cpp')
+    expect(ideLanguageOf('java')).toBe('java')
+    expect(ideLanguageOf('unknown')).toBe('python')
+  })
+
+  it('未被嵌入时 isEmbeddedInLmsFrame=false，postCodeRunToParent 不转发', () => {
+    expect(isEmbeddedInLmsFrame()).toBe(false)
+    expect(postCodeRunToParent('print(1)', 'python')).toBe(false)
+  })
+
+  it('被平台 iframe 节点嵌入时 postCodeRunToParent 向父页面 postMessage 运行请求', () => {
+    const postSpy = vi.spyOn(window, 'postMessage').mockImplementation(() => {})
+    const origTop = Object.getOwnPropertyDescriptor(window, 'top')
+    const origFrame = Object.getOwnPropertyDescriptor(window, 'frameElement')
+    const container = document.createElement('div')
+    container.className = 'umo-node-iframe'
+    const frameEl = document.createElement('iframe')
+    container.appendChild(frameEl)
+    document.body.appendChild(container)
+    Object.defineProperty(window, 'top', { configurable: true, get: () => ({} as any) })
+    Object.defineProperty(window, 'frameElement', { configurable: true, get: () => frameEl })
+    try {
+      expect(isEmbeddedInLmsFrame()).toBe(true)
+      expect(postCodeRunToParent('print(1)', 'python')).toBe(true)
+      expect(postSpy).toHaveBeenCalledWith(
+        { type: CODE_RUN_MESSAGE, code: 'print(1)', language: 'python' },
+        '*',
+      )
+    } finally {
+      postSpy.mockRestore()
+      document.body.removeChild(container)
+      if (origTop) Object.defineProperty(window, 'top', origTop)
+      else delete (window as any).top
+      if (origFrame) Object.defineProperty(window, 'frameElement', origFrame)
+      else delete (window as any).frameElement
+    }
+  })
+
+  it('被非平台 iframe 嵌入（如外部页面）时不转发，仍在本页打开', () => {
+    const origTop = Object.getOwnPropertyDescriptor(window, 'top')
+    const origFrame = Object.getOwnPropertyDescriptor(window, 'frameElement')
+    Object.defineProperty(window, 'top', { configurable: true, get: () => ({} as any) })
+    Object.defineProperty(window, 'frameElement', { configurable: true, get: () => null })
+    try {
+      expect(isEmbeddedInLmsFrame()).toBe(false)
+      expect(postCodeRunToParent('print(1)', 'python')).toBe(false)
+    } finally {
+      if (origTop) Object.defineProperty(window, 'top', origTop)
+      else delete (window as any).top
+      if (origFrame) Object.defineProperty(window, 'frameElement', origFrame)
+      else delete (window as any).frameElement
+    }
   })
 })

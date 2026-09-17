@@ -28,11 +28,29 @@
         </svg>
       </button>
     </div>
+
+    <!-- 被嵌入页面里点「运行」时，在本页（父页面）视口弹出运行器，避免浮层被超长 iframe 拉长 -->
+    <IdeModal v-model:open="ideOpen" :code="ideCode" :language="ideLanguage" :portal="runtimePortal" />
+    <UModal v-model:open="codeflowOpen" fullscreen :portal="runtimePortal">
+      <template #content>
+        <div style="display:flex;flex-direction:column;height:100%;overflow:hidden">
+          <div
+            style="flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 12px;border-bottom:1px solid var(--ui-border)">
+            <span style="font-size:13px;font-weight:600">{{ $t('ide.title') }}</span>
+            <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" aria-label="Close"
+              @click="codeflowOpen = false" />
+          </div>
+          <iframe class="iframe-codeflow-frame" :src="codeflowSrc" :title="$t('ide.title')" allow="clipboard-write"
+            style="flex:1 1 auto;display:block;width:100%;min-height:0;border:0" />
+        </div>
+      </template>
+    </UModal>
   </div>
 </template>
 
 <script setup>
 import { computeAtomNodeStyle } from '../helpers'
+import { CODE_RUN_MESSAGE, buildCodeflowUrl, ideLanguageOf, isPythonLang, postCodeRunToParent } from './useCodeBlock'
 
 const props = defineProps({
   node: { type: Object, required: true },
@@ -45,6 +63,40 @@ const iframeRef = ref(null)
 const isFullscreen = ref(false)
 // 内容自适应高度（0 表示未获取到，使用默认/手动高度）
 const autoHeight = ref(0)
+
+// ── 被嵌入页面「运行」请求 → 本页弹出运行器 ──
+const { codeflow } = useLmsPublicConfig()
+const ideOpen = ref(false)
+const ideCode = ref('')
+const ideLanguage = ref('python')
+const codeflowOpen = ref(false)
+const codeflowSrc = ref('')
+// 运行器弹窗的 teleport 目标：默认 body；若 iframe 容器正处于全屏，
+// 必须 teleport 到全屏元素内部——全屏时只有全屏元素子树会被渲染，
+// body 级弹窗不可见（表现为「点了运行没反应」）。
+const runtimePortal = ref(true)
+
+function openRuntimeModal(code, language) {
+  runtimePortal.value = document.fullscreenElement || true
+  if (isPythonLang(language)) {
+    codeflowSrc.value = buildCodeflowUrl(code, codeflow.value?.url)
+    codeflowOpen.value = true
+    return
+  }
+  ideCode.value = code
+  ideLanguage.value = ideLanguageOf(language)
+  ideOpen.value = true
+}
+
+function onMessage(e) {
+  const d = e?.data
+  if (!d || d.type !== CODE_RUN_MESSAGE) return
+  // 仅处理来自本 iframe 内容（及其转发）的消息
+  if (iframeRef.value && e.source !== iframeRef.value.contentWindow) return
+  // 若本页自身也被嵌入，继续向上转发，最终在最外层页面展示
+  if (postCodeRunToParent(d.code, d.language)) return
+  openRuntimeModal(d.code, d.language)
+}
 
 const nodeStyle = computed(() => ({
   display: 'flex',
@@ -141,6 +193,7 @@ function onFullscreenChange() {
 
 onMounted(() => {
   document.addEventListener('fullscreenchange', onFullscreenChange)
+  window.addEventListener('message', onMessage)
   const iframe = iframeRef.value
   if (!iframe) return
   // SSR/hydration：iframe 可能已在挂载前加载完成（load 不再触发），先主动同步一次
@@ -154,6 +207,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   document.removeEventListener('fullscreenchange', onFullscreenChange)
+  window.removeEventListener('message', onMessage)
   contentObserver?.disconnect()
   contentObserver = null
 })

@@ -7,16 +7,16 @@
         <div class="flex items-center gap-2">
             <!-- 每页数量选择 -->
             <select v-model="pageSize"
-                class="text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 text-gray-600 dark:text-gray-300">
+                class="text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 text-gray-600 dark:text-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-400/50">
                 <option :value="10">10 {{ $t('comment.perPageUnit') }}</option>
                 <option :value="20">20 {{ $t('comment.perPageUnit') }}</option>
                 <option :value="50">50 {{ $t('comment.perPageUnit') }}</option>
             </select>
             <div class="flex items-center gap-1">
-                <UButton size="xs" variant="ghost" color="neutral" icon="i-heroicons-chevron-left"
+                <UButton size="xs" variant="soft" color="secondary" icon="i-heroicons-chevron-left"
                     :disabled="page <= 1" @click="page--" />
                 <span class="text-xs text-gray-400">{{ page }} / {{ totalPages }}</span>
-                <UButton size="xs" variant="ghost" color="neutral" icon="i-heroicons-chevron-right"
+                <UButton size="xs" variant="soft" color="secondary" icon="i-heroicons-chevron-right"
                     :disabled="page >= totalPages" @click="page++" />
             </div>
         </div>

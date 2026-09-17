@@ -1,13 +1,13 @@
 <template>
     <!-- 优秀作业区块（本班被教师标优的作业，全班可见） -->
     <div v-if="featuredList.length" class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 space-y-2">
-        <div class="flex items-center gap-1 text-sm font-semibold text-amber-500">
+        <div class="flex items-center gap-1.5 text-sm font-semibold text-amber-600 dark:text-amber-400">
             <UIcon name="i-heroicons-star" class="w-4 h-4" />
             {{ t('homework.featuredTitle') }}
         </div>
 
         <div v-for="(item, idx) in featuredList" :key="idx"
-            class="p-3 bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700 rounded-lg">
+            class="p-3 bg-amber-50/60 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700 rounded-xl shadow-sm hover:shadow transition-shadow">
             <!-- 作者 + 得分 -->
             <div class="flex items-center gap-2 mb-1">
                 <AuthUserCard :user="userOf(item)" />

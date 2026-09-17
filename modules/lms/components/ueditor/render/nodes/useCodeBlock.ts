@@ -41,6 +41,61 @@ export function buildCodeflowUrl(code: string, baseUrl: string = CODEFLOW_BASE_U
   return `${base}${sep}code=${toBase64UrlUtf8(code)}&run=1`
 }
 
+/** 被宿主页面 iframe 嵌入时，codeBlock「运行」请求转发给父页面的消息类型 */
+export const CODE_RUN_MESSAGE = 'lms-code-run'
+
+/** iframe 节点容器类名（与 iframe.vue 一致）：据此确认嵌入方是本平台的 iframe 节点 */
+const LMS_IFRAME_NODE_CLASS = 'umo-node-iframe'
+
+/**
+ * 当前页面是否被本平台的「iframe 节点」嵌入（章节 A 嵌在章节 B 的 iframe 块中）。
+ *
+ * 只有这种嵌入方式在父页面（iframe.vue）注册了 CODE_RUN_MESSAGE 监听，
+ * 才可以把运行弹窗交给父页面展示；跨域 / 非平台 iframe 的嵌入返回 false，
+ * 此时仍在本页打开，避免运行按钮失效。
+ */
+export function isEmbeddedInLmsFrame(): boolean {
+  if (typeof window === 'undefined' || window.self === window.top) return false
+  try {
+    const frameEl = window.frameElement as HTMLElement | null
+    return !!frameEl && !!frameEl.closest?.(`.${LMS_IFRAME_NODE_CLASS}`)
+  } catch {
+    // 跨域访问 frameElement 抛 SecurityError：无法确认嵌入方，按未嵌入处理
+    return false
+  }
+}
+
+/**
+ * 把 codeBlock 运行请求转发给父页面，由父页面在自身视口弹出运行器。
+ * 章节 A 嵌在章节 B 的 iframe 中时，A 的 iframe 高度被撑到内容全高，
+ * 在 A 内弹出的 fixed 浮层会被拉得极长；因此改到父页面 B 展示。
+ * @returns 是否已转发（未被平台 iframe 节点嵌入时返回 false，调用方继续走本页逻辑）
+ */
+export function postCodeRunToParent(code: string, language: string): boolean {
+  if (!isEmbeddedInLmsFrame()) return false
+  try {
+    window.parent.postMessage({ type: CODE_RUN_MESSAGE, code, language }, '*')
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** 是否 Python 语言（走外部在线运行器 codeflow） */
+export function isPythonLang(lang: string): boolean {
+  return ['python', 'py', 'python3'].includes(String(lang || '').toLowerCase().trim())
+}
+
+/** 归一化到内置 IDE 支持的语言名 */
+export function ideLanguageOf(lang: string): string {
+  const l = String(lang || '').toLowerCase().trim()
+  if (['python', 'py', 'python3'].includes(l)) return 'python'
+  if (['javascript', 'js', 'node'].includes(l)) return 'javascript'
+  if (['cpp', 'c', 'c++'].includes(l)) return 'cpp'
+  if (['java'].includes(l)) return 'java'
+  return 'python'
+}
+
 export function useCodeBlock(props: { node: any }) {
     const inQuiz = inject('inQuiz', false)
     const inQuestion = inject('inQuestion', false)
@@ -59,24 +114,20 @@ export function useCodeBlock(props: { node: any }) {
         return ['python', 'py', 'python3', 'javascript', 'js', 'node', 'cpp', 'java'].includes(l)
     })
 
-    const ideLanguage = computed(() => {
-        const l = normLang.value
-        if (['python', 'py', 'python3'].includes(l)) return 'python'
-        if (['javascript', 'js', 'node'].includes(l)) return 'javascript'
-        if (['cpp', 'c', 'c++'].includes(l)) return 'cpp'
-        if (['java'].includes(l)) return 'java'
-        return 'python'
-    })
+    const ideLanguage = computed(() => ideLanguageOf(normLang.value))
 
     const ideOpen = ref(false)
 
     // ── 运行入口 ──
     // Python 改走外部在线运行器（codeflow，iframe 打开）；其余语言仍用内置 IDE
-    const isPython = computed(() => ['python', 'py', 'python3'].includes(normLang.value))
+    const isPython = computed(() => isPythonLang(normLang.value))
     const codeflowOpen = ref(false)
     const codeflowSrc = ref('')
 
     function openRunner() {
+        // 被 iframe 嵌入（章节 A 嵌在章节 B 中）：转发给父页面弹出运行器，
+        // 否则运行器浮层会被超长的 iframe 视口拉长
+        if (postCodeRunToParent(codeText.value, normLang.value)) return
         if (!isPython.value) {
             ideOpen.value = true
             return

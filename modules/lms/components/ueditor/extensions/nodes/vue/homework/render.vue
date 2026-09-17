@@ -1,6 +1,6 @@
 <template>
     <div
-        class="homework-render w-full space-y-4 p-4 rounded-lg bg-white dark:bg-gray-900 relative"
+        class="homework-render w-full space-y-4 p-4 rounded-xl bg-white dark:bg-gray-900 relative shadow-sm transition-shadow duration-200 hover:shadow-md"
         :class="submitted
             ? 'border-2 border-green-400 dark:border-green-500'
             : 'border border-amber-400 dark:border-amber-500'"
@@ -18,22 +18,23 @@
 
         <template v-else>
             <!-- 作业标题 -->
-            <div class="flex items-center gap-3 mb-3">
+            <div class="flex items-center gap-3 mb-3 flex-wrap">
                 <span
-                    class="px-2 py-0.5 bg-purple-50 dark:bg-purple-800 text-purple-600 dark:text-purple-300 rounded text-xs font-medium">
+                    class="px-2.5 py-0.5 rounded-full text-xs font-semibold text-white bg-purple-500 bg-linear-to-r from-purple-500 to-fuchsia-500 shadow-sm">
                     {{ t('homework.label') }}
                 </span>
                 <span class="font-semibold text-gray-800 dark:text-gray-200">{{ homework.name }}</span>
                 <span v-if="homework.code" class="text-xs text-gray-400 font-mono">{{ homework.code }}</span>
                 <span v-if="homeworkId" class="text-xs text-gray-400">#{{ homeworkId }}</span>
                 <div class="flex items-center gap-2 ml-auto">
-                    <UButton v-if="isTeacher" icon="i-lucide-edit" variant="ghost" size="2xs"
-                        class="opacity-50 hover:opacity-100 transition-opacity"
+                    <UButton v-if="isTeacher" icon="i-lucide-edit" color="secondary" variant="soft" size="2xs"
                         @click="editOpen = true" />
-                    <UButton v-if="moduleLms && isTeacher" icon="i-heroicons-clipboard" variant="ghost" size="2xs"
-                        class="opacity-50 hover:opacity-100 transition-opacity"
-                        @click="recordsOpen = true" />
-                    <span class="text-xs text-gray-400">{{ homework.point }}{{ t('question.points') }}</span>
+                    <UButton v-if="moduleLms && isTeacher" icon="i-heroicons-clipboard" color="info" variant="subtle"
+                        size="2xs" @click="recordsOpen = true" />
+                    <span
+                        class="px-2 py-0.5 rounded-full text-xs font-semibold text-purple-600 bg-purple-50 dark:bg-purple-900/30 dark:text-purple-300 border border-purple-200/70 dark:border-purple-800/50">
+                        {{ homework.point }}{{ t('question.points') }}
+                    </span>
                 </div>
             </div>
 
@@ -44,9 +45,9 @@
         </template>
 
         <!-- 标签 -->
-        <div v-if="homework && homework.tags && homework.tags.length" class="flex flex-wrap gap-1 pt-3">
+        <div v-if="homework && homework.tags && homework.tags.length" class="flex flex-wrap gap-1.5 pt-3">
             <span v-for="(tag, idx) in homework.tags" :key="idx"
-                class="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded text-xs">
+                class="px-2 py-0.5 rounded-full text-xs font-medium text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 dark:text-indigo-300">
                 {{ tag }}
             </span>
         </div>

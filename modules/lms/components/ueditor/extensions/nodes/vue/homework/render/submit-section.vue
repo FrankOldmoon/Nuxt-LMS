@@ -3,13 +3,15 @@
     <div class="space-y-3 pt-3 border-t border-gray-100 dark:border-gray-800">
         <!-- 答题内容 -->
         <div>
-            <label class="text-xs text-gray-500 mb-1 block">{{ t('homework.contentLabel') }}</label>
+            <label class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">{{
+                t('homework.contentLabel') }}</label>
             <richEditor v-model="submittedContent" />
         </div>
 
         <!-- 文件上传 -->
         <div>
-            <label class="text-xs text-gray-500 mb-1 block">{{ t('homework.uploadLabel') }}</label>
+            <label class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">{{
+                t('homework.uploadLabel') }}</label>
             <FormInputFile v-model="submittedFiles" multiple :placeholder="t('homework.uploadHint')" />
         </div>
 
@@ -19,10 +21,11 @@
                 submitMsg
                 }}</span>
             <div class="flex gap-2 ml-auto">
-                <UButton variant="soft" size="sm" :disabled="submitting" @click="onReset">
+                <UButton color="neutral" variant="soft" icon="i-lucide-rotate-ccw" size="sm" :disabled="submitting"
+                    @click="onReset">
                     {{ t('common.reset') }}
                 </UButton>
-                <UButton color="primary" size="sm" :loading="submitting"
+                <UButton color="primary" variant="solid" size="sm" icon="i-lucide-send" :loading="submitting"
                     :disabled="submitLocked || !submittedFiles || (Array.isArray(submittedFiles) && submittedFiles.length === 0)"
                     @click="onSubmit">
                     {{ submitted ? t('homework.resubmit') : t('homework.submit') }}
@@ -32,7 +35,7 @@
 
         <!-- 已提交提示 -->
         <div v-if="submitted"
-            class="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-md">
+            class="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg shadow-sm">
             <div class="flex items-center gap-2">
                 <UIcon name="i-heroicons-check-circle" class="w-5 h-5 text-green-500" />
                 <span class="text-sm text-green-700 dark:text-green-300">{{ t('homework.submitSuccess') }}</span>
@@ -43,11 +46,11 @@
                 <p v-else class="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{{ submittedContent }}</p>
             </div>
             <!-- 已提交文件列表 -->
-            <div v-if="submittedFilesMeta.length" class="mt-2 space-y-1">
-                <div v-for="(file, idx) in submittedFilesMeta" :key="idx" class="flex items-center gap-2">
-                    <UIcon name="i-heroicons-document" class="w-4 h-4 text-gray-400" />
-                    <a :href="file.url" target="_blank" class="text-xs text-blue-500 hover:underline truncate">{{ file.name
-                        }}</a>
+            <div v-if="submittedFilesMeta.length" class="mt-2 flex flex-wrap gap-1.5">
+                <div v-for="(file, idx) in submittedFilesMeta" :key="idx"
+                    class="flex items-center gap-2 px-2 py-1 rounded-lg bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300">
+                    <UIcon name="i-heroicons-document" class="w-4 h-4 text-sky-500" />
+                    <a :href="file.url" target="_blank" class="text-xs hover:underline truncate">{{ file.name }}</a>
                 </div>
             </div>
 
