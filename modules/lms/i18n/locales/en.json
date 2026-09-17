@@ -272,6 +272,7 @@
     "joinRace": "Join Race",
     "waitingNext": "Waiting for next question...",
     "showResult": "Show Results",
+    "answerCorrectBarrage": "🎉 answered correctly (+{gain} pts)",
     "pin": "Race PIN",
     "needLms": "Race requires the LMS module to be enabled"
   },

@@ -2,7 +2,7 @@
  * race render 组件测试
  * @see modules/lms/components/ueditor/extensions/nodes/vue/race/render.vue
  */
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { ref } from 'vue'
 import { resetAllStubs, setMockI18n, setMockLmsContext, setMockAuthUser, setMockRuntimeConfig } from '../../../../../../../test/setup/nuxt-stubs'
@@ -10,6 +10,8 @@ import { resetAllStubs, setMockI18n, setMockLmsContext, setMockAuthUser, setMock
 // Stub composables not in nuxt-stubs
 ;(globalThis as any).useChapterTask = () => null
 ;(globalThis as any).useUserCard = () => ({ refreshTrigger: ref(0), refresh: () => {} })
+// 捕获 raceAnswerCorrect 回调，供弹幕浮层渲染测试手动触发
+let raceAnswerCorrectCb: ((d: any) => void) | null = null
 ;(globalThis as any).useWebSocket = () => ({
   ws: ref(null),
   wsConnected: ref(false),
@@ -24,6 +26,7 @@ import { resetAllStubs, setMockI18n, setMockLmsContext, setMockAuthUser, setMock
   onRaceQuestion: () => () => {},
   sendRaceAnswer: () => {},
   onRaceAnswerUpdate: () => () => {},
+  onRaceAnswerCorrect: (cb: any) => { raceAnswerCorrectCb = cb; return () => {} },
   onRaceScores: () => () => {},
   sendRaceQuestionEnd: () => {},
   onRaceQuestionEnd: () => () => {},
@@ -32,18 +35,21 @@ import { resetAllStubs, setMockI18n, setMockLmsContext, setMockAuthUser, setMock
   sendRaceOnline: () => {},
   onRaceOnlineUpdate: () => () => {},
 })
+const fetchUsersSpy = vi.fn(async () => {})
 ;(globalThis as any).useClassUsers = () => ({
   classUsers: ref([]),
   students: ref([]),
   teachers: ref([]),
   classUsersLoading: ref(false),
   currentClassId: ref(null),
-  fetchUsers: async () => {},
+  fetchUsers: fetchUsersSpy,
   clearUsers: () => {},
 })
 
 beforeEach(() => {
   resetAllStubs()
+  raceAnswerCorrectCb = null
+  fetchUsersSpy.mockClear()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
   setMockLmsContext(1, 1)
   setMockAuthUser({ id: 1, name: 'Teacher', defaultClass: { id: 1 } }, [{ code: 'teacher' }])
@@ -116,5 +122,35 @@ describe('race/render.vue', () => {
     })
     await flushPromises()
     expect(wrapper.text()).toContain('race.label')
+  })
+
+  it('挂载时拉取班级名单以填充计分表', async () => {
+    const { default: RaceRender } = await import(
+      '../../../../../components/ueditor/extensions/nodes/vue/race/render.vue'
+    )
+    const wrapper = mount(RaceRender, {
+      props: { node: { attrs: { content: '1' } }, courseId: 1 },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    expect(fetchUsersSpy).toHaveBeenCalledWith(1, 1)
+    wrapper.unmount()
+  })
+
+  it('收到 raceAnswerCorrect 后渲染答对者弹幕浮层', async () => {
+    const { default: RaceRender } = await import(
+      '../../../../../components/ueditor/extensions/nodes/vue/race/render.vue'
+    )
+    const wrapper = mount(RaceRender, {
+      props: { node: { attrs: { content: '1' } }, courseId: 1 },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    expect(raceAnswerCorrectCb).toBeTruthy()
+    raceAnswerCorrectCb!({ raceCid: 1, from: 'test01', gain: 1 })
+    await flushPromises()
+    expect(wrapper.find('.race-barrage').exists()).toBe(true)
+    expect(wrapper.text()).toContain('test01')
+    expect(wrapper.text()).toContain('race.answerCorrectBarrage')
   })
 })

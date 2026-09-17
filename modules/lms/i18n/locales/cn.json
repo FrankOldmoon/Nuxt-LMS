@@ -272,6 +272,7 @@
     "joinRace": "加入抢答",
     "waitingNext": "等待下一题…",
     "showResult": "显示结果",
+    "answerCorrectBarrage": "🎉 答对了题目 (+{gain}分)",
     "pin": "抢答 PIN",
     "needLms": "抢答需要启用 LMS 模块"
   },

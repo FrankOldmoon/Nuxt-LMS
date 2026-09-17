@@ -24,6 +24,7 @@ import { resetAllStubs, setMockI18n, setMockLmsContext, setMockAuthUser, setMock
   onRaceQuestion: () => () => {},
   sendRaceAnswer: () => {},
   onRaceAnswerUpdate: () => () => {},
+  onRaceAnswerCorrect: () => () => {},
   onRaceScores: () => () => {},
   sendRaceQuestionEnd: () => {},
   onRaceQuestionEnd: () => () => {},

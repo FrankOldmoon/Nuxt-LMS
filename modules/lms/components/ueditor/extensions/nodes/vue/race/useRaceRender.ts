@@ -29,7 +29,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
     const isLoggedIn = computed(() => !!user.value)
     const toast = useToast()
     const chapterTask = useChapterTask()
-    const { wsConnected, connect, raceJoin, onRaceJoined, sendRaceStart, onRaceStart, sendRaceQuestion, onRaceQuestion, sendRaceAnswer, onRaceAnswerUpdate, onRaceScores, sendRaceQuestionEnd, onRaceQuestionEnd, sendRaceEnd, onRaceEnd, sendRaceOnline, onRaceOnlineUpdate } = useWebSocket()
+    const { wsConnected, connect, raceJoin, onRaceJoined, sendRaceStart, onRaceStart, sendRaceQuestion, onRaceQuestion, sendRaceAnswer, onRaceAnswerUpdate, onRaceAnswerCorrect, onRaceScores, sendRaceQuestionEnd, onRaceQuestionEnd, sendRaceEnd, onRaceEnd, sendRaceOnline, onRaceOnlineUpdate } = useWebSocket()
 
     // 告知 question 组件当前在 race 中：显示提交按钮但不向后端提交，
     // 提交时触发 onRaceSubmit 回调（显式提交，避免 record 非空即自动提交）
@@ -105,12 +105,19 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
     let timerInterval: any = null
     let submitCheckTimer: any = null
 
+    // 答对者弹幕（竞赛内浮层，教师与学生端均可见）
+    const raceBarrages = ref<Array<{ id: number; from: string; gain: number; top: number }>>([])
+    let barrageId = 0
+
     // race 在线用户：userId → boolean
     const raceOnlineMap = reactive<Record<number, boolean>>({})
 
     // ====================== pin 房间加入 ======================
     onMounted(() => {
         if (!canShow.value) return
+        // 拉取班级名单：计分表依赖 useClassUsers 全局缓存，
+        // 学生端此前无人填充该缓存，导致得分表恒为空
+        if (classId.value) void fetchUsers(classId.value, effectiveCourseId.value)
         // 确保 ws 连接
         if (!wsConnected.value) {
             connect()
@@ -150,7 +157,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
     })
 
     // ====================== 学生得分表 ======================
-    const { students } = useClassUsers()
+    const { students, fetchUsers } = useClassUsers()
 
     const studentRows = computed(() => {
         const scoreMap = new Map(raceScores.value.map((s: any) => [s.userId, s]))
@@ -184,6 +191,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         currentQuestionCid.value = 0
         studentAnswered.value = false
         raceScores.value = []
+        raceBarrages.value = []
     })
 
     onRaceQuestion((data: any) => {
@@ -219,6 +227,16 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         raceScores.value = data.scores || []
     })
 
+    // 答对者弹幕：某学生答对时，竞赛内所有端（含其他学生）飘出提示
+    onRaceAnswerCorrect((data: any) => {
+        if (data.raceCid !== raceId.value) return
+        const item = { id: ++barrageId, from: String(data.from || 'anonymous'), gain: Number(data.gain) || 0, top: 8 + Math.random() * 70 }
+        raceBarrages.value.push(item)
+        setTimeout(() => {
+            raceBarrages.value = raceBarrages.value.filter(b => b.id !== item.id)
+        }, 4000)
+    })
+
     onRaceQuestionEnd((data: any) => {
         if (data.raceCid !== raceId.value) return
         currentQuestionCid.value = 0
@@ -234,6 +252,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         raceActive.value = false
         currentQuestionCid.value = 0
         raceScores.value = data.scores || data.leaderboard || []
+        raceBarrages.value = []
         // 最终领奖台：按总得分展示
         questionTop3.value = (data.scores || data.leaderboard || []).slice(0, 3).map((s: any) => ({
             userId: s.userId,
@@ -255,6 +274,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         currentIndex.value = -1
         currentQuestionCid.value = 0
         raceScores.value = []
+        raceBarrages.value = []
         showPodium.value = false
         questionTop3.value = []
     }
@@ -386,6 +406,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         editOpen, studentRows, scoresLoading, scoreColumns, getScoreClass,
         raceActive, raceQuestions, currentIndex, currentQuestionCid,
         timeRemaining, formatTime, timeProgress, showPodium, questionTop3,
+        raceBarrages,
         studentAnswered, questionRef, onSaved, startRace, nextQuestion,
         endQuestion, endRace, refresh,
         useRaceRenderContext

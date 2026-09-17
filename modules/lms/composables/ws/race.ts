@@ -36,6 +36,9 @@ export function useWsRace() {
   function onRaceAnswerUpdate(callback: (data: any) => void) {
     return registerWsHandler('raceAnswerUpdate', callback)
   }
+  function onRaceAnswerCorrect(callback: (data: any) => void) {
+    return registerWsHandler('raceAnswerCorrect', callback)
+  }
   function onRaceScores(callback: (data: any) => void) {
     return registerWsHandler('raceScores', callback)
   }
@@ -65,7 +68,7 @@ export function useWsRace() {
     raceJoin, onRaceJoined,
     sendRaceStart, onRaceStart,
     sendRaceQuestion, onRaceQuestion,
-    sendRaceAnswer, onRaceAnswerUpdate, onRaceScores,
+    sendRaceAnswer, onRaceAnswerUpdate, onRaceAnswerCorrect, onRaceScores,
     sendRaceQuestionEnd, onRaceQuestionEnd,
     sendRaceEnd, onRaceEnd,
     sendRaceOnline, onRaceOnlineUpdate,

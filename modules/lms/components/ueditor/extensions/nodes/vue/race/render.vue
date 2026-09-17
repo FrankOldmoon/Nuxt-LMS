@@ -4,6 +4,13 @@
         {{ placeholderText }}
     </div>
     <div v-else class="race-render w-full p-4 border border-amber-400 dark:border-amber-500 rounded-lg bg-white dark:bg-gray-900 relative">
+        <!-- 答对者弹幕：竞赛内浮层，教师与学生端均可见 -->
+        <div class="pointer-events-none absolute inset-0 overflow-hidden z-10">
+            <div v-for="b in raceBarrages" :key="b.id" class="race-barrage" :style="{ top: b.top + '%' }">
+                {{ b.from }}：{{ t('race.answerCorrectBarrage', { gain: b.gain }) }}
+            </div>
+        </div>
+
         <!-- 加载中 -->
         <div v-if="pending" class="flex items-center justify-center py-6 text-gray-400">
             <span>{{ t('race.loading') }}</span>
@@ -85,7 +92,7 @@ const emit = defineEmits(['saved'])
 const {
     t, canShow, placeholderText, pending, race, raceId, isTeacher, pin,
     editOpen, studentAnswered, currentQuestionCid, showPodium, questionRef,
-    raceActive, onSaved, refresh,
+    raceActive, onSaved, refresh, raceBarrages,
 } = useRaceRender(props, emit)
 
 defineExpose({ refresh, data: race })
@@ -94,5 +101,26 @@ defineExpose({ refresh, data: race })
 <style scoped>
 .race-render {
     width: 100%;
+}
+
+.race-barrage {
+    position: absolute;
+    white-space: nowrap;
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: #22c55e;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+    animation: race-barrage-slide 4s linear forwards;
+}
+
+@keyframes race-barrage-slide {
+    from {
+        left: 100%;
+        transform: translateX(0);
+    }
+    to {
+        left: 0;
+        transform: translateX(-100%);
+    }
 }
 </style>

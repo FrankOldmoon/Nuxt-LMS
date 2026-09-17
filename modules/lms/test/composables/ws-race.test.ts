@@ -82,4 +82,18 @@ describe('composables/ws/race', () => {
     dispatchWsHandler('raceEnd', { pin: 'PIN' })
     expect(cb).toHaveBeenCalledWith({ pin: 'PIN' })
   })
+
+  it('onRaceAnswerCorrect 注册 handler 并可被 dispatch 触发', async () => {
+    ;(globalThis as any).useWsConnection = () => ({
+      ws: ref(null),
+      wsConnected: ref(true),
+      send: () => {},
+    })
+    const { useWsRace } = await import('../../composables/ws/race')
+    const { onRaceAnswerCorrect } = useWsRace()
+    const cb = vi.fn()
+    onRaceAnswerCorrect(cb)
+    dispatchWsHandler('raceAnswerCorrect', { raceCid: 1, from: 'alice', gain: 1 })
+    expect(cb).toHaveBeenCalledWith({ raceCid: 1, from: 'alice', gain: 1 })
+  })
 })

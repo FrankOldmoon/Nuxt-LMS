@@ -58,6 +58,8 @@
 </template>
 
 <script setup>
+import { useRaceEditContext } from '../useRaceEdit'
+
 const {
     t, form, pickerOpen, showJsonEditor, jsonText, jsonError,
 } = useRaceEditContext()

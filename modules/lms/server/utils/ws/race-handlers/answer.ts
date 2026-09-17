@@ -44,4 +44,17 @@ export async function handleRaceAnswer(_peer: any, data: any) {
     raceCid: race.raceCid, questionCid, answeredCount: qAnswers.size }))
   broadcastToRace(pin, JSON.stringify({ type: 'raceScores',
     raceCid: race.raceCid, scores: computeRaceScores(race) }))
+
+  // 答对者弹幕：向竞赛房间广播（竞赛参与者均可收到，含学生端）
+  if (correct) {
+    const point = race.questionPoints.get(questionCid) || 1
+    broadcastToRace(pin, JSON.stringify({
+      type: 'raceAnswerCorrect',
+      raceCid: race.raceCid,
+      questionCid,
+      userId,
+      from: String(data.from || 'anonymous'),
+      gain: Math.round(rate * point * 100) / 100,
+    }))
+  }
 }

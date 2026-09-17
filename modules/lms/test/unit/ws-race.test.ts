@@ -193,6 +193,57 @@ describe('ws/race: start / question / answer', () => {
     expect(sends).toContainEqual(expect.objectContaining({ type: 'raceScores' }))
   })
 
+  it('raceAnswer 答对时广播 raceAnswerCorrect（供竞赛内答对者弹幕）', async () => {
+    handleRaceMessage(makeMockPeer(), {
+      type: 'raceStart', pin: 'p1', raceCid: 100, courseId: 1, totalQuestions: 5, timeLimit: 30,
+    })
+    handleRaceMessage(makeMockPeer(), {
+      type: 'raceQuestion', pin: 'p1', questionCid: 50, questionIndex: 0, timeLimit: 30,
+    })
+    peer1.send.mockClear()
+    handleRaceMessage(makeMockPeer(), {
+      type: 'raceAnswer', pin: 'p1', userId: 1, from: 'a', answer: 'X', rate: 1, correct: true,
+    })
+    await flushAsync()
+    const sends = sendsOf(peer1)
+    expect(sends).toContainEqual({
+      type: 'raceAnswerCorrect', raceCid: 100, questionCid: 50, userId: 1, from: 'a', gain: 1,
+    })
+  })
+
+  it('raceAnswer 答错时不广播 raceAnswerCorrect', async () => {
+    handleRaceMessage(makeMockPeer(), {
+      type: 'raceStart', pin: 'p1', raceCid: 100, courseId: 1, totalQuestions: 5, timeLimit: 30,
+    })
+    handleRaceMessage(makeMockPeer(), {
+      type: 'raceQuestion', pin: 'p1', questionCid: 50, questionIndex: 0, timeLimit: 30,
+    })
+    peer1.send.mockClear()
+    handleRaceMessage(makeMockPeer(), {
+      type: 'raceAnswer', pin: 'p1', userId: 1, from: 'a', answer: 'X', rate: 0, correct: false,
+    })
+    await flushAsync()
+    const sends = sendsOf(peer1)
+    expect(sends.filter((m: any) => m.type === 'raceAnswerCorrect')).toHaveLength(0)
+  })
+
+  it('raceScores 携带 correctCount（答对数）', async () => {
+    handleRaceMessage(makeMockPeer(), {
+      type: 'raceStart', pin: 'p1', raceCid: 100, courseId: 1, totalQuestions: 5, timeLimit: 30,
+    })
+    handleRaceMessage(makeMockPeer(), {
+      type: 'raceQuestion', pin: 'p1', questionCid: 50, questionIndex: 0, timeLimit: 30,
+    })
+    peer1.send.mockClear()
+    handleRaceMessage(makeMockPeer(), {
+      type: 'raceAnswer', pin: 'p1', userId: 1, from: 'a', answer: 'X', rate: 1, correct: true,
+    })
+    await flushAsync()
+    const scores = sendsOf(peer1).filter((m: any) => m.type === 'raceScores').pop()
+    expect(scores).toBeDefined()
+    expect(scores.scores[0]).toEqual(expect.objectContaining({ userId: 1, score: 1, correctCount: 1 }))
+  })
+
   it('raceAnswer 同一用户不能重复答同一题', async () => {
     handleRaceMessage(makeMockPeer(), {
       type: 'raceStart', pin: 'p1', raceCid: 100, courseId: 1, totalQuestions: 5, timeLimit: 30,
