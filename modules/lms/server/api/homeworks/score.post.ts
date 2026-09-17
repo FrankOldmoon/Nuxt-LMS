@@ -63,6 +63,18 @@ export default eventHandler(async (event) => {
     // 更新 userCourses：homeworkScore + score
     await addCourseScore(userId, courseId, scoreDelta, 'homeworkScore', 0, 0)
 
+    // 分数有变化时给该学生发定向通知（个人通知，读后硬删除；失败不影响打分结果）
+    if (newScore != null && scoreDelta !== 0) {
+      try {
+        await notifyUser(userId, '作业已评分', `你的作业已评分：${newScore} 分`, {
+          type: 'homeworkGraded',
+          courseId,
+          homeworkCid: Number(homework_cid),
+          score: newScore,
+        })
+      } catch { /* 通知失败忽略 */ }
+    }
+
     return cResp(saved)
   } catch (error: any) {
     console.error('打分失败:', error)

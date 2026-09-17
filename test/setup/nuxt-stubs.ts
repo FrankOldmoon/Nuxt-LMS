@@ -740,6 +740,14 @@ export async function broadcastSubmitDanmaku(args: any) {
 export function getSubmitDanmakuCalls() { return _mockSubmitDanmakuCalls }
 export function clearSubmitDanmakuCalls() { _mockSubmitDanmakuCalls = [] }
 
+/** notifyUser 桩 — 记录定向通知调用（真实实现见 modules/base/server/utils/notify.ts） */
+const _notifyCalls: Array<{ userId: number; name: string; content: any; data?: any }> = []
+export async function notifyUser(userId: number, name: string, content: any, data?: any) {
+  _notifyCalls.push({ userId, name, content, data })
+}
+export function getNotifyCalls() { return _notifyCalls }
+export function clearNotifyCalls() { _notifyCalls.length = 0 }
+
 /** normalizeChapterPageData 桩（lms server/utils/normalize/chapter 的默认实现） */
 export function normalizeChapterPageData(ch: any, course: any, userChapter?: any) {
   return {
@@ -1320,6 +1328,9 @@ const _stubsToExpose: Record<string, any> = {
   broadcastSubmitDanmaku,
   getSubmitDanmakuCalls,
   clearSubmitDanmakuCalls,
+  notifyUser,
+  getNotifyCalls,
+  clearNotifyCalls,
   normalizeChapterPageData,
   saveContentVersion,
   listTable, setMockListTableResult,
@@ -1407,6 +1418,7 @@ export function resetAllStubs() {
   clearMockLmsConfig()
   clearToastCalls()
   clearSubmitDanmakuCalls()
+  clearNotifyCalls()
   clearUserCardRefreshCount()
   clearMockTableMeta()
   clearTableOverrideRegistry()

@@ -30,14 +30,14 @@
               <span v-else class="size-2 shrink-0 mt-1.5" />
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2">
-                  <h4 class="font-medium text-sm truncate">{{ item.name }}</h4>
+                  <h4 class="font-medium text-sm truncate">{{ displayTitle(item) }}</h4>
                   <span class="text-[10px] rounded-full px-1.5 py-0.5 shrink-0"
                     :class="item.readAt ? 'bg-muted text-muted-foreground' : 'bg-primary/10 text-primary'">
                     {{ item.readAt ? $t('notification.read') : $t('notification.unread') }}
                   </span>
                 </div>
-                <p v-if="item.content?.text" class="text-xs text-muted-foreground mt-1 line-clamp-2">
-                  {{ item.content.text }}
+                <p v-if="displayText(item)" class="text-xs text-muted-foreground mt-1 line-clamp-2">
+                  {{ displayText(item) }}
                 </p>
                 <p class="text-[10px] text-muted-foreground mt-1.5">{{ formatTime(item.createdAt) }}</p>
               </div>
@@ -69,12 +69,31 @@
 <script setup lang="ts">
 const isOpen = defineModel<boolean>('open', { default: false })
 
+const { t } = useI18n()
 const { page, list, pending, formatTime, refresh } = useNotifications(isOpen)
 const { hasRole } = useAuth()
 const isAdmin = computed(() => hasRole('admin'))
 
 const broadcastOpen = ref(false)
 const { refresh: refreshUnread } = useUnreadCounts()
+
+/**
+ * 系统生成的定向通知（作业评分 / 评论过审）服务端只存中文兜底文案，
+ * 这里按 data.type 用当前语言重新渲染；管理员广播则直接显示原始标题/内容。
+ */
+function displayTitle(item: any): string {
+  const type = item?.data?.type
+  if (type === 'homeworkGraded') return t('notification.homeworkGradedTitle')
+  if (type === 'commentApproved') return t('notification.commentApprovedTitle')
+  return item?.name || ''
+}
+
+function displayText(item: any): string {
+  const d = item?.data
+  if (d?.type === 'homeworkGraded') return t('notification.homeworkGraded', { score: d.score })
+  if (d?.type === 'commentApproved') return t('notification.commentApproved')
+  return item?.content?.text || ''
+}
 
 // 广播发送成功后：通知弹窗列表刷新 + 未读角标即时更新
 async function afterBroadcast() {

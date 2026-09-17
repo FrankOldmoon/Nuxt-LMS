@@ -166,6 +166,20 @@
         "progress": "Progress Band"
       }
     },
+    "broadcast": {
+      "title": "Notification Read Rate",
+      "subtitle": "Delivery and read stats for admin broadcasts",
+      "refresh": "Refresh",
+      "empty": "No broadcasts yet",
+      "table": {
+        "title": "Title",
+        "text": "Content",
+        "delivered": "Delivered",
+        "read": "Read",
+        "readRate": "Read Rate",
+        "sentAt": "Sent At"
+      }
+    },
     "table": {
       "add": "Add",
       "edit": "Edit",

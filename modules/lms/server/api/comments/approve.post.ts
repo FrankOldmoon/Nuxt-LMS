@@ -61,6 +61,15 @@ export default eventHandler(async (event) => {
       kind: 'comment',
       gainedExp: commentGainedExp,
     })
+
+    // 通知评论作者：已通过审核（个人通知，读后硬删除；失败不影响审核结果）
+    try {
+      await notifyUser(commentRow.userId, '评论已通过审核', '你的评论已通过审核', {
+        type: 'commentApproved',
+        courseId,
+        cid: commentCid,
+      })
+    } catch { /* 通知失败忽略 */ }
   }
 
   // 实时通知：广播到评论作者所在班级房间，前端收到 commentRefresh 后刷新对应主题的评论列表

@@ -225,7 +225,11 @@
     "titleLabel": "标题",
     "contentLabel": "内容",
     "send": "发送",
-    "sent": "通知已发送给所有用户"
+    "sent": "通知已发送给所有用户",
+    "homeworkGraded": "作业已评分：{score} 分",
+    "homeworkGradedTitle": "作业已评分",
+    "commentApproved": "你的评论已通过审核",
+    "commentApprovedTitle": "评论已通过审核"
   },
   "message": {
     "title": "消息",

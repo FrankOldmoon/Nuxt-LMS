@@ -180,6 +180,23 @@ export const userClasses = pgTable(
   }),
 );
 
+/**
+ * 全局广播通知主表（两层方案的第一层）
+ * - 管理员发一次广播 → 这里 1 行（内容/发送者/送达人数快照）
+ * - 每人一条明细存在 notifications（第二层），明细带 broadcastId 与各自的 readAt
+ *   → 管理员由此可统计每条广播的送达数 / 已读数 / 阅读率
+ */
+export const broadcasts = pgTable('broadcasts', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  content: jsonb('content'),
+  /** 发送者（管理员）用户 id */
+  createdBy: integer('created_by'),
+  /** 发送时的送达人数快照（fan-out 出的明细行数） */
+  audience: integer('audience').default(0),
+  ...withTimestamps,
+});
+
 export const notifys = pgTable(
   'notifications',
   {
@@ -188,12 +205,20 @@ export const notifys = pgTable(
     content: jsonb('content'),
     data: jsonb('data'),
     userId: integer('user_id').notNull(),
+    /**
+     * 所属广播（第一层 broadcasts.id）：
+     * - 全局广播：多行共享同一 broadcastId，读后写 readAt（保留用于阅读率统计）
+     * - 个人定向通知（作业评分 / 评论过审等）：为 null，用户读后直接硬删除
+     */
+    broadcastId: integer('broadcast_id'),
     readAt: timestamp('read_at', { withTimezone: true }),
     ...withTimestamps,
   },
   (t) => ({
     userFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('cascade'),
     userIdx: index('idx_notifications_user_id').on(t.userId),
+    broadcastFk: foreignKey({ columns: [t.broadcastId], foreignColumns: [broadcasts.id] }).onDelete('cascade'),
+    broadcastIdx: index('idx_notifications_broadcast_id').on(t.broadcastId),
   }),
 );
 

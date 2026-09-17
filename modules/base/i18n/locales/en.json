@@ -225,7 +225,11 @@
     "titleLabel": "Title",
     "contentLabel": "Content",
     "send": "Send",
-    "sent": "Notification sent to all users"
+    "sent": "Notification sent to all users",
+    "homeworkGraded": "Homework graded: {score} points",
+    "homeworkGradedTitle": "Homework Graded",
+    "commentApproved": "Your comment has been approved",
+    "commentApprovedTitle": "Comment Approved"
   },
   "message": {
     "title": "Messages",

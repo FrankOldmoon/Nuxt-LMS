@@ -57,6 +57,12 @@ export default defineNuxtModule({
         path: '/report',
         file: resolve('./pages/report.vue'),
       })
+      // 广播通知阅读率（/broadcasts）：独立路由，复用 admin 布局
+      pages.push({
+        name: 'admin-broadcasts',
+        path: '/broadcasts',
+        file: resolve('./pages/broadcasts.vue'),
+      })
     })
 
     // 注册 i18n locale

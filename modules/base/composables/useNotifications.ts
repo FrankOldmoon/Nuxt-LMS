@@ -4,6 +4,8 @@ interface NotificationItem {
   id: number
   name: string
   content: { text?: string } | null
+  /** 附加数据：广播为 { type: 'broadcast' }；系统定向通知为 { type: 'homeworkGraded' | 'commentApproved', ... } */
+  data?: Record<string, any> | null
   readAt: string | null
   createdAt: string
 }

@@ -166,6 +166,20 @@
         "progress": "进度区间"
       }
     },
+    "broadcast": {
+      "title": "通知阅读率",
+      "subtitle": "管理员广播通知的送达与已读统计",
+      "refresh": "刷新",
+      "empty": "暂无广播记录",
+      "table": {
+        "title": "标题",
+        "text": "内容",
+        "delivered": "送达",
+        "read": "已读",
+        "readRate": "阅读率",
+        "sentAt": "发送时间"
+      }
+    },
     "table": {
       "add": "添加",
       "edit": "编辑",
