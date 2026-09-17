@@ -400,6 +400,7 @@
     "videoCorrect": "Correct",
     "videoCompleted": "Video completed",
     "videoNeedWatchFull": "Please watch the full video first",
+    "videoNoSeek": "Fast-forward disabled; rewind to rewatch",
     "videoNeedAllCorrect": "Please answer all questions correctly",
     "videoEditHint": "Add interactive questions to the video. They will pop up at the specified timestamp. All questions must be answered correctly and the full video must be watched for this question to be marked correct.",
     "jsonEditor": "JSON (Advanced)",

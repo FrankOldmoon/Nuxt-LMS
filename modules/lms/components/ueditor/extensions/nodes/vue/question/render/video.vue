@@ -12,7 +12,7 @@
             <!-- 视频本体 -->
             <video ref="videoEl" :src="videoSrc" controls preload="metadata"
                 class="w-full block" style="max-height: 480px; background: #000;"
-                @timeupdate="onTimeUpdate" @seeked="onTimeUpdate" @ended="onVideoEnded" @loadedmetadata="onLoadedMetadata" />
+                @timeupdate="onTimeUpdate" @seeking="onSeeking" @seeked="onTimeUpdate" @ended="onVideoEnded" @loadedmetadata="onLoadedMetadata" />
 
             <!-- 进度条：已观看比例 + 题目位置 -->
             <div v-if="subQuestions.length" class="relative h-2 bg-gray-200 dark:bg-gray-700">
@@ -80,9 +80,13 @@
         <div v-if="!inQuiz && videoSrc" class="mt-3 flex items-center gap-2 text-sm">
             <UIcon v-if="allPassed" name="i-lucide-check-circle-2" class="size-4 text-green-500" />
             <UIcon v-else-if="watchedRatio >= 0.95" name="i-lucide-alert-circle" class="size-4 text-amber-500" />
-            <UIcon v-else name="i-lucide-circle" class="size-4 text-gray-400" />
+            <UIcon v-else name="i-lucide-text-quote" class="size-4 text-gray-400" />
             <span :class="allPassed ? 'text-green-600' : 'text-gray-500'">
                 {{ statusText }}
+            </span>
+            <span class="flex items-center gap-1 text-xs text-gray-400">
+                <UIcon name="i-lucide-lock" class="size-3.5" />
+                {{ $t('question.videoNoSeek') }}
             </span>
         </div>
     </div>
@@ -91,7 +95,7 @@
 import QuestionRender from '../render.vue'
 import { useVideo } from './useVideo'
 const props = defineProps({ question: { type: Object, required: true }, questionId: { type: Number, default: 0 }, inQuiz: { type: Boolean, default: false } })
-const { videoSrc, subQuestions, watchedRatio, subRecords, correctSubCount, allPassed, statusText, videoEl, activeQuestion, activeSubCorrect, onLoadedMetadata, onTimeUpdate, onVideoEnded, dismissQuestion, onSubQuestionSubmitted, submit, reset, hasAnswer, fillCorrectAnswer, pct, formatTime } = useVideo(props)
+const { videoSrc, subQuestions, watchedRatio, subRecords, correctSubCount, allPassed, statusText, videoEl, activeQuestion, activeSubCorrect, onLoadedMetadata, onTimeUpdate, onSeeking, onVideoEnded, dismissQuestion, onSubQuestionSubmitted, submit, reset, hasAnswer, fillCorrectAnswer, pct, formatTime } = useVideo(props)
 defineExpose({ submit, reset, get hasAnswer() { return hasAnswer.value }, fillCorrectAnswer })
 </script>
 <style scoped>

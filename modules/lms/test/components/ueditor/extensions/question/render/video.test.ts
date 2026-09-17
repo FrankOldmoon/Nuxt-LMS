@@ -55,7 +55,7 @@ afterEach(() => {
 })
 
 const _globalStubs = {
-  UIcon: { template: '<span class="uicon" />', props: ['name'] },
+  UIcon: { template: '<span class="uicon" :data-name="name" />', props: ['name'] },
   UButton: { template: '<button @click="$emit(\'click\', $event)">{{ label }}<slot /></button>', props: ['icon', 'color', 'variant', 'size', 'label', 'disabled'], emits: ['click'] },
   QuestionRender: { template: '<div class="question-render-stub" />', props: ['node'] },
 }
@@ -186,6 +186,112 @@ describe('question/render/video.vue', () => {
     ;(wrapper.vm as any).reset()
     await wrapper.find('video').trigger('ended')
     expect(trigger).toHaveBeenCalledTimes(2)
+  })
+
+  // ── 禁止拖动进度条 ──
+
+  /** 自然播放到 t 秒（推进"已自然观看位置"） */
+  async function playTo(wrapper: any, t: number) {
+    const el = wrapper.find('video').element as any
+    el.currentTime = t
+    await wrapper.find('video').trigger('timeupdate')
+  }
+
+  it('拖动进度条快进会被拉回已观看位置', async () => {
+    const wrapper = await mountVideo(sampleQuestion, vi.fn())
+    await primeDuration(wrapper, 120)
+    await playTo(wrapper, 10)
+    const el = wrapper.find('video').element as any
+
+    el.currentTime = 90                     // 拖动到 90s
+    await wrapper.find('video').trigger('seeking')
+
+    expect(el.currentTime).toBe(10)         // 被拉回
+  })
+
+  it('拖动进度条回退被允许（可重看）', async () => {
+    const wrapper = await mountVideo(sampleQuestion, vi.fn())
+    await primeDuration(wrapper, 120)
+    await playTo(wrapper, 10)
+    const el = wrapper.find('video').element as any
+
+    el.currentTime = 2
+    await wrapper.find('video').trigger('seeking')
+
+    expect(el.currentTime).toBe(2)          // 回退放行
+  })
+
+  it('回退重看不会回退已累积的观看进度，之后仍不能快进', async () => {
+    const wrapper = await mountVideo(sampleQuestion, vi.fn())
+    await primeDuration(wrapper, 120)
+    await playTo(wrapper, 115)              // 看到 115s（≥95%，算通过）
+    const el = wrapper.find('video').element as any
+    expect((wrapper.vm as any).hasAnswer).toBe(true)
+
+    el.currentTime = 10                     // 回退重看
+    await wrapper.find('video').trigger('seeking')
+    await playTo(wrapper, 20)               // 重新看到 20s
+    expect((wrapper.vm as any).hasAnswer).toBe(true)   // 已累积进度不因回退而丢失
+
+    el.currentTime = 119                    // 超过已观看位置 → 拉回 115
+    await wrapper.find('video').trigger('seeking')
+    expect(el.currentTime).toBe(115)
+  })
+
+  it('容差内的微小抖动不触发拉回', async () => {
+    const wrapper = await mountVideo(sampleQuestion, vi.fn())
+    await primeDuration(wrapper, 120)
+    await playTo(wrapper, 10)
+    const el = wrapper.find('video').element as any
+
+    el.currentTime = 10.5
+    await wrapper.find('video').trigger('seeking')
+
+    expect(el.currentTime).toBe(10.5)
+  })
+
+  it('自然播放（含大步长）不被拦截，观看进度正常累积', async () => {
+    const wrapper = await mountVideo(sampleQuestion, vi.fn())
+    await primeDuration(wrapper, 120)
+    expect((wrapper.vm as any).hasAnswer).toBe(false)
+
+    await playTo(wrapper, 120)              // 自然播放到结尾
+    expect((wrapper.vm as any).hasAnswer).toBe(true)
+  })
+
+  it('reset 后回到开头：可从 0 重新观看，仍不能拖动', async () => {
+    const wrapper = await mountVideo(sampleQuestion, vi.fn())
+    await primeDuration(wrapper, 120)
+    await playTo(wrapper, 10)
+    const el = wrapper.find('video').element as any
+
+    ;(wrapper.vm as any).reset()
+    expect(el.currentTime).toBe(0)
+
+    el.currentTime = 5
+    await wrapper.find('video').trigger('seeking')
+    expect(el.currentTime).toBe(0)
+  })
+
+  it('按已累积的观看进度恢复位置，恢复点之外仍不能拖动', async () => {
+    const wrapper = await mountVideo({ ...sampleQuestion, record: [{ watchedRatio: 0.5 }] }, vi.fn())
+    await primeDuration(wrapper, 120)
+    const el = wrapper.find('video').element as any
+    expect(el.currentTime).toBe(60)         // 恢复到 50% 处
+
+    el.currentTime = 100
+    await wrapper.find('video').trigger('seeking')
+    expect(el.currentTime).toBe(60)
+  })
+
+  it('未看完时状态文案左侧用 blockquote 图标，并提示不可快进', async () => {
+    const wrapper = await mountVideo(sampleQuestion, vi.fn())
+    await primeDuration(wrapper, 120)
+
+    const icons = wrapper.findAll('.uicon').map(i => i.attributes('data-name'))
+    expect(icons).toContain('i-lucide-text-quote')   // blockquote 图标
+    expect(icons).not.toContain('i-lucide-circle')   // 不再是 radio 圆圈
+    expect(wrapper.text()).toContain('question.videoNoSeek')
   })
 
   // ── 不可见自动暂停 ──

@@ -400,6 +400,7 @@
     "videoCorrect": "正确",
     "videoCompleted": "视频已完成",
     "videoNeedWatchFull": "请先完整观看视频",
+    "videoNoSeek": "不可快进，可回退重看",
     "videoNeedAllCorrect": "请答对所有题目",
     "videoEditHint": "为视频添加交互题目，将在指定时间点弹出。需要所有题目答对且完整观看视频，本小题才会被标记正确。",
     "jsonEditor": "JSON（高级）",

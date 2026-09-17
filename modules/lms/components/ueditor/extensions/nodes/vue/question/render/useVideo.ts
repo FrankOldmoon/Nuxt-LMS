@@ -117,6 +117,29 @@ export function useVideo(props: any) {
     viewObserver = null
   }
 
+  // ── 禁止拖动进度条快进 ──
+  // 观看进度只能靠自然播放累积：向前拖动会被拉回「已自然观看到的位置」，回退则允许（可重看）。
+  // 只拦真正的 seek（seeking 事件），不干预自然播放，因此倍速播放不受影响。
+  let maxAllowedTime = 0
+  /** 容差（秒）：吸收拖动判定误差，避免与浏览器来回抖动 */
+  const SEEK_TOLERANCE = 1
+
+  /** 允许的内部定位（按记录恢复到上次观看点、reset 回到开头），同时抬升允许位置 */
+  function allowSeekTo(seconds: number) {
+    maxAllowedTime = Math.max(0, seconds)
+    const v = videoEl.value
+    if (v && v.currentTime !== maxAllowedTime) v.currentTime = maxAllowedTime
+  }
+
+  /** 拖动进度条：快进拉回允许位置；回退（重看）放行 */
+  function onSeeking() {
+    const v = videoEl.value
+    if (!v) return
+    if (v.currentTime - maxAllowedTime > SEEK_TOLERANCE) {
+      v.currentTime = maxAllowedTime
+    }
+  }
+
   // 视频元素出现/切换 src 时重建监听（视频配置是异步加载的，元素可能晚于 setup 才出现）
   watch(videoEl, (el) => {
     stopViewObserver()
@@ -131,12 +154,20 @@ export function useVideo(props: any) {
 
   function onLoadedMetadata() {
     duration.value = videoEl.value?.duration || 0
+    // 已累积的观看进度是之前真实看过的部分，允许从这里继续（否则重进页面必须从头重看）
+    if (duration.value > 0 && watchedRatio.value > 0) {
+      allowSeekTo(watchedRatio.value * duration.value)
+    } else {
+      maxAllowedTime = 0
+    }
   }
 
   function onTimeUpdate() {
     const v = videoEl.value
     if (!v) return
     const t = v.currentTime
+    // 记录已自然观看到的位置（拖动会被 onSeeking 拦下，不会推进该位置）
+    if (t > maxAllowedTime) maxAllowedTime = t
     // 更新 watchedRatio（取最大值，防止回退）
     if (duration.value > 0) {
       const ratio = Math.max(0, Math.min(1, t / duration.value))
@@ -250,6 +281,8 @@ export function useVideo(props: any) {
     Object.keys(triggered).forEach(k => delete triggered[Number(k)])
     activeQuestion.value = null
     activeSubCorrect.value = false
+    // 允许位置归零：重置后从头重新观看，拖动依旧被拦
+    maxAllowedTime = 0
     if (videoEl.value) {
       videoEl.value.currentTime = 0
     }
@@ -305,6 +338,7 @@ export function useVideo(props: any) {
     activeSubCorrect,
     onLoadedMetadata,
     onTimeUpdate,
+    onSeeking,
     onVideoEnded,
     dismissQuestion,
     onSubQuestionSubmitted,
