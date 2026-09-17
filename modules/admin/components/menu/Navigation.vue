@@ -1,14 +1,23 @@
 <template>
   <div>
-    <!-- 顶部：概览链接 + 编辑菜单入口 -->
+    <!-- 顶部：概览 / 报告链接 + 编辑菜单入口 -->
     <div class="flex items-center justify-between mb-2">
-      <NuxtLink
-        to="/dashboard"
-        class="text-sm font-medium text-highlighted hover:text-primary transition-colors flex items-center gap-1"
-      >
-        <UIcon name="i-lucide-layout-dashboard" />
-        <span>{{ t('admin.menu.overview') }}</span>
-      </NuxtLink>
+      <div class="flex items-center gap-3">
+        <NuxtLink
+          to="/dashboard"
+          class="text-sm font-medium text-highlighted hover:text-primary transition-colors flex items-center gap-1"
+        >
+          <UIcon name="i-lucide-layout-dashboard" />
+          <span>{{ t('admin.menu.overview') }}</span>
+        </NuxtLink>
+        <NuxtLink
+          to="/report"
+          class="text-sm font-medium text-highlighted hover:text-primary transition-colors flex items-center gap-1"
+        >
+          <UIcon name="i-lucide-chart-column" />
+          <span>{{ t('admin.report.title') }}</span>
+        </NuxtLink>
+      </div>
       <UButton
         icon="i-lucide-settings"
         variant="ghost"

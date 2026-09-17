@@ -51,6 +51,12 @@ export default defineNuxtModule({
           { name: 'admin-table', path: 't/:table', file: resolve('./pages/dashboard/t/[table].vue') },
         ],
       })
+      // 平台学习数据总览（/report）：独立路由，复用 admin 布局（左侧菜单 + 顶栏）
+      pages.push({
+        name: 'admin-report',
+        path: '/report',
+        file: resolve('./pages/report.vue'),
+      })
     })
 
     // 注册 i18n locale
