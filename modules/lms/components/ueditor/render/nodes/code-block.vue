@@ -17,10 +17,15 @@
       <pre class="cb-code"><code v-html="highlightedHtml"></code></pre>
     </div>
     <IdeModal v-model:open="ideOpen" :code="codeText" :language="ideLanguage" />
-    <!-- Python：改由外部在线运行器（codeflow）以 iframe 运行 -->
-    <UModal v-model:open="codeflowOpen" :ui="{ content: 'max-w-5xl' }">
+    <!-- Python：改由外部在线运行器（codeflow）以 iframe 运行，铺满整屏 -->
+    <UModal v-model:open="codeflowOpen" fullscreen>
       <template #content>
         <div class="cb-codeflow">
+          <div class="cb-codeflow-bar">
+            <span class="cb-codeflow-title">{{ $t('ide.title') }}</span>
+            <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" aria-label="Close"
+              @click="codeflowOpen = false" />
+          </div>
           <iframe class="cb-codeflow-frame" :src="codeflowSrc" :title="$t('ide.title')" allow="clipboard-write" />
         </div>
       </template>

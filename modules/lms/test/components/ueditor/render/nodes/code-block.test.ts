@@ -14,7 +14,15 @@ beforeEach(() => {
 
 const _globalStubs = {
   IdeModal: { template: '<div class="ide-modal-stub" />', props: ['open', 'code', 'language'] },
-  UModal: { template: '<div v-if="open" class="umodal"><slot name="content" /></div>', props: ['open', 'ui'] },
+  UModal: {
+    template: '<div v-if="open" class="umodal" :class="{ fullscreen }"><slot name="content" /></div>',
+    props: { open: {}, ui: {}, fullscreen: { type: Boolean } },
+  },
+  UButton: {
+    template: '<button class="ubtn" @click="$emit(\'click\')"><slot /></button>',
+    props: ['icon', 'color', 'variant', 'size'],
+    emits: ['click'],
+  },
 }
 
 const _globalConfig = {
@@ -173,6 +181,24 @@ describe('ueditor/render/nodes/code-block.vue', () => {
     await wrapper.find('.cb-run').trigger('click')
 
     expect(wrapper.findComponent(_globalStubs.IdeModal).props('open')).toBe(true)
+    expect(wrapper.find('.cb-codeflow-frame').exists()).toBe(false)
+  })
+
+  it('Python：运行弹窗为 fullscreen 铺满整屏，且工具条可关闭', async () => {
+    const wrapper = await mountCodeBlock(pythonNode)
+    await wrapper.find('.cb-run').trigger('click')
+
+    const modal = wrapper.find('.umodal')
+    expect(modal.exists()).toBe(true)
+    expect(modal.classes()).toContain('fullscreen')
+
+    // 顶部工具条：标题 + 关闭按钮（fullscreen 下没有可点的遮罩）
+    expect(wrapper.find('.cb-codeflow-title').text()).toBe('ide.title')
+    const closeBtn = wrapper.find('.cb-codeflow-bar .ubtn')
+    expect(closeBtn.exists()).toBe(true)
+
+    await closeBtn.trigger('click')
+    expect(wrapper.find('.umodal').exists()).toBe(false)
     expect(wrapper.find('.cb-codeflow-frame').exists()).toBe(false)
   })
 })
