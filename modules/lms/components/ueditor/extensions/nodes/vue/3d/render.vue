@@ -91,9 +91,9 @@ let resizeObs = null
 let loadedMeshes = []
 let sceneLoaded = false
 
-// CDN (sandbox.babylonjs.com 同款 CDN)
-const BJS_CORE = 'https://cdn.jsdelivr.net/npm/babylonjs@latest/babylon.js'
-const BJS_LOADERS = 'https://cdn.jsdelivr.net/npm/babylonjs-loaders@latest/babylonjs.loaders.min.js'
+// 重量级依赖（Babylon 约 7MB）：默认走公网 CDN，内网部署时用 NUXT_PUBLIC_NPM_ASSETS_BASE 指向本地镜像
+const bjsCoreUrl = () => npmAsset('babylonjs@latest/babylon.js')
+const bjsLoadersUrl = () => npmAsset('babylonjs-loaders@latest/babylonjs.loaders.min.js')
 
 // 全局缓存 promise，避免重复加载或竞态
 let _babylonPromise = null
@@ -117,8 +117,8 @@ async function ensureBabylon() {
             s.onerror = () => reject(new Error(`Failed to load ${src}`))
             document.head.appendChild(s)
         }
-        loadScript(BJS_CORE, () => {
-            loadScript(BJS_LOADERS, () => {
+        loadScript(bjsCoreUrl(), () => {
+            loadScript(bjsLoadersUrl(), () => {
                 if (window.BABYLON && window.BABYLON.SceneLoader) {
                     resolve(window.BABYLON)
                 } else {
@@ -132,15 +132,15 @@ async function ensureBabylon() {
     return _babylonPromise
 }
 
-// JSZip CDN 加载（按需，打包下载时用）
-const JSZIP_CDN = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'
+// JSZip：本地资源（public/vendor/jszip，由 scripts/copy-vendor-assets.mjs 从 npm 包拷贝）
+const JSZIP_URL = '/vendor/jszip/jszip.min.js'
 let _jszipPromise = null
 async function ensureJSZip() {
     if (window.JSZip) return window.JSZip
     if (_jszipPromise) return _jszipPromise
     _jszipPromise = new Promise((resolve, reject) => {
         const s = document.createElement('script')
-        s.src = JSZIP_CDN
+        s.src = JSZIP_URL
         s.onload = () => window.JSZip ? resolve(window.JSZip) : reject(new Error('JSZip load failed'))
         s.onerror = () => reject(new Error('Failed to load JSZip'))
         document.head.appendChild(s)

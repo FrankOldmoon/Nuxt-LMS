@@ -48,6 +48,13 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       verificationUrl: '',
+      // 重量级第三方库（Babylon / Univer+React / web-llm / three+three-vrm / ffmpeg core）不随仓库分发，
+      // 默认走公网 CDN；内网部署时用环境变量指向本地镜像即可完全脱网：
+      //   NUXT_PUBLIC_NPM_ASSETS_BASE  镜像 jsdelivr 的 npm 路径布局，默认 https://cdn.jsdelivr.net/npm
+      //   NUXT_PUBLIC_ESM_ASSETS_BASE  ESM 依赖基址（three / three-vrm / web-llm），默认 https://esm.sh
+      // 轻量依赖已由 scripts/copy-vendor-assets.mjs 落到 public/vendor（同源，不需要配置）。
+      npmAssetsBase: 'https://cdn.jsdelivr.net/npm',
+      esmAssetsBase: 'https://esm.sh',
     },
     // PeerTube 视频上传（ueditor 视频走 PeerTube，插入 embed iframe）。
     // 全部凭证通过 .env 的环境变量提供，不写入代码仓库：

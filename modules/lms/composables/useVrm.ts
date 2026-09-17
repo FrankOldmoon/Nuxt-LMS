@@ -28,14 +28,15 @@ export function useVrm(props: VrmProps, emit: (event: string, ...args: any[]) =>
     emit('close')
   }
 
-  // ===================== CDN 加载 three + three-vrm =====================
-  // 双 CDN 回退：esm.sh（主）→ esm.run（jsdelivr 的 ESM CDN，备）
-  const THREE_CDN_PRIMARY = 'https://esm.sh/three@0.169.0'
-  const THREE_CDN_FALLBACK = 'https://esm.run/three@0.169.0'
-  const GLTF_CDN_PRIMARY = 'https://esm.sh/three@0.169.0/examples/jsm/loaders/GLTFLoader.js'
-  const GLTF_CDN_FALLBACK = 'https://esm.run/three@0.169.0/examples/jsm/loaders/GLTFLoader.js'
-  const VRM_CDN_PRIMARY = 'https://esm.sh/@pixiv/three-vrm@3.5.4?deps=three@0.169.0'
-  const VRM_CDN_FALLBACK = 'https://esm.run/@pixiv/three-vrm@3.5.4'
+  // ===================== 加载 three + three-vrm（重量级依赖，约 2MB）=====================
+  // 默认走公网：esm.sh（主）→ jsdelivr 的 +esm（备）。内网部署时用
+  // NUXT_PUBLIC_ESM_ASSETS_BASE / NUXT_PUBLIC_NPM_ASSETS_BASE 指向本地镜像即可脱网。
+  const THREE_CDN_PRIMARY = esmAsset('three@0.169.0')
+  const THREE_CDN_FALLBACK = npmEsmAsset('three@0.169.0')
+  const GLTF_CDN_PRIMARY = esmAsset('three@0.169.0/examples/jsm/loaders/GLTFLoader.js')
+  const GLTF_CDN_FALLBACK = npmEsmAsset('three@0.169.0/examples/jsm/loaders/GLTFLoader.js')
+  const VRM_CDN_PRIMARY = esmAsset('@pixiv/three-vrm@3.5.4?deps=three@0.169.0')
+  const VRM_CDN_FALLBACK = npmEsmAsset('@pixiv/three-vrm@3.5.4')
 
   async function dynamicImportWithFallback<T>(primary: string, fallback: string): Promise<T> {
     try {

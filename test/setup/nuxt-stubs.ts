@@ -227,6 +227,10 @@ import { useRaceEditContext } from '../../modules/lms/components/ueditor/extensi
 /** formatTime — base auto-import from modules/base/utils/format.ts (pure function) */
 import { formatTime } from '../../modules/base/utils/format'
 
+/** heavyAssets — base auto-import from modules/base/utils/heavyAssets.ts
+ *  重量级依赖（Babylon / Univer / web-llm / three 等）的可配置资源基址，纯函数，直接复用真实实现 */
+import { npmAssetsBase, esmAssetsBase, npmAsset, esmAsset, npmEsmAsset } from '../../modules/base/utils/heavyAssets'
+
 /** compressImage — base auto-import from modules/base/utils/compressImage.ts
  *  测试环境没有 canvas / Image，桩成「原样返回文件」，保证上传链路可测 */
 export async function compressImage(file: File, _options?: any): Promise<File> {
@@ -1255,6 +1259,11 @@ const _stubsToExpose: Record<string, any> = {
   // base utils auto-imports
   formatTime,
   compressImage,
+  npmAssetsBase,
+  esmAssetsBase,
+  npmAsset,
+  esmAsset,
+  npmEsmAsset,
   // Nitro auto-imports
   defineEventHandler,
   eventHandler,

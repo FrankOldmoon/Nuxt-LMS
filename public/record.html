@@ -187,7 +187,13 @@
     All processing happens locally in your browser. Grant microphone/camera permission when prompted.
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+  <!-- ffmpeg 属重量级依赖（core 约 25MB），默认走公网 CDN。
+       内网/无外网部署可用 ?assets=<镜像根> 指向本地镜像（需保持 npm 的路径布局），
+       例如：/record.html?assets=/vendor/ffmpeg -->
+  <script>
+    window.__FFMPEG_BASE__ = new URLSearchParams(location.search).get('assets') || 'https://cdn.jsdelivr.net/npm'
+    document.write('<script src="' + window.__FFMPEG_BASE__ + '/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"><\/script>')
+  </script>
   <script>
     // ===== Helpers =====
     function pad(n) { return n.toString().padStart(2, '0'); }
@@ -425,7 +431,7 @@
           if (!window.FFmpeg) throw new Error('ffmpeg.min.js failed to load (check network)');
           ffmpegInstance = FFmpeg.createFFmpeg({
             log: false,
-            corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'
+            corePath: (window.__FFMPEG_BASE__ || 'https://cdn.jsdelivr.net/npm') + '/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'
           });
           await ffmpegInstance.load();
         }

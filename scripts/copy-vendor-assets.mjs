@@ -30,6 +30,8 @@ const FILES = [
   // 思维导图（useMindmapRender / exportPpt/imageRender）：用自包含的 ESM 版，比 UMD 小 3MB+
   ['simple-mind-map/dist/simpleMindMap.esm.min.js', 'simple-mind-map/simpleMindMap.esm.min.js'],
   ['simple-mind-map/dist/simpleMindMap.esm.min.css', 'simple-mind-map/simpleMindMap.esm.min.css'],
+  // 3D 节点的打包下载
+  ['jszip/dist/jszip.min.js', 'jszip/jszip.min.js'],
   // Excel 导出（exportSheet；注意 CDN 上的 xlsx@0.20.3 已是 404，本地 0.18.5 才可用）
   ['xlsx/dist/xlsx.full.min.js', 'xlsx/xlsx.full.min.js'],
   // PPT 导出（exportPpt：公式转图 + 生成 pptx）
@@ -60,7 +62,7 @@ const DIRS = [
 
 /** 记录版本号到 public/vendor/.versions，便于比对依赖是否升级 */
 const VERSION_PACKAGES = [
-  'pdfjs-dist', 'simple-mind-map', 'xlsx', 'html2canvas', 'pptxgenjs',
+  'pdfjs-dist', 'simple-mind-map', 'xlsx', 'html2canvas', 'pptxgenjs', 'jszip',
   'katex', '@pintora/standalone', 'reveal.js', '@tailwindcss/browser', '@umoteam/editor-external',
 ]
 

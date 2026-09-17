@@ -44,17 +44,18 @@ export function useUniverSheet(
     })
   }
 
-  // Univer CDN 资源
+  // Univer（含 React / rxjs，合计约 10MB）属重量级依赖：默认走公网 CDN，
+  // 内网部署时用 NUXT_PUBLIC_NPM_ASSETS_BASE 指向本地镜像（保持 npm 路径布局）即可脱网。
   const UNIVER_CDN = {
-    css: 'https://cdn.jsdelivr.net/npm/@univerjs/preset-sheets-core/lib/index.css',
+    css: npmAsset('@univerjs/preset-sheets-core/lib/index.css'),
     scripts: [
-      'https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js',
-      'https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js',
-      'https://cdn.jsdelivr.net/npm/rxjs@latest/dist/bundles/rxjs.umd.min.js',
-      'https://cdn.jsdelivr.net/npm/@univerjs/presets/lib/umd/index.js',
-      'https://cdn.jsdelivr.net/npm/@univerjs/preset-sheets-core/lib/umd/index.js',
+      npmAsset('react@18.3.1/umd/react.production.min.js'),
+      npmAsset('react-dom@18.3.1/umd/react-dom.production.min.js'),
+      npmAsset('rxjs@latest/dist/bundles/rxjs.umd.min.js'),
+      npmAsset('@univerjs/presets/lib/umd/index.js'),
+      npmAsset('@univerjs/preset-sheets-core/lib/umd/index.js'),
     ],
-    locale: 'https://cdn.jsdelivr.net/npm/@univerjs/preset-sheets-core/lib/umd/locales/zh-CN.js',
+    locale: npmAsset('@univerjs/preset-sheets-core/lib/umd/locales/zh-CN.js'),
   }
 
   // ========== 销毁 Univer 实例 ==========

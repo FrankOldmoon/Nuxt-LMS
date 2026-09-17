@@ -104,6 +104,10 @@ export function useUeditorIndex(props: any, json: any) {
         document: {
             content: json.value,
         },
+        // 编辑器按需从 editor-external 加载 katex / echarts / mermaid / plyr 等外部资源
+        // （属重量级依赖，总量约 6MB+）。默认指向公网 CDN；内网部署时用
+        // NUXT_PUBLIC_NPM_ASSETS_BASE 指向本地镜像即可脱网。
+        cdnUrl: `${npmAssetsBase()}/@umoteam/editor-external@latest`,
         contentType: 'markdown',
         readonly: isReadonly.value,
         extensions,

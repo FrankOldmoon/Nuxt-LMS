@@ -540,26 +540,30 @@ function formatBytesLLM(bytes: number): string {
 }
 
 /**
- * 加载 WebLLM 库（CDN 动态 import）。
+ * 加载 WebLLM 库（远程动态 import）。
  *
  * 不走 npm 包 import('@mlc-ai/web-llm')，因为该包体积 6MB+，
  * Vite 依赖优化器会触发 "Maximum call stack size exceeded"。
- * 用 CDN URL 配合 vite-ignore 注释让 Vite 完全跳过解析，
- * 浏览器运行时直接从 CDN 加载 JS+WASM 推理引擎。
+ * 用 URL 配合 vite-ignore 注释让 Vite 完全跳过解析，
+ * 浏览器运行时直接加载 JS+WASM 推理引擎。
  *
- * 模型权重走云端 HuggingFace（WebLLM 默认 prebuiltAppConfig）。
+ * 地址来自可配置基址（默认 esm.sh，兜底 jsdelivr 的 +esm）；
+ * 内网/无外网部署时用 NUXT_PUBLIC_ESM_ASSETS_BASE / NUXT_PUBLIC_NPM_ASSETS_BASE 指向镜像。
+ *
+ * 模型权重仍走云端 HuggingFace（WebLLM 默认 prebuiltAppConfig）；
+ * 需要完全脱网时可通过 WebLLM 的 appConfig 指向自建模型服务。
  *
  * 仅在客户端调用；SSR 不会触发此函数。
  */
-const WEBLLM_CDN_PRIMARY = 'https://esm.sh/@mlc-ai/web-llm@0.2.84'
-const WEBLLM_CDN_FALLBACK = 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.84/+esm'
+const webllmPrimaryUrl = () => esmAsset('@mlc-ai/web-llm@0.2.84')
+const webllmFallbackUrl = () => npmEsmAsset('@mlc-ai/web-llm@0.2.84')
 
 async function loadWebLLMModule(): Promise<any> {
   if (webllmModule) return webllmModule
   try {
-    webllmModule = await import(/* @vite-ignore */ WEBLLM_CDN_PRIMARY)
+    webllmModule = await import(/* @vite-ignore */ webllmPrimaryUrl())
   } catch {
-    webllmModule = await import(/* @vite-ignore */ WEBLLM_CDN_FALLBACK)
+    webllmModule = await import(/* @vite-ignore */ webllmFallbackUrl())
   }
   return webllmModule
 }
