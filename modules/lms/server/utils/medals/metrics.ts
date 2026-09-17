@@ -1,6 +1,7 @@
 import { db, schema } from '@nuxthub/db'
 import { eq, and, count, sql } from 'drizzle-orm'
 import type { UserMetrics } from './types'
+import { homeworkSubmitted } from '../submit/record'
 
 /** 收集用户在某课程下的全部指标 */
 export async function collectUserMetrics(userId: number, courseId: number): Promise<UserMetrics> {
@@ -29,11 +30,15 @@ export async function collectUserMetrics(userId: number, courseId: number): Prom
     .from(schema.userQuestions)
     .where(and(eq(schema.userQuestions.userId, userId), eq(schema.userQuestions.courseId, courseId)))
 
-  // 作业提交数
+  // 作业提交数（排除教师为未提交学生打的「仅评分」记录）
   const hCount = await db
     .select({ c: count() })
     .from(schema.userHomeworks)
-    .where(and(eq(schema.userHomeworks.userId, userId), eq(schema.userHomeworks.courseId, courseId)))
+    .where(and(
+      eq(schema.userHomeworks.userId, userId),
+      eq(schema.userHomeworks.courseId, courseId),
+      homeworkSubmitted(),
+    ))
 
   // 评论数
   const cCount = await db

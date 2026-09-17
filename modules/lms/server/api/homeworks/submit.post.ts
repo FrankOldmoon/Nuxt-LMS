@@ -47,25 +47,39 @@ export default withSubmitHandler('提交作业失败', async (event) => {
   }
 
   // 3. 写 userHomeworks
+  const writeValues = {
+    userId: user.id,
+    courseId,
+    homeworkCid: Number(homeworkCid),
+    files: files || null,
+    content: content || null,
+    // 首次提交 _submitCount=0；重提交在原记录上 +1
+    record: existing ? { ...recordMeta, _submitCount: nextResubmitCount } : { _submitCount: 0 },
+  }
   if (existing) {
-    const newRecord = { ...recordMeta, _submitCount: nextResubmitCount }
     await db.update(schema.userHomeworks).set({
-      files: files || null,
-      content: content || null,
-      record: newRecord,
+      files: writeValues.files,
+      content: writeValues.content,
+      record: writeValues.record,
     }).where(and(
       eq(schema.userHomeworks.userId, user.id),
       eq(schema.userHomeworks.courseId, courseId),
       eq(schema.userHomeworks.homeworkCid, Number(homeworkCid)),
     ))
   } else {
-    await db.insert(schema.userHomeworks).values({
-      userId: user.id,
-      courseId,
-      homeworkCid: Number(homeworkCid),
-      files: files || null,
-      content: content || null,
-      record: { _submitCount: 0 },
+    // upsert：学生此前可能已被教师打过「仅评分」（record 为空）而存在行，避免主键冲突。
+    // set 仅覆盖提交字段，保留教师写入的 score/comment/excellent。
+    await db.insert(schema.userHomeworks).values(writeValues).onConflictDoUpdate({
+      target: [
+        schema.userHomeworks.userId,
+        schema.userHomeworks.courseId,
+        schema.userHomeworks.homeworkCid,
+      ],
+      set: {
+        files: writeValues.files,
+        content: writeValues.content,
+        record: writeValues.record,
+      },
     })
   }
 

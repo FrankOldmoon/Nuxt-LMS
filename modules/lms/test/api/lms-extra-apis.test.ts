@@ -319,6 +319,31 @@ describe('API: homeworks/score', () => {
     const r = await handler(makeEvent({ body: { course_id: 1, homework_cid: 1, user_id: 2, score: 85 } }))
     expect(r.success).toBe(true)
   })
+
+  it('学生未提交也可打分：新建「仅评分」记录（不写 record）', async () => {
+    setMockAuthState({ id: 1, username: 't', name: 't', roles: ['teacher'], permissions: [] })
+    _mockDb.query.userHomeworks.findFirst = vi.fn().mockResolvedValue(null)
+    _mockDb.returning = vi.fn().mockResolvedValue([{ userId: 2, courseId: 1, homeworkCid: 1, score: '60' }])
+    const handler = (await import('../../server/api/homeworks/score.post')).default
+    const r = await handler(makeEvent({ body: { course_id: 1, chapter_id: 0, homework_cid: 1, user_id: 2, score: 60 } }))
+    expect(r.success).toBe(true)
+    expect(_mockDb.insert).toHaveBeenCalled()
+    const values = _mockDb.values.mock.calls[0][0]
+    expect(values).toEqual(expect.objectContaining({ userId: 2, courseId: 1, homeworkCid: 1, score: '60' }))
+    // 「仅评分」记录不写 record，避免被当作已提交
+    expect(values.record).toBeUndefined()
+  })
+
+  it('已有提交记录时走更新而非新建', async () => {
+    setMockAuthState({ id: 1, username: 't', name: 't', roles: ['teacher'], permissions: [] })
+    _mockDb.query.userHomeworks.findFirst = vi.fn().mockResolvedValue({ userId: 2, courseId: 1, homeworkCid: 1, score: '50' })
+    _mockDb.returning = vi.fn().mockResolvedValue([{ userId: 2, courseId: 1, homeworkCid: 1, score: '70' }])
+    const handler = (await import('../../server/api/homeworks/score.post')).default
+    const r = await handler(makeEvent({ body: { course_id: 1, chapter_id: 0, homework_cid: 1, user_id: 2, score: 70 } }))
+    expect(r.success).toBe(true)
+    expect(_mockDb.update).toHaveBeenCalled()
+    expect(_mockDb.insert).not.toHaveBeenCalled()
+  })
 })
 
 describe('API: homeworks/record.get', () => {

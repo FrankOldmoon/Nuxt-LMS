@@ -9,6 +9,7 @@
 import { db, schema } from '@nuxthub/db'
 import { and, eq, inArray } from 'drizzle-orm'
 import type { ItemStatus } from '../courseProgress/query'
+import { homeworkSubmitted } from '../submit/record'
 
 /** 批量查询某课程下，指定学生在 question cids 上的状态 */
 export async function queryStudentQuestionStatus(
@@ -52,6 +53,7 @@ export async function queryStudentHomeworkStatus(
       eq(schema.userHomeworks.courseId, courseId),
       inArray(schema.userHomeworks.userId, studentIds),
       inArray(schema.userHomeworks.homeworkCid, [...new Set(cids)]),
+      homeworkSubmitted(),
     ))
   for (const h of rows) map.set(`${h.userId}:${h.homeworkCid}`, 'done')
   return map

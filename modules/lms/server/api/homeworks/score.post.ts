@@ -29,17 +29,30 @@ export default eventHandler(async (event) => {
     const oldScore = existing ? Number(existing.score) || 0 : 0
     const scoreDelta = newScore != null ? (newScore - oldScore) : -oldScore
 
-    // 更新 userHomeworks 分数
-    const result = await db.update(schema.userHomeworks).set({
-      score: newScore != null ? String(newScore) : null,
-    }).where(and(
-      eq(schema.userHomeworks.userId, userId),
-      eq(schema.userHomeworks.courseId, courseId),
-      eq(schema.userHomeworks.homeworkCid, Number(homework_cid))
-    )).returning()
+    const scoreValue = newScore != null ? String(newScore) : null
+    let saved: any
+    if (existing) {
+      const result = await db.update(schema.userHomeworks).set({
+        score: scoreValue,
+      }).where(and(
+        eq(schema.userHomeworks.userId, userId),
+        eq(schema.userHomeworks.courseId, courseId),
+        eq(schema.userHomeworks.homeworkCid, Number(homework_cid))
+      )).returning()
+      saved = result[0]
+    } else {
+      // 学生未提交也允许打分：新建「仅评分」记录（record 为空，不计入完成）
+      const inserted = await db.insert(schema.userHomeworks).values({
+        userId,
+        courseId,
+        homeworkCid: Number(homework_cid),
+        score: scoreValue,
+      }).returning()
+      saved = inserted[0]
+    }
 
-    if (!result.length) {
-      return cResp(null, '未找到该学生的提交记录', false)
+    if (!saved) {
+      return cResp(null, '保存失败', false)
     }
 
     // 更新 userChapters.score
@@ -50,7 +63,7 @@ export default eventHandler(async (event) => {
     // 更新 userCourses：homeworkScore + score
     await addCourseScore(userId, courseId, scoreDelta, 'homeworkScore', 0, 0)
 
-    return cResp(result[0])
+    return cResp(saved)
   } catch (error: any) {
     console.error('打分失败:', error)
     return cResp(null, error.message || '打分失败', false)

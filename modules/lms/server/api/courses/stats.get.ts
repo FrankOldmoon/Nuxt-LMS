@@ -8,6 +8,7 @@
  */
 import { db, schema } from '@nuxthub/db'
 import { eq, and, count } from 'drizzle-orm'
+import { homeworkSubmitted } from '../../utils/submit/record'
 
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
@@ -34,7 +35,11 @@ export default eventHandler(async (event) => {
   const [h] = await db
     .select({ n: count() })
     .from(schema.userHomeworks)
-    .where(and(eq(schema.userHomeworks.userId, uid), eq(schema.userHomeworks.courseId, courseId)))
+    .where(and(
+      eq(schema.userHomeworks.userId, uid),
+      eq(schema.userHomeworks.courseId, courseId),
+      homeworkSubmitted(),
+    ))
 
   const [qz] = await db
     .select({ n: count() })

@@ -29,8 +29,8 @@ async function makeCtx(records: any[]) {
 describe('useHomeworkRecords 全屏评阅', () => {
   it('openHomeworkDetail + next/prev 循环切换', async () => {
     const ctx = await makeCtx([
-      { userId: 1, record: { score: '5', files: [], comment: null, excellent: false } },
-      { userId: 3, record: { score: '8', files: [], comment: null, excellent: false } },
+      { userId: 1, record: { score: '5', files: [{ url: 'a.pdf' }], comment: null, excellent: false, record: { _submitCount: 1 } } },
+      { userId: 3, record: { score: '8', files: [{ url: 'b.png' }], comment: null, excellent: false, record: { _submitCount: 1 } } },
     ])
     await ctx.fetchRecords()
     const sub1 = ctx.rows.value.find(r => r.id === 1)
@@ -44,6 +44,37 @@ describe('useHomeworkRecords 全屏评阅', () => {
     expect(ctx.detailData.value?.id).toBe(1)
     ctx.prevSubmission() // 前一篇循环到最后
     expect(ctx.detailData.value?.id).toBe(3)
+  })
+
+  it('hasSubmission 区分真实提交与「仅评分」记录', async () => {
+    const ctx = await makeCtx([
+      // 真实提交（submit API 会写入 record）
+      { userId: 1, record: { score: '5', files: [], comment: null, excellent: false, record: { _submitCount: 1 } } },
+      // 教师为未提交学生打的「仅评分」记录：record/content/files 均为空
+      { userId: 2, record: { score: '0', files: null, content: null, comment: '未提交', excellent: false, record: null } },
+    ])
+    await ctx.fetchRecords()
+    expect(ctx.hasSubmission(ctx.rows.value.find(r => r.id === 1)?.record)).toBe(true)
+    expect(ctx.hasSubmission(ctx.rows.value.find(r => r.id === 2)?.record)).toBe(false)
+    // 仅评分记录不计入逐份评阅列表
+    expect(ctx.detailTotal.value).toBe(1)
+  })
+
+  it('未提交学生也能保存打分（本地补记录）', async () => {
+    const calls: any[] = []
+    const ctx = await makeCtx([])
+    ;(globalThis as any).cRequest = async (url: string, opts: any) => { calls.push({ url, opts }); return [] }
+    await ctx.fetchRecords()
+    const row = ctx.rows.value.find(r => r.id === 2)!
+    expect(row.record).toBe(null)
+    ctx.scoreMap[row.id] = 7
+    await ctx.onScoreBlur(row)
+    const scoreCall = calls.find(c => c.url === '/api/homeworks/score')
+    expect(scoreCall).toBeTruthy()
+    expect(scoreCall.opts.body.user_id).toBe(2)
+    // 保存后本地行有记录，表格可即时反映
+    expect(row.record?.score).toBe('7')
+    expect(ctx.hasSubmission(row.record)).toBe(false)
   })
 
   it('isPreviewableFile 区分可预览与仅下载类型', async () => {

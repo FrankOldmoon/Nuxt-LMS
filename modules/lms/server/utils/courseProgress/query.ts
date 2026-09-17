@@ -8,6 +8,7 @@
  */
 import { db, schema } from '@nuxthub/db'
 import { eq, and, inArray } from 'drizzle-orm'
+import { homeworkSubmitted } from '../submit/record'
 
 export type ItemStatus = 'done' | 'partial' | 'todo'
 
@@ -49,6 +50,7 @@ export async function queryHomeworkStatus(
       eq(schema.userHomeworks.userId, userId),
       eq(schema.userHomeworks.courseId, courseId),
       inArray(schema.userHomeworks.homeworkCid, [...new Set(cids)]),
+      homeworkSubmitted(),
     ))
   for (const h of rows) map.set(h.homeworkCid, 'done')
   return map

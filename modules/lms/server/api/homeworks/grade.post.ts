@@ -32,10 +32,22 @@ export default eventHandler(async (event) => {
       eq(schema.userHomeworks.homeworkCid, homeworkCid)
     )).returning()
 
-    if (!result.length) {
+    if (result.length) {
+      return cResp(result[0])
+    }
+
+    // 学生未提交也允许写评语：新建「仅评语」记录（record 为空，不计入完成）。
+    // 未提交时不允许仅标优秀（避免无提交内容出现在优秀作业展示中）。
+    if (comment === undefined) {
       return cResp(null, '未找到该学生的提交记录', false)
     }
-    return cResp(result[0])
+    const inserted = await db.insert(schema.userHomeworks).values({
+      userId,
+      courseId,
+      homeworkCid,
+      comment: String(comment ?? ''),
+    }).returning()
+    return cResp(inserted[0])
   } catch (error: any) {
     console.error('评语/标优失败:', error)
     return cResp(null, error.message || '更新失败', false)

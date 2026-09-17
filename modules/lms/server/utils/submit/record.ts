@@ -7,7 +7,7 @@
  * TABLES 使用惰性初始化（getter 模式），允许测试只 mock 部分 userXxx 表。
  */
 import { db, schema } from '@nuxthub/db'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, isNotNull } from 'drizzle-orm'
 
 export type RecordType = 'question' | 'homework' | 'quiz' | 'race'
 
@@ -16,6 +16,19 @@ export interface SubmitRecordTable {
   userIdField: any
   courseIdField: any
   cidField: any
+  /** 额外过滤条件：用于把"仅评分"记录（未提交）排除在"已提交"之外 */
+  extraWhere?: any
+}
+
+/**
+ * 「已提交」判定：user_homeworks 行存在且 record 非空。
+ *
+ * 教师可为未提交学生打分/写评语，此时新建的行 record 为空（「仅评分」记录）；
+ * 学生真实提交时 submit API 始终写入 record（{ _submitCount }）。
+ * 故 record 非空 ⇔ 真实提交，仅评分行不计入进度/条件/勋章等完成统计。
+ */
+export function homeworkSubmitted() {
+  return isNotNull(schema.userHomeworks.record)
 }
 
 /** 惰性按需构造指定类型的 TABLES 视图（避免在模块加载时强制要求所有 userXxx 表都已 mock） */
@@ -34,6 +47,8 @@ function buildTable(type: RecordType): SubmitRecordTable {
         userIdField: schema.userHomeworks.userId,
         courseIdField: schema.userHomeworks.courseId,
         cidField: schema.userHomeworks.homeworkCid,
+        // 仅评分（record 为空）的行不算"已提交"：不影响首次提交经验与重提交计数
+        extraWhere: homeworkSubmitted(),
       }
     case 'quiz':
       return {
@@ -81,6 +96,7 @@ export async function findUserSubmitRecord(
       eq(t.userIdField, userId),
       eq(t.courseIdField, courseId),
       eq(t.cidField, cid),
+      ...(t.extraWhere ? [t.extraWhere] : []),
     ),
   })
 }

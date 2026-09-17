@@ -14,10 +14,10 @@
 
                 <ClassUsersTable :rows="rows" :loading="pending" :extra-columns="extraColumns"
                     :hide-actions="true" :hide-teachers="true" :default-sort="defaultSort">
-                    <!-- record 列：查看详情按钮 -->
+                    <!-- record 列：查看详情按钮（仅真实提交可查看） -->
                     <template #record-cell="{ row }">
                         <div class="flex items-center gap-2">
-                            <UButton v-if="row.original.record" size="xs" variant="soft"
+                            <UButton v-if="hasSubmission(row.original.record)" size="xs" variant="soft"
                                 icon="i-heroicons-document" @click="openHomeworkDetail(row.original)">
                                 {{ $t('record.viewDetail') }}
                             </UButton>
@@ -25,9 +25,9 @@
                         </div>
                     </template>
 
-                    <!-- score 列：打分输入 + 一键满分 -->
+                    <!-- score 列：打分输入 + 一键满分（未提交也允许打分） -->
                     <template #score-cell="{ row }">
-                        <div v-if="row.original.record" class="flex items-center gap-1">
+                        <div class="flex items-center gap-1">
                             <UInput v-model.number="scoreMap[row.original.id]" type="number"
                                 size="xs" class="w-16" :max="maxScore"
                                 @blur="onScoreBlur(row.original)" @keydown.enter="$event.target.blur()" />
@@ -36,20 +36,18 @@
                                     @click="onQuickScore(row.original, maxScore)" />
                             </UTooltip>
                         </div>
-                        <span v-else class="text-xs text-gray-400">-</span>
                     </template>
 
-                    <!-- comment 列：评语输入 -->
+                    <!-- comment 列：评语输入（未提交也允许写评语） -->
                     <template #comment-cell="{ row }">
-                        <UInput v-if="row.original.record" v-model="commentMap[row.original.id]"
+                        <UInput v-model="commentMap[row.original.id]"
                             size="xs" class="w-44" :placeholder="$t('homework.commentPlaceholder')"
                             @blur="onCommentBlur(row.original)" @keydown.enter="$event.target.blur()" />
-                        <span v-else class="text-xs text-gray-400">-</span>
                     </template>
 
-                    <!-- excellent 列：标为优秀 -->
+                    <!-- excellent 列：标为优秀（仅真实提交可标记） -->
                     <template #excellent-cell="{ row }">
-                        <UButton v-if="row.original.record" size="xs" variant="soft"
+                        <UButton v-if="hasSubmission(row.original.record)" size="xs" variant="soft"
                             :color="excellentMap[row.original.id] ? 'warning' : 'gray'"
                             :icon="excellentMap[row.original.id] ? 'i-heroicons-star' : 'i-heroicons-star'"
                             @click="toggleExcellent(row.original)">
@@ -216,7 +214,7 @@ const {
     open, rows, pending, extraColumns, defaultSort, scoreMap, commentMap, excellentMap, fetchRecords,
     onScoreBlur, onQuickScore, onCommentBlur, toggleExcellent,
     detailOpen, detailData, detailRecord, detailIndex, detailTotal,
-    openHomeworkDetail, prevSubmission, nextSubmission, closeDetail, isRichDoc, isPreviewableFile,
+    openHomeworkDetail, prevSubmission, nextSubmission, closeDetail, isRichDoc, hasSubmission, isPreviewableFile,
 } = useHomeworkRecords(props, emit)
 
 // ==================== 文件预览 ====================

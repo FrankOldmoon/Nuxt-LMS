@@ -18,6 +18,8 @@ const _mockDb = {
   update: vi.fn().mockReturnThis(),
   set: vi.fn().mockReturnThis(),
   returning: vi.fn(),
+  insert: vi.fn().mockReturnThis(),
+  values: vi.fn().mockReturnThis(),
 }
 const _mockSchema = {
   userHomeworks: { userId: 'userId', courseId: 'courseId', homeworkCid: 'homeworkCid', comment: 'comment', excellent: 'excellent' },
@@ -69,6 +71,29 @@ describe('API: homeworks/grade.post', () => {
     const handler = (await import('../../server/api/homeworks/grade.post')).default
     const r = await handler(makeEvent({ body: { course_id: 1, homework_cid: 1, user_id: 1 } }))
     expect(r.success).toBe(false)
+  })
+
+  it('学生未提交也可写评语：新建「仅评语」记录', async () => {
+    setMockAuthState({ id: 9, username: 'teacher', roles: ['teacher'], permissions: [] })
+    _mockDb.returning = vi.fn()
+      .mockResolvedValueOnce([]) // update 未命中（无提交记录）
+      .mockResolvedValueOnce([{ userId: 1, courseId: 1, homeworkCid: 1, comment: '未提交' }]) // insert
+    const handler = (await import('../../server/api/homeworks/grade.post')).default
+    const r = await handler(makeEvent({ body: { course_id: 1, homework_cid: 1, user_id: 1, comment: '未提交' } }))
+    expect(r.success).toBe(true)
+    expect(_mockDb.insert).toHaveBeenCalled()
+    expect(_mockDb.values).toHaveBeenCalledWith(expect.objectContaining({
+      userId: 1, courseId: 1, homeworkCid: 1, comment: '未提交',
+    }))
+  })
+
+  it('学生未提交且仅标优秀：不新建记录', async () => {
+    setMockAuthState({ id: 9, username: 'teacher', roles: ['teacher'], permissions: [] })
+    _mockDb.returning = vi.fn().mockResolvedValue([]) // update 未命中
+    const handler = (await import('../../server/api/homeworks/grade.post')).default
+    const r = await handler(makeEvent({ body: { course_id: 1, homework_cid: 1, user_id: 1, excellent: true } }))
+    expect(r.success).toBe(false)
+    expect(_mockDb.insert).not.toHaveBeenCalled()
   })
 })
 

@@ -26,7 +26,7 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
         {
             id: 'record',
             header: t('record.colRecord'),
-            sortingFn: (a, b) => (a.original.record ? 1 : 0) - (b.original.record ? 1 : 0),
+            sortingFn: (a, b) => (hasSubmission(a.original.record) ? 1 : 0) - (hasSubmission(b.original.record) ? 1 : 0),
         },
         // score 行数据无顶层字段（分数在 record.score），用自定义 sortingFn 按真实分数排序
         {
@@ -53,6 +53,36 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
         return ''
     }
 
+    /**
+     * 是否为学生真实提交。
+     * 教师可为未提交学生打分/写评语，此时会产生「仅评分」行（record/content/files 均为空），
+     * 这类行不算提交：详情按钮、标优秀、已提交排序均以本判定为准。
+     */
+    function hasSubmission(record: any): boolean {
+        if (!record) return false
+        return record.record != null
+            || record.content != null
+            || (Array.isArray(record.files) && record.files.length > 0)
+    }
+
+    /** 本地补一个记录对象：未提交学生首次保存打分/评语后，表格需即时反映 */
+    function ensureRecord(row: any) {
+        if (!row.record) {
+            row.record = {
+                userId: row.id,
+                courseId: props.courseId,
+                homeworkCid: props.cid,
+                score: null,
+                comment: null,
+                content: null,
+                files: null,
+                record: null,
+                excellent: false,
+            }
+        }
+        return row.record
+    }
+
     // 先用缓存学生数据填充 table，再异步合并 records
     function buildRows(recordsData) {
         const recordMap = new Map((recordsData || []).map(r => [r.userId, r.record]))
@@ -73,8 +103,8 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
             }
         })
         rows.value.sort((a, b) => {
-            const aHas = a.record ? 1 : 0
-            const bHas = b.record ? 1 : 0
+            const aHas = hasSubmission(a.record) ? 1 : 0
+            const bHas = hasSubmission(b.record) ? 1 : 0
             return bHas - aHas
         })
     }
@@ -115,6 +145,7 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
                 },
             })
             if (row.record) row.record.score = String(val)
+            else ensureRecord(row).score = String(val)
         } catch (err) {
             scoreMap[row.id] = original
         }
@@ -142,6 +173,7 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
                 },
             })
             if (row.record) row.record.comment = text
+            else ensureRecord(row).comment = text
         } catch {
             commentMap[row.id] = original
         }
@@ -181,8 +213,8 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
     const detailIndex = ref(0)
     const detailRecord = computed(() => detailData.value?.record ?? null)
     const detailTotal = computed(() => submissions.value.length)
-    // 所有已提交的作业（表格行仅含 record 的），用于前后切换
-    const submissions = computed(() => rows.value.filter(r => r.record))
+    // 所有已提交的作业（表格行仅含真实提交的），用于前后切换
+    const submissions = computed(() => rows.value.filter(r => hasSubmission(r.record)))
 
     function applyDetail() {
         const len = submissions.value.length
@@ -253,6 +285,6 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
         fetchRecords, onScoreBlur, onQuickScore, onCommentBlur, toggleExcellent,
         detailOpen, detailData, detailRecord, detailIndex, detailTotal,
         openHomeworkDetail, prevSubmission, nextSubmission, closeDetail,
-        isRichDoc, strFromComment, isPreviewableFile,
+        isRichDoc, strFromComment, hasSubmission, isPreviewableFile,
     }
 }
