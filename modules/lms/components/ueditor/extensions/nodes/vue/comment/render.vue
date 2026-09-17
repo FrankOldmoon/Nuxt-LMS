@@ -1,5 +1,9 @@
 <template>
-    <div class="comment-render w-full space-y-4 p-4 border border-amber-400 dark:border-amber-500 rounded-lg bg-white dark:bg-gray-900 relative"
+    <!-- 已发表过评论（提交即绿；重新进入时若已有自己的发表记录同样为绿）→ 绿色外框，与作业一致 -->
+    <div class="comment-render w-full space-y-4 p-4 rounded-lg bg-white dark:bg-gray-900 relative"
+        :class="hasPosted
+            ? 'border-2 border-green-400 dark:border-green-500'
+            : 'border border-amber-400 dark:border-amber-500'"
         :data-comment-id="commentId">
         <!-- 评论未找到 -->
         <div v-if="!comment" class="text-center py-6 text-gray-400">
@@ -99,7 +103,7 @@ const props = defineProps({
 
 const {
     effectiveCourseId, moduleLms, RecordsModal, comment, commentId, isTeacher, user,
-    editOpen, recordsOpen, listPending, pagedChildren, fetchComments,
+    editOpen, recordsOpen, listPending, pagedChildren, hasPosted, fetchComments,
     onReply, toggleLike, onDelete, onApprove, onSaved,
 } = useCommentRender(props)
 

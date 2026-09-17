@@ -73,4 +73,17 @@ describe('homework/edit.vue', () => {
     await flushPromises()
     expect(wrapper.text()).toContain('My Homework')
   })
+
+  it('新建作业（homework 为空）默认 10 分', async () => {
+    const { default: HomeworkEdit } = await import(
+      '../../../../../components/ueditor/extensions/nodes/vue/homework/edit.vue'
+    )
+    const wrapper = mount(HomeworkEdit, {
+      props: { homeworkId: 0, homework: null },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    const pointInput = wrapper.findAllComponents(_globalStubs.UInput).find(c => c.props('modelValue') === 10)
+    expect(pointInput).toBeTruthy()
+  })
 })

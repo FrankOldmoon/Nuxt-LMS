@@ -94,4 +94,17 @@ describe('comment/edit.vue', () => {
       expect(events).toBeTruthy()
     }
   })
+
+  it('新建评论（comment 为空）默认 10 分', async () => {
+    const { default: CommentEdit } = await import(
+      '../../../../../components/ueditor/extensions/nodes/vue/comment/edit.vue'
+    )
+    const wrapper = mount(CommentEdit, {
+      props: { commentId: 0, comment: null },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    const pointInput = wrapper.findAllComponents(_globalStubs.UInput).find(c => c.props('modelValue') === 10)
+    expect(pointInput).toBeTruthy()
+  })
 })

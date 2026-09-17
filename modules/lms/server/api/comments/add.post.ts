@@ -65,7 +65,7 @@ export default eventHandler(async (event) => {
       parentId: body.parentId || null,
       tags: Array.isArray(body.tags) ? body.tags : [],
       // 安全：point/status 由服务端固定默认值，不接受客户端自设（防止自定分值/状态）
-      point: 1,
+      point: 10,
       // 顶层评论（无 parentId）创建即发布（published），对学生立即可见；
       // 回复默认待审核（audit），教师过审（status=published）后才可见（见 approve.post.ts）
       status: body.parentId ? 'audit' : 'published',

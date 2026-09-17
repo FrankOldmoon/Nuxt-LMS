@@ -42,7 +42,7 @@ export function useCommentEdit(props: CommentEditProps, emit: CommentEditEmit) {
                 name: '',
                 content: '',
                 tags: [],
-                point: 1,
+                point: 10,
             }
             originalData = JSON.parse(JSON.stringify(form.value))
             return

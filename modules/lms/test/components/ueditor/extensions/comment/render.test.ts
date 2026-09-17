@@ -5,7 +5,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { ref } from 'vue'
-import { resetAllStubs, setMockI18n, setMockLmsContext, setMockAuthUser } from '../../../../../../../test/setup/nuxt-stubs'
+import { resetAllStubs, setMockI18n, setMockLmsContext, setMockAuthUser, setMockFetchHandler, clearMockFetchHandler } from '../../../../../../../test/setup/nuxt-stubs'
 
 // Stub composables not in nuxt-stubs
 ;(globalThis as any).useChapterTask = () => null
@@ -13,6 +13,7 @@ import { resetAllStubs, setMockI18n, setMockLmsContext, setMockAuthUser } from '
 
 beforeEach(() => {
   resetAllStubs()
+  clearMockFetchHandler()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
   setMockLmsContext(1, 1)
 })
@@ -118,5 +119,68 @@ describe('comment/render.vue', () => {
     })
     await flushPromises()
     expect(wrapper.text()).not.toContain('comment.auditPending')
+  })
+
+  // ── 绿色外框（与作业一致：提交即绿 / 有发表记录也绿） ──
+
+  const topicComment = { name: 'Topic', content: 'topic', tags: [], point: 10, status: 'published' }
+
+  /** 挂载评论块，/api/comments/list 返回指定子评论列表（uid=10 为当前用户） */
+  async function mountWith(opts: { children?: any[], onAdd?: () => any } = {}) {
+    setMockFetchHandler(async (url: string) => {
+      if (String(url).startsWith('/api/comments/list')) {
+        return {
+          success: true,
+          msg: '',
+          data: { root: { cid: 1, userId: 99, ...topicComment }, children: opts.children || [] },
+        }
+      }
+      if (String(url).startsWith('/api/comments/add')) {
+        return { success: true, msg: '', data: opts.onAdd?.() ?? { cid: 2, userId: 10, content: 'hi', status: 'audit' } }
+      }
+      return { success: true, msg: '', data: null }
+    })
+    const { default: CommentRender } = await import(
+      '../../../../../components/ueditor/extensions/nodes/vue/comment/render.vue'
+    )
+    const wrapper = mount(CommentRender, {
+      props: { node: { attrs: { content: '1' } }, comment: topicComment, courseId: 1 },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    return wrapper
+  }
+
+  it('未发表过评论时外框为琥珀色', async () => {
+    setMockAuthUser({ id: 10, name: 'Alice' })
+    const wrapper = await mountWith({ children: [{ cid: 3, userId: 20, userName: 'Bob', status: 'published' }] })
+    const cls = wrapper.find('.comment-render').classes()
+    expect(cls).toContain('border-amber-400')
+    expect(cls).not.toContain('border-green-400')
+  })
+
+  it('已有自己的发表记录时外框为绿色（重新进入也是绿）', async () => {
+    setMockAuthUser({ id: 10, name: 'Alice' })
+    const wrapper = await mountWith({
+      // 自己的回复即使是待审核（作者可见）也算已发表
+      children: [{ cid: 2, userId: 10, userName: 'Alice', content: 'mine', status: 'audit' }],
+    })
+    const cls = wrapper.find('.comment-render').classes()
+    expect(cls).toContain('border-green-400')
+    expect(cls).toContain('border-2')
+    expect(cls).not.toContain('border-amber-400')
+  })
+
+  it('提交回复后立即变绿', async () => {
+    setMockAuthUser({ id: 10, name: 'Alice' })
+    const wrapper = await mountWith({ children: [] })
+    expect(wrapper.find('.comment-render').classes()).toContain('border-amber-400')
+
+    await wrapper.find('textarea').setValue('我的回复')
+    const submitBtn = wrapper.findAll('button').find(b => b.text().includes('comment.reply'))!
+    await submitBtn.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('.comment-render').classes()).toContain('border-green-400')
   })
 })

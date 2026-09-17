@@ -52,7 +52,7 @@ export function useHomeworkEdit(props: HomeworkEditProps, emit: HomeworkEditEmit
                 name: '',
                 code: '',
                 content: '',
-                point: 1,
+                point: 10,
                 tags: [],
                 explanation: '',
             }

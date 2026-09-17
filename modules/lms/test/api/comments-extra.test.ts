@@ -71,12 +71,17 @@ describe('API: comments/add', () => {
     expect(r.success).toBe(true)
   })
 
-  it('携带 parentId/tags/point 参数', async () => {
+  it('回复：parentId/tags 透传，point 由服务端固定为 10（忽略客户端传值）', async () => {
     setMockAuthState({ id: 1, username: 's', name: 's', roles: ['student'], permissions: [] })
     _mockDb.limit = vi.fn().mockResolvedValueOnce([])
     const handler = (await import('../../server/api/comments/add.post')).default
     const r = await handler(makeEvent({ body: { course_id: 1, content: 'reply', parentId: 2, tags: ['x'], point: 5 } }))
     expect(r.success).toBe(true)
+    const inserted = _mockDb.values.mock.calls[0][0] as any
+    expect(inserted.parentId).toBe(2)
+    expect(inserted.tags).toEqual(['x'])
+    // 客户端传 5 也不生效：新建评论默认分值固定为 10
+    expect(inserted.point).toBe(10)
   })
 
   it('tags 非数组会被规范为空数组', async () => {

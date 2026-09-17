@@ -104,6 +104,17 @@ export function useCommentRender(props: CommentRenderProps) {
         if (page.value > totalPages.value) page.value = totalPages.value
     })
 
+    // 是否已发表过评论（用于评论块的绿色外框，与作业一致）：
+    // - 刚回复成功：onReply 已把新回复乐观插入 children，立即为 true
+    // - 重新进入：服务端列表里包含自己发的评论（自己发的无论是否过审，作者都可见）
+    // - 主题评论本身由自己创建（老师/管理员）也算已发表
+    const hasPosted = computed(() => {
+        const uid = Number(user.value?.id) || 0
+        if (!uid) return false
+        if (Number(rootComment.value?.userId) === uid) return true
+        return children.value.some((c: any) => Number(c.userId) === uid)
+    })
+
     async function fetchComments() {
         if (!commentId.value || !effectiveCourseId.value) return
         listPending.value = true
@@ -238,7 +249,7 @@ export function useCommentRender(props: CommentRenderProps) {
         effectiveCourseId, moduleLms, RecordsModal,
         comment, commentId, isTeacher, user,
         editOpen, recordsOpen, pending, listPending,
-        page, pageSize, totalPages, children, pagedChildren,
+        page, pageSize, totalPages, children, pagedChildren, hasPosted,
         fetchComments,
         onReply, toggleLike, onDelete, onApprove, onSaved,
     }
