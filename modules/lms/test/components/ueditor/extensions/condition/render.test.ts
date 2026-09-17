@@ -98,6 +98,36 @@ describe('condition/render.vue', () => {
     expect(wrapper.find('.ueditor-render-stub').exists()).toBe(true)
   })
 
+  it('role 条件满足 → 内容下方仍标注该条件', async () => {
+    const wrapper = await mountRender({
+      conditions: [{ type: 'role', value: 'student', label: 'Student' }],
+      content: CONTENT,
+    })
+    await flushPromises()
+    expect(wrapper.find('.ueditor-render-stub').exists()).toBe(true)
+    expect(wrapper.find('.condition-tags-met').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Student')
+  })
+
+  it('class 条件满足 → 内容下方仍标注该条件', async () => {
+    _mockClassIds.value = [5]
+    const wrapper = await mountRender({
+      conditions: [{ type: 'class', value: '5', label: '5A' }],
+      content: CONTENT,
+    })
+    await flushPromises()
+    expect(wrapper.find('.ueditor-render-stub').exists()).toBe(true)
+    expect(wrapper.find('.condition-tags-met').exists()).toBe(true)
+    expect(wrapper.text()).toContain('5A')
+  })
+
+  it('无条件 → 渲染内容且不显示条件标注', async () => {
+    const wrapper = await mountRender({ conditions: [], content: CONTENT })
+    await flushPromises()
+    expect(wrapper.find('.ueditor-render-stub').exists()).toBe(true)
+    expect(wrapper.find('.condition-tags-met').exists()).toBe(false)
+  })
+
   it('远端条件：hover 时请求接口，met=true → 渲染内容', async () => {
     const fetchSpy = vi.fn().mockResolvedValue({ data: { met: true, details: [] }, success: true })
     setMockFetchHandler(fetchSpy)
