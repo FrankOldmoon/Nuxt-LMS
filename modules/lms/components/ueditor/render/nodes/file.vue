@@ -124,7 +124,8 @@ import TextPreview from './text-preview.vue'
 
 import { computeAtomNodeStyle } from '../helpers'
 
-const CDN_URL = 'https://cdn.jsdelivr.net/npm/@umoteam/editor-external@latest'
+// 文件类型图标改用本地 /vendor（由 scripts/copy-vendor-assets.mjs 从 @umoteam/editor-external 拷贝 icons/file）
+const CDN_URL = '/vendor/editor-external'
 
 const { t } = useI18n()
 const toast = useToast()

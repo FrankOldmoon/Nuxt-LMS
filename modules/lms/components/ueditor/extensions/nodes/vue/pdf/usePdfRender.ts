@@ -4,8 +4,9 @@ export interface PdfRenderProps {
     node?: any
 }
 
-const PDFJS_CDN = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.min.mjs'
-const PDFJS_WORKER = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.worker.min.mjs'
+// 本地资源（public/vendor/pdfjs，由 scripts/copy-vendor-assets.mjs 从 pdfjs-dist 拷贝），内网/无外网可直接用
+const PDFJS_URL = '/vendor/pdfjs/pdf.min.mjs'
+const PDFJS_WORKER_URL = '/vendor/pdfjs/pdf.worker.min.mjs'
 
 export function usePdfRender(props: PdfRenderProps) {
     const { t } = useI18n()
@@ -48,10 +49,10 @@ export function usePdfRender(props: PdfRenderProps) {
         const w = window as any
         if (w.pdfjsLib) return true
         try {
-            const module = await import(/* @vite-ignore */ PDFJS_CDN)
+            const module = await import(/* @vite-ignore */ PDFJS_URL)
             w.pdfjsLib = module
             if (module.GlobalWorkerOptions) {
-                module.GlobalWorkerOptions.workerSrc = PDFJS_WORKER
+                module.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_URL
             }
             return true
         } catch (e) {

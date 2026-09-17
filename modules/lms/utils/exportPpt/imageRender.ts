@@ -36,8 +36,9 @@ export function loadEcharts(): Promise<void> {
   return echartsLoadPromise
 }
 
-const SMM_CSS = 'https://cdn.jsdelivr.net/npm/simple-mind-map@0.10.2/dist/simpleMindMap.esm.css'
-const SMM_JS = 'https://cdn.jsdelivr.net/npm/simple-mind-map@0.10.2/dist/simpleMindMap.umd.min.js'
+// 本地资源（public/vendor/simple-mind-map，由 scripts/copy-vendor-assets.mjs 拷贝）
+const SMM_CSS = '/vendor/simple-mind-map/simpleMindMap.esm.min.css'
+const SMM_JS = '/vendor/simple-mind-map/simpleMindMap.esm.min.js'
 let smmLoadPromise: Promise<void> | null = null
 
 /** 加载 simple-mind-map（幂等） */
@@ -58,19 +59,12 @@ export function loadSimpleMindMap(): Promise<void> {
       link.onerror = () => resolve()
       document.head.appendChild(link)
     })
-    // JS
-    await new Promise<void>((resolve, reject) => {
-      if ((window as any).simpleMindMap) return resolve()
-      const script = document.createElement('script')
-      script.src = SMM_JS
-      script.type = 'text/javascript'
-      script.onload = () => {
-        if ((window as any).simpleMindMap) resolve()
-        else reject(new Error('simple-mind-map loaded but not found'))
-      }
-      script.onerror = () => reject(new Error('Failed to load simple-mind-map'))
-      document.head.appendChild(script)
-    })
+    // JS：动态 import 本地自包含 ESM 产物；按原脚本版的行为把默认导出挂到 window.simpleMindMap 上
+    //（本文件其余逻辑与调用方都通过 window.simpleMindMap.default 取构造器）
+    if (!(window as any).simpleMindMap) {
+      const mod: any = await import(/* @vite-ignore */ SMM_JS)
+      ;(window as any).simpleMindMap = mod?.default ? { default: mod.default } : mod
+    }
   })()
 
   return smmLoadPromise

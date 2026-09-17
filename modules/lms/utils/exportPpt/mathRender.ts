@@ -11,9 +11,9 @@
 import type { MathImage } from './types'
 import { markdownToTiptap } from '../markdown'
 
-// CDN 基址（与 math.vue 一致，共享浏览器缓存）
-const KATEX_CDN_BASE = 'https://cdn.jsdelivr.net/npm/@umoteam/editor-external@latest/libs/katex'
-const HTML2CANVAS_CDN = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'
+// 本地资源基址（public/vendor，由 scripts/copy-vendor-assets.mjs 从 katex / html2canvas 拷贝）
+const KATEX_BASE = '/vendor/katex'
+const HTML2CANVAS_URL = '/vendor/html2canvas/html2canvas.min.js'
 
 /** 幻灯片内容区最大宽度（英寸，LAYOUT_WIDE = 13.33"，左右各 0.5" 边距） */
 const MAX_CONTENT_WIDTH = 12.33
@@ -37,7 +37,7 @@ export function loadKatex(): Promise<void> {
       if (document.getElementById('pptx-export-katex-css')) return resolve()
       const link = document.createElement('link')
       link.rel = 'stylesheet'
-      link.href = `${KATEX_CDN_BASE}/katex.min.css`
+      link.href = `${KATEX_BASE}/katex.min.css`
       link.id = 'pptx-export-katex-css'
       link.onload = () => resolve()
       link.onerror = () => resolve() // CSS 失败不阻断（公式仍可渲染，只是无样式）
@@ -54,7 +54,7 @@ export function loadKatex(): Promise<void> {
         return
       }
       const script = document.createElement('script')
-      script.src = `${KATEX_CDN_BASE}/katex.min.js`
+      script.src = `${KATEX_BASE}/katex.min.js`
       script.id = 'pptx-export-katex-js'
       script.type = 'text/javascript'
       script.onload = () => {
@@ -89,7 +89,7 @@ export function loadHtml2Canvas(): Promise<void> {
       return
     }
     const script = document.createElement('script')
-    script.src = HTML2CANVAS_CDN
+    script.src = HTML2CANVAS_URL
     script.id = 'pptx-export-html2canvas'
     script.type = 'text/javascript'
     script.onload = () => {

@@ -4,8 +4,10 @@ export interface MindmapRenderProps {
     node?: any
 }
 
-const SMM_CSS = 'https://cdn.jsdelivr.net/npm/simple-mind-map@0.10.2/dist/simpleMindMap.esm.css'
-const SMM_JS = 'https://cdn.jsdelivr.net/npm/simple-mind-map@0.10.2/dist/simpleMindMap.umd.min.js'
+// 本地资源（public/vendor/simple-mind-map，由 scripts/copy-vendor-assets.mjs 从 npm 包拷贝）。
+// 用自包含的 ESM 版（1.5MB）而不是 UMD（4.9MB），仍然保持懒加载、不进主 bundle。
+const SMM_CSS = '/vendor/simple-mind-map/simpleMindMap.esm.min.css'
+const SMM_JS = '/vendor/simple-mind-map/simpleMindMap.esm.min.js'
 
 function markdownToTree(md: string) {
     const lines = (md || '').split('\n').filter(l => l.trim())
@@ -60,16 +62,16 @@ function loadCss(url: string) {
     })
 }
 
-function loadScript(url: string) {
-    return new Promise<boolean>((resolve) => {
-        const w = window as any
-        if (w.simpleMindMap) { resolve(true); return }
-        const script = document.createElement('script')
-        script.src = url
-        script.onload = () => resolve(true)
-        script.onerror = () => resolve(false)
-        document.head.appendChild(script)
-    })
+let mindMapModule: Promise<any> | null = null
+
+/** 动态加载 simple-mind-map（本地自包含 ESM），返回构造器；模块级缓存 */
+function loadMindMap(): Promise<any> {
+    if (!mindMapModule) {
+        mindMapModule = import(/* @vite-ignore */ SMM_JS)
+            .then((mod: any) => mod?.default || mod || null)
+            .catch(() => { mindMapModule = null; return null })
+    }
+    return mindMapModule
 }
 
 export function useMindmapRender(props: MindmapRenderProps) {
@@ -120,11 +122,8 @@ export function useMindmapRender(props: MindmapRenderProps) {
     async function renderMindMap() {
         if (!mindmapRef.value) return
         await loadCss(SMM_CSS)
-        await loadScript(SMM_JS)
-        const w = window as any
-        if (!w.simpleMindMap?.default) return
-
-        const MindMap = w.simpleMindMap.default
+        const MindMap = await loadMindMap()
+        if (!MindMap) return
         if (mindMap) { mindMap.destroy(); mindMap = null }
         mindmapRef.value.innerHTML = ''
 

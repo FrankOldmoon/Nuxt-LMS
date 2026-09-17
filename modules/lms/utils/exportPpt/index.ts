@@ -26,7 +26,7 @@ import { newSlide } from './slideUtils'
 // CDN 动态加载 pptxgenjs
 // ═══════════════════════════════════════
 
-const PPTXGEN_CDN = 'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js'
+const PPTXGEN_URL = '/vendor/pptxgenjs/pptxgen.bundle.js'
 let pptxGenPromise: Promise<any> | null = null
 
 function loadPptxGenJS(): Promise<any> {
@@ -36,7 +36,7 @@ function loadPptxGenJS(): Promise<any> {
   if (pptxGenPromise) return pptxGenPromise
   pptxGenPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script')
-    script.src = PPTXGEN_CDN
+    script.src = PPTXGEN_URL
     script.type = 'text/javascript'
     script.onload = () => {
       const PptxGenJS = (window as any).PptxGenJS

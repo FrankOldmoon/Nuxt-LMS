@@ -123,11 +123,14 @@ function loadXlsxScript(url: string): Promise<boolean> {
 async function downloadXlsx() {
     exporting.value = true
     try {
-        const XLSX_CDN = 'https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.full.min.js'
-        const ok = await loadXlsxScript(XLSX_CDN)
+        // 本地资源（public/vendor/xlsx，由 scripts/copy-vendor-assets.mjs 拷贝）。
+        // 注意：原先引用的 CDN 地址 xlsx@0.20.3 已 404（SheetJS 后续版本不再发布到 npm/jsdelivr），
+        // 这里改用本地 npm 包 xlsx@0.18.5，同时修掉导出 Excel 一直失败的问题。
+        const XLSX_URL = '/vendor/xlsx/xlsx.full.min.js'
+        const ok = await loadXlsxScript(XLSX_URL)
         const XLSX = (window as any).XLSX
         if (!ok || !XLSX) {
-            // CDN 加载失败，回退到 CSV
+            // 加载失败，回退到 CSV
             downloadCsv()
             return
         }

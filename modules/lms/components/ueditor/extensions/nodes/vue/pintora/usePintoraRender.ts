@@ -1,18 +1,18 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 
-// Pintora 从 CDN 动态加载（ESM）。
-// skypack.dev 已下线，改用 jsdelivr 的 +esm 打包入口（与项目其它 CDN 资源一致）。
-const PINTORA_CDN = 'https://cdn.jsdelivr.net/npm/@pintora/standalone@0.8.1/+esm'
+// Pintora 从本地 /vendor 动态加载（ESM，由 scripts/copy-vendor-assets.mjs 从 @pintora/standalone 拷贝），
+// 内网/无外网可直接用；保持懒加载，不进主 bundle。
+const PINTORA_URL = '/vendor/pintora/pintora-standalone.esm.mjs'
 
 let pintoraPromise: Promise<any> | null = null
 
 /** 懒加载 Pintora（模块级缓存，同一会话只加载一次） */
 function loadPintora() {
   if (!pintoraPromise) {
-    pintoraPromise = import(/* @vite-ignore */ PINTORA_CDN).then((mod: any) => {
-      // jsdelivr +esm 产物的 default 可能即导出对象本身
+    pintoraPromise = import(/* @vite-ignore */ PINTORA_URL).then((mod: any) => {
+      // 打包产物的 default 可能即导出对象本身
       const p = mod?.default?.renderTo ? mod.default : mod
-      if (!p?.renderTo) throw new Error('Pintora CDN 加载失败：找不到 renderTo API')
+      if (!p?.renderTo) throw new Error('Pintora 加载失败：找不到 renderTo API')
       return p
     })
   }
