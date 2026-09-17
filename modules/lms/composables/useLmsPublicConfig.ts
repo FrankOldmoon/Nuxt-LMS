@@ -39,6 +39,8 @@ export function useLmsPublicConfig() {
   const user = computed(() => config.value?.user || {})
   const ai = computed(() => config.value?.ai || {})
   const oj = computed(() => config.value?.oj || { url: '' })
+  // Python 在线运行器（codeflow/IDE）基址，供 codeBlock 运行按钮拼接地址
+  const codeflow = computed(() => config.value?.codeflow || { url: '' })
   // 站点统计（谷歌分析 / 百度统计），留空则不注入脚本
   const analytics = computed(() => config.value?.analytics || { googleTrackingId: '', baiduTrackingId: '' })
   // 等级换算步长：每 levelStep 经验升一级的曲线系数（默认 100，前端等级换算用）
@@ -71,6 +73,7 @@ export function useLmsPublicConfig() {
     user,
     ai,
     oj,
+    codeflow,
     analytics,
     levelStep,
     // 手动刷新（与 useSiteConfig 一致：通过 key 触发 useFetch refresh）

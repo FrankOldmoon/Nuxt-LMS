@@ -4,11 +4,19 @@
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { ref, computed } from 'vue'
 import { resetAllStubs, setMockI18n } from '../../../../../../../test/setup/nuxt-stubs'
 import { buildCodeflowUrl, toBase64UrlUtf8, CODEFLOW_BASE_URL } from '../../../../../components/ueditor/render/nodes/useCodeBlock'
 
+// 系统配置中的 Python 运行器基址（模拟 useLmsPublicConfig().codeflow.url）
+let _codeflowUrl = ref('')
+;(globalThis as any).useLmsPublicConfig = () => ({
+  codeflow: computed(() => ({ url: _codeflowUrl.value })),
+})
+
 beforeEach(() => {
   resetAllStubs()
+  _codeflowUrl = ref('')
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
 })
 
@@ -201,9 +209,49 @@ describe('ueditor/render/nodes/code-block.vue', () => {
     expect(wrapper.find('.umodal').exists()).toBe(false)
     expect(wrapper.find('.cb-codeflow-frame').exists()).toBe(false)
   })
+
+  it('Python：运行地址使用系统配置 codeflow.url', async () => {
+    _codeflowUrl.value = 'https://runner.example.com/ide'
+    const wrapper = await mountCodeBlock(pythonNode)
+    await wrapper.find('.cb-run').trigger('click')
+
+    const src = wrapper.find('.cb-codeflow-frame').attributes('src')!
+    expect(src.startsWith('https://runner.example.com/ide?code=')).toBe(true)
+    expect(src.endsWith('&run=1')).toBe(true)
+  })
+
+  it('Python：系统配置为空时回退到内置默认地址', async () => {
+    _codeflowUrl.value = ''
+    const wrapper = await mountCodeBlock(pythonNode)
+    await wrapper.find('.cb-run').trigger('click')
+
+    const src = wrapper.find('.cb-codeflow-frame').attributes('src')!
+    expect(src.startsWith(`${CODEFLOW_BASE_URL}?code=`)).toBe(true)
+  })
 })
 
 describe('codeflow 运行链接', () => {
+  it('默认基址为内置地址（可被系统配置覆盖）', () => {
+    expect(CODEFLOW_BASE_URL).toBe('http://10.28.1.152/ide')
+    expect(buildCodeflowUrl('print(1)').startsWith(`${CODEFLOW_BASE_URL}?code=`)).toBe(true)
+  })
+
+  it('传入自定义基址时拼接该基址', () => {
+    const url = new URL(buildCodeflowUrl('print(1)', 'https://runner.example.com/ide'))
+    expect(`${url.origin}${url.pathname}`).toBe('https://runner.example.com/ide')
+    expect(url.searchParams.get('run')).toBe('1')
+  })
+
+  it('基址已带 query 时用 & 连接（不产生第二个 ?）', () => {
+    const raw = buildCodeflowUrl('print(1)', 'https://runner.example.com/ide?theme=dark')
+    expect(raw.startsWith('https://runner.example.com/ide?theme=dark&code=')).toBe(true)
+    expect((raw.match(/\?/g) || []).length).toBe(1)
+  })
+
+  it('基址为空时回退默认地址', () => {
+    expect(buildCodeflowUrl('print(1)', '   ').startsWith(`${CODEFLOW_BASE_URL}?code=`)).toBe(true)
+  })
+
   it('code 为 UTF-8 base64url（无 + / = ），run=1 齐全', () => {
     const code = 'print("你好")\n# 这是中文说明'
     const raw = buildCodeflowUrl(code)

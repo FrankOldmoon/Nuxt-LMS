@@ -41,6 +41,7 @@ const _globalStubs = {
   LmsConfigEditorDanmakuSection: { template: '<div class="danmaku-section" />' },
   LmsConfigEditorGridSections: { template: '<div class="grid-sections" />' },
   LmsConfigEditorOjSection: { template: '<div class="oj-section" />' },
+  LmsConfigEditorCodeflowSection: { template: '<div class="codeflow-section" />' },
 }
 
 const _globalConfig = {
@@ -80,6 +81,8 @@ describe('lms/configEditor/index.vue', () => {
     expect(wrapper.find('.switch-sections').exists()).toBe(true)
     expect(wrapper.find('.danmaku-section').exists()).toBe(true)
     expect(wrapper.find('.grid-sections').exists()).toBe(true)
+    expect(wrapper.find('.oj-section').exists()).toBe(true)
+    expect(wrapper.find('.codeflow-section').exists()).toBe(true)
   })
 
   it('接收 modelValue prop', async () => {

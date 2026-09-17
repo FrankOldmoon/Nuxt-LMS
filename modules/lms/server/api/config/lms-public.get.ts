@@ -28,6 +28,7 @@ const PUBLIC_KEYS = [
   'chapter.passScore',
   'general.levelStep',
   'oj',
+  'codeflow',
   'ai.enabled',
   'ai.mode',
   'ai.model',

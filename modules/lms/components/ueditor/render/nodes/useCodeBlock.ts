@@ -18,8 +18,8 @@ const LANG_ALIASES: Record<string, string> = {
   'jsonc': 'json',
 }
 
-/** 外部 Python 在线运行器（codeflow）地址；换环境改这里即可 */
-export const CODEFLOW_BASE_URL = 'http://10.28.1.151:3010/apps/codeflow/'
+/** 外部 Python 在线运行器（codeflow/IDE）默认基址；可在「系统设置 → LMS 配置」中覆盖 */
+export const CODEFLOW_BASE_URL = 'http://10.28.1.152/ide'
 
 /**
  * UTF-8 安全的 base64url（无 padding）。
@@ -34,15 +34,20 @@ export function toBase64UrlUtf8(text: string): string {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
-/** 拼 codeflow 运行链接：{base}?code=<base64url>&run=1 */
-export function buildCodeflowUrl(code: string): string {
-  return `${CODEFLOW_BASE_URL}?code=${toBase64UrlUtf8(code)}&run=1`
+/** 拼运行链接：{base}?code=<base64url>&run=1（base 已带 query 时用 & 连接；base 为空回退默认） */
+export function buildCodeflowUrl(code: string, baseUrl: string = CODEFLOW_BASE_URL): string {
+  const base = String(baseUrl || '').trim() || CODEFLOW_BASE_URL
+  const sep = base.includes('?') ? '&' : '?'
+  return `${base}${sep}code=${toBase64UrlUtf8(code)}&run=1`
 }
 
 export function useCodeBlock(props: { node: any }) {
     const inQuiz = inject('inQuiz', false)
     const inQuestion = inject('inQuestion', false)
     const hideActions = computed(() => inQuiz || inQuestion)
+
+    // Python 在线运行器基址来自系统配置（LMS 公开配置 codeflow.url），未配置时回退默认常量
+    const { codeflow } = useLmsPublicConfig()
 
     const attrs = computed(() => props.node.attrs || {})
     const language = computed(() => attrs.value.language || 'plaintext')
@@ -76,7 +81,7 @@ export function useCodeBlock(props: { node: any }) {
             ideOpen.value = true
             return
         }
-        codeflowSrc.value = buildCodeflowUrl(codeText.value)
+        codeflowSrc.value = buildCodeflowUrl(codeText.value, codeflow.value?.url)
         codeflowOpen.value = true
     }
 

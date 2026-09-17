@@ -10,6 +10,8 @@
  * - ./ui：首页/课程/章节 UI 显隐
  * - ./user：通用/用户/网盘
  * - ./ai：AI 助手
+ * - ./oj：OJ 在线评测
+ * - ./codeflow：Python 在线运行器（codeflow/IDE）
  */
 import { learningDefaults } from './defaults/learning'
 import { raceDefaults } from './defaults/race'
@@ -17,6 +19,7 @@ import { uiDefaults } from './defaults/ui'
 import { userDefaults } from './defaults/user'
 import { aiDefaults } from './defaults/ai'
 import { ojDefaults } from './defaults/oj'
+import { codeflowDefaults } from './defaults/codeflow'
 import { analyticsDefaults } from './defaults/analytics'
 
 export const DEFAULT_LMS_CONFIG = {
@@ -26,5 +29,6 @@ export const DEFAULT_LMS_CONFIG = {
   ...userDefaults,
   ai: aiDefaults,
   oj: ojDefaults,
+  codeflow: codeflowDefaults,
   ...analyticsDefaults,
 }

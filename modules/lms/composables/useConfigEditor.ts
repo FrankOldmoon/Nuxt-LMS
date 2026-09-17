@@ -53,6 +53,8 @@ export function useConfigEditor(props: ConfigEditorProps, emit: (e: 'update:mode
     },
     // OJ 在线评测平台基址（fetchOj / getOjStatus 拼接地址用，只从 config/env 加载，不硬编码）
     oj: { url: '' },
+    // Python 在线运行器（codeflow/IDE）基址，供 codeBlock 运行按钮使用
+    codeflow: { url: 'http://10.28.1.152/ide' },
     // 站点统计（与服务端 defaults/analytics.ts 对齐：留空 = 不注入统计脚本）
     analytics: { googleTrackingId: '', baiduTrackingId: '' },
   }
