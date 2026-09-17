@@ -79,6 +79,54 @@ describe('utils/compressImage', () => {
     expect((imageCompression as any)).not.toHaveBeenCalled() // 未调用压缩
   })
 
+  it('Web Worker 用同源本地库脚本，不请求 CDN', async () => {
+    // unit 项目跑在 node 环境，补一个 window 桩来模拟浏览器
+    const origin = 'https://lms.example.com'
+    const originalWindow = (globalThis as any).window
+    ;(globalThis as any).window = { location: { origin } }
+    try {
+      const imageCompression = (await import('browser-image-compression')).default
+      ;(imageCompression as any).mockClear()
+      const { compressImage } = await import('../../utils/compressImage')
+      const file = new File([new Blob(['x'])], 'a.png', { type: 'image/png' })
+      await compressImage(file)
+
+      const opts = (imageCompression as any).mock.calls[0][1]
+      expect(opts.useWebWorker).toBe(true)
+      // 库的 libURL 默认值是 jsdelivr CDN，必须被覆盖为同源地址
+      expect(opts.libURL).toBe(`${origin}/browser-image-compression.js`)
+      expect(String(opts.libURL)).not.toContain('jsdelivr')
+    } finally {
+      if (originalWindow === undefined) delete (globalThis as any).window
+      else (globalThis as any).window = originalWindow
+    }
+  })
+
+  it('无 window（SSR）时不开 Worker，杜绝任何外部请求', async () => {
+    const originalWindow = (globalThis as any).window
+    delete (globalThis as any).window
+    try {
+      const imageCompression = (await import('browser-image-compression')).default
+      ;(imageCompression as any).mockClear()
+      const { compressImage } = await import('../../utils/compressImage')
+      const file = new File([new Blob(['x'])], 'a.png', { type: 'image/png' })
+      await compressImage(file)
+
+      const opts = (imageCompression as any).mock.calls[0][1]
+      expect(opts.useWebWorker).toBe(false)
+      expect(opts.libURL).toBeUndefined()
+    } finally {
+      if (originalWindow !== undefined) (globalThis as any).window = originalWindow
+    }
+  })
+
+  it('同源库脚本随 public 发布（缺失会退化成主线程压缩）', async () => {
+    const fs = await import('node:fs')
+    const asset = `${process.cwd()}/public/browser-image-compression.js`
+    expect(fs.existsSync(asset)).toBe(true)
+    expect(fs.statSync(asset).size).toBeGreaterThan(10000)
+  })
+
   it('compressAndUpload 上传成功返回 url', async () => {
     const { compressAndUpload } = await import('../../utils/compressImage')
     const { setMockFetchHandler, resetAllStubs } = await import('../../../../test/setup/nuxt-stubs')

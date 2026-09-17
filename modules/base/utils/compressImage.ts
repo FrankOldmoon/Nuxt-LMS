@@ -22,6 +22,28 @@ const DEFAULT_OPTIONS: CompressOptions = {
 }
 
 /**
+ * Worker 内运行的库脚本地址（同源本地文件）。
+ *
+ * browser-image-compression 在 `useWebWorker: true` 时会 new Worker(blob)，
+ * 并在 Worker 内 `importScripts(libURL)` 重新加载自身，而 `libURL` 的默认值是
+ * jsdelivr CDN（https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/...）——
+ * 也就是说，即使项目里不写任何 CDN 地址，只要开了 Web Worker 就会向 jsdelivr 发请求
+ * （内网 / 无外网环境会悬挂或失败）。
+ * 这里改为同源文件（public/browser-image-compression.js，即该包 dist/browser-image-compression.js 原样拷贝），
+ * 从而完全不发起外部请求。若该文件缺失，Worker 会报错并由库内建的 fallback 自动降级为主线程压缩，功能不受影响。
+ */
+function resolveWorkerLibUrl(): string {
+    if (typeof window === 'undefined') return ''
+    try {
+        // 与 Nuxt 的 app.baseURL（Vite BASE_URL）保持一致，避免部署在子路径时取错文件
+        const base = String((import.meta as any).env?.BASE_URL || '/').replace(/\/+$/, '')
+        return new URL(`${base}/browser-image-compression.js`, window.location.origin).href
+    } catch {
+        return ''
+    }
+}
+
+/**
  * 压缩图片文件
  * @param file - 原始图片文件
  * @param options - 压缩选项
@@ -38,11 +60,14 @@ export async function compressImage(file: File, options?: CompressOptions): Prom
     }
 
     const mergedOptions = { ...DEFAULT_OPTIONS, ...options }
+    const libUrl = resolveWorkerLibUrl()
 
     const compressionOptions = {
         maxSizeMB: mergedOptions.maxSizeMB,
         maxWidthOrHeight: mergedOptions.maxWidthOrHeight,
-        useWebWorker: true,
+        // 无 window（SSR / 测试）时不需要 Worker；浏览器内用 Worker + 同源本地库脚本
+        useWebWorker: Boolean(libUrl),
+        ...(libUrl ? { libURL: libUrl } : {}),
         fileType: mergedOptions.fileType,
         initialQuality: mergedOptions.quality,
     }
