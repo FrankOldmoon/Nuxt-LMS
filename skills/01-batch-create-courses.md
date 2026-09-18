@@ -4,13 +4,11 @@
 
 ## Prerequisite: log in (admin)
 
-Most backend APIs require admin identity. Two login options:
+Most backend APIs require admin identity. Log in explicitly to get a cookie:
 
-1. URL auto-login (supported by the base plugin; parameters are cleared after login):
-   `http://localhost:3000/?username=admin&password=<password>`
-2. Explicit login to get a cookie:
-   `POST /api/auth/login`, body `{ username, password }`; pass the returned cookie on subsequent requests.
+`POST /api/auth/login`, body `{ username, password }`; pass the returned cookie on subsequent requests.
 
+> Note: URL auto-login (`?username=&password=`) has been removed — credentials must never be placed in a URL.
 > Admin credentials come from the project's actual `.env` / `users` table. If the password is unknown, reset it directly in the database (scrypt hash in `salt:derivedKey` format, see `modules/base/server/utils/auth/password.ts`).
 
 ## Get a course category (categoryId is required)

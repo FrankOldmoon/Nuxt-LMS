@@ -25,8 +25,6 @@ describe('composables/useNavigation - useHome', () => {
     expect(data.value.categories).toEqual([])
     expect(data.value.courses).toEqual([])
     expect(data.value.config).toBeNull()
-    expect(data.value.notifyUnread).toBe(0)
-    expect(data.value.msgUnread).toBe(0)
   })
 
   it('refresh 不抛错', async () => {

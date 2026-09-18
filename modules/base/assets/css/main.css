@@ -2,3 +2,10 @@
 @import "@nuxt/ui";
 
 @source "../../..";
+
+/*
+ * 排除 public/：里面是第三方运行时（pyodide 13 MB、vendor 8 MB，多为已压缩的 JS），
+ * Tailwind 每次构建都要读取/解析这些文件来提取候选类名——纯浪费构建时间，
+ * 且 app 的样式并不依赖它们（如 public/record.html 自带样式）。
+ */
+@source not "../../../public";

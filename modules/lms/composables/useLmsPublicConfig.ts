@@ -12,7 +12,7 @@
  *   - 客户端 hydration 直接从 payload 还原，不发新请求
  *
  * 实时更新：
- *   - WS 广播 'lms-config-changed' 触发 refreshNuxtData('lms-public-config-singleton-fetch')
+ *   - WS 广播 'lms-config-changed' 触发 refreshNuxtData(BOOTSTRAP_KEY)
  *   - useState 自动同步 → 所有 computed 自动更新
  *
  * 使用：
@@ -53,9 +53,9 @@ export function useLmsPublicConfig() {
       // 确保 WS 已建立
       try { useWsConnection().connect() } catch { /* ignore */ }
       registerWsHandler('lms-config-changed', () => {
-        // 通过 key 找到 plugins/lms-public-config.ts 里的 useFetch 并触发其 refresh
+        // 通过 key 找到 plugins/bootstrap.ts 里的 useFetch 并触发其 refresh
         // refresh 完成后 useFetch 的 data 更新 → plugin watch 同步到 useState
-        refreshNuxtData('lms-public-config-singleton-fetch')
+        refreshNuxtData(BOOTSTRAP_KEY)
       })
     } catch {
       // WS 模块未启用（base stub 模式），静默忽略
@@ -77,6 +77,6 @@ export function useLmsPublicConfig() {
     analytics,
     levelStep,
     // 手动刷新（与 useSiteConfig 一致：通过 key 触发 useFetch refresh）
-    refresh: () => refreshNuxtData('lms-public-config-singleton-fetch'),
+    refresh: () => refreshNuxtData(BOOTSTRAP_KEY),
   }
 }

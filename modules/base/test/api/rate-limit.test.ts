@@ -83,4 +83,23 @@ describe('Middleware: rate-limit', () => {
       statusCode: 429,
     })
   })
+
+  it('保护 startup 访问门的 POST（防暴力破解旁路）', async () => {
+    setMockRequestIP('1.2.3.9')
+    const { default: handler } = await import('../../server/middleware/rate-limit')
+    for (let i = 0; i < 5; i++) {
+      await handler(makeEvent({ path: '/api/auth/startup', method: 'POST' }))
+    }
+    await expect(handler(makeEvent({ path: '/api/auth/startup', method: 'POST' }))).rejects.toMatchObject({
+      statusCode: 429,
+    })
+  })
+
+  it('startup 的 GET（查询解锁状态）不限流', async () => {
+    setMockRequestIP('1.2.3.10')
+    const { default: handler } = await import('../../server/middleware/rate-limit')
+    for (let i = 0; i < 20; i++) {
+      await expect(handler(makeEvent({ path: '/api/auth/startup', method: 'GET' }))).resolves.toBeUndefined()
+    }
+  })
 })

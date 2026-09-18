@@ -22,9 +22,31 @@ function syncPyodide() {
   }
 }
 
+// 生产构建时对 .output/public 做 Brotli 预压缩（替代 Nitro 内建压缩，见 modules/base/index.ts）。
+// 时机：copyPublicAssets 之后、Nitro 生成 public-assets 清单之前，保证压缩产物可被运行时命中。
+function precompressPublicAssets(dir: string) {
+  try {
+    execSync(
+      `node "${new URL('./scripts/precompress-assets.mjs', import.meta.url).pathname}" "${dir}"`,
+      { stdio: 'inherit' },
+    )
+  } catch {
+    // 脚本内部已打印错误，静默避免打断构建
+  }
+}
+
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
+  // 仅生产构建关闭 server sourcemap（dev 保持 Nuxt 默认，调试体验不变）。
+  // Nuxt 默认 sourcemap.server=true，代价很大：Vite SSR 会为 .nuxt/dist/server
+  // 生成 hires map（50MB 产物里 map 占 33MB），Nitro 再为服务端产物生成 438 个 map。
+  // 实测关闭后：SSR 构建 49.7s → 31.1s，Nitro rollup 75.3s → 47.4s，整体 -51s。
+  // 代价：线上服务端报错堆栈指向打包后位置；需要排查线上问题时，把这里改成
+  // sourcemap: { server: true } 再构建即可（本地 dev 不受影响）。
+  $production: {
+    sourcemap: { server: false },
+  },
   hooks: {
     // 每次构建/启动前同步 pyodide 本地资源
     "modules:done": () => {
@@ -32,6 +54,10 @@ export default defineNuxtConfig({
       if (!process.argv.includes('prepare')) return
       ensureFromExample('.env', '.env.example')
       ensureFromExample('ecosystem.config.cjs', 'ecosystem.config.example.cjs')
+    },
+    // 生产构建：压缩 public 资源（阶段名见 @nuxt/nitro-server）
+    "nitro:build:public-assets": (nitro: { options: { output: { publicDir: string } } }) => {
+      precompressPublicAssets(nitro.options.output.publicDir)
     },
   },
   modules: [

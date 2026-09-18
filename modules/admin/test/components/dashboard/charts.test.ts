@@ -17,7 +17,10 @@ const _globalStubs = {
   ClientOnly: {
     template: '<div class="client-only"><slot /><slot name="fallback" /></div>',
   },
+  // 组件模板已改用 <LazyChart>（defineAsyncComponent，避免 echarts 进入共享 chunk），
+  // 测试环境无 Nuxt 自动导入，两个名字都给出桩
   Chart: { template: '<div class="chart">{{ option?.title?.text }}</div>', props: ['option', 'height'] },
+  LazyChart: { template: '<div class="chart">{{ option?.title?.text }}</div>', props: ['option', 'height'] },
   USkeleton: { template: '<div class="uskeleton" />', props: ['class'] },
 }
 

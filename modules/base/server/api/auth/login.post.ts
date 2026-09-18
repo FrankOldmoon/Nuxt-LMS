@@ -1,21 +1,6 @@
 import { db, schema } from '@nuxthub/db'
 import { eq } from 'drizzle-orm'
-
-// ====================== 账号锁定指数退避（M6，内存单实例） ======================
-// 每次触发锁定后，下次锁定时长按 base * 2^n 递增，封顶 MAX_LOCKOUT_MIN，遏制持续爆破。
-const lockoutCounts = new Map<number, number>()
-const MAX_LOCKOUT_MIN = 480 // 8 小时封顶
-
-function nextLockoutMinutes(baseMinutes: number, userId: number): number {
-  const count = lockoutCounts.get(userId) || 0
-  lockoutCounts.set(userId, count + 1)
-  return Math.min(baseMinutes * Math.pow(2, count), MAX_LOCKOUT_MIN)
-}
-
-function resetLockoutCount(userId: number) {
-  lockoutCounts.delete(userId)
-}
-// ==============================================================================
+import { verifyCredentials } from '../../utils/auth/credentials'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
@@ -25,65 +10,16 @@ export default defineEventHandler(async (event) => {
     return cResp(null, 'Username and password are required', false)
   }
 
-  // 读取暴力破解防护配置（loginMaxAttempts=0 表示不限制）
-  const maxAttempts = Number(await getConfig('site:loginMaxAttempts')) || 0
-  const lockoutMinutes = Number(await getConfig('site:loginLockoutMinutes')) || 15
-
-  // 查找用户
-  const users = await db
-    .select()
-    .from(schema.users)
-    .where(eq(schema.users.username, username))
-    .limit(1)
-
-  if (users.length === 0) {
-    return cResp(null, 'Invalid username or password', false)
-  }
-
-  const user = users[0]
-
-  // 检查账号锁定状态
-  if (maxAttempts > 0 && user.lockedUntil) {
-    const lockedUntilDate = new Date(user.lockedUntil)
-    if (lockedUntilDate > new Date()) {
-      const remainingMin = Math.ceil((lockedUntilDate.getTime() - Date.now()) / 60000)
-      return cResp(null, `账号已锁定，请 ${remainingMin} 分钟后再试`, false)
-    }
-    // 锁定已过期，重置计数器
-    await db.update(schema.users)
-      .set({ failedAttempts: 0, lockedUntil: null })
-      .where(eq(schema.users.id, user.id))
-    user.failedAttempts = 0
-    user.lockedUntil = null
-  }
-
-  // 验证密码
-  const valid = await verifyPassword(password, user.password)
-  if (!valid) {
-    // 累加失败次数，达到阈值则锁定（锁定时间随次数指数退避）
-    if (maxAttempts > 0) {
-      const newAttempts = (Number(user.failedAttempts) || 0) + 1
-      if (newAttempts >= maxAttempts) {
-        const lockoutMin = nextLockoutMinutes(lockoutMinutes, user.id)
-        await db.update(schema.users)
-          .set({ failedAttempts: 0, lockedUntil: new Date(Date.now() + lockoutMin * 60000) })
-          .where(eq(schema.users.id, user.id))
-      } else {
-        await db.update(schema.users)
-          .set({ failedAttempts: newAttempts })
-          .where(eq(schema.users.id, user.id))
-      }
+  // 校验账号密码 + 暴力破解防护（失败计数 / 指数退避锁定，与 startup 访问门共用同一实现）
+  const result = await verifyCredentials(username, password)
+  if (!result.ok) {
+    if (result.locked) {
+      return cResp(null, `账号已锁定，请 ${result.remainingMinutes} 分钟后再试`, false)
     }
     return cResp(null, 'Invalid username or password', false)
   }
 
-  // 登录成功：重置失败计数、锁定状态与退避计数
-  if (maxAttempts > 0 && (user.failedAttempts || user.lockedUntil)) {
-    await db.update(schema.users)
-      .set({ failedAttempts: 0, lockedUntil: null })
-      .where(eq(schema.users.id, user.id))
-  }
-  resetLockoutCount(user.id)
+  const user = result.user
 
   // 生成 token
   const tokenStr = generateToken()

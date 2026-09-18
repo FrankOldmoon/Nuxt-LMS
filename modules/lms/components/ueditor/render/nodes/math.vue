@@ -5,10 +5,20 @@
 
 <script setup>
 import katex from 'katex'
-import 'katex/dist/katex.min.css'
 
 const props = defineProps({
   node: { type: Object, required: true },
+})
+
+/**
+ * katex 公式样式按需加载：
+ * 不用 `import 'katex/dist/katex.min.css'`（那会把约 23 KB 样式并进入口 CSS，
+ * 因为本组件被 ueditor 节点分发器静态引用），改为渲染公式时用 useHead 挂上
+ * public/vendor 里的静态副本（由 scripts/copy-vendor-assets.mjs 拷贝）。
+ * 走 useHead 而非 DOM 注入：SSR 会一并输出 <link>，公式首屏不会无样式闪烁。
+ */
+useHead({
+  link: [{ rel: 'stylesheet', href: '/vendor/katex/katex.min.css' }],
 })
 
 const isBlock = computed(() => props.node.type === 'blockMath')

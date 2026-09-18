@@ -15,9 +15,10 @@
     </div>
 
     <!-- lms 专有：章节按钮、班级卡片、学习进度 -->
-
-    <ChapterBtns />
-    <ClassUserCard />
+    <!-- Lazy：ChapterBtns 内部 6 个弹窗（成绩/点名/计时/弹幕/投票/抢答）里有 ueditorRender，
+         静态引用会把节点渲染器与富文本内核拖进「布局 chunk」→ 阻塞首屏 -->
+    <LazyChapterBtns />
+    <LazyClassUserCard />
 
     <!-- 章节学习进度（heading 汇总）- 仅登录用户显示 -->
     <div v-if="isLoggedIn && chapterTask && totalHeadings > 0" class="pt-4 my-4 border-t border-default">
@@ -51,7 +52,11 @@
 
         <template #body>
           <div class="p-4 h-full">
-            <ueditor v-model="chapterContent" :save-handler="handleSave" :lock-id="lockId" ref="ueditorRef" :show-insert="true" />
+            <!-- Lazy：完整富文本编辑器（tiptap/ProseMirror + 全部节点扩展 + monaco 等）
+                 只有点开「编辑页面」才需要。此前这里是静态引用，本组件又在布局树里常驻，
+                 导致整个编辑器栈被打成 4 MB 公共 chunk 并 modulepreload 阻塞首屏。 -->
+            <LazyUeditor v-model="chapterContent" :save-handler="handleSave" :lock-id="lockId" ref="ueditorRef"
+              :show-insert="true" />
           </div>
         </template>
         <template #footer>
@@ -63,7 +68,8 @@
       </UModal>
 
       <!-- 历史记录 -->
-      <ChapterHistoryModal :table="'chapters'" :id="chapterId" />
+      <!-- Lazy：历史记录弹窗内部用 ueditorRender 预览内容 -->
+      <LazyChapterHistoryModal :table="'chapters'" :id="chapterId" />
     </div>
   </div>
 </template>

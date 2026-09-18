@@ -12,7 +12,7 @@ export function useNav() {
   /**
    * 导航保存后刷新：
    * - 主要靠服务端广播 'home-changed'（categories/courses add|update|batch|delete|import）
-   *   → useHome() 内部 WS handler 触发 refreshNuxtData('home-singleton-fetch')
+   *   → useHome() 内部 WS handler 触发 refreshNuxtData(BOOTSTRAP_KEY)
    *   → 所有 useHeaderNav / pages/index.vue / 其他 useHome() 消费者实时更新
    * - 此处再调用一次 refresh() 作为兜底（防止 WS 未连接或广播丢失）
    */

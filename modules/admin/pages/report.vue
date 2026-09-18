@@ -29,6 +29,55 @@
     </div>
 
     <template v-else>
+      <!-- ⓪ 关键洞察（分析结论，而非原始数据） -->
+      <section class="space-y-3">
+        <h3 class="text-sm font-semibold text-muted">{{ t('admin.report.section.insights') }}</h3>
+        <div class="grid lg:grid-cols-3 gap-4">
+          <!-- 平台健康度 -->
+          <div class="p-4 rounded-lg border border-default bg-default">
+            <div class="text-xs font-medium text-muted">{{ t('admin.report.insights.health') }}</div>
+            <div class="flex items-end gap-2 mt-2">
+              <div class="text-4xl font-semibold tabular-nums leading-none" :class="levelText(insights.level)">
+                {{ insights.score }}
+              </div>
+              <span
+                class="text-xs px-2 py-0.5 rounded-full mb-0.5"
+                :class="levelBadge(insights.level)"
+              >
+                {{ t(`admin.report.insights.level.${insights.level}`) }}
+              </span>
+            </div>
+            <div class="mt-4 space-y-2.5">
+              <div v-for="m in insights.metrics" :key="m.key">
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-muted">{{ t(`admin.report.insights.metric.${m.key}`) }}</span>
+                  <span class="tabular-nums">{{ m.value }}%</span>
+                </div>
+                <div class="h-1.5 rounded-full bg-elevated overflow-hidden">
+                  <div
+                    class="h-full rounded-full transition-all"
+                    :class="levelBar(m.level)"
+                    :style="{ width: `${Math.min(100, m.score)}%` }"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 风险提示 -->
+          <div class="lg:col-span-2 p-4 rounded-lg border border-default bg-default">
+            <div class="text-xs font-medium text-muted">{{ t('admin.report.insights.alertTitle') }}</div>
+            <div v-if="alerts.length" class="mt-3 grid sm:grid-cols-2 gap-2">
+              <div v-for="a in alerts" :key="a.key" class="flex items-center gap-2 text-sm">
+                <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="levelBar(a.level)" />
+                <span>{{ t(`admin.report.insights.alert.${a.key}`, a.params || {}) }}</span>
+              </div>
+            </div>
+            <p v-else class="mt-3 text-sm text-muted">{{ t('admin.report.insights.noAlert') }}</p>
+          </div>
+        </div>
+      </section>
+
       <!-- ① 规模概览 -->
       <section class="space-y-3">
         <h3 class="text-sm font-semibold text-muted">{{ t('admin.report.section.scale') }}</h3>
@@ -51,42 +100,88 @@
           <div class="p-3 rounded-lg border border-default bg-default">
             <div class="text-xs font-medium text-muted mb-1">{{ t('admin.report.chart.userGrowth') }}</div>
             <ClientOnly>
-              <Chart :option="userGrowthOption" :height="300" />
+              <LazyChart :option="userGrowthOption" :height="300" />
               <template #fallback><USkeleton class="h-72" /></template>
             </ClientOnly>
           </div>
           <div class="p-3 rounded-lg border border-default bg-default">
             <div class="text-xs font-medium text-muted mb-1">{{ t('admin.report.chart.learningTrend') }}</div>
             <ClientOnly>
-              <Chart :option="learningTrendOption" :height="300" />
+              <LazyChart :option="learningTrendOption" :height="300" />
               <template #fallback><USkeleton class="h-72" /></template>
             </ClientOnly>
           </div>
         </div>
       </section>
 
-      <!-- ③ 分布 -->
+      <!-- ③ 增长与结构分析 -->
+      <section class="space-y-3">
+        <h3 class="text-sm font-semibold text-muted">{{ t('admin.report.section.growth') }}</h3>
+        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+          <div v-for="card in growthCards" :key="card.key" class="p-4 rounded-lg border border-default bg-default">
+            <div class="text-2xl font-semibold tabular-nums">{{ card.value }}</div>
+            <div class="text-xs text-muted mt-1">{{ card.label }}</div>
+            <div v-if="card.rate !== null" class="flex items-center gap-1 text-xs mt-1" :class="trendClass(card.rate)">
+              <UIcon :name="trendIcon(card.rate)" class="w-3 h-3" />
+              <span class="tabular-nums">{{ card.rate > 0 ? '+' : '' }}{{ card.rate }}%</span>
+            </div>
+            <div v-else-if="card.hint" class="text-xs text-muted mt-1 tabular-nums">{{ card.hint }}</div>
+          </div>
+        </div>
+
+        <!-- 成绩结构（优秀 / 良好 / 及格 / 不及格） -->
+        <div class="p-4 rounded-lg border border-default bg-default">
+          <div class="flex items-center justify-between mb-3">
+            <div class="text-xs font-medium text-muted">{{ t('admin.report.growth.scoreStructure') }}</div>
+            <div class="text-xs text-muted tabular-nums">{{ t('admin.report.growth.totalRecords') }} {{ fmt(scoreStruct.total) }}</div>
+          </div>
+          <div class="flex h-3 rounded-full overflow-hidden bg-elevated">
+            <div
+              v-for="seg in scoreSegments"
+              :key="seg.key"
+              class="h-full"
+              :class="seg.cls"
+              :style="{ width: `${seg.pct}%` }"
+              :title="`${t(`admin.report.growth.${seg.key}`)} ${seg.pct}%`"
+            />
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+            <div v-for="seg in scoreSegments" :key="seg.key" class="text-sm">
+              <div class="flex items-center gap-1.5 text-xs text-muted">
+                <span class="w-2 h-2 rounded-full" :class="seg.cls" />
+                {{ t(`admin.report.growth.${seg.key}`) }}
+              </div>
+              <div class="mt-1 tabular-nums">
+                <span class="font-semibold">{{ seg.rate }}%</span>
+                <span class="text-muted text-xs ml-1">{{ fmt(seg.count) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ④ 分布 -->
       <section class="space-y-3">
         <h3 class="text-sm font-semibold text-muted">{{ t('admin.report.section.distribution') }}</h3>
         <div class="grid lg:grid-cols-3 gap-4">
           <div class="p-3 rounded-lg border border-default bg-default">
             <div class="text-xs font-medium text-muted mb-1">{{ t('admin.report.chart.roleDistribution') }}</div>
             <ClientOnly>
-              <Chart :option="roleOption" :height="300" />
+              <LazyChart :option="roleOption" :height="300" />
               <template #fallback><USkeleton class="h-72" /></template>
             </ClientOnly>
           </div>
           <div class="p-3 rounded-lg border border-default bg-default">
             <div class="text-xs font-medium text-muted mb-1">{{ t('admin.report.chart.scoreDistribution') }}</div>
             <ClientOnly>
-              <Chart :option="scoreOption" :height="300" />
+              <LazyChart :option="scoreOption" :height="300" />
               <template #fallback><USkeleton class="h-72" /></template>
             </ClientOnly>
           </div>
           <div class="p-3 rounded-lg border border-default bg-default">
             <div class="text-xs font-medium text-muted mb-1">{{ t('admin.report.chart.progressDistribution') }}</div>
             <ClientOnly>
-              <Chart :option="progressOption" :height="300" />
+              <LazyChart :option="progressOption" :height="300" />
               <template #fallback><USkeleton class="h-72" /></template>
             </ClientOnly>
           </div>
@@ -100,14 +195,14 @@
           <div class="p-3 rounded-lg border border-default bg-default">
             <div class="text-xs font-medium text-muted mb-1">{{ t('admin.report.chart.abilityRadar') }}</div>
             <ClientOnly>
-              <Chart :option="abilityOption" :height="320" />
+              <LazyChart :option="abilityOption" :height="320" />
               <template #fallback><USkeleton class="h-80" /></template>
             </ClientOnly>
           </div>
           <div class="p-3 rounded-lg border border-default bg-default">
             <div class="text-xs font-medium text-muted mb-1">{{ t('admin.report.chart.contentDistribution') }}</div>
             <ClientOnly>
-              <Chart :option="contentOption" :height="320" />
+              <LazyChart :option="contentOption" :height="320" />
               <template #fallback><USkeleton class="h-80" /></template>
             </ClientOnly>
           </div>

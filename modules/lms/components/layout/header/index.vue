@@ -15,7 +15,8 @@
           <UButton icon="i-lucide-search" color="neutral" variant="ghost" :aria-label="$t('common.search')" />
         </UTooltip>
         <template #content>
-          <LayoutSearchModal @close="() => { showSearchModal = false }" />
+          <!-- Lazy：搜索弹窗只有点开才需要（内含索引查询逻辑），不进入口 chunk -->
+          <LazyLayoutSearchModal @close="() => { showSearchModal = false }" />
         </template>
       </UModal>
     </template>

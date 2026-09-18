@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <DashboardStatCards :stats="stats" />
-    <DashboardCharts :stats="stats" />
+    <LazyDashboardCharts :stats="stats" />
   </div>
 </template>
 

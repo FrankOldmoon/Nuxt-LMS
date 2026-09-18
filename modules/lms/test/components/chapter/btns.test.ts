@@ -38,12 +38,20 @@ const _globalStubs = {
     template: '<button :disabled="loading" @click="$emit(\'click\', $event)"><slot /></button>',
     props: ['icon', 'color', 'variant', 'size', 'loading', 'label', 'to'],
   },
+  // 模板已改用 Lazy 前缀（defineAsyncComponent），测试环境无 Nuxt 自动导入，
+  // Lazy 与非 Lazy 两个名字都给出桩
   ChapterScoreModal: { template: '<div class="score-modal" />', props: ['open', 'courseId', 'chapterId', 'classId'] },
+  LazyChapterScoreModal: { template: '<div class="score-modal" />', props: ['open', 'courseId', 'chapterId', 'classId'] },
   ChapterSelectModal: { template: '<div class="select-modal" />', props: ['open', 'courseId', 'classId'] },
+  LazyChapterSelectModal: { template: '<div class="select-modal" />', props: ['open', 'courseId', 'classId'] },
   ChapterTimerModal: { template: '<div class="timer-modal" />', props: ['open'] },
+  LazyChapterTimerModal: { template: '<div class="timer-modal" />', props: ['open'] },
   ChapterDanmakuModal: { template: '<div class="danmaku-modal" />', props: ['open', 'classId', 'canEdit'] },
+  LazyChapterDanmakuModal: { template: '<div class="danmaku-modal" />', props: ['open', 'classId', 'canEdit'] },
   ChapterVoteModal: { template: '<div class="vote-modal" />', props: ['open', 'classId', 'canEdit'] },
+  LazyChapterVoteModal: { template: '<div class="vote-modal" />', props: ['open', 'classId', 'canEdit'] },
   ChapterQuickAnswerModal: { template: '<div class="qa-modal" />', props: ['open', 'classId', 'canEdit'] },
+  LazyChapterQuickAnswerModal: { template: '<div class="qa-modal" />', props: ['open', 'classId', 'canEdit'] },
 }
 
 const _globalConfig = {
@@ -110,16 +118,27 @@ describe('chapter/btns.vue', () => {
     expect(wrapper.find('.score-modal').exists()).toBe(true)
   })
 
-  it('渲染所有子弹窗占位', async () => {
+  it('未打开时不渲染任何子弹窗', async () => {
     setMockAuthUser({ id: 1, name: 'admin' }, [{ code: 'admin' }], [])
     const { default: Btns } = await import('../../../components/chapter/btns.vue')
     const wrapper = mount(Btns, { global: _globalConfig })
     await flushPromises()
+    // v-if 门控：未打开的弹窗不参与渲染（含 SSR），否则其 chunk 会被 modulepreload 阻塞首屏
+    for (const cls of ['.score-modal', '.select-modal', '.timer-modal', '.danmaku-modal', '.vote-modal', '.qa-modal']) {
+      expect(wrapper.find(cls).exists()).toBe(false)
+    }
+  })
+
+  it('点击按钮后按需渲染对应弹窗', async () => {
+    setMockAuthUser({ id: 1, name: 'admin' }, [{ code: 'admin' }], [])
+    const { default: Btns } = await import('../../../components/chapter/btns.vue')
+    const wrapper = mount(Btns, { global: _globalConfig })
+    await flushPromises()
+    expect(wrapper.find('.score-modal').exists()).toBe(false)
+    const buttons = wrapper.findAll('button')
+    await buttons[0].trigger('click')
+    await flushPromises()
+    // 第一个按钮是得分 → 打开后才渲染
     expect(wrapper.find('.score-modal').exists()).toBe(true)
-    expect(wrapper.find('.select-modal').exists()).toBe(true)
-    expect(wrapper.find('.timer-modal').exists()).toBe(true)
-    expect(wrapper.find('.danmaku-modal').exists()).toBe(true)
-    expect(wrapper.find('.vote-modal').exists()).toBe(true)
-    expect(wrapper.find('.qa-modal').exists()).toBe(true)
   })
 })

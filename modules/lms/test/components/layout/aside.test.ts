@@ -66,13 +66,19 @@ beforeEach(() => {
 })
 
 const _globalStubs = {
+  // 组件模板已改用 Lazy* 前缀（defineAsyncComponent，避免重依赖进入首屏阻塞路径），
+  // 测试环境无 Nuxt 自动导入，Lazy 与非 Lazy 两个名字都给出桩
   CourseBtns: { template: '<div class="course-btns" />', props: ['courseId', 'navigation'] },
+  LazyCourseBtns: { template: '<div class="course-btns" />', props: ['courseId', 'navigation'] },
   UButton: { template: '<button @click="$emit(\'click\')">{{ label }}<slot /></button>', props: ['label', 'icon', 'color', 'variant', 'size'] },
   NuxtLink: { template: '<a :href="to" class="nuxt-link"><slot /></a>', props: ['to'] },
   UNavigationMenu: { template: '<div class="nav-menu" />', props: ['items', 'orientation', 'highlight', 'color'] },
   NavEditor: { template: '<div class="nav-editor" />', props: ['mode', 'courseId', 'navigation'] },
+  LazyNavEditor: { template: '<div class="nav-editor" />', props: ['mode', 'courseId', 'navigation'] },
   UeditorContentPicker: { template: '<div v-if="modelValue" class="content-picker" />', props: ['modelValue', 'previewMode'] },
+  LazyUeditorContentPicker: { template: '<div v-if="modelValue" class="content-picker" />', props: ['modelValue', 'previewMode'] },
   ClassModal: { template: '<div v-if="open" class="class-modal" />', props: ['open'] },
+  LazyClassModal: { template: '<div v-if="open" class="class-modal" />', props: ['open'] },
   UModal: { template: '<div v-if="open" class="modal" />', props: ['open'] },
 }
 

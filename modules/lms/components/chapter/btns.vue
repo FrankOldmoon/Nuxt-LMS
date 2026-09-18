@@ -41,13 +41,16 @@
   </div>
 
   <!-- 弹窗 -->
-  <ChapterScoreModal v-model:open="scoreOpen" :course-id="courseIdNum" :chapter-id="chapterIdNum"
+  <!-- Lazy + v-if：这些弹窗（尤其抢答/弹幕/投票）内部用 ueditorRender，会牵出节点渲染器与
+       富文本内核。仅加 Lazy 不够——组件若在 SSR 期间照常渲染，脚手架仍会把它的 chunk 放进
+       modulepreload 阻塞首屏；用 v-if 让未打开的弹窗不参与 SSR 渲染，才真正移出关键路径。 -->
+  <LazyChapterScoreModal v-if="scoreOpen" v-model:open="scoreOpen" :course-id="courseIdNum" :chapter-id="chapterIdNum"
     :class-id="classIdNum" />
-  <ChapterSelectModal v-model:open="selectOpen" :course-id="courseIdNum" :class-id="classIdNum" :chapter-id="chapterIdNum" />
-  <ChapterTimerModal v-model:open="timerOpen" />
-  <ChapterDanmakuModal v-model:open="danmakuOpen" :class-id="classIdNum" :can-edit="canEdit" />
-  <ChapterVoteModal v-model:open="voteOpen" :class-id="classIdNum" :can-edit="canEdit" />
-  <ChapterQuickAnswerModal v-model:open="quickAnswerOpen" :class-id="classIdNum" :can-edit="canEdit" />
+  <LazyChapterSelectModal v-if="selectOpen" v-model:open="selectOpen" :course-id="courseIdNum" :class-id="classIdNum" :chapter-id="chapterIdNum" />
+  <LazyChapterTimerModal v-if="timerOpen" v-model:open="timerOpen" />
+  <LazyChapterDanmakuModal v-if="danmakuOpen" v-model:open="danmakuOpen" :class-id="classIdNum" :can-edit="canEdit" />
+  <LazyChapterVoteModal v-if="voteOpen" v-model:open="voteOpen" :class-id="classIdNum" :can-edit="canEdit" />
+  <LazyChapterQuickAnswerModal v-if="quickAnswerOpen" v-model:open="quickAnswerOpen" :class-id="classIdNum" :can-edit="canEdit" />
 </template>
 
 <script setup lang="ts">

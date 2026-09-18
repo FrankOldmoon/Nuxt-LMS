@@ -232,6 +232,16 @@ export async function getPlatformReport() {
     .from(schema.userCourses)
     .where(isNull(schema.userCourses.deletedAt))
 
+  // ── 7b. 全局均分 / 在读规模（供分析洞察：达标率、完成度、人均互动） ──
+  const [analyticsRow]: any[] = await db
+    .select({
+      avgScore: sql`coalesce(avg(${schema.userCourses.score}), 0)`.as('avg_score'),
+      avgProgress: sql`coalesce(avg(${progressExpr}), 0)`.as('avg_progress'),
+      enrolledStudents: sql`count(distinct ${schema.userCourses.userId})`.as('enrolled_students'),
+    })
+    .from(schema.userCourses)
+    .where(isNull(schema.userCourses.deletedAt))
+
   // ── 8. 课程排行（按选课人数） ──
   const courseRows: any[] = await db
     .select({
@@ -279,7 +289,27 @@ export async function getPlatformReport() {
     .groupBy(schema.userCourses.userId, schema.users.name, schema.users.classId)
     .orderBy(sql`coalesce(sum(${schema.userCourses.score}), 0) desc`)
     .limit(10)
-  const classIds = [...new Set(studentRows.map((r) => num(r.classId)).filter((id) => id > 0))]
+
+  // ── 9b. 学困生预警（累计分最低的在读学生，用于提前干预） ──
+  const riskRows: any[] = await db
+    .select({
+      userId: schema.userCourses.userId,
+      name: schema.users.name,
+      classId: schema.users.classId,
+      score: sql`coalesce(sum(${schema.userCourses.score}), 0)`.as('score'),
+      avgProgress: sql`coalesce(avg(${progressExpr}), 0)`.as('avg_progress'),
+      exp: sql`coalesce(sum(${schema.userCourses.exp}), 0)`.as('exp'),
+    })
+    .from(schema.userCourses)
+    .innerJoin(schema.users, eq(schema.users.id, schema.userCourses.userId))
+    .where(isNull(schema.userCourses.deletedAt))
+    .groupBy(schema.userCourses.userId, schema.users.name, schema.users.classId)
+    .orderBy(sql`coalesce(sum(${schema.userCourses.score}), 0) asc`)
+    .limit(10)
+
+  const classIds = [...new Set(
+    [...studentRows, ...riskRows].map((r) => num(r.classId)).filter((id) => id > 0),
+  )]
   const classNameRows: any[] = classIds.length
     ? await db
       .select({ id: schema.classes.id, name: schema.classes.name })
@@ -295,6 +325,15 @@ export async function getPlatformReport() {
     score: round2(num(r.score)),
     exp: num(r.exp),
     coin: num(r.coin),
+  }))
+  const atRiskStudents = riskRows.map((r, idx) => ({
+    rank: idx + 1,
+    userId: num(r.userId),
+    name: String(r.name || `#${num(r.userId)}`),
+    className: classNames.get(num(r.classId)) || '—',
+    score: round2(num(r.score)),
+    avgProgress: round2(num(r.avgProgress)),
+    exp: num(r.exp),
   }))
 
   // ── 10. 内容质量 ──
@@ -418,6 +457,12 @@ export async function getPlatformReport() {
     progressDistribution: progressRows.map((r) => ({ band: String(r.band), count: num(r.count) })),
     courseRanking,
     topStudents,
+    atRiskStudents,
+    analytics: {
+      avgScore: round2(num(analyticsRow?.avgScore)),
+      avgProgress: round2(num(analyticsRow?.avgProgress)),
+      enrolledStudents: num(analyticsRow?.enrolledStudents),
+    },
     contentQuality: {
       hardest: hardestRows.map(mapQuestion),
       easiest: easiestRows.map(mapQuestion),

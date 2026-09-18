@@ -8,11 +8,15 @@ export default defineEventHandler(async (event) => {
   if (!username || !password) {
     return cResp(null, 'Username and password are required', false)
   }
-  // 校验账号密码并签发 startup 解锁 cookie，返回用户
-  const user = await verifyStartupLogin(event, username, password)
-  if (!user) {
+  // 校验账号密码并签发 startup 解锁 cookie（含失败计数 / 账号锁定防护）
+  const result = await verifyStartupLogin(event, username, password)
+  if (!result.ok) {
+    if (result.locked) {
+      return cResp(null, `账号已锁定，请 ${result.remainingMinutes} 分钟后再试`, false)
+    }
     return cResp(null, 'Invalid username or password', false)
   }
+  const user = result.user
   // 等价登录：建立登录会话（auth_token cookie），后登录态保持
   await createAuthSession(event, user)
   return cResp({

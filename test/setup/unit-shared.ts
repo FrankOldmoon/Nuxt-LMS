@@ -61,6 +61,7 @@ import {
   getClassUsers, setMockClassUsers,
   reloadSiteConfig,
   npmAssetsBase, esmAssetsBase, npmAsset, esmAsset, npmEsmAsset,
+  BOOTSTRAP_KEY,
   resetAllStubs,
 } from './nuxt-stubs'
 
@@ -126,6 +127,7 @@ const _exports: Record<string, any> = {
   reloadSiteConfig,
   // base utils auto-imports（重量级依赖的可配置资源基址）
   npmAssetsBase, esmAssetsBase, npmAsset, esmAsset, npmEsmAsset,
+  BOOTSTRAP_KEY,
   resetAllStubs,
 }
 

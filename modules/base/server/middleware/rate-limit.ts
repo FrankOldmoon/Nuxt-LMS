@@ -1,7 +1,7 @@
 /**
  * 认证接口 IP 速率限制中间件
  *
- * 针对登录/重置密码等敏感端点按 IP 限流，防止分布式暴力破解与邮件轰炸。
+ * 针对登录/重置密码/访问门等敏感端点按 IP 限流，防止分布式暴力破解与邮件轰炸。
  * 采用滑动窗口算法，单实例内存存储（重启清空，符合 LMS 单实例部署场景）。
  *
  * 限制：每 IP 每分钟最多 RATE_LIMIT_MAX 次请求（默认 5，M6 加固：降低阈值以遏制暴力爆破）。
@@ -11,19 +11,23 @@
 const WINDOW_MS = 60_000 // 1 分钟窗口
 const RATE_LIMIT_MAX = 5 // 每 IP 每窗口最大请求数
 
-// 受保护的端点（认证相关，易遭暴力破解/枚举）
-const PROTECTED_PATHS = new Set([
-  '/api/auth/login',
-  '/api/auth/forgot-password',
-  '/api/auth/reset-password',
-])
+// 受保护的端点（认证相关，易遭暴力破解/枚举）→ 生效方法
+// 注：/api/auth/startup 访问门同样以真实账号密码开锁，必须纳入限流，
+// 否则会成为绕过登录侧暴力破解防护的旁路；GET 仅查询解锁状态，不参与限流。
+const PROTECTED_ENDPOINTS: Record<string, string[]> = {
+  '/api/auth/login': ['POST'],
+  '/api/auth/forgot-password': ['POST'],
+  '/api/auth/reset-password': ['POST'],
+  '/api/auth/startup': ['POST'],
+}
 
 // IP → 窗口内请求时间戳列表
 const ipHits = new Map<string, number[]>()
 
 export default defineEventHandler(async (event) => {
   const path = getRequestPath(event)
-  if (!PROTECTED_PATHS.has(path)) return
+  const allowedMethods = PROTECTED_ENDPOINTS[path]
+  if (!allowedMethods || !allowedMethods.includes(getMethod(event))) return
 
   const ip = getRequestIP(event) || 'unknown'
   const now = Date.now()

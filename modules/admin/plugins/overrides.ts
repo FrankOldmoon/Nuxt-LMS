@@ -1,17 +1,4 @@
-import QuestionShow from '../overrides/QuestionShow.vue'
-import QuestionForm from '../overrides/QuestionForm.vue'
-import HomeworkShow from '../overrides/HomeworkShow.vue'
-import HomeworkForm from '../overrides/HomeworkForm.vue'
-import CommentShow from '../overrides/CommentShow.vue'
-import CommentForm from '../overrides/CommentForm.vue'
-import QuizShow from '../overrides/QuizShow.vue'
-import QuizForm from '../overrides/QuizForm.vue'
-import RaceShow from '../overrides/RaceShow.vue'
-import RaceForm from '../overrides/RaceForm.vue'
-import ChapterShow from '../overrides/ChapterShow.vue'
-import ChapterForm from '../overrides/ChapterForm.vue'
-import FeedbackShow from '../overrides/FeedbackShow.vue'
-import FeedbackContentCell from '../overrides/FeedbackContentCell.vue'
+import { defineAsyncComponent } from 'vue'
 
 /**
  * 表个性化覆盖注册插件
@@ -21,7 +8,32 @@ import FeedbackContentCell from '../overrides/FeedbackContentCell.vue'
  * 避免 useLayoutState 等 LMS 自动导入缺失导致 build 失败。
  *
  * 所有 5 个表都是复合主键（courseId + cid），批量删除需走专用端点。
+ *
+ * ⚠️ 性能：以下覆盖组件**必须**用 defineAsyncComponent 动态导入，不能写在文件顶部静态 import。
+ * 原因：ChapterShow/ChapterForm 等 → ueditorRender → useNodeDispatcher 会牵出
+ * 富文本编辑器内核（tiptap/ProseMirror）、katex、lowlight、phaser、monaco 等重依赖；
+ * 静态 import 时整棵依赖树会被打进**入口 chunk**（实测入口因此达到 5.4 MB / brotli 1.16 MB，
+ * 连学生看首页都要下载编辑器内核）。改懒加载后它们各自成独立 chunk，只有管理员真正
+ * 打开对应表格的预览/编辑时才下载。
+ *
+ * 例外：feedbacks 的预览/单元格组件很轻（base64 图片），保持静态 import 以保证 SSR 直出。
  */
+import FeedbackShow from '../overrides/FeedbackShow.vue'
+import FeedbackContentCell from '../overrides/FeedbackContentCell.vue'
+
+const QuestionShow = defineAsyncComponent(() => import('../overrides/QuestionShow.vue'))
+const QuestionForm = defineAsyncComponent(() => import('../overrides/QuestionForm.vue'))
+const HomeworkShow = defineAsyncComponent(() => import('../overrides/HomeworkShow.vue'))
+const HomeworkForm = defineAsyncComponent(() => import('../overrides/HomeworkForm.vue'))
+const CommentShow = defineAsyncComponent(() => import('../overrides/CommentShow.vue'))
+const CommentForm = defineAsyncComponent(() => import('../overrides/CommentForm.vue'))
+const QuizShow = defineAsyncComponent(() => import('../overrides/QuizShow.vue'))
+const QuizForm = defineAsyncComponent(() => import('../overrides/QuizForm.vue'))
+const RaceShow = defineAsyncComponent(() => import('../overrides/RaceShow.vue'))
+const RaceForm = defineAsyncComponent(() => import('../overrides/RaceForm.vue'))
+const ChapterShow = defineAsyncComponent(() => import('../overrides/ChapterShow.vue'))
+const ChapterForm = defineAsyncComponent(() => import('../overrides/ChapterForm.vue'))
+
 export default defineNuxtPlugin(() => {
   const { moduleLms, moduleAdmin } = useRuntimeConfig().public
   if (!moduleLms || !moduleAdmin) return

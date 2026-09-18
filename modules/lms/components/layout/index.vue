@@ -21,8 +21,9 @@
 
   <LayoutFooter v-if="!playFullscreen" />
 
-  <!-- 登录后全站显示的 Dify 悬浮聊天机器人（全屏播放时隐藏） -->
-  <LayoutDifyChat v-if="!playFullscreen" />
+  <!-- 登录后全站显示的 Dify 悬浮聊天机器人（全屏播放时隐藏）
+       Lazy：见 base/components/layout/index.vue 说明 -->
+  <LazyLayoutDifyChat v-if="!playFullscreen" />
 </template>
 
 <script setup lang="ts">

@@ -227,6 +227,9 @@ import { useRaceEditContext } from '../../modules/lms/components/ueditor/extensi
 /** formatTime — base auto-import from modules/base/utils/format.ts (pure function) */
 import { formatTime } from '../../modules/base/utils/format'
 
+/** BOOTSTRAP_KEY — base auto-import from modules/base/utils/bootstrapKey.ts（首屏引导数据 useFetch key） */
+export const BOOTSTRAP_KEY = 'bootstrap-singleton-fetch'
+
 /** heavyAssets — base auto-import from modules/base/utils/heavyAssets.ts
  *  重量级依赖（Babylon / Univer / web-llm / three 等）的可配置资源基址，纯函数，直接复用真实实现 */
 import { npmAssetsBase, esmAssetsBase, npmAsset, esmAsset, npmEsmAsset } from '../../modules/base/utils/heavyAssets'
@@ -1267,6 +1270,7 @@ const _stubsToExpose: Record<string, any> = {
   // base utils auto-imports
   formatTime,
   compressImage,
+  BOOTSTRAP_KEY,
   npmAssetsBase,
   esmAssetsBase,
   npmAsset,

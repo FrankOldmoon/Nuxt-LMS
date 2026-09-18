@@ -24,8 +24,8 @@ import { computed } from "vue"
  *     不需要保存函数引用（devalue 不能序列化函数）
  */
 
-// 与 plugins/site-config.ts 中的 useFetch 共用同一个 key
-const FETCH_KEY = 'site-config-singleton-fetch'
+// 与 plugins/site-config.ts（或 lms 的 plugins/bootstrap.ts）的 useFetch 共用同一个 key
+const FETCH_KEY = BOOTSTRAP_KEY
 
 // 模块级 flag：保证 WS handler 在整个应用生命周期内只注册 1 次
 let _wsHandlerRegistered = false

@@ -116,9 +116,9 @@ export default defineNuxtModule({
     // 共享数据单例插件：应用启动时预拉取一次 /api/home 和 /api/config/lms-public，
     // 存入 useState 后所有组件通过 useHome() / useLmsPublicConfig() 共享同一份数据。
     // 注：模块 plugins/ 目录不会被 Nuxt 自动发现，必须显式 addPlugin() 注册
-    // （参考 base 模块的 site-config.ts 注册方式）。
-    addPlugin(resolve('./plugins/home-data.ts'))
-    addPlugin(resolve('./plugins/lms-public-config.ts'))
+    // 首屏引导：一次 /api/bootstrap 带回 站点配置 + LMS 公开配置 + 首页数据
+    // （合并了原 home-data.ts / lms-public-config.ts 两个插件）
+    addPlugin(resolve('./plugins/bootstrap.ts'))
 
     // 客户端站点统计（谷歌分析 / 百度统计）：配置就绪后注入脚本并执行
     addPlugin(resolve('./plugins/analytics.ts'))

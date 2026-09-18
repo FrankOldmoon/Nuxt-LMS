@@ -3,7 +3,7 @@
     <!-- 用户增长（折线） -->
     <div class="p-3 rounded-lg border border-default bg-default">
       <ClientOnly>
-        <Chart :option="growthOption" :height="320" />
+        <LazyChart :option="growthOption" :height="320" />
         <template #fallback>
           <USkeleton class="h-80" />
         </template>
@@ -13,7 +13,7 @@
     <!-- 角色分布（饼） -->
     <div class="p-3 rounded-lg border border-default bg-default">
       <ClientOnly>
-        <Chart :option="roleOption" :height="320" />
+        <LazyChart :option="roleOption" :height="320" />
         <template #fallback>
           <USkeleton class="h-80" />
         </template>
@@ -23,7 +23,7 @@
     <!-- 内容分布（柱） -->
     <div class="p-3 rounded-lg border border-default bg-default lg:col-span-2">
       <ClientOnly>
-        <Chart :option="contentOption" :height="320" />
+        <LazyChart :option="contentOption" :height="320" />
         <template #fallback>
           <USkeleton class="h-80" />
         </template>

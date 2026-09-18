@@ -90,9 +90,16 @@ export default defineNuxtModule({
     nuxt.options.nitro.scheduledTasks = { '0 0 * * *': 'build-search' }
     nuxt.options.nitro = {
       ...nuxt.options.nitro,
-      compressPublicAssets: {
-        gzip: false,
-        brotli: true,
+      // 关闭 Nitro 内建 brotli 压缩：其质量硬编码为最高级(11)且无法配置，
+      // 每次构建都要重压整个 .output/public（CPU 约 110s，墙钟约 38s）。
+      // 改为在 nitro:build:public-assets 阶段用 scripts/precompress-assets.mjs
+      // 以质量 9 压缩（见 nuxt.config.ts），在 Nitro 生成 public-assets 清单之前完成。
+      compressPublicAssets: false,
+      // 构建结束的产物树默认会对 .output/server 每个文件做一次 gzip 统计（~50MB），
+      // 仅用于日志里的 "(x gzip)" 标注，关掉可省去这一步。
+      logging: {
+        ...nuxt.options.nitro.logging,
+        compressedSizes: false,
       },
       experimental: {
         ...nuxt.options.nitro.experimental,
@@ -105,6 +112,16 @@ export default defineNuxtModule({
         //'/api/**': { cors: true },
       }
     }
+    // 首屏 prefetch 收敛见 server/plugins/strip-prefetch.ts
+    // （注：模块侧的 render:html hook 不会被序列化进 server 构建，故用 Nitro 插件）
+
+    // ========== 关于 manualChunks（已试验，结论：不要加）==========
+    // 试过把 tiptap/echarts/monaco/katex/... 用 manualChunks 各自拆成 vendor-* 独立包，
+    // 实测是**负优化**：拆出的 vendor 包被入口 chunk 直接静态引用（入口前三条 import 就是
+    // vendor-monaco / vendor-tiptap / vendor-flow），于是全部进入 modulepreload 阻塞首屏，
+    // 阻塞体积反而从 br ~1.25 MB 涨到 ~2.7 MB。
+    // 真正有效的做法是**消除静态引用边**（见下方各处的 Lazy / defineAsyncComponent 改动），
+    // 让重依赖只被懒加载 chunk 引用；拆包本身解决不了"谁引用了它"的问题。
     // ========== base 模块功能注册（env 控制开关）==========
 
     // 标记 base 模块已启用，供组件条件渲染使用
@@ -164,8 +181,6 @@ export default defineNuxtModule({
 
     // 注册客户端 plugin：恢复登录态
     addPlugin(resolve('./plugins/restore.client.ts'))
-    // 注册插件：支持 URL 携带 ?username=&password= 自动登录
-    addPlugin(resolve('./plugins/url-auth.client.ts'))
 
     // 注册插件：站点配置单例预拉取（应用启动时调一次 /api/config/get，结果存 useState）
     addPlugin(resolve('./plugins/site-config.ts'))

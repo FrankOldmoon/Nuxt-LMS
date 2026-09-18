@@ -18,8 +18,8 @@ pnpm dev              # runs nuxt-hub db migrate then starts dev, default http:/
 
 ## 2. Prepare admin identity
 
-- URL auto-login: `http://localhost:3000/?username=admin&password=<password>`
-  (or `POST /api/auth/login` to get a cookie)
+- Log in explicitly: `POST /api/auth/login` with body `{ username, password }` to get a cookie
+  (the previous URL auto-login `?username=&password=` has been removed — never put credentials in a URL)
 - All subsequent curl calls carry that cookie, or do it in a script that logs in first
 
 ## 3. Steps (script or sequential curl recommended)

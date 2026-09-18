@@ -69,11 +69,17 @@ const _globalStubs = {
   UDropdownMenu: { template: '<div class="dropdown"><slot /></div>', props: ['items'] },
   UProgress: { template: '<div class="progress" />', props: ['modelValue'] },
   UModal: { template: '<div v-if="open" class="modal"><slot /><slot name="body" /><slot name="footer" /></div>', props: ['open', 'fullscreen', 'scrollable'] },
+  // 模板已改用 Lazy 前缀（defineAsyncComponent：避免节点渲染器/富文本内核进入首屏阻塞路径），
+  // 测试环境无 Nuxt 自动导入，Lazy 与非 Lazy 两个名字都给出桩
   ChapterBtns: { template: '<div class="chapter-btns" />' },
+  LazyChapterBtns: { template: '<div class="chapter-btns" />' },
   ClassUserCard: { template: '<div class="class-user-card" />' },
+  LazyClassUserCard: { template: '<div class="class-user-card" />' },
   ChapterHistoryModal: { template: '<div class="chapter-history" />', props: ['table', 'id'] },
+  LazyChapterHistoryModal: { template: '<div class="chapter-history" />', props: ['table', 'id'] },
   LayoutTocList: { template: '<div class="toc-list" />', props: ['links', 'class'] },
   ueditor: { template: '<div class="ueditor" />', props: ['modelValue', 'saveHandler', 'lockId', 'showInsert'] },
+  LazyUeditor: { template: '<div class="ueditor" />', props: ['modelValue', 'saveHandler', 'lockId', 'showInsert'] },
 }
 
 const _globalConfig = {

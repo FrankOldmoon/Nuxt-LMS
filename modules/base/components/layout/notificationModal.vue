@@ -62,8 +62,10 @@
     </template>
   </UModal>
 
-  <!-- 管理员：发通知给所有人 -->
-  <LayoutNotificationBroadcastModal v-model:open="broadcastOpen" @sent="afterBroadcast" />
+  <!-- 管理员：发通知给所有人
+       Lazy：广播弹窗内含富文本编辑器（tiptap/ProseMirror 内核，数 MB），
+       只有管理员点「广播」才需要，不能进入口 chunk -->
+  <LazyLayoutNotificationBroadcastModal v-model:open="broadcastOpen" @sent="afterBroadcast" />
 </template>
 
 <script setup lang="ts">

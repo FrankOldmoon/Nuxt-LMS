@@ -4,7 +4,7 @@
  *
  * 通过 mock @nuxthub/db 直接调用 handler 函数
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 // ====================== Mock @nuxthub/db ======================
 const _mockDb = {
@@ -681,6 +681,137 @@ describe('API: auth/me.put', () => {
     const handler = (await import('../../server/api/auth/me.put')).default
     const result = await handler(makeEvent({ body: { password: 'hack', id: 999 } }))
     expect(result.success).toBe(false) // 只有非白名单字段 → 没有可更新字段
+  })
+})
+
+describe('API: auth/startup.post 访问门（复用暴力破解防护）', () => {
+  beforeEach(() => {
+    resetDbChain()
+    setMockConfigStore({
+      'site:loginMaxAttempts': 3,
+      'site:loginLockoutMinutes': 15,
+    })
+  })
+
+  it('缺少用户名/密码返回失败', async () => {
+    const handler = (await import('../../server/api/auth/startup.post')).default
+    const result = await handler(makeEvent({ body: {} }))
+    expect(result.success).toBe(false)
+    expect(result.msg).toMatch(/required/i)
+  })
+
+  it('用户不存在返回失败且不签发 cookie', async () => {
+    _mockDb.limit = vi.fn().mockResolvedValue([])
+    const handler = (await import('../../server/api/auth/startup.post')).default
+    const event = makeEvent({ body: { username: 'nobody', password: 'x' } })
+    const result = await handler(event)
+    expect(result.success).toBe(false)
+    expect(event.cookies?.startup_token).toBeUndefined()
+  })
+
+  it('账号锁定时返回锁定提示且不写入（不再绕过锁定）', async () => {
+    const { hashPassword } = await import('../../server/utils/auth')
+    const hashed = await hashPassword('correct-pwd')
+    _mockDb.limit = vi.fn().mockResolvedValue([{
+      id: 1, username: 'alice', name: 'Alice', password: hashed,
+      failedAttempts: 0,
+      lockedUntil: new Date(Date.now() + 10 * 60 * 1000),
+    }])
+    const handler = (await import('../../server/api/auth/startup.post')).default
+    const event = makeEvent({ body: { username: 'alice', password: 'correct-pwd' } })
+    const result = await handler(event)
+    expect(result.success).toBe(false)
+    expect(result.msg).toMatch(/锁定/)
+    expect(event.cookies?.startup_token).toBeUndefined()
+    expect(_mockDb.update).not.toHaveBeenCalled()
+  })
+
+  it('密码错误时累加失败次数（与 login 一致的防护）', async () => {
+    const { hashPassword } = await import('../../server/utils/auth')
+    const hashed = await hashPassword('correct-pwd')
+    _mockDb.limit = vi.fn().mockResolvedValue([{
+      id: 1, username: 'alice', name: 'Alice', password: hashed,
+      failedAttempts: 1, lockedUntil: null,
+    }])
+    const handler = (await import('../../server/api/auth/startup.post')).default
+    const result = await handler(makeEvent({ body: { username: 'alice', password: 'wrong-pwd' } }))
+    expect(result.success).toBe(false)
+    expect(_mockDb.set.mock.calls[0][0]).toEqual({ failedAttempts: 2 })
+  })
+
+  it('达到最大尝试次数时锁定账号', async () => {
+    const { hashPassword } = await import('../../server/utils/auth')
+    const hashed = await hashPassword('correct-pwd')
+    _mockDb.limit = vi.fn().mockResolvedValue([{
+      id: 1, username: 'alice', name: 'Alice', password: hashed,
+      failedAttempts: 2, lockedUntil: null,
+    }])
+    const handler = (await import('../../server/api/auth/startup.post')).default
+    const result = await handler(makeEvent({ body: { username: 'alice', password: 'wrong-pwd' } }))
+    expect(result.success).toBe(false)
+    const setCall = _mockDb.set.mock.calls[0][0]
+    expect(setCall.failedAttempts).toBe(0)
+    expect(setCall.lockedUntil).toBeInstanceOf(Date)
+  })
+
+  it('正确凭据签发 startup_token 并建立登录会话', async () => {
+    const { hashPassword } = await import('../../server/utils/auth')
+    const hashed = await hashPassword('correct-pwd')
+    _mockDb.limit = vi.fn().mockResolvedValue([{
+      id: 1, username: 'alice', name: 'Alice', password: hashed,
+      failedAttempts: 0, lockedUntil: null,
+    }])
+    const handler = (await import('../../server/api/auth/startup.post')).default
+    const event = makeEvent({ body: { username: 'alice', password: 'correct-pwd' } })
+    const result = await handler(event)
+    expect(result.success).toBe(true)
+    expect(result.data.unlocked).toBe(true)
+    expect(event.cookies.startup_token).toBeTruthy()
+    expect(event.cookies.auth_token).toMatch(/^[0-9a-f]{64}$/)
+  })
+})
+
+describe('API: auth/startup 密钥配置（生产强制 NUXT_STARTUP_SECRET）', () => {
+  beforeEach(() => {
+    resetDbChain()
+    setMockConfigStore({
+      'site:loginMaxAttempts': 3,
+      'site:loginLockoutMinutes': 15,
+    })
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it('生产环境未配置密钥时拒绝签发（抛 500）', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('NUXT_STARTUP_SECRET', '')
+    const { verifyStartupLogin } = await import('../../server/utils/startup')
+    await expect(verifyStartupLogin(makeEvent(), 'alice', 'pwd')).rejects.toMatchObject({ statusCode: 500 })
+  })
+
+  it('生产环境配置密钥后可正常签发', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('NUXT_STARTUP_SECRET', 'a-strong-secret')
+    const { hashPassword } = await import('../../server/utils/auth')
+    const hashed = await hashPassword('correct-pwd')
+    _mockDb.limit = vi.fn().mockResolvedValue([{
+      id: 1, username: 'alice', name: 'Alice', password: hashed,
+      failedAttempts: 0, lockedUntil: null,
+    }])
+    const { verifyStartupLogin } = await import('../../server/utils/startup')
+    const event = makeEvent()
+    const result = await verifyStartupLogin(event, 'alice', 'correct-pwd')
+    expect(result.ok).toBe(true)
+    expect(event.cookies.startup_token).toBeTruthy()
+  })
+
+  it('生产环境未配置密钥时 startup 接口返回 500', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('NUXT_STARTUP_SECRET', '')
+    const handler = (await import('../../server/api/auth/startup.post')).default
+    await expect(handler(makeEvent({ body: { username: 'alice', password: 'pwd' } }))).rejects.toMatchObject({ statusCode: 500 })
   })
 })
 

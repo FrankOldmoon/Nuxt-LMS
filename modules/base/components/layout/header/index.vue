@@ -58,22 +58,27 @@
     </template>
   </UHeader>
 
-  <AuthLoginModal v-model:open="showLoginModal" />
-  <AuthProfileModal v-model:open="showProfileModal" />
-  <AuthSettingsModal v-model:open="showSettingsModal" />
-  <AuthImportUsersModal v-model:open="showImportUsersModal" />
+  <!-- 以下弹窗都是「按需打开」且部分依赖很重（如导入用户带 xlsx、广播弹窗带富文本编辑器内核）
+       统一用 Lazy 前缀 → Nuxt 生成 defineAsyncComponent（动态 import），
+       避免它们的依赖被打进入口 chunk（entry 曾因此达到 5.4 MB / brotli 1.16 MB）。
+       再加 v-if 门控：仅 Lazy 不够——组件若在 SSR 期间照常渲染，Nuxt 仍会把这些 chunk
+       放进 modulepreload 阻塞首屏；未打开的弹窗不参与 SSR 渲染才真正移出关键路径。 -->
+  <LazyAuthLoginModal v-if="showLoginModal" v-model:open="showLoginModal" />
+  <LazyAuthProfileModal v-if="showProfileModal" v-model:open="showProfileModal" />
+  <LazyAuthSettingsModal v-if="showSettingsModal" v-model:open="showSettingsModal" />
+  <LazyAuthImportUsersModal v-if="showImportUsersModal" v-model:open="showImportUsersModal" />
 
   <!-- 通知弹窗 -->
-  <LayoutNotificationModal v-model:open="showNotificationModal" />
+  <LazyLayoutNotificationModal v-if="showNotificationModal" v-model:open="showNotificationModal" />
 
   <!-- 消息弹窗 -->
-  <LayoutMessageModal v-model:open="showMessageModal" />
+  <LazyLayoutMessageModal v-if="showMessageModal" v-model:open="showMessageModal" />
 
   <!-- 网盘文件弹窗 -->
-  <FilesMyFilesModal v-model:open="showMyFilesModal" />
+  <LazyFilesMyFilesModal v-if="showMyFilesModal" v-model:open="showMyFilesModal" />
 
   <!-- 反馈弹窗 -->
-  <LayoutFeedbackModal v-model:open="showFeedbackModal" />
+  <LazyLayoutFeedbackModal v-if="showFeedbackModal" v-model:open="showFeedbackModal" />
 </template>
 
 <script setup lang="ts">

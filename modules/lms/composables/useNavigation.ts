@@ -17,7 +17,7 @@ let _wsHandlerRegistered = false
  *
  * 实时更新：
  * - WS 广播 'home-changed'（由 categories/courses add|update|batch|delete|import 触发）
- *   → 触发 refreshNuxtData('home-singleton-fetch')
+ *   → 触发 refreshNuxtData(BOOTSTRAP_KEY)
  *   → useFetch data 更新 → plugin watch 同步到 useState → 所有 computed 自动更新
  *
  * 收益：
@@ -30,8 +30,6 @@ export function useHome() {
     categories: [],
     courses: [],
     config: null as any,
-    notifyUnread: 0,
-    msgUnread: 0,
   }))
 
   // 客户端：订阅服务端 home-changed 广播，自动 refresh
@@ -40,7 +38,7 @@ export function useHome() {
     try {
       try { useWsConnection().connect() } catch { /* ignore */ }
       registerWsHandler('home-changed', () => {
-        refreshNuxtData('home-singleton-fetch')
+        refreshNuxtData(BOOTSTRAP_KEY)
       })
     } catch {
       // WS 模块未启用（base stub 模式），静默忽略
@@ -49,7 +47,7 @@ export function useHome() {
 
   return {
     data,
-    refresh: () => refreshNuxtData('home-singleton-fetch'),
+    refresh: () => refreshNuxtData(BOOTSTRAP_KEY),
   }
 }
 
