@@ -29,6 +29,7 @@ let raceAnswerCorrectOff: () => void = () => {}
   sendRaceAnswer: () => {},
   onRaceAnswerUpdate: () => () => {},
   onRaceAnswerCorrect: (cb: any) => { raceAnswerCorrectCb = cb; return raceAnswerCorrectOff },
+  onRaceAnswerResult: () => () => {},
   onRaceScores: () => () => {},
   sendRaceQuestionEnd: () => {},
   onRaceQuestionEnd: () => () => {},

@@ -16,8 +16,13 @@ function parseLocalTime(time?: string | null): Date | null {
   return new Date(time)
 }
 
-/** 格式化时间为本地可读字符串（跟随用户 locale） */
-export function formatTime(time?: string | null): string {
+/**
+ * 格式化时间为可读字符串。
+ * @param timeZone 指定渲染时区（IANA，如 'Asia/Shanghai'）。缺省用浏览器本地时区——
+ * 注意 toLocaleString 无 timeZone 时按浏览器/系统时区显示，跨地区查看会不一致；
+ * 需要在站点内统一用站点时区（如北京）显示时显式传入。
+ */
+export function formatTime(time?: string | null, timeZone?: string): string {
   const d = parseLocalTime(time)
   if (!d || isNaN(d.getTime())) return ''
   return d.toLocaleString(undefined, {
@@ -26,13 +31,14 @@ export function formatTime(time?: string | null): string {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    ...(timeZone ? { timeZone } : {}),
   })
 }
 
-/** 格式化日期为本地短日期 */
-export function formatDate(time?: string | null): string {
+/** 格式化日期为可读短日期；timeZone 语义同 formatTime */
+export function formatDate(time?: string | null, timeZone?: string): string {
   const d = parseLocalTime(time)
   if (!d || isNaN(d.getTime())) return ''
-  return d.toLocaleDateString()
+  return d.toLocaleDateString(undefined, timeZone ? { timeZone } : {})
 }
 

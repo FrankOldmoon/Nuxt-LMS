@@ -288,12 +288,14 @@ describe('API: homeworks/submit', () => {
     expect(r.data.gainedExp).toBeGreaterThan(0)
   })
 
-  it('已有记录时按 resubmitExp 计算', async () => {
+  it('重提交不再奖励经验/金币（gainedExp=gainedCoin=0）', async () => {
     setMockAuthState({ id: 1, username: 's', name: 's', roles: ['student'], permissions: [] })
-    _mockDb.query.userHomeworks.findFirst = vi.fn().mockResolvedValue({ record: { _submitCount: 0 } })
+    _mockDb.query.userHomeworks.findFirst = vi.fn().mockResolvedValue({ record: { _submitCount: 1 } })
     const handler = (await import('../../server/api/homeworks/submit.post')).default
     const r = await handler(makeEvent({ body: { course_id: 1, homework_cid: 1, content: 'resub' } }))
     expect(r.success).toBe(true)
+    expect(r.data.gainedExp).toBe(0)
+    expect(r.data.gainedCoin).toBe(0)
   })
 })
 
@@ -318,6 +320,42 @@ describe('API: homeworks/score', () => {
     const handler = (await import('../../server/api/homeworks/score.post')).default
     const r = await handler(makeEvent({ body: { course_id: 1, homework_cid: 1, user_id: 2, score: 85 } }))
     expect(r.success).toBe(true)
+  })
+
+  it('打分超过作业满分：服务端钳制到满分', async () => {
+    setMockAuthState({ id: 1, username: 't', name: 't', roles: ['teacher'], permissions: [] })
+    _mockDb.query.homeworks.findFirst = vi.fn().mockResolvedValue({ courseId: 1, cid: 1, point: 100 })
+    _mockDb.query.userHomeworks.findFirst = vi.fn().mockResolvedValue(null)
+    _mockDb.returning = vi.fn().mockResolvedValue([{ userId: 2, courseId: 1, homeworkCid: 1, score: '100' }])
+    const handler = (await import('../../server/api/homeworks/score.post')).default
+    const r = await handler(makeEvent({ body: { course_id: 1, homework_cid: 1, user_id: 2, score: 999 } }))
+    expect(r.success).toBe(true)
+    const values = _mockDb.values.mock.calls.at(-1)[0]
+    expect(values.score).toBe('100')
+  })
+
+  it('打分为负数：服务端钳制到 0', async () => {
+    setMockAuthState({ id: 1, username: 't', name: 't', roles: ['teacher'], permissions: [] })
+    _mockDb.query.homeworks.findFirst = vi.fn().mockResolvedValue({ courseId: 1, cid: 1, point: 100 })
+    _mockDb.query.userHomeworks.findFirst = vi.fn().mockResolvedValue(null)
+    _mockDb.returning = vi.fn().mockResolvedValue([{ userId: 2, courseId: 1, homeworkCid: 1, score: '0' }])
+    const handler = (await import('../../server/api/homeworks/score.post')).default
+    const r = await handler(makeEvent({ body: { course_id: 1, homework_cid: 1, user_id: 2, score: -5 } }))
+    expect(r.success).toBe(true)
+    const values = _mockDb.values.mock.calls.at(-1)[0]
+    expect(values.score).toBe('0')
+  })
+
+  it('打分支持小数（范围内保留原值）', async () => {
+    setMockAuthState({ id: 1, username: 't', name: 't', roles: ['teacher'], permissions: [] })
+    _mockDb.query.homeworks.findFirst = vi.fn().mockResolvedValue({ courseId: 1, cid: 1, point: 100 })
+    _mockDb.query.userHomeworks.findFirst = vi.fn().mockResolvedValue(null)
+    _mockDb.returning = vi.fn().mockResolvedValue([{ userId: 2, courseId: 1, homeworkCid: 1, score: '88.5' }])
+    const handler = (await import('../../server/api/homeworks/score.post')).default
+    const r = await handler(makeEvent({ body: { course_id: 1, homework_cid: 1, user_id: 2, score: 88.5 } }))
+    expect(r.success).toBe(true)
+    const values = _mockDb.values.mock.calls.at(-1)[0]
+    expect(values.score).toBe('88.5')
   })
 
   it('学生未提交也可打分：新建「仅评分」记录（不写 record）', async () => {

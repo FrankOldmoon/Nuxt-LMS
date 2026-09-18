@@ -17,7 +17,7 @@ beforeEach(() => {
 })
 
 const _globalStubs = {
-  UButton: { template: '<button @click="$emit(\'click\', $event)">{{ label }}<slot /></button>', props: ['variant', 'size', 'color', 'disabled', 'icon', 'label'] },
+  UButton: { template: '<button :disabled="disabled" @click="$emit(\'click\', $event)">{{ label }}<slot /></button>', props: ['variant', 'size', 'color', 'disabled', 'icon', 'label'] },
   ResultBanner: { template: '<div class="result-banner" />', props: ['correct', 'point'] },
   ExplanationBlock: { template: '<div class="explanation-block" />', props: ['explanation'] },
 }
@@ -29,6 +29,7 @@ function makeRenderCtx(overrides: any = {}) {
   const showAnswer = ref(overrides.showAnswer ?? false)
   const hasAnswer = ref(overrides.hasAnswer ?? true)
   const isTeacher = ref(overrides.isTeacher ?? false)
+  const answerLocked = ref(overrides.answerLocked ?? false)
   const formattedAnswers = computed(() => overrides.formattedAnswers ?? ['A'])
   return {
     t: (k: string) => k,
@@ -38,6 +39,7 @@ function makeRenderCtx(overrides: any = {}) {
     isCorrect,
     showAnswer,
     hasAnswer,
+    answerLocked,
     formattedAnswers,
     onSubmit: () => {},
     onReset: () => {},
@@ -47,12 +49,12 @@ function makeRenderCtx(overrides: any = {}) {
 }
 
 /** Wrapper component that provides the QuestionRenderKey via Vue's provide */
-function makeProvider(inQuiz: boolean = false) {
+function makeProvider(inQuiz: boolean = false, ctxOverrides: any = {}) {
   // Also set inQuiz in the global provide Map (for footer's auto-imported inject)
   globalProvide('inQuiz', inQuiz)
   return defineComponent({
     setup(_, { slots }) {
-      vueProvide(QuestionRenderKey, makeRenderCtx())
+      vueProvide(QuestionRenderKey, makeRenderCtx(ctxOverrides))
       return () => slots.default?.()
     },
   })
@@ -99,5 +101,48 @@ describe('question/render/footer.vue', () => {
       },
     }, { global: { stubs: _globalStubs, mocks: _mocks } })
     expect(wrapper.text()).not.toContain('question.submit')
+  })
+
+  it('answerLocked=true 时禁用提交/重置（竞赛答过）', async () => {
+    const { default: Footer } = await import(
+      '../../../../../../components/ueditor/extensions/nodes/vue/question/render/footer.vue'
+    )
+    const Provider = makeProvider(false, { answerLocked: true })
+    const wrapper = mount({
+      render() {
+        return h(Provider, () => h(Footer))
+      },
+    }, { global: { stubs: _globalStubs, mocks: _mocks } })
+    const resetBtn = wrapper.findAll('button').find(b => b.text().includes('common.reset'))
+    const submitBtn = wrapper.findAll('button').find(b => b.text().includes('question.submit'))
+    expect(resetBtn!.attributes('disabled')).toBeDefined()
+    expect(submitBtn!.attributes('disabled')).toBeDefined()
+  })
+
+  it('竞赛答完（showAnswer=true）即使答错也展示正确答案', async () => {
+    const { default: Footer } = await import(
+      '../../../../../../components/ueditor/extensions/nodes/vue/question/render/footer.vue'
+    )
+    const Provider = makeProvider(false, { submitted: true, isCorrect: false, showAnswer: true })
+    const wrapper = mount({
+      render() {
+        return h(Provider, () => h(Footer))
+      },
+    }, { global: { stubs: _globalStubs, mocks: _mocks } })
+    expect(wrapper.text()).toContain('question.correctAnswerLabel')
+    expect(wrapper.find('.explanation-block').exists()).toBe(true)
+  })
+
+  it('未答对且未开启显示答案时不展示正确答案', async () => {
+    const { default: Footer } = await import(
+      '../../../../../../components/ueditor/extensions/nodes/vue/question/render/footer.vue'
+    )
+    const Provider = makeProvider(false, { submitted: true, isCorrect: false, showAnswer: false })
+    const wrapper = mount({
+      render() {
+        return h(Provider, () => h(Footer))
+      },
+    }, { global: { stubs: _globalStubs, mocks: _mocks } })
+    expect(wrapper.text()).not.toContain('question.correctAnswerLabel')
   })
 })

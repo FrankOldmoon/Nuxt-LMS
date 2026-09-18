@@ -29,7 +29,6 @@ const sections = [
     configKey: 'homework',
     fields: [
       { key: 'submitExp', label: 'lmsConfig.submitExp' },
-      { key: 'resubmitExp', label: 'lmsConfig.resubmitExp' },
       { key: 'chapterScore', label: 'lmsConfig.chapterScore' },
     ],
   },

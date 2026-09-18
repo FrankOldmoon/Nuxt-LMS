@@ -17,12 +17,25 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 const route = useRoute()
 const chapterId = computed(() => route.params.cid as string)
 const courseId = computed(() => route.params.id as string)
 
 // 为子树（含弹窗内组件）提供 course/chapter 上下文
 provideLmsContext(courseId, chapterId)
+
+// lms 扩展：进入章节即拉取 default_class 的学生名单到 useClassUsers 全局缓存，
+// 使作业/测验/评论等 records 弹窗能直接渲染出学生（否则首次进入缓存为空、显示“无学生”）。
+// fetchUsers 按 classId:courseId 缓存，重复进入章节不会重复请求。
+const { user } = useAuth()
+onMounted(() => {
+  const classId = user.value?.defaultClass?.id
+  if (classId && courseId.value) {
+    const { fetchUsers } = useClassUsers()
+    void fetchUsers(Number(classId), Number(courseId.value))
+  }
+})
 
 const { resp, pending, error, data, notFound, prevChapter, nextChapter } =
   useChapterPage(chapterId, courseId)

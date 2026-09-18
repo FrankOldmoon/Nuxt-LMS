@@ -63,6 +63,23 @@ describe('question/render/sort.vue', () => {
     expect(wrapper.find('.draggable').exists()).toBe(true)
   })
 
+  it('整行可拖拽：不限定 drag handle，鼠标样式落在整行', async () => {
+    const { default: SortRender } = await import(
+      '../../../../../../components/ueditor/extensions/nodes/vue/question/render/sort.vue'
+    )
+    const wrapper = mount(SortRender, {
+      props: { question: sampleQuestion, questionId: 1 },
+      global: _globalConfig,
+    })
+    // draggable 不再传 handle，整行任意位置都可按住拖动
+    const draggableComp = wrapper.findComponent(_globalStubs.draggable)
+    expect(draggableComp.exists()).toBe(true)
+    expect(draggableComp.props('handle')).toBeUndefined()
+    // 拖拽手柄样式移到整行，旧的 handle 类名不再使用
+    expect(wrapper.find('.draggable .cursor-move').exists()).toBe(true)
+    expect(wrapper.find('.sort-drag-handle').exists()).toBe(false)
+  })
+
   it('exposes submit/reset/fillCorrectAnswer methods', async () => {
     const { default: SortRender } = await import(
       '../../../../../../components/ueditor/extensions/nodes/vue/question/render/sort.vue'

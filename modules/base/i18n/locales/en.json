@@ -55,6 +55,8 @@
     "logout": "Logout",
     "username": "Username",
     "password": "Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "confirmPassword": "Confirm Password",
     "name": "Name",
     "email": "Email",

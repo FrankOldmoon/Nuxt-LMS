@@ -4,16 +4,15 @@
     <draggable
       v-model="dragList"
       item-key="originalIndex"
-      handle=".sort-drag-handle"
       animation="200"
       class="space-y-2"
     >
       <template #item="{ element, index }">
         <div
-          class="flex items-center gap-3 p-3 rounded-md border transition-colors"
+          class="flex items-center gap-3 p-3 rounded-md border transition-colors cursor-move select-none"
           :class="itemClass(element.originalIndex)"
         >
-          <span class="sort-drag-handle cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 shrink-0">
+          <span class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 shrink-0">
             <UIcon name="i-heroicons-bars-3" class="w-4 h-4" />
           </span>
           <span class="shrink-0 w-6 h-6 rounded-full text-xs flex items-center justify-center font-medium"

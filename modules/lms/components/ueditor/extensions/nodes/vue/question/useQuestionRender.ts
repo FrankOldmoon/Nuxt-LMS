@@ -122,6 +122,8 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
 
     const hasAnswer = computed(() => renderRef.value?.hasAnswer ?? false)
     const isTeacher = computed(() => hasRole('teacher') || hasRole('admin'))
+    // 竞赛模式：学生答过一次后本场即锁定，禁用「提交/重置」
+    const answerLocked = computed(() => !!inRace && submitted.value)
 
     // 格式化答案（根据题型不同显示方式不同）
     const formattedAnswers = computed(() => {
@@ -359,7 +361,7 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
         t, effectiveCourseId, moduleLms, RecordsModal,
         question, pending, questionId, isTeacher, typeLabel,
         submitted, isCorrect, showAnswer, fromRecord, showFireworks,
-        containerBorderClass, hasAnswer, scoreDisplay, formattedAnswers,
+        containerBorderClass, hasAnswer, answerLocked, scoreDisplay, formattedAnswers,
         submitLocked,
         renderComponent, renderRef, editOpen, recordsOpen,
         onSubmit, onReset, onShowAnswer, onHover, onSaved,
@@ -392,6 +394,14 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
             showAnswer.value = false
             showFireworks.value = false
             if (question.value) question.value.record = []
+        },
+        /** 竞赛答完：把服务端返回的正确答案/解析注入题目并展示（footer 据此渲染答案区） */
+        revealAnswer(answer: any, explanation?: any) {
+            if (!question.value) return
+            if (Array.isArray(answer)) question.value.answer = [...answer]
+            if (explanation != null && explanation !== '') question.value.explanation = explanation
+            showAnswer.value = true
+            submitted.value = true
         },
     }
     provide(QuestionRenderKey, ctx)

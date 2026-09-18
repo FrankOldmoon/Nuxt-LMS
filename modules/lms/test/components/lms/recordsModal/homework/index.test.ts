@@ -71,6 +71,8 @@ beforeEach(() => {
   h.files = []
   // useFileNames 由 base 模块 addImportsDir 自动导入，测试中 globalThis stub
   ;(globalThis as any).useFileNames = () => ref(h.files)
+  // 站点时区：时间显示用固定时区
+  ;(globalThis as any).useSiteConfig = () => ({ config: ref({}), siteTimeZone: ref('Asia/Shanghai') })
 })
 
 const _globalStubs = {
@@ -140,6 +142,17 @@ describe('lms/recordsModal/homework/index.vue', () => {
     })
     await flushPromises()
     expect(wrapper.find('.class-users-table').exists()).toBe(true)
+  })
+
+  it('标题旁显示该作业满分', async () => {
+    const { default: HomeworkRecords } = await import('../../../../../components/lms/recordsModal/homework/index.vue')
+    const wrapper = mount(HomeworkRecords, {
+      props: { modelValue: true, courseId: 1, cid: 100, maxScore: 88 },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    expect(wrapper.text()).toContain('record.fullScore')
+    expect(wrapper.text()).toContain('88')
   })
 
   it('顶部渲染「下载全部附件」按钮，点击触发 downloadAllFiles', async () => {

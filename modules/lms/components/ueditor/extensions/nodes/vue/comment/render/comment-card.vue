@@ -9,8 +9,8 @@
         <div class="flex-1 min-w-0">
             <!-- 时间 + 操作按钮 -->
             <div class="flex items-center gap-2 mb-1">
-                <!-- 时间只应在客户端(浏览器本地时区)渲染；SSR 阶段留空避免服务端/客户端时区不一致导致显示 UTC -->
-                <span v-if="comment.createdAt && hydratedTime" class="text-xs text-gray-400">{{ formatTime(comment.createdAt) }}</span>
+                <!-- 时间只应在客户端渲染；用站点时区（默认北京）显示，避免 SSR 与客户端/浏览器时区不一致 -->
+                <span v-if="comment.createdAt && hydratedTime" class="text-xs text-gray-400">{{ formatTime(comment.createdAt, siteTimeZone) }}</span>
                 <!-- 操作按钮靠右 -->
                 <div class="flex items-center gap-2 ml-auto">
                     <!-- 点赞 -->
@@ -78,8 +78,9 @@ const props = defineProps({
 const emit = defineEmits(['toggle-like', 'delete', 'approve'])
 
 const { hasRole } = useAuth()
+const { siteTimeZone } = useSiteConfig()
 
-// 仅客户端渲染时间（浏览器本地时区），避免 SSR 阶段按服务器时区输出导致时区不一致
+// 仅客户端渲染时间（SSR 阶段留空，避免服务端/客户端不一致）
 const hydratedTime = ref(false)
 onMounted(() => { hydratedTime.value = true })
 

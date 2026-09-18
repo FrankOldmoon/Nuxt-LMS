@@ -106,6 +106,9 @@ export function useChapterScore(props: { courseId: number; chapterId: number; cl
     }
   }
 
+  // immediate: 弹窗在 btns.vue 里是 Lazy + v-if 门控的（未打开不挂载），
+  // 因此组件创建时 isOpen 已经是 true，watcher 若只在"变化时"触发就永远不会执行，
+  // 表现为打开得分弹窗后表格无数据。immediate 让"挂载即已打开"的首次也加载。
   watch(isOpen, (val) => {
     if (val) {
       loadData()
@@ -113,7 +116,7 @@ export function useChapterScore(props: { courseId: number; chapterId: number; cl
     } else {
       stopPolling()
     }
-  })
+  }, { immediate: true })
 
   // 弹窗内切换班级（defaultClass 变化 → props.classId 变化）后立即重拉该班数据
   watch(() => props.classId, () => { loadData() })

@@ -33,9 +33,11 @@ const loading = ref(false)
 const editorRef = ref<{ getConfig: () => any } | null>(null)
 const lmsConfig = ref<any>({})
 
+// immediate: 弹窗由 header 以 Lazy + v-if 门控（未打开不挂载），组件创建时 isOpen 已为 true，
+// 仅靠"变化时"触发会导致打开设置弹窗后配置加载不出来
 watch(isOpen, async (val) => {
   if (val) await loadLmsConfig()
-})
+}, { immediate: true })
 
 async function loadLmsConfig() {
   loading.value = true

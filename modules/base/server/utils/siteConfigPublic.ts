@@ -11,7 +11,7 @@ export async function getSiteConfigPublic() {
   const [
     siteTitle, siteDescription, siteLogo, siteFavicon, siteFooterText,
     defaultLocale, pageSize, allowRegistration, allowForgotPassword, maintenanceMode,
-    showNotify, showMsg, showMyFiles,
+    showNotify, showMsg, showMyFiles, siteTimeZone,
   ] = await Promise.all([
     getConfig('site:title'),
     getConfig('site:description'),
@@ -26,6 +26,7 @@ export async function getSiteConfigPublic() {
     getConfig('site:showNotify'),
     getConfig('site:showMsg'),
     getConfig('site:showMyFiles'),
+    getConfig('site:timezone'),
   ])
 
   return {
@@ -42,5 +43,6 @@ export async function getSiteConfigPublic() {
     showNotify,
     showMsg,
     showMyFiles,
+    siteTimeZone,
   }
 }

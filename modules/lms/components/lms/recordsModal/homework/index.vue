@@ -3,7 +3,13 @@
         <template #body>
             <div class="p-6 space-y-4 min-w-[600px]">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-lg font-semibold">{{ $t('record.homeworkRecords') }}</h2>
+                    <div class="flex items-center gap-3 min-w-0">
+                        <h2 class="text-lg font-semibold whitespace-nowrap">{{ $t('record.homeworkRecords') }}</h2>
+                        <!-- 满分提示：本 homework 的总分 -->
+                        <span v-if="maxScore > 0" class="text-sm text-muted whitespace-nowrap">
+                            {{ $t('record.fullScore') }}: {{ maxScore }}
+                        </span>
+                    </div>
                     <div class="flex items-center gap-2">
                         <UButton icon="i-heroicons-check-badge" variant="soft" size="sm"
                             :loading="scoringAll" :label="$t('record.scoreAllSubmitted')"
@@ -34,7 +40,7 @@
                     <!-- submittedAt 列：提交时间（仅真实提交显示） -->
                     <template #submittedAt-cell="{ row }">
                         <span v-if="submittedAtOf(row.original.record)" class="text-xs text-muted whitespace-nowrap">
-                            {{ formatTime(submittedAtOf(row.original.record)) }}
+                            {{ formatTime(submittedAtOf(row.original.record), siteTimeZone) }}
                         </span>
                         <span v-else class="text-xs text-gray-400">-</span>
                     </template>
@@ -43,7 +49,7 @@
                     <template #score-cell="{ row }">
                         <div class="flex items-center gap-1">
                             <UInput v-model.number="scoreMap[row.original.id]" type="number"
-                                size="xs" class="w-16" :max="maxScore"
+                                size="xs" class="w-16" min="0" :max="maxScore" step="any"
                                 @blur="onScoreBlur(row.original)" @keydown.enter="$event.target.blur()" />
                             <UTooltip :text="$t('homework.quickScore')">
                                 <UButton icon="i-heroicons-check" color="primary" variant="soft" size="xs"
@@ -116,7 +122,7 @@
 
                                 <!-- 提交时间 -->
                                 <span v-if="detailSubmittedAt" class="text-xs text-muted whitespace-nowrap">
-                                    {{ $t('record.submitTime') }}: {{ formatTime(detailSubmittedAt) }}
+                                    {{ $t('record.submitTime') }}: {{ formatTime(detailSubmittedAt, siteTimeZone) }}
                                 </span>
                             </div>
 
@@ -125,7 +131,7 @@
                                 <div class="flex items-center gap-1.5">
                                     <label class="text-sm text-muted whitespace-nowrap">{{ $t('record.score') }}</label>
                                     <UInput v-model.number="scoreMap[detailData.id]" type="number" size="sm" class="w-20"
-                                        :max="maxScore" :placeholder="String(maxScore)"
+                                        min="0" :max="maxScore" step="any" :placeholder="String(maxScore)"
                                         @blur="onScoreBlur(detailData)" @keydown.enter="$event.target.blur()" />
                                     <span class="text-sm text-muted whitespace-nowrap">/ {{ maxScore }}</span>
                                     <UTooltip :text="$t('homework.quickScore')">
@@ -243,6 +249,9 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
+
+// 时间显示统一用站点时区（如北京），避免因浏览器时区不同显示偏移
+const { siteTimeZone } = useSiteConfig()
 
 const {
     open, rows, pending, extraColumns, defaultSort, scoreMap, commentMap, excellentMap, fetchRecords,

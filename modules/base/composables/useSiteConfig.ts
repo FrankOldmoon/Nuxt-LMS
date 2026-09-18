@@ -42,6 +42,9 @@ export function useSiteConfig() {
   const showNotify = computed(() => config.value?.showNotify ?? true)
   const showMsg = computed(() => config.value?.showMsg ?? true)
   const showMyFiles = computed(() => config.value?.showMyFiles ?? true)
+  // 站点时区（时间显示统一用此固定时区，而不是各浏览器系统时区）；
+  // 缺省 Asia/Shanghai（本 LMS 单地区部署，服务器时区即上海）
+  const siteTimeZone = computed(() => config.value?.siteTimeZone || 'Asia/Shanghai')
 
   // 客户端：订阅服务端 site-config-changed 广播，自动 refresh
   // 仅在首次调用时注册 handler（模块级 flag），避免 N 个组件调用 → N 次注册 → N 次 refresh
@@ -71,6 +74,7 @@ export function useSiteConfig() {
     showNotify,
     showMsg,
     showMyFiles,
+    siteTimeZone,
     // 兼容旧代码：config 字段返回 useState ref
     config: config as any,
     // 手动刷新：调用 refreshNuxtData(key)，watch 自动同步到 useState

@@ -26,7 +26,7 @@ export function useConfigEditor(props: ConfigEditorProps, emit: (e: 'update:mode
   const defaultConfig = {
     ai: { enabled: true, mode: 'api', model: '', thinking: false, apiUrl: '/api/aichat/chat', llmApiUrl: '', llmApiKey: '', ollamaUrl: 'http://localhost:11434', ollamaModel: '', title: '', preset: '', opening: '', ttsGender: 'female' },
     question: { submitExp: 2, correctBonusExp: 5, firstCorrectBonusExp: 10, maxSubmitCount: 999 },
-    homework: { submitExp: 5, resubmitExp: 1, chapterScore: 3 },
+    homework: { submitExp: 5, chapterScore: 3 },
     comment: { publishExp: 3, replyExp: 2, likeReceivedExp: 1, maxDailyExp: 20 },
     chapter: { headingExp: 5, headingCoin: 5, headingScore: 2, headingChapterScore: 1 },
     race: { participateExp: 5, rank1Exp: 100, rank2Exp: 80, rank3Exp: 60, chapterScore: 3 },

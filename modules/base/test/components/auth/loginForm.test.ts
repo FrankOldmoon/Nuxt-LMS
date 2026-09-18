@@ -5,9 +5,23 @@
 import {
   describe, it, expect, beforeEach, vi,
   mount, flushPromises,
-  _globalConfig, baseBeforeEach,
+  _globalConfig, _globalStubs, baseBeforeEach,
   setMockFetchHandler, clearMockFetchHandler,
 } from './_shared'
+
+// 默认 stub 的 UInput 不渲染 #trailing 插槽；UButton stub 因「内部 $emit + 原生回落」
+// 会让 click 触发两次（切换会抵消）。这里用更贴近真实的简单 stub，便于断言密码显隐按钮。
+const _configWithInputSlot = {
+  ..._globalConfig,
+  stubs: {
+    ..._globalStubs,
+    UInput: {
+      template: '<div class="uinput-wrap"><input class="uinput" :value="modelValue" :type="type" :placeholder="placeholder" @input="$emit(\'update:modelValue\', $event.target.value)" /><slot name="trailing" /></div>',
+      props: ['modelValue', 'type', 'placeholder', 'icon', 'size', 'disabled', 'autocomplete'],
+    },
+    UButton: { template: '<button class="ubtn"><slot /></button>' },
+  },
+}
 
 beforeEach(() => {
   baseBeforeEach()
@@ -40,6 +54,19 @@ describe('auth/loginForm.vue', () => {
     expect(registerBtn).toBeTruthy()
     await registerBtn!.trigger('click')
     expect(wrapper.emitted('switchToRegister')).toBeTruthy()
+  })
+
+  it('密码框右侧「查看」按钮可切换明文', async () => {
+    const { default: LoginForm } = await import('../../../components/auth/loginForm.vue')
+    const wrapper = mount(LoginForm, { global: _configWithInputSlot })
+    // 默认隐藏：type=password
+    expect(wrapper.find('input[type="password"]').exists()).toBe(true)
+    const toggle = wrapper.find('.uinput-wrap button')
+    expect(toggle.exists()).toBe(true)
+    await toggle.trigger('click')
+    // 切换为明文
+    expect(wrapper.find('input[type="password"]').exists()).toBe(false)
+    expect(wrapper.find('input[type="text"]').exists()).toBe(true)
   })
 
   it('点击忘记密码链接 emit switchToForgotPassword', async () => {

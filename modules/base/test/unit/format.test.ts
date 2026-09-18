@@ -49,6 +49,23 @@ describe('utils/format', () => {
       expect(result).toBe(expected)
     })
 
+    it('指定 timeZone 时按该时区渲染（与浏览器时区无关）', async () => {
+      const { formatTime } = await import('../../utils/format')
+      // 2024-01-15T10:30:00Z = 北京时间 18:30
+      const result = formatTime('2024-01-15T10:30:00Z', 'Asia/Shanghai')
+      const expected = new Date('2024-01-15T10:30:00Z').toLocaleString(undefined, {
+        year: 'numeric', month: 'numeric', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Shanghai',
+      })
+      expect(result).toBe(expected)
+      // 北京 18:30 与 UTC 10:30 分属不同时区：两者应不一致（证明按北京渲染而非浏览器时区）
+      const utcDisplay = new Date('2024-01-15T10:30:00Z').toLocaleString(undefined, {
+        year: 'numeric', month: 'numeric', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
+      })
+      expect(result).not.toBe(utcDisplay)
+    })
+
     it('结果包含年月日时分信息', async () => {
       const { formatTime } = await import('../../utils/format')
       const result = formatTime('2024-12-25T14:00:00')

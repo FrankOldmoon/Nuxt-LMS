@@ -17,12 +17,23 @@
       <UFormField :label="$t('auth.password')" required>
         <UInput
           v-model="password"
-          type="password"
+          :type="showPassword ? 'text' : 'password'"
           :placeholder="$t('auth.password')"
           autocomplete="current-password"
           size="lg"
           class="w-full"
-        />
+        >
+          <template #trailing>
+            <UButton
+              :icon="showPassword ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+              color="neutral"
+              variant="link"
+              size="xs"
+              :aria-label="showPassword ? $t('auth.hidePassword') : $t('auth.showPassword')"
+              @click="showPassword = !showPassword"
+            />
+          </template>
+        </UInput>
       </UFormField>
 
       <UButton
@@ -66,6 +77,8 @@ const { allowRegistration } = useSiteConfig()
 const username = ref('')
 const password = ref('')
 const loading = ref(false)
+// 密码明文切换（右侧「查看」按钮）
+const showPassword = ref(false)
 
 // 登录冷却：点击一次后倒计时 3 秒才允许再次点击
 const COOLDOWN_SECONDS = 3

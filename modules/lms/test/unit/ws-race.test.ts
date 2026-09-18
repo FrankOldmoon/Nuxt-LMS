@@ -31,6 +31,7 @@ vi.mock('../../server/utils/medals/checker', () => ({
 }))
 
 import { makeMockPeer } from '../../../../test/setup/db-helpers'
+import { db } from '@nuxthub/db'
 import { raceRooms, raceStates } from '../../server/utils/ws/state'
 import { handleRaceMessage, cleanupRacePeer } from '../../server/utils/ws/race'
 
@@ -225,6 +226,33 @@ describe('ws/race: start / question / answer', () => {
     await flushAsync()
     const sends = sendsOf(peer1)
     expect(sends.filter((m: any) => m.type === 'raceAnswerCorrect')).toHaveLength(0)
+  })
+
+  it('raceAnswer 答完私发 raceAnswerResult（含正确答案/解析）给答题者', async () => {
+    ;(db.query.questions.findFirst as any).mockResolvedValueOnce({
+      courseId: 1, cid: 50, type: 'single', answer: [0], explanation: '解析A', point: 10,
+    })
+    handleRaceMessage(makeMockPeer(), {
+      type: 'raceStart', pin: 'p1', raceCid: 100, courseId: 1, totalQuestions: 5, timeLimit: 30,
+    })
+    handleRaceMessage(makeMockPeer(), {
+      type: 'raceQuestion', pin: 'p1', raceCid: 100, questionCid: 50, questionIndex: 0, totalQuestions: 5, timeLimit: 30,
+    })
+    // 答题者本人（未加入房间，私发只发给该 peer）
+    const answerer = makeMockPeer({ userId: 1, userName: 'a' })
+    answerer.send.mockClear()
+    handleRaceMessage(answerer, {
+      type: 'raceAnswer', pin: 'p1', userId: 1, from: 'a', answer: [0], rate: 0, correct: false,
+    })
+    await flushAsync()
+    const result = sendsOf(answerer).find((m: any) => m.type === 'raceAnswerResult')
+    expect(result).toBeTruthy()
+    expect(result.raceCid).toBe(100)
+    expect(result.questionCid).toBe(50)
+    expect(result.correct).toBe(true)
+    expect(result.rate).toBe(1)
+    expect(result.answer).toEqual([0])
+    expect(result.explanation).toBe('解析A')
   })
 
   it('raceScores 携带 correctCount（答对数）', async () => {

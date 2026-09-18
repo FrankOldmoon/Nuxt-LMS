@@ -142,12 +142,13 @@ async function loadFeedbacks() {
 }
 
 watch(page, loadFeedbacks)
+// immediate: 弹窗是 Lazy + v-if 门控，组件创建即已打开，靠"变化时"触发会漏掉首次加载（管理员列表为空）
 watch(isOpen, (val) => {
   if (val && isAdmin.value) {
     page.value = 1
     loadFeedbacks()
   }
-})
+}, { immediate: true })
 
 /** content 可能是 { text: base64 }、纯 base64 字符串或旧版文档对象 */
 function imageOf(fb: any): string {

@@ -52,6 +52,7 @@
                 <component
                     ref="questionRef"
                     :is="QuestionRender"
+                    :key="currentQuestionCid"
                     :node="{ attrs: { type: 'question', content: String(currentQuestionCid) } }" />
             </div>
 

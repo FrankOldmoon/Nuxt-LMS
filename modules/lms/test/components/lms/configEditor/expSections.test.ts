@@ -70,13 +70,14 @@ describe('lms/configEditor/expSections.vue', () => {
     expect(wrapper.text()).toContain('lmsConfig.maxSubmitCount')
   })
 
-  it('渲染 homework section 的 3 个字段', async () => {
+  it('渲染 homework section 的 2 个字段', async () => {
     setupContext()
     const { default: ExpSections } = await import('../../../../components/lms/configEditor/expSections.vue')
     const wrapper = mount(ExpSections, { global: _globalConfig })
     expect(wrapper.text()).toContain('lmsConfig.submitExp')
-    expect(wrapper.text()).toContain('lmsConfig.resubmitExp')
     expect(wrapper.text()).toContain('lmsConfig.chapterScore')
+    // resubmitExp 已移除（重提交不再奖励经验）
+    expect(wrapper.text()).not.toContain('lmsConfig.resubmitExp')
     // latePenalty 已移除（作业无截止时间，从未生效）
     expect(wrapper.text()).not.toContain('lmsConfig.latePenalty')
   })
@@ -124,8 +125,8 @@ describe('lms/configEditor/expSections.vue', () => {
     const { default: ExpSections } = await import('../../../../components/lms/configEditor/expSections.vue')
     const wrapper = mount(ExpSections, { global: _globalConfig })
     const inputs = wrapper.findAll('.uinput')
-    // 4+3+4+4+5+4+3+2 = 29 个输入框
-    expect(inputs.length).toBe(29)
+    // 4+2+4+4+5+4+3+2 = 28 个输入框
+    expect(inputs.length).toBe(28)
     // 都是 number 类型
     expect(inputs[0]!.attributes('type')).toBe('number')
   })

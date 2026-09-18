@@ -16,6 +16,8 @@ beforeEach(() => {
   clearMockFetchHandler()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
   setMockLmsContext(1, 1)
+  // comment render 内含 comment-card，需 stub useSiteConfig
+  ;(globalThis as any).useSiteConfig = () => ({ config: ref({}), siteTimeZone: ref('Asia/Shanghai') })
 })
 
 const _globalStubs = {

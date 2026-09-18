@@ -29,7 +29,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
     const isLoggedIn = computed(() => !!user.value)
     const toast = useToast()
     const chapterTask = useChapterTask()
-    const { wsConnected, connect, raceJoin, onRaceJoined, sendRaceStart, onRaceStart, sendRaceQuestion, onRaceQuestion, sendRaceAnswer, onRaceAnswerUpdate, onRaceAnswerCorrect, onRaceScores, sendRaceQuestionEnd, onRaceQuestionEnd, sendRaceEnd, onRaceEnd, sendRaceOnline, onRaceOnlineUpdate } = useWebSocket()
+    const { wsConnected, connect, raceJoin, onRaceJoined, sendRaceStart, onRaceStart, sendRaceQuestion, onRaceQuestion, sendRaceAnswer, onRaceAnswerUpdate, onRaceAnswerCorrect, onRaceAnswerResult, onRaceScores, sendRaceQuestionEnd, onRaceQuestionEnd, sendRaceEnd, onRaceEnd, sendRaceOnline, onRaceOnlineUpdate } = useWebSocket()
 
     // 告知 question 组件当前在 race 中：显示提交按钮但不向后端提交，
     // 提交时触发 onRaceSubmit 回调（显式提交，避免 record 非空即自动提交）
@@ -238,6 +238,15 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         setTimeout(() => {
             raceBarrages.value = raceBarrages.value.filter(b => b.id !== item.id)
         }, 4000)
+    }))
+
+    // 答完私发给本人：展示正误 + 正确答案/解析（学生端）
+    wsUnsubs.push(onRaceAnswerResult((data: any) => {
+        if (data.raceCid !== raceId.value) return
+        if (Number(data.questionCid) !== Number(currentQuestionCid.value)) return
+        // 以服务端重算的 rate 校准正误，再揭示正确答案/解析
+        questionRef.value?.showResult?.(Number(data.rate) || 0)
+        questionRef.value?.revealAnswer?.(data.answer ?? [], data.explanation ?? '')
     }))
 
     wsUnsubs.push(onRaceQuestionEnd((data: any) => {

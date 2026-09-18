@@ -3,10 +3,10 @@
  * POST /api/homeworks/submit
  * body: { course_id, chapter_id?, homework_cid, files?, content? }
  *
- * 防刷策略（详见 utils/submit/homework.ts）：
- *  - 首次提交：给 submitExp 经验
- *  - 重提交：在 resubmitCount 限额内给 resubmitExp，超出后 gainedExp=0
- *  - 作业分数由教师批改后通过 score API 更新（此处只更新经验）
+ * 防刷策略：
+ *  - 首次提交：给 submitExp 经验 / submitCoin 金币，并计入首次提交章节分
+ *  - 重提交：不再奖励任何经验/金币/章节分（gainedExp=gainedCoin=submitScore=0）
+ *  - 作业分数由教师批改后通过 score API 更新（此处只更新经验/金币）
  *  - 提交次数记录在 userHomeworks.record._submitCount 内部字段
  */
 import { db, schema } from '@nuxthub/db'
@@ -24,26 +24,22 @@ export default withSubmitHandler('提交作业失败', async (event) => {
   const { user, courseId, cid: homeworkCid, section: hConfig, body } = ctx
 
   const { files, content } = body
-  const maxResubmitCount = Number(hConfig.maxResubmitCount ?? 3)
 
-  // 1. 查找已有记录
+  // 1. 查找已有记录（仅统计学生真实提交；教师「仅评分」行不算）
   const existing = await findUserSubmitRecord(user.id, courseId, 'homework', homeworkCid)
   const recordMeta: any = (existing?.record && typeof existing.record === 'object') ? existing.record : {}
   const prevResubmitCount = Number(recordMeta._submitCount || 0)
   const nextResubmitCount = prevResubmitCount + 1
 
-  // 2. 计算经验值 + 金币
+  // 2. 计算经验值 + 金币：仅「首次提交」发放；第二次起（重提交）一律为 0
   let gainedExp: number
   let gainedCoin: number
   if (!existing) {
     gainedExp = hConfig.submitExp
     gainedCoin = hConfig.submitCoin
-  } else if (nextResubmitCount > maxResubmitCount) {
+  } else {
     gainedExp = 0
     gainedCoin = 0
-  } else {
-    gainedExp = hConfig.resubmitExp
-    gainedCoin = hConfig.resubmitCoin
   }
 
   // 3. 写 userHomeworks

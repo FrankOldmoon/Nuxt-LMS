@@ -1148,6 +1148,7 @@
     "optionDistribution": "Option Distribution",
     "selectedCount": "Selected Count",
     "scoreUnit": "pts",
+    "fullScore": "Full Score",
     "downloadAllFiles": "Download All Files",
     "downloadAllDone": "Packaged {saved}/{total} attachments",
     "downloadAllFailed": "Failed to package attachments",

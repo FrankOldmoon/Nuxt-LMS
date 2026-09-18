@@ -1148,6 +1148,7 @@
     "optionDistribution": "选项分布",
     "selectedCount": "选择数",
     "scoreUnit": "分",
+    "fullScore": "满分",
     "downloadAllFiles": "下载全部附件",
     "downloadAllDone": "已打包下载 {saved}/{total} 个附件",
     "downloadAllFailed": "附件打包下载失败",

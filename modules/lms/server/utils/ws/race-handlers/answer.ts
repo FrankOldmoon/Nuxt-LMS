@@ -10,7 +10,7 @@ import { and, eq } from 'drizzle-orm'
 import { raceStates, broadcastToRace, computeRaceScores } from '../state'
 import { computeServerRate } from '../../submit/verify'
 
-export async function handleRaceAnswer(_peer: any, data: any) {
+export async function handleRaceAnswer(peer: any, data: any) {
   const pin = String(data.pin || '')
   const race = raceStates.get(pin); if (!race || !race.activeQuestionCid) return
   const userId = Number(data.userId)
@@ -21,6 +21,9 @@ export async function handleRaceAnswer(_peer: any, data: any) {
   // 服务端判分：按题目定义重算（客户端传的 rate/correct 仅作参考，不采信）
   let rate = Math.max(0, Math.min(1, Number(data.rate) || 0))
   let correct = !!data.correct
+  // 正确答案 / 解析：判分时一并取出，答完私发给答题者本人（不向房间广播，避免泄露给未作答学生）
+  let correctAnswer: any = null
+  let explanation: any = null
   try {
     const question = await db.query.questions.findFirst({
       where: and(
@@ -32,6 +35,8 @@ export async function handleRaceAnswer(_peer: any, data: any) {
       rate = computeServerRate(question, data.answer)
       correct = rate > 0
       race.questionPoints.set(questionCid, Number(question.point) || 1)
+      correctAnswer = (question as any).answer ?? null
+      explanation = (question as any).explanation ?? null
     }
   } catch { /* 判分失败退回客户端值 */ }
 
@@ -44,6 +49,19 @@ export async function handleRaceAnswer(_peer: any, data: any) {
     raceCid: race.raceCid, questionCid, answeredCount: qAnswers.size }))
   broadcastToRace(pin, JSON.stringify({ type: 'raceScores',
     raceCid: race.raceCid, scores: computeRaceScores(race) }))
+
+  // 答完即把「正误 + 正确答案/解析」私发给答题者本人（该用户本场该题已锁定，无法再答）
+  try {
+    peer.send(JSON.stringify({
+      type: 'raceAnswerResult',
+      raceCid: race.raceCid,
+      questionCid,
+      rate,
+      correct,
+      answer: correctAnswer,
+      explanation,
+    }))
+  } catch { /* peer 已断开 */ }
 
   // 答对者弹幕：向竞赛房间广播（竞赛参与者均可收到，含学生端）
   if (correct) {

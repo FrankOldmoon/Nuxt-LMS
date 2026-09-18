@@ -16,8 +16,6 @@ export const learningDefaults = {
   homework: {
     submitExp: 5,
     submitCoin: 5,
-    resubmitExp: 1,
-    resubmitCoin: 1,
     // 首次提交作业奖励的章节分（同时计入课程 homeworkScore 分项）
     chapterScore: 3,
   },

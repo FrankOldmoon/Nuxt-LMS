@@ -8,6 +8,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 const _mockDb: any = {
   query: {
     userHomeworks: { findFirst: vi.fn() },
+    homeworks: { findFirst: vi.fn() },
     comments: { findFirst: vi.fn() },
   },
   select: vi.fn().mockReturnThis(),

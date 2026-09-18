@@ -6,10 +6,14 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ref } from 'vue'
 import { resetAllStubs, setMockI18n, setMockLmsContext, getToastCalls } from '../../../../test/setup/nuxt-stubs'
 
-// 「一键下载全部附件」动态 import('jszip')：用轻量假实现，避免真实压缩开销
+// 「一键下载全部附件」动态 import('jszip')：用轻量假实现，避免真实压缩开销。
+// 记录写入 zip 的文件条目（folderPath/fileName/content），便于断言外链生成了 .url 文件。
+const zipEntries: { folder: string; name: string; content: any }[] = []
 vi.mock('jszip', () => ({
   default: class {
-    folder() { return { file: () => {} } }
+    folder(name: string) {
+      return { file: (fileName: string, content: any) => { zipEntries.push({ folder: name, name: fileName, content }) } }
+    }
     async generateAsync() { return new Blob(['zip']) }
   },
 }))
@@ -25,6 +29,7 @@ beforeEach(async () => {
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
   setMockLmsContext(1, 1)
   ;(globalThis as any).useClassUsers = () => ({ students: ref(students), teachers: ref([]) })
+  zipEntries.length = 0
 })
 
 async function makeCtx(records: any[]) {
@@ -85,6 +90,35 @@ describe('useHomeworkRecords 全屏评阅', () => {
     expect(ctx.hasSubmission(row.record)).toBe(false)
   })
 
+  it('onScoreBlur：分数超过满分时钳制到满分', async () => {
+    const calls: any[] = []
+    const ctx = await makeCtx([])
+    ;(globalThis as any).cRequest = async (url: string, opts: any) => { calls.push({ url, opts }); return [] }
+    await ctx.fetchRecords()
+    const row = ctx.rows.value.find(r => r.id === 2)!
+    ctx.scoreMap[row.id] = 999
+    await ctx.onScoreBlur(row)
+    const scoreCall = calls.find(c => c.url === '/api/homeworks/score')
+    expect(scoreCall.opts.body.score).toBe(10) // maxScore=10
+    expect(ctx.scoreMap[row.id]).toBe(10)
+  })
+
+  it('onScoreBlur：分数为负时钳制到 0，且支持小数', async () => {
+    const calls: any[] = []
+    const ctx = await makeCtx([])
+    ;(globalThis as any).cRequest = async (url: string, opts: any) => { calls.push({ url, opts }); return [] }
+    await ctx.fetchRecords()
+    const row = ctx.rows.value.find(r => r.id === 2)!
+    ctx.scoreMap[row.id] = -3
+    await ctx.onScoreBlur(row)
+    expect(calls.find(c => c.url === '/api/homeworks/score').opts.body.score).toBe(0)
+    // 小数保留
+    calls.length = 0
+    ctx.scoreMap[row.id] = 6.5
+    await ctx.onScoreBlur(row)
+    expect(calls.find(c => c.url === '/api/homeworks/score').opts.body.score).toBe(6.5)
+  })
+
   it('submittedAtOf：优先 _submittedAt，回退 createdAt，并暴露提交时间列', async () => {
     const ctx = await makeCtx([])
     expect(ctx.extraColumns.value.map((c: any) => c.id)).toContain('submittedAt')
@@ -136,6 +170,45 @@ describe('useHomeworkRecords 全屏评阅', () => {
       expect(click).toHaveBeenCalled()
       expect(String(fakeLink.download)).toContain('.zip')
       expect(getToastCalls().some((c: any) => c.title === 'record.downloadAllDone')).toBe(true)
+    } finally {
+      createEl.mockRestore()
+      append.mockRestore()
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('downloadAllFiles：外链附件不实际下载，生成本站外链可双击的 .url 文件', async () => {
+    const ctx = await makeCtx([
+      { userId: 1, record: { files: ['https://example.com/share/a.pdf'], record: { _submitCount: 1 } } },
+      { userId: 2, record: { files: ['/api/files/serve?pathname=2%2Frealfile.pdf'], record: { _submitCount: 1 } } },
+    ])
+    await ctx.fetchRecords()
+    ;(globalThis as any).getFileNameFromUrl = (url: string) => {
+      const u = new URL(url, 'http://x')
+      const p = u.searchParams.get('pathname')
+      if (p) return p.split('/').pop() || p || 'file'
+      return u.pathname.split('/').pop() || 'file'
+    }
+    const fetchSpy = vi.fn(async () => ({ ok: true, blob: async () => new Blob(['f']) }))
+    vi.stubGlobal('fetch', fetchSpy)
+    ;(URL as any).createObjectURL = vi.fn(() => 'blob:x')
+    ;(URL as any).revokeObjectURL = vi.fn()
+    const click = vi.fn()
+    const fakeLink: any = { href: '', download: '', click, remove: vi.fn() }
+    const createEl = vi.spyOn(document, 'createElement').mockReturnValue(fakeLink)
+    const append = vi.spyOn(document.body, 'appendChild').mockImplementation(() => fakeLink)
+
+    try {
+      await ctx.downloadAllFiles()
+      // 外链：不调用 fetch，且写入 .url 快捷方式
+      const urlEntry = zipEntries.find(e => e.name.endsWith('.url'))
+      expect(urlEntry).toBeTruthy()
+      expect(String(urlEntry!.content)).toContain('https://example.com/share/a.pdf')
+      expect(String(urlEntry!.content)).toContain('[InternetShortcut]')
+      // 本站文件：走 fetch 下载真实内容
+      const realEntry = zipEntries.find(e => e.name === 'realfile.pdf')
+      expect(realEntry).toBeTruthy()
+      expect(fetchSpy).toHaveBeenCalledTimes(1)
     } finally {
       createEl.mockRestore()
       append.mockRestore()

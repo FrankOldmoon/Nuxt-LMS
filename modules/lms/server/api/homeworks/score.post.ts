@@ -14,9 +14,25 @@ export default eventHandler(async (event) => {
   const courseId = Number(course_id)
   const chapterId = Number(chapter_id) || 0
   const userId = Number(user_id)
-  const newScore = score === null || score === '' ? null : Number(score)
 
   try {
+    // 查询作业满分：用于把打分钳制到 [0, 满分]，防止越界分数入库
+    const homework = await db.query.homeworks.findFirst({
+      where: and(
+        eq(schema.homeworks.courseId, courseId),
+        eq(schema.homeworks.cid, Number(homework_cid))
+      )
+    })
+    const maxScore = Number((homework as any)?.point) || 0
+
+    let newScore = score === null || score === '' ? null : Number(score)
+    // 钳制：非法值 → null；负数 → 0；超过满分 → 满分
+    if (newScore != null && !Number.isFinite(newScore)) newScore = null
+    if (newScore != null) {
+      if (newScore < 0) newScore = 0
+      if (maxScore > 0 && newScore > maxScore) newScore = maxScore
+    }
+
     // 查询旧分数
     const existing = await db.query.userHomeworks.findFirst({
       where: and(

@@ -155,12 +155,29 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
         }
     }
 
+    /** 打分上限（homework 满分），用于输入框与保存时的边界钳制 */
+    const maxScoreValue = computed(() => Number(props.maxScore) || 0)
+
+    /** 将分数钳制到 [0, 满分]；空值返回 null（表示未设置） */
+    function clampScore(value: any): number | null {
+        if (value === null || value === undefined || value === '') return null
+        let n = Number(value)
+        if (!Number.isFinite(n)) return null
+        if (n < 0) n = 0
+        const max = maxScoreValue.value
+        if (max > 0 && n > max) n = max
+        return n
+    }
+
     // 保存打分
     async function onScoreBlur(row) {
-        const val = scoreMap[row.id]
-        if (val === null || val === undefined || val === '') return
+        const raw = scoreMap[row.id]
+        const val = clampScore(raw)
+        // 超出范围的输入即时回显钳制后的值，给用户反馈
+        if (val !== null && Number(raw) !== val) scoreMap[row.id] = val
+        if (val === null) return
         const original = row.record?.score != null ? Number(row.record.score) : null
-        if (original === Number(val)) return
+        if (original === val) return
 
         try {
             await cRequest('/api/homeworks/score', {
@@ -355,6 +372,22 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
         return candidate
     }
 
+    /** 是否为「外部链接」（非本站文件）：本站上传文件走 /api/files/*，其它一律视为外链 */
+    function isExternalLink(url: string): boolean {
+        try {
+            const u = new URL(url, window.location.origin)
+            // 本站文件：/api/files/serve 等
+            return !u.pathname.startsWith('/api/files/')
+        } catch {
+            return false
+        }
+    }
+
+    /** 外部链接 → 可双击打开的 .url 快捷方式内容（Windows InternetShortcut） */
+    function urlShortcutContent(url: string): string {
+        return `[InternetShortcut]\r\nURL=${url}\r\n`
+    }
+
     /**
      * 一键下载所有学生的作业附件：按「学生」分文件夹打包为 zip。
      * 单个文件下载失败会跳过，不影响整体；全部失败则提示。
@@ -390,6 +423,18 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
                 const usedNames = new Set<string>()
                 for (const url of group.files) {
                     total += 1
+                    // 外部链接：不实际下载（跨域/不可达），改为生成可双击打开的 .url 快捷方式
+                    if (isExternalLink(url)) {
+                        try {
+                            const rawName = safeSegment(getFileNameFromUrl(url)) || 'link'
+                            let fileName = rawName.toLowerCase().endsWith('.url') ? rawName : `${rawName}.url`
+                            fileName = uniqueName(fileName, usedNames)
+                            usedNames.add(fileName)
+                            folder.file(fileName, urlShortcutContent(url))
+                            saved += 1
+                        } catch { /* 单个链接失败跳过 */ }
+                        continue
+                    }
                     try {
                         const resp = await fetch(url)
                         if (!resp.ok) throw new Error(`HTTP ${resp.status}`)

@@ -152,6 +152,27 @@ describe('composables/useChapterScore', () => {
     expect(r.loading.value).toBe(false)
   })
 
+  it('isOpen 初始即为 true（弹窗被 v-if 门控）时挂载即加载', async () => {
+    // 回归：弹窗改成 Lazy + v-if 后，组件创建时 isOpen 已是 true，
+    // watch(isOpen) 若不开 immediate 就永远不触发，打开得分弹窗无数据
+    setMockFetchHandler(async (url) => {
+      if (url.includes('/api/classes/users')) {
+        return { data: [{ id: 1, name: 'alice', isTeacher: false }], success: true, msg: '' }
+      }
+      if (url.includes('/api/chapters/scores')) {
+        return { data: [{ userId: 1, score: 80, items: [], taskStatus: { h1: true } }], success: true, msg: '' }
+      }
+      return { data: null, success: true, msg: '' }
+    })
+    const isOpen = ref(true)
+    const { useChapterScore } = await import('../../composables/useChapterScore')
+    const r = useChapterScore({ courseId: 1, chapterId: 10, classId: 100 }, isOpen)
+    await vi.waitFor(() => {
+      expect(r.scoreData.value).toHaveLength(1)
+    })
+    expect(r.tableRows.value[0].score).toBe(80)
+  })
+
   it('isOpen 变 true 时触发 loadData', async () => {
     setMockFetchHandler(async (url) => {
       if (url.includes('/api/classes/users')) {

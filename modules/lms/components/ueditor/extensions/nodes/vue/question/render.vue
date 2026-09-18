@@ -74,10 +74,10 @@ const {
     question, pending, questionId, isTeacher, typeLabel,
     showFireworks, containerBorderClass, hasAnswer, scoreDisplay,
     renderComponent, renderRef, editOpen, recordsOpen, onHover, onSaved,
-    getQuestionData, fillFromRecord, showResult, resetForQuiz,
+    getQuestionData, fillFromRecord, showResult, resetForQuiz, revealAnswer,
 } = useQuestionRender(props, emit)
 
-defineExpose({ getQuestionData, fillFromRecord, showResult, resetForQuiz, get hasAnswer() { return hasAnswer.value } })
+defineExpose({ getQuestionData, fillFromRecord, showResult, resetForQuiz, revealAnswer, get hasAnswer() { return hasAnswer.value } })
 </script>
 
 <style scoped>

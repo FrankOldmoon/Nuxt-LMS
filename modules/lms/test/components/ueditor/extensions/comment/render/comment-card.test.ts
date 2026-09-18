@@ -4,11 +4,14 @@
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { ref } from 'vue'
 import { resetAllStubs, setMockI18n, setMockAuthUser } from '../../../../../../../../test/setup/nuxt-stubs'
 
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
+  // comment-card uses useSiteConfig to render time in the site timezone; stub it here
+  ;(globalThis as any).useSiteConfig = () => ({ config: ref({}), siteTimeZone: ref('Asia/Shanghai') })
 })
 
 const _globalStubs = {

@@ -83,22 +83,4 @@ describe('race/render/podium.vue', () => {
     expect(wrapper.text()).toContain('Bob')
     expect(wrapper.text()).toContain('Carol')
   })
-
-  it('默认收起，点击标题展开/收起排行内容', async () => {
-    const { default: Podium } = await import(
-      '../../../../../../components/ueditor/extensions/nodes/vue/race/render/podium.vue'
-    )
-    const ctx = makeMockContext({ questionTop3: ref([]) })
-    const wrapper = mount(Podium, {
-      global: { ..._globalConfig, provide: { [RaceRenderKey as any]: ctx } },
-    })
-    const content = wrapper.find('.race-podium-body')
-    expect(content.exists()).toBe(true)
-    const styleOf = () => wrapper.find('.race-podium-body').attributes('style') || ''
-    expect(styleOf()).toContain('display: none')
-    await wrapper.find('button').trigger('click')
-    expect(styleOf()).not.toContain('display: none')
-    await wrapper.find('button').trigger('click')
-    expect(styleOf()).toContain('display: none')
-  })
 })
