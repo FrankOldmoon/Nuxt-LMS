@@ -60,14 +60,58 @@
       "generatedAt": "生成于",
       "empty": "暂无数据",
       "section": {
+        "insights": "关键洞察",
         "scale": "规模概览",
         "users": "用户与角色",
         "trend": "趋势",
+        "growth": "增长与结构分析",
         "distribution": "分布",
         "ability": "能力与内容",
         "ranking": "排行",
+        "risk": "学困生预警",
         "quality": "内容质量",
         "interaction": "互动与游戏化"
+      },
+      "insights": {
+        "health": "平台健康度",
+        "alertTitle": "风险提示",
+        "noAlert": "暂无风险项",
+        "level": {
+          "good": "良好",
+          "warning": "关注",
+          "danger": "预警"
+        },
+        "metric": {
+          "active": "学生活跃度",
+          "completion": "学习完成度",
+          "pass": "成绩达标率",
+          "publish": "课程发布率",
+          "interaction": "互动活跃度"
+        },
+        "alert": {
+          "lowPass": "成绩及格率偏低（{n}%）",
+          "atRisk": "{n} 名学困生需要关注",
+          "learningDown": "学习行为环比下降（{n}%）",
+          "lowActive": "近 30 天学生活跃率偏低（{n}%）",
+          "showcasesPending": "待审作品 {n} 个",
+          "pendingComments": "待审评论 {n} 条",
+          "unanswered": "无人作答题目 {n} 道",
+          "draftCourses": "草稿课程 {n} 门未发布"
+        }
+      },
+      "growth": {
+        "learning7d": "学习行为（近 7 天）",
+        "newUsers7d": "新增用户（近 7 天）",
+        "peakDay": "学习行为峰值",
+        "avgScore": "平台平均成绩",
+        "avgProgress": "平均学习进度",
+        "enrolledStudents": "在读学生",
+        "scoreStructure": "成绩结构分析",
+        "totalRecords": "样本",
+        "excellent": "优秀（80+）",
+        "good": "良好（70-79）",
+        "pass": "及格（60-69）",
+        "fail": "不及格（<60）"
       },
       "kpi": {
         "users": "用户总数",
@@ -145,7 +189,8 @@
         "submitCount": "作答次数",
         "correctRate": "正确率",
         "courseRanking": "课程排行（按选课人数）",
-        "topStudents": "学生排行（按累计分）"
+        "topStudents": "学生排行（按累计分）",
+        "atRiskStudents": "重点关注学生（累计分最低）"
       },
       "quality": {
         "hardest": "最难题目（正确率最低）",

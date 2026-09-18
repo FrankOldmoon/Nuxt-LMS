@@ -60,14 +60,58 @@
       "generatedAt": "Generated at",
       "empty": "No data",
       "section": {
+        "insights": "Key Insights",
         "scale": "Scale",
         "users": "Users & Roles",
         "trend": "Trends",
+        "growth": "Growth & Structure",
         "distribution": "Distribution",
         "ability": "Ability & Content",
         "ranking": "Rankings",
+        "risk": "At-risk Students",
         "quality": "Content Quality",
         "interaction": "Interaction & Gamification"
+      },
+      "insights": {
+        "health": "Platform Health",
+        "alertTitle": "Risk Alerts",
+        "noAlert": "No risks detected",
+        "level": {
+          "good": "Good",
+          "warning": "Watch",
+          "danger": "Alert"
+        },
+        "metric": {
+          "active": "Student Activity",
+          "completion": "Learning Completion",
+          "pass": "Pass Rate",
+          "publish": "Course Publish Rate",
+          "interaction": "Interaction"
+        },
+        "alert": {
+          "lowPass": "Low pass rate ({n}%)",
+          "atRisk": "{n} at-risk students need attention",
+          "learningDown": "Learning activity down {n}% period over period",
+          "lowActive": "Low 30-day student activity rate ({n}%)",
+          "showcasesPending": "{n} showcases pending review",
+          "pendingComments": "{n} comments pending review",
+          "unanswered": "{n} questions with no attempts",
+          "draftCourses": "{n} draft courses unpublished"
+        }
+      },
+      "growth": {
+        "learning7d": "Learning Activity (7d)",
+        "newUsers7d": "New Users (7d)",
+        "peakDay": "Peak Learning Activity",
+        "avgScore": "Average Score",
+        "avgProgress": "Average Progress",
+        "enrolledStudents": "Enrolled Students",
+        "scoreStructure": "Score Structure",
+        "totalRecords": "Sample",
+        "excellent": "Excellent (80+)",
+        "good": "Good (70-79)",
+        "pass": "Pass (60-69)",
+        "fail": "Fail (<60)"
       },
       "kpi": {
         "users": "Total Users",
@@ -145,7 +189,8 @@
         "submitCount": "Submissions",
         "correctRate": "Correct Rate",
         "courseRanking": "Top Courses (by enrollment)",
-        "topStudents": "Top Students (by score)"
+        "topStudents": "Top Students (by score)",
+        "atRiskStudents": "At-risk Students (lowest score)"
       },
       "quality": {
         "hardest": "Hardest Questions (lowest correct rate)",

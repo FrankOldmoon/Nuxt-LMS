@@ -142,7 +142,7 @@
               class="h-full"
               :class="seg.cls"
               :style="{ width: `${seg.pct}%` }"
-              :title="`${t(`admin.report.growth.${seg.key}`)} ${seg.pct}%`"
+              :title="t('admin.report.growth.' + seg.key) + ' ' + seg.rate + '%'"
             />
           </div>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
@@ -188,7 +188,7 @@
         </div>
       </section>
 
-      <!-- ④ 能力雷达 + 内容分布 -->
+      <!-- ⑤ 能力雷达 + 内容分布 -->
       <section class="space-y-3">
         <h3 class="text-sm font-semibold text-muted">{{ t('admin.report.section.ability') }}</h3>
         <div class="grid lg:grid-cols-2 gap-4">
@@ -209,7 +209,7 @@
         </div>
       </section>
 
-      <!-- ⑤ 排行 -->
+      <!-- ⑥ 排行 -->
       <section class="space-y-3">
         <h3 class="text-sm font-semibold text-muted">{{ t('admin.report.section.ranking') }}</h3>
         <div class="grid lg:grid-cols-2 gap-4">
@@ -283,7 +283,47 @@
         </div>
       </section>
 
-      <!-- ⑥ 内容质量 -->
+      <!-- ⑦ 学困生预警 -->
+      <section class="space-y-3">
+        <h3 class="text-sm font-semibold text-muted">{{ t('admin.report.section.risk') }}</h3>
+        <div class="rounded-lg border border-default bg-default overflow-hidden">
+          <div class="px-3 py-2 border-b border-default text-xs font-medium text-muted flex items-center gap-2">
+            <UIcon name="i-lucide-triangle-alert" class="w-3.5 h-3.5 text-amber-500" />
+            {{ t('admin.report.table.atRiskStudents') }}
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="text-xs text-muted">
+                <tr class="border-b border-default">
+                  <th class="text-left px-3 py-2 font-medium w-12">{{ t('admin.report.table.rank') }}</th>
+                  <th class="text-left px-3 py-2 font-medium">{{ t('admin.report.table.name') }}</th>
+                  <th class="text-left px-3 py-2 font-medium">{{ t('admin.report.table.className') }}</th>
+                  <th class="text-right px-3 py-2 font-medium">{{ t('admin.report.table.score') }}</th>
+                  <th class="text-right px-3 py-2 font-medium">{{ t('admin.report.table.avgProgress') }}</th>
+                  <th class="text-right px-3 py-2 font-medium">{{ t('admin.report.table.exp') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="s in report.atRiskStudents" :key="s.userId" class="border-b border-default last:border-0">
+                  <td class="px-3 py-2 tabular-nums">
+                    <UBadge color="error" variant="subtle" size="sm">{{ s.rank }}</UBadge>
+                  </td>
+                  <td class="px-3 py-2 truncate max-w-40">{{ s.name }}</td>
+                  <td class="px-3 py-2 truncate max-w-32 text-muted">{{ s.className }}</td>
+                  <td class="px-3 py-2 text-right tabular-nums">{{ s.score }}</td>
+                  <td class="px-3 py-2 text-right tabular-nums">{{ s.avgProgress }}%</td>
+                  <td class="px-3 py-2 text-right tabular-nums">{{ fmt(s.exp) }}</td>
+                </tr>
+                <tr v-if="!report.atRiskStudents.length">
+                  <td colspan="6" class="px-3 py-6 text-center text-muted text-xs">{{ t('admin.report.empty') }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑧ 内容质量 -->
       <section class="space-y-3">
         <h3 class="text-sm font-semibold text-muted">{{ t('admin.report.section.quality') }}</h3>
 
@@ -310,7 +350,7 @@
         </div>
       </section>
 
-      <!-- ⑦ 互动与游戏化 -->
+      <!-- ⑨ 互动与游戏化 -->
       <section class="space-y-3">
         <h3 class="text-sm font-semibold text-muted">{{ t('admin.report.section.interaction') }}</h3>
         <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3">
@@ -326,6 +366,15 @@
 
 <script setup lang="ts">
 import QuestionTable from '../components/report/questionTable.vue'
+import {
+  buildAlerts,
+  buildHealth,
+  peakOf,
+  percentOf,
+  periodGrowth,
+  scoreStructure,
+  type InsightLevel,
+} from '../utils/reportAnalysis'
 
 definePageMeta({ layout: 'admin' })
 
@@ -341,6 +390,81 @@ const generatedAtText = computed(() => {
   const iso = report.value?.generatedAt
   if (!iso) return ''
   return String(iso).replace('T', ' ').slice(0, 16)
+})
+
+// ── 分析层：等级配色 ──
+const levelText = (l: InsightLevel) =>
+  l === 'good' ? 'text-green-500' : l === 'warning' ? 'text-amber-500' : 'text-red-500'
+const levelBar = (l: InsightLevel) =>
+  l === 'good' ? 'bg-green-500' : l === 'warning' ? 'bg-amber-500' : 'bg-red-500'
+const levelBadge = (l: InsightLevel) =>
+  l === 'good'
+    ? 'bg-green-500/10 text-green-600'
+    : l === 'warning'
+      ? 'bg-amber-500/10 text-amber-600'
+      : 'bg-red-500/10 text-red-600'
+const trendClass = (rate: number | null) =>
+  rate === null ? 'text-muted' : rate >= 0 ? 'text-green-500' : 'text-red-500'
+const trendIcon = (rate: number | null) =>
+  rate === null ? 'i-lucide-minus' : rate >= 0 ? 'i-lucide-trending-up' : 'i-lucide-trending-down'
+
+// ── 分析层：成绩结构 ──
+const scoreStruct = computed(() => scoreStructure(report.value?.scoreDistribution ?? []))
+
+const scoreSegments = computed(() => {
+  const s = scoreStruct.value
+  const total = s.total || 1
+  return [
+    { key: 'excellent', count: s.excellent, rate: s.excellentRate, pct: (s.excellent / total) * 100, cls: 'bg-green-500' },
+    { key: 'good', count: s.good, rate: percentOf(s.good, s.total), pct: (s.good / total) * 100, cls: 'bg-sky-500' },
+    { key: 'pass', count: s.pass, rate: percentOf(s.pass, s.total), pct: (s.pass / total) * 100, cls: 'bg-amber-500' },
+    { key: 'fail', count: s.fail, rate: s.failRate, pct: (s.fail / total) * 100, cls: 'bg-red-500' },
+  ]
+})
+
+// ── 分析层：环比 / 峰值 ──
+const learningCompare = computed(() => periodGrowth<any>(report.value?.learningTrend ?? [], 7, (r) => r.total))
+const userCompare = computed(() => periodGrowth<any>(report.value?.userGrowth ?? [], 7, (r) => r.count))
+const peakLearning = computed(() => peakOf<any>(report.value?.learningTrend ?? [], (r) => r.total))
+const activeRate = computed(() => percentOf(report.value?.kpi?.users?.active30d ?? 0, report.value?.kpi?.users?.students ?? 0))
+
+// ── 分析层：平台健康度 ──
+const insights = computed(() => buildHealth({
+  students: report.value?.kpi?.users?.students ?? 0,
+  active30d: report.value?.kpi?.users?.active30d ?? 0,
+  avgProgress: report.value?.analytics?.avgProgress ?? 0,
+  passRate: scoreStruct.value.passRate,
+  coursesTotal: report.value?.kpi?.courses?.total ?? 0,
+  coursesPublished: report.value?.kpi?.courses?.published ?? 0,
+  enrolledStudents: report.value?.analytics?.enrolledStudents ?? 0,
+  commentLikes: report.value?.kpi?.interaction?.commentLikes ?? 0,
+  commentReplies: report.value?.kpi?.interaction?.commentReplies ?? 0,
+}))
+
+const alerts = computed(() => buildAlerts({
+  showcasesPending: report.value?.kpi?.interaction?.showcasesPending ?? 0,
+  pendingComments: report.value?.contentQuality?.comments?.pending ?? 0,
+  unansweredQuestions: report.value?.contentQuality?.unansweredQuestions ?? 0,
+  draftCourses: report.value?.kpi?.courses?.draft ?? 0,
+  activeRate: activeRate.value,
+  passRate: scoreStruct.value.passRate,
+  atRisk: report.value?.atRiskStudents?.length ?? 0,
+  learningRate: learningCompare.value.rate,
+}))
+
+type AnalysisCard = { key: string; value: string; label: string; rate: number | null; hint?: string }
+
+const growthCards = computed<AnalysisCard[]>(() => {
+  if (!report.value?.kpi) return []
+  const peak = peakLearning.value
+  return [
+    { key: 'learning7d', value: fmt(learningCompare.value.current), label: t('admin.report.growth.learning7d'), rate: learningCompare.value.rate },
+    { key: 'newUsers7d', value: fmt(userCompare.value.current), label: t('admin.report.growth.newUsers7d'), rate: userCompare.value.rate },
+    { key: 'peakDay', value: fmt(peak?.value ?? 0), label: t('admin.report.growth.peakDay'), rate: null, hint: peak?.row?.date?.slice(5) },
+    { key: 'avgScore', value: String(report.value?.analytics?.avgScore ?? 0), label: t('admin.report.growth.avgScore'), rate: null },
+    { key: 'avgProgress', value: `${report.value?.analytics?.avgProgress ?? 0}%`, label: t('admin.report.growth.avgProgress'), rate: null },
+    { key: 'enrolledStudents', value: fmt(report.value?.analytics?.enrolledStudents), label: t('admin.report.growth.enrolledStudents'), rate: null },
+  ]
 })
 
 // ── KPI 卡片 ──
