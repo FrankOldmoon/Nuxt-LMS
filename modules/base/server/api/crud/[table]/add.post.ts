@@ -7,6 +7,8 @@ export default eventHandler(async (event) => {
 
   try {
     const result = await addTable(table, body)
+    // configs 表写入会影响内存配置缓存，bump 版本戳让所有进程重载
+    if (table === 'configs') await bumpConfigVersion()
     return cResp(result)
   } catch (error: any) {
     console.error('插入失败:', error)

@@ -560,8 +560,8 @@ export async function exportTableRows(_tableName: string, _query?: any) {
 }
 
 /** cResp — 统一响应包装（mock 版本） */
-export function cResp(data: any = null, msg: string = '', success: boolean = true) {
-  return { data, msg, success }
+export function cResp(data: any = null, msg: string = '', success: boolean = true, code?: string) {
+  return code ? { data, msg, success, code } : { data, msg, success }
 }
 
 /** hashPassword / verifyPassword / generateToken 桩
@@ -640,6 +640,32 @@ export async function upsertConfig(key: string, value: any) {
 }
 export async function reloadConfig() {
   // mock：无操作；真实实现会重读 db
+}
+
+/** 配置版本戳 / 重载器 / 新鲜度检查 桩 */
+let _mockConfigVersion: string | null = 'v0'
+export async function bumpConfigVersion(): Promise<string> {
+  _mockConfigVersion = `v${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  return _mockConfigVersion
+}
+export async function readConfigVersion(): Promise<string | null> {
+  return _mockConfigVersion
+}
+export function _resetMockConfigVersion() {
+  _mockConfigVersion = 'v0'
+}
+const _configReloaders: Array<() => any> = []
+export function registerConfigReloader(fn: () => any) {
+  _configReloaders.push(fn)
+}
+export async function runConfigReloaders(): Promise<void> {
+  for (const fn of _configReloaders) await fn()
+}
+export function clearConfigReloaders() {
+  _configReloaders.length = 0
+}
+export async function ensureConfigFresh(): Promise<void> {
+  // mock：无操作
 }
 
 /** broadcastToAll（WebSocket）桩 */
@@ -1313,6 +1339,11 @@ const _stubsToExpose: Record<string, any> = {
   setMockAuthState,
   upsertConfig,
   reloadConfig,
+  bumpConfigVersion,
+  readConfigVersion,
+  registerConfigReloader,
+  runConfigReloaders,
+  ensureConfigFresh,
   broadcastToAll,
   getWsBroadcasts,
   clearWsBroadcasts,
@@ -1416,6 +1447,8 @@ export function resetAllStubs() {
   clearMockWsHandlers()
   clearMeEnrichHandlers()
   clearMockConfigStore()
+  _resetMockConfigVersion()
+  clearConfigReloaders()
   clearAssignedRoles()
   clearWsBroadcasts()
   clearWsSentToUser()

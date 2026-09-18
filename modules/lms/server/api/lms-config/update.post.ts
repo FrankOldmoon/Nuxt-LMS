@@ -46,10 +46,13 @@ export default eventHandler(async (event) => {
         })
     }
 
-    // 3. 刷新内存缓存
+    // 3. bump 版本戳：通知所有进程（含本进程）失效并重载缓存（跨进程一致性）
+    await bumpConfigVersion()
+
+    // 4. 刷新本进程内存缓存
     await reloadLmsConfig()
 
-    // 4. WS 广播：所有在线客户端 useAiConfig/useLmsPublicConfig 自动 refresh
+    // 5. WS 广播：所有在线客户端 useAiConfig/useLmsPublicConfig 自动 refresh
     broadcastToAll({ type: 'lms-config-changed' })
 
     return cResp(getLmsConfigSync())

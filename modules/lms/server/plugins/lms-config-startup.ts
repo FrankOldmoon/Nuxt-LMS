@@ -19,6 +19,13 @@ const SEED_FLAG_KEY = 'lms:_system.testAccountsSeeded'
 export default defineNitroPlugin(async () => {
   await reloadLmsConfig()
 
+  // 注册 lms 配置重载器：base 的 config-freshness 请求钩子检测到版本戳变化时调用，
+  // 使其它进程在下一次请求时也能重载最新 lms 配置（跨进程一致性）。
+  registerConfigReloader(async () => {
+    await reloadLmsConfig()
+    broadcastToAll({ type: 'lms-config-changed' })
+  })
+
   // 播种初始全局商品（按版本号，版本变化时重播）
   try {
     const GOODS_SEED_VERSION = 3

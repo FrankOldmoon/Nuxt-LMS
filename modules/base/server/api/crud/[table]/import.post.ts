@@ -12,6 +12,8 @@ export default eventHandler(async (event) => {
 
   try {
     const result = await importTableRows(table, rows)
+    // configs 表写入会影响内存配置缓存，bump 版本戳让所有进程重载
+    if (table === 'configs' && result.inserted > 0) await bumpConfigVersion()
     return cResp(result, result.errors.length ? `已插入 ${result.inserted} 行，${result.errors.length} 行失败` : `已插入 ${result.inserted} 行`)
   } catch (error: any) {
     console.error('导入失败:', error)

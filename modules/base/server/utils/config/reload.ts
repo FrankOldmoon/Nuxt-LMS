@@ -8,7 +8,6 @@ import {
   setCacheEntry,
   markLoaded,
   isLoaded,
-  clearCache,
   getCacheEntry,
   getConfigSync,
 } from './state'
@@ -20,6 +19,7 @@ import {
  *   MAIL_HOST / MAIL_PORT / MAIL_SECURE / MAIL_USER / MAIL_PASS / MAIL_FROM / SITE_URL
  */
 export async function reloadConfig(): Promise<Record<string, any>> {
+  let loaded = false
   try {
     const rows = await db
       .select({ id: schema.configs.id, value: schema.configs.value })
@@ -32,10 +32,12 @@ export async function reloadConfig(): Promise<Record<string, any>> {
         setCacheEntry(row.id, row.value)
       }
     }
+    loaded = true
   } catch (e) {
-    console.error('[config] 加载失败，使用默认配置', e)
-    clearCache()
-    resetCacheToDefaults()
+    console.error('[config] 加载失败', e)
+    // 读库失败时不要用默认值覆盖已有缓存（那会让前端读到"假配置"）；
+    // 仅当从未成功加载过时，才用默认值兜底。
+    if (!isLoaded()) resetCacheToDefaults()
   }
 
   // 环境变量覆盖 mail 配置（优先级最高，留空则保持数据库/默认值）
@@ -48,7 +50,8 @@ export async function reloadConfig(): Promise<Record<string, any>> {
   if (env.MAIL_FROM) setCacheEntry('site:mail.from', env.MAIL_FROM)
   if (env.SITE_URL) setCacheEntry('site:mail.siteUrl', env.SITE_URL)
 
-  markLoaded()
+  // 仅成功从 DB 读取后才标记已加载；失败时保持未加载状态，下次调用会重试
+  if (loaded) markLoaded()
   return getConfigSync()
 }
 

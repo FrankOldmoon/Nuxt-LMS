@@ -23,6 +23,7 @@ import { applyEnvOverride } from './cache/env-override'
 export async function reloadLmsConfig(): Promise<any> {
   await migrateLegacyLmsConfigIfNeeded()
   let flat: Record<string, any> = { ...FLAT_DEFAULTS }
+  let loaded = false
   try {
     const rows = await db
       .select({ id: schema.configs.id, value: schema.configs.value })
@@ -32,13 +33,17 @@ export async function reloadLmsConfig(): Promise<any> {
       const key = row.id.startsWith(LMS_KEY_PREFIX) ? row.id.slice(LMS_KEY_PREFIX.length) : row.id
       if (row.value !== undefined && row.value !== null) flat[key] = row.value
     }
+    loaded = true
   } catch (e) {
-    console.error('[lms_config] 加载失败，使用默认配置', e)
+    console.error('[lms_config] 加载失败', e)
+    // 读库失败时保留已有缓存，避免用默认值覆盖（前端会读到"假配置"）
+    const previous = getRaw()
+    if (previous) return previous
     flat = { ...FLAT_DEFAULTS }
   }
   const cfg = unflattenTree(flat)
   applyEnvOverride(cfg)
-  setLoaded(cfg)
+  if (loaded || !getRaw()) setLoaded(cfg)
   return cfg
 }
 

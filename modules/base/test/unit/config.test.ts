@@ -62,14 +62,24 @@ describe('server/utils/config - reloadConfig', () => {
     expect(getConfigSync('site:title')).toBe('My LMS')
   })
 
-  it('数据库查询失败时回退到默认值', async () => {
+  it('数据库查询失败时保留上次成功加载的缓存（不清成默认值）', async () => {
     const { reloadConfig } = await import('../../server/utils/config/reload')
-    const chain = _mockDb.select()
-    chain.where = vi.fn().mockRejectedValueOnce(new Error('DB error'))
-    _mockDb.select.mockReturnValueOnce(chain as any)
+    const { getConfigSync } = await import('../../server/utils/config/state')
+
+    // 先成功加载一次
+    const okChain = _mockDb.select()
+    okChain.where = vi.fn().mockResolvedValueOnce([{ id: 'site:title', value: 'My LMS' }])
+    _mockDb.select.mockReturnValueOnce(okChain as any)
+    await reloadConfig()
+    expect(getConfigSync('site:title')).toBe('My LMS')
+
+    // 再让查询失败：应保留上一次的值，而不是回退默认值（避免前端读到"假配置"）
+    const failChain = _mockDb.select()
+    failChain.where = vi.fn().mockRejectedValueOnce(new Error('DB error'))
+    _mockDb.select.mockReturnValueOnce(failChain as any)
 
     const result = await reloadConfig()
-    expect(result['site:title']).toBe('AI LMS')
+    expect(result['site:title']).toBe('My LMS')
     expect(result['site:pageSize']).toBe(20)
   })
 
@@ -162,5 +172,20 @@ describe('server/utils/config - getConfigByPrefix', () => {
     const mail = await getConfigByPrefix('site:mail')
     // 实际行为：key 为 '.host' '.port' 等
     expect(mail).toHaveProperty('.host')
+  })
+})
+
+describe('server/utils/config - 首次加载失败兜底', () => {
+  it('从未成功加载过时，查询失败回退到默认值', async () => {
+    vi.resetModules()
+    const chain = _mockDb.select()
+    chain.where = vi.fn().mockRejectedValueOnce(new Error('DB error'))
+    _mockDb.select.mockReturnValueOnce(chain as any)
+
+    const { reloadConfig } = await import('../../server/utils/config/reload')
+    const { getConfigSync } = await import('../../server/utils/config/state')
+    const result = await reloadConfig()
+    expect(result['site:title']).toBe('AI LMS')
+    expect(getConfigSync('site:title')).toBe('AI LMS')
   })
 })

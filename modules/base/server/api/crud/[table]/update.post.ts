@@ -12,6 +12,8 @@ export default eventHandler(async (event) => {
 
   try {
     const result = await updateTable(table, Number(id), setData)
+    // configs 表写入会影响内存配置缓存，bump 版本戳让所有进程重载
+    if (table === 'configs') await bumpConfigVersion()
     return cResp(result)
   } catch (error: any) {
     console.error('更新失败:', error)

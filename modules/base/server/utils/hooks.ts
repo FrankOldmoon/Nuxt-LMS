@@ -7,9 +7,11 @@
 
 type MeEnrichFn = (user: any) => Promise<Record<string, any>>
 type UserImportedFn = (inserted: any[], rawUsers: any[]) => Promise<void>
+type ConfigReloadFn = () => Promise<void> | void
 
 const _meEnrichFns: MeEnrichFn[] = []
 const _userImportedFns: UserImportedFn[] = []
+const _configReloadFns: ConfigReloadFn[] = []
 
 /** 注册 me 接口字段扩展（如 lms 注入 editorCourseIds/teacherCourseIds/classIds） */
 export function registerOnMeEnrich(fn: MeEnrichFn): void {
@@ -42,6 +44,26 @@ export async function runOnUserImported(inserted: any[], rawUsers: any[]): Promi
       await fn(inserted, rawUsers)
     } catch (e) {
       console.error('[hooks] onUserImported error', e)
+    }
+  }
+}
+
+/**
+ * 注册配置重载器（base 注册 site 配置重载，lms 注册 lms 配置重载）
+ *
+ * 由 config-freshness 请求钩子在检测到版本戳变化时统一调用，用于跨进程失效。
+ */
+export function registerConfigReloader(fn: ConfigReloadFn): void {
+  _configReloadFns.push(fn)
+}
+
+/** 运行所有配置重载器（版本戳变化时） */
+export async function runConfigReloaders(): Promise<void> {
+  for (const fn of _configReloadFns) {
+    try {
+      await fn()
+    } catch (e) {
+      console.error('[hooks] config reload error', e)
     }
   }
 }
