@@ -15,6 +15,18 @@ export function useQuizRenderContext() {
     return ctx
 }
 
+/**
+ * 提交失败中"不可重试"的错误码：超时作废 / 次数用尽 / 未开放等。
+ * 这些情况重试也不会成功，必须停止自动重试，否则会每 60s 反复请求失败。
+ */
+const TERMINAL_SUBMIT_CODES = new Set([
+    'quiz_time_up',
+    'quiz_submit_limit',
+    'quiz_ended',
+    'quiz_not_started',
+    'quiz_not_found',
+])
+
 export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
     const { t } = useI18n()
     const { courseId, chapterId } = useLmsContext()
@@ -38,7 +50,7 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
     const recordsOpen = ref(false)
 
     const defaultQuiz = reactive({
-        name: '', point: 100, timeLimit: 600, submitLimit: 1,
+        name: '', point: 100, timeLimit: 600, submitLimit: 1, switchLimit: 0,
         questions: [], startAt: null, endAt: null, content: '',
     })
 
@@ -55,6 +67,7 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
                 point: Number(raw.point) || 100,
                 timeLimit: Number(raw.timeLimit) || 600,
                 submitLimit: Number(raw.submitLimit) || 1,
+                switchLimit: Number(raw.switchLimit) || 0,
                 questions: raw.questions || [],
                 startAt: raw.startAt,
                 endAt: raw.endAt,
@@ -84,6 +97,9 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
 
     // ====================== 状态变量 ======================
     const userRecord = ref<any>(null)
+    // 进行中但已超过时限、从未提交的记录（本次作答作废，可重试）
+    const expiredRecord = ref<any>(null)
+    const expiredUnsubmitted = computed(() => !!expiredRecord.value)
     const recordFetched = ref(false)
     const started = ref(false)
     const submitted = ref(false)
@@ -97,7 +113,12 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
     const questionRefs: any[] = []
     const answeredSet = ref(new Set<number>())
     const questionStates = reactive<Record<number, any>>({})
+    const switchCount = ref(0)
     let timerInterval: any = null
+    // 计时锚点：剩余时间以 deadlineTs 反推，避免后台标签页 setInterval 被节流导致"多给时间"
+    let deadlineTs = 0
+    // 一次"离开"只计一次（blur / visibilitychange 可能同时触发）
+    let awayCounted = false
 
     watch(quizQuestions, (qs) => {
         qs.forEach((q: any, idx: number) => {
@@ -127,15 +148,29 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
     async function fetchRecord() {
         if (!isLoggedIn.value || isTeacher.value) return
         if (!quizId.value || !effectiveCourseId.value) return
+        // 等待测验配置就绪：resume 时剩余时间依赖 timeLimit，若配置尚未加载会按默认 600s 误算
+        if (pending.value) {
+            await new Promise<void>((resolve) => {
+                const stop = watch(pending, (p) => {
+                    if (!p) { stop(); resolve() }
+                })
+            })
+        }
         try {
             const data = await cRequest(`/api/quizzes/record?course_id=${effectiveCourseId.value}&cid=${quizId.value}`)
             if (data) {
                 if (data.startedAt && !data.submitedAt) {
                     const elapsed = Math.floor((Date.now() - new Date(data.startedAt).getTime()) / 1000)
-                    const limit = quiz.value.timeLimit || 600
+                    const limit = Number(quiz.value?.timeLimit) || 600
                     remainingTime.value = Math.max(0, limit - elapsed)
                     totalTime.value = limit
-                    if (remainingTime.value > 0) {
+                    if (remainingTime.value <= 0) {
+                        // 时间已到但从未提交：作答未持久化，本次作废。
+                        // 不能塞进 userRecord（那会被当成"已提交"显示分数），单独标记以提示"超时未提交"。
+                        userRecord.value = null
+                        expiredRecord.value = data
+                    } else if (canStart.value) {
+                        expiredRecord.value = null
                         started.value = true
                         submitted.value = false
                         resumeTimer()
@@ -145,9 +180,13 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
                             }
                         })
                     } else {
-                        userRecord.value = data
+                        // 时间未到但测验已不在开放窗口（如 endAt 已过）：不恢复答题
+                        userRecord.value = null
+                        expiredRecord.value = null
+                        started.value = false
                     }
                 } else {
+                    expiredRecord.value = null
                     userRecord.value = data
                     nextTick(() => fillRecordsToQuestions(data.records))
                 }
@@ -175,18 +214,19 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
                 point: q.point, answered: true, correct: rec.rate > 0,
             }
         })
+        updateAnsweredSet()
     }
 
     onMounted(() => {
+        // 切屏检测：标签页隐藏/窗口失焦都算一次，回到页面时按配置决定是否自动提交
+        document.addEventListener('visibilitychange', handleVisibilityChange)
+        window.addEventListener('blur', handleAway)
+        window.addEventListener('focus', handleReturn)
         if (isTeacher.value) return
         fetchRecord()
-        const syncTimer = setInterval(() => {
-            if (questionRefs.length > 0) {
-                syncQuestionStates()
-                updateAnsweredSet()
-            }
-        }, 500)
-        setTimeout(() => clearInterval(syncTimer), 30000)
+        // 已答计数：回填/恢复后在 nextTick 刷新一次，答题中的每秒刷新由倒计时 tick 驱动，
+        // 不再用 500ms 轮询（轮询既多余又会在后台标签页被节流）
+        nextTick(() => updateAnsweredSet())
     })
 
     const canStart = computed(() => {
@@ -208,15 +248,20 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
     })
 
     const canRetry = computed(() => {
-        if (!userRecord.value) return false
+        const rec = userRecord.value || expiredRecord.value
+        if (!rec) return false
         const submitLimit = quiz.value?.submitLimit || 1
-        return (userRecord.value.submitCount || 0) < submitLimit
+        return (rec.submitCount || 0) < submitLimit
     })
 
     const timeProgress = computed(() => {
         if (!totalTime.value) return 0
         return (remainingTime.value / totalTime.value) * 100
     })
+
+    // 允许的最大切屏次数：0 表示不限制（关闭该功能）
+    const switchLimit = computed(() => Number(quiz.value?.switchLimit) || 0)
+    const switchLimitEnabled = computed(() => switchLimit.value > 0)
 
     const answeredCount = computed(() => answeredSet.value.size)
 
@@ -243,6 +288,9 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
         currentIndex.value = 0
         remainingTime.value = quiz.value.timeLimit || 600
         totalTime.value = quiz.value.timeLimit || 600
+        switchCount.value = 0
+        awayCounted = false
+        expiredRecord.value = null
         answeredSet.value = new Set()
         Object.keys(questionStates).forEach(key => {
             questionStates[Number(key)] = { record: [], rate: 0, point: quizQuestions.value[Number(key)]?.point || 1, answered: false, correct: null }
@@ -251,6 +299,7 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
             questionRefs.forEach((comp) => {
                 comp?.resetForQuiz?.()
             })
+            updateAnsweredSet()
         })
         cRequest('/api/quizzes/submit', {
             method: 'POST',
@@ -265,15 +314,69 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
     }
 
     function resumeTimer() {
-        if (timerInterval) clearInterval(timerInterval)
+        stopTimer()
+        // 以当前剩余时间建立新的计时锚点（resume 场景剩余时间已按 startedAt 校准）
+        deadlineTs = Date.now() + remainingTime.value * 1000
         timerInterval = setInterval(() => {
-            remainingTime.value = Math.max(0, remainingTime.value - 1)
+            remainingTime.value = Math.max(0, Math.ceil((deadlineTs - Date.now()) / 1000))
             updateAnsweredSet()
             if (remainingTime.value <= 0) {
-                clearInterval(timerInterval)
+                stopTimer()
                 submitQuiz()
             }
         }, 1000)
+    }
+
+    function stopTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval)
+            timerInterval = null
+        }
+    }
+
+    // ====================== 切屏检测 ======================
+    // 仅统计"答题中"的切屏（开始答题后、未提交前）；教师预览不计。
+    function isAnswering() {
+        return started.value && !submitted.value && !submitting.value && !isTeacher.value
+    }
+
+    function handleAway() {
+        if (!isAnswering()) return
+        // blur 与 visibilitychange 可能同时触发，同一次离开只计一次
+        if (awayCounted) return
+        awayCounted = true
+        switchCount.value += 1
+    }
+
+    function handleReturn() {
+        if (!awayCounted) return
+        awayCounted = false
+        if (!isAnswering()) return
+        // 回到页面先按锚点校准剩余时间（后台标签页计时会被浏览器节流）
+        if (deadlineTs) {
+            remainingTime.value = Math.max(0, Math.ceil((deadlineTs - Date.now()) / 1000))
+        }
+        // 离开期间时间已耗尽 → 自动提交
+        if (remainingTime.value <= 0) {
+            stopTimer()
+            submitQuiz()
+            return
+        }
+        // 切屏次数超过上限 → 回到页面自动提交
+        if (switchLimitEnabled.value && switchCount.value > switchLimit.value) {
+            toast.add({
+                title: t('quiz.switchExceeded'),
+                description: t('quiz.switchExceededDesc', { n: switchCount.value, limit: switchLimit.value }),
+                color: 'warning',
+            })
+            submitQuiz()
+        }
+    }
+
+    function handleVisibilityChange() {
+        if (typeof document === 'undefined') return
+        if (document.hidden) handleAway()
+        else handleReturn()
     }
 
     function formatTime(seconds: number) {
@@ -336,7 +439,7 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
         if (submitting.value) return
         confirmOpen.value = false
         submitting.value = true
-        if (timerInterval) clearInterval(timerInterval)
+        stopTimer()
         try {
             const records = collectAnswers()
             const parentCourseId = useEmbeddingParentCourse()
@@ -374,26 +477,26 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
             await fetchRecord()
             useUserCard().refresh()
         } catch (err: any) {
-            started.value = true
-            submitted.value = false
             toast.add({
                 title: t('quiz.submitFailed'),
                 description: err?.message,
                 color: 'error',
             })
-            // 超时自动提交失败：给 60 秒缓冲重新计时，避免卡在 00:00 无法再提交
+            // 不可重试的失败（超时作废 / 次数用尽 / 已结束等）：停止重试，刷新记录让 UI 呈现真实状态
+            if (err?.code && TERMINAL_SUBMIT_CODES.has(err.code)) {
+                started.value = false
+                submitted.value = false
+                await fetchRecord()
+                return
+            }
+            // 可重试失败（网络抖动等）：恢复答题并重新计时；到点提交失败给 60 秒缓冲
+            started.value = true
+            submitted.value = false
             if (remainingTime.value <= 0) {
                 remainingTime.value = 60
                 totalTime.value = Math.max(totalTime.value, 60)
             }
-            timerInterval = setInterval(() => {
-                remainingTime.value = Math.max(0, remainingTime.value - 1)
-                updateAnsweredSet()
-                if (remainingTime.value <= 0) {
-                    clearInterval(timerInterval)
-                    submitQuiz()
-                }
-            }, 1000)
+            resumeTimer()
         } finally {
             submitting.value = false
         }
@@ -407,15 +510,20 @@ export function useQuizRender(props: QuizRenderProps, emit: QuizRenderEmit) {
     }
 
     onBeforeUnmount(() => {
-        if (timerInterval) clearInterval(timerInterval)
+        stopTimer()
+        document.removeEventListener('visibilitychange', handleVisibilityChange)
+        window.removeEventListener('blur', handleAway)
+        window.removeEventListener('focus', handleReturn)
     })
 
     const ctx = {
         t, courseId, effectiveCourseId, moduleLms, QuizRecordsModal,
         quiz, pending, quizId, isTeacher, editOpen, recordsOpen,
-        userRecord, started, submitted, submitting, resultScore, resultPassed,
+        userRecord, expiredRecord, expiredUnsubmitted,
+        started, submitted, submitting, resultScore, resultPassed,
         confirmOpen, currentIndex, remainingTime, totalTime, questionRefs,
         quizQuestions, canStart, notStartedReason, canRetry, timeProgress,
+        switchCount, switchLimit, switchLimitEnabled,
         answeredCount, formatTime, formatDateTime, onHover, startQuiz,
         getQuestionBtnClass, switchQuestion, confirmSubmit, submitQuiz,
         onSaved, refresh,

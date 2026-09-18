@@ -1,0 +1,1 @@
+ALTER TABLE "quizzes" ADD COLUMN "switch_limit" integer DEFAULT 0;

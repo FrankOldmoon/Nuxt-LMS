@@ -93,9 +93,10 @@ describe('useFill 输入框同步（空格回归）', () => {
       point: 1,
       record: [] as any[],
     })
+    let api: any
     const Comp = defineComponent({
       setup() {
-        useFill({ question, questionId: 1 })
+        api = useFill({ question, questionId: 1 })
         return () => h('div')
       },
     })
@@ -110,7 +111,7 @@ describe('useFill 输入框同步（空格回归）', () => {
       },
     })
     await nextTick()
-    return { question }
+    return { question, api: () => api }
   }
 
   it('用户输入的空格不会被 record 回写吞掉', async () => {
@@ -128,5 +129,17 @@ describe('useFill 输入框同步（空格回归）', () => {
     await nextTick()
     await nextTick()
     expect(input.value).toBe('hello')
+  })
+
+  it('show answer 填充正确答案后 hasAnswer=true（提交按钮可用）', async () => {
+    const { api } = await mountFill(ref(false))
+    const f = api()
+    // 未作答时按钮应禁用
+    expect(f.hasAnswer.value).toBe(false)
+    f.fillCorrectAnswer()
+    await nextTick()
+    // 填充正确答案后：输入框有值 + hasAnswer=true（提交/重置按钮解禁）
+    expect(input.value).toBe('Input Image')
+    expect(f.hasAnswer.value).toBe(true)
   })
 })

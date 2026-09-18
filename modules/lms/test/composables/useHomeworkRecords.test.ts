@@ -2,9 +2,17 @@
  * useHomeworkRecords composable 测试（全屏逐份评阅：导航循环 + 文件预览类型判断）
  * @see modules/lms/components/lms/recordsModal/homework/useHomeworkRecords.ts
  */
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ref } from 'vue'
-import { resetAllStubs, setMockI18n, setMockLmsContext } from '../../../../test/setup/nuxt-stubs'
+import { resetAllStubs, setMockI18n, setMockLmsContext, getToastCalls } from '../../../../test/setup/nuxt-stubs'
+
+// 「一键下载全部附件」动态 import('jszip')：用轻量假实现，避免真实压缩开销
+vi.mock('jszip', () => ({
+  default: class {
+    folder() { return { file: () => {} } }
+    async generateAsync() { return new Blob(['zip']) }
+  },
+}))
 
 const students = [
   { id: 1, name: 'A', preferName: '', rollNumber: '', username: '', avatarImg: '', isTeacher: false },
@@ -94,5 +102,74 @@ describe('useHomeworkRecords 全屏评阅', () => {
     expect(ctx.isPreviewableFile('/api/files/serve?pathname=2%2Fscript.py')).toBe(true)
     expect(ctx.isPreviewableFile('/api/files/serve?pathname=2%2Fx.zip')).toBe(false)
     expect(ctx.isPreviewableFile('/api/files/serve?pathname=2%2Fx.rar')).toBe(false)
+  })
+
+  it('downloadAllFiles：没有附件时只提示，不触发下载', async () => {
+    const ctx = await makeCtx([
+      { userId: 1, record: { files: [], record: { _submitCount: 1 } } },
+      { userId: 2, record: { files: null, record: { _submitCount: 1 } } },
+    ])
+    await ctx.fetchRecords()
+    await ctx.downloadAllFiles()
+    expect(getToastCalls().some((c: any) => c.title === 'record.noAttachments')).toBe(true)
+  })
+
+  it('downloadAllFiles：按学生分文件夹打包并触发下载', async () => {
+    const ctx = await makeCtx([
+      { userId: 1, record: { files: ['/api/files/serve?pathname=1%2Fa.pdf'], record: { _submitCount: 1 } } },
+      { userId: 3, record: { files: [{ url: '/api/files/serve?pathname=3%2Fb.png' }], record: { _submitCount: 1 } } },
+    ])
+    await ctx.fetchRecords()
+    // /api/files/meta 返回原始文件名
+    ;(globalThis as any).cRequest = async () => ({ name: 'x.pdf' })
+    ;(globalThis as any).getFileNameFromUrl = () => 'x.pdf'
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, blob: async () => new Blob(['f']) })))
+    ;(URL as any).createObjectURL = vi.fn(() => 'blob:x')
+    ;(URL as any).revokeObjectURL = vi.fn()
+    const click = vi.fn()
+    const fakeLink: any = { href: '', download: '', click, remove: vi.fn() }
+    const createEl = vi.spyOn(document, 'createElement').mockReturnValue(fakeLink)
+    const append = vi.spyOn(document.body, 'appendChild').mockImplementation(() => fakeLink)
+
+    try {
+      await ctx.downloadAllFiles()
+      expect(click).toHaveBeenCalled()
+      expect(String(fakeLink.download)).toContain('.zip')
+      expect(getToastCalls().some((c: any) => c.title === 'record.downloadAllDone')).toBe(true)
+    } finally {
+      createEl.mockRestore()
+      append.mockRestore()
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('scoreAllSubmitted：给已提交同学打满分，跳过已满分与未提交', async () => {
+    const calls: any[] = []
+    const ctx = await makeCtx([
+      { userId: 1, record: { score: '10', files: [], record: { _submitCount: 1 } } },
+      { userId: 2, record: { score: null, files: ['a.pdf'], record: { _submitCount: 1 } } },
+      { userId: 3, record: { score: null, files: null, record: null } },
+    ])
+    await ctx.fetchRecords()
+    ;(globalThis as any).cRequest = async (url: string, opts: any) => { calls.push({ url, opts }); return {} }
+    await ctx.scoreAllSubmitted()
+    const scoreCalls = calls.filter((c: any) => c.url === '/api/homeworks/score')
+    expect(scoreCalls).toHaveLength(1)
+    expect(scoreCalls[0].opts.body.user_id).toBe(2)
+    expect(scoreCalls[0].opts.body.score).toBe(10)
+    expect(ctx.scoreMap[2]).toBe(10)
+    expect(getToastCalls().some((c: any) => c.title === 'record.scoreAllDone')).toBe(true)
+  })
+
+  it('scoreAllSubmitted：没有需要打分的提交时只提示，不发请求', async () => {
+    const calls: any[] = []
+    const ctx = await makeCtx([
+      { userId: 1, record: { score: '10', files: [], record: { _submitCount: 1 } } },
+    ])
+    await ctx.fetchRecords()
+    ;(globalThis as any).cRequest = async (url: string, opts: any) => { calls.push({ url, opts }); return {} }
+    await ctx.scoreAllSubmitted()
+    expect(calls.filter((c: any) => c.url === '/api/homeworks/score')).toHaveLength(0)
+    expect(getToastCalls().some((c: any) => c.title === 'record.scoreAllNone')).toBe(true)
   })
 })

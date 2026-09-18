@@ -160,6 +160,50 @@ describe('API: quizzes/submit', () => {
     const handler = (await import('../../server/api/quizzes/submit.post')).default
     const result = await handler(makeEvent({ body: { course_id: 1, quiz_cid: 1, records: [] } }))
     expect(result.success).toBe(false)
+    expect(result.code).toBe('quiz_submit_limit')
+  })
+
+  it('超过答题时限提交返回 quiz_time_up（含 30s 宽限）', async () => {
+    setMockAuthState({ id: 1, username: 'student', roles: ['student'], permissions: [] })
+    _mockDb.query.quizzes.findFirst = vi.fn().mockResolvedValue({ courseId: 1, cid: 1, submitLimit: 3, timeLimit: 60 })
+    // 已用 200s > 60s + 30s 宽限 → 判定超时
+    _mockDb.query.userQuizzes.findFirst = vi.fn().mockResolvedValue({
+      submitCount: 0, startedAt: new Date(Date.now() - 200_000), submitedAt: null,
+    })
+    const handler = (await import('../../server/api/quizzes/submit.post')).default
+    const result = await handler(makeEvent({ body: { course_id: 1, quiz_cid: 1, records: [] } }))
+    expect(result.success).toBe(false)
+    expect(result.code).toBe('quiz_time_up')
+  })
+
+  it('宽限期内提交不判定超时', async () => {
+    setMockAuthState({ id: 1, username: 'student', roles: ['student'], permissions: [] })
+    setupQuizDefs(
+      { courseId: 1, cid: 1, timeLimit: 60 },
+      [{ courseId: 1, cid: 1, type: 'single', answer: ['A'], point: 100 }],
+    )
+    // 已用 80s，落在 60s + 30s 宽限内 → 正常判分
+    _mockDb.query.userQuizzes.findFirst = vi.fn().mockResolvedValue({
+      submitCount: 0, startedAt: new Date(Date.now() - 80_000), submitedAt: null,
+    })
+    const handler = (await import('../../server/api/quizzes/submit.post')).default
+    const result = await handler(makeEvent({
+      body: { course_id: 1, quiz_cid: 1, records: [{ questionCid: 1, rate: 1, point: 100, answer: ['A'] }] },
+    }))
+    expect(result.success).toBe(true)
+    expect(result.data.score).toBe(100)
+  })
+
+  it('start_only：进行中记录已超时则重置 startedAt', async () => {
+    setMockAuthState({ id: 1, username: 'student', roles: ['student'], permissions: [] })
+    const oldStartedAt = new Date(Date.now() - 200_000)
+    _mockDb.query.quizzes.findFirst = vi.fn().mockResolvedValue({ courseId: 1, cid: 1, submitLimit: 3, timeLimit: 60 })
+    _mockDb.query.userQuizzes.findFirst = vi.fn().mockResolvedValue({ startedAt: oldStartedAt, submitedAt: null, submitCount: 0 })
+    const handler = (await import('../../server/api/quizzes/submit.post')).default
+    const result = await handler(makeEvent({ body: { course_id: 1, quiz_cid: 1, start_only: true } }))
+    expect(result.success).toBe(true)
+    expect(result.data.startedAt).not.toEqual(oldStartedAt)
+    expect(_mockDb.update).toHaveBeenCalled()
   })
 
   // 服务端判分辅助：quiz 定义带 questions id 列表，questions.findMany 返回题目定义

@@ -5,6 +5,12 @@
                 <div class="flex items-center justify-between">
                     <h2 class="text-lg font-semibold">{{ $t('record.homeworkRecords') }}</h2>
                     <div class="flex items-center gap-2">
+                        <UButton icon="i-heroicons-check-badge" variant="soft" size="sm"
+                            :loading="scoringAll" :label="$t('record.scoreAllSubmitted')"
+                            @click="scoreAllConfirmOpen = true" />
+                        <UButton icon="i-heroicons-arrow-down-tray" variant="soft" size="sm"
+                            :loading="downloadingAll" :label="$t('record.downloadAllFiles')"
+                            @click="downloadAllFiles" />
                         <LmsClassSelector :course-id="courseId" />
                         <UTooltip :text="$t('common.refresh')">
                             <UButton icon="i-lucide-refresh-cw" variant="soft" size="sm" :loading="pending" @click="fetchRecords" />
@@ -64,6 +70,20 @@
                         <span v-else class="text-xs text-gray-400">-</span>
                     </template>
                 </ClassUsersTable>
+            </div>
+        </template>
+    </UModal>
+
+    <!-- 一键全部满分确认 -->
+    <UModal v-model:open="scoreAllConfirmOpen">
+        <template #content>
+            <div class="p-6 space-y-4">
+                <h3 class="text-lg font-semibold">{{ $t('record.scoreAllConfirmTitle') }}</h3>
+                <p class="text-sm text-gray-500">{{ $t('record.scoreAllConfirmDesc', { score: maxScore }) }}</p>
+                <div class="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+                    <UButton variant="soft" @click="scoreAllConfirmOpen = false">{{ $t('common.cancel') }}</UButton>
+                    <UButton color="primary" :loading="scoringAll" @click="confirmScoreAll">{{ $t('common.confirm') }}</UButton>
+                </div>
             </div>
         </template>
     </UModal>
@@ -219,6 +239,7 @@ const props = defineProps({
     courseId: { type: Number, default: 0 },
     cid: { type: Number, default: 0 },
     maxScore: { type: Number, default: 0 },
+    homeworkName: { type: String, default: '' },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -226,9 +247,18 @@ const emit = defineEmits(['update:modelValue'])
 const {
     open, rows, pending, extraColumns, defaultSort, scoreMap, commentMap, excellentMap, fetchRecords,
     onScoreBlur, onQuickScore, onCommentBlur, toggleExcellent,
+    downloadingAll, downloadAllFiles,
+    scoringAll, scoreAllSubmitted,
     detailOpen, detailData, detailRecord, detailSubmittedAt, detailIndex, detailTotal,
     openHomeworkDetail, prevSubmission, nextSubmission, closeDetail, isRichDoc, hasSubmission, submittedAtOf, isPreviewableFile,
 } = useHomeworkRecords(props, emit)
+
+// 一键全部满分：二次确认后执行，避免误覆盖已有分数
+const scoreAllConfirmOpen = ref(false)
+async function confirmScoreAll() {
+    scoreAllConfirmOpen.value = false
+    await scoreAllSubmitted()
+}
 
 // ==================== 文件预览 ====================
 // useFileNames 由 base 模块 addImportsDir 全局自动导入，返回 { url, name }（name 含原始文件名）

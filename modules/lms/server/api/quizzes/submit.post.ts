@@ -20,6 +20,12 @@ import { insertUserQuiz, updateUserQuizBestScore, incrementQuizSubmitCount } fro
 import { notifyCourseProgressMax, notifyParentCourse } from '../../utils/submit/progress'
 import { computeServerRate } from '../../utils/submit/verify'
 
+/**
+ * 超时宽限（秒）：客户端到点会自动提交，但网络往返/渲染有延迟，
+ * 服务端判定超时时留出宽限，避免"刚好到点提交"被误判作废。
+ */
+const SUBMIT_TIME_GRACE = 30
+
 export default eventHandler(async (event) => {
   const user = await requireAuth(event)
   const body = await readBody(event)
@@ -34,15 +40,15 @@ export default eventHandler(async (event) => {
   const quiz = await db.query.quizzes.findFirst({
     where: and(eq(schema.quizzes.courseId, courseId), eq(schema.quizzes.cid, quizCid)),
   })
-  if (!quiz) return cResp(null, '测验不存在', false)
+  if (!quiz) return cResp(null, '测验不存在', false, 'quiz_not_found')
 
   // 2.5 开放时间校验（start_only 与正常提交都生效，与前端 canStart 对齐）
   const nowTs = new Date()
   if (quiz.startAt && nowTs < new Date(quiz.startAt)) {
-    return cResp(null, '测验尚未开始', false)
+    return cResp(null, '测验尚未开始', false, 'quiz_not_started')
   }
   if (quiz.endAt && nowTs > new Date(quiz.endAt)) {
-    return cResp(null, '测验已结束', false)
+    return cResp(null, '测验已结束', false, 'quiz_ended')
   }
 
   // 3. 查找已有记录
@@ -54,9 +60,11 @@ export default eventHandler(async (event) => {
     ),
   })
 
+  const timeLimit = Number(quiz.timeLimit) || 0
+
   // 3. start_only 模式
   if (start_only) {
-    const r = await handleQuizStartOnly(user.id, courseId, quizCid, existing)
+    const r = await handleQuizStartOnly(user.id, courseId, quizCid, existing, undefined, timeLimit)
     return cResp({ startedAt: r.startedAt })
   }
 
@@ -64,7 +72,16 @@ export default eventHandler(async (event) => {
   const submitLimit = quiz.submitLimit || 1
   const currentCount = existing?.submitCount || 0
   if (currentCount >= submitLimit) {
-    return cResp(null, '已达到最大提交次数', false)
+    return cResp(null, '已达到最大提交次数', false, 'quiz_submit_limit')
+  }
+
+  // 4.5 答题时长校验：仅针对"进行中"的记录（startedAt 存在且未提交），
+  // 防止超过时限后仍继续作答并补交。超时后该次作答作废，前端据此停止重试。
+  if (existing?.startedAt && !existing.submitedAt && timeLimit > 0) {
+    const elapsed = (nowTs.getTime() - new Date(existing.startedAt).getTime()) / 1000
+    if (elapsed > timeLimit + SUBMIT_TIME_GRACE) {
+      return cResp(null, '答题时间已结束', false, 'quiz_time_up')
+    }
   }
 
   // 5. 服务端判分：按测验题目定义重算每题 rate（不信任客户端 rate/point）

@@ -204,6 +204,12 @@
     "noQuestions": "暂无题目，请添加",
     "timeLimit": "时限（秒）",
     "submitLimit": "提交次数",
+    "switchLimit": "切屏次数上限",
+    "switchLimitHint": "离开答题页（切屏/最小化）次数上限，超过后回到页面自动提交；0 表示不限制",
+    "switchCount": "切屏 {n}/{limit}",
+    "switchExceeded": "切屏次数超限",
+    "switchExceededDesc": "已离开答题页 {n} 次（上限 {limit}），自动提交测验证",
+    "expiredNotSubmitted": "时间已到，本次未提交",
     "point": "总分",
     "totalPoint": "总分（自动）",
     "perQuestionPoint": "分值",
@@ -280,6 +286,7 @@
     "showResult": "显示结果",
     "answerCorrectBarrage": "🎉 答对了题目 (+{gain}分)",
     "pin": "抢答 PIN",
+    "scoresTable": "学生得分",
     "needLms": "抢答需要启用 LMS 模块"
   },
   "peerReview": {
@@ -1140,7 +1147,18 @@
     "correctAnswer": "正确答案",
     "optionDistribution": "选项分布",
     "selectedCount": "选择数",
-    "scoreUnit": "分"
+    "scoreUnit": "分",
+    "downloadAllFiles": "下载全部附件",
+    "downloadAllDone": "已打包下载 {saved}/{total} 个附件",
+    "downloadAllFailed": "附件打包下载失败",
+    "noAttachments": "没有可下载的学生附件",
+    "scoreAllSubmitted": "全部满分",
+    "scoreAllConfirmTitle": "确认给已提交的同学全部满分？",
+    "scoreAllConfirmDesc": "将给所有已提交作业的同学打 {score} 分，并覆盖其已有分数。",
+    "scoreAllDone": "已为 {n} 位提交同学打满分",
+    "scoreAllNone": "没有需要打满分的提交",
+    "scoreAllFailed": "全部打分失败",
+    "scoreAllInvalidMax": "作业总分无效，无法打满分"
   },
   "comment": {
     "label": "评论",

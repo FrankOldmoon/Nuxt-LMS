@@ -32,7 +32,7 @@
         :loading="loading"
         :disabled="disabled"
       >
-        {{ cooldown > 0 ? `${$t('auth.login')} (${cooldown}s)` : $t('auth.login') }}
+        {{ $t('auth.login') }}
       </UButton>
     </UForm>
 

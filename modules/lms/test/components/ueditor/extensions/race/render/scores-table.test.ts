@@ -14,6 +14,7 @@ beforeEach(() => {
 })
 
 const _globalStubs = {
+  UIcon: { template: '<span />', props: ['name'] },
   ClassUsersTable: {
     template: '<div class="class-users-table-stub"><slot name="score-cell" :row="{ original: { score: 50 } }" /><slot name="correctCount-cell" :row="{ original: { correctCount: 3 } }" /></div>',
     props: ['rows', 'loading', 'hideActions', 'hideTeachers', 'hideNumber', 'extraColumns', 'defaultSort', 'showChart', 'showOnline'],
@@ -77,5 +78,23 @@ describe('race/render/scores-table.vue', () => {
     if (table.exists()) {
       expect(table.props('loading')).toBe(true)
     }
+  })
+
+  it('默认收起，点击表头展开/收起学生表格', async () => {
+    const { default: ScoresTable } = await import(
+      '../../../../../../components/ueditor/extensions/nodes/vue/race/render/scores-table.vue'
+    )
+    const ctx = makeMockContext()
+    const wrapper = mount(ScoresTable, {
+      global: { ..._globalConfig, provide: { [RaceRenderKey as any]: ctx } },
+    })
+    const table = wrapper.find('.class-users-table-stub')
+    expect(table.exists()).toBe(true)
+    const body = () => wrapper.find('.race-scores-body').attributes('style') || ''
+    expect(body()).toContain('display: none')
+    await wrapper.find('button').trigger('click')
+    expect(body()).not.toContain('display: none')
+    await wrapper.find('button').trigger('click')
+    expect(body()).toContain('display: none')
   })
 })

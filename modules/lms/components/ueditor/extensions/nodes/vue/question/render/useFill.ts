@@ -172,6 +172,8 @@ export function useFill(props: any) {
   // 填充正确答案为 record
   function fillCorrectAnswer() {
     if (props.question?.answer && props.question.answer.length > 0) {
+      // 同步 fillAnswers，使 hasAnswer=true（否则「显示答案」后提交按钮仍禁用）
+      fillAnswers.value = [...props.question.answer]
       const container = getInputContainer()
       if (container) {
         const inputs = container.querySelectorAll('input')

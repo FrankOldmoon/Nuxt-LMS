@@ -147,14 +147,17 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         })
     })
 
-    // 监听 race 在线状态
-    onRaceOnlineUpdate((data: any) => {
-        raceOnlineMap[data.userId] = data.online
-    })
+    // 收集 WS 回调的取消注册函数：组件卸载时统一注销，避免 handler 在全局注册表累积（内存泄漏）
+    const wsUnsubs: Array<() => void> = []
 
-    onRaceJoined((_data: any) => {
+    // 监听 race 在线状态
+    wsUnsubs.push(onRaceOnlineUpdate((data: any) => {
+        raceOnlineMap[data.userId] = data.online
+    }))
+
+    wsUnsubs.push(onRaceJoined((_data: any) => {
         // 加入成功
-    })
+    }))
 
     // ====================== 学生得分表 ======================
     const { students, fetchUsers } = useClassUsers()
@@ -184,7 +187,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
     }
 
     // ====================== WebSocket 事件监听 ======================
-    onRaceStart((data: any) => {
+    wsUnsubs.push(onRaceStart((data: any) => {
         if (data.raceCid !== raceId.value) return
         raceActive.value = true
         currentIndex.value = -1
@@ -192,9 +195,9 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         studentAnswered.value = false
         raceScores.value = []
         raceBarrages.value = []
-    })
+    }))
 
-    onRaceQuestion((data: any) => {
+    wsUnsubs.push(onRaceQuestion((data: any) => {
         if (data.raceCid !== raceId.value) return
         currentIndex.value = data.questionIndex
         currentQuestionCid.value = data.questionCid
@@ -216,28 +219,28 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
                 }
             }
         }, 1000)
-    })
+    }))
 
-    onRaceAnswerUpdate((_data: any) => {
+    wsUnsubs.push(onRaceAnswerUpdate((_data: any) => {
         // 答题进度更新（可通过 scores 获取）
-    })
+    }))
 
-    onRaceScores((data: any) => {
+    wsUnsubs.push(onRaceScores((data: any) => {
         if (data.raceCid !== raceId.value) return
         raceScores.value = data.scores || []
-    })
+    }))
 
     // 答对者弹幕：某学生答对时，竞赛内所有端（含其他学生）飘出提示
-    onRaceAnswerCorrect((data: any) => {
+    wsUnsubs.push(onRaceAnswerCorrect((data: any) => {
         if (data.raceCid !== raceId.value) return
         const item = { id: ++barrageId, from: String(data.from || 'anonymous'), gain: Number(data.gain) || 0, top: 8 + Math.random() * 70 }
         raceBarrages.value.push(item)
         setTimeout(() => {
             raceBarrages.value = raceBarrages.value.filter(b => b.id !== item.id)
         }, 4000)
-    })
+    }))
 
-    onRaceQuestionEnd((data: any) => {
+    wsUnsubs.push(onRaceQuestionEnd((data: any) => {
         if (data.raceCid !== raceId.value) return
         currentQuestionCid.value = 0
         showPodium.value = true
@@ -245,9 +248,9 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         questionTop3.value = (data.top3 || []).map((t: any) => ({ ...t, display: `${t.timeUsed}s` }))
         if (timerInterval) clearInterval(timerInterval)
         if (submitCheckTimer) clearInterval(submitCheckTimer)
-    })
+    }))
 
-    onRaceEnd((data: any) => {
+    wsUnsubs.push(onRaceEnd((data: any) => {
         if (data.raceCid !== raceId.value) return
         raceActive.value = false
         currentQuestionCid.value = 0
@@ -264,7 +267,7 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
         showPodium.value = true
         if (timerInterval) clearInterval(timerInterval)
         if (submitCheckTimer) clearInterval(submitCheckTimer)
-    })
+    }))
 
     // ====================== 教师控制 ======================
     function startRace() {
@@ -395,6 +398,9 @@ export function useRaceRender(props: RaceRenderProps, emit: RaceRenderEmit) {
     onBeforeUnmount(() => {
         if (timerInterval) clearInterval(timerInterval)
         if (submitCheckTimer) clearInterval(submitCheckTimer)
+        // 注销 WS 回调，避免组件卸载后 handler 残留累积
+        wsUnsubs.forEach(fn => fn())
+        wsUnsubs.length = 0
         // 发送离线信号
         if (pin.value && canShow.value) {
             sendRaceOnline(pin.value, user.value?.id || 0, user.value?.name || 'anonymous', false)

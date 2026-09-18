@@ -12,6 +12,8 @@ import { resetAllStubs, setMockI18n, setMockLmsContext, setMockAuthUser, setMock
 ;(globalThis as any).useUserCard = () => ({ refreshTrigger: ref(0), refresh: () => {} })
 // 捕获 raceAnswerCorrect 回调，供弹幕浮层渲染测试手动触发
 let raceAnswerCorrectCb: ((d: any) => void) | null = null
+// raceAnswerCorrect 的取消注册函数（验证卸载时是否注销）
+let raceAnswerCorrectOff: () => void = () => {}
 ;(globalThis as any).useWebSocket = () => ({
   ws: ref(null),
   wsConnected: ref(false),
@@ -26,7 +28,7 @@ let raceAnswerCorrectCb: ((d: any) => void) | null = null
   onRaceQuestion: () => () => {},
   sendRaceAnswer: () => {},
   onRaceAnswerUpdate: () => () => {},
-  onRaceAnswerCorrect: (cb: any) => { raceAnswerCorrectCb = cb; return () => {} },
+  onRaceAnswerCorrect: (cb: any) => { raceAnswerCorrectCb = cb; return raceAnswerCorrectOff },
   onRaceScores: () => () => {},
   sendRaceQuestionEnd: () => {},
   onRaceQuestionEnd: () => () => {},
@@ -49,6 +51,7 @@ const fetchUsersSpy = vi.fn(async () => {})
 beforeEach(() => {
   resetAllStubs()
   raceAnswerCorrectCb = null
+  raceAnswerCorrectOff = vi.fn()
   fetchUsersSpy.mockClear()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
   setMockLmsContext(1, 1)
@@ -152,5 +155,18 @@ describe('race/render.vue', () => {
     expect(wrapper.find('.race-barrage').exists()).toBe(true)
     expect(wrapper.text()).toContain('test01')
     expect(wrapper.text()).toContain('race.answerCorrectBarrage')
+  })
+
+  it('卸载时注销已注册的 WS 回调（避免 handler 累积）', async () => {
+    const { default: RaceRender } = await import(
+      '../../../../../components/ueditor/extensions/nodes/vue/race/render.vue'
+    )
+    const wrapper = mount(RaceRender, {
+      props: { node: { attrs: { content: '1' } }, courseId: 1 },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    wrapper.unmount()
+    expect(raceAnswerCorrectOff).toHaveBeenCalled()
   })
 })

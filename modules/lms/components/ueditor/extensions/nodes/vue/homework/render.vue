@@ -65,7 +65,7 @@
 
         <!-- 记录弹窗（仅教师） -->
         <LmsRecordsModalHomework v-if="isTeacher" v-model="recordsOpen"
-            :course-id="courseId" :cid="homeworkId" :max-score="homework.point || 0" />
+            :course-id="courseId" :cid="homeworkId" :homework-name="homework.name" :max-score="homework.point || 0" />
 
         <!-- 编辑弹窗 -->
         <Edit v-model="editOpen" :homework-id="homeworkId" :homework="homework" @saved="onSaved" />

@@ -23,7 +23,14 @@
                     <UIcon name="i-lucide-timer" class="size-3.5 inline mr-1" />
                     {{ formatTime(remainingTime) }}
                 </span>
-                <span class="text-gray-400">{{ t('quiz.timeRemaining') }}</span>
+                <div class="flex items-center gap-3">
+                    <span v-if="switchLimitEnabled"
+                        :class="switchCount > switchLimit ? 'text-red-500 font-bold' : 'text-orange-500'">
+                        <UIcon name="i-lucide-monitor-off" class="size-3.5 inline mr-1" />
+                        {{ t('quiz.switchCount', { n: switchCount, limit: switchLimit }) }}
+                    </span>
+                    <span class="text-gray-400">{{ t('quiz.timeRemaining') }}</span>
+                </div>
             </div>
             <div class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div class="h-full rounded-full transition-all duration-1000 ease-linear"
@@ -80,6 +87,7 @@ import { useQuizRenderContext } from '../useQuizRender'
 
 const {
     t, effectiveCourseId, started, remainingTime, formatTime, timeProgress,
+    switchCount, switchLimit, switchLimitEnabled,
     quizQuestions, getQuestionBtnClass, switchQuestion, currentIndex,
     questionRefs, answeredCount, submitting, confirmOpen, confirmSubmit, submitQuiz,
 } = useQuizRenderContext()

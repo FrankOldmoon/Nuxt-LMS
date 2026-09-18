@@ -237,6 +237,7 @@ export const quizzes = pgTable(
     timeLimit: integer('time_limit').default(600),
     submitCount: integer('submit_count').default(0),
     submitLimit: integer('submit_limit').default(1),
+    switchLimit: integer('switch_limit').default(0),
     startAt: timestamp('start_at', { withTimezone: true }),
     endAt: timestamp('end_at', { withTimezone: true }),
     avgPoint: numeric('avg_point', { precision: 10, scale: 2 }).default('0'),

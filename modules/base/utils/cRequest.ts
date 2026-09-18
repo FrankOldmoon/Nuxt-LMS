@@ -75,9 +75,11 @@ async function cRequest<T = any>(url: string, options: Record<string, any> = {})
     finalOptions.body = injectToBody(options.body, courseId, chapterId)
   }
 
-  const resp = await $fetch<{ data: T; success: boolean; msg: string }>(finalUrl, finalOptions)
+  const resp = await $fetch<{ data: T; success: boolean; msg: string; code?: string }>(finalUrl, finalOptions)
   if (!resp.success) {
-    throw new Error(resp.msg || '请求失败')
+    const err: any = new Error(resp.msg || '请求失败')
+    if (resp.code) err.code = resp.code
+    throw err
   }
   return resp.data
 }

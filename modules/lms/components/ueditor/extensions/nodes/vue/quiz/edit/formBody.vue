@@ -12,6 +12,9 @@
         <UFormField :label="t('quiz.submitLimit')" size="sm">
             <UInput v-model.number="form.submitLimit" type="number" size="sm" />
         </UFormField>
+        <UFormField :label="t('quiz.switchLimit')" size="sm" :help="t('quiz.switchLimitHint')">
+            <UInput v-model.number="form.switchLimit" type="number" min="0" size="sm" />
+        </UFormField>
         <UFormField :label="t('quiz.totalPoint')" size="sm">
             <UInput :model-value="totalPoint" type="number" size="sm" disabled />
         </UFormField>

@@ -45,16 +45,28 @@
         <div class="text-xs text-gray-500">{{ t('quiz.submitCount', { n: userRecord.submitCount }) }}</div>
     </div>
 
+    <!-- 超时未提交：本次作答作废（未持久化），可重试 -->
+    <div v-if="expiredUnsubmitted"
+        class="mb-3 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-md">
+        <div class="flex items-center gap-2 mb-1">
+            <UIcon name="i-heroicons-clock" class="size-5 text-orange-500" />
+            <span class="text-sm font-medium text-orange-700 dark:text-orange-300">
+                {{ t('quiz.expiredNotSubmitted') }}
+            </span>
+        </div>
+        <div class="text-xs text-gray-500">{{ t('quiz.submitCount', { n: expiredRecord.submitCount }) }}</div>
+    </div>
+
     <!-- 未开始：显示开始按钮或等待提示 -->
-    <div v-if="!started && !userRecord" class="flex flex-col items-center gap-3 py-6">
+    <div v-if="!started && !userRecord && !expiredUnsubmitted" class="flex flex-col items-center gap-3 py-6">
         <UButton v-if="canStart && quizQuestions.length > 0" color="primary" size="lg" icon="i-lucide-play"
             :label="t('quiz.start')" @click="startQuiz" />
         <p v-else-if="quizQuestions.length === 0" class="text-sm text-gray-400">{{ t('quiz.noQuestions') }}</p>
         <p v-else class="text-sm text-gray-400">{{ notStartedReason }}</p>
     </div>
 
-    <!-- 已提交且可重试：显示重新开始按钮 -->
-    <div v-if="userRecord && canRetry && !started" class="flex justify-center py-4">
+    <!-- 已提交/超时且可重试：显示重新开始按钮 -->
+    <div v-if="(userRecord || expiredUnsubmitted) && canRetry && !started" class="flex justify-center py-4">
         <UButton color="primary" variant="outline" icon="i-lucide-rotate-ccw" :label="t('quiz.retry')"
             @click="startQuiz" />
     </div>
@@ -65,7 +77,8 @@ import { useQuizRenderContext } from '../useQuizRender'
 
 const {
     t, quiz, quizId, isTeacher, moduleLms, editOpen, recordsOpen,
-    userRecord, started, quizQuestions, canStart, notStartedReason,
+    userRecord, expiredRecord, expiredUnsubmitted,
+    started, quizQuestions, canStart, notStartedReason,
     canRetry, formatDateTime, startQuiz,
 } = useQuizRenderContext()
 </script>

@@ -94,6 +94,8 @@ describe('auth/loginForm.vue', () => {
       await flushPromises()
       expect(loginCalls).toBe(1)
       expect(loginBtn.attributes('disabled')).toBeDefined()
+      // 冷却期间只禁用，按钮文案不再显示倒计时数字
+      expect(loginBtn.text()).not.toMatch(/\(\d+s\)/)
 
       // 冷却期内再次提交：被拦截
       await wrapper.find('form').trigger('submit')

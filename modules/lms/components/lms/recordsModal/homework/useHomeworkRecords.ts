@@ -5,12 +5,15 @@ export interface HomeworkRecordsProps {
     courseId: number
     cid: number
     maxScore: number
+    /** 作业名称（用于「一键下载全部附件」的压缩包命名） */
+    homeworkName?: string
 }
 
 export type HomeworkRecordsEmit = (event: 'update:modelValue', value: boolean) => void
 
 export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRecordsEmit) {
     const { t } = useI18n()
+    const toast = useToast()
     const { students } = useClassUsers()
     const { chapterId } = useLmsContext()
 
@@ -21,6 +24,8 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
 
     const rows = ref([])
     const pending = ref(false)
+    // 一键下载全部附件：打包中状态
+    const downloadingAll = ref(false)
 
     const extraColumns = computed(() => [
         {
@@ -306,9 +311,180 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
         return PREVIEWABLE_EXTS.has(getFileUrlExt(url))
     }
 
+    // ==================== 一键下载全部附件 ====================
+    /** 归一化 record.files → url 字符串数组（兼容 [{url}] 与字符串两种历史格式） */
+    function attachmentUrls(record: any): string[] {
+        const files = record?.files
+        if (!Array.isArray(files)) return []
+        return files.map((f: any) => (typeof f === 'string' ? f : f?.url)).filter(Boolean)
+    }
+
+    /** 压缩包内的路径片段清洗：去掉非法字符，避免跨目录 */
+    function safeSegment(name: string): string {
+        return String(name || '')
+            .replace(/[\\/:*?"<>|]/g, '_')
+            .replace(/\s+/g, ' ')
+            .trim() || 'unknown'
+    }
+
+    /** 解析附件的原始文件名：优先 /api/files/meta，失败回退 url 解析 */
+    async function resolveFileName(url: string): Promise<string> {
+        try {
+            const u = new URL(url, window.location.origin)
+            const pathname = u.searchParams.get('pathname')
+            if (pathname) {
+                const data = await cRequest(`/api/files/meta?pathname=${encodeURIComponent(pathname)}`)
+                if (data?.name) return data.name
+            }
+        } catch { /* 忽略，回退 */ }
+        return getFileNameFromUrl(url)
+    }
+
+    /** 同一目录内重名时追加 (n) 后缀 */
+    function uniqueName(name: string, used: Set<string>): string {
+        if (!used.has(name)) return name
+        const dot = name.lastIndexOf('.')
+        const base = dot > 0 ? name.slice(0, dot) : name
+        const ext = dot > 0 ? name.slice(dot) : ''
+        let n = 1
+        let candidate = `${base}(${n})${ext}`
+        while (used.has(candidate)) {
+            n += 1
+            candidate = `${base}(${n})${ext}`
+        }
+        return candidate
+    }
+
+    /**
+     * 一键下载所有学生的作业附件：按「学生」分文件夹打包为 zip。
+     * 单个文件下载失败会跳过，不影响整体；全部失败则提示。
+     */
+    async function downloadAllFiles() {
+        if (downloadingAll.value) return
+        const groups = rows.value
+            .filter(r => hasSubmission(r.record))
+            .map(r => ({
+                name: safeSegment(r.preferName || r.name || r.username || `user-${r.id}`),
+                files: attachmentUrls(r.record),
+            }))
+            .filter(g => g.files.length > 0)
+
+        if (!groups.length) {
+            toast.add({ title: t('record.noAttachments'), color: 'warning' })
+            return
+        }
+
+        downloadingAll.value = true
+        try {
+            const JSZip = (await import('jszip')).default
+            const zip = new JSZip()
+            let total = 0
+            let saved = 0
+            // 同名学生在同一班级内理论上不会出现，仍做去重避免覆盖
+            const usedFolders = new Set<string>()
+
+            for (const group of groups) {
+                const folderName = uniqueName(group.name, usedFolders)
+                usedFolders.add(folderName)
+                const folder = zip.folder(folderName)!
+                const usedNames = new Set<string>()
+                for (const url of group.files) {
+                    total += 1
+                    try {
+                        const resp = await fetch(url)
+                        if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+                        const blob = await resp.blob()
+                        const rawName = await resolveFileName(url)
+                        const fileName = uniqueName(safeSegment(rawName), usedNames)
+                        usedNames.add(fileName)
+                        folder.file(fileName, blob)
+                        saved += 1
+                    } catch { /* 单个附件失败跳过 */ }
+                }
+            }
+
+            if (!saved) {
+                toast.add({ title: t('record.downloadAllFailed'), color: 'error' })
+                return
+            }
+
+            const blob = await zip.generateAsync({ type: 'blob' })
+            const stamp = new Date().toISOString().slice(0, 10)
+            const prefix = safeSegment(props.homeworkName || `homework-${props.cid}`)
+            const link = document.createElement('a')
+            link.href = URL.createObjectURL(blob)
+            link.download = `${prefix}-attachments-${stamp}.zip`
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+            setTimeout(() => URL.revokeObjectURL(link.href), 1000)
+            toast.add({ title: t('record.downloadAllDone', { saved, total }), color: 'success' })
+        } catch {
+            toast.add({ title: t('record.downloadAllFailed'), color: 'error' })
+        } finally {
+            downloadingAll.value = false
+        }
+    }
+
+    // ==================== 一键全部满分 ====================
+    const scoringAll = ref(false)
+
+    /**
+     * 给所有「已提交作业」的学生一键打满分（maxScore）。
+     * - 已是满分的行跳过（避免无意义的重复请求）
+     * - 单个学生失败不影响整体；全部失败则提示
+     */
+    async function scoreAllSubmitted() {
+        if (scoringAll.value) return
+        const max = Number(props.maxScore) || 0
+        if (max <= 0) {
+            toast.add({ title: t('record.scoreAllInvalidMax'), color: 'warning' })
+            return
+        }
+        const targets = rows.value.filter(r =>
+            hasSubmission(r.record) && Number(scoreMap[r.id]) !== max,
+        )
+        if (!targets.length) {
+            toast.add({ title: t('record.scoreAllNone'), color: 'warning' })
+            return
+        }
+
+        scoringAll.value = true
+        let ok = 0
+        try {
+            for (const row of targets) {
+                try {
+                    await cRequest('/api/homeworks/score', {
+                        method: 'POST',
+                        body: {
+                            course_id: props.courseId,
+                            chapter_id: chapterId.value,
+                            homework_cid: props.cid,
+                            user_id: row.id,
+                            score: max,
+                        },
+                    })
+                    scoreMap[row.id] = max
+                    if (row.record) row.record.score = String(max)
+                    else ensureRecord(row).score = String(max)
+                    ok += 1
+                } catch { /* 单个失败跳过 */ }
+            }
+            if (ok > 0) {
+                toast.add({ title: t('record.scoreAllDone', { n: ok }), color: 'success' })
+            } else {
+                toast.add({ title: t('record.scoreAllFailed'), color: 'error' })
+            }
+        } finally {
+            scoringAll.value = false
+        }
+    }
+
     return {
         open, rows, pending, extraColumns, defaultSort, scoreMap, commentMap, excellentMap,
         fetchRecords, onScoreBlur, onQuickScore, onCommentBlur, toggleExcellent,
+        downloadingAll, downloadAllFiles,
+        scoringAll, scoreAllSubmitted,
         detailOpen, detailData, detailRecord, detailSubmittedAt, detailIndex, detailTotal,
         openHomeworkDetail, prevSubmission, nextSubmission, closeDetail,
         isRichDoc, strFromComment, hasSubmission, submittedAtOf, isPreviewableFile,

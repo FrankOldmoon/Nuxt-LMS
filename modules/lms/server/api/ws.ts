@@ -38,6 +38,7 @@
  *   { type: 'raceQuestion', raceCid, questionCid, questionIndex, totalQuestions, timeLimit }
  *   { type: 'raceAnswerUpdate', raceCid, questionCid, answeredCount }
  *   { type: 'raceScores', raceCid, scores }
+ *   { type: 'raceAnswerCorrect', raceCid, questionCid, userId, from, gain }  ← 答对者弹幕（房间广播，含其他学生）
  *   { type: 'raceQuestionEnd', raceCid, questionCid, results, top3, answeredCount }
  *   { type: 'raceEnd', raceCid, leaderboard, scores }
  *   { type: 'raceOnlineUpdate', pin, userId, from, online }

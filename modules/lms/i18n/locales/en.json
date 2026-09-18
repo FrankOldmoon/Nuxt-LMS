@@ -204,6 +204,12 @@
     "noQuestions": "No questions, please add",
     "timeLimit": "Time Limit (sec)",
     "submitLimit": "Submit Limit",
+    "switchLimit": "Tab-switch Limit",
+    "switchLimitHint": "Max times you may leave the quiz page (tab switch/minimize). Exceeding it auto-submits on return. 0 = unlimited",
+    "switchCount": "Switched {n}/{limit}",
+    "switchExceeded": "Tab-switch limit exceeded",
+    "switchExceededDesc": "Left the quiz page {n} times (limit {limit}). Auto-submitting the quiz",
+    "expiredNotSubmitted": "Time's up — this attempt was not submitted",
     "point": "Total Points",
     "totalPoint": "Total (auto)",
     "perQuestionPoint": "Points",
@@ -280,6 +286,7 @@
     "showResult": "Show Results",
     "answerCorrectBarrage": "🎉 answered correctly (+{gain} pts)",
     "pin": "Race PIN",
+    "scoresTable": "Student Scores",
     "needLms": "Race requires the LMS module to be enabled"
   },
   "peerReview": {
@@ -1140,7 +1147,18 @@
     "correctAnswer": "Correct Answer",
     "optionDistribution": "Option Distribution",
     "selectedCount": "Selected Count",
-    "scoreUnit": "pts"
+    "scoreUnit": "pts",
+    "downloadAllFiles": "Download All Files",
+    "downloadAllDone": "Packaged {saved}/{total} attachments",
+    "downloadAllFailed": "Failed to package attachments",
+    "noAttachments": "No student attachments to download",
+    "scoreAllSubmitted": "Full Score All",
+    "scoreAllConfirmTitle": "Give full score to all submitted students?",
+    "scoreAllConfirmDesc": "All students who submitted will be scored {score}, overwriting their existing scores.",
+    "scoreAllDone": "Gave full score to {n} students",
+    "scoreAllNone": "No submissions need full score",
+    "scoreAllFailed": "Failed to score all",
+    "scoreAllInvalidMax": "Invalid homework total score"
   },
   "comment": {
     "label": "Comment",

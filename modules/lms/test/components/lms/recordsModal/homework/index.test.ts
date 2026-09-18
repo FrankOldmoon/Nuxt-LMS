@@ -16,6 +16,8 @@ const h = vi.hoisted(() => ({
   files: [] as { url: string; name: string }[],
   prevSubmission: vi.fn(),
   nextSubmission: vi.fn(),
+  downloadAllFiles: vi.fn(),
+  scoreAllSubmitted: vi.fn(),
 }))
 
 vi.mock('../../../../../components/lms/recordsModal/homework/useHomeworkRecords', () => ({
@@ -48,6 +50,10 @@ vi.mock('../../../../../components/lms/recordsModal/homework/useHomeworkRecords'
       openHomeworkDetail: vi.fn(),
       prevSubmission: h.prevSubmission,
       nextSubmission: h.nextSubmission,
+      downloadingAll: ref(false),
+      downloadAllFiles: h.downloadAllFiles,
+      scoringAll: ref(false),
+      scoreAllSubmitted: h.scoreAllSubmitted,
       isRichDoc: (content: any) => typeof content === 'object',
       isPreviewableFile: () => h.state.previewable,
     }
@@ -134,6 +140,37 @@ describe('lms/recordsModal/homework/index.vue', () => {
     })
     await flushPromises()
     expect(wrapper.find('.class-users-table').exists()).toBe(true)
+  })
+
+  it('顶部渲染「下载全部附件」按钮，点击触发 downloadAllFiles', async () => {
+    h.downloadAllFiles.mockClear()
+    const { default: HomeworkRecords } = await import('../../../../../components/lms/recordsModal/homework/index.vue')
+    const wrapper = mount(HomeworkRecords, {
+      props: { modelValue: true, courseId: 1, cid: 100, maxScore: 100 },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    const btn = wrapper.findAll('button').find(b => b.text().includes('record.downloadAllFiles'))
+    expect(btn).toBeTruthy()
+    await btn!.trigger('click')
+    expect(h.downloadAllFiles).toHaveBeenCalled()
+  })
+
+  it('顶部「全部满分」按钮：确认后触发 scoreAllSubmitted', async () => {
+    h.scoreAllSubmitted.mockClear()
+    const { default: HomeworkRecords } = await import('../../../../../components/lms/recordsModal/homework/index.vue')
+    const wrapper = mount(HomeworkRecords, {
+      props: { modelValue: true, courseId: 1, cid: 100, maxScore: 100 },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    const openBtn = wrapper.findAll('button').find(b => b.text().includes('record.scoreAllSubmitted'))
+    expect(openBtn).toBeTruthy()
+    await openBtn!.trigger('click')
+    const confirmBtn = wrapper.findAll('button').find(b => b.text().includes('common.confirm'))
+    expect(confirmBtn).toBeTruthy()
+    await confirmBtn!.trigger('click')
+    expect(h.scoreAllSubmitted).toHaveBeenCalled()
   })
 
   it('正确接收 maxScore prop', async () => {
