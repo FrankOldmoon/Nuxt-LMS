@@ -170,4 +170,35 @@ describe('composables/useCourseProgress', () => {
     const opened = tasksCol!.cell({ row: { original: { accessible: true, items } } as any })
     expect(opened).toBeTruthy()
   })
+
+  it('bar 列：显示百分比数字', async () => {
+    const { useCourseProgress } = await import('../../composables/useCourseProgress')
+    const isOpen = ref(false)
+    const ui = { UButton: {}, UTooltip: {}, UIcon: {}, NuxtLink: {} }
+    const { columns } = useCourseProgress({ courseId: '1', navigation: [] }, isOpen, ui)
+    const barCol = columns.find(c => c.id === 'bar')
+    expect(barCol).toBeDefined()
+
+    // 有进度：进度条 + 百分比数字
+    const vnode = barCol!.cell({ row: { original: { progress: 60, isParent: false } } as any } as any)
+    expect(vnode).toBeTruthy()
+    expect(collectText(vnode)).toContain('60%')
+
+    // 无进度（null）：不渲染
+    expect(barCol!.cell({ row: { original: { progress: null } } as any } as any)).toBeNull()
+  })
 })
+
+/** 递归收集 vnode 树中的文本，用于断言渲染文案 */
+function collectText(node: any): string {
+  if (node == null || typeof node === 'boolean') return ''
+  if (typeof node === 'string' || typeof node === 'number') return String(node)
+  if (Array.isArray(node)) return node.map(collectText).join('')
+  const children = node.children
+  if (typeof children === 'string' || typeof children === 'number') return String(children)
+  if (Array.isArray(children)) return children.map(collectText).join('')
+  if (children && typeof children === 'object' && typeof children.default === 'function') {
+    return collectText(children.default())
+  }
+  return ''
+}

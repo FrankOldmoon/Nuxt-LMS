@@ -59,8 +59,12 @@ export function useFill(props: any) {
     }
   }, { immediate: true })
 
-  // 监听 record 变化，同步到 fillAnswers 和 DOM（fetchRecord 回填场景）
+  // 监听 record 变化，同步到 fillAnswers 和 DOM（仅服务端回填作答时）。
+  // 用户实时输入时 record 是经 trim 写入的，若此时把 record 回写进输入框，
+  // 会把刚输入的空格吞掉（且每次按键光标被移到末尾），导致填空题无法输入空格。
+  // 因此只在 fromRecord=true（fetchRecord / 答卷回填）时同步。
   watch(() => props.question?.record, (record: any) => {
+    if (!fromRecord?.value) return
     if (!Array.isArray(record) || record.length === 0) return
     fillAnswers.value = [...record]
     // DOM 可能还未渲染，用 nextTick 确保已挂载

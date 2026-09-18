@@ -170,11 +170,15 @@ export function useCourseProgress(
         const progress = (row.original as ProgressRow)?.progress ?? null
         if (progress == null) return null
         const pct = Math.min(100, Math.max(0, progress))
-        return h('div', { class: 'w-full h-2 bg-gray-200 dark:bg-gray-700 rounded overflow-hidden' }, [
-          h('div', {
-            class: ['h-full rounded transition-all', (row.original as ProgressRow)?.isParent ? 'bg-primary-300' : 'bg-primary-500'],
-            style: { width: `${pct}%` },
-          }),
+        return h('div', { class: 'flex items-center gap-2' }, [
+          h('div', { class: 'flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded overflow-hidden' }, [
+            h('div', {
+              class: ['h-full rounded transition-all', (row.original as ProgressRow)?.isParent ? 'bg-primary-300' : 'bg-primary-500'],
+              style: { width: `${pct}%` },
+            }),
+          ]),
+          // 百分比数字：进度为 0-100 的整数（服务端按 Math.round 计算）
+          h('span', { class: 'text-xs text-muted tabular-nums shrink-0 w-9 text-right' }, `${pct}%`),
         ])
       },
     },

@@ -25,6 +25,14 @@
                         </div>
                     </template>
 
+                    <!-- submittedAt 列：提交时间（仅真实提交显示） -->
+                    <template #submittedAt-cell="{ row }">
+                        <span v-if="submittedAtOf(row.original.record)" class="text-xs text-muted whitespace-nowrap">
+                            {{ formatTime(submittedAtOf(row.original.record)) }}
+                        </span>
+                        <span v-else class="text-xs text-gray-400">-</span>
+                    </template>
+
                     <!-- score 列：打分输入 + 一键满分（未提交也允许打分） -->
                     <template #score-cell="{ row }">
                         <div class="flex items-center gap-1">
@@ -84,6 +92,11 @@
                                 <!-- 序号 / 总数 -->
                                 <span class="text-xs font-medium text-muted whitespace-nowrap bg-gray-100 dark:bg-gray-800 rounded-full px-2.5 py-1">
                                     {{ detailIndex + 1 }}/{{ detailTotal }}
+                                </span>
+
+                                <!-- 提交时间 -->
+                                <span v-if="detailSubmittedAt" class="text-xs text-muted whitespace-nowrap">
+                                    {{ $t('record.submitTime') }}: {{ formatTime(detailSubmittedAt) }}
                                 </span>
                             </div>
 
@@ -213,8 +226,8 @@ const emit = defineEmits(['update:modelValue'])
 const {
     open, rows, pending, extraColumns, defaultSort, scoreMap, commentMap, excellentMap, fetchRecords,
     onScoreBlur, onQuickScore, onCommentBlur, toggleExcellent,
-    detailOpen, detailData, detailRecord, detailIndex, detailTotal,
-    openHomeworkDetail, prevSubmission, nextSubmission, closeDetail, isRichDoc, hasSubmission, isPreviewableFile,
+    detailOpen, detailData, detailRecord, detailSubmittedAt, detailIndex, detailTotal,
+    openHomeworkDetail, prevSubmission, nextSubmission, closeDetail, isRichDoc, hasSubmission, submittedAtOf, isPreviewableFile,
 } = useHomeworkRecords(props, emit)
 
 // ==================== 文件预览 ====================

@@ -77,6 +77,16 @@ describe('useHomeworkRecords 全屏评阅', () => {
     expect(ctx.hasSubmission(row.record)).toBe(false)
   })
 
+  it('submittedAtOf：优先 _submittedAt，回退 createdAt，并暴露提交时间列', async () => {
+    const ctx = await makeCtx([])
+    expect(ctx.extraColumns.value.map((c: any) => c.id)).toContain('submittedAt')
+    expect(ctx.submittedAtOf({ record: { _submittedAt: '2026-05-01T00:00:00.000Z' }, createdAt: '2026-01-01T00:00:00.000Z' }))
+      .toBe('2026-05-01T00:00:00.000Z')
+    expect(ctx.submittedAtOf({ record: { _submitCount: 0 }, createdAt: '2026-01-01T00:00:00.000Z' }))
+      .toBe('2026-01-01T00:00:00.000Z')
+    expect(ctx.submittedAtOf(null)).toBe(null)
+  })
+
   it('isPreviewableFile 区分可预览与仅下载类型', async () => {
     const ctx = await makeCtx([])
     expect(ctx.isPreviewableFile('/api/files/serve?pathname=2%2Fx.pdf')).toBe(true)

@@ -28,6 +28,13 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
             header: t('record.colRecord'),
             sortingFn: (a, b) => (hasSubmission(a.original.record) ? 1 : 0) - (hasSubmission(b.original.record) ? 1 : 0),
         },
+        // 提交时间：优先取提交时写入的 record._submittedAt，旧数据回退到行创建时间
+        {
+            id: 'submittedAt',
+            header: t('record.submitTime'),
+            canSort: true,
+            sortingFn: (a: any, b: any) => submittedTs(a.original.record) - submittedTs(b.original.record),
+        },
         // score 行数据无顶层字段（分数在 record.score），用自定义 sortingFn 按真实分数排序
         {
             id: 'score',
@@ -63,6 +70,23 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
         return record.record != null
             || record.content != null
             || (Array.isArray(record.files) && record.files.length > 0)
+    }
+
+    /**
+     * 记录的提交时间：优先取提交时写入的 record._submittedAt（重提交会刷新），
+     * 历史数据（改造前）没有该字段，回退到行创建时间 createdAt。
+     */
+    function submittedAtOf(record: any): string | null {
+        if (!record) return null
+        return record.record?._submittedAt || record.createdAt || null
+    }
+
+    /** 提交时间转时间戳（用于排序，缺失/非法按 0 处理） */
+    function submittedTs(record: any): number {
+        const v = submittedAtOf(record)
+        if (!v) return 0
+        const ms = new Date(v).getTime()
+        return Number.isNaN(ms) ? 0 : ms
     }
 
     /** 本地补一个记录对象：未提交学生首次保存打分/评语后，表格需即时反映 */
@@ -212,6 +236,8 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
     const detailData = ref<any>(null) // 当前评阅的完整行 { id, name, ..., record }
     const detailIndex = ref(0)
     const detailRecord = computed(() => detailData.value?.record ?? null)
+    // 提交时间：优先取提交时写入的 record._submittedAt（重提交会刷新），旧数据回退到行创建时间
+    const detailSubmittedAt = computed(() => submittedAtOf(detailRecord.value))
     const detailTotal = computed(() => submissions.value.length)
     // 所有已提交的作业（表格行仅含真实提交的），用于前后切换
     const submissions = computed(() => rows.value.filter(r => hasSubmission(r.record)))
@@ -283,8 +309,8 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
     return {
         open, rows, pending, extraColumns, defaultSort, scoreMap, commentMap, excellentMap,
         fetchRecords, onScoreBlur, onQuickScore, onCommentBlur, toggleExcellent,
-        detailOpen, detailData, detailRecord, detailIndex, detailTotal,
+        detailOpen, detailData, detailRecord, detailSubmittedAt, detailIndex, detailTotal,
         openHomeworkDetail, prevSubmission, nextSubmission, closeDetail,
-        isRichDoc, strFromComment, hasSubmission, isPreviewableFile,
+        isRichDoc, strFromComment, hasSubmission, submittedAtOf, isPreviewableFile,
     }
 }

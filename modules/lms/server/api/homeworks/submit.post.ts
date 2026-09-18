@@ -47,14 +47,18 @@ export default withSubmitHandler('提交作业失败', async (event) => {
   }
 
   // 3. 写 userHomeworks
+  const submittedAt = new Date().toISOString()
   const writeValues = {
     userId: user.id,
     courseId,
     homeworkCid: Number(homeworkCid),
     files: files || null,
     content: content || null,
-    // 首次提交 _submitCount=0；重提交在原记录上 +1
-    record: existing ? { ...recordMeta, _submitCount: nextResubmitCount } : { _submitCount: 0 },
+    // 首次提交 _submitCount=0；重提交在原记录上 +1；
+    // _submittedAt 记录最近一次提交时间（供教师端评阅详情展示）
+    record: existing
+      ? { ...recordMeta, _submitCount: nextResubmitCount, _submittedAt: submittedAt }
+      : { _submitCount: 0, _submittedAt: submittedAt },
   }
   if (existing) {
     await db.update(schema.userHomeworks).set({
