@@ -72,7 +72,6 @@ export default defineNitroPlugin(() => {
       ...classes.map((c) => c.id),
       ...(defaultClassId ? [defaultClassId] : []),
     ])]
-    console.log('[me-enrich] classIds', classIds, 'defaultClassId', defaultClassId)
 
     return { teacherCourseIds, editorCourseIds, classIds, classes }
   })

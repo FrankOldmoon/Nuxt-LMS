@@ -71,6 +71,5 @@ export const getOjStatus = async (pid: string, username: string): Promise<boolea
     if (!data || !data.rdocs) {
         return null;
     }
-    console.log(pid, username, data.rdocs.length)
     return data.rdocs.length > 0
 }

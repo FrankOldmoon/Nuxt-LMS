@@ -22,7 +22,6 @@ export async function checkClass(userId: number, value: number | string): Promis
   if (u) {
     const primaryClassId = Number(u.classId) || 0
     const defaultClassId = Number((u.defaultClass as any)?.id) || 0
-    console.log('[condition] checkClass 主班级', { userId, classId, primaryClassId, defaultClassId })
     if (primaryClassId === classId || defaultClassId === classId) return true
   }
 
