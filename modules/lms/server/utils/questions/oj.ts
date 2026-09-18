@@ -12,6 +12,28 @@ function getOjUrl(): string {
   return String(url).replace(/\/+$/, '')
 }
 
+/**
+ * 解析题目记录对应的 OJ pid。
+ *
+ * pid 的权威来源是 `options.pid`（内容管理/编辑器写入）。
+ * `content` 只在「题目正文尚未回填」时才是 pid——被 show.ts 用 OJ 题目正文替换后，
+ * content 变成题目正文（含换行/空格），直接当 pid 会查不到提交记录。
+ * 因此优先 options.pid，其次把「形如 pid 的短字符串」content 作为老数据回退。
+ */
+export function resolveOjPid(question: any): string {
+    const opts = question?.options
+    if (opts && typeof opts === 'object' && !Array.isArray(opts) && opts.pid) {
+        return String(opts.pid)
+    }
+    const c = question?.content
+    if (typeof c === 'string') {
+        const s = c.trim()
+        // 老数据 content 存 pid（如 P1001 / 2）；正文文本含换行/空格，不匹配
+        if (/^[A-Za-z0-9_-]{1,32}$/.test(s)) return s
+    }
+    return ''
+}
+
 export const fetchOj = async (pid: string) => {
     const base = getOjUrl()
     if (!base || !pid) return null

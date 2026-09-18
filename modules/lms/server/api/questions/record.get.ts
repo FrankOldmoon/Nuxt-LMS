@@ -14,7 +14,7 @@ export default eventHandler(async (event) => {
   const questionCid = Number(cid)
 
   // OJ 题型：hover 时实时查询 OJ 通过状态，按 pass 值更新 user_question
-  // （content 存的是 pid）。仅首次通过时计入课程分项分，避免重复加分。
+  // （pid 取 options.pid，content 可能是已回填的题目正文）。仅首次通过时计入课程分项分，避免重复加分。
   const question = await db.query.questions.findFirst({
     where: and(
       eq(schema.questions.courseId, courseId),
@@ -22,7 +22,7 @@ export default eventHandler(async (event) => {
     )
   })
   if (question?.type === 'oj' && !skip_oj) {
-    const pid = String(question.content || '')
+    const pid = resolveOjPid(question)
     if (pid) {
       try {
         const passed = await getOjStatus(pid, user.username)

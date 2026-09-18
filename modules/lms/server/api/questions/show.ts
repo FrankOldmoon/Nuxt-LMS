@@ -29,10 +29,11 @@ export default eventHandler(async (event) => {
   })
   if (!data) return cResp(null, '题目不存在', false)
 
-  // OJ 题型：content 存的是 pid，用 fetchOj 拉取题目内容替换 content 供前端展示；
+  // OJ 题型：pid 取 options.pid（content 可能已被回填为题目正文），
+  // 用 fetchOj 拉取题目内容替换 content 供前端展示；
   // 同时把 pid 放入 options，供编辑回填与渲染「前往 OJ」链接使用。
   if (data.type === 'oj') {
-    const pid = String(data.content || '')
+    const pid = resolveOjPid(data)
     if (pid) {
       const opts: any = data.options
       if (!opts || typeof opts !== 'object' || Array.isArray(opts) || !opts.pid) {
