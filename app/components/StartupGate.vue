@@ -10,6 +10,7 @@
         </div>
         <h1 class="text-xl font-semibold text-gray-900">Access Verification</h1>
         <p class="text-sm text-gray-500 mt-1">This page requires authentication. Please sign in with your account.</p>
+        <p class="text-xs text-amber-600 mt-1.5">Only teacher and administrator accounts can sign in on this domain.</p>
       </div>
 
       <UForm class="space-y-4" @submit.prevent="verify">

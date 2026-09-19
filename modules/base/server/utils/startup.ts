@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { verifyCredentials, type CredentialResult } from './auth/credentials'
+import { isGatedLoginAllowed } from './auth/hostPolicy'
 
 // 启动访问门（StartupGate）：用真实用户账号/密码校验，不再使用硬编码密码。
 // 校验通过后签发 HttpOnly cookie，凭签名判断已解锁（不代表已登录）。
@@ -60,6 +61,11 @@ export async function verifyStartupLogin(event: StartupEvent, username: string, 
   resolveSecret()
   const result = await verifyCredentials(username, password)
   if (!result.ok) return result
+  // 非 IP 的 URL（正式域名）：访问门仅允许教师及以上账号通过。
+  // 必须在签发 startup cookie **之前**判定，否则学生账号虽被拒但仍拿到解锁 cookie。
+  if (!(await isGatedLoginAllowed(event, result.user.id))) {
+    return { ok: false, locked: false, forbidden: true }
+  }
   const token = sign(String(Date.now()))
   setCookie(event, COOKIE_NAME, token, {
     httpOnly: true,

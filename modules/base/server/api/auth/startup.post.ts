@@ -14,6 +14,10 @@ export default defineEventHandler(async (event) => {
     if (result.locked) {
       return cResp(null, `账号已锁定，请 ${result.remainingMinutes} 分钟后再试`, false)
     }
+    // 非 IP 域名（正式站点）：仅教师及以上账号可通过访问门
+    if (result.forbidden) {
+      return cResp(null, '该站点仅开放教师及以上账号登录', false)
+    }
     return cResp(null, 'Invalid username or password', false)
   }
   const user = result.user

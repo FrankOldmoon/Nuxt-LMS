@@ -53,11 +53,12 @@ beforeEach(() => {
 })
 
 /** 模拟一个 H3 event 对象 */
-function makeEvent(opts: { cookies?: Record<string, any>; body?: any; query?: Record<string, any> } = {}) {
+function makeEvent(opts: { cookies?: Record<string, any>; body?: any; query?: Record<string, any>; headers?: Record<string, string> } = {}) {
   return {
     cookies: opts.cookies || {},
     body: opts.body,
     query: opts.query || {},
+    headers: opts.headers || {},
   } as any
 }
 
@@ -190,6 +191,67 @@ describe('API: auth/login.post', () => {
     expect(result.data.user.username).toBe('alice')
     expect(result.data.token).toMatch(/^[0-9a-f]{64}$/)
     expect(event.cookies.auth_token).toBe(result.data.token)
+  })
+})
+
+describe('API: auth/login.post 非 IP 域名仅教师及以上', () => {
+  beforeEach(() => {
+    resetDbChain()
+  })
+
+  /**
+   * select() 首次调用走 users 链（凭据校验 select().from(users).where().limit()），
+   * 之后走 roles 链（角色查询 select().from(userRoles).innerJoin(roles).where()）。
+   */
+  function mockSelectWithRoles(roleRows: any[], hashed: string) {
+    const usersChain: any = {
+      from: vi.fn(() => usersChain),
+      where: vi.fn(() => usersChain),
+      limit: vi.fn(() => Promise.resolve([
+        { id: 1, username: 'alice', name: 'Alice', password: hashed, email: 'a@b.c', avatarImg: null, failedAttempts: 0, lockedUntil: null },
+      ])),
+    }
+    const rolesChain: any = {
+      from: vi.fn(() => rolesChain),
+      innerJoin: vi.fn(() => rolesChain),
+      where: vi.fn(() => Promise.resolve(roleRows)),
+    }
+    _mockDb.select = vi.fn().mockReturnValueOnce(usersChain).mockReturnValue(rolesChain)
+  }
+
+  async function loginAs(host: string, roleCode: string | null) {
+    const { hashPassword } = await import('../../server/utils/auth')
+    mockSelectWithRoles(roleCode ? [{ code: roleCode }] : [], await hashPassword('correct-pwd'))
+    const handler = (await import('../../server/api/auth/login.post')).default
+    const event = makeEvent({ body: { username: 'alice', password: 'correct-pwd' }, headers: { host } })
+    return { result: await handler(event), event }
+  }
+
+  it('域名下学生账号被拒，且不签发 token', async () => {
+    const { result, event } = await loginAs('lms.oldmoon.cn', 'student')
+    expect(result.success).toBe(false)
+    expect(result.msg).toMatch(/教师/)
+    expect(event.cookies.auth_token).toBeUndefined()
+  })
+
+  it('域名下无角色账号被拒', async () => {
+    const { result } = await loginAs('lms.oldmoon.cn', null)
+    expect(result.success).toBe(false)
+  })
+
+  it('域名下教师 / 管理员账号可正常登录', async () => {
+    for (const code of ['teacher', 'admin', 'observer']) {
+      const { result, event } = await loginAs('lms.oldmoon.cn', code)
+      expect(result.success).toBe(true)
+      expect(event.cookies.auth_token).toBeTruthy()
+    }
+  })
+
+  it('IP / localhost 访问时不限制角色（学生可登录，便于本地调试）', async () => {
+    for (const host of ['127.0.0.1:3004', 'localhost:3004', '192.168.1.10:3004']) {
+      const { result } = await loginAs(host, 'student')
+      expect(result.success).toBe(true)
+    }
   })
 })
 
@@ -768,6 +830,56 @@ describe('API: auth/startup.post 访问门（复用暴力破解防护）', () =>
     expect(result.data.unlocked).toBe(true)
     expect(event.cookies.startup_token).toBeTruthy()
     expect(event.cookies.auth_token).toMatch(/^[0-9a-f]{64}$/)
+  })
+
+  it('非 IP 域名下学生账号被拒，且不签发 startup/auth cookie', async () => {
+    const { hashPassword } = await import('../../server/utils/auth')
+    const hashed = await hashPassword('correct-pwd')
+    const usersChain: any = {
+      from: vi.fn(() => usersChain),
+      where: vi.fn(() => usersChain),
+      limit: vi.fn(() => Promise.resolve([{ id: 1, username: 'alice', name: 'Alice', password: hashed, failedAttempts: 0, lockedUntil: null }])),
+    }
+    const rolesChain: any = {
+      from: vi.fn(() => rolesChain),
+      innerJoin: vi.fn(() => rolesChain),
+      where: vi.fn(() => Promise.resolve([{ code: 'student' }])),
+    }
+    _mockDb.select = vi.fn().mockReturnValueOnce(usersChain).mockReturnValue(rolesChain)
+    const handler = (await import('../../server/api/auth/startup.post')).default
+    const event = makeEvent({
+      body: { username: 'alice', password: 'correct-pwd' },
+      headers: { host: 'lms.oldmoon.cn' },
+    })
+    const result = await handler(event)
+    expect(result.success).toBe(false)
+    expect(result.msg).toMatch(/教师/)
+    expect(event.cookies?.startup_token).toBeUndefined()
+    expect(event.cookies?.auth_token).toBeUndefined()
+  })
+
+  it('非 IP 域名下教师账号可通过访问门', async () => {
+    const { hashPassword } = await import('../../server/utils/auth')
+    const hashed = await hashPassword('correct-pwd')
+    const usersChain: any = {
+      from: vi.fn(() => usersChain),
+      where: vi.fn(() => usersChain),
+      limit: vi.fn(() => Promise.resolve([{ id: 2, username: 'teacher', name: 'T', password: hashed, failedAttempts: 0, lockedUntil: null }])),
+    }
+    const rolesChain: any = {
+      from: vi.fn(() => rolesChain),
+      innerJoin: vi.fn(() => rolesChain),
+      where: vi.fn(() => Promise.resolve([{ code: 'teacher' }])),
+    }
+    _mockDb.select = vi.fn().mockReturnValueOnce(usersChain).mockReturnValue(rolesChain)
+    const handler = (await import('../../server/api/auth/startup.post')).default
+    const event = makeEvent({
+      body: { username: 'teacher', password: 'correct-pwd' },
+      headers: { host: 'lms.oldmoon.cn' },
+    })
+    const result = await handler(event)
+    expect(result.success).toBe(true)
+    expect(event.cookies.startup_token).toBeTruthy()
   })
 })
 

@@ -1,6 +1,7 @@
 import { db, schema } from '@nuxthub/db'
 import { eq } from 'drizzle-orm'
 import { verifyCredentials } from '../../utils/auth/credentials'
+import { isGatedLoginAllowed } from '../../utils/auth/hostPolicy'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
@@ -20,6 +21,12 @@ export default defineEventHandler(async (event) => {
   }
 
   const user = result.user
+
+  // 非 IP 的 URL（正式域名）：登录同样仅允许教师及以上账号，
+  // 防止学生绕过访问门直接调用登录接口拿到会话。
+  if (!(await isGatedLoginAllowed(event, user.id))) {
+    return cResp(null, '该站点仅开放教师及以上账号登录', false)
+  }
 
   // 生成 token
   const tokenStr = generateToken()

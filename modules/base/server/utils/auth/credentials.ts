@@ -21,12 +21,13 @@ function resetLockoutCount(userId: number) {
 /**
  * 凭据校验结果：
  * - ok=true  → 校验通过，返回用户
- * - ok=false → 校验失败；locked=true 表示账号处于锁定期内（remainingMinutes 为剩余分钟）
+ * - ok=false → 校验失败；locked=true 表示账号处于锁定期内（remainingMinutes 为剩余分钟）；
+ *              forbidden=true 表示凭据正确但被站点策略拒绝（如非 IP 域名仅允许教师及以上）
  */
 export type CredentialResult =
   | { ok: true; user: any }
   | { ok: false; locked: true; remainingMinutes: number }
-  | { ok: false; locked: false }
+  | { ok: false; locked: false; forbidden?: boolean }
 
 /**
  * 校验账号密码并施加暴力破解防护（失败计数 + 指数退避锁定）。

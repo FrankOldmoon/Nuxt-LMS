@@ -384,6 +384,17 @@ export function getHeader(_event: any, _name: string) {
   return undefined
 }
 
+/** getRequestHeader 桩 — 从 event.headers 读取（名称大小写不敏感；用于断言 Host 相关策略） */
+export function getRequestHeader(event: any, name: string): string | undefined {
+  const headers = event?.headers
+  if (!headers) return undefined
+  const k = String(name).toLowerCase()
+  for (const key of Object.keys(headers)) {
+    if (key.toLowerCase() === k) return (headers as any)[key]
+  }
+  return undefined
+}
+
 /** setCookie / deleteCookie（实际写入 event.cookies） */
 export function setCookie(event: any, name: string, value: string, _opts?: any) {
   if (!event.cookies) event.cookies = {}
@@ -1316,6 +1327,7 @@ const _stubsToExpose: Record<string, any> = {
   setResponseStatus,
   setHeader,
   getHeader,
+  getRequestHeader,
   setResponseHeader,
   setResponseHeaders,
   sendStream,
