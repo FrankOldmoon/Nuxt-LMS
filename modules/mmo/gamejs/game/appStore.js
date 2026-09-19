@@ -15,4 +15,13 @@ export const appStore = {
   groundTarget: null,    // 当前活跃场景（地面物品目标）
   activeScene: null,     // 当前活跃游戏场景(MapScene 实例)
   onSelfReady: null,     // 本机角色就位回调(首帧渲染前不显示画面, 避免出生点→存档坐标瞬移)
+  // 章节副本运行时(由 mmo.vue 注入; 非章节模式为 null):
+  //   { active, chapterId, layers, ctx, isLayerDone(i), layerProgress(i), markRead(key), requestTask(type,cid,key) }
+  chapterRuntime: null,
+  // 由 mmo.vue 注入: 在游戏内打开 LMS 原生任务渲染弹窗 (type, cid, key) => void
+  openChapterTask: null,
+  // 由 mmo.vue 注入: 通过章节副本最后一层出口时调用 → 回到章节页面并退出游戏
+  onChapterExit: null,
+  // 章节任务弹窗是否打开(打开时冻结游戏输入/移动)
+  taskModalOpen: false,
 };

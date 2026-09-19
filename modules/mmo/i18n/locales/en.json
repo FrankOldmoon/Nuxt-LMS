@@ -1,6 +1,7 @@
 {
   "mmo": {
     "title": "MMO World",
+    "chapterEntry": "MMO Dungeon",
     "showMmo": "Show MMO",
     "connecting": "Connecting…",
     "connected": "{n} in room",
@@ -29,6 +30,29 @@
     },
     "door": {
       "enterTip": "Press [E] to enter {name}"
+    },
+    "chapterInst": {
+      "layer": "Floor {n}",
+      "readBlock": "Reading",
+      "emptyBlock": "(no content)",
+      "textBlock": "Notes",
+      "taskNpc": "Task",
+      "taskTip": "{name}: press [E] to answer",
+      "challengeTip": "Press [E] to challenge (answer correctly to slay)",
+      "taskQuestion": "Question",
+      "taskHomework": "Homework",
+      "taskComment": "Comment",
+      "taskQuiz": "Quiz",
+      "taskRace": "Race",
+      "enemyDefeated": "Slain!",
+      "lockTip": "Complete this floor to reveal the exit",
+      "exitTip": "Press [E] to finish and return to the chapter",
+      "exitLabel": "EXIT",
+      "finishLabel": "FINISH",
+      "back": "Back to chapter",
+      "progress": "Progress {done}/{total}",
+      "enemiesShort": "Enemies {a}/{b}",
+      "more": "…"
     },
     "indoor": {
       "hint": "A small room. Walk to the door and press [E] to leave.",

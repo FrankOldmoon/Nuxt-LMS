@@ -36,14 +36,15 @@ export class Monster {
     this.maxHp = opts.hp || 60;
     this.hp = this.maxHp;
     this.dead = false;
+    const showBar = opts.showBar !== false; // 章节任务敌人不显示血条
     this.x = x; this.y = y; // 逻辑位置(移动基准,不含浮动偏移)
     this.spr = scene.add.sprite(x, y, this.texKey, this.frameAt(2, 0)).setOrigin(0.5, 1).setScale(sc).setDepth(4);
     this.shadow = scene.add.ellipse(x, y + 4, 34 * sc, 10 * sc, 0x000000, 0.28).setDepth(3);
     // 头顶血条(所有怪物统一长度,按百分比填充;填充向左边收缩)
     this.barW = 34;
     const y0 = y - this.cell * sc - 10;
-    this.hpBg = scene.add.rectangle(x - this.barW / 2, y0, this.barW, 5, 0x111111, 0.85).setOrigin(0, 0.5).setDepth(6);
-    this.hpFill = scene.add.rectangle(x - this.barW / 2, y0, this.barW, 5, 0x44ff44, 1).setOrigin(0, 0.5).setDepth(7);
+    this.hpBg = scene.add.rectangle(x - this.barW / 2, y0, this.barW, 5, 0x111111, 0.85).setOrigin(0, 0.5).setDepth(6).setVisible(showBar);
+    this.hpFill = scene.add.rectangle(x - this.barW / 2, y0, this.barW, 5, 0x44ff44, 1).setOrigin(0, 0.5).setDepth(7).setVisible(showBar);
     this.state = { facing: 2, mode: "walk" };
     this._animT = 0;
     this._hurt = null;      // {until, active}

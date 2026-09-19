@@ -9,8 +9,9 @@ import { W, H } from "../constants.js";
 import { AnimatedCharacter } from "../animatedCharacter.js";
 import { appStore } from "../appStore.js";
 import { buildMvCharacter } from "../../rpg/buildMvCharacter.js";
-import { DEFAULT_CFG } from "../../config/characterConfig.js";
+import { DEFAULT_CFG, randomMvCfg } from "../../config/characterConfig.js";
 import { RpgMap } from "../../rpg/rpgMap.js";
+import { EXIT_TILE } from "../../rpg/dungeonGen.js";
 import { fetchBitmap, BASE } from "../../lpc/imageLoader.js";
 import { NPCS } from "../npc.js";
 import { Overlay } from "../overlay.js";
@@ -35,6 +36,22 @@ const XP_PER_LV = 100;
 const MONSTER_RESPAWN_MS = 20000;
 const COLLIDE_R = 14;
 const MONSTER_TILES = [[2, 3], [36, 4], [33, 8], [30, 30], [14, 12], [2, 20], [35, 20], [14, 35]];
+
+// 章节副本 NPC 的确定性外观随机源：同一 NPC（key+序号）每次生成外观一致，且彼此差异化
+function hashSeed(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function chapterNpcRng(key, idx) {
+  let a = hashSeed(String(key) + ":" + idx);
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
 
 // 玩家名字
 function playerName() {
@@ -86,13 +103,13 @@ export default class MapScene extends Phaser.Scene {
     });
 
     // 渲染地图(配置驱动)
-    const mkMap = async (file, tex) => {
-      const m = new RpgMap(this, file, { texKey: tex });
+    const mkMap = async (file, tex, mapObj) => {
+      const m = new RpgMap(this, file, { texKey: tex, mapObj });
       await m.load();
       return m;
     };
     try {
-      this.rpgMap = await mkMap(mcfg.file, mcfg.tex)
+      this.rpgMap = await mkMap(mcfg.file, mcfg.tex, mcfg._mapObj)
         .catch((e) => { console.error("[MapScene] map load fail, fallback world", e); return mkMap(MAPS.world.file, mcfg.tex); }); // 失败回退世界地图,避免黑屏
     } catch (e) {
       console.error("[map load]", e);
@@ -124,7 +141,8 @@ export default class MapScene extends Phaser.Scene {
       }
     }
     // 刷新恢复: 若存档 mapId 匹配当前场景, 用存档坐标设置 spawn(避免先出生点再跳转)
-    if (!this.spawn && appStore.playerState) {
+    // 章节副本例外：始终从「入口瓦片」进入（mcfg.spawn = 地牢入口），保证每次进本都在入口处
+    if (!this.spawn && appStore.playerState && !mcfg.chapter) {
       const ps = appStore.playerState;
       if (ps.mapId === this.scene.key && typeof ps.x === "number" && typeof ps.y === "number") {
         const px = Phaser.Math.Clamp(ps.x, 0, this._worldW);
@@ -149,11 +167,15 @@ export default class MapScene extends Phaser.Scene {
         for (const tile of tiles) {
           if (!tile) continue;
           const p = this.rpgMap.findWalkable(clampTile(tile[0], this.rpgMap.MAP_W), clampTile(tile[1], this.rpgMap.MAP_H));
-          this.doors.push({ to: d.to, spawn: d.spawn || null, pos: p });
+          this.doors.push({ to: d.to, spawn: d.spawn || null, pos: p, lock: d.lock || null, tile, exit: !!d.exit });
         }
       }
     }
     this.nearDoor = false;
+    // 章节副本：本层完成后才「出现」出口瓦片（生成时已抹掉）
+    this._chapterLayer = mcfg.chapter && typeof mcfg.chapter.layer === "number" ? mcfg.chapter.layer : -1;
+    this._chapterExitShown = false;
+    this._exitFx = null; // 场景实例会被复用：重置出口特效引用（旧对象已随 shutdown 销毁）
 
     // UI
     this.doorTip = this.add.text(0, 0, "", { fontFamily: '"PingFang SC"', fontSize: "15px", color: "#7fd4ff", fontStyle: "bold", stroke: "#000000", strokeThickness: 3 }).setOrigin(0.5, 1).setDepth(69).setVisible(false);
@@ -207,14 +229,26 @@ export default class MapScene extends Phaser.Scene {
     this.nearNpc = null;
     this.monsters = [];
     this.inBattle = false;       // 回合制战斗进行中(暂停移动)
+    // 章节副本的任务敌人（答对即消灭；不走回合制战斗系统）
+    this.chapterEnemies = [];
+    this.nearEnemy = null;
     if (mcfg.features && mcfg.features.npc) this.spawnNPCs();
     if (mcfg.features && mcfg.features.monsters) this.spawnMonsters();
+    if (Array.isArray(mcfg.enemies) && mcfg.enemies.length) this.spawnChapterEnemies();
 
     this._status = this.add.text(14, 14, t("mmo.connecting"), { fontFamily: '"PingFang SC"', fontSize: "15px", color: "#fff", stroke: "#000", strokeThickness: 3 }).setScrollFactor(0, 0).setDepth(20);
     this.taskHud = this.add.text(14, 54, "", { fontFamily: '"PingFang SC"', fontSize: "14px", color: "#ffd66b", fontStyle: "bold", stroke: "#000000", strokeThickness: 3 }).setScrollFactor(0, 0).setDepth(24).setVisible(false)
       .setInteractive({ useHandCursor: true })
       .on("pointerdown", () => this.toggleTasks());
     this.posHud = DEV ? this.add.text(14, this.scale.height - 22, "", { fontFamily: "monospace", fontSize: "13px", color: "#b9e8ff", stroke: "#000000", strokeThickness: 2 }).setOrigin(0, 1).setScrollFactor(0, 0).setDepth(201).setVisible(false) : null;
+
+    // 章节副本：进度 / 返回按钮由 mmo.vue 的 DOM 面板呈现（此处不再画画布 HUD，避免重叠）
+    // 已进入章节副本时，若本层已在上次游玩中完成，直接补上出口
+    if (this._chapterLayer >= 0) {
+      const rt = appStore.chapterRuntime;
+      if (rt && rt.active) this.syncChapterState();
+      else { this._chapterExitShown = true; this.revealChapterExit(); }
+    }
 
     this.setupDialogUI();
     this.bindNetHandlers();
@@ -392,6 +426,16 @@ export default class MapScene extends Phaser.Scene {
   // 若不在当前场景则切换到目标地图(目标地图按自身配置 spawn 出生)
   // 走门进入时(_fromNav=true)跳过: door spawn 已正确, 不应再用旧坐标覆盖
   restoreSavedMap(p) {
+    // 章节副本：始终从「入口瓦片」出生 —— 忽略服务器存档的层/坐标。
+    // 否则会把角色瞬移到上次停留的坐标，甚至切到上次停留的那一层。
+    // 同时把当前层 + 入口坐标原子地同步给服务器，避免远端看到"新地图 + 旧坐标"。
+    if (this.mcfg && this.mcfg.chapter) {
+      const c = this.localChar;
+      if (c && this.net.connected) {
+        try { this.net.sendMap(this.scene.key, c.sprite.x, c.sprite.y); } catch { /* ignore */ }
+      }
+      return;
+    }
     const target = p && typeof p.mapId === "string" ? p.mapId : "";
     if (!target) return;
     // 未知地图(可能尚未加载的副本)落回主世界, 避免黑屏
@@ -644,6 +688,80 @@ export default class MapScene extends Phaser.Scene {
     // 跨端一致的怪物 id：地图 + 类型 + 落点瓦片（各端 maps.json 相同 → id 相同），用于战斗锁
     const id = `${this.scene.key}:${key}:${Math.round(x / 48)}:${Math.round(y / 48)}`;
     this.monsters.push({ id, m, def, key, homeX: x, homeY: y, ai: { t: Phaser.Math.Between(600, 1600), dx: 0, dy: 1, atkCd: 0 } });
+  }
+
+  // ---- 章节任务敌人：(题目/作业/评论/测验) 各一只，答对即被"斩杀" ----
+  async spawnChapterEnemies() {
+    await registerMonsterTextures(this);
+    const rt = appStore.chapterRuntime;
+    const types = ["bat", "bee", "big_worm", "eyeball", "ghost", "man_eater_flower", "pumpking", "snake"];
+    const list = (this.mcfg.enemies || []).filter((e) => (e.map || this.scene.key) === this.scene.key);
+    list.forEach((def, i) => {
+      // 已答对的任务不再出现（进入副本时按服务端进度恢复）
+      if (rt && rt.isTaskDone && rt.isTaskDone(def.taskKey)) return;
+      let key = types[i % types.length];
+      if (!this.textures.exists("mon_" + key)) key = types.find((k) => this.textures.exists("mon_" + k));
+      if (!key) return;
+      const spot = this.rpgMap.findWalkable(def.tile[0], def.tile[1]);
+      const m = new Monster(this, spot.x, spot.y, key, { scale: 1, hp: 1, showBar: false });
+      this.chapterEnemies.push({
+        id: `${this.scene.key}:e${i}`, m, key, def,
+        taskKey: def.taskKey, taskType: def.taskType, taskCid: def.taskCid,
+        name: def.name || this.monsterLabel(key),
+        x: spot.x, y: spot.y, defeated: false,
+      });
+    });
+  }
+  updateChapterEnemies(delta) {
+    const c = this.localChar;
+    for (const en of this.chapterEnemies) {
+      if (!en || en.defeated || !en.m || !en.m.spr || !en.m.spr.scene) continue;
+      let facing = 2;
+      if (c) {
+        const dx = c.sprite.x - en.m.x, dy = c.sprite.y - en.m.y;
+        facing = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 3 : 1) : (dy > 0 ? 2 : 0);
+      }
+      en.m.setFacing(facing);
+      try { en.m.update(delta, en.x, en.y, false); } catch { /* 过渡帧 */ }
+    }
+  }
+  // 答对题目 → 快速斩击动画 + 敌人消灭
+  defeatChapterEnemy(en) {
+    if (!en || en.defeated) return;
+    en.defeated = true;
+    const ex = en.m.x, ey = en.m.y;
+    const c = this.localChar;
+    if (c) {
+      const dx = ex - c.sprite.x, dy = ey - c.sprite.y;
+      c.state.facing = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 3 : 1) : (dy > 0 ? 2 : 0);
+    }
+    // 斩击弧
+    const g = this.add.graphics().setDepth(45);
+    g.lineStyle(7, 0xffffff, 0.95);
+    g.beginPath();
+    g.arc(ex, ey - 22, 34, Phaser.Math.DegToRad(-70), Phaser.Math.DegToRad(70), false);
+    g.strokePath();
+    g.setScale(0.35).setAlpha(1);
+    this.tweens.add({ targets: g, scaleX: 1.35, scaleY: 1.35, alpha: 0, duration: 300, ease: "Cubic.easeOut", onComplete: () => g.destroy() });
+    // 敌人受击闪红 → 缩放淡出消失
+    en.m.spr.setTint(0xff5050);
+    en.m.hpBg.setVisible(false);
+    en.m.hpFill.setVisible(false);
+    sfx.hurtMonster();
+    this.cameras.main.shake(90, 0.003);
+    this.tweens.add({
+      targets: en.m.spr,
+      alpha: 0,
+      scaleX: en.m.scale * 1.5,
+      scaleY: en.m.scale * 1.5,
+      duration: 280,
+      delay: 90,
+      ease: "Cubic.easeIn",
+      onComplete: () => { try { en.m.destroy(); } catch { /* ignore */ } },
+    });
+    this.time.delayedCall(90, () => { try { en.m.shadow.setAlpha(0); } catch { /* ignore */ } });
+    this.time.delayedCall(380, () => sfx.monsterDie());
+    this.floatText(ex, ey - 60, t("chapterInst.enemyDefeated"), "#ffd66b");
   }
   // 该怪当前被谁锁住（undefined = 空闲）
   monsterLock(id) {
@@ -901,19 +1019,50 @@ export default class MapScene extends Phaser.Scene {
     // 静态 NPCS + 本图教师编排副本 NPC(副本 NPC 已带 map 字段)
     const defs = NPCS.slice();
     if (this.mcfg && Array.isArray(this.mcfg.npcs)) defs.push(...this.mcfg.npcs);
+    const isChapter = !!(this.mcfg && this.mcfg.type === "chapter");
+    let appearanceIdx = 0;
     for (const def of defs) {
       // 只生成属于当前地图的 NPC(def.map 缺省视为 world)
       if ((def.map || "world") !== this.scene.key) continue;
       try {
-        const result = await buildMvCharacter(mvCfg(def.cfg || DEFAULT_CFG));
+        // 章节副本 NPC 没有固定外观 → 现场生成一份差异化外观（必带头发，性别只取男女）
+        let raw = def.cfg;
+        if (!raw && isChapter) {
+          raw = await randomMvCfg({ rng: chapterNpcRng(def.key, appearanceIdx++), hairAlways: true, genders: ["Male", "Female"] });
+        }
+        const result = await buildMvCharacter(mvCfg(raw || DEFAULT_CFG));
         const spot = this.rpgMap.findWalkable(def.tile[0], def.tile[1]);
         const ch = new AnimatedCharacter(this, spot.x, spot.y, "npc_" + def.key, { name: def.name, enableHurtFx: false, scale: 1 });
         ch.build(result.sheets, result.layout);
         ch.ready = true;
         ch.setState("idle", 2);
-        this.npcs.push({ def, x: spot.x, y: spot.y, char: ch });
+        // 章节副本的「阅读」NPC：头顶一个上下缓动的 ❗，读完后隐藏
+        const mark = this.chapterNpcMark(def, spot, ch);
+        this.npcs.push({ def, x: spot.x, y: spot.y, char: ch, mark });
       } catch (e) { console.warn("[npc] build failed:", def.key, e); }
     }
+  }
+
+  // 章节副本「阅读」NPC 的头顶 ❗（上下缓动）；非阅读 NPC 或已完成阅读则不显示
+  chapterNpcMark(def, spot, ch) {
+    if (!def || !def.readKey) return null;
+    const done = this.chapterReadDone(def);
+    const h = (ch && ch.sprite && ch.sprite.displayHeight) ? ch.sprite.displayHeight : 56;
+    const baseY = spot.y - h - 8;
+    const mark = this.add.text(spot.x, baseY, "❗", {
+      fontFamily: '"PingFang SC"', fontSize: "22px", color: "#ffd93b",
+      stroke: "#000000", strokeThickness: 4,
+    }).setOrigin(0.5, 1).setDepth(46).setVisible(!done);
+    this.tweens.add({ targets: mark, y: baseY - 12, duration: 700, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+    return mark;
+  }
+  // 该阅读块是否已完成（本会话已读，或其所属 heading 已通过）
+  chapterReadDone(def, rt) {
+    rt = rt || appStore.chapterRuntime;
+    if (!rt || !rt.active || !def) return false;
+    if (def.readKey && rt.isReadDone && rt.isReadDone(def.readKey)) return true;
+    if (def.headingId && rt.isHeadingDone && rt.isHeadingDone(def.headingId)) return true;
+    return false;
   }
 
   // ---- 对话框 / 互动 ----
@@ -947,7 +1096,14 @@ export default class MapScene extends Phaser.Scene {
     const d = this.dlgOmni;
     if (!d.open) return;
     if (d.index < (d.npc.def.lines || []).length - 1) { d.index++; this.renderDialog(); }
-    else this.closeDialog();
+    else { this.completeDialogRead(d.npc); this.closeDialog(); }
+  }
+  // 对话翻到最后一页：章节副本里视为「读过该块」，上报给 LMS 进度
+  completeDialogRead(npc) {
+    const def = npc && npc.def;
+    if (!def || !def.readKey) return;
+    const rt = appStore.chapterRuntime;
+    if (rt && rt.active) rt.markRead(def.readKey);
   }
   closeDialog() {
     if (!this.dlgOmni.open) { return; }
@@ -957,20 +1113,93 @@ export default class MapScene extends Phaser.Scene {
   }
 
   onActionKey() {
-    if (this.backpackOpen || this.dead) return;
+    if (this.backpackOpen || this.dead || appStore.taskModalOpen) return;
     if (this.nearDoor) { this.goDoor(this.nearDoor); return; }
     if (this.dlgOmni.open) { this.advanceDialog(); return; }
     if (this.shopOpen) { this.toggleShop(false); return; }
+    // 章节副本：靠近任务敌人 → 弹出 LMS 原生渲染弹窗作答（答对即斩杀）
+    if (this.nearEnemy && !this.nearEnemy.defeated) {
+      const en = this.nearEnemy;
+      if (appStore.openChapterTask) appStore.openChapterTask(en.taskType, en.taskCid, en.taskKey);
+      return;
+    }
     if (this.nearNpc) {
-      if (this.net.connected) this.net.sendTalk(this.nearNpc.def.key);
-      if (this.nearNpc.def.role === "shop") { this.openShop(); return; }
+      const def = this.nearNpc.def;
+      if (this.net.connected) this.net.sendTalk(def.key);
+      if (def.role === "shop") { this.openShop(); return; }
       this.openDialog(this.nearNpc);
     }
+  }
+
+  // ---- 章节副本：出口门控 / 进度 HUD / 出口瓦片「出现」 ----
+  doorUnlocked(d) {
+    if (!d || !d.lock) return true;
+    const rt = appStore.chapterRuntime;
+    if (!rt || !rt.active) return true; // 缺失章节运行时（如刷新丢失上下文）→ 不软锁
+    if (typeof d.lock.layer === "number") return rt.isLayerDone(d.lock.layer);
+    return true;
+  }
+  revealChapterExit() {
+    const d = this.doors && this.doors[0];
+    if (!d || !d.tile || !this.rpgMap) return;
+    this.rpgMap.revealTile(d.tile[0], d.tile[1], EXIT_TILE);
+    this.createChapterExitFx(d);
+  }
+  // 出口传送门特效：地面脉冲光圈 + 上方浮动箭头 + 标签
+  // 中间层用青蓝色（下一层），最后一层通关出口用金色以示区分
+  createChapterExitFx(d) {
+    if (this._exitFx || !d || !d.tile) return;
+    const cx = d.tile[0] * 48 + 24, cy = d.tile[1] * 48 + 24;
+    const final = !!d.exit;
+    const color = final ? 0xffd66b : 0x7fd4ff;
+    // 地面光圈（脉冲缩放 + 呼吸）
+    const glow = this.add.ellipse(cx, cy + 12, 46, 20, color, 0.30).setStrokeStyle(2, color, 0.9).setDepth(5);
+    const pulse = this.add.ellipse(cx, cy + 12, 46, 20, color, 0).setStrokeStyle(2, color, 0.7).setDepth(5);
+    this.tweens.add({ targets: glow, scaleX: 1.6, scaleY: 1.6, alpha: 0.06, duration: 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+    this.tweens.add({ targets: pulse, scaleX: 2.1, scaleY: 2.1, alpha: { from: 0.7, to: 0 }, duration: 1200, repeat: -1, ease: "Cubic.easeOut" });
+    // 上方向下指的箭头（上下浮动）
+    const arrow = this.add.graphics().setDepth(46);
+    arrow.fillStyle(color, 1);
+    arrow.fillTriangle(-9, 0, 9, 0, 0, 13);
+    arrow.setPosition(cx, cy - 40);
+    this.tweens.add({ targets: arrow, y: cy - 26, duration: 620, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+    // 标签
+    const label = this.add.text(cx, cy - 58, t(final ? "chapterInst.finishLabel" : "chapterInst.exitLabel"), {
+      fontFamily: '"PingFang SC"', fontSize: "15px", color: final ? "#ffd66b" : "#7fd4ff",
+      fontStyle: "bold", stroke: "#000000", strokeThickness: 4,
+    }).setOrigin(0.5, 1).setDepth(46);
+    this._exitFx = { glow, pulse, arrow, label };
+    sfx.pickup();
+  }
+  syncChapterState() {
+    if (this._chapterLayer < 0) return;
+    const rt = appStore.chapterRuntime;
+    if (!rt || !rt.active) return;
+    const i = this._chapterLayer;
+    // 答对题目 → 斩杀对应敌人；任务弹窗打开时延后触发，保证斩击动画可见
+    if (rt.isTaskDone && !appStore.taskModalOpen) {
+      for (const en of this.chapterEnemies) {
+        if (!en.defeated && rt.isTaskDone(en.taskKey)) this.defeatChapterEnemy(en);
+      }
+    }
+    // 阅读 NPC 的 ❗：阅读完成后隐藏
+    for (const n of this.npcs) {
+      if (!n.mark || !n.def || !n.def.readKey) continue;
+      const want = !this.chapterReadDone(n.def, rt);
+      if (n.mark.visible !== want) n.mark.setVisible(want);
+    }
+    const done = rt.isLayerDone(i);
+    if (done && !this._chapterExitShown) { this._chapterExitShown = true; this.revealChapterExit(); }
   }
 
   // ---- 跨图出入口 ----
   goDoor(door) {
     this.closeOverlays();
+    // 章节副本最后一层的出口：通关后直接回到章节页面并退出游戏（不再回主世界）
+    if (door.exit) {
+      if (typeof appStore.onChapterExit === "function") appStore.onChapterExit();
+      return;
+    }
     appStore.nav = { to: door.to, tile: door.spawn };
     // 目标地图的出生瓦片 → 像素(48px/格, 取格中心), 与 mapId 一起发给服务器,
     // 让"进入新地图"和"坐标更新"原子化, 避免远端玩家先看到旧地图坐标再瞬移到门口
@@ -1072,9 +1301,10 @@ export default class MapScene extends Phaser.Scene {
   update(_time, delta) {
     const c = this.localChar;
     if (!c || !c.ready) return;
+    if (this._chapterLayer >= 0) this.syncChapterState();
     const runKey = this.keys && this.keys.run;
     let vx = 0, vy = 0;
-    const uiBlocked = this.dlgOmni.open || this.backpackOpen || this.shopOpen || this.dead || this.inBattle ||
+    const uiBlocked = this.dlgOmni.open || this.backpackOpen || this.shopOpen || this.dead || this.inBattle || appStore.taskModalOpen ||
       (() => { const r = document.getElementById("tasks"); return r && !r.hidden; })();
     if (!c.state.busy && !uiBlocked) {
       vx = (this.cursors.RIGHT.isDown || this.cursors.D.isDown ? 1 : 0) - (this.cursors.LEFT.isDown || this.cursors.A.isDown ? 1 : 0);
@@ -1099,6 +1329,7 @@ export default class MapScene extends Phaser.Scene {
 
     for (const n of this.npcs) { n.char.update(delta); if (DEV) n.char.setCoord(n.char.sprite.x, n.char.sprite.y); }
     this.updateMonsters(delta, dt);
+    this.updateChapterEnemies(delta);
 
     // NPC 靠近检测
     let near = null, best = 110;
@@ -1107,7 +1338,17 @@ export default class MapScene extends Phaser.Scene {
       if (d2 < best) { best = d2; near = n; }
     }
     this.nearNpc = near;
-    if (near && !uiBlocked && !this.nearGround && !this.nearDoor) {
+    // 任务敌人靠近检测（优先于 NPC 提示）
+    let nearEnemy = null, bestE = 110;
+    for (const en of this.chapterEnemies) {
+      if (!en || en.defeated || !en.m) continue;
+      const d2 = Math.hypot(c.sprite.x - en.m.x, c.sprite.y - en.m.y);
+      if (d2 < bestE) { bestE = d2; nearEnemy = en; }
+    }
+    this.nearEnemy = nearEnemy;
+    if (nearEnemy && !uiBlocked && !this.nearGround && !this.nearDoor) {
+      this.tip.setVisible(true).setText(t("chapterInst.challengeTip")).setPosition(nearEnemy.m.x, nearEnemy.m.y - 56);
+    } else if (near && !uiBlocked && !this.nearGround && !this.nearDoor) {
       this.tip.setVisible(true).setText(t("npc.talkTip")).setPosition(near.x, near.y - 52);
     } else { this.tip.setVisible(false); }
 
@@ -1122,15 +1363,25 @@ export default class MapScene extends Phaser.Scene {
       }
     }
 
-    // 门(跨图出入口)
-    let door = null;
+    // 门(跨图出入口)——被锁的门不触发，靠近时给出未完成提示
+    let door = null, lockedDoor = null;
     for (const d of this.doors) {
-      if (Math.hypot(c.sprite.x - d.pos.x, c.sprite.y - d.pos.y) < 64) { door = d; break; }
+      if (Math.hypot(c.sprite.x - d.pos.x, c.sprite.y - d.pos.y) < 64) {
+        if (this.doorUnlocked(d)) { door = d; break; }
+        if (!lockedDoor) lockedDoor = d;
+      }
     }
     this.nearDoor = door;
     if (door && !this.nearGround) {
-      const toName = (MAPS[door.to] && MAPS[door.to].name) || door.to;
-      this.doorTip.setVisible(true).setText(t("door.enterTip", { name: toName })).setPosition(door.pos.x, door.pos.y - 26);
+      if (door.exit) {
+        // 通关出口：离开副本、回到章节页面
+        this.doorTip.setVisible(true).setText(t("chapterInst.exitTip")).setPosition(door.pos.x, door.pos.y - 26);
+      } else {
+        const toName = (MAPS[door.to] && MAPS[door.to].name) || (instanceStore.getMap(door.to) && instanceStore.getMap(door.to).name) || door.to;
+        this.doorTip.setVisible(true).setText(t("door.enterTip", { name: toName })).setPosition(door.pos.x, door.pos.y - 26);
+      }
+    } else if (lockedDoor && !this.nearGround) {
+      this.doorTip.setVisible(true).setText(t("chapterInst.lockTip")).setPosition(lockedDoor.pos.x, lockedDoor.pos.y - 26);
     } else { this.doorTip.setVisible(false); }
 
     // 地面物品

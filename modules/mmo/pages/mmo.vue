@@ -8,6 +8,7 @@ import { MAPS } from '../gamejs/shared/maps'
 import { instanceStore } from '../gamejs/shared/instanceStore'
 import { addRuntimeTasks } from '../gamejs/shared/tasks'
 import { setLang, setTranslator } from '../gamejs/i18n'
+import { generateChapterLayers } from '../gamejs/rpg/chapterInstance'
 
 definePageMeta({ layout: false })
 
@@ -17,8 +18,86 @@ const route = useRoute()
 const { public: mmoConfig } = useRuntimeConfig()
 
 // 必须带课程参数才能进入：游戏数据（存档/背包/任务）与金币都绑定到该课程。
-// 入口路径为 /course/:id/mmo，课程 ID 取自路由参数。
+// 入口路径：/course/:id/mmo（课程世界）与 /course/:id/:cid/mmo（章节副本）。课程 ID 取自路由参数。
 const courseId = computed(() => Number(route.params.id) || Number(route.query.course || route.query.courseId) || 0)
+
+// 章节副本模式：路由 /course/:id/:cid/mmo（兼容旧的 ?chapter= 查询参数）。
+// 点击章节页「MMO 副本」按钮进入，按章节内容生成地牢副本。
+const chapterId = computed(() => Number(route.params.cid) || Number(route.query.chapter) || 0)
+
+// 章节副本进度上下文：直接复用 LMS 的 useChapterTask 口径，
+// 使游戏内的「读完 / 答对」都能落回 chapter.progress（含持久化与奖励结算）。
+const chapterContent = ref(null)
+const chapterTitleRef = ref('')
+const chapterLayers = ref([]) // 生成的各层（供 DOM 进度面板展示）
+const chapterTaskCtx = setupChapterTask({
+  content: chapterContent,
+  chapterId: computed(() => chapterId.value),
+  courseId: computed(() => courseId.value),
+  chapterTitle: chapterTitleRef,
+})
+
+// 返回章节页地址（地牢左上角返回按钮用）
+const chapterBackUrl = computed(() => `/course/${Number(courseId.value)}/${Number(chapterId.value)}`)
+
+// 通关最后一层 → 直接回章节页面并退出游戏（由 MapScene 通过 appStore.onChapterExit 触发）
+function exitChapterDungeon() {
+  if (!import.meta.client) return
+  appStore.onChapterExit = null
+  navigateTo(chapterBackUrl.value)
+}
+
+// 整章进度（与 LMS 章节页同一口径：已完成 heading / 全部 heading）
+const chapterProgress = computed(() => {
+  const heads = chapterTaskCtx.taskMap.value.headings || []
+  const total = heads.length
+  const done = heads.filter((h) => chapterTaskCtx.taskStatus.value[h.id] === true).length
+  return { done, total, pct: total ? Math.round((done / total) * 100) : 0 }
+})
+// 逐层进度（含敌人击杀数）
+const layerProgressList = computed(() =>
+  chapterLayers.value.map((L, i) => {
+    const ids = (L.layer && L.layer.headingIds) || []
+    const done = ids.filter((id) => chapterTaskCtx.taskStatus.value[id] === true).length
+    const tasks = (L.layer && L.layer.tasks) || []
+    const killed = tasks.filter((t) => chapterTaskCtx.nodeStatus.value[t.key] === true).length
+    return { i, name: L.name, done, total: ids.length, killed, enemies: tasks.length, cleared: ids.length === 0 || done === ids.length }
+  }),
+)
+
+// 游戏内点击「可提交任务」敌人 → 弹出 LMS 原生任务渲染弹窗（question/homework/comment/quiz）
+const chapterTaskOpen = ref(false)
+const chapterTaskState = reactive({ type: '', id: 0, key: '' })
+const TaskModalComp = resolveComponent('CourseTaskModal')
+const hasTaskModal = typeof TaskModalComp !== 'string'
+// 答对后「马上隐藏」题目：短暂展示判定反馈 → 自动关闭弹窗 → 等离场动画结束再放开输入锁
+let chapterTaskCloseTimer = null
+let chapterTaskHideTimer = null
+watch(chapterTaskOpen, (v) => {
+  if (v) {
+    if (chapterTaskHideTimer) { clearTimeout(chapterTaskHideTimer); chapterTaskHideTimer = null }
+    appStore.taskModalOpen = true
+    return
+  }
+  if (chapterTaskCloseTimer) { clearTimeout(chapterTaskCloseTimer); chapterTaskCloseTimer = null }
+  if (chapterTaskHideTimer) clearTimeout(chapterTaskHideTimer)
+  // Modal 离场动画 ≈300ms：这段时间内仍视为"题目未隐藏"，
+  // 场景不会播放斩杀动画；动画与"题目确实消失"严格先后发生。
+  chapterTaskHideTimer = setTimeout(() => { chapterTaskHideTimer = null; appStore.taskModalOpen = false }, 320)
+})
+watch(() => (chapterTaskState.key ? chapterTaskCtx.nodeStatus.value[chapterTaskState.key] : false), (done) => {
+  if (!done || !chapterTaskOpen.value) return
+  if (chapterTaskCloseTimer) clearTimeout(chapterTaskCloseTimer)
+  chapterTaskCloseTimer = setTimeout(() => { chapterTaskOpen.value = false }, 500)
+})
+
+function openChapterTask(type, cid, key) {
+  if (!type || !Number(cid)) return
+  chapterTaskState.type = type
+  chapterTaskState.id = Number(cid)
+  chapterTaskState.key = key || ''
+  chapterTaskOpen.value = true
+}
 
 // 游戏内文案（Phaser 画布/DOM 覆盖层）跟随主项目语言。
 // locale JSON 会被 i18n 插件编译成 vue-i18n 消息 AST，游戏侧无法直接读 JSON，
@@ -103,6 +182,75 @@ async function startGame() {
       } catch (e) {
         console.error('[mmo external instance]', e)
         errorMsg.value = serverMsg(e && e.message, 'mmo.page.loadExternalFailed')
+        disarmReadyGate()
+        bootState.value = 'error'
+        return
+      }
+    }
+
+    // 章节副本模式：?chapter=<id> → 用 chapterId 作种子生成地牢，按 LMS 进度分层门控出口
+    if (chapterId.value) {
+      try {
+        const showRes = await $fetch(`/api/chapters/show?id=${chapterId.value}`)
+        const ch = showRes && showRes.data && showRes.data.chapter
+        chapterContent.value = (ch && ch.content) || null
+        chapterTitleRef.value = (ch && ch.title) || ''
+        // 材料通行 flags（tileset 4 = Dungeon）：墙面/地面候选、可通行格判定
+        const tiles = await $fetch('/api/game-assets/mmo/tilesets/Tilesets.json').catch(() => null)
+        const flags = (tiles && tiles[4] && tiles[4].flags) || []
+        // 服务端进度（恢复已完成层/已答对任务）
+        try {
+          const me = await $fetch('/api/courses/me', {
+            query: { courseId: courseId.value, chapterId: chapterId.value },
+          })
+          const st = me && me.data ? me.data.chapterTaskStatus : null
+          if (st) chapterTaskCtx.applyServerTaskStatus(st, !!(me.data && me.data.chapterIsPass))
+        } catch { /* 忽略：进度稍后由 useChapterTask 兜底 */ }
+
+        const built = generateChapterLayers({
+          content: chapterContent.value,
+          chapterId: chapterId.value,
+          flags,
+          courseId: courseId.value,
+        })
+        chapterLayers.value = built.layers
+        for (const L of built.layers) {
+          instanceStore.register({
+            id: L.mapId, type: 'chapter', name: L.name,
+            map: L.cfg, npcs: L.npcs, enemies: L.enemies, monsters: [], tasks: [],
+          }, L.mapId)
+        }
+        const layerDone = (i) => {
+          const L = built.layers[i]
+          return !!L && L.layer.headingIds.every((id) => chapterTaskCtx.taskStatus.value[id] === true)
+        }
+        // 始终从第 1 层（入口）进入：保证在入口瓦片出生，并逐层推进到下一个二级标题
+        const start = 0
+        appStore.chapterRuntime = {
+          active: true,
+          chapterId: chapterId.value,
+          layers: built.layers,
+          ctx: chapterTaskCtx,
+          isLayerDone: layerDone,
+          layerProgress(i) {
+            const ids = (built.layers[i] && built.layers[i].layer.headingIds) || []
+            const done = ids.filter((id) => chapterTaskCtx.taskStatus.value[id] === true).length
+            return { done, total: ids.length }
+          },
+          markRead(key) { if (key) chapterTaskCtx.markBlockRead(key) },
+          // 任务是否答对（nodeStatus 由 LMS reportNodeDone 写入）→ 敌人被消灭
+          isTaskDone(key) { return !!key && chapterTaskCtx.nodeStatus.value[key] === true },
+          // 阅读块是否已读（本会话）/ heading 是否已通过 → 场景据此隐藏 NPC 头顶的 ❗
+          isReadDone(key) { return !!key && chapterTaskCtx.isBlockRead(key) },
+          isHeadingDone(id) { return !!id && chapterTaskCtx.isHeadingDone(id) },
+          requestTask(type, cid, key) { openChapterTask(type, cid, key) },
+        }
+        appStore.openChapterTask = (type, cid, key) => openChapterTask(type, cid, key)
+        appStore.onChapterExit = exitChapterDungeon
+        if (built.layers[start]) externalMapId = built.layers[start].mapId
+      } catch (e) {
+        console.error('[mmo chapter instance]', e)
+        errorMsg.value = serverMsg(e && e.message, 'mmo.page.startFailed')
         disarmReadyGate()
         bootState.value = 'error'
         return
@@ -228,6 +376,11 @@ onBeforeUnmount(() => {
   disarmReadyGate()
   leaveRoom()
   if (game.value) game.value.destroy(true)
+  // 清理章节副本运行时/回调，避免下次进入时残留
+  appStore.onChapterExit = null
+  appStore.openChapterTask = null
+  appStore.taskModalOpen = false
+  appStore.chapterRuntime = null
 })
 </script>
 
@@ -262,6 +415,26 @@ onBeforeUnmount(() => {
       <template v-else>
       <!-- 游戏画面全屏铺满（Phaser FIT 自适应居中） -->
       <div id="multi-host" class="mmo-host"></div>
+
+      <!-- 章节副本：左上角返回章节页 + 整章进度（带 slider） -->
+      <div v-if="chapterId" class="chapter-hud">
+        <NuxtLink :to="chapterBackUrl" class="ch-back">← {{ $t('mmo.chapterInst.back') }}</NuxtLink>
+        <div class="ch-title">{{ chapterTitleRef || $t('mmo.chapterInst.layer', { n: 1 }) }}</div>
+        <div class="ch-bar"><i :style="{ width: chapterProgress.pct + '%' }" /></div>
+        <div class="ch-meta">
+          <span>{{ $t('mmo.chapterInst.progress', { done: chapterProgress.done, total: chapterProgress.total }) }}</span>
+          <b>{{ chapterProgress.pct }}%</b>
+        </div>
+        <ul class="ch-layers">
+          <li v-for="L in layerProgressList" :key="L.i" :class="{ cleared: L.cleared }">
+            <span class="ch-lname">{{ $t('mmo.chapterInst.layer', { n: L.i + 1 }) }}</span>
+            <span class="ch-lprog">
+              {{ L.done }}/{{ L.total }}
+              <template v-if="L.enemies"> · {{ $t('mmo.chapterInst.enemiesShort', { a: L.killed, b: L.enemies }) }}</template>
+            </span>
+          </li>
+        </ul>
+      </div>
 
       <!-- 首帧就位前用不透明遮罩盖住，避免看到出生点 → 存档坐标的瞬移 -->
       <div v-if="bootState !== 'ready'" class="mmo-boot">
@@ -313,6 +486,10 @@ onBeforeUnmount(() => {
           <div class="ov-foot">{{ $t('mmo.task.closeHint') }}</div>
         </div>
       </div>
+
+      <!-- 章节副本：游戏内点击任务 NPC → LMS 原生渲染弹窗作答 -->
+      <component v-if="hasTaskModal" :is="TaskModalComp" v-model:open="chapterTaskOpen"
+        :course-id="courseId" :type="chapterTaskState.type" :id="chapterTaskState.id" status="todo" />
       </template>
     </template>
   </div>
@@ -327,6 +504,23 @@ onBeforeUnmount(() => {
 .mmo-host canvas { border-radius: 0; box-shadow: none; }
 /* 首帧就位前的全屏不透明遮罩 */
 .mmo-boot { position: absolute; inset: 0; z-index: 70; display: grid; place-items: center; background: #0f1520; color: #8fa0b8; font-size: 15px; }
+
+/* 章节副本左上角面板：返回章节页 + 整章进度 slider + 逐层进度 */
+.chapter-hud { position: absolute; top: 12px; left: 12px; z-index: 60; width: 248px; padding: 10px 12px; background: rgba(16,22,31,.86); border: 1px solid #2c3a52; border-radius: 10px; color: #e6edf7; font-size: 12px; backdrop-filter: blur(3px); box-shadow: 0 6px 22px rgba(0,0,0,.4); }
+.ch-back { display: inline-block; color: #7fd4ff; font-size: 13px; text-decoration: none; margin-bottom: 6px; }
+.ch-back:hover { text-decoration: underline; }
+.ch-title { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ch-bar { height: 8px; background: #202a3c; border-radius: 5px; overflow: hidden; border: 1px solid #2c3a52; }
+.ch-bar i { display: block; height: 100%; background: linear-gradient(90deg, #4f8cff, #7fd4ff); transition: width .25s ease; }
+.ch-meta { display: flex; justify-content: space-between; margin: 4px 0 6px; color: #9fb3d0; }
+.ch-meta b { color: #9fe8a0; }
+.ch-layers { list-style: none; margin: 0; padding: 0; max-height: 42vh; overflow-y: auto; }
+.ch-layers li { display: flex; justify-content: space-between; gap: 6px; padding: 3px 0; color: #b9c8dd; border-top: 1px dashed #26324a; }
+.ch-layers li:first-child { border-top: none; }
+.ch-layers li.cleared { color: #9fe8a0; }
+.ch-layers li.cleared .ch-lprog::after { content: " \2713"; }
+.ch-lname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ch-lprog { flex: none; color: #8fa0b8; }
 
 /* 角色创建页（首次进入，无存档） */
 .mmo-create { position: absolute; inset: 0; display: grid; place-items: center; overflow: auto; padding: 16px; z-index: 65; background: #0f1520; }

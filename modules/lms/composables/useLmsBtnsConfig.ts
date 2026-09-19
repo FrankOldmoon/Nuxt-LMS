@@ -14,7 +14,7 @@ import type { Ref } from 'vue'
  * 调用方传入 source（Ref），composable 负责 watch + 合并写入 useLayoutState 的
  * courseBtnsConfig / chapterBtnsConfig / showDanmaku。
  *
- * @param source 配置源；为 null 时跳过（数据未就绪）
+ * @param source 配置源；为 null（课程无 courses.config.lmsConfig）时仍会应用全局 public 配置 + 默认值
  * @param options.flush watch flush 时机，[cid].vue 需要 'sync' 保证 SSR Suspense 恢复时同步执行
  */
 export function useLmsBtnsConfig(
@@ -30,25 +30,28 @@ export function useLmsBtnsConfig(
 
   const DEFAULT_COURSE_BTNS: Record<string, boolean> = {
     showProgress: true, showLeaderboard: true, showGroups: true,
-    showGrades: true, showAnnouncements: true, showWrongBook: true, showMmo: true,
+    showGrades: true, showAnnouncements: true, showWrongBook: true, showMmo: false,
   }
   const DEFAULT_CHAPTER_BTNS: Record<string, boolean> = {
     showPlay: true, showScore: true, showSelect: true, showTimer: true,
     showInvite: true, showDanmaku: true, showVote: true, showQuickAnswer: true,
   }
 
-  watch(source, (s) => {
-    if (!s) return
-    if (s.showDanmaku !== undefined) showDanmaku.value = s.showDanmaku
+  // 用 watchEffect 同时追踪 source / 全局 public 配置：
+  // source 为空（课程未做课程级覆盖）时也要写入「全局 public + 默认」，
+  // 否则课程页会停留在 layout 初始 useState（默认值），导致全局已开启的按钮不显示。
+  watchEffect(() => {
+    const s = source.value
+    if (s && s.showDanmaku !== undefined) showDanmaku.value = s.showDanmaku
     courseBtnsConfig.value = {
       ...DEFAULT_COURSE_BTNS,
       ...(courseBtnsPublic.value || {}),
-      ...(s.courseBtns || {}),
+      ...((s && s.courseBtns) || {}),
     }
     chapterBtnsConfig.value = {
       ...DEFAULT_CHAPTER_BTNS,
       ...(chapterBtnsPublic.value || {}),
-      ...(s.chapterBtns || {}),
+      ...((s && s.chapterBtns) || {}),
     }
-  }, { immediate: true, flush: options.flush ?? 'pre' })
+  }, { flush: options.flush ?? 'pre' })
 }

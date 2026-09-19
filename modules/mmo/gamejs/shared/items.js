@@ -44,12 +44,8 @@ export const SHOP_CATS = [
   { key: "facial",     labelKey: "cat.facial",     match: (it) => it.mv && it.slot === "facial" },
 ];
 
-// 商店每个分类最多展示的商品数（消耗品不限）。
-// 武器/服饰/配件类只保留"最便宜的 N 种"并按价格升序，便于新手选购；其余商品暂不上架。
-export const SHOP_LIMIT_PER_CAT = 3;
-
 // 商店实际售卖的分类(只含非空,按 SHOP_CATS 顺序)
-// - 非消耗品每类最多 SHOP_LIMIT_PER_CAT 种、按价格升序
+// - 全量上架：每个分类列出所有可售卖商品（不再限制每类数量），按价格升序
 // - 同名款式(男/女两版共用名称，如"兽耳一")合并为一种；传入 gender 时优先该性别的版本
 export function shopCategories(gender) {
   return SHOP_CATS
@@ -64,9 +60,7 @@ export function shopCategories(gender) {
           const g = ITEMS[id].mv && ITEMS[id].mv.gender;
           if (gender && g === gender) byName.set(name, id); // 同款优先选玩家性别的版本
         }
-        ids = [...byName.values()]
-          .sort((a, b) => (ITEMS[a].buy || 0) - (ITEMS[b].buy || 0))
-          .slice(0, SHOP_LIMIT_PER_CAT);
+        ids = [...byName.values()].sort((a, b) => (ITEMS[a].buy || 0) - (ITEMS[b].buy || 0));
       }
       return { key: c.key, labelKey: c.labelKey, ids };
     })

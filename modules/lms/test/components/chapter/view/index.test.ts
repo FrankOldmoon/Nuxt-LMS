@@ -8,7 +8,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { ref } from 'vue'
-import { resetAllStubs, setMockI18n, setMockAuthUser } from '../../../../../../test/setup/nuxt-stubs'
+import { resetAllStubs, setMockI18n, setMockAuthUser, setMockLayoutState } from '../../../../../../test/setup/nuxt-stubs'
 
 beforeEach(() => {
   resetAllStubs()
@@ -110,6 +110,26 @@ describe('chapter/view/index.vue', () => {
     })
     expect(wrapper.text()).toContain('下一章')
     expect(wrapper.html()).toContain('/course/10/chapter/2')
+  })
+
+  it('showMmo 开启时渲染 MMO 副本按钮，链接为 /course/:id/:cid/mmo', async () => {
+    setMockLayoutState({ courseBtnsConfig: ref({ showMmo: true }) })
+    const { default: View } = await import('../../../../components/chapter/view/index.vue')
+    const wrapper = mount(View, {
+      props: { data: sampleData, pending: false, notFound: false, chapterId: '92', courseId: '5' },
+      global: _globalConfig,
+    })
+    expect(wrapper.html()).toContain('/course/5/92/mmo')
+  })
+
+  it('showMmo 关闭时不渲染 MMO 副本按钮', async () => {
+    setMockLayoutState({ courseBtnsConfig: ref({ showMmo: false }) })
+    const { default: View } = await import('../../../../components/chapter/view/index.vue')
+    const wrapper = mount(View, {
+      props: { data: sampleData, pending: false, notFound: false, chapterId: '92', courseId: '5' },
+      global: _globalConfig,
+    })
+    expect(wrapper.html()).not.toContain('/92/mmo')
   })
 
   it('chapterPageCfg.showOutline=true 时渲染目录区', async () => {

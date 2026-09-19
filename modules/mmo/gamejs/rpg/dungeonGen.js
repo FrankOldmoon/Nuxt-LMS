@@ -263,13 +263,17 @@ export function generateDungeon(opts = {}, env = {}) {
       let far = q[0];
       for (const c of q) if (dist[c[1]][c[0]] > dist[far[1]][far[0]]) far = c;
       if (far[0] === spawn[0] && far[1] === spawn[1] && q.length > 1) far = q[q.length - 1];
-      // 出口优先落在「右侧是墙」的地板格（贴墙），并在其中取最远的一个；找不到再退回最远格
+      // 出口 = 距入口最远的地板格；在「最远附近」优先选右侧贴墙的格子（tol 逐步放宽）。
+      // 既保证「在地图最远处」，又能满足出口贴墙的观感；附近确实无墙时才回退到纯最远格。
       const wallRight = (x, y) => x + 1 < W && wallBase[y][x + 1] !== 0;
-      const withWall = q.filter(([x, y]) => !(x === spawn[0] && y === spawn[1]) && wallRight(x, y));
-      if (withWall.length) {
-        far = withWall.reduce((a, b) => (dist[b[1]][b[0]] > dist[a[1]][a[0]] ? b : a), withWall[0]);
+      const notSpawn = ([x, y]) => !(x === spawn[0] && y === spawn[1]);
+      const maxD = dist[far[1]][far[0]];
+      let best = far;
+      for (let tol = 0; tol <= 4; tol++) {
+        const band = q.filter((c) => notSpawn(c) && dist[c[1]][c[0]] >= maxD - tol && wallRight(c[0], c[1]));
+        if (band.length) { best = band.reduce((a, b) => (dist[b[1]][b[0]] > dist[a[1]][a[0]] ? b : a), band[0]); break; }
       }
-      exitCell = far;
+      exitCell = best;
     }
   }
   deco[spawn[1]][spawn[0]] = ENTRANCE_TILE;

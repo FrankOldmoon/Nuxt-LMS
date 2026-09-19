@@ -17,6 +17,9 @@
             @mouseenter="chapterTask?.completeChapterHeading()">
             {{ data.chapter.title }}
           </h1>
+          <!-- MMO 副本入口：进入该章节内容驱动的闯关副本（层数 = 二级标题数） -->
+          <UButton v-if="showMmoBtn" :label="$t('mmo.chapterEntry')" icon="i-lucide-gamepad-2"
+            color="neutral" variant="outline" class="shrink-0" :to="mmoUrl" />
         </div>
       </div>
 
@@ -90,4 +93,9 @@ const { chapterPageCfg, aiRecord, saveRecord } = useChapterView(props)
 const { user } = useAuth()
 // 章节标题 hover 即完成一级标题（null 时（如课程页）静默忽略）
 const chapterTask = useChapterTask()
+
+// MMO 副本入口（受课程按钮配置 showMmo 控制）
+const { courseBtnsConfig } = useLayoutState()
+const showMmoBtn = computed(() => !!courseBtnsConfig?.value?.showMmo)
+const mmoUrl = computed(() => `/course/${Number(props.courseId)}/${Number(props.chapterId)}/mmo`)
 </script>

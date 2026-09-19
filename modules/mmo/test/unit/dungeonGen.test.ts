@@ -205,4 +205,30 @@ describe("地牢生成器", () => {
       expect((flags[right] || 0) & 0x0f, `seed ${seed} 右侧应为实心墙`).not.toBe(0);
     }
   });
+
+  it("出口位于距入口最远处（为贴墙允许在附近微调）", () => {
+    for (const seed of [1, 777, 12345, 20260919]) {
+      const { map, info } = gen({ seed });
+      const grid = buildPassGrid(map, flags);
+      const W = map.width, H = map.height;
+      const dist = Array.from({ length: H }, () => Array(W).fill(-1));
+      const s = [info.spawn[0], info.spawn[1]];
+      dist[s[1]][s[0]] = 0;
+      const q = [s];
+      let maxD = 0;
+      for (let i = 0; i < q.length; i++) {
+        const [x, y] = q[i];
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const nx = x + dx, ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= W || ny >= H || dist[ny][nx] >= 0 || grid[ny][nx] !== 0) continue;
+          dist[ny][nx] = dist[y][x] + 1;
+          if (dist[ny][nx] > maxD) maxD = dist[ny][nx];
+          q.push([nx, ny]);
+        }
+      }
+      const e = info.exit;
+      expect(dist[e[1]][e[0]], `seed ${seed} 出口应可达`).toBeGreaterThan(0);
+      expect(dist[e[1]][e[0]], `seed ${seed} 出口应在最远处`).toBeGreaterThanOrEqual(maxD - 4);
+    }
+  });
 });

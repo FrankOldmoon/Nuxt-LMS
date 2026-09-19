@@ -1,6 +1,7 @@
 {
   "mmo": {
     "title": "MMO 世界",
+    "chapterEntry": "MMO 副本",
     "showMmo": "显示 MMO",
     "connecting": "连接中…",
     "connected": "房间内 {n} 人",
@@ -29,6 +30,29 @@
     },
     "door": {
       "enterTip": "按 [E] 进入 {name}"
+    },
+    "chapterInst": {
+      "layer": "第 {n} 层",
+      "readBlock": "阅读材料",
+      "emptyBlock": "（此处无内容）",
+      "textBlock": "笔记",
+      "taskNpc": "任务",
+      "taskTip": "{name}：按 [E] 作答",
+      "challengeTip": "按 [E] 挑战（答对即可击杀）",
+      "taskQuestion": "题目",
+      "taskHomework": "作业",
+      "taskComment": "评论",
+      "taskQuiz": "测验",
+      "taskRace": "竞速",
+      "enemyDefeated": "击杀！",
+      "lockTip": "完成本层全部内容后，出口才会出现",
+      "exitTip": "按 [E] 通关离开，返回章节页面",
+      "exitLabel": "出口",
+      "finishLabel": "通关出口",
+      "back": "返回章节",
+      "progress": "进度 {done}/{total}",
+      "enemiesShort": "敌人 {a}/{b}",
+      "more": "……"
     },
     "indoor": {
       "hint": "一间小屋。走到门口按 [E] 离开。",

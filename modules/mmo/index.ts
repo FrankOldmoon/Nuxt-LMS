@@ -56,8 +56,9 @@ export default defineNuxtModule({
     // 所有 MMO 页面禁用 SSR（Canvas / DOM 操作仅客户端执行）
     nuxt.options.nitro.routeRules = {
       ...(nuxt.options.nitro.routeRules || {}),
-      // MMO 入口挂到课程路径下：/course/:id/mmo
+      // MMO 入口挂到课程路径下：/course/:id/mmo（世界）与 /course/:id/:cid/mmo（章节副本）
       '/course/:id/mmo': { ssr: false },
+      '/course/:id/:cid/mmo': { ssr: false },
       '/mmo-test': { ssr: false },
       '/mmo-character': { ssr: false },
       '/mmo-tileset': { ssr: false },
@@ -70,6 +71,12 @@ export default defineNuxtModule({
       pages.push({
         name: 'mmo-game',
         path: '/course/:id/mmo',
+        file: resolve('./pages/mmo.vue'),
+      })
+      // 章节副本入口：/course/:id/:cid/mmo（层数 = 章节二级标题数）
+      pages.push({
+        name: 'mmo-chapter',
+        path: '/course/:id/:cid/mmo',
         file: resolve('./pages/mmo.vue'),
       })
       pages.push({

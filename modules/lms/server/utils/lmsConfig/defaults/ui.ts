@@ -28,7 +28,8 @@ export const uiDefaults = {
     showGrades: true,
     showAnnouncements: true,
     showWrongBook: true,
-    showMmo: true,
+    // 系统默认不显示 MMO 按钮（课程页世界入口 + 章节页副本入口），需在配置里手动开启
+    showMmo: false,
   },
   chapterBtns: {
     showPlay: true,

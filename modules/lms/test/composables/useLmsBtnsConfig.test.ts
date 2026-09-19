@@ -21,17 +21,24 @@ beforeEach(() => {
 })
 
 describe('composables/useLmsBtnsConfig', () => {
-  it('source 为 null 时不更新配置', async () => {
+  it('source 为 null 时仍应用全局 public 配置与默认值', async () => {
     const courseBtnsConfig = ref<Record<string, boolean>>({})
     const chapterBtnsConfig = ref<Record<string, boolean>>({})
     const showDanmaku = ref(true)
     setMockLayoutState({ courseBtnsConfig, chapterBtnsConfig, showDanmaku, notifyCourseNavUpdate: () => {} })
+    // 全局 public 配置已开启 MMO（课程页在无课程级 lmsConfig 时也必须生效）
+    ;(globalThis as any).useLmsPublicConfig = () => ({
+      courseBtns: ref<Record<string, boolean>>({ showMmo: true }),
+      chapterBtns: ref<Record<string, boolean>>({}),
+    })
 
     const { useLmsBtnsConfig } = await import('../../composables/useLmsBtnsConfig')
     const source = ref<any>(null)
     useLmsBtnsConfig(source)
-    expect(Object.keys(courseBtnsConfig.value)).toHaveLength(0)
-    expect(showDanmaku.value).toBe(true)
+    expect(courseBtnsConfig.value.showMmo).toBe(true) // 来自全局 public
+    expect(courseBtnsConfig.value.showProgress).toBe(true) // 默认值
+    expect(chapterBtnsConfig.value.showPlay).toBe(true) // 默认值
+    expect(showDanmaku.value).toBe(true) // 未提供时不改动
   })
 
   it('source 有值时合并默认配置', async () => {

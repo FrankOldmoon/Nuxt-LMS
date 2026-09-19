@@ -1,21 +1,24 @@
 /**
  * 商店分类单元测试
  *
- * 规则：武器/服饰/配件（非 consumable）每个分类最多展示 SHOP_LIMIT_PER_CAT 件，
- * 且按购买价升序；消耗品种类保持原有全部商品。
+ * 规则：商店全量上架 —— 每个分类（含武器/服饰/配件）列出**所有**可售卖商品，按购买价升序；
+ * 同名款式（男女两版）合并为一种，传入性别时优先该性别的版本。
  */
 import { describe, it, expect } from "vitest";
-import { ITEMS, SHOP_CATS, SHOP_STOCK, SHOP_LIMIT_PER_CAT, shopCategories } from "../../gamejs/shared/items.js";
+import { ITEMS, SHOP_CATS, SHOP_STOCK, shopCategories } from "../../gamejs/shared/items.js";
 
 const cats = shopCategories();
 const byKey = (k: string) => cats.find((c) => c.key === k);
 
-describe("商店分类 - 每类上限", () => {
-  it("非消耗品分类每类最多 3 件", () => {
+describe("商店分类 - 全量上架", () => {
+  it("每个非消耗品分类列出全部可售卖商品（不再限量）", () => {
     for (const c of cats) {
       if (c.key === "consumable") continue;
-      expect(c.ids.length, `${c.key} 超过上限`).toBeLessThanOrEqual(SHOP_LIMIT_PER_CAT);
-      expect(c.ids.length).toBeGreaterThan(0);
+      const def = SHOP_CATS.find((d) => d.key === c.key)!;
+      const all = SHOP_STOCK.filter((id) => def.match(ITEMS[id]));
+      const uniqueNames = new Set(all.map((id) => ITEMS[id].name));
+      expect(c.ids.length, `${c.key} 应列出全部（同名合并后）`).toBe(uniqueNames.size);
+      expect(c.ids.length, `${c.key} 不再被截断为 3 件`).toBeGreaterThan(3);
     }
   });
 
@@ -27,18 +30,25 @@ describe("商店分类 - 每类上限", () => {
     }
   });
 
-  it("保留的是最便宜的三件", () => {
-    const weaponDef = SHOP_CATS.find((c) => c.key === "weapon")!;
-    const allWeapons = SHOP_STOCK.filter((id) => weaponDef.match(ITEMS[id]))
+  it("武器分类包含全部可售武器（不止最便宜的三件）", () => {
+    const def = SHOP_CATS.find((c) => c.key === "weapon")!;
+    const allWeapons = SHOP_STOCK.filter((id) => def.match(ITEMS[id]))
       .sort((a, b) => ITEMS[a].buy - ITEMS[b].buy);
-    expect(byKey("weapon")!.ids).toEqual(allWeapons.slice(0, SHOP_LIMIT_PER_CAT));
+    expect(byKey("weapon")!.ids).toEqual(allWeapons);
+    expect(byKey("weapon")!.ids.length).toBeGreaterThan(3);
+  });
+
+  it("服饰分类包含全部可售服饰", () => {
+    const def = SHOP_CATS.find((c) => c.key === "clothing")!;
+    const all = SHOP_STOCK.filter((id) => def.match(ITEMS[id]));
+    expect(byKey("clothing")!.ids.length).toBe(new Set(all.map((id) => ITEMS[id].name)).size);
+    expect(byKey("clothing")!.ids.length).toBeGreaterThan(3);
   });
 
   it("消耗品不受上限影响（保留全部）", () => {
     const consDef = SHOP_CATS.find((c) => c.key === "consumable")!;
     const allConsumables = SHOP_STOCK.filter((id) => consDef.match(ITEMS[id]));
     expect(byKey("consumable")!.ids).toEqual(allConsumables);
-    expect(allConsumables.length).toBeGreaterThan(SHOP_LIMIT_PER_CAT); // 4 件(bread/herb/potion/gem)
   });
 
   it("武器商店与服装商店的分类都在（武器/盾/甲/头盔 + 服饰配件）", () => {
@@ -61,15 +71,18 @@ describe("商店分类 - 同名款式合并 / 性别优先", () => {
     expect(new Set(names).size).toBe(names.length);
   });
 
-  it("传入性别时同款优先该性别的版本（兽耳/尾巴/翅膀/面纹分男女）", () => {
-    const male = shopCategories("Male");
-    const female = shopCategories("Female");
-    for (const key of ["ears", "tail", "wing", "facial"]) {
-      const m = male.find((c) => c.key === key)!;
-      const f = female.find((c) => c.key === key)!;
-      expect(m.ids.every((id) => ITEMS[id].mv?.gender === "Male"), `${key} 男性版`).toBe(true);
-      expect(f.ids.every((id) => ITEMS[id].mv?.gender === "Female"), `${key} 女性版`).toBe(true);
-      expect(f.ids).not.toEqual(m.ids);
+  it("传入性别时，同款若存在本性别版本则优先该版本", () => {
+    for (const gender of ["Male", "Female"]) {
+      const catsG = shopCategories(gender);
+      for (const key of ["ears", "tail", "wing", "facial"]) {
+        const c = catsG.find((x) => x.key === key)!;
+        for (const id of c.ids) {
+          const nm = ITEMS[id].name;
+          // 该名字在商店里是否存在本性别版本
+          const want = SHOP_STOCK.find((sid) => ITEMS[sid].name === nm && ITEMS[sid].mv?.gender === gender);
+          if (want) expect(id, `${gender}/${key}/${nm} 应选本性别版本`).toBe(want);
+        }
+      }
     }
   });
 });

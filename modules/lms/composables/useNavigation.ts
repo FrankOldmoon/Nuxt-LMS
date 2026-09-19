@@ -268,7 +268,7 @@ export function useLayoutState() {
   // 课程按钮开关配置（由课程页从 course lmsConfig 设置）
   const courseBtnsConfig = useState<Record<string, boolean>>('layout-course-btns-config', () => ({
     showProgress: true, showLeaderboard: true, showGroups: true,
-    showGrades: true, showAnnouncements: true, showWrongBook: true, showMmo: true,
+    showGrades: true, showAnnouncements: true, showWrongBook: true, showMmo: false,
   }))
   // 课程侧边栏导航版本号：章节完成状态变化时 +1，触发 useSidebarNav 重新拉取
   const courseNavVersion = useState<number>('layout-course-nav-version', () => 0)

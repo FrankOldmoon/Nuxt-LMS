@@ -29,15 +29,28 @@ export const MV_CATS_PANEL = MV_PANEL_CATS;
 // 随机一组 MV 外观(必选 Body;其余可选分层有概率留空)
 // 排除 Ears：耳朵属于兽耳饰品，创建页不提供该选项，随机也不应自带
 const RANDOM_EXCLUDE = new Set(["Ears"]);
-export async function randomMvCfg() {
-  const cfg = { gender: MV_GENDERS[Math.floor(Math.random() * MV_GENDERS.length)], layers: {}, colors: {}, skin: null };
+// 章节副本 NPC 必带头发，避免出现"没头发"的统一光头
+const HAIR_ALWAYS = new Set(["FrontHair1", "RearHair1"]);
+/**
+ * @param opts { rng?: () => number, hairAlways?: boolean, genders?: string[] }
+ *   rng        —— 可注入的随机源（章节 NPC 用确定性种子保证每次外观一致）
+ *   hairAlways —— 强制带头发（FrontHair1 / RearHair1 必选）
+ *   genders    —— 可用性别集合（默认全部）
+ */
+export async function randomMvCfg(opts = {}) {
+  const rng = typeof opts.rng === "function" ? opts.rng : Math.random;
+  const genders = Array.isArray(opts.genders) && opts.genders.length ? opts.genders : MV_GENDERS;
+  const always = opts.hairAlways ? HAIR_ALWAYS : null;
+  const cfg = { gender: genders[Math.floor(rng() * genders.length)], layers: {}, colors: {}, skin: null };
   await loadManifest();
   for (const c of MV_CATS_PANEL) {
     if (RANDOM_EXCLUDE.has(c.key)) continue;
     const nums = await availableNums(cfg.gender, c.key);
-    if (!nums.length) continue;
-    if (c.required) cfg.layers[c.key] = nums[0];
-    else if (nums.some((n) => n) && Math.random() < 0.8) cfg.layers[c.key] = nums[Math.floor(Math.random() * nums.length)];
+    const valid = nums.filter((n) => n);
+    if (!valid.length) continue;
+    const forced = always && always.has(c.key);
+    if (c.required) cfg.layers[c.key] = valid[0];
+    else if (forced || rng() < 0.8) cfg.layers[c.key] = valid[Math.floor(rng() * valid.length)];
   }
   return cfg;
 }

@@ -19,6 +19,12 @@ export class RpgMap {
     this.passGrid = null;             // [y][x] 4位方向掩码
     this.map = null;
     this._waterTimer = null;
+    // 内存地图（程序化生成的章节副本）：跳过磁盘 JSON 加载，直接用传入的 map 对象
+    this._mapObj = opts.mapObj || null;
+    // 运行时重绘单格所需的上下文（revealTile 用）
+    this._sctx = null;
+    this._srcImages = null;
+    this._staticTex = null;
   }
 
   /* 异步加载并返回此实例(底图已注册为场景纹理) */
@@ -31,7 +37,7 @@ export class RpgMap {
     const isAbsUrl = (s) => /^https?:\/\//i.test(s || "");
     const mapUrl = isAbsUrl(this.mapFile) ? this.mapFile : (BASE_RPG + this.mapFile);
     const [map, tilesets] = await Promise.all([
-      this.loadJson(mapUrl),
+      this._mapObj ? Promise.resolve(this._mapObj) : this.loadJson(mapUrl),
       this.loadJson(BASE_RPG + "tilesets/Tilesets.json"),
     ]);
     if (!map || !tilesets) throw new Error("地图或图集清单加载失败 - " + this.mapFile);
@@ -97,6 +103,10 @@ export class RpgMap {
     const tex = scene.textures.addCanvas(this.texKey, staticCv);
     const img = scene.add.image(0, 0, this.texKey).setOrigin(0).setDepth(this.deep);
     scene.cameras.main.setBounds(0, 0, staticCv.width, staticCv.height);
+    // 供 revealTile 运行时重绘单格使用
+    this._sctx = sctx;
+    this._srcImages = srcImages;
+    this._staticTex = tex;
 
     // 水面层纹理(透明画布, 置于静态层之上、角色之下), 每帧 refresh 重绘动画
     if (scene.textures.exists(this.texKey + "_water")) scene.textures.remove(this.texKey + "_water");
@@ -201,6 +211,23 @@ export class RpgMap {
     if (dx !== 0 && this.canPlace(x + dx, y, R)) nx = x + dx;
     if (dy !== 0 && this.canPlace(nx, y + dy, R)) ny = y + dy;
     return { x: nx, y: ny };
+  }
+
+  /* 运行时「出现」某格瓦片（章节副本的出口）：写入 z 层并局部重绘该格 */
+  revealTile(x, y, id) {
+    if (!this.map || !this._sctx) return;
+    const W = this.MAP_W, H = this.MAP_H, n = W * H;
+    if (x < 0 || y < 0 || x >= W || y >= H) return;
+    const z = id < 256 ? 2 : (id < 512 ? 3 : 0); // B→z2, C→z3, 其余→z0
+    this.map.data[z * n + y * W + x] = id;
+    const ctx = this._sctx;
+    ctx.clearRect(x * TILE, y * TILE, TILE, TILE);
+    for (let zi = 0; zi <= 3; zi++) {
+      const tid = Number(this.map.data[zi * n + y * W + x]) || 0;
+      if (!isA1(tid)) drawTile(ctx, this._srcImages, tid, x, y, 0);
+    }
+    this.drawShadows(ctx, this.map, { x, y });
+    if (this._staticTex) this._staticTex.refresh();
   }
 
   destroy() {
