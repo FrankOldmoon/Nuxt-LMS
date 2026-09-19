@@ -88,14 +88,14 @@ scene.start("inst_<id>")  → 同款 MapScene 加载副本地图 / 生成 NPC / 
 除了"教师后台上传 → 世界地图副本入口进入"这条路径，MMO 页面还支持**通过链接直接加载并进入一个副本**：
 
 ```
-/mmo?json=<副本JSON的URL>
-# 别名：/mmo?url=<副本JSON的URL>
+/course/{courseId}/mmo?json=<副本JSON的URL>
+# 别名：/course/{courseId}/mmo?url=<副本JSON的URL>
 ```
 
 工作流：
 
 ```
-浏览器打开 /mmo?json=<url>
+浏览器打开 /course/{courseId}/mmo?json=<url>
    │
    ▼
 mmo.vue 读取 route.query.json → client.loadExternalInstance(url)

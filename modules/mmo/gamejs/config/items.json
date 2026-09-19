@@ -881,12 +881,5 @@
     "mark_m_1", "mark_m_2", "mark_m_3", "mark_m_4", "mark_m_5", "mark_m_6", "mark_m_7", "mark_m_8",
     "mark_f_1", "mark_f_2", "mark_f_3", "mark_f_4", "mark_f_5", "mark_f_6", "mark_f_7"
   ],
-  "defaultGold": 100,
-  "groundSpawns": [
-    {
-      "x": 264,
-      "y": 168,
-      "itemId": "potion"
-    }
-  ]
+  "defaultGold": 100
 }

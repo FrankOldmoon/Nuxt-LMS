@@ -28,8 +28,8 @@ const _globalStubs = {
     props: ['label', 'color', 'variant', 'size'],
   },
   UButton: {
-    template: '<button class="ubutton" :data-loading="loading" @click="$emit(\'click\', $event)">{{ label }}<slot /></button>',
-    props: ['label', 'icon', 'color', 'size', 'loading', 'variant'],
+    template: '<button class="ubutton" :data-loading="loading" :data-to="to" @click="$emit(\'click\', $event)">{{ label }}<slot /></button>',
+    props: ['label', 'icon', 'color', 'size', 'loading', 'variant', 'to'],
   },
   UTooltip: { template: '<span class="utooltip"><slot /></span>', props: ['text'] },
   UIcon: { template: '<span class="uicon" />', props: ['name'] },
@@ -134,7 +134,7 @@ describe('course/view/header.vue', () => {
     expect(wrapper.text()).toContain('course.startLearning')
   })
 
-  it('showMmo 开启时渲染 MMO 按钮（带 course 参数链接）', async () => {
+  it('showMmo 开启时渲染 MMO 按钮（链接到 /course/:id/mmo）', async () => {
     const { default: ViewHeader } = await import('../../../../components/course/view/header.vue')
     const wrapper = mount(ViewHeader, {
       props: { course: sampleCourse, canEdit: false, courseId: '1', exporting: false, firstChapterUrl: '/course/1/1' },
@@ -142,6 +142,7 @@ describe('course/view/header.vue', () => {
     })
     await flushPromises()
     expect(wrapper.text()).toContain('mmo.title')
+    expect(wrapper.find('.ubutton[data-to="/course/1/mmo"]').exists()).toBe(true)
   })
 
   it('点击导出按钮 emit export 事件', async () => {

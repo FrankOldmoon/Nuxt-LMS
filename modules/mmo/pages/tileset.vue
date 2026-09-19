@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
 
 const { t } = useI18n()
 
@@ -9,8 +9,11 @@ definePageMeta({ layout: false })
 import {
     TILE, TILE_ID_A1, TILE_ID_A5, TILE_ID_A2, TILE_ID_A3, TILE_ID_A4, TILE_ID_MAX,
     isA1, isA2, isA3, isA4, isAutotile, isVisible, autotileKind,
-    drawTile, buildPassGrid, D_UP, D_DOWN, D_LEFT, D_RIGHT
+    drawTile, buildPassGrid, autotileQuads, normalTileSource, D_UP, D_DOWN, D_LEFT, D_RIGHT
 } from '../gamejs/tile-draw.js';
+
+/* 地牢随机生成（与 scripts/gen-dungeon-map.mjs 共用同一套逻辑） */
+import { generateDungeon, listWallBases, listFloorTiles } from '../gamejs/rpg/dungeonGen.js';
 
 /* ============ 图集定义（与 Tilesets.json 的 id 对应） ============ */
 const FAMILIES = [
@@ -600,6 +603,83 @@ function stripShape(id) {
   return id - ((id - TILE_ID_A1) % 48);
 }
 
+/* ============ 随机地牢对话框 ============ */
+const DUNGEON_FAMILY_ID = 4;   // Dungeon 图集
+const genOpen = ref(false);
+const genErr = ref('');
+const genWalls = ref([]);   // [{ id, style }] 墙候选（A4 三组共 24 个，一律平等不分组）
+const genFloors = ref([]);  // [{ id, style }] 地面候选（A5 第3/5/7行共 24 个，一律平等不分组）
+const gen = reactive({
+  w: 41, h: 30, rooms: 8, seed: 20260919,
+  deco: true, decoN: 3,
+  wallMode: 'fill',        // fill=非地面全铺墙 / edge=只铺边缘(其余留空)
+  voidTile: 0,             // edge 留空格填充：0=透明 / 1536=Darkness(实心)
+  wallPairMode: 'single',  // single / topFace / outerInner / mix
+  wallA: 0, wallB: 0, floorId: 0,
+});
+
+/* 某 tileId 的缩略图 CSS（按图集 + 源矩形做 background-position） */
+function tileThumb(id) {
+  const fam = FAMILIES.find(f => f.id === DUNGEON_FAMILY_ID);
+  let setNumber, sx, sy, sw, sh;
+  if (isAutotile(id)) {
+    const a = autotileQuads(id, 0);
+    setNumber = a.setNumber;
+    sx = Math.min(...a.quads.map(q => q.sx));
+    sy = Math.min(...a.quads.map(q => q.sy));
+    sw = Math.max(...a.quads.map(q => q.sx + q.sw)) - sx;
+    sh = Math.max(...a.quads.map(q => q.sy + q.sh)) - sy;
+  } else {
+    const r = normalTileSource(id);
+    setNumber = r.setNumber; sx = r.sx; sy = r.sy; sw = 48; sh = 48;
+  }
+  const url = ASSET_ROOT + fam.names[setNumber] + '.png';
+  const img = imgCache[url];
+  const aw = (img && img.naturalWidth) || (setNumber === 4 ? 384 : 768);
+  const ah = (img && img.naturalHeight) || (setNumber === 4 ? 768 : 720);
+  const S = 40; // 显示尺寸(px)
+  return {
+    width: S + 'px', height: S + 'px',
+    backgroundImage: `url(${url})`,
+    backgroundSize: `${aw * (S / 48)}px ${ah * (S / 48)}px`,
+    backgroundPosition: `${-sx * (S / 48)}px ${-sy * (S / 48)}px`,
+    imageRendering: 'pixelated',
+  };
+}
+
+/* 打开对话框：预载 Dungeon 图集，构建墙/地面候选；默认尺寸取当前画布 */
+async function openGenModal() {
+  genErr.value = '';
+  gen.w = MAP_W; gen.h = MAP_H;
+  gen.rooms = Math.max(3, Math.min(14, Math.round((MAP_W * MAP_H) / 130)));
+  genOpen.value = true;
+  try {
+    const flags = (TILESETS_DATA && TILESETS_DATA[4] && TILESETS_DATA[4].flags) || [];
+    const fam = FAMILIES.find(f => f.id === DUNGEON_FAMILY_ID);
+    await Promise.all([3, 4].map(i => loadImg(ASSET_ROOT + fam.names[i] + '.png').catch(() => null)));
+    genWalls.value = listWallBases(flags).map(id => ({ id, style: tileThumb(id) }));
+    genFloors.value = listFloorTiles(flags).map(id => ({ id, style: tileThumb(id) }));
+    if (!gen.wallA && genWalls.value[0]) gen.wallA = genWalls.value[0].id;
+    if (!gen.wallB) gen.wallB = gen.wallA;
+    if (!gen.floorId && genFloors.value[0]) gen.floorId = genFloors.value[0].id;
+  } catch (e) {
+    genErr.value = String((e && e.message) || e);
+  }
+}
+
+/* 按对话框设置生成并填入画布 */
+async function applyGen() {
+  const flags = (TILESETS_DATA && TILESETS_DATA[4] && TILESETS_DATA[4].flags) || [];
+  const { map } = generateDungeon({
+    width: gen.w, height: gen.h, rooms: gen.rooms, seed: gen.seed || 1,
+    deco: gen.deco ? gen.decoN : 0,
+    floorId: gen.floorId, wallA: gen.wallA, wallB: gen.wallB,
+    wallPairMode: gen.wallPairMode, wallMode: gen.wallMode, voidTile: gen.voidTile,
+  }, { flags, meta: null });
+  genOpen.value = false;
+  await applyMapObject(map);
+}
+
 onMounted(async () => {
   /* ============ DOM ============ */
   familySeg = $('familySeg'); typeSeg = $('typeSeg'); layerSeg = $('layerSeg');
@@ -675,6 +755,7 @@ onMounted(async () => {
   $('btnClear').onclick = () => { clearGrid(); rebuild(); };
   $('btnCollision').onclick = toggleCollision;
   $('btnJSON').onclick = exportJSON;
+  $('btnGenDungeon').onclick = openGenModal;
 
   /* 导入 JSON：从本地文件读取地图，填入画布 */
   $('btnImport').onclick = () => $('fileImport').click();
@@ -786,6 +867,7 @@ onBeforeUnmount(() => {
     <span id="posInfo">{{ $t('mmo.tileset.posInfo') }}</span>
     <span style="flex:1"></span>
     <button class="btn ghost" id="btnCollision" :title="$t('mmo.tileset.showCollisionTip')">{{ $t('mmo.tileset.showCollision') }}</button>
+    <button class="btn" id="btnGenDungeon" :title="$t('mmo.tileset.genDungeonTip')">{{ $t('mmo.tileset.genDungeon') }}</button>
     <button class="btn ghost" id="btnClear">{{ $t('mmo.tileset.clear') }}</button>
     <button class="btn warn" id="btnJSON">{{ $t('mmo.tileset.exportJson') }}</button>
     <button class="btn" id="btnPNG">{{ $t('mmo.tileset.exportPng') }}</button>
@@ -810,6 +892,91 @@ onBeforeUnmount(() => {
       <div class="hint">{{ $t('mmo.tileset.hint') }}</div>
     </div>
   </main>
+  <!-- 随机地牢对话框 -->
+  <div v-if="genOpen" class="gen-mask" @click.self="genOpen = false">
+    <div class="gen-modal">
+      <div class="gen-head">
+        <b>{{ $t('mmo.tileset.genDungeon') }}</b>
+        <button class="gen-x" @click="genOpen = false">✕</button>
+      </div>
+      <div class="gen-body">
+        <div class="gen-row">
+          <label>{{ $t('mmo.tileset.genWidth') }}</label>
+          <input class="num" type="number" min="8" max="120" v-model.number="gen.w">
+          <label>{{ $t('mmo.tileset.genHeight') }}</label>
+          <input class="num" type="number" min="8" max="120" v-model.number="gen.h">
+          <label>{{ $t('mmo.tileset.genRooms') }}</label>
+          <input class="num" type="number" min="1" max="40" v-model.number="gen.rooms">
+        </div>
+
+        <div class="gen-row">
+          <label>{{ $t('mmo.tileset.genSeed') }}</label>
+          <input class="num" style="width:110px" type="number" v-model.number="gen.seed">
+          <button class="btn ghost" @click="gen.seed = Math.floor(Math.random() * 0x7fffffff)">{{ $t('mmo.tileset.genReroll') }}</button>
+        </div>
+
+        <div class="gen-row">
+          <label><input type="checkbox" v-model="gen.deco"> {{ $t('mmo.tileset.genDeco') }}</label>
+          <input class="num" type="number" min="0" max="12" v-model.number="gen.decoN" :disabled="!gen.deco">
+        </div>
+
+        <div class="gen-row">
+          <label>{{ $t('mmo.tileset.genWallMode') }}</label>
+          <div class="seg gen-seg">
+            <button :class="{ active: gen.wallMode === 'fill' }" @click="gen.wallMode = 'fill'">{{ $t('mmo.tileset.genWallFill') }}</button>
+            <button :class="{ active: gen.wallMode === 'edge' }" @click="gen.wallMode = 'edge'">{{ $t('mmo.tileset.genWallEdge') }}</button>
+          </div>
+          <template v-if="gen.wallMode === 'edge'">
+            <label>{{ $t('mmo.tileset.genVoid') }}</label>
+            <div class="seg gen-seg">
+              <button :class="{ active: gen.voidTile === 0 }" @click="gen.voidTile = 0">{{ $t('mmo.tileset.genVoidEmpty') }}</button>
+              <button :class="{ active: gen.voidTile === 1536 }" @click="gen.voidTile = 1536">{{ $t('mmo.tileset.genVoidDark') }}</button>
+            </div>
+          </template>
+        </div>
+
+        <div class="gen-row">
+          <label>{{ $t('mmo.tileset.genWallPair') }}</label>
+          <div class="seg gen-seg">
+            <button :class="{ active: gen.wallPairMode === 'single' }" @click="gen.wallPairMode = 'single'">{{ $t('mmo.tileset.genPairSingle') }}</button>
+            <button :class="{ active: gen.wallPairMode === 'topFace' }" @click="gen.wallPairMode = 'topFace'">{{ $t('mmo.tileset.genPairTopFace') }}</button>
+            <button :class="{ active: gen.wallPairMode === 'outerInner' }" @click="gen.wallPairMode = 'outerInner'">{{ $t('mmo.tileset.genPairOuterInner') }}</button>
+            <button :class="{ active: gen.wallPairMode === 'mix' }" @click="gen.wallPairMode = 'mix'">{{ $t('mmo.tileset.genPairMix') }}</button>
+          </div>
+        </div>
+
+        <div class="gen-pick">
+          <div class="gen-pick-label">{{ $t('mmo.tileset.genWallA') }} <span class="gen-id">#{{ gen.wallA }}</span></div>
+          <div class="gen-grid">
+            <span v-for="o in genWalls" :key="o.id" class="gen-tile" :class="{ sel: gen.wallA === o.id }"
+              :style="o.style" :title="'#' + o.id" @click="gen.wallA = o.id"></span>
+          </div>
+        </div>
+
+        <div class="gen-pick" v-if="gen.wallPairMode !== 'single'">
+          <div class="gen-pick-label">{{ $t('mmo.tileset.genWallB') }} <span class="gen-id">#{{ gen.wallB }}</span></div>
+          <div class="gen-grid">
+            <span v-for="o in genWalls" :key="o.id" class="gen-tile" :class="{ sel: gen.wallB === o.id }"
+              :style="o.style" :title="'#' + o.id" @click="gen.wallB = o.id"></span>
+          </div>
+        </div>
+
+        <div class="gen-pick">
+          <div class="gen-pick-label">{{ $t('mmo.tileset.genFloor') }} <span class="gen-id">#{{ gen.floorId }}</span></div>
+          <div class="gen-grid">
+            <span v-for="o in genFloors" :key="o.id" class="gen-tile" :class="{ sel: gen.floorId === o.id }"
+              :style="o.style" :title="'#' + o.id" @click="gen.floorId = o.id"></span>
+          </div>
+        </div>
+
+        <div v-if="genErr" class="gen-err">{{ genErr }}</div>
+      </div>
+      <div class="gen-foot">
+        <button class="btn ghost" @click="genOpen = false">{{ $t('mmo.tileset.genCancel') }}</button>
+        <button class="btn" @click="applyGen">{{ $t('mmo.tileset.genConfirm') }}</button>
+      </div>
+    </div>
+  </div>
   <!-- 拖拽文件遮罩 -->
   <div id="dragOverlay"><span>{{ $t('mmo.tileset.dropToLoad') }}</span></div>
   </div>
@@ -917,6 +1084,32 @@ onBeforeUnmount(() => {
     margin: 0 auto;
   }
   #cv { image-rendering: pixelated; display: block; cursor: crosshair; }
+  /* 随机地牢对话框 */
+  .gen-mask { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,.55);
+    display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .gen-modal { width: min(760px, 96vw); max-height: 90vh; display: flex; flex-direction: column;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: 0 18px 50px rgba(0,0,0,.5); overflow: hidden; }
+  .gen-head { display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .gen-x { border: 0; background: transparent; color: var(--muted); font-size: 16px; cursor: pointer; }
+  .gen-x:hover { color: var(--text); }
+  .gen-body { padding: 12px 14px; overflow: auto; display: flex; flex-direction: column; gap: 10px; }
+  .gen-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    font-size: 12px; color: var(--muted); }
+  .gen-row > label { display: flex; align-items: center; gap: 5px; }
+  .gen-seg button { white-space: nowrap; }
+  .gen-pick { display: flex; flex-direction: column; gap: 5px; }
+  .gen-pick-label { font-size: 12px; color: var(--muted); }
+  .gen-id { color: #ffd66b; font-family: ui-monospace, Menlo, Consolas, monospace; }
+  .gen-grid { display: flex; flex-wrap: wrap; gap: 4px; max-height: 108px; overflow: auto;
+    padding: 4px; background: var(--panel2); border: 1px solid var(--border); border-radius: 6px; }
+  .gen-tile { display: inline-block; border: 2px solid var(--border); border-radius: 4px;
+    background-color: #10141c; cursor: pointer; flex-shrink: 0; }
+  .gen-tile.sel { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(74,163,255,.35); }
+  .gen-err { color: #ff8a8a; font-size: 12px; }
+  .gen-foot { display: flex; justify-content: flex-end; gap: 8px;
+    padding: 12px 14px; border-top: 1px solid var(--border); }
   ::-webkit-scrollbar { height: 8px; width: 8px; }
   ::-webkit-scrollbar-thumb { background: #3a4252; border-radius: 4px; }
 </style>

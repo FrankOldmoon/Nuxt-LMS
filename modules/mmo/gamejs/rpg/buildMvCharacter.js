@@ -164,6 +164,40 @@ async function loadLayer(gender, pre, num) {
   return fetchBitmap(`${BASE_GEN}${gender}/TV_${pre}_p${String(num).padStart(2, "0")}.png`);
 }
 
+/* 部件素材按"可见朝向"出图：MV 生成器导出的每个部件只在它实际可见的朝向有画面，
+ * 空行是**刻意的**（前发在背面不可见、后发正面不可见、内衬被外套挡住…），所以默认**原样使用**。
+ * 实测掩码(下/左/右/上)：Body `####`、Clothing2 `####`、FrontHair1/RearHair2/Glasses `###.`、
+ * RearHair1/FrontHair2 `...#`、Clothing1 `.##.`。
+ *
+ * 唯一例外：翅膀/尾巴/披风这类"挂在背后的配件"素材常常**只有背面视图**(`...#`)，
+ * 于是四个朝向里只有"朝上"能看到它。按约定改为「只在朝下时显示」：把那行素材挪到第 1 行(下)，
+ * 其余朝向留空，并标记 behind=true 画在身体**下层**（否则会盖住人物正面）。 */
+const BACK_ATTACH = new Set(["Wing", "Tail", "Cloak1", "Cloak2"]);
+function normalizeLayer(key, img) {
+  const w = img && img.width, h = img && img.height;
+  if (!BACK_ATTACH.has(key) || !w || !h || h % 4 !== 0) return { img, behind: false };
+  const fh = h / 4;
+  const probe = document.createElement("canvas");
+  probe.width = w; probe.height = h;
+  const px = probe.getContext("2d");
+  px.drawImage(img, 0, 0);
+  const counts = [];
+  for (let r = 0; r < 4; r++) {
+    const d = px.getImageData(0, r * fh, w, fh).data;
+    let n = 0;
+    for (let i = 3; i < d.length; i += 4) if (d[i] > 10) n++;
+    counts.push(n);
+  }
+  const filled = counts.filter((n) => n > 0).length;
+  if (filled !== 1 || counts[3] === 0) return { img, behind: false }; // 非"只有背面视图" → 原样
+  const out = document.createElement("canvas");
+  out.width = w; out.height = h;
+  const ctx = out.getContext("2d");
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(img, 0, 3 * fh, w, fh, 0, 0, w, fh); // 背面那行 → 第 1 行(朝下)，其余留空
+  return { img: out, behind: true };
+}
+
 /* 依据外观配置合成行走图。
  * cfg = { gender, skin, colors:{cat:hex}, layers:{cat:num} }
  * 返回 { walk: canvas, layout: { frames:[4], cell: TV_CELL } }(兼容 AnimatedCharacter);
@@ -174,7 +208,8 @@ export async function buildMvCharacter(cfg) {
   const colors = cfg.colors || {};
 
   // 逐层(官方顺序)加载非空分层
-  const stack = [];
+  const stack = [];   // 按官方层序(会画在身体之上)
+  const behind = [];  // "背后"的部件(翅膀/披风/后发/尾巴) → 先画，位于身体下层
   await loadManifest();
   for (const c of MV_CATS) {
     let num = layers[c.key];
@@ -187,9 +222,10 @@ export async function buildMvCharacter(cfg) {
     if (!img && c.key === "Ears") img = await loadLayer(gender, "Ears", 2);
     if (!img) continue;
     const color = colors[c.key];
-    stack.push(color ? tintLayer(img, color) : img);
+    const norm = normalizeLayer(c.key, color ? tintLayer(img, color) : img);
+    (norm.behind ? behind : stack).push(norm.img);
   }
-  if (!stack.length) return null;
+  if (!stack.length && !behind.length) return null;
 
   // 合成基础行走图(3 列 × 4 行 = down/left/right/up)
   const fw = TV_CELL, fh = TV_CELL;
@@ -197,6 +233,8 @@ export async function buildMvCharacter(cfg) {
   const full = document.createElement("canvas");
   full.width = w; full.height = h;
   const fctx = full.getContext("2d");
+  // 先画"背后"的部件(翅膀/披风/后发/尾巴)到下层，再按官方层序画身体与其余部件
+  for (const im of behind) fctx.drawImage(im, 0, 0);
   for (const im of stack) fctx.drawImage(im, 0, 0);
   if (cfg.skin) applySkinToCanvas(full, cfg.skin);
 

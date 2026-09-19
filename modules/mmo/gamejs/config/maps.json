@@ -10,7 +10,28 @@
       "doors": [
         { "tile": [26, 20], "to": "indoor",  "spawn": [9, 13] },
         { "tile": [9, 18],  "to": "indoor2", "spawn": [10, 15] },
-        { "tiles": [[18, 39], [19, 39], [20, 39]], "to": "village2", "spawn": [14, 38] }
+        { "tiles": [[18, 39], [19, 39], [20, 39]], "to": "dungeon", "spawn": [7, 23] }
+      ]
+    },
+    "dungeon": {
+      "type": "indoor",
+      "file": "maps/Map_New_Dungeon.json",
+      "tex": "rpgDungeon",
+      "spawn": [7, 23],
+      "name": "地牢",
+      "features": { "npc": false, "monsters": true },
+      "doors": [
+        { "tiles": [[7, 23], [7, 24]], "to": "world", "spawn": [19, 39] }
+      ],
+      "monsters": [
+        { "key": "ghost", "tile": [33, 3] },
+        { "key": "eyeball", "tile": [30, 25] },
+        { "key": "pumpking", "tile": [14, 6] },
+        { "key": "snake", "tile": [1, 10] },
+        { "key": "big_worm", "tile": [19, 19] },
+        { "key": "man_eater_flower", "tile": [35, 15] },
+        { "key": "bat", "tile": [24, 9] },
+        { "key": "bee", "tile": [7, 15] }
       ]
     },
     "village2": {
@@ -19,7 +40,7 @@
       "tex": "rpgVillage2",
       "spawn": [14, 38],
       "name": "村庄二",
-      "features": { "npc": false, "monsters": true },
+      "features": { "npc": false, "monsters": false },
       "doors": [
         { "tiles": [[14, 38], [14, 39]], "to": "world", "spawn": [19, 39] }
       ]

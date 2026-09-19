@@ -56,7 +56,8 @@ export default defineNuxtModule({
     // 所有 MMO 页面禁用 SSR（Canvas / DOM 操作仅客户端执行）
     nuxt.options.nitro.routeRules = {
       ...(nuxt.options.nitro.routeRules || {}),
-      '/mmo': { ssr: false },
+      // MMO 入口挂到课程路径下：/course/:id/mmo
+      '/course/:id/mmo': { ssr: false },
       '/mmo-test': { ssr: false },
       '/mmo-character': { ssr: false },
       '/mmo-tileset': { ssr: false },
@@ -65,9 +66,10 @@ export default defineNuxtModule({
 
     // 注册 pages（合并到主 pages）
     nuxt.hook('pages:extend', (pages) => {
+      // MMO 入口：/course/:id/mmo（游戏数据与金币按课程绑定，课程 ID 取自路由参数）
       pages.push({
         name: 'mmo-game',
-        path: '/mmo',
+        path: '/course/:id/mmo',
         file: resolve('./pages/mmo.vue'),
       })
       pages.push({

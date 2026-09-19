@@ -67,6 +67,9 @@ export class NetClient {
   sendTalk(key) { if (this.room) this.room.send("talk", { key }); }
   // 回合制战斗胜利: 仅上报怪物 key 与玩家承受伤害, 经验/掉落由服务端权威结算
   sendBattleWin(key, taken) { if (this.room) this.room.send("battleWin", { key, taken: Number(taken) || 0 }); }
+  // 怪物战斗锁: 同一只怪同一时间只能被一个玩家战斗
+  sendLockMonster(id) { if (this.room && id) this.room.send("lockMonster", { id }); }
+  sendUnlockMonster(id) { if (this.room && id) this.room.send("unlockMonster", { id }); }
   sendUse(itemId) { if (this.room) this.room.send("use", { itemId }); }
   sendEquip(itemId) { if (this.room) this.room.send("equip", { itemId }); }
   sendUnequip(slot) { if (this.room) this.room.send("unequip", { slot }); }

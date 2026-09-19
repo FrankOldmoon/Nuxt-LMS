@@ -81,7 +81,7 @@ const { t } = useI18n()
 const toast = useToast()
 const { courseBtnsConfig } = useLayoutState()
 const creatingChapter = ref(false)
-const mmoUrl = computed(() => `/mmo?course=${Number(props.courseId)}`)
+const mmoUrl = computed(() => `/course/${Number(props.courseId)}/mmo`)
 
 async function startLearning() {
   if (props.firstChapterUrl) {

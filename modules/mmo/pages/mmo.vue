@@ -7,7 +7,7 @@ import { appStore } from '../gamejs/game/appStore'
 import { MAPS } from '../gamejs/shared/maps'
 import { instanceStore } from '../gamejs/shared/instanceStore'
 import { addRuntimeTasks } from '../gamejs/shared/tasks'
-import { setLang } from '../gamejs/i18n'
+import { setLang, setTranslator } from '../gamejs/i18n'
 
 definePageMeta({ layout: false })
 
@@ -16,12 +16,17 @@ const { t, locale } = useI18n()
 const route = useRoute()
 const { public: mmoConfig } = useRuntimeConfig()
 
-// 必须带课程参数才能进入：游戏数据（存档/背包/任务）与金币都绑定到该课程，
-// 缺参数时不启动游戏，直接给出"请从课程页进入"的提示。
-const courseId = computed(() => Number(route.query.course || route.query.courseId) || 0)
+// 必须带课程参数才能进入：游戏数据（存档/背包/任务）与金币都绑定到该课程。
+// 入口路径为 /course/:id/mmo，课程 ID 取自路由参数。
+const courseId = computed(() => Number(route.params.id) || Number(route.query.course || route.query.courseId) || 0)
 
-// 游戏内文案（Phaser 画布/DOM 覆盖层）跟随主项目语言
-function syncGameLang() { setLang(locale.value === 'cn' ? 'zh' : 'en') }
+// 游戏内文案（Phaser 画布/DOM 覆盖层）跟随主项目语言。
+// locale JSON 会被 i18n 插件编译成 vue-i18n 消息 AST，游戏侧无法直接读 JSON，
+// 因此把 Vue 的 t 注入给游戏（游戏内的 key 会自动补 'mmo.' 前缀）。
+function syncGameLang() {
+  setLang(locale.value === 'cn' ? 'zh' : 'en')
+  setTranslator((key, params) => t(key, params))
+}
 watch(locale, syncGameLang)
 
 // 服务端错误多为中文兜底：英文界面下若消息含中文则改用本地化文案（中文界面保留服务端详情）

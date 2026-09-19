@@ -641,13 +641,33 @@ export default class MapScene extends Phaser.Scene {
   }
   spawnMonster(key, x, y, def) {
     const m = new Monster(this, x, y, key, { scale: 1, hp: def ? def.hp : 60 });
-    this.monsters.push({ m, def, key, homeX: x, homeY: y, ai: { t: Phaser.Math.Between(600, 1600), dx: 0, dy: 1, atkCd: 0 } });
+    // 跨端一致的怪物 id：地图 + 类型 + 落点瓦片（各端 maps.json 相同 → id 相同），用于战斗锁
+    const id = `${this.scene.key}:${key}:${Math.round(x / 48)}:${Math.round(y / 48)}`;
+    this.monsters.push({ id, m, def, key, homeX: x, homeY: y, ai: { t: Phaser.Math.Between(600, 1600), dx: 0, dy: 1, atkCd: 0 } });
+  }
+  // 该怪当前被谁锁住（undefined = 空闲）
+  monsterLock(id) {
+    const locks = this.net.room && this.net.room.state && this.net.room.state.monsterLocks;
+    return locks ? locks.get(id) : undefined;
+  }
+  // 被"别人"锁住 → 我不能与它战斗
+  lockedByOther(id) {
+    const owner = this.monsterLock(id);
+    return !!owner && owner !== this.net.sessionId;
   }
   updateMonsters(delta, dt) {
     for (const mn of this.monsters) {
       if (!mn || !mn.m || !mn.m.spr || !this.textures.exists(mn.m.texKey)) continue;
       if (mn.m.dead) continue;
       const ai = mn.ai, M = 24;
+      // 自己正在战斗 / 该怪被任意玩家锁定 → 原地不动（只转向玩家）
+      if (this.inBattle || this.monsterLock(mn.id) !== undefined) {
+        ai.mode = "stay"; ai.dx = 0; ai.dy = 0;
+        const c0 = this.localChar;
+        if (c0) mn.m.setFacing(Math.abs(c0.sprite.x - mn.m.x) >= Math.abs(c0.sprite.y - mn.m.y) ? (c0.sprite.x > mn.m.x ? 3 : 1) : (c0.sprite.y > mn.m.y ? 2 : 0));
+        try { mn.m.update(delta, mn.m.x, mn.m.y, false); } catch { /* 过渡帧 */ }
+        continue;
+      }
       ai.t = (ai.t || 0) - delta;
       if (ai.t <= 0) {
         if (ai.mode !== "stay") { ai.mode = "stay"; ai.dx = 0; ai.dy = 0; ai.t = Phaser.Math.Between(2000, 4000); }
@@ -716,6 +736,7 @@ export default class MapScene extends Phaser.Scene {
     const mn = this.monsters[i];
     if (!mn || !mn.m || mn.m.dead || this.inBattle || this.dead) return;
     this.inBattle = true;
+    this.net.sendLockMonster(mn.id); // 上锁：别人不能同时打这只怪
     sfx.hurtMonster();
     const def = mn.def || {};
     const sp = this.selfP;
@@ -740,6 +761,8 @@ export default class MapScene extends Phaser.Scene {
     this.inBattle = false;
     // 短时间免战冷却: 防止逃跑后玩家仍贴着怪物导致瞬间再次开战
     this._battleCd = this.time.now + 1500;
+    const cur = this.monsters[i];
+    if (cur) this.net.sendUnlockMonster(cur.id); // 释放战斗锁
     const mn = this.monsters[i];
     if (snap.result === "win" && mn) {
       if (this.net.connected) this.net.sendBattleWin(mn.key, snap.taken);
@@ -1093,6 +1116,7 @@ export default class MapScene extends Phaser.Scene {
       for (let i = 0; i < this.monsters.length; i++) {
         const mn = this.monsters[i];
         if (!mn || !mn.m || mn.m.dead) continue;
+        if (this.lockedByOther(mn.id)) continue; // 别人正在和它战斗 → 我不能参战
         const d = Math.hypot(c.sprite.x - mn.m.x, c.sprite.y - mn.m.y);
         if (d < COLLIDE_R + 8) { this.startBattle(i); break; }
       }

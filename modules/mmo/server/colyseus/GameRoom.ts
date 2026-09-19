@@ -15,7 +15,6 @@ import { eq, and, isNull } from "drizzle-orm";
 const { Room } = colyseus;
 
 const ITEMS: Record<string, any> = itemsData.items;
-const GROUND_SPAWNS: any[] = itemsData.groundSpawns;
 const DEFAULT_GOLD: number = itemsData.defaultGold;
 const TASKS: any[] = tasksData.tasks;
 const MONSTER_DEFS: any[] = monstersData.monsters;
@@ -26,7 +25,6 @@ const DEFAULT_CFG = {
   colors: {}, skin: null,
 };
 
-const RESPAWN_MS = 20000;   // 地面物品被拾取后的原地刷新
 const INIT_HP = 100;
 const DEAD_MS = 2500;
 const XP_PER_LV = 100;
@@ -54,11 +52,8 @@ export class GameRoom extends Room {
     this.instTasks = [];
     await this.reloadInstanceTasks();
 
-    // 世界地面物品（一次生成,拾取即从状态移除）
-    for (let i = 0; i < GROUND_SPAWNS.length; i++) {
-      const s = GROUND_SPAWNS[i];
-      this.state.groundItems.push(new GroundItem().assign({ id: "g_" + i, itemId: s.itemId, x: s.x, y: s.y, mapId: "world" }));
-    }
+    // 主地图不再预置/随机生成任何地面物品；地面物品只来自
+    // 服务端权威结算的击杀掉落(handleBattleWin)与玩家主动丢弃(drop)。
 
     this.onMessage("move", (client, msg) => {
       const p = this.playerOf(client);
@@ -131,17 +126,30 @@ export class GameRoom extends Room {
       if ((gi.mapId || "world") !== (p.mapId || "world")) return;
       const d = Math.hypot(p.x - gi.x, p.y - gi.y);
       if (d > 90) return;
-      const info = { id: gi.id, itemId: gi.itemId, x: gi.x, y: gi.y };
+      const itemId = gi.itemId;
       const idx = this.state.groundItems.findIndex((g: any) => g.id === gi.id);
       this.state.groundItems.splice(idx, 1);
-      this.addItem(p, info.itemId);
-      this.updateTask(p, "collect", info.itemId);
+      this.addItem(p, itemId);
+      this.updateTask(p, "collect", itemId);
       this.checkAllTasks(p);
-      setTimeout(() => {
-        if (!this.state) return;
-        if (this.state.groundItems.some((g: any) => g.id === info.id)) return;
-        this.state.groundItems.push(new GroundItem().assign(info));
-      }, RESPAWN_MS);
+      // 掉落一次性：拾取后不再重生（怪物本身仍会原地重生）
+    });
+
+    // 怪物战斗锁：同一只怪同一时间只能被一个玩家战斗。
+    // 怪物 id 由客户端按「地图:类型:落点瓦片」生成，各端一致。
+    this.onMessage("lockMonster", (client, msg) => {
+      if (!this.playerOf(client)) return;
+      const id = msg && typeof msg.id === "string" ? msg.id.trim() : "";
+      if (!id || id.length > 96) return;
+      const owner = this.state.monsterLocks.get(id);
+      if (owner && owner !== client.sessionId) return; // 已被别人锁住 → 抢不到
+      this.state.monsterLocks.set(id, client.sessionId);
+    });
+    this.onMessage("unlockMonster", (client, msg) => {
+      if (!this.playerOf(client)) return;
+      const id = msg && typeof msg.id === "string" ? msg.id.trim() : "";
+      if (!id) return;
+      if (this.state.monsterLocks.get(id) === client.sessionId) this.state.monsterLocks.delete(id);
     });
 
     // 玩家状态：被怪物击中 / 击杀 / 掉落 / 使用物品 / 装备
@@ -372,11 +380,16 @@ export class GameRoom extends Room {
     }
     this.userBySession.delete(client.sessionId);
     this.courseBySession.delete(client.sessionId);
+    // 离开时释放其持有的怪物战斗锁，避免怪物被永久锁死
+    const owned: string[] = [];
+    this.state.monsterLocks.forEach((owner: string, id: string) => { if (owner === client.sessionId) owned.push(id); });
+    for (const id of owned) this.state.monsterLocks.delete(id);
   }
 
   onDispose() {
     this.userBySession.clear();
     this.courseBySession.clear();
+    this.state.monsterLocks.clear();
   }
 
   // ---- 班级/账号信息 ----

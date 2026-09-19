@@ -10,27 +10,50 @@ const clear = (n) => { if (n) n.innerHTML = ""; };
 // 物品图标地址（assets/mmo/items/*.png）
 const itemImg = (id) => `/api/game-assets/mmo/items/${id}.png`;
 
-// 服饰/配件 icon: 截取真实 MV sprite(TV_{layer}_p{NN}.png, 3列×4行)的第 1 行第 2 列 (48x48)
+// 服饰/配件 icon: 从 MV 行走图(TV_{layer}_p{NN}.png, 3列×4行)里截一帧当作图标。
+// 注意：不同图层"有内容"的行并不相同（翅膀/披风/后发只在最后一行，衣裤在中间行），
+// 所以不能写死取第一行第二列，改为挑「不透明像素最多」的那一帧。
 const MV_TV = { Beard: "Beard1", Tail: "Tail1", Wing: "Wing1" };
 const mvIconCache = new Map();
+function pickBestCell(cv) {
+  const w = Math.floor(cv.width / 48), h = Math.floor(cv.height / 48);
+  if (w <= 0 || h <= 0) return { x: 0, y: 0 };
+  const t = document.createElement("canvas");
+  t.width = cv.width; t.height = cv.height;
+  const tx = t.getContext("2d");
+  tx.drawImage(cv, 0, 0);
+  let best = { x: 0, y: 0 }, bestN = -1;
+  for (let cy = 0; cy < h; cy++) {
+    for (let cx = 0; cx < w; cx++) {
+      const d = tx.getImageData(cx * 48, cy * 48, 48, 48).data;
+      let n = 0;
+      for (let i = 3; i < d.length; i += 4) if (d[i] > 10) n++;
+      if (n > bestN) { bestN = n; best = { x: cx * 48, y: cy * 48 }; }
+    }
+  }
+  return bestN > 0 ? best : { x: 48, y: 0 };
+}
 async function mvIconSrc(it) {
   const mv = it && it.mv;
-  if (!mv || !mv.gender || !mv.layer || !mv.num) return null;
+  if (!mv || !mv.layer || !mv.num) return null;
   const tv = MV_TV[mv.layer] || mv.layer;
   const p = String(mv.num).padStart(2, "0");
-  const cv = await fetchBitmap(`${BASE_GEN}${mv.gender}/TV_${tv}_p${p}.png`);
+  // 旧数据里披风等缺 gender，按男性素材取图标即可
+  const gender = mv.gender || "Male";
+  const cv = await fetchBitmap(`${BASE_GEN}${gender}/TV_${tv}_p${p}.png`);
   if (!cv) return null;
   const c = document.createElement("canvas");
   c.width = 48; c.height = 48;
   const x = c.getContext("2d");
   x.imageSmoothingEnabled = false;
-  x.drawImage(cv, 48, 0, 48, 48, 0, 0, 48, 48); // 第一行第二列
+  const cell = pickBestCell(cv);
+  x.drawImage(cv, cell.x, cell.y, 48, 48, 0, 0, 48, 48);
   return c.toDataURL();
 }
 async function fillMvIcon(img) {
   const id = img.dataset.mv;
   const it = ITEMS[id] || {};
-  const key = it.mv ? `${id}:${it.mv.gender}` : id;
+  const key = it.mv ? `${id}:${it.mv.gender || "Male"}` : id;
   let src = mvIconCache.get(key);
   if (src === undefined) {
     src = await mvIconSrc(it);

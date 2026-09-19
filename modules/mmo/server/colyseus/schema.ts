@@ -2,7 +2,7 @@
 // 与客户端 colyseus.js 的 auto-schema 解码兼容（players 用 ArraySchema）。
 // 注：金币与课程 user_courses.coin 同源，进入房间时由服务端从课程余额初始化；
 //     体力(饱食度)已移除，玩家只有生命/经验/等级。
-import { Schema, ArraySchema, defineTypes } from "@colyseus/schema";
+import { Schema, ArraySchema, MapSchema, defineTypes } from "@colyseus/schema";
 
 export class Player extends Schema {}
 defineTypes(Player, {
@@ -36,9 +36,11 @@ export class GameRoomState extends Schema {
     super();
     this.players = new ArraySchema();
     this.groundItems = new ArraySchema();
+    this.monsterLocks = new MapSchema(); // 怪物战斗锁: monsterId -> sessionId(谁正在与它战斗)
   }
 }
 defineTypes(GameRoomState, {
   players: { array: Player },
   groundItems: { array: GroundItem },
+  monsterLocks: { map: "string" },
 });

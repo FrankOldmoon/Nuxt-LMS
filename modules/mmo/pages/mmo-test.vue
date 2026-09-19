@@ -7,14 +7,18 @@
 import { ref, shallowRef, computed, onBeforeUnmount, nextTick } from 'vue'
 import { appStore } from '../gamejs/game/appStore'
 import { OfflineNetClient } from '../gamejs/net/offline.js'
-import { setLang } from '../gamejs/i18n'
+import { setLang, setTranslator } from '../gamejs/i18n'
 
 definePageMeta({ layout: false })
 
 const { t, locale } = useI18n()
 
-// 游戏内文案（Phaser 画布/DOM 覆盖层）跟随主项目语言
-function syncGameLang() { setLang(locale.value === 'cn' ? 'zh' : 'en') }
+// 游戏内文案（Phaser 画布/DOM 覆盖层）跟随主项目语言；
+// locale JSON 会被 i18n 插件编译成 AST，游戏侧读不了，故注入 Vue 的 t
+function syncGameLang() {
+  setLang(locale.value === 'cn' ? 'zh' : 'en')
+  setTranslator((key, params) => t(key, params))
+}
 watch(locale, syncGameLang)
 if (import.meta.client) syncGameLang()
 

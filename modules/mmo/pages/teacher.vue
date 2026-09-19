@@ -83,7 +83,6 @@ watch(isLoggedIn, (v) => { if (v) loadList() })
       <div class="tch-bar">
         <b>{{ $t('mmo.teacher.bar') }}</b>
         <span class="tch-user">{{ (user && user.name) || $t('mmo.teacher.teacher') }}</span>
-        <NuxtLink to="/mmo" class="tch-btn">{{ $t('mmo.teacher.enterGame') }}</NuxtLink>
       </div>
 
       <div class="tch-body">

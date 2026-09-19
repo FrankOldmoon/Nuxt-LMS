@@ -33,22 +33,22 @@ describe("切图同步", () => {
 });
 
 describe("地面物品拾取（跨客户端）", () => {
-  it("A 走到地面物品处拾取后，物品从 A/B 状态移除并进入 A 背包", async () => {
+  it("A 丢弃后拾取，物品从 A/B 状态移除并进入 A 背包", async () => {
     const c = nextClassId();
-    const A = await join(nextUserId(), c);
+    const A = await join(nextUserId(), c, { inventory: { bread: 1 } });
     const B = await join(nextUserId(), c);
     await waitPlayers(B, 2);
 
-    // 取一件世界初始地面物品（onCreate 按 groundSpawns 生成）
+    // 主地图已不再预置地面物：由 A 丢弃一件物品产生
+    await sleep(MOVE_GUARD_MS);
+    A.send("move", { x: 500, y: 500, facing: 2, mode: "idle" });
+    expect(await waitFor(() => mirror(A, A.sessionId)?.x === 500)).toBe(true);
+    A.send("drop", { itemId: "bread" });
+
+    expect(await waitFor(() => grounds(A).length > 0), "丢弃后应产生地面物品").toBe(true);
     const g = grounds(A)[0];
-    expect(g, "应存在初始地面物品").toBeTruthy();
     const gid = g.id;
     const gitem = g.itemId;
-    expect(grounds(A).length).toBeGreaterThan(0);
-
-    await sleep(MOVE_GUARD_MS);
-    A.send("move", { x: g.x, y: g.y, facing: 2, mode: "idle" });
-    expect(await waitFor(() => mirror(A, A.sessionId)?.x === g.x)).toBe(true);
 
     A.send("pickup", gid);
 

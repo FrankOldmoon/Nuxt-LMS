@@ -5,7 +5,6 @@ import itemsData from "../config/items.json";
 export const ITEMS = itemsData.items;
 export const SHOP_STOCK = itemsData.shopStock;
 export const DEFAULT_GOLD = itemsData.defaultGold;
-export const GROUND_SPAWNS = itemsData.groundSpawns;
 
 // 装备槽定义(顺序即装备栏显示顺序)。服饰/配件槽通过 item.mv 关联到 MV 角色合成图层。
 export const EQUIP_SLOTS = [

@@ -2,10 +2,11 @@
 // 单人与多人场景共用;外观由 gender + 各分层编号 + 可选调色 + 肤色组成。
 import { MV_PANEL_CATS, MV_GENDERS, availableNums, loadManifest, SKIN_GRADIENTS, PRESET_COLORS } from "../rpg/buildMvCharacter.js";
 
-// 默认外观配置(MV 分层编号)
+// 默认外观配置(MV 分层编号)。注意 Ears 留空：耳朵属于"兽耳饰品"，只能靠道具/装备获得，
+// 初始外观不应自带耳朵（Face 与 Body 视图都不渲染耳朵层）。
 export const DEFAULT_CFG = {
   gender: "Male",
-  layers: { Body: 1, Clothing1: 1, Clothing2: 13, Face: 1, Eyes: 1, Nose: 1, Mouth: 1, Eyebrows: 1, Ears: 1, FrontHair1: null, FrontHair2: null, RearHair1: null, RearHair2: null },
+  layers: { Body: 1, Clothing1: 1, Clothing2: 13, Face: 1, Eyes: 1, Nose: 1, Mouth: 1, Eyebrows: 1, Ears: null, FrontHair1: null, FrontHair2: null, RearHair1: null, RearHair2: null },
   colors: {},        // {cat: hex|null}
   skin: null,        // null=原肤色
 };
@@ -26,10 +27,13 @@ export function applyOutfit(layers, gender) {
 export const MV_CATS_PANEL = MV_PANEL_CATS;
 
 // 随机一组 MV 外观(必选 Body;其余可选分层有概率留空)
+// 排除 Ears：耳朵属于兽耳饰品，创建页不提供该选项，随机也不应自带
+const RANDOM_EXCLUDE = new Set(["Ears"]);
 export async function randomMvCfg() {
   const cfg = { gender: MV_GENDERS[Math.floor(Math.random() * MV_GENDERS.length)], layers: {}, colors: {}, skin: null };
   await loadManifest();
   for (const c of MV_CATS_PANEL) {
+    if (RANDOM_EXCLUDE.has(c.key)) continue;
     const nums = await availableNums(cfg.gender, c.key);
     if (!nums.length) continue;
     if (c.required) cfg.layers[c.key] = nums[0];

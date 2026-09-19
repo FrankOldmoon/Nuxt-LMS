@@ -57,7 +57,8 @@ export default defineNitroPlugin(async () => {
 
   const gameServer = new Server({ server: httpServer });
   // 按 classId 过滤：每个班级独立房间，玩家只进自己 default_class 的房间
-  (gameServer.define("game", GameRoom) as any).filterBy(["classId"]);
+  // 同课程 + 同班级 → 同一个世界：房间按 (courseId, classId) 分组
+  (gameServer.define("game", GameRoom) as any).filterBy(["courseId", "classId"]);
 
   httpServer.on("error", (e: any) => {
     console.error("[mmo] Colyseus http server error:", e && e.message);

@@ -89,7 +89,7 @@ const rooms: any[] = [];
 export async function bootServer() {
   httpServer = http.createServer();
   gameServer = new Server({ server: httpServer });
-  gameServer.define("game", GameRoom).filterBy(["classId"]);
+  gameServer.define("game", GameRoom).filterBy(["courseId", "classId"]);
   await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", () => resolve()));
   port = (httpServer.address() as any).port;
 }

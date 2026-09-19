@@ -55,12 +55,9 @@ const eq = (p: any) => JSON.parse(p.equippedJSON);
 let room: any;
 beforeEach(async () => { room = await bootRoom(); });
 
-describe("onCreate - 世界地面物品", () => {
-  it("按 groundSpawns 初始化地面物品", () => {
-    expect(room.state.groundItems.length).toBeGreaterThan(0);
-    const g = room.state.groundItems[0];
-    expect(g.mapId).toBe("world");
-    expect(typeof g.itemId).toBe("string");
+describe("onCreate - 地面物品", () => {
+  it("主地图不再预置/随机生成任何地面物品", () => {
+    expect(room.state.groundItems.length).toBe(0);
   });
 });
 
@@ -157,6 +154,20 @@ describe("背包 - drop / pickup", () => {
     call("pickup", S1, "g3");
     expect(inv(p).gem).toBe(1);
   });
+
+  it("掉落一次性：拾取后不会重生", () => {
+    vi.useFakeTimers();
+    try {
+      const p = addPlayer(room, { x: 10, y: 20, mapId: "dungeon" });
+      room.state.groundItems.push(new GroundItem().assign({ id: "g4", itemId: "gem", x: 10, y: 20, mapId: "dungeon" }));
+      call("pickup", S1, "g4");
+      expect(inv(p).gem).toBe(1);
+      vi.advanceTimersByTime(120000);
+      expect(room.state.groundItems.some((g: any) => g.id === "g4")).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
 
 describe("使用 / 装备", () => {
@@ -243,6 +254,36 @@ describe("受击 / 任务", () => {
     expect(p.gold).toBe(beforeGold);
     expect(inv(p).gem).toBeUndefined();
     expect(room.state.groundItems.length).toBe(beforeItems);
+  });
+});
+
+describe("怪物战斗锁", () => {
+  it("同一只怪只能被一个玩家锁住（别人抢不到）", () => {
+    addPlayer(room, { sessionId: "s1" });
+    addPlayer(room, { sessionId: "s2" });
+    call("lockMonster", S1, { id: "dungeon:ghost:7:23" });
+    expect(room.state.monsterLocks.get("dungeon:ghost:7:23")).toBe("s1");
+    call("lockMonster", { sessionId: "s2" }, { id: "dungeon:ghost:7:23" });
+    expect(room.state.monsterLocks.get("dungeon:ghost:7:23")).toBe("s1"); // 抢不到
+  });
+
+  it("解锁 / 离房会释放锁", async () => {
+    addPlayer(room, { sessionId: "s1" });
+    call("lockMonster", S1, { id: "m1" });
+    call("unlockMonster", S1, { id: "m1" });
+    expect(room.state.monsterLocks.get("m1")).toBeUndefined();
+    call("lockMonster", S1, { id: "m2" });
+    room.persistPlayer = async () => {};
+    await room.onLeave({ sessionId: "s1" });
+    expect(room.state.monsterLocks.get("m2")).toBeUndefined();
+  });
+
+  it("非持有者无法解锁别人的锁", () => {
+    addPlayer(room, { sessionId: "s1" });
+    addPlayer(room, { sessionId: "s2" });
+    call("lockMonster", S1, { id: "m3" });
+    call("unlockMonster", { sessionId: "s2" }, { id: "m3" });
+    expect(room.state.monsterLocks.get("m3")).toBe("s1");
   });
 });
 
