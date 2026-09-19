@@ -12,7 +12,7 @@ import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { generateDungeon, THEMES, deriveMaterials, listWallBases, listFloorTiles } from "../../gamejs/rpg/dungeonGen.js";
+import { generateDungeon, generateStraightMap, THEMES, deriveMaterials, listWallBases, listFloorTiles } from "../../gamejs/rpg/dungeonGen.js";
 import { isAutotile, autotileQuads, normalTileSource, buildPassGrid } from "../../gamejs/tile-draw.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
@@ -230,5 +230,85 @@ describe("地牢生成器", () => {
       expect(dist[e[1]][e[0]], `seed ${seed} 出口应可达`).toBeGreaterThan(0);
       expect(dist[e[1]][e[0]], `seed ${seed} 出口应在最远处`).toBeGreaterThanOrEqual(maxD - 4);
     }
+  });
+});
+
+describe("直线走廊地图（章节副本用）", () => {
+  const straight = (opts: Record<string, unknown>) =>
+    generateStraightMap({ tilesetId: TILESET_ID, ...opts }, { flags, meta });
+
+  /** 从某点出发统计可达地板格（与游戏 buildPassGrid 同口径） */
+  const reachableCount = (map: any, from: [number, number]) => {
+    const grid = buildPassGrid(map, flags);
+    const W = map.width, H = map.height;
+    if (grid[from[1]][from[0]] !== 0) return 0;
+    const seen = Array.from({ length: H }, () => Array(W).fill(false));
+    seen[from[1]][from[0]] = true;
+    const q: [number, number][] = [[from[0], from[1]]];
+    let cnt = 1;
+    for (let i = 0; i < q.length; i++) {
+      const [x, y] = q[i];
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = x + dx, ny = y + dy;
+        if (nx < 0 || ny < 0 || nx >= W || ny >= H || seen[ny][nx] || grid[ny][nx] !== 0) continue;
+        seen[ny][nx] = true; cnt++; q.push([nx, ny]);
+      }
+    }
+    return cnt;
+  };
+
+  it("入口在最左、出口在最右，内容点等距同排且按顺序递增", () => {
+    const { info } = straight({ count: 5 });
+    expect(info.spots).toHaveLength(5);
+    expect(info.spawn[0]).toBeLessThan(info.spots[0][0]);
+    expect(info.exit[0]).toBeGreaterThan(info.spots[4][0]);
+    for (let k = 0; k < 5; k++) expect(info.spots[k][1]).toBe(info.spots[0][1]);
+    for (let k = 1; k < 5; k++) expect(info.spots[k][0] - info.spots[k - 1][0]).toBe(info.spacing);
+  });
+
+  it("走廊是水平的一条直线：只有中间 5 行可通行", () => {
+    const { map } = straight({ count: 5 });
+    const grid = buildPassGrid(map, flags);
+    const mid = map.height >> 1;
+    for (let y = 0; y < map.height; y++) {
+      for (let x = 0; x < map.width; x++) {
+        if (grid[y][x] !== 0) continue;
+        expect(Math.abs(y - mid)).toBeLessThanOrEqual(2);
+        expect(x).toBeGreaterThanOrEqual(1);
+        expect(x).toBeLessThanOrEqual(map.width - 2);
+      }
+    }
+  });
+
+  it("内容数自适应宽度，且不超出画布纹理上限（16384px）", () => {
+    for (const count of [1, 8, 40, 120]) {
+      const { map, info } = straight({ count });
+      expect(info.spots).toHaveLength(count);
+      expect(map.width * 48).toBeLessThanOrEqual(16384);
+      expect(info.spots[count - 1][0]).toBeLessThan(info.exit[0]);
+    }
+  });
+
+  it("入口/出口瓦片就位，且从入口出发所有可走格都连通", () => {
+    for (const count of [1, 6, 30]) {
+      const { map, info } = straight({ count });
+      const n = map.width * map.height;
+      expect(map.data[2 * n + info.spawn[1] * map.width + info.spawn[0]]).toBe(info.entranceTile);
+      expect(map.data[2 * n + info.exit[1] * map.width + info.exit[0]]).toBe(info.exitTile);
+      expect(reachableCount(map, [info.spawn[0], info.spawn[1]])).toBe(info.walkable);
+    }
+  });
+
+  it("显式指定地面/墙 tile 会被采用", () => {
+    const floors = listFloorTiles(flags);
+    const walls = listWallBases(flags);
+    const { map, info } = straight({ count: 3, floorId: floors[3], wallA: walls[2] });
+    expect(info.floorId).toBe(floors[3]);
+    expect(info.wallA).toBe(walls[2]);
+    // 地板用指定瓦片、墙用指定瓦片 base+shape
+    const mid = map.height >> 1;
+    expect(map.data[mid * map.width + 2]).toBe(floors[3]);
+    expect(map.data[0] - walls[2]).toBeGreaterThanOrEqual(0);
+    expect(map.data[0] - walls[2]).toBeLessThanOrEqual(15);
   });
 });

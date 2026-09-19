@@ -52,6 +52,12 @@
       "back": "Back to chapter",
       "progress": "Progress {done}/{total}",
       "enemiesShort": "Enemies {a}/{b}",
+      "richImage": "Image",
+      "richWidget": "Interactive",
+      "richBlock": "Content",
+      "viewTip": "Press [E] to view",
+      "blockView": "Chapter Content",
+      "blockUnavailable": "(Please view this content on the chapter page)",
       "more": "…"
     },
     "indoor": {

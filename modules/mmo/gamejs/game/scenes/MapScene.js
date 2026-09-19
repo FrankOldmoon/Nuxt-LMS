@@ -1127,6 +1127,12 @@ export default class MapScene extends Phaser.Scene {
       const def = this.nearNpc.def;
       if (this.net.connected) this.net.sendTalk(def.key);
       if (def.role === "shop") { this.openShop(); return; }
+      // 章节副本：图文/组件类内容（含 codeBlock/blockquote 必读块）→ 用 LMS 原始组件渲染；
+      // 必读块携带 readKey，弹窗关闭后回写「已读」
+      if (def.render === "component" && def.nodeIndex != null && typeof appStore.openChapterBlock === "function") {
+        appStore.openChapterBlock(def.nodeIndex, def.readKey || "");
+        return;
+      }
       this.openDialog(this.nearNpc);
     }
   }
@@ -1349,7 +1355,9 @@ export default class MapScene extends Phaser.Scene {
     if (nearEnemy && !uiBlocked && !this.nearGround && !this.nearDoor) {
       this.tip.setVisible(true).setText(t("chapterInst.challengeTip")).setPosition(nearEnemy.m.x, nearEnemy.m.y - 56);
     } else if (near && !uiBlocked && !this.nearGround && !this.nearDoor) {
-      this.tip.setVisible(true).setText(t("npc.talkTip")).setPosition(near.x, near.y - 52);
+      // 章节副本里「图文/组件类」内容：提示按 E 查看（用 LMS 原始组件渲染）
+      const isComp = !!(near.def && near.def.render === "component" && near.def.nodeIndex != null);
+      this.tip.setVisible(true).setText(t(isComp ? "chapterInst.viewTip" : "npc.talkTip")).setPosition(near.x, near.y - 52);
     } else { this.tip.setVisible(false); }
 
     // 怪物接触 → 触发回合制战斗(暂停移动)

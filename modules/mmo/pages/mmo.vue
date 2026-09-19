@@ -70,20 +70,53 @@ const chapterTaskOpen = ref(false)
 const chapterTaskState = reactive({ type: '', id: 0, key: '' })
 const TaskModalComp = resolveComponent('CourseTaskModal')
 const hasTaskModal = typeof TaskModalComp !== 'string'
-// 答对后「马上隐藏」题目：短暂展示判定反馈 → 自动关闭弹窗 → 等离场动画结束再放开输入锁
+
+// 章节副本：图文/组件类内容 → 用 LMS 的**原始渲染组件**原样展示章节里的那一块内容
+// （组件名来自 lms 模块 addComponentsDir({ pathPrefix: true })：
+//   components/ueditor/render/node.vue → UeditorRenderNode）
+const RenderNodeComp = resolveComponent('UeditorRenderNode')
+const hasRenderNode = typeof RenderNodeComp !== 'string'
+const chapterBlockOpen = ref(false)
+const chapterBlockState = reactive({ nodeIndex: null, readKey: '' })
+const chapterBlockNode = computed(() => {
+  const list = chapterContent.value && chapterContent.value.content
+  const i = chapterBlockState.nodeIndex
+  return Array.isArray(list) && Number.isInteger(i) ? (list[i] || null) : null
+})
+
+// 游戏内弹窗打开期间锁住玩家输入（移动/交互），避免角色在弹窗后面走动
+function syncModalLock() {
+  appStore.taskModalOpen = !!(chapterTaskOpen.value || chapterBlockOpen.value)
+}
+
+function openChapterBlock(nodeIndex, readKey) {
+  if (!Number.isInteger(nodeIndex)) return
+  chapterBlockState.nodeIndex = nodeIndex
+  chapterBlockState.readKey = readKey || ''
+  chapterBlockOpen.value = true
+}
+// 关闭弹窗：必读块（codeBlock/blockquote）关闭即视为「读完」，回写 LMS 进度
+function closeChapterBlock() {
+  const key = chapterBlockState.readKey
+  chapterBlockOpen.value = false
+  chapterBlockState.readKey = ''
+  if (key) chapterTaskCtx.markBlockRead(key)
+}
+watch(chapterBlockOpen, syncModalLock)
+
 let chapterTaskCloseTimer = null
 let chapterTaskHideTimer = null
 watch(chapterTaskOpen, (v) => {
   if (v) {
     if (chapterTaskHideTimer) { clearTimeout(chapterTaskHideTimer); chapterTaskHideTimer = null }
-    appStore.taskModalOpen = true
+    syncModalLock()
     return
   }
   if (chapterTaskCloseTimer) { clearTimeout(chapterTaskCloseTimer); chapterTaskCloseTimer = null }
   if (chapterTaskHideTimer) clearTimeout(chapterTaskHideTimer)
   // Modal 离场动画 ≈300ms：这段时间内仍视为"题目未隐藏"，
   // 场景不会播放斩杀动画；动画与"题目确实消失"严格先后发生。
-  chapterTaskHideTimer = setTimeout(() => { chapterTaskHideTimer = null; appStore.taskModalOpen = false }, 320)
+  chapterTaskHideTimer = setTimeout(() => { chapterTaskHideTimer = null; syncModalLock() }, 320)
 })
 watch(() => (chapterTaskState.key ? chapterTaskCtx.nodeStatus.value[chapterTaskState.key] : false), (done) => {
   if (!done || !chapterTaskOpen.value) return
@@ -244,8 +277,11 @@ async function startGame() {
           isReadDone(key) { return !!key && chapterTaskCtx.isBlockRead(key) },
           isHeadingDone(id) { return !!id && chapterTaskCtx.isHeadingDone(id) },
           requestTask(type, cid, key) { openChapterTask(type, cid, key) },
+          // 图文/组件类内容（含 codeBlock/blockquote 必读块）→ 原始组件弹窗
+          openBlock(nodeIndex, readKey) { openChapterBlock(nodeIndex, readKey) },
         }
         appStore.openChapterTask = (type, cid, key) => openChapterTask(type, cid, key)
+        appStore.openChapterBlock = (nodeIndex, readKey) => openChapterBlock(nodeIndex, readKey)
         appStore.onChapterExit = exitChapterDungeon
         if (built.layers[start]) externalMapId = built.layers[start].mapId
       } catch (e) {
@@ -379,6 +415,7 @@ onBeforeUnmount(() => {
   // 清理章节副本运行时/回调，避免下次进入时残留
   appStore.onChapterExit = null
   appStore.openChapterTask = null
+  appStore.openChapterBlock = null
   appStore.taskModalOpen = false
   appStore.chapterRuntime = null
 })
@@ -490,6 +527,22 @@ onBeforeUnmount(() => {
       <!-- 章节副本：游戏内点击任务 NPC → LMS 原生渲染弹窗作答 -->
       <component v-if="hasTaskModal" :is="TaskModalComp" v-model:open="chapterTaskOpen"
         :course-id="courseId" :type="chapterTaskState.type" :id="chapterTaskState.id" status="todo" />
+
+      <!-- 章节副本：图文/组件类内容 → 用 LMS 原始渲染组件原样展示
+           （图片/表格/列表/公式/视频/各类自定义扩展框……章节里有什么就渲染什么） -->
+      <div v-if="chapterBlockOpen" class="ov" @click.self="closeChapterBlock">
+        <div class="ov-box ch-block-box">
+          <div class="ov-head">
+            <b>{{ $t('mmo.chapterInst.blockView') }}</b>
+            <button class="ov-close" @click="closeChapterBlock">✕</button>
+          </div>
+          <div class="ov-list ch-block-body">
+            <component v-if="hasRenderNode && chapterBlockNode" :is="RenderNodeComp"
+              :node="chapterBlockNode" :course-id="courseId" :track-reading="false" />
+            <div v-else class="ch-block-fallback">{{ $t('mmo.chapterInst.blockUnavailable') }}</div>
+          </div>
+        </div>
+      </div>
       </template>
     </template>
   </div>
@@ -521,6 +574,12 @@ onBeforeUnmount(() => {
 .ch-layers li.cleared .ch-lprog::after { content: " \2713"; }
 .ch-lname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ch-lprog { flex: none; color: #8fa0b8; }
+
+/* 章节副本：图文/组件内容弹窗（LMS 原始组件渲染） */
+.ch-block-box { width: 880px; max-width: 94vw; }
+.ch-block-body { padding: 14px 18px; }
+.ch-block-body img, .ch-block-body video, .ch-block-body iframe { max-width: 100%; }
+.ch-block-fallback { color: #8fa0b8; font-size: 13px; text-align: center; padding: 24px 0; }
 
 /* 角色创建页（首次进入，无存档） */
 .mmo-create { position: absolute; inset: 0; display: grid; place-items: center; overflow: auto; padding: 16px; z-index: 65; background: #0f1520; }

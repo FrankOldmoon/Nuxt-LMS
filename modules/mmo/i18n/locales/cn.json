@@ -52,6 +52,12 @@
       "back": "返回章节",
       "progress": "进度 {done}/{total}",
       "enemiesShort": "敌人 {a}/{b}",
+      "richImage": "图片",
+      "richWidget": "互动组件",
+      "richBlock": "图文内容",
+      "viewTip": "按 [E] 查看",
+      "blockView": "章节内容",
+      "blockUnavailable": "（该内容请在章节页面查看）",
       "more": "……"
     },
     "indoor": {

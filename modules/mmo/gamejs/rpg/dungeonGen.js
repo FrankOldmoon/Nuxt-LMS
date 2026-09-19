@@ -310,3 +310,102 @@ export function generateDungeon(opts = {}, env = {}) {
   };
   return { map, info };
 }
+
+/**
+ * 生成一张「一条直线走廊」地图（章节副本专用）：内容点按文档顺序从左到右排布，**不做随机房间**。
+ * 选材与自动瓦片算法与 generateDungeon 一致，仅布局是确定的直线：
+ *   入口在最左端、出口在最右端，中间等距摆 count 个内容点（info.spots 按顺序返回）。
+ *
+ * @param opts {
+ *   count,      内容点数量（决定走廊长度）
+ *   spacing,    相邻内容点间距（格）；缺省按 maxWidth 自适应
+ *   padX,       两端留白（格，默认 4）
+ *   height,     地图高度（格，默认 15）
+ *   halfHeight, 走廊半高（默认 2 → 走廊共 5 格高）
+ *   maxWidth,   自适应 spacing 时的宽度上限（格，默认 320，避免超出画布纹理上限）
+ *   floorId, wallA, tilesetId, theme
+ * }
+ * @param env { flags:number[], meta:object|null }
+ * @returns { map, info }  info.spots = 内容点坐标（按顺序，长度 = count）
+ */
+export function generateStraightMap(opts = {}, env = {}) {
+  const flags = env.flags || [];
+  const mats = deriveMaterials(env.meta, flags);
+  const th = THEMES[opts.theme] || THEMES.stone;
+  const pickFloor = id => (id && mats.flats.includes(id)) ? id : (mats.flats[0] || 1554);
+  const pickWall = id => (id && mats.walls.includes(id)) ? id : (mats.walls[0] || 6368);
+  const FLOOR = pickFloor(opts.floorId || th.floor);
+  const WALL = pickWall(opts.wallA || opts.wallId || th.wall);
+
+  const count = Math.max(1, Number(opts.count) || 1);
+  const padX = Math.max(3, Number(opts.padX) || 4);
+  const H = Math.max(9, Math.min(60, Number(opts.height) || 15));
+  const halfH = Math.max(1, Math.min(4, Number(opts.halfHeight) || 2));
+  const maxW = Math.max(40, Number(opts.maxWidth) || 320);
+  // 间距自适应：内容少时 4 格（宽松），内容多时收紧（最紧 1 格），避免地图宽度失控
+  const auto = Math.max(1, Math.min(4, Math.floor((maxW - padX * 2) / Math.max(1, count - 1))));
+  const spacing = opts.spacing != null ? Math.max(1, Math.floor(Number(opts.spacing)) || 1) : auto;
+  const W = Math.max(16, padX * 2 + (count - 1) * spacing);
+  const cy = H >> 1;
+
+  // 全墙 → 挖一条水平走廊（rows cy±halfH，x ∈ [1, W-2]）
+  const floor = Array.from({ length: H }, () => Array(W).fill(false));
+  for (let y = cy - halfH; y <= cy + halfH; y++) {
+    if (y < 1 || y > H - 2) continue;
+    for (let x = 1; x <= W - 2; x++) floor[y][x] = true;
+  }
+  const wallBase = Array.from({ length: H }, () => Array(W).fill(0));
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (!floor[y][x]) wallBase[y][x] = WALL;
+  // 墙自动瓦片：shape = 左1 + 上2 + 右4 + 下8（四邻同为墙则不加），与 generateDungeon 同源
+  const shapeOf = (x, y) => {
+    const same = (nx, ny) => (nx < 0 || ny < 0 || nx >= W || ny >= H) ? true : wallBase[ny][nx] === WALL;
+    return (same(x - 1, y) ? 0 : 1) + (same(x, y - 1) ? 0 : 2) + (same(x + 1, y) ? 0 : 4) + (same(x, y + 1) ? 0 : 8);
+  };
+
+  const spawn = [2, cy];
+  const exitCell = [W - 3, cy];
+  const spots = [];
+  for (let k = 0; k < count; k++) {
+    spots.push([Math.min(W - 4, Math.max(3, padX + k * spacing)), cy]);
+  }
+
+  const n = W * H;
+  const data = new Array(n * 6).fill(0);
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      if (floor[y][x]) data[y * W + x] = FLOOR;
+      else if (wallBase[y][x]) data[y * W + x] = wallBase[y][x] + shapeOf(x, y);
+    }
+  }
+  data[2 * n + spawn[1] * W + spawn[0]] = ENTRANCE_TILE;
+  if (exitCell[0] !== spawn[0] || exitCell[1] !== spawn[1]) data[2 * n + exitCell[1] * W + exitCell[0]] = EXIT_TILE;
+
+  const map = {
+    autoplayBgm: false, autoplayBgs: false, battleback1Name: '', battleback2Name: '',
+    bgm: { name: '', pan: 0, pitch: 100, volume: 90 },
+    bgs: { name: '', pan: 0, pitch: 100, volume: 90 },
+    disableDashing: false, displayName: '', encounterList: [], encounterStep: 30,
+    height: H, note: '', parallaxLoopX: false, parallaxLoopY: false, parallaxName: '',
+    parallaxShow: true, parallaxSx: 0, parallaxSy: 0, scrollType: 0, specifyBattleback: false,
+    tilesetId: opts.tilesetId || 4, width: W, data, events: [],
+  };
+  // 可通行格数（与游戏 buildPassGrid 同口径：地面可走 + 上层装饰不挡路）
+  let walkableCount = 0;
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const base = data[y * W + x];
+      if (!base || blockedDirs(flags, base) !== 0 || isOverhead(flags, base)) continue;
+      if (blockedDirs(flags, data[2 * n + y * W + x]) !== 0) continue;
+      walkableCount++;
+    }
+  }
+  const info = {
+    theme: 'straight', floorId: FLOOR, wallId: WALL, wallA: WALL, wallB: WALL,
+    wallMode: 'fill', wallPairMode: 'single', voidTile: 0,
+    spawn, entrance: [spawn[0], spawn[1]], entranceTile: ENTRANCE_TILE,
+    exit: exitCell, exitTile: EXIT_TILE, spots, count, spacing,
+    width: W, height: H, walkable: walkableCount, reachable: walkableCount,
+    deco: { details: 0, props: 0, propsDrawn: 0, propsKept: 0 },
+  };
+  return { map, info };
+}
