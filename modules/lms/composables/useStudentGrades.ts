@@ -1,4 +1,5 @@
 import { inject, provide, type InjectionKey, type Ref } from 'vue'
+import { useKnowledgeProfile } from './useKnowledgeProfile'
 
 /**
  * 单个学生的学习数据 composable（学生端 / 教师端共用同一上下文形状）
@@ -87,6 +88,15 @@ export function useStudentGrades(
     }
   })
 
+  // 知识能力画像：按内容标签聚合该学生的学习掌握度
+  const knowledge = useKnowledgeProfile(
+    {
+      courseId: computed(() => Number(toValue(props.courseId)) || 0),
+      userId: computed(() => Number(toValue(props.userId)) || 0),
+    },
+    isOpen,
+  )
+
   async function loadData() {
     // props.courseId/userId/classId 可能由调用方传入 ref/computed，toValue 统一解包
     const courseId = Number(toValue(props.courseId))
@@ -135,6 +145,7 @@ export function useStudentGrades(
     score,
     statCards,
     radarOption,
+    ...knowledge,
     loadData,
   }
 }

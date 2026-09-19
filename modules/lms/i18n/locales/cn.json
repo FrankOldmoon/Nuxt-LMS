@@ -776,7 +776,7 @@
     "noGroups": "暂无小组",
     "attitudeScore": "态度",
     "externalScore": "外部分",
-    "ability": "能力值",
+    "ability": "score分布",
     "learningStats": "学习统计",
     "grade": "等级",
     "criteria": "评分标准",
@@ -799,7 +799,23 @@
     "classAvgEmpty": "暂无班级数据",
     "students": "人数",
     "avgScore": "生均分",
-    "level": "等级"
+    "level": "等级",
+    "knowledgeProfile": "知识能力画像",
+    "kpOverall": "综合掌握度",
+    "kpOverview": "能力维度",
+    "kpTags": "知识点掌握度",
+    "kpStrengths": "优势",
+    "kpWeaknesses": "待加强",
+    "kpEmpty": "暂无足够学习数据生成画像",
+    "kpNoTags": "暂无知识点标签数据",
+    "kpDim": {
+      "question": "题目掌握",
+      "homework": "作业达成",
+      "quiz": "测验达成",
+      "practice": "练习表现",
+      "reading": "阅读完成",
+      "comment": "讨论参与"
+    }
   },
   "announcement": {
     "title": "课程公告",

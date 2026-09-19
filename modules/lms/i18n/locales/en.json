@@ -776,7 +776,7 @@
     "noGroups": "No groups",
     "attitudeScore": "Attitude",
     "externalScore": "External",
-    "ability": "Ability",
+    "ability": "score分布",
     "learningStats": "Learning Stats",
     "grade": "Grade",
     "criteria": "Grading Criteria",
@@ -799,7 +799,23 @@
     "classAvgEmpty": "No class data yet",
     "students": "Students",
     "avgScore": "Avg Score",
-    "level": "Level"
+    "level": "Level",
+    "knowledgeProfile": "Knowledge Profile",
+    "kpOverall": "Overall Mastery",
+    "kpOverview": "Ability Dimensions",
+    "kpTags": "Knowledge Point Mastery",
+    "kpStrengths": "Strengths",
+    "kpWeaknesses": "To Improve",
+    "kpEmpty": "Not enough learning data to build a profile",
+    "kpNoTags": "No knowledge tags yet",
+    "kpDim": {
+      "question": "Questions",
+      "homework": "Homework",
+      "quiz": "Quizzes",
+      "practice": "Practice",
+      "reading": "Reading",
+      "comment": "Discussion"
+    }
   },
   "announcement": {
     "title": "Course Announcements",

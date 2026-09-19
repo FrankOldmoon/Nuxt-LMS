@@ -1,4 +1,5 @@
 import { inject, provide, type InjectionKey } from 'vue'
+import { useKnowledgeProfile } from './useKnowledgeProfile'
 
 const GradesKey = Symbol('Grades') as InjectionKey<ReturnType<typeof useCourseGrades>>
 
@@ -255,6 +256,13 @@ export function useCourseGrades(
     }
   })
 
+  // 学生端：知识能力画像（按内容标签聚合掌握度；仅学生视角加载，教师端由 canEdit 关闭）
+  const knowledge = useKnowledgeProfile(
+    { courseId: computed(() => Number(props.courseId) || 0) },
+    isOpen,
+    () => !canEdit.value,
+  )
+
   async function loadData() {
     if (!props.courseId) return
     // 先用缓存学生数据立即显示
@@ -349,6 +357,7 @@ export function useCourseGrades(
     stats,
     statCards,
     radarOption,
+    ...knowledge,
     loadData,
     canEdit,
     gradeCriteria,

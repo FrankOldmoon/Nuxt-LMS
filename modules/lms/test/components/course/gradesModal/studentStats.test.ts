@@ -17,6 +17,7 @@ beforeEach(() => {
 const _globalStubs = {
   ClientOnly: { template: '<div class="client-only"><slot /></div>' },
   Chart: { template: '<div class="chart" />', props: ['option', 'height'] },
+  UBadge: { template: '<span class="ubadge">{{ label }}</span>', props: ['label', 'color', 'variant', 'size'] },
 }
 
 const _globalConfig = {
@@ -31,6 +32,13 @@ function setupContext(overrides: any = {}) {
       { label: '通过章节', value: 5 },
     ]),
     radarOption: ref({ title: { text: 'radar' } }),
+    kpHasProfile: ref(false),
+    kpOverall: ref(0),
+    kpRadarOption: ref({}),
+    kpBarOption: ref({}),
+    kpBarHeight: ref(240),
+    kpStrengths: ref([]),
+    kpWeaknesses: ref([]),
     ...overrides,
   }
   ;(globalThis as any).useGradesContext = () => ctx
@@ -86,5 +94,40 @@ describe('course/gradesModal/studentStats.vue', () => {
     expect(wrapper.text()).toContain('C')
     expect(wrapper.text()).toContain('D')
     expect(wrapper.text()).toContain('E')
+  })
+
+  it('渲染知识能力画像标题（在学习统计下方）', async () => {
+    setupContext()
+    const { default: StudentStats } = await import('../../../../components/course/gradesModal/studentStats.vue')
+    const wrapper = mount(StudentStats, { global: _globalConfig })
+    expect(wrapper.text()).toContain('coursePanel.knowledgeProfile')
+    // 知识能力画像位于学习统计之后
+    expect(wrapper.text().indexOf('coursePanel.knowledgeProfile'))
+      .toBeGreaterThan(wrapper.text().indexOf('coursePanel.learningStats'))
+  })
+
+  it('无画像数据时显示空态', async () => {
+    setupContext()
+    const { default: StudentStats } = await import('../../../../components/course/gradesModal/studentStats.vue')
+    const wrapper = mount(StudentStats, { global: _globalConfig })
+    expect(wrapper.text()).toContain('coursePanel.kpEmpty')
+  })
+
+  it('有画像数据时渲染综合掌握度与优势/待加强标签', async () => {
+    setupContext({
+      kpHasProfile: ref(true),
+      kpOverall: ref(78),
+      kpRadarOption: ref({ radar: { indicator: [] }, series: [{ data: [{ value: [] }] }] }),
+      kpBarOption: ref({ series: [{ data: [{ value: 90 }] }] }),
+      kpStrengths: ref(['函数']),
+      kpWeaknesses: ref(['循环']),
+    })
+    const { default: StudentStats } = await import('../../../../components/course/gradesModal/studentStats.vue')
+    const wrapper = mount(StudentStats, { global: _globalConfig })
+    expect(wrapper.text()).toContain('coursePanel.kpOverall')
+    expect(wrapper.text()).toContain('78')
+    expect(wrapper.text()).toContain('函数')
+    expect(wrapper.text()).toContain('循环')
+    expect(wrapper.text()).not.toContain('coursePanel.kpEmpty')
   })
 })
