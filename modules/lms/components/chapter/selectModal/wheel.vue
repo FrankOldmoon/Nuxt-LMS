@@ -109,6 +109,9 @@ const AVATAR_R = 106
 const AVATAR_CLIP_ID = 'wheel-avatar-clip'
 
 const { rotation, duration, spinTo, rotateTo } = useWheelPicker()
+// 真实头像：教师及以上可见任意人；学生仅可见自己的（与 file API 头像鉴权一致）
+const { user, canViewAvatars } = useAuth()
+const myAvatarImg = computed(() => user.value?.avatarImg || '')
 
 const rotorStyle = computed(() => ({
     transform: `rotate(${rotation.value}deg)`,
@@ -158,8 +161,12 @@ function avatarTransform(index: number) {
     return `translate(${x}, ${y})`
 }
 
-function avatarOf(user: any) {
-    return user?.avatarImg || ''
+function avatarOf(u: any) {
+    const src = u?.avatarImg || ''
+    if (!src) return ''
+    // 自己的头像始终展示；他人头像需教师及以上权限，否则降级为首字母
+    if (canViewAvatars.value || src === myAvatarImg.value) return src
+    return ''
 }
 
 function initialOf(user: any) {

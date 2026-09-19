@@ -85,11 +85,20 @@ vi.mock('../../server/utils/upload/persist', () => ({
   persistUploadedFile: vi.fn(),
 }))
 
+// 头像访问守卫：默认「不是头像」→ 不影响既有公开只读用例；头像用例单独开启
+vi.mock('../../server/utils/files/avatarGuard', () => ({
+  AVATAR_VIEWER_ROLES: ['admin', 'teacher', 'observer'],
+  guardAvatarAccess: vi.fn(async () => false),
+  isAvatarPath: vi.fn(async () => false),
+  invalidateAvatarCache: vi.fn(),
+}))
+
 import { resetAllStubs, setMockAuthState, setMockDriveSpace, setMockDriveQuota, setMockDriveUsed } from '../../../../test/setup/nuxt-stubs'
 import { access, statSync } from 'fs'
 import { resolveUploadSource, UploadError } from '../../server/utils/upload/parse'
 import { validateUpload } from '../../server/utils/upload/validate'
 import { persistUploadedFile } from '../../server/utils/upload/persist'
+import { guardAvatarAccess } from '../../server/utils/files/avatarGuard'
 
 beforeEach(() => {
   resetAllStubs()
@@ -121,6 +130,8 @@ function resetChain() {
   vi.mocked(access).mockImplementation(((_p: any, cb: any) => cb(null)) as any)
   // 重置 fs.statSync 默认行为（文件大小 1024）
   vi.mocked(statSync).mockImplementation((() => ({ size: 1024 })) as any)
+  // 头像守卫默认「不是头像」（不改变既有公开只读行为）
+  vi.mocked(guardAvatarAccess).mockResolvedValue(false)
 }
 
 describe('API: files/delete.post (soft delete)', () => {
@@ -495,6 +506,42 @@ describe('API: files/serve.get', () => {
     await handler(makeEvent(undefined, { pathname: 'dir/1.png' }))
     const csp = spy.mock.calls.find((c: any[]) => c[1] === 'Content-Security-Policy')
     expect(csp).toBeUndefined()
+  })
+
+  it('头像文件：学生/访客访问返回 403（直接输入 URL 也不可读）', async () => {
+    vi.mocked(guardAvatarAccess).mockImplementation(async () => {
+      const err: any = new Error('头像仅教师及以上角色可查看')
+      err.statusCode = 403
+      throw err
+    })
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    const handler = (await import('../../server/api/files/serve.get')).default
+    await expect(handler(makeEvent(undefined, { pathname: 'dir/avatar.webp' }))).rejects.toThrow()
+
+    setMockAuthState(null)
+    await expect(handler(makeEvent(undefined, { pathname: 'dir/avatar.webp' }))).rejects.toThrow()
+  })
+
+  it('头像文件：教师可见，且 Cache-Control 为私有不可缓存', async () => {
+    vi.mocked(guardAvatarAccess).mockResolvedValue(true)
+    setMockAuthState({ id: 2, username: 'teacher', roles: ['teacher'], permissions: [] })
+    const h3 = await import('h3')
+    const spy = vi.mocked(h3.setResponseHeader)
+    const handler = (await import('../../server/api/files/serve.get')).default
+    const result = await handler(makeEvent(undefined, { pathname: 'dir/avatar.webp' }))
+    expect(result).toBe('mock-stream')
+    const cc = spy.mock.calls.find((c: any[]) => c[1] === 'Cache-Control')
+    expect(String(cc![2])).toBe('private, no-store')
+  })
+
+  it('非头像文件：仍为公开长缓存', async () => {
+    setMockAuthState(null)
+    const h3 = await import('h3')
+    const spy = vi.mocked(h3.setResponseHeader)
+    const handler = (await import('../../server/api/files/serve.get')).default
+    await handler(makeEvent(undefined, { pathname: 'dir/1.png' }))
+    const cc = spy.mock.calls.find((c: any[]) => c[1] === 'Cache-Control')
+    expect(String(cc![2])).toContain('public, max-age=31536000')
   })
 })
 

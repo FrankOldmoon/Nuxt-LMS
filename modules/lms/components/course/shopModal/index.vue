@@ -146,12 +146,11 @@ const {
 } = useShop(courseIdRef)
 
 // 头像框佩戴
-const { user, canViewAvatars } = useAuth()
+const { user } = useAuth()
 const { frame: myFrame, equip } = useAvatarFrame()
 const equipping = ref(false)
-const userAvatarSrc = computed(() => user.value?.avatarImg || undefined)
-// 无查看权限（普通学生）时不显示真实头像，仅显示字母头像
-const previewAvatarSrc = computed(() => (canViewAvatars.value ? userAvatarSrc.value : undefined))
+// 商店预览的是「本人」的头像，本人始终可查看自己的头像
+const previewAvatarSrc = computed(() => user.value?.avatarImg || undefined)
 const previewAvatarText = computed(() => user.value?.name?.charAt(0) || user.value?.username?.charAt(0) || '')
 
 async function toggleFrame(frame?: string) {

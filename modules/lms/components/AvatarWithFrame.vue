@@ -43,14 +43,18 @@ const sizeClass = computed(() => {
 
 const shapeClass = computed(() => (props.shape === 'square' ? 'rounded-lg' : 'rounded-full'))
 
-// 无查看权限（普通学生/访客）时不加载真实头像，只显示字母头像
-const effectiveSrc = computed(() => (canViewAvatars.value ? (props.src || undefined) : undefined))
+// 自己的头像始终可见；他人真实头像需教师及以上权限（与服务端 file API 鉴权一致）
+const isOwnAvatar = computed(() => !!props.src && props.src === (user.value?.avatarImg || undefined))
+const effectiveSrc = computed(() =>
+  (canViewAvatars.value || isOwnAvatar.value) ? (props.src || undefined) : undefined,
+)
 
-// 当前用户（未指定 userId 或 userId === 当前用户）时使用全局佩戴框
+// 他人头像框：无查看权限则隐藏；自己 / 未指定 userId 时使用全局佩戴框
+const isOtherUser = computed(() => !!props.userId && props.userId !== user.value?.id)
 const effectiveFrame = computed(() => {
-  if (!canViewAvatars.value) return null
+  if (isOtherUser.value && !canViewAvatars.value) return null
   if (props.frame !== undefined && props.frame !== null) return props.frame
-  if (props.userId && props.userId !== user.value?.id) return null
+  if (isOtherUser.value) return null
   return myFrame.value || null
 })
 </script>

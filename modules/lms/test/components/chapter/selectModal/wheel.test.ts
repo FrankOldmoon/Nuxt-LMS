@@ -8,7 +8,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
-import { resetAllStubs, setMockI18n } from '../../../../../../test/setup/nuxt-stubs'
+import { resetAllStubs, setMockI18n, setMockAuthUser } from '../../../../../../test/setup/nuxt-stubs'
 import { WHEEL_COLORS } from '../../../../components/chapter/selectModal/useWheel'
 
 beforeEach(() => {
@@ -61,6 +61,8 @@ describe('chapter/selectModal/wheel.vue', () => {
   })
 
   it('有头像的学生在扇区内渲染圆形头像，无头像时降级为首字圆牌', async () => {
+    // 真实头像仅教师及以上可见（与 file API 头像鉴权一致）
+    setMockAuthUser({ id: 9, name: 'Teacher' }, [{ code: 'teacher' }], [])
     const wrapper = await mountWheel()
     const avatars = wrapper.findAll('.wheel-avatar')
     expect(avatars.length).toBe(1)
@@ -84,6 +86,24 @@ describe('chapter/selectModal/wheel.vue', () => {
     const fallback = wrapper.findAll('.wheel-avatar-text')
     expect(fallback.length).toBe(1)
     expect(fallback[0]!.text()).toBe('李')
+  })
+
+  it('学生视角不渲染真实头像（全部降级为首字圆牌）', async () => {
+    setMockAuthUser({ id: 1, name: 'Student' }, [{ code: 'student' }], [])
+    const wrapper = await mountWheel()
+    expect(wrapper.findAll('.wheel-avatar').length).toBe(0)
+    expect(wrapper.findAll('.wheel-avatar-text').map(t => t.text())).toEqual(['张', '李'])
+  })
+
+  it('学生本人可看到自己的头像（他人仍降级为首字）', async () => {
+    const mine = { id: 1, name: '张三', avatarImg: '/api/files/serve?pathname=avatar-1.png' }
+    const other = { id: 2, name: '李四', avatarImg: '/api/files/serve?pathname=avatar-2.png' }
+    setMockAuthUser({ id: 1, name: '张三', avatarImg: mine.avatarImg }, [{ code: 'student' }], [])
+    const wrapper = await mountWheel({ users: [mine, other] })
+    const avatars = wrapper.findAll('.wheel-avatar')
+    expect(avatars.length).toBe(1)
+    expect(avatars[0]!.attributes('href')).toBe(mine.avatarImg)
+    expect(wrapper.findAll('.wheel-avatar-text').map(t => t.text())).toEqual(['李'])
   })
 
   it('头像圆心比姓名更靠内（姓名排在头像外侧）', async () => {

@@ -1,6 +1,12 @@
 import { db } from "@nuxthub/db"
 import { eq, inArray } from "drizzle-orm"
 import { getTable } from "./_helpers"
+import { invalidateAvatarCache } from "../files/avatarGuard"
+
+/** 用户表写入头像时，立刻失效头像路径缓存（避免新头像在 TTL 内被当作普通文件公开） */
+function maybeInvalidateAvatarCache(tableName: string, data: Record<string, any>) {
+  if (tableName === 'users' && data && 'avatarImg' in data) invalidateAvatarCache()
+}
 
 /**
  * 列表查询：获取表中所有记录
@@ -31,6 +37,7 @@ export async function showTable(tableName: string, id: number) {
 export async function addTable(tableName: string, data: Record<string, any>) {
   const table = getTable(tableName)
   const rows = await db.insert(table).values(data).returning()
+  maybeInvalidateAvatarCache(tableName, data)
   return rows
 }
 
@@ -45,6 +52,7 @@ export async function updateTable(tableName: string, id: number, data: Record<st
     throw createError({ statusCode: 400, message: `表 ${tableName} 为复合主键表，不支持按 id 更新` })
   }
   const result = await db.update(table).set(data).where(eq(table.id, id))
+  maybeInvalidateAvatarCache(tableName, data)
   return result
 }
 

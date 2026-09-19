@@ -2,6 +2,7 @@ import { resolve, extname, basename } from 'node:path'
 import { access } from 'node:fs'
 import { setResponseHeader, createError } from 'h3'
 import { serveFileWithRange } from '../utils/files/serveFile'
+import { guardAvatarAccess } from '../utils/files/avatarGuard'
 
 /**
  * 按 pathname 流式返回上传文件（兼容旧路由 /api/file，等价于 /api/files/serve）
@@ -38,6 +39,9 @@ export default eventHandler(async (event) => {
     throw createError({ statusCode: 403, message: '禁止的路径访问' })
   }
 
+  // 头像文件：仅教师及以上角色可读（学生/访客直接输入 URL 也 403）
+  const isAvatar = await guardAvatarAccess(event, safePathname)
+
   // 检查文件是否存在
   try {
     await new Promise<void>((resolve, reject) => {
@@ -51,8 +55,12 @@ export default eventHandler(async (event) => {
   const fileName = basename(safePathname)
   const contentType = MIME_TYPES[ext] || 'application/octet-stream'
   setResponseHeader(event, 'Content-Type', contentType)
-  // 上传文件内容不变，缓存一年
-  setResponseHeader(event, 'Cache-Control', 'public, max-age=31536000, immutable')
+  // 上传文件内容不变，缓存一年；头像属个人隐私 → 改为私有不可缓存
+  setResponseHeader(
+    event,
+    'Cache-Control',
+    isAvatar ? 'private, no-store' : 'public, max-age=31536000, immutable',
+  )
   // 防止 MIME 嗅探将上传内容按 HTML 渲染（存储型 XSS 兜底）
   setResponseHeader(event, 'X-Content-Type-Options', 'nosniff')
   // SVG 直开时禁止脚本执行
