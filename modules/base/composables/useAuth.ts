@@ -95,6 +95,12 @@ export function useAuth() {
     return permissions.value.some((p) => p.code === code)
   }
 
+  /**
+   * 是否允许查看真实头像：仅教师及以上角色（admin / teacher / observer）可见，
+   * 普通学生及未登录访客一律只显示简约的字母头像。
+   */
+  const canViewAvatars = computed(() => hasAnyRole(['admin', 'teacher', 'observer']))
+
   // ====================== 变更方法（仅客户端调用） ======================
 
   /**
@@ -145,6 +151,7 @@ export function useAuth() {
     hasRole,
     hasAnyRole,
     hasPermission,
+    canViewAvatars,
     login,
     register,
     logout,

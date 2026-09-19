@@ -1016,6 +1016,7 @@ export function useAuth() {
     hasRole: (code: string) => _mockAuthRoles.some((r: any) => r.code === code),
     hasAnyRole: (codes: string[]) => codes.some(c => _mockAuthRoles.some((r: any) => r.code === c)),
     hasPermission: (code: string) => _mockAuthPermissions.some((p: any) => p.code === code),
+    canViewAvatars: computed(() => ['admin', 'teacher', 'observer'].some(c => _mockAuthRoles.some((r: any) => r.code === c))),
     login: async (username: string, password: string) => {
       return await cRequest<{ user: any; token: string }>('/api/auth/login', {
         method: 'POST',

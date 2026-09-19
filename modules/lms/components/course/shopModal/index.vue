@@ -29,7 +29,7 @@
                 <!-- 头像框商品用 SVG 框预览，其余用图标 -->
                 <div v-if="good.type === 'avatar_frame'"
                   class="size-12 rounded-full bg-elevated flex items-center justify-center shrink-0 relative overflow-hidden">
-                  <UAvatar :src="userAvatarSrc" :alt="good.name" size="md" />
+                  <UAvatar :src="previewAvatarSrc" :text="previewAvatarText" :alt="good.name" size="md" />
                   <AvatarFrame :frame="good.content?.frame" class="absolute inset-0 h-full w-full" />
                 </div>
                 <div v-else class="size-10 rounded-lg bg-elevated flex items-center justify-center shrink-0">
@@ -77,7 +77,7 @@
                 class="flex items-center gap-3 p-3 rounded-lg border border-default bg-elevated/30">
                 <div v-if="item.type === 'avatar_frame'"
                   class="size-12 rounded-full bg-elevated flex items-center justify-center shrink-0 relative overflow-hidden">
-                  <UAvatar :src="userAvatarSrc" :alt="item.name" size="md" />
+                  <UAvatar :src="previewAvatarSrc" :text="previewAvatarText" :alt="item.name" size="md" />
                   <AvatarFrame :frame="item.content?.frame" class="absolute inset-0 h-full w-full" />
                 </div>
                 <div v-else class="size-10 rounded-lg bg-elevated flex items-center justify-center shrink-0">
@@ -146,10 +146,13 @@ const {
 } = useShop(courseIdRef)
 
 // 头像框佩戴
-const { user } = useAuth()
+const { user, canViewAvatars } = useAuth()
 const { frame: myFrame, equip } = useAvatarFrame()
 const equipping = ref(false)
 const userAvatarSrc = computed(() => user.value?.avatarImg || undefined)
+// 无查看权限（普通学生）时不显示真实头像，仅显示字母头像
+const previewAvatarSrc = computed(() => (canViewAvatars.value ? userAvatarSrc.value : undefined))
+const previewAvatarText = computed(() => user.value?.name?.charAt(0) || user.value?.username?.charAt(0) || '')
 
 async function toggleFrame(frame?: string) {
   if (!frame) return

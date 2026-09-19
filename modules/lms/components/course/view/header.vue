@@ -41,9 +41,13 @@
           <div class="flex -space-x-2">
             <div v-for="teacher in course.teachers.slice(0, 5)" :key="teacher.userId"
               class="relative size-6 shrink-0">
-              <img :src="teacher.avatarImg || ''" :alt="teacher.name"
+              <img v-if="canViewAvatars" :src="teacher.avatarImg || ''" :alt="teacher.name"
                 class="size-6 rounded-full border-2 border-default object-cover bg-elevated" />
-              <AvatarFrame :frame="teacher.avatarFrame" class="absolute inset-0 h-full w-full" />
+              <div v-else
+                class="size-6 rounded-full border-2 border-default bg-elevated flex items-center justify-center text-[10px] font-medium text-muted select-none">
+                {{ teacher.name?.charAt(0) }}
+              </div>
+              <AvatarFrame v-if="canViewAvatars" :frame="teacher.avatarFrame" class="absolute inset-0 h-full w-full" />
             </div>
             <div v-if="course.teachers.length > 5"
               class="size-6 rounded-full border-2 border-default bg-elevated flex items-center justify-center text-xs text-muted">
@@ -79,6 +83,7 @@ const emit = defineEmits<{ saved: [], export: [] }>()
 
 const { t } = useI18n()
 const toast = useToast()
+const { canViewAvatars } = useAuth()
 const { courseBtnsConfig } = useLayoutState()
 const creatingChapter = ref(false)
 const mmoUrl = computed(() => `/course/${Number(props.courseId)}/mmo`)

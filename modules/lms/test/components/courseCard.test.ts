@@ -4,7 +4,7 @@
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { resetAllStubs, setMockI18n } from '../../../../test/setup/nuxt-stubs'
+import { resetAllStubs, setMockI18n, setMockAuthUser } from '../../../../test/setup/nuxt-stubs'
 
 beforeEach(() => {
   resetAllStubs()
@@ -190,6 +190,11 @@ describe('course/card.vue', () => {
   })
 
   it('teachers>4 时仍能正常渲染', async () => {
+    // 教师及以上角色才可见真实头像，因此以教师身份查看
+    setMockAuthUser(
+      { id: 99, username: 'teacher', name: 'Teacher' },
+      [{ code: 'teacher', name: 'Teacher' }],
+    )
     const { default: CourseCard } = await import('../../components/course/card.vue')
     const manyTeachers = Array.from({ length: 5 }, (_, i) => ({
       userId: i + 1,

@@ -68,11 +68,18 @@
               class="relative size-7 shrink-0"
             >
               <img
+                v-if="canViewAvatars"
                 :src="teacher.avatarImg || ''"
                 :alt="teacher.name"
                 class="size-7 rounded-full border-2 border-default object-cover bg-elevated"
               />
-              <AvatarFrame :frame="teacher.avatarFrame" class="absolute inset-0 h-full w-full" />
+              <div
+                v-else
+                class="size-7 rounded-full border-2 border-default bg-elevated flex items-center justify-center text-[10px] font-medium text-muted select-none"
+              >
+                {{ teacher.name?.charAt(0) }}
+              </div>
+              <AvatarFrame v-if="canViewAvatars" :frame="teacher.avatarFrame" class="absolute inset-0 h-full w-full" />
             </div>
             <div
               v-if="course.teachers.length > 4"
@@ -107,4 +114,6 @@ defineProps<{
   course: LmsCourseSummary
   highlight?: boolean
 }>()
+
+const { canViewAvatars } = useAuth()
 </script>

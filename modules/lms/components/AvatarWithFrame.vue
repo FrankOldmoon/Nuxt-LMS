@@ -2,7 +2,7 @@
   <!-- 带头像框的用户头像：UAvatar + 覆盖 AvatarFrame（当前用户自动读全局佩戴状态） -->
   <div class="relative inline-flex shrink-0" :style="{ width: sizeClass, height: sizeClass }">
     <UAvatar
-      :src="src || undefined"
+      :src="effectiveSrc"
       :alt="alt"
       :text="text"
       class="!w-full !h-full"
@@ -30,7 +30,7 @@ const props = defineProps<{
   shape?: 'circle' | 'square'
 }>()
 
-const { user } = useAuth()
+const { user, canViewAvatars } = useAuth()
 const { frame: myFrame } = useAvatarFrame()
 
 const SIZES: Record<string, string> = {
@@ -43,8 +43,12 @@ const sizeClass = computed(() => {
 
 const shapeClass = computed(() => (props.shape === 'square' ? 'rounded-lg' : 'rounded-full'))
 
+// 无查看权限（普通学生/访客）时不加载真实头像，只显示字母头像
+const effectiveSrc = computed(() => (canViewAvatars.value ? (props.src || undefined) : undefined))
+
 // 当前用户（未指定 userId 或 userId === 当前用户）时使用全局佩戴框
 const effectiveFrame = computed(() => {
+  if (!canViewAvatars.value) return null
   if (props.frame !== undefined && props.frame !== null) return props.frame
   if (props.userId && props.userId !== user.value?.id) return null
   return myFrame.value || null
