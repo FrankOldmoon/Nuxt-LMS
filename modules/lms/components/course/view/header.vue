@@ -58,14 +58,11 @@
       <div v-if="firstChapterUrl || canEdit" class="flex items-center gap-2 mt-2">
         <UButton :label="$t('course.startLearning')" icon="i-lucide-play" color="primary" size="lg"
           :loading="creatingChapter" @click="startLearning" />
-        <UButton :label="$t('shop.title')" v-if="courseBtnsConfig.showShop" icon="i-lucide-shopping-bag" color="neutral" variant="outline" size="lg"
-          @click="openShop" />
+        <UButton :label="$t('mmo.title')" v-if="courseBtnsConfig.showMmo" icon="i-lucide-gamepad-2" color="neutral" variant="outline" size="lg"
+          :to="mmoUrl" />
       </div>
     </div>
   </div>
-
-  <!-- 商店弹窗 -->
-  <CourseShopModal v-model:open="shopOpen" :course-id="Number(courseId)" />
 </template>
 
 <script setup lang="ts">
@@ -84,11 +81,7 @@ const { t } = useI18n()
 const toast = useToast()
 const { courseBtnsConfig } = useLayoutState()
 const creatingChapter = ref(false)
-const shopOpen = ref(false)
-
-function openShop() {
-  shopOpen.value = true
-}
+const mmoUrl = computed(() => `/mmo?course=${Number(props.courseId)}`)
 
 async function startLearning() {
   if (props.firstChapterUrl) {

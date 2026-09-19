@@ -32,12 +32,14 @@ export function useNotifications(isOpen: Ref<boolean>) {
     { default: () => null, watch: [page], immediate: false },
   )
 
+  // immediate：弹窗在 header 里由 v-if 门控，挂载时 open 已经是 true，
+  // 非 immediate 的 watch 永远不会触发 → 首开拿不到数据（列表空白）
   watch(isOpen, (val) => {
     if (val) {
       page.value = 1
       refresh()
     }
-  })
+  }, { immediate: true })
 
   function formatTime(ts: string) {
     return new Date(ts).toLocaleString()

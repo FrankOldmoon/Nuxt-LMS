@@ -1,0 +1,892 @@
+{
+  "items": {
+    "bread": {
+      "name": "面包",
+      "desc": "一条金黄的硬皮面包，恢复 30 点饱食度。",
+      "emoji": "🍞",
+      "buy": 15,
+      "sell": 8,
+      "feed": 30
+    },
+    "herb": {
+      "name": "草药",
+      "desc": "新鲜采来的草药，恢复 15 点生命和少量饱食度。",
+      "emoji": "🌿",
+      "buy": 30,
+      "sell": 15,
+      "feed": 5,
+      "heal": 15
+    },
+    "potion": {
+      "name": "药水",
+      "desc": "冒着气泡的药剂，恢复 50 点生命。",
+      "emoji": "🧪",
+      "buy": 50,
+      "sell": 25,
+      "heal": 50
+    },
+    "gem": {
+      "name": "宝石",
+      "desc": "璀璨夺目的宝石，价值不菲。",
+      "emoji": "💎",
+      "buy": 400,
+      "sell": 200
+    },
+    "sword": {
+      "name": "长剑",
+      "desc": "可靠实用的铁剑，适合战斗。攻击 +10。",
+      "emoji": "⚔️",
+      "buy": 200,
+      "sell": 100,
+      "slot": "weapon",
+      "atk": 10,
+      "lpc": {
+        "df": "weapons/sword/weapon_sword_longsword",
+        "v": "longsword",
+        "type": "sword"
+      }
+    },
+    "rapier": {
+      "name": "细剑",
+      "desc": "轻巧优雅的刺剑，出手迅捷。攻击 +16。",
+      "emoji": "🗡️",
+      "buy": 450,
+      "sell": 225,
+      "slot": "weapon",
+      "atk": 16,
+      "lpc": {
+        "df": "weapons/sword/weapon_sword_rapier",
+        "v": "rapier",
+        "type": "sword"
+      }
+    },
+    "saber": {
+      "name": "军刀",
+      "desc": "沉甸甸的骑兵军刀，势大力沉。攻击 +22。",
+      "emoji": "🔪",
+      "buy": 750,
+      "sell": 375,
+      "slot": "weapon",
+      "atk": 22,
+      "lpc": {
+        "df": "weapons/sword/weapon_sword_saber",
+        "v": "saber",
+        "type": "sword"
+      }
+    },
+    "dagger": {
+      "name": "匕首",
+      "desc": "短小精悍的匕首，快如闪电。攻击 +6。",
+      "emoji": "🗡️",
+      "buy": 120,
+      "sell": 60,
+      "slot": "weapon",
+      "atk": 6,
+      "lpc": {
+        "df": "weapons/sword/weapon_sword_dagger",
+        "v": "dagger",
+        "type": "sword"
+      }
+    },
+    "scimitar": {
+      "name": "弯刀",
+      "desc": "东方新月弯刀，刀光凌厉。攻击 +18。",
+      "emoji": "🌙",
+      "buy": 560,
+      "sell": 280,
+      "slot": "weapon",
+      "atk": 18,
+      "lpc": {
+        "df": "weapons/sword/weapon_sword_scimitar",
+        "v": "scimitar",
+        "type": "sword"
+      }
+    },
+    "katana": {
+      "name": "武士刀",
+      "desc": "锋利无比的东洋刀。攻击 +20。",
+      "emoji": "🎋",
+      "buy": 680,
+      "sell": 340,
+      "slot": "weapon",
+      "atk": 20,
+      "lpc": {
+        "df": "weapons/sword/weapon_sword_katana",
+        "v": "katana",
+        "type": "sword"
+      }
+    },
+    "greatsword": {
+      "name": "巨剑",
+      "desc": "双手巨剑，一击破甲。攻击 +26。",
+      "emoji": "⚔️",
+      "buy": 890,
+      "sell": 445,
+      "slot": "weapon",
+      "atk": 26,
+      "lpc": {
+        "df": "weapons/sword/weapon_sword_longsword_alt",
+        "v": "longsword_alt",
+        "type": "sword"
+      }
+    },
+    "glowsword": {
+      "name": "辉光剑",
+      "desc": "流转魔法光辉的剑刃。攻击 +30。",
+      "emoji": "✨",
+      "buy": 1200,
+      "sell": 600,
+      "slot": "weapon",
+      "atk": 30,
+      "lpc": {
+        "df": "weapons/sword/weapon_sword_glowsword",
+        "v": "blue",
+        "type": "sword"
+      }
+    },
+    "mace": {
+      "name": "钉头锤",
+      "desc": "带刺的钝锤，专破护甲。攻击 +14。",
+      "emoji": "🔨",
+      "buy": 340,
+      "sell": 170,
+      "slot": "weapon",
+      "atk": 14,
+      "lpc": {
+        "df": "weapons/blunt/weapon_blunt_mace",
+        "v": "mace",
+        "type": "blunt"
+      }
+    },
+    "waraxe": {
+      "name": "战斧",
+      "desc": "凶悍的战斧。攻击 +21。",
+      "emoji": "🪓",
+      "buy": 620,
+      "sell": 310,
+      "slot": "weapon",
+      "atk": 21,
+      "lpc": {
+        "df": "weapons/blunt/weapon_blunt_waraxe",
+        "v": "waraxe",
+        "type": "blunt"
+      }
+    },
+    "flail": {
+      "name": "连枷",
+      "desc": "锁链连着旋转的锤头。攻击 +19。",
+      "emoji": "🔗",
+      "buy": 540,
+      "sell": 270,
+      "slot": "weapon",
+      "atk": 19,
+      "lpc": {
+        "df": "weapons/blunt/weapon_blunt_flail",
+        "v": "flail",
+        "type": "blunt"
+      }
+    },
+    "club": {
+      "name": "木棍",
+      "desc": "一根朴素的木棍。攻击 +8。",
+      "emoji": "🏏",
+      "buy": 180,
+      "sell": 90,
+      "slot": "weapon",
+      "atk": 8,
+      "lpc": {
+        "frontWalk": "weapon/blunt/club/background/club.png",
+        "slash": "weapon/blunt/club/club.png"
+      }
+    },
+    "spear": {
+      "name": "长矛",
+      "desc": "基础的刺击长矛。攻击 +12。",
+      "emoji": "🔱",
+      "buy": 160,
+      "sell": 80,
+      "slot": "weapon",
+      "atk": 12,
+      "lpc": {
+        "df": "weapons/polearm/weapon_polearm_spear",
+        "v": "spear",
+        "type": "polearm"
+      }
+    },
+    "halberd": {
+      "name": "戟",
+      "desc": "斧刃与枪尖合一的重兵器。攻击 +24。",
+      "emoji": "🪓",
+      "buy": 580,
+      "sell": 290,
+      "slot": "weapon",
+      "atk": 24,
+      "lpc": {
+        "df": "weapons/polearm/weapon_polearm_halberd",
+        "v": "halberd",
+        "type": "polearm"
+      }
+    },
+    "scythe": {
+      "name": "死神镰",
+      "desc": "死神手中的弧形镰刀。攻击 +28。",
+      "emoji": "🌑",
+      "buy": 720,
+      "sell": 360,
+      "slot": "weapon",
+      "atk": 28,
+      "lpc": {
+        "df": "weapons/polearm/weapon_polearm_scythe",
+        "v": "scythe",
+        "type": "polearm"
+      }
+    },
+    "bow": {
+      "name": "弓",
+      "desc": "木制长弓，箭无虚发。攻击 +15。",
+      "emoji": "🏹",
+      "buy": 300,
+      "sell": 150,
+      "slot": "weapon",
+      "atk": 15,
+      "lpc": {
+        "df": "weapons/ranged/bow/weapon_ranged_bow_normal",
+        "v": "steel",
+        "type": "ranged"
+      }
+    },
+    "crossbow": {
+      "name": "弩",
+      "desc": "机械驱动的强力弩。攻击 +20。",
+      "emoji": "🏹",
+      "buy": 420,
+      "sell": 210,
+      "slot": "weapon",
+      "atk": 20,
+      "lpc": {
+        "df": "weapons/ranged/weapon_ranged_crossbow",
+        "v": "crossbow",
+        "type": "ranged"
+      }
+    },
+    "crystal_staff": {
+      "name": "水晶法杖",
+      "desc": "水晶镶嵌的法杖。攻击 +17。",
+      "emoji": "🔮",
+      "buy": 680,
+      "sell": 340,
+      "slot": "weapon",
+      "atk": 17,
+      "lpc": {
+        "df": "weapons/magic/weapon_magic_crystal",
+        "v": "crystal",
+        "type": "magic"
+      }
+    },
+    "gnarled_staff": {
+      "name": "虬木法杖",
+      "desc": "盘根虬结的魔法杖。攻击 +15。",
+      "emoji": "🪄",
+      "buy": 560,
+      "sell": 280,
+      "slot": "weapon",
+      "atk": 15,
+      "lpc": {
+        "df": "weapons/magic/weapon_magic_gnarled",
+        "v": "gnarled",
+        "type": "magic"
+      }
+    },
+    "simple_staff": {
+      "name": "简易法杖",
+      "desc": "初学者的法杖。攻击 +11。",
+      "emoji": "🪵",
+      "buy": 280,
+      "sell": 140,
+      "slot": "weapon",
+      "atk": 11,
+      "lpc": {
+        "df": "weapons/magic/weapon_magic_simple",
+        "v": "simple",
+        "type": "magic"
+      }
+    },
+    "shield": {
+      "name": "鸢盾",
+      "desc": "坚固的盾牌，能抵挡攻击。防御 +8。",
+      "emoji": "🛡️",
+      "buy": 150,
+      "sell": 75,
+      "slot": "shield",
+      "def": 8,
+      "lpc": {
+        "frontWalk": "shield/heater/revised/wood/fg/idle.png",
+        "backWalk": "shield/heater/revised/wood/bg/idle.png",
+        "slash": "shield/heater/revised/wood/fg/slash.png",
+        "hurt": "shield/heater/revised/wood/fg/hurt.png"
+      }
+    },
+    "round_shield": {
+      "name": "圆盾",
+      "desc": "朴实的木制圆盾。防御 +10。",
+      "emoji": "🛡️",
+      "buy": 220,
+      "sell": 110,
+      "slot": "shield",
+      "def": 10,
+      "lpc": {
+        "frontWalk": "shield/round/walk.png",
+        "slash": "shield/round/slash.png"
+      }
+    },
+    "kite_shield": {
+      "name": "鸢形盾",
+      "desc": "修长的鸢形盾。防御 +12。",
+      "emoji": "🛡️",
+      "buy": 380,
+      "sell": 190,
+      "slot": "shield",
+      "def": 12,
+      "lpc": {
+        "frontWalk": "shield/kite/male/walk/kite_gray.png",
+        "slash": "shield/kite/male/slash/kite_gray.png"
+      }
+    },
+    "crusader_shield": {
+      "name": "十字军盾",
+      "desc": "十字军骑士之盾。防御 +14。",
+      "emoji": "🛡️",
+      "buy": 480,
+      "sell": 240,
+      "slot": "shield",
+      "def": 14,
+      "lpc": {
+        "frontWalk": "shield/crusader/fg/walk.png",
+        "backWalk": "shield/crusader/bg/walk.png",
+        "slash": "shield/crusader/fg/slash.png",
+        "slashBehind": "shield/crusader/bg/slash.png"
+      }
+    },
+    "scutum": {
+      "name": "罗马大盾",
+      "desc": "军团重装大盾。防御 +16。",
+      "emoji": "🛡️",
+      "buy": 560,
+      "sell": 280,
+      "slot": "shield",
+      "def": 16,
+      "lpc": {
+        "frontWalk": "shield/scutum/paint/fg/male/walk/scutum.png",
+        "backWalk": "shield/scutum/paint/bg/walk/scutum.png"
+      }
+    },
+    "spartan_shield": {
+      "name": "斯巴达盾",
+      "desc": "传说中的青铜圆盾。防御 +18。",
+      "emoji": "🛡️",
+      "buy": 640,
+      "sell": 320,
+      "slot": "shield",
+      "def": 18,
+      "lpc": {
+        "frontWalk": "shield/spartan/fg/walk/spartan.png",
+        "backWalk": "shield/spartan/bg/walk/spartan.png",
+        "slash": "shield/spartan/fg/slash/spartan.png"
+      }
+    },
+    "crusader2_shield": {
+      "name": "十字军盾 II",
+      "desc": "华丽的十字军盾。防御 +15。",
+      "emoji": "🛡️",
+      "buy": 520,
+      "sell": 260,
+      "slot": "shield",
+      "def": 15,
+      "lpc": {
+        "frontWalk": "shield/crusader2/male/fg/walk.png",
+        "slash": "shield/crusader2/male/fg/slash.png"
+      }
+    },
+    "engrailed_shield": {
+      "name": "纹边盾",
+      "desc": "边缘装饰的纹边盾。防御 +13。",
+      "emoji": "🛡️",
+      "buy": 460,
+      "sell": 230,
+      "slot": "shield",
+      "def": 13,
+      "lpc": {
+        "frontWalk": "shield/two_engrailed/paint/fg/male/walk/two_engrailed.png",
+        "backWalk": "shield/two_engrailed/paint/bg/walk/two_engrailed.png"
+      }
+    },
+    "leather_armor": {
+      "name": "皮甲",
+      "desc": "硝制过的软皮护甲，轻便合身。防御 +5。",
+      "emoji": "🦺",
+      "buy": 260,
+      "sell": 130,
+      "slot": "armor",
+      "def": 5,
+      "lpc": {
+        "dir": "torso/armour/leather"
+      }
+    },
+    "chainmail": {
+      "name": "锁子甲",
+      "desc": "环环相扣的铁环甲，防护周密。防御 +9。",
+      "emoji": "🥼",
+      "buy": 520,
+      "sell": 260,
+      "slot": "armor",
+      "def": 9,
+      "lpc": {
+        "dir": "torso/chainmail"
+      }
+    },
+    "plate_armor": {
+      "name": "板甲",
+      "desc": "整块钢板锻造的重甲，刀枪不入。防御 +14。",
+      "emoji": "🦿",
+      "buy": 900,
+      "sell": 450,
+      "slot": "armor",
+      "def": 14,
+      "lpc": {
+        "dir": "torso/armour/plate"
+      }
+    },
+    "legion_armor": {
+      "name": "罗马军团甲",
+      "desc": "军团环片甲，攻守兼备。防御 +11。",
+      "emoji": "🎖️",
+      "buy": 700,
+      "sell": 350,
+      "slot": "armor",
+      "def": 11,
+      "lpc": {
+        "dir": "torso/armour/legion"
+      }
+    },
+    "iron_helmet": {
+      "name": "铁盔",
+      "desc": "护鼻铁盔，朴实可靠。防御 +4。",
+      "emoji": "⛑️",
+      "buy": 180,
+      "sell": 90,
+      "slot": "helmet",
+      "def": 4,
+      "lpc": {
+        "dir": "hat/helmet/nasal"
+      }
+    },
+    "armet": {
+      "name": "全罩盔",
+      "desc": "全包覆式头盔，密不透风。防御 +7。",
+      "emoji": "⛑️",
+      "buy": 420,
+      "sell": 210,
+      "slot": "helmet",
+      "def": 7,
+      "lpc": {
+        "dir": "hat/helmet/armet"
+      }
+    },
+    "barbuta": {
+      "name": "意大利盔",
+      "desc": "T 形面甲的意大利盔。防御 +6。",
+      "emoji": "⛑️",
+      "buy": 360,
+      "sell": 180,
+      "slot": "helmet",
+      "def": 6,
+      "lpc": {
+        "dir": "hat/helmet/barbuta"
+      }
+    },
+    "greathelm": {
+      "name": "大头盔",
+      "desc": "威严耸立的大头盔。防御 +9。",
+      "emoji": "⛑️",
+      "buy": 560,
+      "sell": 280,
+      "slot": "helmet",
+      "def": 9,
+      "lpc": {
+        "dir": "hat/helmet/greathelm"
+      }
+    },
+    "spangenhelm": {
+      "name": "拼瓣盔",
+      "desc": "铆接拼瓣的战盔。防御 +5。",
+      "emoji": "⛑️",
+      "buy": 300,
+      "sell": 150,
+      "slot": "helmet",
+      "def": 5,
+      "lpc": {
+        "dir": "hat/helmet/spangenhelm"
+      }
+    },
+    "horned_helmet": {
+      "name": "角盔",
+      "desc": "双角狰狞的狂战士盔。防御 +8。",
+      "emoji": "⛑️",
+      "buy": 480,
+      "sell": 240,
+      "slot": "helmet",
+      "def": 8,
+      "lpc": {
+        "dir": "hat/helmet/horned"
+      }
+    },
+    "barbarian_helmet": {
+      "name": "蛮族盔",
+      "desc": "粗犷的部落战盔。防御 +6。",
+      "emoji": "⛑️",
+      "buy": 340,
+      "sell": 170,
+      "slot": "helmet",
+      "def": 6,
+      "lpc": {
+        "dir": "hat/helmet/barbarian"
+      }
+    },
+    "bascinet": {
+      "name": "巴斯金盔",
+      "desc": "尖顶巴斯金盔。防御 +7。",
+      "emoji": "⛑️",
+      "buy": 400,
+      "sell": 200,
+      "slot": "helmet",
+      "def": 7,
+      "lpc": {
+        "dir": "hat/helmet/bascinet"
+      }
+    },
+    "kettle_helmet": {
+      "name": "锅形盔",
+      "desc": "宽檐锅形盔，遮阳挡雨。防御 +4。",
+      "emoji": "⛑️",
+      "buy": 240,
+      "sell": 120,
+      "slot": "helmet",
+      "def": 4,
+      "lpc": {
+        "dir": "hat/helmet/kettle"
+      }
+    },
+    "morion": {
+      "name": "莫里恩盔",
+      "desc": "带冠脊的西班牙莫里恩盔。防御 +5。",
+      "emoji": "⛑️",
+      "buy": 320,
+      "sell": 160,
+      "slot": "helmet",
+      "def": 5,
+      "lpc": {
+        "dir": "hat/helmet/morion"
+      }
+    },
+    "norman_helmet": {
+      "name": "诺曼盔",
+      "desc": "诺曼锥形护鼻盔。防御 +5。",
+      "emoji": "⛑️",
+      "buy": 280,
+      "sell": 140,
+      "slot": "helmet",
+      "def": 5,
+      "lpc": {
+        "dir": "hat/helmet/norman"
+      }
+    },
+    "legion_helmet": {
+      "name": "军团盔",
+      "desc": "罗马军团制式头盔。防御 +6。",
+      "emoji": "⛑️",
+      "buy": 360,
+      "sell": 180,
+      "slot": "helmet",
+      "def": 6,
+      "lpc": {
+        "dir": "hat/helmet/legion"
+      }
+    },
+    "sugarloaf_helmet": {
+      "name": "糖面包盔",
+      "desc": "高耸圆锥形的糖面包盔。防御 +9。",
+      "emoji": "⛑️",
+      "buy": 520,
+      "sell": 260,
+      "slot": "helmet",
+      "def": 9,
+      "lpc": {
+        "dir": "hat/helmet/sugarloaf"
+      }
+    },
+    "close_helmet": {
+      "name": "封闭盔",
+      "desc": "全封闭式头盔。防御 +8。",
+      "emoji": "⛑️",
+      "buy": 440,
+      "sell": 220,
+      "slot": "helmet",
+      "def": 8,
+      "lpc": {
+        "dir": "hat/helmet/close"
+      }
+    },
+
+    "top_m_1": { "name": "男性布衣Ⅰ", "desc": "样式一：素色棉布短衫，男女皆可，舒适透气。", "buy": 60, "sell": 30, "slot": "clothing", "mv": { "gender": "Male", "layer": "Clothing1", "num": 1 } },
+    "top_m_2": { "name": "男性短衫Ⅱ", "desc": "样式二：棕褐马甲，利落干练。", "buy": 90, "sell": 45, "slot": "clothing", "mv": { "gender": "Male", "layer": "Clothing1", "num": 2 } },
+    "top_m_3": { "name": "男性皮衣Ⅲ", "desc": "样式三：深色皮制上衣，硬朗耐磨。", "buy": 130, "sell": 65, "slot": "clothing", "mv": { "gender": "Male", "layer": "Clothing1", "num": 3 } },
+    "top_m_4": { "name": "男性长袍Ⅳ", "desc": "样式四：及腰长袍，沉稳大方。", "buy": 170, "sell": 85, "slot": "clothing", "mv": { "gender": "Male", "layer": "Clothing1", "num": 4 } },
+    "top_m_5": { "name": "男性战衣Ⅴ", "desc": "样式五：铆钉战衣，气势凌人。", "buy": 220, "sell": 110, "slot": "clothing", "mv": { "gender": "Male", "layer": "Clothing1", "num": 5 } },
+    "top_m_6": { "name": "男性锦袍Ⅵ", "desc": "样式六：锦绣长袍，华美考究。", "buy": 260, "sell": 130, "slot": "clothing", "mv": { "gender": "Male", "layer": "Clothing1", "num": 6 } },
+    "top_m_7": { "name": "男性风衣Ⅶ", "desc": "样式七：长款风衣，潇洒倜傥。", "buy": 300, "sell": 150, "slot": "clothing", "mv": { "gender": "Male", "layer": "Clothing1", "num": 7 } },
+    "top_m_8": { "name": "男性袒膊Ⅷ", "desc": "样式八：露肩劲装，豪迈粗犷。", "buy": 340, "sell": 170, "slot": "clothing", "mv": { "gender": "Male", "layer": "Clothing1", "num": 8 } },
+    "top_m_9": { "name": "男性礼服Ⅸ", "desc": "样式九：正装礼服，彬彬有礼。", "buy": 400, "sell": 200, "slot": "clothing", "mv": { "gender": "Male", "layer": "Clothing1", "num": 9 } },
+
+    "top_f_1": { "name": "女性衬衣Ⅰ", "desc": "样式一：素白衬衣，简约清秀。", "buy": 60, "sell": 30, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 1 } },
+    "top_f_2": { "name": "女性布裙Ⅱ", "desc": "样式二：碎花布裙，温婉可人。", "buy": 90, "sell": 45, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 2 } },
+    "top_f_3": { "name": "女性皮衣Ⅲ", "desc": "样式三：贴身皮衣，英气利落。", "buy": 130, "sell": 65, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 3 } },
+    "top_f_4": { "name": "女性长裙Ⅳ", "desc": "样式四：曳地长裙，优雅大方。", "buy": 170, "sell": 85, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 4 } },
+    "top_f_5": { "name": "女式战裙Ⅴ", "desc": "样式五：战裙轻甲，巾帼不让须眉。", "buy": 220, "sell": 110, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 5 } },
+    "top_f_6": { "name": "女性锦裙Ⅵ", "desc": "样式六：锦绣罗裙，光彩照人。", "buy": 260, "sell": 130, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 6 } },
+    "top_f_7": { "name": "女性旗袍Ⅶ", "desc": "样式七：合身旗袍，风情万种。", "buy": 300, "sell": 150, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 7 } },
+    "top_f_8": { "name": "女式洋装Ⅷ", "desc": "样式八：蓬松洋装，甜美可爱。", "buy": 340, "sell": 170, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 8 } },
+    "top_f_9": { "name": "女性礼服Ⅸ", "desc": "样式九：曳地礼服，雍容华贵。", "buy": 400, "sell": 200, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 9 } },
+    "top_f_10": { "name": "女性纱衣Ⅹ", "desc": "样式十：轻纱薄衣，若隐若现。", "buy": 430, "sell": 215, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 10 } },
+    "top_f_11": { "name": "女性冬衣Ⅺ", "desc": "样式十一：厚呢冬衣，温暖包裹。", "buy": 460, "sell": 230, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 11 } },
+    "top_f_12": { "name": "女式胸甲Ⅻ", "desc": "样式十二：鳞纹胸甲，威风凛凛。", "buy": 490, "sell": 245, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 12 } },
+    "top_f_13": { "name": "女性襦裙ⅩⅢ", "desc": "样式十三：襦裙飘逸，古典雅致。", "buy": 520, "sell": 260, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 13 } },
+    "top_f_14": { "name": "女式猎装ⅩⅣ", "desc": "样式十四：野外猎装，行动自如。", "buy": 550, "sell": 275, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 14 } },
+    "top_f_15": { "name": "女性斗篷裙ⅩⅤ", "desc": "样式十五：附斗篷的连衣裙，神秘梦幻。", "buy": 580, "sell": 290, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 15 } },
+    "top_f_16": { "name": "女式排扣衣ⅩⅥ", "desc": "样式十六：双排扣大衣，干练摩登。", "buy": 610, "sell": 305, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 16 } },
+    "top_f_17": { "name": "女性巫女装ⅩⅦ", "desc": "样式十七：巫女束装，灵秀神秘。", "buy": 640, "sell": 320, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 17 } },
+    "top_f_18": { "name": "女式公主裙ⅩⅧ", "desc": "样式十八：蓬蓬公主裙，天真烂漫。", "buy": 670, "sell": 335, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 18 } },
+    "top_f_19": { "name": "女性轻铠ⅩⅨ", "desc": "样式十九：轻装缀甲，飒爽英姿。", "buy": 700, "sell": 350, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 19 } },
+    "top_f_20": { "name": "女式学院装ⅩⅩ", "desc": "样式二十：学院风制服，青春洋溢。", "buy": 720, "sell": 360, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 20 } },
+    "top_f_21": { "name": "女性旗袍ⅡⅩⅪ", "desc": "样式二十一：改良绣花旗袍，精致端庄。", "buy": 740, "sell": 370, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 21 } },
+    "top_f_22": { "name": "女式皮靴装ⅩⅫ", "desc": "样式二十二：干练皮装，野外酣战。", "buy": 760, "sell": 380, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 22 } },
+    "top_f_23": { "name": "女性长衫ⅩⅩⅢ", "desc": "样式二十三：素雅长衫，娴静端庄。", "buy": 780, "sell": 390, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 23 } },
+    "top_f_24": { "name": "女式礼服ⅣⅩⅩⅣ", "desc": "样式二十四：盛宴礼服，高贵典雅。", "buy": 820, "sell": 410, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 24 } },
+    "top_f_25": { "name": "女性旅行装ⅩⅩⅤ", "desc": "样式二十五：轻便旅行装，自在随性。", "buy": 860, "sell": 430, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 25 } },
+    "top_f_26": { "name": "女式宫廷裙ⅩⅩⅥ", "desc": "样式二十六：宫廷大裙，华灯下璀璨。", "buy": 920, "sell": 460, "slot": "clothing", "mv": { "gender": "Female", "layer": "Clothing1", "num": 26 } },
+
+    "coat_m_1": { "name": "男性外套Ⅰ", "desc": "样式一：提气的外套，遮风挡寒。", "buy": 120, "sell": 60, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 1 } },
+    "coat_m_2": { "name": "男性斗篷Ⅱ", "desc": "样式二：披肩斗篷，行路带风。", "buy": 160, "sell": 80, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 2 } },
+    "coat_m_3": { "name": "男性西装Ⅲ", "desc": "样式三：合身西装，绅士风度。", "buy": 210, "sell": 105, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 3 } },
+    "coat_m_4": { "name": "男性铠甲Ⅳ", "desc": "样式四：外罩铠甲，防御坚固。", "buy": 280, "sell": 140, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 4 } },
+    "coat_m_5": { "name": "男性猎装Ⅴ", "desc": "样式五：猎户外套，口袋众多。", "buy": 240, "sell": 120, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 5 } },
+    "coat_m_6": { "name": "男性长披风Ⅵ", "desc": "样式六：及踝长披风，气势磅礴。", "buy": 360, "sell": 180, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 6 } },
+    "coat_m_7": { "name": "男性棉袄Ⅶ", "desc": "样式七：厚实棉袄，暖意融融。", "buy": 200, "sell": 100, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 7 } },
+    "coat_m_8": { "name": "男性短褂Ⅷ", "desc": "样式八：短褂罩衣，便利工作。", "buy": 150, "sell": 75, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 8 } },
+    "coat_m_9": { "name": "男性学者袍Ⅸ", "desc": "样式九：宽松学者袍，书卷气浓。", "buy": 260, "sell": 130, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 9 } },
+    "coat_m_10": { "name": "男性背甲Ⅹ", "desc": "样式十：背部轻型护甲。", "buy": 300, "sell": 150, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 10 } },
+    "coat_m_11": { "name": "男性风衣Ⅺ", "desc": "样式十一：双排扣风衣，潇洒干练。", "buy": 280, "sell": 140, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 11 } },
+    "coat_m_12": { "name": "男性皮袄Ⅻ", "desc": "样式十二：羊皮袄子，粗犷温暖。", "buy": 230, "sell": 115, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 12 } },
+    "coat_m_13": { "name": "男性祭袍XⅢ", "desc": "样式十三：祭祀长袍，庄严肃穆。", "buy": 320, "sell": 160, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 13 } },
+    "coat_m_14": { "name": "男性军装XⅣ", "desc": "样式十四：制式军装，英挺正经。", "buy": 300, "sell": 150, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 14 } },
+    "coat_m_15": { "name": "男性猎皮甲XⅤ", "desc": "样式十五：皮板猎甲，荒野猎手。", "buy": 270, "sell": 135, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 15 } },
+    "coat_m_16": { "name": "男性羽织XⅥ", "desc": "样式十六：轻羽外衣，轻盈保暖。", "buy": 290, "sell": 145, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 16 } },
+    "coat_m_17": { "name": "男性锁纹衣XⅦ", "desc": "样式十七：锁链纹饰外套，武者风范。", "buy": 310, "sell": 155, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 17 } },
+    "coat_m_18": { "name": "男性绒皮袄XⅧ", "desc": "样式十八：绒毛皮袄，富态温暖。", "buy": 250, "sell": 125, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 18 } },
+    "coat_m_19": { "name": "男性游侠袍XⅨ", "desc": "样式十九：游侠披袍，来去如风。", "buy": 330, "sell": 165, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 19 } },
+    "coat_m_20": { "name": "男式铠袍XⅩ", "desc": "样式二十：铠片夹袍，攻防一体。", "buy": 380, "sell": 190, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 20 } },
+    "coat_m_21": { "name": "男性罩衫XⅩⅠ", "desc": "样式二十一：宽身罩衫，随性自在。", "buy": 190, "sell": 95, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 21 } },
+    "coat_m_22": { "name": "男性马甲XⅩⅡ", "desc": "样式二十二：修身马甲，衣冠楚楚。", "buy": 200, "sell": 100, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 22 } },
+    "coat_m_23": { "name": "男式圣袍XⅩⅢ", "desc": "样式二十三：圣职长袍，肃穆慈和。", "buy": 420, "sell": 210, "slot": "outer", "mv": { "gender": "Male", "layer": "Clothing2", "num": 23 } },
+
+    "cloak_a1": { "name": "斗篷·甲一", "desc": "红色系披风（A 一），醒目张扬。", "buy": 180, "sell": 90, "slot": "cloak", "mv": { "layer": "Cloak1", "num": 1 } },
+    "cloak_a2": { "name": "斗篷·甲二", "desc": "青色系披风（A 二），风雅淡然。", "buy": 220, "sell": 110, "slot": "cloak", "mv": { "layer": "Cloak1", "num": 2 } },
+    "cloak_a3": { "name": "斗篷·甲三", "desc": "黑袍披风（A 三），神秘莫测。", "buy": 260, "sell": 130, "slot": "cloak", "mv": { "layer": "Cloak1", "num": 3 } },
+    "cloak_a4": { "name": "斗篷·甲四", "desc": "白绒披风（A 四），圣洁高贵。", "buy": 300, "sell": 150, "slot": "cloak", "mv": { "layer": "Cloak1", "num": 4 } },
+    "cloak_b1": { "name": "大氅·乙一", "desc": "深红大氅（B 一），厚重御风。", "buy": 200, "sell": 100, "slot": "cloak", "mv": { "layer": "Cloak2", "num": 1 } },
+    "cloak_b2": { "name": "大氅·乙二", "desc": "青灰大氅（B 二），低调沉稳。", "buy": 240, "sell": 120, "slot": "cloak", "mv": { "layer": "Cloak2", "num": 2 } },
+    "cloak_b3": { "name": "大氅·乙三", "desc": "玄黑大氅（B 三），威严庄重。", "buy": 280, "sell": 140, "slot": "cloak", "mv": { "layer": "Cloak2", "num": 3 } },
+    "cloak_b4": { "name": "大氅·乙四", "desc": "金边大氅（B 四），奢华尊贵。", "buy": 340, "sell": 170, "slot": "cloak", "mv": { "layer": "Cloak2", "num": 4 } },
+
+    "acca_m_1": { "name": "男性饰品甲一", "desc": "配饰A之一：护腕系。", "buy": 150, "sell": 75, "slot": "acca", "mv": { "gender": "Male", "layer": "AccA", "num": 1 } },
+    "acca_m_2": { "name": "男性饰品甲二", "desc": "配饰A之二：袖带系。", "buy": 170, "sell": 85, "slot": "acca", "mv": { "gender": "Male", "layer": "AccA", "num": 2 } },
+    "acca_m_3": { "name": "男性饰品甲三", "desc": "配饰A之三：腰饰系。", "buy": 190, "sell": 95, "slot": "acca", "mv": { "gender": "Male", "layer": "AccA", "num": 3 } },
+    "acca_m_4": { "name": "男性饰品甲四", "desc": "配饰A之四：护胸系。", "buy": 210, "sell": 105, "slot": "acca", "mv": { "gender": "Male", "layer": "AccA", "num": 4 } },
+    "acca_m_5": { "name": "男性饰品甲五", "desc": "配饰A之五：披肩系。", "buy": 230, "sell": 115, "slot": "acca", "mv": { "gender": "Male", "layer": "AccA", "num": 5 } },
+    "acca_m_6": { "name": "男性饰品甲六", "desc": "配饰A之六：肩环系。", "buy": 250, "sell": 125, "slot": "acca", "mv": { "gender": "Male", "layer": "AccA", "num": 6 } },
+    "acca_m_7": { "name": "男性饰品甲七", "desc": "配饰A之七：束带系。", "buy": 260, "sell": 130, "slot": "acca", "mv": { "gender": "Male", "layer": "AccA", "num": 7 } },
+    "acca_m_8": { "name": "男性饰品甲八", "desc": "配饰A之八：战兜系。", "buy": 280, "sell": 140, "slot": "acca", "mv": { "gender": "Male", "layer": "AccA", "num": 8 } },
+    "acca_f_1": { "name": "女性饰品甲一", "desc": "配饰A之一：颈饰系。", "buy": 150, "sell": 75, "slot": "acca", "mv": { "gender": "Female", "layer": "AccA", "num": 1 } },
+    "acca_f_2": { "name": "女性饰品甲二", "desc": "配饰A之二：腕饰系。", "buy": 170, "sell": 85, "slot": "acca", "mv": { "gender": "Female", "layer": "AccA", "num": 2 } },
+    "acca_f_3": { "name": "女性饰品甲三", "desc": "配饰A之三：发饰系。", "buy": 190, "sell": 95, "slot": "acca", "mv": { "gender": "Female", "layer": "AccA", "num": 3 } },
+    "acca_f_4": { "name": "女性饰品甲四", "desc": "配饰A之四：肩饰系。", "buy": 210, "sell": 105, "slot": "acca", "mv": { "gender": "Female", "layer": "AccA", "num": 4 } },
+    "acca_f_5": { "name": "女性饰品甲五", "desc": "配饰A之五：胸饰系。", "buy": 230, "sell": 115, "slot": "acca", "mv": { "gender": "Female", "layer": "AccA", "num": 5 } },
+    "acca_f_6": { "name": "女性饰品甲六", "desc": "配饰A之六：腰链系。", "buy": 250, "sell": 125, "slot": "acca", "mv": { "gender": "Female", "layer": "AccA", "num": 6 } },
+    "acca_f_7": { "name": "女性饰品甲七", "desc": "配饰A之七：披纱系。", "buy": 260, "sell": 130, "slot": "acca", "mv": { "gender": "Female", "layer": "AccA", "num": 7 } },
+
+    "accb_m_1": { "name": "男性饰品乙一", "desc": "配饰B之一：手环系。", "buy": 150, "sell": 75, "slot": "accb", "mv": { "gender": "Male", "layer": "AccB", "num": 1 } },
+    "accb_m_2": { "name": "男性饰品乙二", "desc": "配饰B之二：颈链系。", "buy": 170, "sell": 85, "slot": "accb", "mv": { "gender": "Male", "layer": "AccB", "num": 2 } },
+    "accb_m_3": { "name": "男性饰品乙三", "desc": "配饰B之三：耳坠系。", "buy": 190, "sell": 95, "slot": "accb", "mv": { "gender": "Male", "layer": "AccB", "num": 3 } },
+    "accb_m_4": { "name": "男性饰品乙四", "desc": "配饰B之四：指环系。", "buy": 210, "sell": 105, "slot": "accb", "mv": { "gender": "Male", "layer": "AccB", "num": 4 } },
+    "accb_m_5": { "name": "男性饰品乙五", "desc": "配饰B之五：腰带系。", "buy": 230, "sell": 115, "slot": "accb", "mv": { "gender": "Male", "layer": "AccB", "num": 5 } },
+    "accb_m_6": { "name": "男性饰品乙六", "desc": "配饰B之六：腕环系。", "buy": 250, "sell": 125, "slot": "accb", "mv": { "gender": "Male", "layer": "AccB", "num": 6 } },
+    "accb_m_7": { "name": "男性饰品乙七", "desc": "配饰B之七：胸针系。", "buy": 260, "sell": 130, "slot": "accb", "mv": { "gender": "Male", "layer": "AccB", "num": 7 } },
+    "accb_m_8": { "name": "男性饰品乙八", "desc": "配饰B之八：肩饰系。", "buy": 280, "sell": 140, "slot": "accb", "mv": { "gender": "Male", "layer": "AccB", "num": 8 } },
+    "accb_f_1": { "name": "女性饰品乙一", "desc": "配饰B之一：发带系。", "buy": 150, "sell": 75, "slot": "accb", "mv": { "gender": "Female", "layer": "AccB", "num": 1 } },
+    "accb_f_2": { "name": "女性饰品乙二", "desc": "配饰B之二：耳饰系。", "buy": 170, "sell": 85, "slot": "accb", "mv": { "gender": "Female", "layer": "AccB", "num": 2 } },
+    "accb_f_3": { "name": "女性饰品乙三", "desc": "配饰B之三：颈饰系。", "buy": 190, "sell": 95, "slot": "accb", "mv": { "gender": "Female", "layer": "AccB", "num": 3 } },
+    "accb_f_4": { "name": "女性饰品乙四", "desc": "配饰B之四：胸针系。", "buy": 210, "sell": 105, "slot": "accb", "mv": { "gender": "Female", "layer": "AccB", "num": 4 } },
+    "accb_f_5": { "name": "女性饰品乙五", "desc": "配饰B之五：腰饰系。", "buy": 230, "sell": 115, "slot": "accb", "mv": { "gender": "Female", "layer": "AccB", "num": 5 } },
+    "accb_f_6": { "name": "女性饰品乙六", "desc": "配饰B之六：腕饰系。", "buy": 250, "sell": 125, "slot": "accb", "mv": { "gender": "Female", "layer": "AccB", "num": 6 } },
+    "accb_f_7": { "name": "女性饰品乙七", "desc": "配饰B之七：指环系。", "buy": 260, "sell": 130, "slot": "accb", "mv": { "gender": "Female", "layer": "AccB", "num": 7 } },
+    "accb_f_8": { "name": "女性饰品乙八", "desc": "配饰B之八：手链系。", "buy": 280, "sell": 140, "slot": "accb", "mv": { "gender": "Female", "layer": "AccB", "num": 8 } },
+    "accb_f_9": { "name": "女性饰品乙九", "desc": "配饰B之九：脚环系。", "buy": 300, "sell": 150, "slot": "accb", "mv": { "gender": "Female", "layer": "AccB", "num": 9 } },
+    "accb_f_10": { "name": "女性饰品乙十", "desc": "配饰B之十：铃铛系。", "buy": 320, "sell": 160, "slot": "accb", "mv": { "gender": "Female", "layer": "AccB", "num": 10 } },
+
+    "glass_m_1": { "name": "男式眼镜一", "desc": "眼镜一：圆框眼镜，斯文有礼。", "buy": 140, "sell": 70, "slot": "glasses", "mv": { "gender": "Male", "layer": "Glasses", "num": 1 } },
+    "glass_m_2": { "name": "男式墨镜二", "desc": "眼镜二：黑色墨镜，冷酷低调。", "buy": 180, "sell": 90, "slot": "glasses", "mv": { "gender": "Male", "layer": "Glasses", "num": 2 } },
+    "glass_m_3": { "name": "男式方框三", "desc": "眼镜三：方形镜框，儒雅干练。", "buy": 200, "sell": 100, "slot": "glasses", "mv": { "gender": "Male", "layer": "Glasses", "num": 3 } },
+    "glass_m_4": { "name": "男式单片镜四", "desc": "眼镜四：单片眼镜，英伦绅士。", "buy": 240, "sell": 120, "slot": "glasses", "mv": { "gender": "Male", "layer": "Glasses", "num": 4 } },
+    "glass_m_5": { "name": "男式战术镜五", "desc": "眼镜五：战术护目镜，机能感足。", "buy": 280, "sell": 140, "slot": "glasses", "mv": { "gender": "Male", "layer": "Glasses", "num": 5 } },
+    "glass_f_1": { "name": "女式花镜一", "desc": "眼镜一：圆形花镜，温婉可爱。", "buy": 140, "sell": 70, "slot": "glasses", "mv": { "gender": "Female", "layer": "Glasses", "num": 1 } },
+    "glass_f_2": { "name": "女式墨镜二", "desc": "眼镜二：猫眼墨镜，神秘魅力。", "buy": 180, "sell": 90, "slot": "glasses", "mv": { "gender": "Female", "layer": "Glasses", "num": 2 } },
+    "glass_f_3": { "name": "女式细框三", "desc": "眼镜三：细金框眼镜，知性优雅。", "buy": 200, "sell": 100, "slot": "glasses", "mv": { "gender": "Female", "layer": "Glasses", "num": 3 } },
+    "glass_f_4": { "name": "女式方镜四", "desc": "眼镜四：方框眼镜，清爽利落。", "buy": 220, "sell": 110, "slot": "glasses", "mv": { "gender": "Female", "layer": "Glasses", "num": 4 } },
+    "glass_f_5": { "name": "女式复古镜五", "desc": "眼镜五：复古圆镜，文艺气质。", "buy": 260, "sell": 130, "slot": "glasses", "mv": { "gender": "Female", "layer": "Glasses", "num": 5 } },
+    "glass_f_6": { "name": "女式护目镜六", "desc": "眼镜六：防风护目镜，飒气十足。", "buy": 300, "sell": 150, "slot": "glasses", "mv": { "gender": "Female", "layer": "Glasses", "num": 6 } },
+
+    "ears_m_1": { "name": "兽耳一", "desc": "耳朵一：猫耳，俏皮灵动。", "buy": 160, "sell": 80, "slot": "ears", "mv": { "gender": "Male", "layer": "Ears", "num": 1 } },
+    "ears_m_2": { "name": "犬耳二", "desc": "耳朵二：犬耳，老实可靠。", "buy": 160, "sell": 80, "slot": "ears", "mv": { "gender": "Male", "layer": "Ears", "num": 2 } },
+    "ears_m_3": { "name": "狐耳三", "desc": "耳朵三：狐耳，魅惑狡黠。", "buy": 180, "sell": 90, "slot": "ears", "mv": { "gender": "Male", "layer": "Ears", "num": 3 } },
+    "ears_m_4": { "name": "狼耳四", "desc": "耳朵四：狼耳，野性锐利。", "buy": 180, "sell": 90, "slot": "ears", "mv": { "gender": "Male", "layer": "Ears", "num": 4 } },
+    "ears_m_5": { "name": "兔耳五", "desc": "耳朵五：垂兔耳，柔和温驯。", "buy": 170, "sell": 85, "slot": "ears", "mv": { "gender": "Male", "layer": "Ears", "num": 5 } },
+    "ears_m_6": { "name": "精灵耳六", "desc": "耳朵六：精灵尖耳，空灵飘渺。", "buy": 200, "sell": 100, "slot": "ears", "mv": { "gender": "Male", "layer": "Ears", "num": 6 } },
+    "ears_f_1": { "name": "兽耳一", "desc": "耳朵一：猫耳，俏皮灵动。", "buy": 160, "sell": 80, "slot": "ears", "mv": { "gender": "Female", "layer": "Ears", "num": 1 } },
+    "ears_f_2": { "name": "犬耳二", "desc": "耳朵二：犬耳，老实可靠。", "buy": 160, "sell": 80, "slot": "ears", "mv": { "gender": "Female", "layer": "Ears", "num": 2 } },
+    "ears_f_3": { "name": "狐耳三", "desc": "耳朵三：狐耳，魅惑狡黠。", "buy": 180, "sell": 90, "slot": "ears", "mv": { "gender": "Female", "layer": "Ears", "num": 3 } },
+    "ears_f_4": { "name": "狼耳四", "desc": "耳朵四：狼耳，野性锐利。", "buy": 180, "sell": 90, "slot": "ears", "mv": { "gender": "Female", "layer": "Ears", "num": 4 } },
+    "ears_f_5": { "name": "兔耳五", "desc": "耳朵五：垂兔耳，柔和温驯。", "buy": 170, "sell": 85, "slot": "ears", "mv": { "gender": "Female", "layer": "Ears", "num": 5 } },
+    "ears_f_6": { "name": "精灵耳六", "desc": "耳朵六：精灵尖耳，空灵飘渺。", "buy": 200, "sell": 100, "slot": "ears", "mv": { "gender": "Female", "layer": "Ears", "num": 6 } },
+
+    "tail_m_1": { "name": "猫尾一", "desc": "尾巴一：猫尾，慵懒摆动。", "buy": 140, "sell": 70, "slot": "tail", "mv": { "gender": "Male", "layer": "Tail", "num": 1 } },
+    "tail_m_2": { "name": "犬尾二", "desc": "尾巴二：犬尾，欢快摇摆。", "buy": 140, "sell": 70, "slot": "tail", "mv": { "gender": "Male", "layer": "Tail", "num": 2 } },
+    "tail_m_3": { "name": "狐尾三", "desc": "尾巴三：蓬松狐尾，华丽张扬。", "buy": 170, "sell": 85, "slot": "tail", "mv": { "gender": "Male", "layer": "Tail", "num": 3 } },
+    "tail_m_4": { "name": "狼尾四", "desc": "尾巴四：狼尾，劲健有力。", "buy": 160, "sell": 80, "slot": "tail", "mv": { "gender": "Male", "layer": "Tail", "num": 4 } },
+    "tail_m_5": { "name": "狮尾五", "desc": "尾巴五：狮尾，威猛霸气。", "buy": 180, "sell": 90, "slot": "tail", "mv": { "gender": "Male", "layer": "Tail", "num": 5 } },
+    "tail_m_6": { "name": "龙尾六", "desc": "尾巴六：龙尾，鳞甲嶙峋。", "buy": 220, "sell": 110, "slot": "tail", "mv": { "gender": "Male", "layer": "Tail", "num": 6 } },
+    "tail_f_1": { "name": "猫尾一", "desc": "尾巴一：猫尾，慵懒摆动。", "buy": 140, "sell": 70, "slot": "tail", "mv": { "gender": "Female", "layer": "Tail", "num": 1 } },
+    "tail_f_2": { "name": "犬尾二", "desc": "尾巴二：犬尾，欢快摇摆。", "buy": 140, "sell": 70, "slot": "tail", "mv": { "gender": "Female", "layer": "Tail", "num": 2 } },
+    "tail_f_3": { "name": "狐尾三", "desc": "尾巴三：蓬松狐尾，华丽张扬。", "buy": 170, "sell": 85, "slot": "tail", "mv": { "gender": "Female", "layer": "Tail", "num": 3 } },
+    "tail_f_4": { "name": "狼尾四", "desc": "尾巴四：狼尾，劲健有力。", "buy": 160, "sell": 80, "slot": "tail", "mv": { "gender": "Female", "layer": "Tail", "num": 4 } },
+    "tail_f_5": { "name": "狮尾五", "desc": "尾巴五：狮尾，威猛霸气。", "buy": 180, "sell": 90, "slot": "tail", "mv": { "gender": "Female", "layer": "Tail", "num": 5 } },
+    "tail_f_6": { "name": "龙尾六", "desc": "尾巴六：龙尾，鳞甲嶙峋。", "buy": 220, "sell": 110, "slot": "tail", "mv": { "gender": "Female", "layer": "Tail", "num": 6 } },
+
+    "wing_m_1": { "name": "鹰翼一", "desc": "翅膀一：褐色鹰翼，展翅翱翔。", "buy": 400, "sell": 200, "slot": "wing", "mv": { "gender": "Male", "layer": "Wing", "num": 1 } },
+    "wing_m_2": { "name": "白翼二", "desc": "翅膀二：洁白羽翼，天使圣洁。", "buy": 480, "sell": 240, "slot": "wing", "mv": { "gender": "Male", "layer": "Wing", "num": 2 } },
+    "wing_m_3": { "name": "暗翼三", "desc": "翅膀三：漆黑魔翼，邪魅霸气。", "buy": 520, "sell": 260, "slot": "wing", "mv": { "gender": "Male", "layer": "Wing", "num": 3 } },
+    "wing_m_4": { "name": "龙翼四", "desc": "翅膀四：猩红龙翼，凶戾威严。", "buy": 600, "sell": 300, "slot": "wing", "mv": { "gender": "Male", "layer": "Wing", "num": 4 } },
+    "wing_m_5": { "name": "光翼五", "desc": "翅膀五：流光圣翼，璀璨夺目。", "buy": 700, "sell": 350, "slot": "wing", "mv": { "gender": "Male", "layer": "Wing", "num": 5 } },
+    "wing_f_1": { "name": "鹰翼一", "desc": "翅膀一：褐色鹰翼，展翅翱翔。", "buy": 400, "sell": 200, "slot": "wing", "mv": { "gender": "Female", "layer": "Wing", "num": 1 } },
+    "wing_f_2": { "name": "白翼二", "desc": "翅膀二：洁白羽翼，天使圣洁。", "buy": 480, "sell": 240, "slot": "wing", "mv": { "gender": "Female", "layer": "Wing", "num": 2 } },
+    "wing_f_3": { "name": "暗翼三", "desc": "翅膀三：漆黑魔翼，邪魅霸气。", "buy": 520, "sell": 260, "slot": "wing", "mv": { "gender": "Female", "layer": "Wing", "num": 3 } },
+    "wing_f_4": { "name": "龙翼四", "desc": "翅膀四：猩红龙翼，凶戾威严。", "buy": 600, "sell": 300, "slot": "wing", "mv": { "gender": "Female", "layer": "Wing", "num": 4 } },
+    "wing_f_5": { "name": "光翼五", "desc": "翅膀五：流光圣翼，璀璨夺目。", "buy": 700, "sell": 350, "slot": "wing", "mv": { "gender": "Female", "layer": "Wing", "num": 5 } },
+
+    "mark_m_1": { "name": "面纹一", "desc": "面纹一：颧骨红纹，异域部落风。", "buy": 90, "sell": 45, "slot": "facial", "mv": { "gender": "Male", "layer": "FacialMark", "num": 1 } },
+    "mark_m_2": { "name": "面纹二", "desc": "面纹二：额间蓝纹，神秘灵气。", "buy": 100, "sell": 50, "slot": "facial", "mv": { "gender": "Male", "layer": "FacialMark", "num": 2 } },
+    "mark_m_3": { "name": "面纹三", "desc": "面纹三：脸颊斜纹，凌厉英武。", "buy": 100, "sell": 50, "slot": "facial", "mv": { "gender": "Male", "layer": "FacialMark", "num": 3 } },
+    "mark_m_4": { "name": "面纹四", "desc": "面纹四：眼周黑纹，阴鸷深沉。", "buy": 110, "sell": 55, "slot": "facial", "mv": { "gender": "Male", "layer": "FacialMark", "num": 4 } },
+    "mark_m_5": { "name": "面纹五", "desc": "面纹五：金色圣纹，庄重祥瑞。", "buy": 130, "sell": 65, "slot": "facial", "mv": { "gender": "Male", "layer": "FacialMark", "num": 5 } },
+    "mark_m_6": { "name": "面纹六", "desc": "面纹六：紫罗兰纹，诡秘迷人。", "buy": 120, "sell": 60, "slot": "facial", "mv": { "gender": "Male", "layer": "FacialMark", "num": 6 } },
+    "mark_m_7": { "name": "面纹七", "desc": "面纹七：颊边斑点，野性斑驳。", "buy": 100, "sell": 50, "slot": "facial", "mv": { "gender": "Male", "layer": "FacialMark", "num": 7 } },
+    "mark_m_8": { "name": "面纹八", "desc": "面纹八：额角暗纹，久经沙场。", "buy": 110, "sell": 55, "slot": "facial", "mv": { "gender": "Male", "layer": "FacialMark", "num": 8 } },
+    "mark_f_1": { "name": "面纹一", "desc": "面纹一：颧骨红纹，异域风情。", "buy": 90, "sell": 45, "slot": "facial", "mv": { "gender": "Female", "layer": "FacialMark", "num": 1 } },
+    "mark_f_2": { "name": "面纹二", "desc": "面纹二：额间蓝纹，清丽脱俗。", "buy": 100, "sell": 50, "slot": "facial", "mv": { "gender": "Female", "layer": "FacialMark", "num": 2 } },
+    "mark_f_3": { "name": "面纹三", "desc": "面纹三：脸颊斜纹，英姿飒爽。", "buy": 100, "sell": 50, "slot": "facial", "mv": { "gender": "Female", "layer": "FacialMark", "num": 3 } },
+    "mark_f_4": { "name": "面纹四", "desc": "面纹四：眼周黑纹，神秘妩媚。", "buy": 110, "sell": 55, "slot": "facial", "mv": { "gender": "Female", "layer": "FacialMark", "num": 4 } },
+    "mark_f_5": { "name": "面纹五", "desc": "面纹五：金色圣纹，典雅华贵。", "buy": 130, "sell": 65, "slot": "facial", "mv": { "gender": "Female", "layer": "FacialMark", "num": 5 } },
+    "mark_f_6": { "name": "面纹六", "desc": "面纹六：紫罗兰纹，清冷迷人。", "buy": 120, "sell": 60, "slot": "facial", "mv": { "gender": "Female", "layer": "FacialMark", "num": 6 } },
+    "mark_f_7": { "name": "面纹七", "desc": "面纹七：颊边斑点，灵动可人。", "buy": 100, "sell": 50, "slot": "facial", "mv": { "gender": "Female", "layer": "FacialMark", "num": 7 } }
+  },
+  "shopStock": [
+    "bread",
+    "herb",
+    "potion",
+    "dagger",
+    "club",
+    "sword",
+    "spear",
+    "mace",
+    "rapier",
+    "bow",
+    "scimitar",
+    "flail",
+    "crossbow",
+    "katana",
+    "waraxe",
+    "halberd",
+    "greatsword",
+    "scythe",
+    "saber",
+    "glowsword",
+    "simple_staff",
+    "gnarled_staff",
+    "crystal_staff",
+    "shield",
+    "round_shield",
+    "kite_shield",
+    "engrailed_shield",
+    "crusader_shield",
+    "crusader2_shield",
+    "scutum",
+    "spartan_shield",
+    "leather_armor",
+    "chainmail",
+    "legion_armor",
+    "plate_armor",
+    "iron_helmet",
+    "kettle_helmet",
+    "spangenhelm",
+    "norman_helmet",
+    "morion",
+    "barbuta",
+    "barbarian_helmet",
+    "legion_helmet",
+    "bascinet",
+    "armet",
+    "close_helmet",
+    "horned_helmet",
+    "sugarloaf_helmet",
+    "greathelm",
+    "gem",
+    "top_m_1", "top_m_2", "top_m_3", "top_m_4", "top_m_5", "top_m_6", "top_m_7", "top_m_8", "top_m_9",
+    "top_f_1", "top_f_2", "top_f_3", "top_f_4", "top_f_5", "top_f_6", "top_f_7", "top_f_8", "top_f_9",
+    "top_f_10", "top_f_11", "top_f_12", "top_f_13", "top_f_14", "top_f_15", "top_f_16", "top_f_17",
+    "top_f_18", "top_f_19", "top_f_20", "top_f_21", "top_f_22", "top_f_23", "top_f_24", "top_f_25", "top_f_26",
+    "coat_m_1", "coat_m_2", "coat_m_3", "coat_m_4", "coat_m_5", "coat_m_6", "coat_m_7", "coat_m_8", "coat_m_9",
+    "coat_m_10", "coat_m_11", "coat_m_12", "coat_m_13", "coat_m_14", "coat_m_15", "coat_m_16", "coat_m_17",
+    "coat_m_18", "coat_m_19", "coat_m_20", "coat_m_21", "coat_m_22", "coat_m_23",
+    "cloak_a1", "cloak_a2", "cloak_a3", "cloak_a4", "cloak_b1", "cloak_b2", "cloak_b3", "cloak_b4",
+    "acca_m_1", "acca_m_2", "acca_m_3", "acca_m_4", "acca_m_5", "acca_m_6", "acca_m_7", "acca_m_8",
+    "acca_f_1", "acca_f_2", "acca_f_3", "acca_f_4", "acca_f_5", "acca_f_6", "acca_f_7",
+    "accb_m_1", "accb_m_2", "accb_m_3", "accb_m_4", "accb_m_5", "accb_m_6", "accb_m_7", "accb_m_8",
+    "accb_f_1", "accb_f_2", "accb_f_3", "accb_f_4", "accb_f_5", "accb_f_6", "accb_f_7", "accb_f_8", "accb_f_9", "accb_f_10",
+    "glass_m_1", "glass_m_2", "glass_m_3", "glass_m_4", "glass_m_5",
+    "glass_f_1", "glass_f_2", "glass_f_3", "glass_f_4", "glass_f_5", "glass_f_6",
+    "ears_m_1", "ears_m_2", "ears_m_3", "ears_m_4", "ears_m_5", "ears_m_6",
+    "ears_f_1", "ears_f_2", "ears_f_3", "ears_f_4", "ears_f_5", "ears_f_6",
+    "tail_m_1", "tail_m_2", "tail_m_3", "tail_m_4", "tail_m_5", "tail_m_6",
+    "tail_f_1", "tail_f_2", "tail_f_3", "tail_f_4", "tail_f_5", "tail_f_6",
+    "wing_m_1", "wing_m_2", "wing_m_3", "wing_m_4", "wing_m_5",
+    "wing_f_1", "wing_f_2", "wing_f_3", "wing_f_4", "wing_f_5",
+    "mark_m_1", "mark_m_2", "mark_m_3", "mark_m_4", "mark_m_5", "mark_m_6", "mark_m_7", "mark_m_8",
+    "mark_f_1", "mark_f_2", "mark_f_3", "mark_f_4", "mark_f_5", "mark_f_6", "mark_f_7"
+  ],
+  "defaultGold": 100,
+  "groundSpawns": [
+    {
+      "x": 264,
+      "y": 168,
+      "itemId": "potion"
+    }
+  ]
+}

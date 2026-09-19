@@ -124,6 +124,8 @@ export function useMessages(isOpen: Ref<boolean>) {
     return d.toLocaleDateString([], { month: '2-digit', day: '2-digit' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }
 
+  // immediate：弹窗在 header 里由 v-if 门控，挂载时 open 已经是 true，
+  // 非 immediate 的 watch 永远不会触发 → 首开拿不到会话列表
   watch(isOpen, (val) => {
     if (val) {
       loadConversations()
@@ -132,7 +134,7 @@ export function useMessages(isOpen: Ref<boolean>) {
       messages.value = []
       inputText.value = ''
     }
-  })
+  }, { immediate: true })
 
   // WebSocket 实时消息
   registerWsHandler('message', (data: any) => {

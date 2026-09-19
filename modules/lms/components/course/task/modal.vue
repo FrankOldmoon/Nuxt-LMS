@@ -11,8 +11,8 @@
 
                 <!-- 使用已有的渲染组件 -->
                 <QuestionRender v-if="type === 'question' && renderNode" :node="renderNode" />
-                <HomeworkRender v-else-if="type === 'homework' && renderNode" :node="renderNode" />
-                <CommentRender v-else-if="type === 'comment' && renderNode" :node="renderNode" />
+                <HomeworkRender v-else-if="type === 'homework' && renderNode" :node="renderNode" :course-id="courseId" />
+                <CommentRender v-else-if="type === 'comment' && renderNode" :node="renderNode" :course-id="courseId" />
                 <QuizRender v-else-if="type === 'quiz' && renderNode" :node="renderNode" />
 
                 <!-- 无数据 -->

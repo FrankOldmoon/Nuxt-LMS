@@ -56,6 +56,16 @@ export default defineConfig({
       },
       {
         test: {
+          name: "integration",
+          // 集成测试：起真实 Colyseus 服务 + Node 里的 colyseus.js 多客户端（无头验证同步/隔离）
+          include: ["modules/*/test/integration/*.{test,spec}.ts"],
+          environment: "node",
+          testTimeout: 30000,
+          hookTimeout: 30000,
+        },
+      },
+      {
+        test: {
           name: "e2e",
           include: [
             "test/e2e/*.{test,spec}.ts",

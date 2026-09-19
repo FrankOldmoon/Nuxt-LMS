@@ -105,8 +105,9 @@ export function useFetch(url: any, options: any = {}) {
       status.value = 'error'
     }
   }
-  // 默认立刻执行（lazy=false）
-  if (options.lazy !== true) {
+  // 默认立刻执行（lazy=false 且 immediate 未显式置 false）
+  // 与真实 Nuxt 语义一致：immediate:false 时不自动请求，需调用方 refresh()
+  if (options.lazy !== true && options.immediate !== false) {
     refresh()
   }
   return { data, status, error, refresh, pending: computed(() => status.value === 'pending') }

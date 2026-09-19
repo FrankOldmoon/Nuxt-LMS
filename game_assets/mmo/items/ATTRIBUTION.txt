@@ -1,0 +1,11 @@
+Item/object sprites in this folder were extracted from the public "LPC Tile Atlas2"
+(https://opengameart.org/content/lpc-tile-atlas2) by adrix89, which compiles assets
+by the Liberated Pixel Cup community, including Lanea Zimmerman (Sharm),
+Stephen Challener (Redshrike), Charles Sanchez, Manuel Riecke, Daniel Armstrong,
+Daniel Eddeland and others.
+
+License: CC-BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/) with
+additional GPL 3.0 options per original author.
+
+Source image: Atlas2.zip -> obj_misk_atlas.png (1024x1024, 32px tiles).
+Extracted tiles (bread, potion, herb, shield, sword, gem) are 32x32 and unchanged.

@@ -10,8 +10,8 @@ import { resetAllStubs, setMockI18n, setMockLayoutState } from '../../../../../.
 
 beforeEach(() => {
   resetAllStubs()
-  // header.vue 通过 useLayoutState 读取 courseBtnsConfig.showShop 控制商店按钮显隐
-  setMockLayoutState({ courseBtnsConfig: { showShop: true } })
+  // header.vue 通过 useLayoutState 读取 courseBtnsConfig.showMmo 控制 MMO 按钮显隐
+  setMockLayoutState({ courseBtnsConfig: { showMmo: true } })
   setMockI18n({ locale: { value: 'en' }, t: (k: string, params?: any) => {
     if (params) {
       let s = k
@@ -132,6 +132,16 @@ describe('course/view/header.vue', () => {
     })
     await flushPromises()
     expect(wrapper.text()).toContain('course.startLearning')
+  })
+
+  it('showMmo 开启时渲染 MMO 按钮（带 course 参数链接）', async () => {
+    const { default: ViewHeader } = await import('../../../../components/course/view/header.vue')
+    const wrapper = mount(ViewHeader, {
+      props: { course: sampleCourse, canEdit: false, courseId: '1', exporting: false, firstChapterUrl: '/course/1/1' },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    expect(wrapper.text()).toContain('mmo.title')
   })
 
   it('点击导出按钮 emit export 事件', async () => {

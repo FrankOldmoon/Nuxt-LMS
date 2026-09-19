@@ -1,0 +1,42 @@
+{
+  "merchant": {
+    "name": "Merchant",
+    "lines": [
+      "Welcome, traveler. Fine goods and rumors alike are for sale here.",
+      "The wilderness lies just beyond the village — stock up on food and water before you set out.",
+      "Mind the mud pits. Safe travels!"
+    ]
+  },
+  "guard": {
+    "name": "Guard",
+    "lines": [
+      "Halt! ...Oh, it's you. Welcome to the village.",
+      "Good timing — the village elder has a favor to ask of you.",
+      "Go have a word with the elder; he's not far to the east."
+    ]
+  },
+  "elder": {
+    "name": "Elder",
+    "lines": [
+      "Child, you've come. The guard has already told me about you.",
+      "The monsters out there carry gems. Follow the path east to Village Two and bring me three.",
+      "Beware those monsters, and don't bite off more than you can chew. Off you go!"
+    ]
+  },
+  "weapon_merchant": {
+    "name": "Weapon Merchant",
+    "lines": [
+      "Welcome, warrior. Only the finest iron is sold here.",
+      "Blades, shields, and armor — pick something that fits your hand.",
+      "One more layer of protection on the battlefield is one more chance to live."
+    ]
+  },
+  "clothing_merchant": {
+    "name": "Clothing Merchant",
+    "lines": [
+      "Welcome, customer. This shop deals in clothing and accessories.",
+      "From fine robes and cloaks down to earrings and tails — we have it all.",
+      "Pick something you like and wear it proudly all year!"
+    ]
+  }
+}

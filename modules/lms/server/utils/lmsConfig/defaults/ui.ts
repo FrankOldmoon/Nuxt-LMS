@@ -28,7 +28,7 @@ export const uiDefaults = {
     showGrades: true,
     showAnnouncements: true,
     showWrongBook: true,
-    showShop: true,
+    showMmo: true,
   },
   chapterBtns: {
     showPlay: true,

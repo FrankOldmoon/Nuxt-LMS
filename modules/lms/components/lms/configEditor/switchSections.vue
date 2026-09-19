@@ -40,7 +40,7 @@ const sections = [
     { key: 'showGrades', label: 'coursePanel.grades' },
     { key: 'showAnnouncements', label: 'coursePanel.announcements' },
     { key: 'showWrongBook', label: 'chapter.wrongBook' },
-    { key: 'showShop', label: 'shop.showShop' },
+    { key: 'showMmo', label: 'mmo.showMmo' },
   ] },
   { title: 'lmsConfig.home', configKey: 'home', fields: [
     { key: 'showHero', label: 'lmsConfig.showHero' },

@@ -29,6 +29,13 @@
       "when": 1789710159413,
       "tag": "0003_tense_mad_thinker",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789789193155,
+      "tag": "0004_mmo_course_binding",
+      "breakpoints": true
     }
   ]
 }

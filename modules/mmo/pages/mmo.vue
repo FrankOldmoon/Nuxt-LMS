@@ -1,0 +1,447 @@
+<script setup>
+// mmo.vue —— MMO 游戏页（Colyseus 实时同步）
+// 登录校验：未登录不渲染游戏；已登录则预载存档 + 申请 token + 加入 Colyseus 房间。
+import { DEFAULT_CFG } from '../gamejs/config/characterConfig'
+import { GameClient } from '../gamejs/net/client'
+import { appStore } from '../gamejs/game/appStore'
+import { MAPS } from '../gamejs/shared/maps'
+import { instanceStore } from '../gamejs/shared/instanceStore'
+import { addRuntimeTasks } from '../gamejs/shared/tasks'
+import { setLang } from '../gamejs/i18n'
+
+definePageMeta({ layout: false })
+
+const { isLoggedIn, user, isLoading } = useAuth()
+const { t, locale } = useI18n()
+const route = useRoute()
+const { public: mmoConfig } = useRuntimeConfig()
+
+// 必须带课程参数才能进入：游戏数据（存档/背包/任务）与金币都绑定到该课程，
+// 缺参数时不启动游戏，直接给出"请从课程页进入"的提示。
+const courseId = computed(() => Number(route.query.course || route.query.courseId) || 0)
+
+// 游戏内文案（Phaser 画布/DOM 覆盖层）跟随主项目语言
+function syncGameLang() { setLang(locale.value === 'cn' ? 'zh' : 'en') }
+watch(locale, syncGameLang)
+
+// 服务端错误多为中文兜底：英文界面下若消息含中文则改用本地化文案（中文界面保留服务端详情）
+function serverMsg(msg, key) {
+  if (!msg) return t(key)
+  if (locale.value !== 'cn' && /[\u4e00-\u9fff]/.test(msg)) return t(key)
+  return msg
+}
+
+const game = shallowRef(null)
+const bootState = ref('idle') // idle | loading | ready | error
+const errorMsg = ref('')
+const playerName = ref('')
+const cfg = ref({ ...DEFAULT_CFG })
+const needCreate = ref(false) // 首次进入（无存档）：先显示角色创建页
+const creating = ref(false)
+const createError = ref('')
+
+// 首帧就位门控：本机角色落到存档坐标前，用不透明遮罩盖住画面，
+// 避免"出生点 → 存档坐标"的瞬移被看到。
+let readyTimer = null
+function disarmReadyGate() {
+  appStore.onSelfReady = null
+  if (readyTimer) { clearTimeout(readyTimer); readyTimer = null }
+}
+function armReadyGate() {
+  disarmReadyGate()
+  appStore.onSelfReady = () => {
+    disarmReadyGate()
+    if (bootState.value === 'loading') bootState.value = 'ready'
+  }
+  // 兜底：场景异常时 8s 后仍放行，避免一直卡在加载遮罩
+  readyTimer = setTimeout(() => { if (bootState.value === 'loading') bootState.value = 'ready' }, 8000)
+}
+
+// 创建页确认(MvCharacterCreator)：写入 cfg 后保存存档进入游戏
+function onCreatorCreated(v) {
+  cfg.value = { ...cfg.value, gender: v.gender, layers: { ...v.layers } }
+  confirmCreation()
+}
+
+function closeTasks() {
+  if (typeof document === "undefined") return
+  const el = document.getElementById("tasks")
+  if (el) el.hidden = true
+}
+
+async function startGame() {
+  if (!import.meta.client || bootState.value === 'loading' || game.value) return
+  if (!courseId.value) return // 无课程参数：由模板层拦截（不启动游戏）
+  syncGameLang()
+  bootState.value = 'loading'
+  try {
+    // 清除旧连接状态(防止 HMR/旧会话残留导致坐标错误)
+    if (window.__mmoGame) { try { window.__mmoGame.destroy(true); } catch { /* ignore */ } window.__mmoGame = null; }
+    if (appStore.sharedNet) { appStore.sharedNet.leave(); appStore.sharedNet = null; }
+    appStore.selfP = null;
+
+    const Phaser = (await import('phaser')).default
+    const client = new GameClient(courseId.value)
+    appStore.gameClient = client
+    appStore.courseId = courseId.value
+
+    // 外部副本模式：?json=<url> 或 ?url=<url> 直接加载并进入该副本地图
+    // （服务端拉取 json、校验结构并持久化为本班实例，保证任务/掉落权威结算）
+    const extUrl = route.query.json || route.query.url
+    let externalMapId = null
+    if (extUrl && typeof extUrl === 'string') {
+      try {
+        const inst = await client.loadExternalInstance(extUrl)
+        externalMapId = 'inst_' + inst.id
+        instanceStore.register(inst.json, externalMapId)
+        addRuntimeTasks(inst.json.tasks)
+      } catch (e) {
+        console.error('[mmo external instance]', e)
+        errorMsg.value = serverMsg(e && e.message, 'mmo.page.loadExternalFailed')
+        disarmReadyGate()
+        bootState.value = 'error'
+        return
+      }
+    }
+
+    // Colyseus 服务地址（与 MMO_WS_PORT 一致）
+    const port = mmoConfig.mmoWsPort || 2567
+    appStore.netURL = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname || 'localhost'}:${port}`
+
+    // 预载存档（外观/名字/出生位置）；无存档（首次进入）先显示角色创建页
+    const state = await client.load()
+    if (!state) {
+      appStore.playerState = null
+      playerName.value = (user.value && user.value.name) || t('mmo.player.default')
+      cfg.value = { ...DEFAULT_CFG }
+      needCreate.value = true
+      bootState.value = 'idle'
+      return
+    }
+    needCreate.value = false
+    appStore.playerState = state
+    playerName.value = (state && state.name) || (user.value && user.value.name) || t('mmo.player.default')
+    cfg.value = { ...DEFAULT_CFG, ...((state && state.cfg) || {}) }
+
+    // 申请一次性 Colyseus 游戏 token + 房间号（default_class.id，每人只进自己班级的房间）
+    const gj = await client.joinGame()
+    appStore.gameToken = gj ? gj.token : null
+    appStore.classId = gj ? gj.classId : 0
+
+    // 预注册本班教师编排副本：刷新/断线重连后仍能解析存档 mapId（inst_<id>），
+    // 并直接回到所在副本（否则 instanceStore 为空会回退主世界）
+    try {
+      const insts = await client.listInstances(true)
+      for (const it of insts) {
+        if (!it || !it.json) continue
+        instanceStore.register(it.json, 'inst_' + it.id)
+        addRuntimeTasks(it.json.tasks)
+      }
+    } catch (e) { console.error('[mmo preload instances]', e) }
+
+    const { default: MapScene } = await import('../gamejs/game/scenes/MapScene')
+    // 按 maps.json 所有地图 + 本班副本，为同一场景类(MapScene)注册多个 key
+    // 直接激活目标地图(外部副本优先, 其次存档所在地图[含副本], 再其次 world), 避免刷新时先闪 world 再跳转
+    const knownMap = (id) => !!MAPS[id] || !!instanceStore.getMap(id)
+    const savedMapId = state && typeof state.mapId === 'string' && knownMap(state.mapId) ? state.mapId : 'world'
+    const targetMapId = externalMapId || savedMapId
+    // 注意: Phaser 会强制启动 scene 数组中下标为 0 的场景(autoStart = i === 0)。
+    // 必须把目标地图放到第一位, 否则 world 与目标地图会同时启动, 两个场景都会用
+    // 同一个一次性 token 调用 joinServer → 第二个 join 认证失败 → 1005 断连,
+    // 表现为"看不到别人但别人能看到我"。
+    const orderedKeys = [...new Set([targetMapId, ...Object.keys(MAPS), ...Object.keys(instanceStore.maps)])]
+    const sceneArgs = orderedKeys.map((key) => {
+      const cfg = { key }
+      if (key === targetMapId) cfg.active = true
+      return new (MapScene)(cfg)
+    })
+
+    armReadyGate()
+    game.value = new Phaser.Game({
+      type: Phaser.AUTO,
+      parent: 'multi-host',
+      width: 1280,
+      height: 720,
+      backgroundColor: '#0f1520',
+      pixelArt: true,
+      render: { pixelArt: true, roundPixels: false },
+      scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+      scene: sceneArgs,
+    })
+    if (import.meta.client) window.__mmoGame = game.value  // 调试/自动化辅助
+    // bootState 由 appStore.onSelfReady 在角色就位后置为 'ready'（见 armReadyGate）
+  } catch (e) {
+    console.error('[mmo init]', e)
+    errorMsg.value = e && e.message ? e.message : t('mmo.page.startFailed')
+    disarmReadyGate()
+    bootState.value = 'error'
+  }
+}
+
+// 离开房间（Colyseus 服务端会在离房时写入存档）
+function leaveRoom() {
+  if (appStore.sharedNet) {
+    appStore.sharedNet.leave()
+    appStore.sharedNet = null
+  }
+}
+
+// 角色创建页确认：保存外观存档后进入多人游戏（昵称取自账号，无需输入）
+async function confirmCreation() {
+  if (creating.value) return
+  creating.value = true
+  createError.value = ''
+  try {
+    const client = appStore.gameClient || new GameClient(courseId.value)
+    appStore.gameClient = client
+    const state = await client.saveCfg(cfg.value)
+    if (!state) throw new Error(t('mmo.page.saveFailed'))
+    needCreate.value = false
+    await startGame() // 已有存档，直接进入游戏
+  } catch (e) {
+    console.error('[mmo create]', e)
+    createError.value = serverMsg(e && e.message, 'mmo.page.saveRetry')
+  } finally {
+    creating.value = false
+  }
+}
+
+watch(isLoggedIn, (v) => {
+  if (v && !game.value) startGame()
+  else if (!v && game.value) {
+    leaveRoom()
+    game.value.destroy(true)
+    game.value = null
+    bootState.value = 'idle'
+  }
+})
+
+onMounted(() => {
+  if (isLoggedIn.value) startGame()
+})
+onBeforeUnmount(() => {
+  disarmReadyGate()
+  leaveRoom()
+  if (game.value) game.value.destroy(true)
+})
+</script>
+
+<template>
+  <div class="mmo-page">
+    <!-- 未登录：不显示游戏 -->
+    <div v-if="!isLoggedIn && !isLoading" class="mmo-login-gate">
+      <h1>{{ $t('mmo.title') }}</h1>
+      <p>{{ $t('mmo.page.loginRequired') }}</p>
+      <NuxtLink to="/" class="mmo-btn">{{ $t('mmo.page.goLogin') }}</NuxtLink>
+    </div>
+
+    <!-- 缺少课程参数：不允许直接进入（游戏存档与金币都绑定到课程） -->
+    <div v-else-if="!courseId" class="mmo-login-gate">
+      <h1>{{ $t('mmo.title') }}</h1>
+      <p>{{ $t('mmo.page.courseRequired') }}</p>
+      <NuxtLink to="/" class="mmo-btn">{{ $t('mmo.page.goCourse') }}</NuxtLink>
+    </div>
+
+    <template v-else>
+      <!-- 首次进入（无存档）：角色创建页(共享组件,配置一处维护) -->
+      <div v-if="needCreate" class="mmo-create">
+        <MvCharacterCreator
+          :nickname="(user && user.name) || playerName"
+          :loading="creating"
+          :error="createError"
+          :button-text="$t('mmo.page.enterGame')"
+          @created="onCreatorCreated"
+        />
+      </div>
+
+      <template v-else>
+      <!-- 游戏画面全屏铺满（Phaser FIT 自适应居中） -->
+      <div id="multi-host" class="mmo-host"></div>
+
+      <!-- 首帧就位前用不透明遮罩盖住，避免看到出生点 → 存档坐标的瞬移 -->
+      <div v-if="bootState !== 'ready'" class="mmo-boot">
+        <template v-if="bootState === 'error'">{{ $t('mmo.page.bootFailed', { msg: errorMsg }) }}</template>
+        <template v-else>{{ $t('mmo.page.loadingWorld') }}</template>
+      </div>
+
+      <!-- 背包覆盖层 -->
+      <div id="backpack" class="ov" hidden>
+        <div class="ov-box bp-box">
+          <div class="ov-head"><b>{{ $t('mmo.bag.title') }}</b><button class="ov-close" id="bpClose">✕</button></div>
+          <div class="ov-gold">{{ $t('mmo.gold.label') }}: <b id="bpGold">0</b></div>
+          <div class="ov-list" id="bpList"></div>
+        </div>
+      </div>
+
+      <!-- 商店覆盖层 -->
+      <div id="shop" class="ov" hidden>
+        <div class="ov-box shop-box">
+          <div class="ov-head"><b>{{ $t('mmo.shop.title') }}</b><button class="ov-close" id="shClose">✕</button></div>
+          <div class="ov-gold">{{ $t('mmo.gold.label') }}: <b id="shGold">0</b></div>
+          <div class="shop-cols">
+            <div class="shop-col">
+              <div class="col-title">{{ $t('mmo.shop.buy') }}</div>
+              <div class="ov-list col-list" id="shBuyList"></div>
+            </div>
+            <div class="shop-col">
+              <div class="col-title">{{ $t('mmo.shop.sell') }}</div>
+              <div class="ov-list col-list" id="shSellList"></div>
+            </div>
+          </div>
+          <div class="ov-foot">{{ $t('mmo.shop.closeHint') }}</div>
+        </div>
+      </div>
+
+      <!-- 任务完成全局提示 -->
+      <div id="taskBanner" class="task-banner" hidden>
+        <div class="tb-title">{{ $t('mmo.task.completeBanner') }}</div>
+        <div class="tb-name" id="taskBannerName"></div>
+        <div class="tb-reward" id="taskBannerReward"></div>
+      </div>
+
+      <!-- 任务覆盖层 -->
+      <div id="tasks" class="ov" hidden>
+        <div class="ov-box task-box">
+          <div class="ov-head"><b>{{ $t('mmo.task.title') }}</b><button class="ov-close" @click="closeTasks">✕</button></div>
+          <div class="task-tabs" id="taskTabs"></div>
+          <div class="ov-list" id="taskList"></div>
+          <div class="ov-foot">{{ $t('mmo.task.closeHint') }}</div>
+        </div>
+      </div>
+      </template>
+    </template>
+  </div>
+</template>
+
+<style>
+.mmo-page { position: fixed; inset: 0; background: #0f1520; color: #e6edf7; font-family: "PingFang SC","Microsoft YaHei",system-ui,sans-serif; overflow: hidden; }
+.mmo-login-gate { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 16px; align-items: center; justify-content: center; text-align: center; }
+.mmo-login-gate h1 { font-size: 26px; }
+/* 全屏游戏画面 */
+.mmo-host { position: absolute; inset: 0; overflow: hidden; }
+.mmo-host canvas { border-radius: 0; box-shadow: none; }
+/* 首帧就位前的全屏不透明遮罩 */
+.mmo-boot { position: absolute; inset: 0; z-index: 70; display: grid; place-items: center; background: #0f1520; color: #8fa0b8; font-size: 15px; }
+
+/* 角色创建页（首次进入，无存档） */
+.mmo-create { position: absolute; inset: 0; display: grid; place-items: center; overflow: auto; padding: 16px; z-index: 65; background: #0f1520; }
+.create-box { width: 760px; max-width: 96vw; background: #141b28; border: 1px solid #2c3a52; border-radius: 14px; padding: 22px 26px; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+.create-box h1 { font-size: 24px; margin-bottom: 14px; }
+.create-name { display: flex; align-items: baseline; gap: 10px; padding: 12px 16px; background: #182131; border: 1px solid #2c3a52; border-radius: 10px; margin-bottom: 14px; }
+.create-name .label { font-size: 13px; color: #8fa0b8; }
+.create-name b { font-size: 18px; color: #7fd4ff; }
+.create-name .tip { margin-left: auto; font-size: 12px; color: #8fa0b8; }
+.create-groups { max-height: 52vh; overflow-y: auto; margin-bottom: 14px; padding-right: 4px; flex: 1; }
+.create-spread { display: flex; gap: 22px; margin-bottom: 14px; }
+.create-preview { flex: none; width: 168px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.create-avatar { width: 96px; height: 96px; image-rendering: pixelated; background: #0d141f; border: 1px solid #2c3a52; border-radius: 10px; }
+.create-avatar-empty { width: 96px; height: 96px; display: grid; place-items: center; color: #8fa0b8; font-size: 11px; background: #0d141f; border: 1px solid #2c3a52; border-radius: 10px; }
+.create-full { width: 120px; height: auto; image-rendering: pixelated; background: #0d141f; border: 1px solid #2c3a52; border-radius: 8px; }
+.create-preview-tip { font-size: 12px; color: #8fa0b8; }
+.create-err { color: #ff8a8a; font-size: 13px; margin-bottom: 10px; }
+.create-btn { width: 100%; background: #4f8cff; color: #fff; border: none; border-radius: 10px; padding: 12px 0; font-size: 16px; cursor: pointer; }
+.create-btn:hover { background: #6b9fff; }
+.create-btn:disabled { opacity: .6; cursor: not-allowed; }
+
+/* 覆盖层（背包/商店/任务）—— 由 overlay.js 动态注入内容，故使用全局样式 */
+.ov { position: fixed; inset: 0 0 0 0; z-index: 100; display: grid; place-items: center; background: rgba(6,10,18,.55); }
+.ov[hidden] { display: none; }
+.ov-box { width: 560px; max-width: 92vw; max-height: 86vh; display: flex; flex-direction: column; background: #141b28; border: 1px solid #2c3a52; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+.ov-box.shop-box { width: 760px; height: 500px; }
+.ov-box.task-box { width: 480px; }
+.ov-box.bp-box { width: 780px; max-width: 96vw; max-height: 92vh; }
+.shop-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 10px 14px; flex: 1; min-height: 0; }
+.shop-col { display: flex; flex-direction: column; min-height: 0; }
+.col-title { font-size: 13px; color: #9fb3d0; padding: 0 2px 6px; }
+.col-list { flex: 1; overflow-y: auto; }
+#shBuyList { overflow-y: hidden; display: flex; flex-direction: column; }
+#shSellList { overflow-y: auto; }
+.shop-tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 0 8px; flex: none; }
+.shop-tab { background: #182131; color: #b9c8dd; border: 1px solid #2c3a52; border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 12px; }
+.shop-tab:hover { background: #22304a; }
+.shop-tab.active { background: #2f6faf; color: #fff; border-color: #4f8cff; }
+.shop-list { flex: 1; overflow-y: auto; padding-right: 2px; }
+.ov-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #2c3a52; }
+.ov-head b { font-size: 16px; }
+.ov-close { background: #2c3a52; color: #e6edf7; border: none; border-radius: 6px; width: 28px; height: 28px; cursor: pointer; font-size: 14px; }
+.ov-close:hover { background: #3b4c6b; }
+.ov-gold { padding: 10px 16px; font-size: 14px; color: #ffd66b; border-bottom: 1px solid #202a3c; }
+.ov-list { flex: 1; overflow-y: auto; padding: 10px 14px; }
+.ov-foot { padding: 8px 16px; font-size: 12px; color: #8fa0b8; border-top: 1px solid #202a3c; }
+.irow { display: flex; align-items: center; gap: 10px; padding: 8px 10px; margin-bottom: 6px; background: #182131; border: 1px solid #2c3a52; border-radius: 10px; }
+.iicon { width: 30px; height: 30px; flex: none; image-rendering: pixelated; }
+#bpList { overflow: hidden; flex: 1; min-height: 0; }
+.bp-body { display: flex; align-items: stretch; width: 100%; flex: 1; min-height: 0; }
+.bp-main { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 14px 16px; gap: 10px; min-height: 0; }
+.bp-main .bp-grid { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(8, 1fr); grid-auto-rows: 1fr; gap: 6px; align-content: stretch; }
+.bpc { position: relative; min-height: 40px; display: grid; place-items: center; border: 1px solid #2c3a52; border-radius: 8px; background: #1a2334; transition: border-color .12s, box-shadow .12s, transform .08s; }
+.bpc:not(.filled) { border-style: dashed; border-color: #2a3850; opacity: .5; }
+.bpc.filled:hover { border-color: #7fd4ff; transform: translateY(-1px); }
+.bpc.selected { border-color: #4f8cff; background: #22334f; box-shadow: inset 0 0 0 1.5px #4f8cff; }
+.bpc .iicon { width: 30px; height: 30px; }
+.bpc .bcnt { position: absolute; right: 3px; bottom: 2px; font-size: 11px; color: #fff; background: rgba(0,0,0,.6); border-radius: 6px; padding: 0 3px; }
+.eq-col { width: 148px; flex: none; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 10px; border-right: 1px solid #202a3c; overflow-y: auto; }
+.eq-group-title { font-size: 11px; color: #7d8da6; font-weight: 700; letter-spacing: .5px; padding: 0 1px; }
+.eq-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.eq-slot { aspect-ratio: 1; border: 1px solid #2c3a52; border-radius: 7px; background: #141b28; position: relative; display: grid; place-items: center; cursor: pointer; }
+.eq-slot.filled { border-color: #3a5a8c; background: #16233a; }
+.eq-slot .iicon { width: 74%; height: 74%; }
+.eq-slot .eq-ghost { font-size: 10px; color: #5c6d8a; text-align: center; line-height: 1.15; }
+.eq-slot .uneq { position: absolute; right: 1px; top: 1px; font-size: 9px; line-height: 1; color: #ffd0a0; background: rgba(80,40,10,.75); border: 1px solid #a06a2a; border-radius: 3px; padding: 1px 2px; cursor: pointer; }
+.eq-slot .uneq:hover { background: #c07a20; color: #fff; }
+.bp-empty { flex: 1; display: grid; place-items: center; color: #7d8da6; font-size: 13px; }
+.bp-actions { min-height: 48px; flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; background: #10161f; border: 1px solid #2c3a52; border-radius: 10px; }
+.bp-actions-tip { font-size: 12px; color: #7d8da6; }
+.bp-selinfo { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.bp-selinfo .iicon { width: 30px; height: 30px; flex: none; }
+.bp-selname { font-size: 13px; color: #e6edf7; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bp-selcount { font-size: 12px; color: #ffd66b; flex: none; }
+.bp-btns { display: flex; gap: 8px; flex: none; }
+.act-btn { background: #2c3a52; color: #e6edf7; border: 1px solid #3b4c6b; border-radius: 8px; padding: 6px 16px; cursor: pointer; font-size: 13px; }
+.act-btn:hover { opacity: .9; }
+.act-btn.use { background: #2f8f4e; border-color: #2f8f4e; color: #fff; }
+.act-btn.equip { background: #2f6faf; border-color: #2f6faf; color: #fff; }
+.act-btn.drop { background: #a03030; border-color: #a03030; color: #fff; }
+.act-btn.close { background: #202a3c; color: #8fa0b8; }
+.uneq { flex: none; margin-left: auto; }
+.bp-tip { position: fixed; z-index: 130; pointer-events: none; background: #10161f; border: 1px solid #4f8cff; border-radius: 8px; padding: 8px 10px; max-width: 220px; box-shadow: 0 4px 18px rgba(0,0,0,.5); }
+.bp-tip .tip-name { font-size: 13px; color: #7fd4ff; font-weight: bold; margin-bottom: 3px; }
+.bp-tip .tip-desc { font-size: 12px; color: #b9c8dd; line-height: 1.4; margin-bottom: 4px; }
+.bp-tip .tip-price { font-size: 12px; color: #ffd66b; }
+.bp-tip .tip-stat { font-size: 12px; color: #9fe8a0; margin-bottom: 4px; }
+.iname { flex: 1; font-size: 14px; }
+.icount { color: #cfe0f5; font-size: 13px; }
+.iprice { color: #ffd66b; font-size: 13px; min-width: 56px; text-align: right; }
+.ibtn { background: #2f8f4e; color: #fff; border: none; border-radius: 8px; padding: 5px 14px; cursor: pointer; font-size: 13px; }
+.ibtn:hover { background: #39ab60; }
+.ibtn.sell { background: #d99a1b; }
+.ibtn.sell:hover { background: #efb234; }
+.ibtn.disabled, .ibtn:disabled { background: #2c3a52; color: #7d8da6; cursor: not-allowed; }
+.ibtn.disabled:hover, .ibtn:disabled:hover { background: #2c3a52; }
+.empty { text-align: center; color: #8fa0b8; padding: 24px 0; font-size: 13px; }
+
+/* 任务面板 */
+.task-row { padding: 8px 10px; margin-bottom: 8px; background: #182131; border: 1px solid #2c3a52; border-radius: 10px; }
+.task-row.done { opacity: .7; }
+.task-name { font-size: 14px; color: #7fd4ff; font-weight: bold; }
+.task-desc { font-size: 12px; color: #b9c8dd; margin: 3px 0 6px; line-height: 1.4; }
+.task-bar { height: 6px; background: #202a3c; border-radius: 3px; overflow: hidden; margin-bottom: 4px; }
+.task-bar i { display: block; height: 100%; background: #4f8cff; }
+.task-prog { font-size: 12px; color: #9fb3d0; }
+.task-reward { font-size: 12px; color: #ffd66b; margin-top: 2px; }
+.task-banner {
+  position: fixed; top: 90px; left: 50%; transform: translateX(-50%); z-index: 300;
+  background: linear-gradient(135deg, #1c3a5f, #14243c); border: 1px solid #4f8cff;
+  border-radius: 14px; padding: 14px 28px; min-width: 300px; max-width: 60vw;
+  text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,.6), 0 0 0 1px rgba(79,140,255,.25);
+  animation: taskBannerIn .35s cubic-bezier(.18,.89,.32,1.28), taskBannerOut .4s ease 2.4s 1 forwards;
+}
+.task-banner .tb-title { font-size: 17px; color: #ffd66b; font-weight: 800; letter-spacing: 2px; margin-bottom: 4px; }
+.task-banner .tb-name { font-size: 15px; color: #7fd4ff; font-weight: 700; margin-bottom: 2px; }
+.task-banner .tb-reward { font-size: 13px; color: #9fe8a0; }
+@keyframes taskBannerIn { from { opacity: 0; transform: translate(-50%, -18px) scale(.85); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
+@keyframes taskBannerOut { from { opacity: 1; } to { opacity: 0; transform: translate(-50%, -14px) scale(.92); } }
+.task-tabs { display: flex; gap: 4px; padding: 6px 10px; border-bottom: 1px solid #2c3a52; }
+.task-tab { flex: 1; padding: 6px 0; font-size: 13px; color: #9fb3d0; background: #182131; border: 1px solid #2c3a52; border-radius: 6px; cursor: pointer; text-align: center; }
+.task-tab.on { color: #7fd4ff; border-color: #4f8cff; background: #1a2b48; font-weight: bold; }
+</style>

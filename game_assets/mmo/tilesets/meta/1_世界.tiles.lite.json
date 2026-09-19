@@ -1,0 +1,3420 @@
+{
+ "meta": {
+  "tilesetId": 1,
+  "family": "世界",
+  "note": "省 token 版：自动瓦片只列 kind，写入 baseTileId+四邻shape；普通瓦片 tileId 即为 data 写入值",
+  "dataFormat": "6层数组[layer0地面/墙, layer2物件, layer3装饰]"
+ },
+ "autotiles": [
+  {
+   "group": "A1",
+   "kind": 0,
+   "baseTileId": 2048,
+   "layer": 0,
+   "cn": "Sea"
+  },
+  {
+   "group": "A1",
+   "kind": 1,
+   "baseTileId": 2096,
+   "layer": 0,
+   "cn": "Deep Sea"
+  },
+  {
+   "group": "A1",
+   "kind": 2,
+   "baseTileId": 2144,
+   "layer": 0,
+   "cn": "岩石"
+  },
+  {
+   "group": "A1",
+   "kind": 3,
+   "baseTileId": 2192,
+   "layer": 0,
+   "cn": "Icebergs"
+  },
+  {
+   "group": "A1",
+   "kind": 4,
+   "baseTileId": 2240,
+   "layer": 0,
+   "cn": "Poison Swamp"
+  },
+  {
+   "group": "A1",
+   "kind": 5,
+   "baseTileId": 2288,
+   "layer": 0,
+   "cn": "树"
+  },
+  {
+   "group": "A1",
+   "kind": 6,
+   "baseTileId": 2336,
+   "layer": 0,
+   "cn": "Lava"
+  },
+  {
+   "group": "A1",
+   "kind": 7,
+   "baseTileId": 2384,
+   "layer": 0,
+   "cn": "Lava Bubbles"
+  },
+  {
+   "group": "A1",
+   "kind": 8,
+   "baseTileId": 2432,
+   "layer": 0,
+   "cn": "Pond"
+  },
+  {
+   "group": "A1",
+   "kind": 9,
+   "baseTileId": 2480,
+   "layer": 0,
+   "cn": "Boulder"
+  },
+  {
+   "group": "A1",
+   "kind": 10,
+   "baseTileId": 2528,
+   "layer": 0,
+   "cn": "Frozen Sea"
+  },
+  {
+   "group": "A1",
+   "kind": 11,
+   "baseTileId": 2576,
+   "layer": 0,
+   "cn": "Whirlpool"
+  },
+  {
+   "group": "A1",
+   "kind": 12,
+   "baseTileId": 2624,
+   "layer": 0,
+   "cn": "Land's End"
+  },
+  {
+   "group": "A1",
+   "kind": 13,
+   "baseTileId": 2672,
+   "layer": 0,
+   "cn": "瀑布"
+  },
+  {
+   "group": "A1",
+   "kind": 14,
+   "baseTileId": 2720,
+   "layer": 0,
+   "cn": "Cloud (Land's End)"
+  },
+  {
+   "group": "A1",
+   "kind": 15,
+   "baseTileId": 2768,
+   "layer": 0,
+   "cn": "Cloud"
+  },
+  {
+   "group": "A2",
+   "kind": 0,
+   "baseTileId": 2816,
+   "layer": 0,
+   "cn": "草地"
+  },
+  {
+   "group": "A2",
+   "kind": 1,
+   "baseTileId": 2864,
+   "layer": 0,
+   "cn": "草地"
+  },
+  {
+   "group": "A2",
+   "kind": 2,
+   "baseTileId": 2912,
+   "layer": 0,
+   "cn": "草地"
+  },
+  {
+   "group": "A2",
+   "kind": 3,
+   "baseTileId": 2960,
+   "layer": 0,
+   "cn": "草地"
+  },
+  {
+   "group": "A2",
+   "kind": 4,
+   "baseTileId": 3008,
+   "layer": 0,
+   "cn": "Forest"
+  },
+  {
+   "group": "A2",
+   "kind": 5,
+   "baseTileId": 3056,
+   "layer": 0,
+   "cn": "Forest (Conifer)"
+  },
+  {
+   "group": "A2",
+   "kind": 6,
+   "baseTileId": 3104,
+   "layer": 0,
+   "cn": "草地"
+  },
+  {
+   "group": "A2",
+   "kind": 7,
+   "baseTileId": 3152,
+   "layer": 0,
+   "cn": "Mountain (Dirt)"
+  },
+  {
+   "group": "A2",
+   "kind": 8,
+   "baseTileId": 3200,
+   "layer": 0,
+   "cn": "荒地"
+  },
+  {
+   "group": "A2",
+   "kind": 9,
+   "baseTileId": 3248,
+   "layer": 0,
+   "cn": "荒地"
+  },
+  {
+   "group": "A2",
+   "kind": 10,
+   "baseTileId": 3296,
+   "layer": 0,
+   "cn": "Dirt Field A"
+  },
+  {
+   "group": "A2",
+   "kind": 11,
+   "baseTileId": 3344,
+   "layer": 0,
+   "cn": "Dirt Field B"
+  },
+  {
+   "group": "A2",
+   "kind": 12,
+   "baseTileId": 3392,
+   "layer": 0,
+   "cn": "树"
+  },
+  {
+   "group": "A2",
+   "kind": 13,
+   "baseTileId": 3440,
+   "layer": 0,
+   "cn": "Road (Dirt)"
+  },
+  {
+   "group": "A2",
+   "kind": 14,
+   "baseTileId": 3488,
+   "layer": 0,
+   "cn": "Hill (Dirt)"
+  },
+  {
+   "group": "A2",
+   "kind": 15,
+   "baseTileId": 3536,
+   "layer": 0,
+   "cn": "岩石"
+  },
+  {
+   "group": "A2",
+   "kind": 16,
+   "baseTileId": 3584,
+   "layer": 0,
+   "cn": "沙漠"
+  },
+  {
+   "group": "A2",
+   "kind": 17,
+   "baseTileId": 3632,
+   "layer": 0,
+   "cn": "沙漠"
+  },
+  {
+   "group": "A2",
+   "kind": 18,
+   "baseTileId": 3680,
+   "layer": 0,
+   "cn": "岩石"
+  },
+  {
+   "group": "A2",
+   "kind": 19,
+   "baseTileId": 3728,
+   "layer": 0,
+   "cn": "岩石"
+  },
+  {
+   "group": "A2",
+   "kind": 20,
+   "baseTileId": 3776,
+   "layer": 0,
+   "cn": "树"
+  },
+  {
+   "group": "A2",
+   "kind": 21,
+   "baseTileId": 3824,
+   "layer": 0,
+   "cn": "Road (Paved)"
+  },
+  {
+   "group": "A2",
+   "kind": 22,
+   "baseTileId": 3872,
+   "layer": 0,
+   "cn": "沙地/沙路"
+  },
+  {
+   "group": "A2",
+   "kind": 23,
+   "baseTileId": 3920,
+   "layer": 0,
+   "cn": "沙地/沙路"
+  },
+  {
+   "group": "A2",
+   "kind": 24,
+   "baseTileId": 3968,
+   "layer": 0,
+   "cn": "雪原"
+  },
+  {
+   "group": "A2",
+   "kind": 25,
+   "baseTileId": 4016,
+   "layer": 0,
+   "cn": "雪"
+  },
+  {
+   "group": "A2",
+   "kind": 26,
+   "baseTileId": 4064,
+   "layer": 0,
+   "cn": "Clouds"
+  },
+  {
+   "group": "A2",
+   "kind": 27,
+   "baseTileId": 4112,
+   "layer": 0,
+   "cn": "Large Clouds"
+  },
+  {
+   "group": "A2",
+   "kind": 28,
+   "baseTileId": 4160,
+   "layer": 0,
+   "cn": "雪"
+  },
+  {
+   "group": "A2",
+   "kind": 29,
+   "baseTileId": 4208,
+   "layer": 0,
+   "cn": "Pit"
+  },
+  {
+   "group": "A2",
+   "kind": 30,
+   "baseTileId": 4256,
+   "layer": 0,
+   "cn": "岩石"
+  },
+  {
+   "group": "A2",
+   "kind": 31,
+   "baseTileId": 4304,
+   "layer": 0,
+   "cn": "雪"
+  }
+ ],
+ "normals": [
+  {
+   "group": "B",
+   "tileId": 0,
+   "layer": 2,
+   "cn": "Transparent"
+  },
+  {
+   "group": "B",
+   "tileId": 1,
+   "layer": 2,
+   "cn": "招牌"
+  },
+  {
+   "group": "B",
+   "tileId": 2,
+   "layer": 2,
+   "cn": "Pier (H)"
+  },
+  {
+   "group": "B",
+   "tileId": 3,
+   "layer": 2,
+   "cn": "Pier (V)"
+  },
+  {
+   "group": "B",
+   "tileId": 4,
+   "layer": 2,
+   "cn": "Pond"
+  },
+  {
+   "group": "B",
+   "tileId": 5,
+   "layer": 2,
+   "cn": "Oasis"
+  },
+  {
+   "group": "B",
+   "tileId": 6,
+   "layer": 2,
+   "cn": "Pond (Ice)"
+  },
+  {
+   "group": "B",
+   "tileId": 7,
+   "layer": 2,
+   "cn": "Beanstalk"
+  },
+  {
+   "group": "B",
+   "tileId": 8,
+   "layer": 2,
+   "cn": "Tent"
+  },
+  {
+   "group": "B",
+   "tileId": 9,
+   "layer": 2,
+   "cn": "Igloo"
+  },
+  {
+   "group": "B",
+   "tileId": 10,
+   "layer": 2,
+   "cn": "Pyramid"
+  },
+  {
+   "group": "B",
+   "tileId": 11,
+   "layer": 2,
+   "cn": "树"
+  },
+  {
+   "group": "B",
+   "tileId": 12,
+   "layer": 2,
+   "cn": "树"
+  },
+  {
+   "group": "B",
+   "tileId": 13,
+   "layer": 2,
+   "cn": "Dirt"
+  },
+  {
+   "group": "B",
+   "tileId": 14,
+   "layer": 2,
+   "cn": "Avalanche"
+  },
+  {
+   "group": "B",
+   "tileId": 15,
+   "layer": 2,
+   "cn": "Beanstalk"
+  },
+  {
+   "group": "B",
+   "tileId": 16,
+   "layer": 2,
+   "cn": "Cave A"
+  },
+  {
+   "group": "B",
+   "tileId": 17,
+   "layer": 2,
+   "cn": "Cave B"
+  },
+  {
+   "group": "B",
+   "tileId": 18,
+   "layer": 2,
+   "cn": "Cave (Collapsed)"
+  },
+  {
+   "group": "B",
+   "tileId": 19,
+   "layer": 2,
+   "cn": "Mine"
+  },
+  {
+   "group": "B",
+   "tileId": 20,
+   "layer": 2,
+   "cn": "Tunnel"
+  },
+  {
+   "group": "B",
+   "tileId": 21,
+   "layer": 2,
+   "cn": "Tunnel (Blocked)"
+  },
+  {
+   "group": "B",
+   "tileId": 22,
+   "layer": 2,
+   "cn": "Shrine"
+  },
+  {
+   "group": "B",
+   "tileId": 23,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 24,
+   "layer": 2,
+   "cn": "Crater"
+  },
+  {
+   "group": "B",
+   "tileId": 25,
+   "layer": 2,
+   "cn": "Trail"
+  },
+  {
+   "group": "B",
+   "tileId": 26,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 27,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 28,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 29,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 30,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 31,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 32,
+   "layer": 2,
+   "cn": "Volcano Crater (Lava)"
+  },
+  {
+   "group": "B",
+   "tileId": 33,
+   "layer": 2,
+   "cn": "Volcano Crater (Lava)"
+  },
+  {
+   "group": "B",
+   "tileId": 34,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 35,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 36,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 37,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 38,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 39,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 40,
+   "layer": 2,
+   "cn": "Volcano Crater"
+  },
+  {
+   "group": "B",
+   "tileId": 41,
+   "layer": 2,
+   "cn": "Volcano Crater"
+  },
+  {
+   "group": "B",
+   "tileId": 42,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 43,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 44,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 45,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 46,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 47,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 48,
+   "layer": 2,
+   "cn": "Volcano"
+  },
+  {
+   "group": "B",
+   "tileId": 49,
+   "layer": 2,
+   "cn": "Volcano"
+  },
+  {
+   "group": "B",
+   "tileId": 50,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 51,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 52,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 53,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 54,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 55,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "B",
+   "tileId": 56,
+   "layer": 2,
+   "cn": "Town A"
+  },
+  {
+   "group": "B",
+   "tileId": 57,
+   "layer": 2,
+   "cn": "Town A"
+  },
+  {
+   "group": "B",
+   "tileId": 58,
+   "layer": 2,
+   "cn": "Town B"
+  },
+  {
+   "group": "B",
+   "tileId": 59,
+   "layer": 2,
+   "cn": "Town B"
+  },
+  {
+   "group": "B",
+   "tileId": 60,
+   "layer": 2,
+   "cn": "Village A"
+  },
+  {
+   "group": "B",
+   "tileId": 61,
+   "layer": 2,
+   "cn": "Village A"
+  },
+  {
+   "group": "B",
+   "tileId": 62,
+   "layer": 2,
+   "cn": "Village B"
+  },
+  {
+   "group": "B",
+   "tileId": 63,
+   "layer": 2,
+   "cn": "房子"
+  },
+  {
+   "group": "B",
+   "tileId": 64,
+   "layer": 2,
+   "cn": "Town C"
+  },
+  {
+   "group": "B",
+   "tileId": 65,
+   "layer": 2,
+   "cn": "Town D"
+  },
+  {
+   "group": "B",
+   "tileId": 66,
+   "layer": 2,
+   "cn": "Village C"
+  },
+  {
+   "group": "B",
+   "tileId": 67,
+   "layer": 2,
+   "cn": "Village D"
+  },
+  {
+   "group": "B",
+   "tileId": 68,
+   "layer": 2,
+   "cn": "Town E (Desert)"
+  },
+  {
+   "group": "B",
+   "tileId": 69,
+   "layer": 2,
+   "cn": "Town E (Desert)"
+  },
+  {
+   "group": "B",
+   "tileId": 70,
+   "layer": 2,
+   "cn": "Town F (Desert)"
+  },
+  {
+   "group": "B",
+   "tileId": 71,
+   "layer": 2,
+   "cn": "房子"
+  },
+  {
+   "group": "B",
+   "tileId": 72,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 73,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 74,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 75,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 76,
+   "layer": 2,
+   "cn": "Town G (Desert)"
+  },
+  {
+   "group": "B",
+   "tileId": 77,
+   "layer": 2,
+   "cn": "Town G (Desert)"
+  },
+  {
+   "group": "B",
+   "tileId": 78,
+   "layer": 2,
+   "cn": "Large Tent"
+  },
+  {
+   "group": "B",
+   "tileId": 79,
+   "layer": 2,
+   "cn": "房子"
+  },
+  {
+   "group": "B",
+   "tileId": 80,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 81,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 82,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 83,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 84,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 85,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 86,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 87,
+   "layer": 2,
+   "cn": "房子"
+  },
+  {
+   "group": "B",
+   "tileId": 88,
+   "layer": 2,
+   "cn": "Fortress City"
+  },
+  {
+   "group": "B",
+   "tileId": 89,
+   "layer": 2,
+   "cn": "Fortress City"
+  },
+  {
+   "group": "B",
+   "tileId": 90,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 91,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 92,
+   "layer": 2,
+   "cn": "Large Mansion"
+  },
+  {
+   "group": "B",
+   "tileId": 93,
+   "layer": 2,
+   "cn": "Large Mansion"
+  },
+  {
+   "group": "B",
+   "tileId": 94,
+   "layer": 2,
+   "cn": "School of Magic"
+  },
+  {
+   "group": "B",
+   "tileId": 95,
+   "layer": 2,
+   "cn": "School of Magic"
+  },
+  {
+   "group": "B",
+   "tileId": 96,
+   "layer": 2,
+   "cn": "Fortress City"
+  },
+  {
+   "group": "B",
+   "tileId": 97,
+   "layer": 2,
+   "cn": "Fortress City"
+  },
+  {
+   "group": "B",
+   "tileId": 98,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 99,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 100,
+   "layer": 2,
+   "cn": "Large Mansion"
+  },
+  {
+   "group": "B",
+   "tileId": 101,
+   "layer": 2,
+   "cn": "Large Mansion"
+  },
+  {
+   "group": "B",
+   "tileId": 102,
+   "layer": 2,
+   "cn": "School of Magic"
+  },
+  {
+   "group": "B",
+   "tileId": 103,
+   "layer": 2,
+   "cn": "School of Magic"
+  },
+  {
+   "group": "B",
+   "tileId": 104,
+   "layer": 2,
+   "cn": "桥"
+  },
+  {
+   "group": "B",
+   "tileId": 105,
+   "layer": 2,
+   "cn": "桥"
+  },
+  {
+   "group": "B",
+   "tileId": 106,
+   "layer": 2,
+   "cn": "桥"
+  },
+  {
+   "group": "B",
+   "tileId": 107,
+   "layer": 2,
+   "cn": "桥"
+  },
+  {
+   "group": "B",
+   "tileId": 108,
+   "layer": 2,
+   "cn": "雪+桥"
+  },
+  {
+   "group": "B",
+   "tileId": 109,
+   "layer": 2,
+   "cn": "雪+桥"
+  },
+  {
+   "group": "B",
+   "tileId": 110,
+   "layer": 2,
+   "cn": "雪+桥"
+  },
+  {
+   "group": "B",
+   "tileId": 111,
+   "layer": 2,
+   "cn": "雪+桥"
+  },
+  {
+   "group": "B",
+   "tileId": 112,
+   "layer": 2,
+   "cn": "Tower A"
+  },
+  {
+   "group": "B",
+   "tileId": 113,
+   "layer": 2,
+   "cn": "Tower A (Ruins)"
+  },
+  {
+   "group": "B",
+   "tileId": 114,
+   "layer": 2,
+   "cn": "Tower B"
+  },
+  {
+   "group": "B",
+   "tileId": 115,
+   "layer": 2,
+   "cn": "Tower C"
+  },
+  {
+   "group": "B",
+   "tileId": 116,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 117,
+   "layer": 2,
+   "cn": "Tower D"
+  },
+  {
+   "group": "B",
+   "tileId": 118,
+   "layer": 2,
+   "cn": "Temple A"
+  },
+  {
+   "group": "B",
+   "tileId": 119,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 120,
+   "layer": 2,
+   "cn": "Tower A"
+  },
+  {
+   "group": "B",
+   "tileId": 121,
+   "layer": 2,
+   "cn": "Tower A (Ruins)"
+  },
+  {
+   "group": "B",
+   "tileId": 122,
+   "layer": 2,
+   "cn": "Tower B"
+  },
+  {
+   "group": "B",
+   "tileId": 123,
+   "layer": 2,
+   "cn": "Tower C"
+  },
+  {
+   "group": "B",
+   "tileId": 124,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 125,
+   "layer": 2,
+   "cn": "Tower D (Ruins)"
+  },
+  {
+   "group": "B",
+   "tileId": 126,
+   "layer": 2,
+   "cn": "Temple B"
+  },
+  {
+   "group": "B",
+   "tileId": 127,
+   "layer": 2,
+   "cn": "Temple C"
+  },
+  {
+   "group": "B",
+   "tileId": 128,
+   "layer": 2,
+   "cn": "Castle A"
+  },
+  {
+   "group": "B",
+   "tileId": 129,
+   "layer": 2,
+   "cn": "Castle A"
+  },
+  {
+   "group": "B",
+   "tileId": 130,
+   "layer": 2,
+   "cn": "Castle B"
+  },
+  {
+   "group": "B",
+   "tileId": 131,
+   "layer": 2,
+   "cn": "Castle B"
+  },
+  {
+   "group": "B",
+   "tileId": 132,
+   "layer": 2,
+   "cn": "Fort A"
+  },
+  {
+   "group": "B",
+   "tileId": 133,
+   "layer": 2,
+   "cn": "Fort A"
+  },
+  {
+   "group": "B",
+   "tileId": 134,
+   "layer": 2,
+   "cn": "Fort B"
+  },
+  {
+   "group": "B",
+   "tileId": 135,
+   "layer": 2,
+   "cn": "Fort B"
+  },
+  {
+   "group": "B",
+   "tileId": 136,
+   "layer": 2,
+   "cn": "Castle A"
+  },
+  {
+   "group": "B",
+   "tileId": 137,
+   "layer": 2,
+   "cn": "Castle A"
+  },
+  {
+   "group": "B",
+   "tileId": 138,
+   "layer": 2,
+   "cn": "Castle B"
+  },
+  {
+   "group": "B",
+   "tileId": 139,
+   "layer": 2,
+   "cn": "Castle B"
+  },
+  {
+   "group": "B",
+   "tileId": 140,
+   "layer": 2,
+   "cn": "Fort A"
+  },
+  {
+   "group": "B",
+   "tileId": 141,
+   "layer": 2,
+   "cn": "Fort A"
+  },
+  {
+   "group": "B",
+   "tileId": 142,
+   "layer": 2,
+   "cn": "Fort B"
+  },
+  {
+   "group": "B",
+   "tileId": 143,
+   "layer": 2,
+   "cn": "Fort B"
+  },
+  {
+   "group": "B",
+   "tileId": 144,
+   "layer": 2,
+   "cn": "Castle C"
+  },
+  {
+   "group": "B",
+   "tileId": 145,
+   "layer": 2,
+   "cn": "Castle C"
+  },
+  {
+   "group": "B",
+   "tileId": 146,
+   "layer": 2,
+   "cn": "Castle D"
+  },
+  {
+   "group": "B",
+   "tileId": 147,
+   "layer": 2,
+   "cn": "Castle D"
+  },
+  {
+   "group": "B",
+   "tileId": 148,
+   "layer": 2,
+   "cn": "Castle (Ruins)"
+  },
+  {
+   "group": "B",
+   "tileId": 149,
+   "layer": 2,
+   "cn": "Castle (Ruins)"
+  },
+  {
+   "group": "B",
+   "tileId": 150,
+   "layer": 2,
+   "cn": "Fort (Ruins)"
+  },
+  {
+   "group": "B",
+   "tileId": 151,
+   "layer": 2,
+   "cn": "Fort (Ruins)"
+  },
+  {
+   "group": "B",
+   "tileId": 152,
+   "layer": 2,
+   "cn": "Castle C"
+  },
+  {
+   "group": "B",
+   "tileId": 153,
+   "layer": 2,
+   "cn": "Castle C"
+  },
+  {
+   "group": "B",
+   "tileId": 154,
+   "layer": 2,
+   "cn": "Castle D"
+  },
+  {
+   "group": "B",
+   "tileId": 155,
+   "layer": 2,
+   "cn": "Castle D"
+  },
+  {
+   "group": "B",
+   "tileId": 156,
+   "layer": 2,
+   "cn": "Castle (Ruins)"
+  },
+  {
+   "group": "B",
+   "tileId": 157,
+   "layer": 2,
+   "cn": "Castle (Ruins)"
+  },
+  {
+   "group": "B",
+   "tileId": 158,
+   "layer": 2,
+   "cn": "Fort (Ruins)"
+  },
+  {
+   "group": "B",
+   "tileId": 159,
+   "layer": 2,
+   "cn": "Fort (Ruins)"
+  },
+  {
+   "group": "B",
+   "tileId": 160,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 161,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 162,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 163,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 164,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 165,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 166,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 167,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 168,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 169,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 170,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 171,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 172,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 173,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 174,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 175,
+   "layer": 2,
+   "cn": "雪"
+  },
+  {
+   "group": "B",
+   "tileId": 176,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 177,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 178,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 179,
+   "layer": 2,
+   "cn": "Demon Castle"
+  },
+  {
+   "group": "B",
+   "tileId": 180,
+   "layer": 2,
+   "cn": "Demon Castle"
+  },
+  {
+   "group": "B",
+   "tileId": 181,
+   "layer": 2,
+   "cn": "Cursed Castle"
+  },
+  {
+   "group": "B",
+   "tileId": 182,
+   "layer": 2,
+   "cn": "Cursed Castle"
+  },
+  {
+   "group": "B",
+   "tileId": 183,
+   "layer": 2,
+   "cn": "Town C (Ruins)"
+  },
+  {
+   "group": "B",
+   "tileId": 184,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 185,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 186,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 187,
+   "layer": 2,
+   "cn": "Demon Castle"
+  },
+  {
+   "group": "B",
+   "tileId": 188,
+   "layer": 2,
+   "cn": "Demon Castle"
+  },
+  {
+   "group": "B",
+   "tileId": 189,
+   "layer": 2,
+   "cn": "Cursed Castle"
+  },
+  {
+   "group": "B",
+   "tileId": 190,
+   "layer": 2,
+   "cn": "Cursed Castle"
+  },
+  {
+   "group": "B",
+   "tileId": 191,
+   "layer": 2,
+   "cn": "Town F (Ruins)"
+  },
+  {
+   "group": "B",
+   "tileId": 192,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 193,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 194,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 195,
+   "layer": 2,
+   "cn": "Town A (Ruins)"
+  },
+  {
+   "group": "B",
+   "tileId": 196,
+   "layer": 2,
+   "cn": "Town A (Ruins)"
+  },
+  {
+   "group": "B",
+   "tileId": 197,
+   "layer": 2,
+   "cn": "Village A (Ruins)"
+  },
+  {
+   "group": "B",
+   "tileId": 198,
+   "layer": 2,
+   "cn": "Village A (Ruins)"
+  },
+  {
+   "group": "B",
+   "tileId": 199,
+   "layer": 2,
+   "cn": "房子"
+  },
+  {
+   "group": "B",
+   "tileId": 200,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 201,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 202,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 203,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 204,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 205,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 206,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 207,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 208,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 209,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 210,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 211,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 212,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 213,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 214,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 215,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 216,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 217,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 218,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 219,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 220,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 221,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 222,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 223,
+   "layer": 2,
+   "cn": "Barricades"
+  },
+  {
+   "group": "B",
+   "tileId": 224,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 225,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 226,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 227,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 228,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 229,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 230,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "B",
+   "tileId": 231,
+   "layer": 2,
+   "cn": "Lookout Post"
+  },
+  {
+   "group": "B",
+   "tileId": 232,
+   "layer": 2,
+   "cn": "树"
+  },
+  {
+   "group": "B",
+   "tileId": 233,
+   "layer": 2,
+   "cn": "树"
+  },
+  {
+   "group": "B",
+   "tileId": 234,
+   "layer": 2,
+   "cn": "Floating Continent"
+  },
+  {
+   "group": "B",
+   "tileId": 235,
+   "layer": 2,
+   "cn": "Floating Continent"
+  },
+  {
+   "group": "B",
+   "tileId": 236,
+   "layer": 2,
+   "cn": "Floating Continent (Cloud)"
+  },
+  {
+   "group": "B",
+   "tileId": 237,
+   "layer": 2,
+   "cn": "Floating Continent (Cloud)"
+  },
+  {
+   "group": "B",
+   "tileId": 238,
+   "layer": 2,
+   "cn": "Cloud Land"
+  },
+  {
+   "group": "B",
+   "tileId": 239,
+   "layer": 2,
+   "cn": "Cloud Land"
+  },
+  {
+   "group": "B",
+   "tileId": 240,
+   "layer": 2,
+   "cn": "Floating Continent (Castle)"
+  },
+  {
+   "group": "B",
+   "tileId": 241,
+   "layer": 2,
+   "cn": "Floating Continent (Castle)"
+  },
+  {
+   "group": "B",
+   "tileId": 242,
+   "layer": 2,
+   "cn": "Floating Continent"
+  },
+  {
+   "group": "B",
+   "tileId": 243,
+   "layer": 2,
+   "cn": "Floating Continent"
+  },
+  {
+   "group": "B",
+   "tileId": 244,
+   "layer": 2,
+   "cn": "Floating Continent (Cloud)"
+  },
+  {
+   "group": "B",
+   "tileId": 245,
+   "layer": 2,
+   "cn": "Floating Continent (Cloud)"
+  },
+  {
+   "group": "B",
+   "tileId": 246,
+   "layer": 2,
+   "cn": "Cloud Land"
+  },
+  {
+   "group": "B",
+   "tileId": 247,
+   "layer": 2,
+   "cn": "Cloud Land"
+  },
+  {
+   "group": "B",
+   "tileId": 248,
+   "layer": 2,
+   "cn": "Floating Continent (Temple)"
+  },
+  {
+   "group": "B",
+   "tileId": 249,
+   "layer": 2,
+   "cn": "Floating Continent (Temple)"
+  },
+  {
+   "group": "B",
+   "tileId": 250,
+   "layer": 2,
+   "cn": "Floating Continent (Shadow)"
+  },
+  {
+   "group": "B",
+   "tileId": 251,
+   "layer": 2,
+   "cn": "Floating Continent (Shadow)"
+  },
+  {
+   "group": "B",
+   "tileId": 252,
+   "layer": 2,
+   "cn": "Cloud Land (Temple)"
+  },
+  {
+   "group": "B",
+   "tileId": 253,
+   "layer": 2,
+   "cn": "Cloud Land (Temple)"
+  },
+  {
+   "group": "B",
+   "tileId": 254,
+   "layer": 2,
+   "cn": "Cloud Land (Castle)"
+  },
+  {
+   "group": "B",
+   "tileId": 255,
+   "layer": 2,
+   "cn": "Cloud Land (Castle)"
+  },
+  {
+   "group": "C",
+   "tileId": 256,
+   "layer": 2,
+   "cn": "Transparent"
+  },
+  {
+   "group": "C",
+   "tileId": 257,
+   "layer": 2,
+   "cn": "Signboard A"
+  },
+  {
+   "group": "C",
+   "tileId": 258,
+   "layer": 2,
+   "cn": "Signboard B"
+  },
+  {
+   "group": "C",
+   "tileId": 259,
+   "layer": 2,
+   "cn": "Signboard C"
+  },
+  {
+   "group": "C",
+   "tileId": 260,
+   "layer": 2,
+   "cn": "桥"
+  },
+  {
+   "group": "C",
+   "tileId": 261,
+   "layer": 2,
+   "cn": "桥"
+  },
+  {
+   "group": "C",
+   "tileId": 262,
+   "layer": 2,
+   "cn": "Reservoir A"
+  },
+  {
+   "group": "C",
+   "tileId": 263,
+   "layer": 2,
+   "cn": "Reservoir B"
+  },
+  {
+   "group": "C",
+   "tileId": 264,
+   "layer": 2,
+   "cn": "Hut"
+  },
+  {
+   "group": "C",
+   "tileId": 265,
+   "layer": 2,
+   "cn": "Shanty"
+  },
+  {
+   "group": "C",
+   "tileId": 266,
+   "layer": 2,
+   "cn": "Signboard D"
+  },
+  {
+   "group": "C",
+   "tileId": 267,
+   "layer": 2,
+   "cn": "Stele A"
+  },
+  {
+   "group": "C",
+   "tileId": 268,
+   "layer": 2,
+   "cn": "Stele B"
+  },
+  {
+   "group": "C",
+   "tileId": 269,
+   "layer": 2,
+   "cn": "Windmill"
+  },
+  {
+   "group": "C",
+   "tileId": 270,
+   "layer": 2,
+   "cn": "Parabolic Antenna"
+  },
+  {
+   "group": "C",
+   "tileId": 271,
+   "layer": 2,
+   "cn": "Heliport"
+  },
+  {
+   "group": "C",
+   "tileId": 272,
+   "layer": 2,
+   "cn": "Entrance A (Open)"
+  },
+  {
+   "group": "C",
+   "tileId": 273,
+   "layer": 2,
+   "cn": "Entrance A (Closed)"
+  },
+  {
+   "group": "C",
+   "tileId": 274,
+   "layer": 2,
+   "cn": "Entrance B (Open)"
+  },
+  {
+   "group": "C",
+   "tileId": 275,
+   "layer": 2,
+   "cn": "Entrance B (Closed)"
+  },
+  {
+   "group": "C",
+   "tileId": 276,
+   "layer": 2,
+   "cn": "Entrance C (Open)"
+  },
+  {
+   "group": "C",
+   "tileId": 277,
+   "layer": 2,
+   "cn": "Entrance C (Closed)"
+  },
+  {
+   "group": "C",
+   "tileId": 278,
+   "layer": 2,
+   "cn": "Entrance D (Closed)"
+  },
+  {
+   "group": "C",
+   "tileId": 279,
+   "layer": 2,
+   "cn": "Entrance E (Closed)"
+  },
+  {
+   "group": "C",
+   "tileId": 280,
+   "layer": 2,
+   "cn": "Road"
+  },
+  {
+   "group": "C",
+   "tileId": 281,
+   "layer": 2,
+   "cn": "Road"
+  },
+  {
+   "group": "C",
+   "tileId": 282,
+   "layer": 2,
+   "cn": "Road Closed"
+  },
+  {
+   "group": "C",
+   "tileId": 283,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "C",
+   "tileId": 284,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "C",
+   "tileId": 285,
+   "layer": 2,
+   "cn": "Mountain"
+  },
+  {
+   "group": "C",
+   "tileId": 286,
+   "layer": 2,
+   "cn": "Mountain"
+  },
+  {
+   "group": "C",
+   "tileId": 287,
+   "layer": 2,
+   "cn": "树"
+  },
+  {
+   "group": "C",
+   "tileId": 288,
+   "layer": 2,
+   "cn": "Road"
+  },
+  {
+   "group": "C",
+   "tileId": 289,
+   "layer": 2,
+   "cn": "Road"
+  },
+  {
+   "group": "C",
+   "tileId": 290,
+   "layer": 2,
+   "cn": "Road"
+  },
+  {
+   "group": "C",
+   "tileId": 291,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "C",
+   "tileId": 292,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "C",
+   "tileId": 293,
+   "layer": 2,
+   "cn": "Mountain"
+  },
+  {
+   "group": "C",
+   "tileId": 294,
+   "layer": 2,
+   "cn": "Mountain"
+  },
+  {
+   "group": "C",
+   "tileId": 295,
+   "layer": 2,
+   "cn": "树"
+  },
+  {
+   "group": "C",
+   "tileId": 296,
+   "layer": 2,
+   "cn": "Road"
+  },
+  {
+   "group": "C",
+   "tileId": 297,
+   "layer": 2,
+   "cn": "Road"
+  },
+  {
+   "group": "C",
+   "tileId": 298,
+   "layer": 2,
+   "cn": "Road"
+  },
+  {
+   "group": "C",
+   "tileId": 299,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "C",
+   "tileId": 300,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "C",
+   "tileId": 301,
+   "layer": 2,
+   "cn": "Mountain"
+  },
+  {
+   "group": "C",
+   "tileId": 302,
+   "layer": 2,
+   "cn": "Mountain"
+  },
+  {
+   "group": "C",
+   "tileId": 303,
+   "layer": 2,
+   "cn": "树"
+  },
+  {
+   "group": "C",
+   "tileId": 304,
+   "layer": 2,
+   "cn": "Road"
+  },
+  {
+   "group": "C",
+   "tileId": 305,
+   "layer": 2,
+   "cn": "Road"
+  },
+  {
+   "group": "C",
+   "tileId": 306,
+   "layer": 2,
+   "cn": "Road"
+  },
+  {
+   "group": "C",
+   "tileId": 307,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "C",
+   "tileId": 308,
+   "layer": 2,
+   "cn": "岩石"
+  },
+  {
+   "group": "C",
+   "tileId": 309,
+   "layer": 2,
+   "cn": "Mountain"
+  },
+  {
+   "group": "C",
+   "tileId": 310,
+   "layer": 2,
+   "cn": "Mountain"
+  },
+  {
+   "group": "C",
+   "tileId": 311,
+   "layer": 2,
+   "cn": "Broken Buildings"
+  },
+  {
+   "group": "C",
+   "tileId": 312,
+   "layer": 2,
+   "cn": "Town A"
+  },
+  {
+   "group": "C",
+   "tileId": 313,
+   "layer": 2,
+   "cn": "Town B"
+  },
+  {
+   "group": "C",
+   "tileId": 314,
+   "layer": 2,
+   "cn": "Slum A"
+  },
+  {
+   "group": "C",
+   "tileId": 315,
+   "layer": 2,
+   "cn": "Slum B"
+  },
+  {
+   "group": "C",
+   "tileId": 316,
+   "layer": 2,
+   "cn": "Mansion A"
+  },
+  {
+   "group": "C",
+   "tileId": 317,
+   "layer": 2,
+   "cn": "Mansion A"
+  },
+  {
+   "group": "C",
+   "tileId": 318,
+   "layer": 2,
+   "cn": "Gate A"
+  },
+  {
+   "group": "C",
+   "tileId": 319,
+   "layer": 2,
+   "cn": "Gate B"
+  },
+  {
+   "group": "C",
+   "tileId": 320,
+   "layer": 2,
+   "cn": "Shopping Area A"
+  },
+  {
+   "group": "C",
+   "tileId": 321,
+   "layer": 2,
+   "cn": "Shopping Area B"
+  },
+  {
+   "group": "C",
+   "tileId": 322,
+   "layer": 2,
+   "cn": "Buildings A"
+  },
+  {
+   "group": "C",
+   "tileId": 323,
+   "layer": 2,
+   "cn": "Buildings B"
+  },
+  {
+   "group": "C",
+   "tileId": 324,
+   "layer": 2,
+   "cn": "Mansion B"
+  },
+  {
+   "group": "C",
+   "tileId": 325,
+   "layer": 2,
+   "cn": "Mansion B"
+  },
+  {
+   "group": "C",
+   "tileId": 326,
+   "layer": 2,
+   "cn": "Gate C"
+  },
+  {
+   "group": "C",
+   "tileId": 327,
+   "layer": 2,
+   "cn": "Gate D"
+  },
+  {
+   "group": "C",
+   "tileId": 328,
+   "layer": 2,
+   "cn": "树"
+  },
+  {
+   "group": "C",
+   "tileId": 329,
+   "layer": 2,
+   "cn": "树"
+  },
+  {
+   "group": "C",
+   "tileId": 330,
+   "layer": 2,
+   "cn": "Slum"
+  },
+  {
+   "group": "C",
+   "tileId": 331,
+   "layer": 2,
+   "cn": "Slum"
+  },
+  {
+   "group": "C",
+   "tileId": 332,
+   "layer": 2,
+   "cn": "School"
+  },
+  {
+   "group": "C",
+   "tileId": 333,
+   "layer": 2,
+   "cn": "School"
+  },
+  {
+   "group": "C",
+   "tileId": 334,
+   "layer": 2,
+   "cn": "Hospital"
+  },
+  {
+   "group": "C",
+   "tileId": 335,
+   "layer": 2,
+   "cn": "Hospital"
+  },
+  {
+   "group": "C",
+   "tileId": 336,
+   "layer": 2,
+   "cn": "树"
+  },
+  {
+   "group": "C",
+   "tileId": 337,
+   "layer": 2,
+   "cn": "树"
+  },
+  {
+   "group": "C",
+   "tileId": 338,
+   "layer": 2,
+   "cn": "Slum"
+  },
+  {
+   "group": "C",
+   "tileId": 339,
+   "layer": 2,
+   "cn": "Slum"
+  },
+  {
+   "group": "C",
+   "tileId": 340,
+   "layer": 2,
+   "cn": "School"
+  },
+  {
+   "group": "C",
+   "tileId": 341,
+   "layer": 2,
+   "cn": "School"
+  },
+  {
+   "group": "C",
+   "tileId": 342,
+   "layer": 2,
+   "cn": "Hospital"
+  },
+  {
+   "group": "C",
+   "tileId": 343,
+   "layer": 2,
+   "cn": "Hospital"
+  },
+  {
+   "group": "C",
+   "tileId": 344,
+   "layer": 2,
+   "cn": "City A"
+  },
+  {
+   "group": "C",
+   "tileId": 345,
+   "layer": 2,
+   "cn": "City A"
+  },
+  {
+   "group": "C",
+   "tileId": 346,
+   "layer": 2,
+   "cn": "City B"
+  },
+  {
+   "group": "C",
+   "tileId": 347,
+   "layer": 2,
+   "cn": "City B"
+  },
+  {
+   "group": "C",
+   "tileId": 348,
+   "layer": 2,
+   "cn": "Residence A"
+  },
+  {
+   "group": "C",
+   "tileId": 349,
+   "layer": 2,
+   "cn": "Residence A"
+  },
+  {
+   "group": "C",
+   "tileId": 350,
+   "layer": 2,
+   "cn": "Residence B"
+  },
+  {
+   "group": "C",
+   "tileId": 351,
+   "layer": 2,
+   "cn": "Residence B"
+  },
+  {
+   "group": "C",
+   "tileId": 352,
+   "layer": 2,
+   "cn": "City A"
+  },
+  {
+   "group": "C",
+   "tileId": 353,
+   "layer": 2,
+   "cn": "City A"
+  },
+  {
+   "group": "C",
+   "tileId": 354,
+   "layer": 2,
+   "cn": "City B"
+  },
+  {
+   "group": "C",
+   "tileId": 355,
+   "layer": 2,
+   "cn": "City B"
+  },
+  {
+   "group": "C",
+   "tileId": 356,
+   "layer": 2,
+   "cn": "Residence A"
+  },
+  {
+   "group": "C",
+   "tileId": 357,
+   "layer": 2,
+   "cn": "Residence A"
+  },
+  {
+   "group": "C",
+   "tileId": 358,
+   "layer": 2,
+   "cn": "Residence B"
+  },
+  {
+   "group": "C",
+   "tileId": 359,
+   "layer": 2,
+   "cn": "Residence B"
+  },
+  {
+   "group": "C",
+   "tileId": 360,
+   "layer": 2,
+   "cn": "桥"
+  },
+  {
+   "group": "C",
+   "tileId": 361,
+   "layer": 2,
+   "cn": "桥"
+  },
+  {
+   "group": "C",
+   "tileId": 362,
+   "layer": 2,
+   "cn": "桥"
+  },
+  {
+   "group": "C",
+   "tileId": 363,
+   "layer": 2,
+   "cn": "桥"
+  },
+  {
+   "group": "C",
+   "tileId": 364,
+   "layer": 2,
+   "cn": "桥"
+  },
+  {
+   "group": "C",
+   "tileId": 365,
+   "layer": 2,
+   "cn": "桥"
+  },
+  {
+   "group": "C",
+   "tileId": 366,
+   "layer": 2,
+   "cn": "桥"
+  },
+  {
+   "group": "C",
+   "tileId": 367,
+   "layer": 2,
+   "cn": "桥"
+  },
+  {
+   "group": "C",
+   "tileId": 368,
+   "layer": 2,
+   "cn": "Building A"
+  },
+  {
+   "group": "C",
+   "tileId": 369,
+   "layer": 2,
+   "cn": "Building B"
+  },
+  {
+   "group": "C",
+   "tileId": 370,
+   "layer": 2,
+   "cn": "Building C"
+  },
+  {
+   "group": "C",
+   "tileId": 371,
+   "layer": 2,
+   "cn": "Building D"
+  },
+  {
+   "group": "C",
+   "tileId": 372,
+   "layer": 2,
+   "cn": "Apartment"
+  },
+  {
+   "group": "C",
+   "tileId": 373,
+   "layer": 2,
+   "cn": "Apartment Complex"
+  },
+  {
+   "group": "C",
+   "tileId": 374,
+   "layer": 2,
+   "cn": "Collapsed Building A"
+  },
+  {
+   "group": "C",
+   "tileId": 375,
+   "layer": 2,
+   "cn": "Collapsed Building B"
+  },
+  {
+   "group": "C",
+   "tileId": 376,
+   "layer": 2,
+   "cn": "Building A"
+  },
+  {
+   "group": "C",
+   "tileId": 377,
+   "layer": 2,
+   "cn": "Building B"
+  },
+  {
+   "group": "C",
+   "tileId": 378,
+   "layer": 2,
+   "cn": "Building C"
+  },
+  {
+   "group": "C",
+   "tileId": 379,
+   "layer": 2,
+   "cn": "Building D"
+  },
+  {
+   "group": "C",
+   "tileId": 380,
+   "layer": 2,
+   "cn": "Apartment"
+  },
+  {
+   "group": "C",
+   "tileId": 381,
+   "layer": 2,
+   "cn": "Apartment Complex"
+  },
+  {
+   "group": "C",
+   "tileId": 382,
+   "layer": 2,
+   "cn": "Collapsed Building A"
+  },
+  {
+   "group": "C",
+   "tileId": 383,
+   "layer": 2,
+   "cn": "Collapsed Building B"
+  },
+  {
+   "group": "C",
+   "tileId": 384,
+   "layer": 2,
+   "cn": "Large Town A"
+  },
+  {
+   "group": "C",
+   "tileId": 385,
+   "layer": 2,
+   "cn": "Large Town A"
+  },
+  {
+   "group": "C",
+   "tileId": 386,
+   "layer": 2,
+   "cn": "Entertainment District A"
+  },
+  {
+   "group": "C",
+   "tileId": 387,
+   "layer": 2,
+   "cn": "Entertainment District A"
+  },
+  {
+   "group": "C",
+   "tileId": 388,
+   "layer": 2,
+   "cn": "Police Station"
+  },
+  {
+   "group": "C",
+   "tileId": 389,
+   "layer": 2,
+   "cn": "Police Station"
+  },
+  {
+   "group": "C",
+   "tileId": 390,
+   "layer": 2,
+   "cn": "Crater A"
+  },
+  {
+   "group": "C",
+   "tileId": 391,
+   "layer": 2,
+   "cn": "Crater A"
+  },
+  {
+   "group": "C",
+   "tileId": 392,
+   "layer": 2,
+   "cn": "Large Town A"
+  },
+  {
+   "group": "C",
+   "tileId": 393,
+   "layer": 2,
+   "cn": "Large Town A"
+  },
+  {
+   "group": "C",
+   "tileId": 394,
+   "layer": 2,
+   "cn": "Entertainment District A"
+  },
+  {
+   "group": "C",
+   "tileId": 395,
+   "layer": 2,
+   "cn": "Entertainment District A"
+  },
+  {
+   "group": "C",
+   "tileId": 396,
+   "layer": 2,
+   "cn": "Police Station"
+  },
+  {
+   "group": "C",
+   "tileId": 397,
+   "layer": 2,
+   "cn": "Police Station"
+  },
+  {
+   "group": "C",
+   "tileId": 398,
+   "layer": 2,
+   "cn": "Crater A"
+  },
+  {
+   "group": "C",
+   "tileId": 399,
+   "layer": 2,
+   "cn": "Crater A"
+  },
+  {
+   "group": "C",
+   "tileId": 400,
+   "layer": 2,
+   "cn": "Large Town B"
+  },
+  {
+   "group": "C",
+   "tileId": 401,
+   "layer": 2,
+   "cn": "Large Town B"
+  },
+  {
+   "group": "C",
+   "tileId": 402,
+   "layer": 2,
+   "cn": "Entertainment District B"
+  },
+  {
+   "group": "C",
+   "tileId": 403,
+   "layer": 2,
+   "cn": "Entertainment District B"
+  },
+  {
+   "group": "C",
+   "tileId": 404,
+   "layer": 2,
+   "cn": "Museum"
+  },
+  {
+   "group": "C",
+   "tileId": 405,
+   "layer": 2,
+   "cn": "Museum"
+  },
+  {
+   "group": "C",
+   "tileId": 406,
+   "layer": 2,
+   "cn": "Crater B"
+  },
+  {
+   "group": "C",
+   "tileId": 407,
+   "layer": 2,
+   "cn": "Crater B"
+  },
+  {
+   "group": "C",
+   "tileId": 408,
+   "layer": 2,
+   "cn": "Large Town B"
+  },
+  {
+   "group": "C",
+   "tileId": 409,
+   "layer": 2,
+   "cn": "Large Town B"
+  },
+  {
+   "group": "C",
+   "tileId": 410,
+   "layer": 2,
+   "cn": "Entertainment District B"
+  },
+  {
+   "group": "C",
+   "tileId": 411,
+   "layer": 2,
+   "cn": "Entertainment District B"
+  },
+  {
+   "group": "C",
+   "tileId": 412,
+   "layer": 2,
+   "cn": "Museum"
+  },
+  {
+   "group": "C",
+   "tileId": 413,
+   "layer": 2,
+   "cn": "Museum"
+  },
+  {
+   "group": "C",
+   "tileId": 414,
+   "layer": 2,
+   "cn": "Crater B"
+  },
+  {
+   "group": "C",
+   "tileId": 415,
+   "layer": 2,
+   "cn": "Crater B"
+  },
+  {
+   "group": "C",
+   "tileId": 416,
+   "layer": 2,
+   "cn": "Warehouse A"
+  },
+  {
+   "group": "C",
+   "tileId": 417,
+   "layer": 2,
+   "cn": "Warehouse A"
+  },
+  {
+   "group": "C",
+   "tileId": 418,
+   "layer": 2,
+   "cn": "Factory"
+  },
+  {
+   "group": "C",
+   "tileId": 419,
+   "layer": 2,
+   "cn": "Factory"
+  },
+  {
+   "group": "C",
+   "tileId": 420,
+   "layer": 2,
+   "cn": "Warehouse B"
+  },
+  {
+   "group": "C",
+   "tileId": 421,
+   "layer": 2,
+   "cn": "Gantry Crane"
+  },
+  {
+   "group": "C",
+   "tileId": 422,
+   "layer": 2,
+   "cn": "Park"
+  },
+  {
+   "group": "C",
+   "tileId": 423,
+   "layer": 2,
+   "cn": "Crater C"
+  },
+  {
+   "group": "C",
+   "tileId": 424,
+   "layer": 2,
+   "cn": "Warehouse A"
+  },
+  {
+   "group": "C",
+   "tileId": 425,
+   "layer": 2,
+   "cn": "Warehouse A"
+  },
+  {
+   "group": "C",
+   "tileId": 426,
+   "layer": 2,
+   "cn": "Factory"
+  },
+  {
+   "group": "C",
+   "tileId": 427,
+   "layer": 2,
+   "cn": "Factory"
+  },
+  {
+   "group": "C",
+   "tileId": 428,
+   "layer": 2,
+   "cn": "Warehouse B"
+  },
+  {
+   "group": "C",
+   "tileId": 429,
+   "layer": 2,
+   "cn": "Gantry Crane"
+  },
+  {
+   "group": "C",
+   "tileId": 430,
+   "layer": 2,
+   "cn": "Statue A"
+  },
+  {
+   "group": "C",
+   "tileId": 431,
+   "layer": 2,
+   "cn": "Statue B"
+  },
+  {
+   "group": "C",
+   "tileId": 432,
+   "layer": 2,
+   "cn": "Fuel Tank"
+  },
+  {
+   "group": "C",
+   "tileId": 433,
+   "layer": 2,
+   "cn": "Fuel Tank"
+  },
+  {
+   "group": "C",
+   "tileId": 434,
+   "layer": 2,
+   "cn": "Construction Site"
+  },
+  {
+   "group": "C",
+   "tileId": 435,
+   "layer": 2,
+   "cn": "Construction Site"
+  },
+  {
+   "group": "C",
+   "tileId": 436,
+   "layer": 2,
+   "cn": "Watchtower"
+  },
+  {
+   "group": "C",
+   "tileId": 437,
+   "layer": 2,
+   "cn": "Steel Tower"
+  },
+  {
+   "group": "C",
+   "tileId": 438,
+   "layer": 2,
+   "cn": "Tower A"
+  },
+  {
+   "group": "C",
+   "tileId": 439,
+   "layer": 2,
+   "cn": "Tower B"
+  },
+  {
+   "group": "C",
+   "tileId": 440,
+   "layer": 2,
+   "cn": "Fuel Tank"
+  },
+  {
+   "group": "C",
+   "tileId": 441,
+   "layer": 2,
+   "cn": "Fuel Tank"
+  },
+  {
+   "group": "C",
+   "tileId": 442,
+   "layer": 2,
+   "cn": "Construction Site"
+  },
+  {
+   "group": "C",
+   "tileId": 443,
+   "layer": 2,
+   "cn": "Construction Site"
+  },
+  {
+   "group": "C",
+   "tileId": 444,
+   "layer": 2,
+   "cn": "Watchtower"
+  },
+  {
+   "group": "C",
+   "tileId": 445,
+   "layer": 2,
+   "cn": "Steel Tower"
+  },
+  {
+   "group": "C",
+   "tileId": 446,
+   "layer": 2,
+   "cn": "Tower A"
+  },
+  {
+   "group": "C",
+   "tileId": 447,
+   "layer": 2,
+   "cn": "Tower B"
+  },
+  {
+   "group": "C",
+   "tileId": 448,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 449,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 450,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 451,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 452,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 453,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 454,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 455,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 456,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 457,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 458,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 459,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 460,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 461,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 462,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 463,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 464,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 465,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 466,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 467,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 468,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 469,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 470,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 471,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 472,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 473,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 474,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 475,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 476,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 477,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 478,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 479,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 480,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 481,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 482,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 483,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 484,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 485,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 486,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 487,
+   "layer": 2,
+   "cn": "墙"
+  },
+  {
+   "group": "C",
+   "tileId": 488,
+   "layer": 2,
+   "cn": "Theme Park"
+  },
+  {
+   "group": "C",
+   "tileId": 489,
+   "layer": 2,
+   "cn": "Theme Park"
+  },
+  {
+   "group": "C",
+   "tileId": 490,
+   "layer": 2,
+   "cn": "Port"
+  },
+  {
+   "group": "C",
+   "tileId": 491,
+   "layer": 2,
+   "cn": "Port"
+  },
+  {
+   "group": "C",
+   "tileId": 492,
+   "layer": 2,
+   "cn": "Military Base"
+  },
+  {
+   "group": "C",
+   "tileId": 493,
+   "layer": 2,
+   "cn": "Military Base"
+  },
+  {
+   "group": "C",
+   "tileId": 494,
+   "layer": 2,
+   "cn": "Dome"
+  },
+  {
+   "group": "C",
+   "tileId": 495,
+   "layer": 2,
+   "cn": "Dome"
+  },
+  {
+   "group": "C",
+   "tileId": 496,
+   "layer": 2,
+   "cn": "Theme Park"
+  },
+  {
+   "group": "C",
+   "tileId": 497,
+   "layer": 2,
+   "cn": "Theme Park"
+  },
+  {
+   "group": "C",
+   "tileId": 498,
+   "layer": 2,
+   "cn": "Port"
+  },
+  {
+   "group": "C",
+   "tileId": 499,
+   "layer": 2,
+   "cn": "Port"
+  },
+  {
+   "group": "C",
+   "tileId": 500,
+   "layer": 2,
+   "cn": "Military Base"
+  },
+  {
+   "group": "C",
+   "tileId": 501,
+   "layer": 2,
+   "cn": "Military Base"
+  },
+  {
+   "group": "C",
+   "tileId": 502,
+   "layer": 2,
+   "cn": "Dome"
+  },
+  {
+   "group": "C",
+   "tileId": 503,
+   "layer": 2,
+   "cn": "Dome"
+  },
+  {
+   "group": "C",
+   "tileId": 504,
+   "layer": 2,
+   "cn": "Lighthouse"
+  },
+  {
+   "group": "C",
+   "tileId": 505,
+   "layer": 2,
+   "cn": "Broken Lighthouse"
+  },
+  {
+   "group": "C",
+   "tileId": 506,
+   "layer": 2,
+   "cn": "Temple"
+  },
+  {
+   "group": "C",
+   "tileId": 507,
+   "layer": 2,
+   "cn": "Church"
+  },
+  {
+   "group": "C",
+   "tileId": 508,
+   "layer": 2,
+   "cn": "Cemetery A"
+  },
+  {
+   "group": "C",
+   "tileId": 509,
+   "layer": 2,
+   "cn": "Cemetery B"
+  },
+  {
+   "group": "C",
+   "tileId": 510,
+   "layer": 2,
+   "cn": "Prison"
+  },
+  {
+   "group": "C",
+   "tileId": 511,
+   "layer": 2,
+   "cn": "Prison"
+  }
+ ]
+}

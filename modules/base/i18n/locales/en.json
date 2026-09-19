@@ -231,7 +231,9 @@
     "homeworkGraded": "Homework graded: {score} points",
     "homeworkGradedTitle": "Homework Graded",
     "commentApproved": "Your comment has been approved",
-    "commentApprovedTitle": "Comment Approved"
+    "commentApprovedTitle": "Comment Approved",
+    "viewHomework": "View homework",
+    "viewComment": "View comment"
   },
   "message": {
     "title": "Messages",

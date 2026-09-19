@@ -1,0 +1,97 @@
+{
+  "npcs": [
+    {
+      "key": "merchant",
+      "map": "world",
+      "tile": [15, 20],
+      "role": "shop",
+      "name": "商人",
+      "cats": ["consumable"],
+      "lines": [
+        "欢迎，旅行者。这里好货、传闻皆有出售。",
+        "村外不远就是荒野，备足干粮和水再上路。",
+        "小心别踩进泥坑。祝你一路平安！"
+      ],
+      "cfg": {
+        "gender": "Female",
+        "layers": { "Body": 1, "Clothing1": 8, "FrontHair1": 4, "RearHair1": 6 },
+        "colors": {},
+        "skin": null
+      }
+    },
+    {
+      "key": "guard",
+      "map": "world",
+      "tile": [23, 20],
+      "role": "talk",
+      "name": "卫兵",
+      "lines": [
+        "站住！……哦，是你啊。欢迎来到村子。",
+        "你来得正好，镇上的长老有事想托你。",
+        "去和长老聊聊吧，他在东边不远。"
+      ],
+      "cfg": {
+        "gender": "Male",
+        "layers": { "Body": 1, "Clothing1": 3, "Clothing2": 1, "FrontHair1": 5, "RearHair1": 2 },
+        "colors": {},
+        "skin": null
+      }
+    },
+    {
+      "key": "elder",
+      "map": "world",
+      "tile": [19, 17],
+      "role": "talk",
+      "name": "长老",
+      "lines": [
+        "孩子，你来了。卫兵已经和我说过了。",
+        "怪物身上带着宝石。往村东的小径走去村庄二，替我取回三颗吧。",
+        "小心那些怪物，量力而行。去吧！"
+      ],
+      "cfg": {
+        "gender": "Male",
+        "layers": { "Body": 1, "Clothing2": 8, "Beard": 11, "FrontHair1": 6, "RearHair1": 7 },
+        "colors": {},
+        "skin": null
+      }
+    },
+    {
+      "key": "weapon_merchant",
+      "map": "indoor",
+      "tile": [8, 4],
+      "role": "shop",
+      "name": "武器商人",
+      "cats": ["weapon", "shield", "armor", "helmet"],
+      "lines": [
+        "欢迎光临，勇士。这里好铁俱在。",
+        "刀剑、盾甲一应俱全，挑件趁手的吧。",
+        "战场上多一分防护，就多一分活命的把握。"
+      ],
+      "cfg": {
+        "gender": "Male",
+        "layers": { "Body": 1, "Clothing1": 3, "Clothing2": 4, "FrontHair1": 5, "RearHair1": 2 },
+        "colors": {},
+        "skin": null
+      }
+    },
+    {
+      "key": "clothing_merchant",
+      "map": "indoor2",
+      "tile": [10, 4],
+      "role": "shop",
+      "name": "服饰商人",
+      "cats": ["clothing", "outer", "cloak", "acca", "accb", "glasses", "ears", "tail", "wing", "facial"],
+      "lines": [
+        "欢迎光临，客官。本店专营衣饰。",
+        "上至华服斗篷，下至耳环尾巴，应有尽有。",
+        "挑件喜欢的，穿上精神一整年！"
+      ],
+      "cfg": {
+        "gender": "Female",
+        "layers": { "Body": 1, "Clothing1": 8, "Clothing2": 1, "FrontHair1": 6, "RearHair1": 4 },
+        "colors": {},
+        "skin": null
+      }
+    }
+  ]
+}

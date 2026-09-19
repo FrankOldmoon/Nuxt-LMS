@@ -12,6 +12,7 @@
     "server": "node .output/server/index.mjs",
     "test": "vitest run",
     "test:unit": "vitest run --project unit",
+    "test:integration": "vitest run --project integration",
     "test:watch": "vitest",
     "vendor": "node scripts/copy-vendor-assets.mjs"
   },

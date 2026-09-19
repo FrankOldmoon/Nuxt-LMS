@@ -1,0 +1,6 @@
+{
+  "world": { "name": "Village Gate" },
+  "village2": { "name": "Village Two" },
+  "indoor": { "name": "Room One" },
+  "indoor2": { "name": "Room Two" }
+}

@@ -11,7 +11,7 @@
                         </span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <UButton icon="i-heroicons-check-badge" variant="soft" size="sm"
+                        <UButton icon="i-heroicons-check-badge" color="warning" variant="soft" size="sm"
                             :loading="scoringAll" :label="$t('record.scoreAllSubmitted')"
                             @click="scoreAllConfirmOpen = true" />
                         <UButton icon="i-heroicons-arrow-down-tray" variant="soft" size="sm"

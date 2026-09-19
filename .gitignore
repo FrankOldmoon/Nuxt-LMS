@@ -27,6 +27,4 @@ logs
 !.env.example
 .trae
 ecosystem.config.cjs
-game_assets
-modules/mmo
 .workbuddy

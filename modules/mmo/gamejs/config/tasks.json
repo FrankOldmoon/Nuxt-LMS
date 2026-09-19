@@ -1,0 +1,14 @@
+{
+  "tasks": [
+    {
+      "id": "gem_hunter",
+      "name": "收集宝石",
+      "desc": "去村庄二击败怪物，收集 3 颗宝石。",
+      "type": "collect",
+      "target": "gem",
+      "giver": "elder",
+      "count": 3,
+      "reward": { "gold": 300, "xp": 100 }
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "maps": {
+    "world": {
+      "type": "outdoor",
+      "file": "maps/Map_New_Village.json",
+      "tex": "rpgVillage",
+      "spawn": [19, 23],
+      "name": "村口",
+      "features": { "npc": true, "monsters": false },
+      "doors": [
+        { "tile": [26, 20], "to": "indoor",  "spawn": [9, 13] },
+        { "tile": [9, 18],  "to": "indoor2", "spawn": [10, 15] },
+        { "tiles": [[18, 39], [19, 39], [20, 39]], "to": "village2", "spawn": [14, 38] }
+      ]
+    },
+    "village2": {
+      "type": "outdoor",
+      "file": "maps/Map_New_Village2.json",
+      "tex": "rpgVillage2",
+      "spawn": [14, 38],
+      "name": "村庄二",
+      "features": { "npc": false, "monsters": true },
+      "doors": [
+        { "tiles": [[14, 38], [14, 39]], "to": "world", "spawn": [19, 39] }
+      ]
+    },
+    "indoor": {
+      "type": "indoor",
+      "file": "maps/Map_New_Inside.json",
+      "tex": "rpgInside",
+      "spawn": [9, 13],
+      "name": "房间一",
+      "features": { "npc": true },
+      "doors": [
+        { "tiles": [[9, 13], [9, 14]], "to": "world", "spawn": [26, 20] }
+      ]
+    },
+    "indoor2": {
+      "type": "indoor",
+      "file": "maps/Map_New_Inside2.json",
+      "tex": "rpgInside2",
+      "spawn": [10, 15],
+      "name": "房间二",
+      "features": { "npc": true },
+      "doors": [
+        { "tiles": [[10, 15], [10, 16]], "to": "world", "spawn": [9, 18] }
+      ]
+    }
+  }
+}

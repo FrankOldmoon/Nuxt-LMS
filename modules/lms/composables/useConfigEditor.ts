@@ -36,7 +36,7 @@ export function useConfigEditor(props: ConfigEditorProps, emit: (e: 'update:mode
     general: { dailyExpCap: 100, levelStep: 100 },
     course: { showDanmaku: true, showAnnouncement: true, showComments: true, showProgress: false, defaultChapterOpen: true },
     chapterBtns: { showPlay: true, showScore: true, showSelect: true, showTimer: true, showInvite: true, showDanmaku: true, showVote: true, showQuickAnswer: true },
-    courseBtns: { showProgress: true, showLeaderboard: true, showGroups: true, showGrades: true, showAnnouncements: true, showWrongBook: true, showShop: true },
+    courseBtns: { showProgress: true, showLeaderboard: true, showGroups: true, showGrades: true, showAnnouncements: true, showWrongBook: true, showMmo: true },
     user: { allowSelfAvatarUpload: true, allowChangePassword: true, allowChangeEmail: true, allowChangeLocale: true, allowExportData: true },
     home: { showHero: true, showStats: true, showRecentCourses: true, showLeaderboard: true },
     courseList: { showSearch: true, showFilter: true, showSort: true, defaultView: 'grid' },
