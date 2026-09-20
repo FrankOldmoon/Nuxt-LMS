@@ -57,7 +57,7 @@ export default defineNuxtModule({
 
     nuxt.hook('pages:extend', (pages) => {
       // 移除 base/doc 的首页和课程路由，避免路径冲突（lms 覆盖全部）
-      const pathsToRemove = ['/', '/course/:id', '/course/:id/:cid']
+      const pathsToRemove = ['/', '/course/:id', '/course/:id/:cid', '/course/:id/3d']
       for (let i = pages.length - 1; i >= 0; i--) {
         if (pathsToRemove.includes(pages[i].path || '')) {
           pages.splice(i, 1)
@@ -78,6 +78,12 @@ export default defineNuxtModule({
         name: 'lms-chapter',
         path: '/course/:id/:cid',
         file: resolve('./pages/course/[id]/[cid].vue'),
+      })
+      // 课程 3D「知识星系」可视化（所有登录用户可访问）
+      pages.push({
+        name: 'lms-course-3d',
+        path: '/course/:id/3d',
+        file: resolve('./pages/course/[id]/3d.vue'),
       })
       // 学生作品展示
       pages.push({

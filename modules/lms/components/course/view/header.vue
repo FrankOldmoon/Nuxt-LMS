@@ -1,13 +1,17 @@
 <template>
   <!-- 课程头部：左图 + 右信息 -->
   <div class="flex flex-col sm:flex-row gap-6 relative">
-    <!-- 右上角编辑工具栏 -->
-    <div v-if="canEdit" class="absolute top-0 right-0 z-10 flex items-center gap-1">
-      <CourseEditor :course-id="Number(courseId)" @saved="emit('saved')" />
-      <UTooltip :text="$t('coursePanel.export')">
-        <UButton icon="i-lucide-download" color="success" variant="soft" size="xs"
-          :loading="exporting" @click="emit('export')" />
-      </UTooltip>
+    <!-- 右上角工具栏：3D 知识星系入口（所有登录用户）+ 编辑/导出（仅编辑者） -->
+    <div class="absolute top-0 right-0 z-10 flex items-center gap-1">
+      <UButton icon="i-lucide-orbit" color="primary" variant="soft" size="xs"
+        :to="course3dUrl" :aria-label="$t('course3d.open3d')" :title="$t('course3d.open3d')" />
+      <template v-if="canEdit">
+        <CourseEditor :course-id="Number(courseId)" @saved="emit('saved')" />
+        <UTooltip :text="$t('coursePanel.export')">
+          <UButton icon="i-lucide-download" color="success" variant="soft" size="xs"
+            :loading="exporting" @click="emit('export')" />
+        </UTooltip>
+      </template>
     </div>
 
     <!-- 左侧：课程封面 -->
@@ -87,6 +91,7 @@ const { canViewAvatars } = useAuth()
 const { courseBtnsConfig } = useLayoutState()
 const creatingChapter = ref(false)
 const mmoUrl = computed(() => `/course/${Number(props.courseId)}/mmo`)
+const course3dUrl = computed(() => `/course/${Number(props.courseId)}/3d`)
 
 async function startLearning() {
   if (props.firstChapterUrl) {
