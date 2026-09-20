@@ -1,19 +1,31 @@
 <template>
   <TextRenderer v-if="node.type === 'text'" :text="node.text" :marks="node.marks" />
   <template v-else-if="node.type === 'doc'">
-    <template v-for="(child, index) in node.content" :key="index">
-      <!-- codeBlock / blockquote 参与阅读追踪（hover 3s 已读） -->
-      <ReadingBlock v-if="trackReading && (child.type === 'codeBlock' || child.type === 'blockquote')"
-        :node="child" :block-key="String(index)">
-        <RenderNode :node="child" :course-id="courseId" />
-      </ReadingBlock>
-      <!-- 无可监控块标题：hover 一瞬间即完成 -->
-      <ReadingBlock v-else-if="trackReading && isAutoCompleteHeading(child, index)" :node="child"
-        :block-key="String(index)" instant>
-        <RenderNode :node="child" :course-id="courseId" />
-      </ReadingBlock>
-      <!-- 其余块级节点直接渲染不监控 -->
-      <RenderNode v-else :node="child" :course-id="courseId" />
+    <!-- 全屏播放：按 heading 把内容聚合为一张张「知识卡片」 -->
+    <template v-if="cardSections">
+      <template v-for="(section, si) in cardSections" :key="'sec' + si">
+        <!-- 首个 heading 之前的零散内容（通常为空）：不套卡片，保持原样 -->
+        <RenderBlock v-for="b in section.leading" :key="'lead' + b.index" :node="b.node" :index="b.index"
+          :course-id="courseId" :track-reading="trackReading" />
+        <section v-if="section.heading" class="chapter-play-card">
+          <!-- 卡片标题区 -->
+          <div class="chapter-play-card__head">
+            <RenderBlock :node="section.heading.node" :index="section.heading.index" :course-id="courseId"
+              :track-reading="trackReading" />
+          </div>
+          <!-- 卡片正文区 -->
+          <div v-if="section.items.length" class="chapter-play-card__body">
+            <RenderBlock v-for="b in section.items" :key="'item' + b.index" :node="b.node" :index="b.index"
+              :course-id="courseId" :track-reading="trackReading" />
+          </div>
+        </section>
+      </template>
+    </template>
+
+    <!-- 常规渲染：逐块输出 -->
+    <template v-else>
+      <RenderBlock v-for="(child, index) in node.content" :key="index" :node="child" :index="index"
+        :course-id="courseId" :track-reading="trackReading" />
     </template>
   </template>
 
@@ -28,7 +40,7 @@
 
 <script setup>
 import { useNodeDispatcher, TextRenderer } from './useNodeDispatcher'
-import ReadingBlock from './readingBlock.vue'
+import RenderBlock from './renderBlock.vue'
 
 defineOptions({ name: 'RenderNode' })
 
@@ -45,14 +57,40 @@ const props = defineProps({
 
 const { currentComponent } = useNodeDispatcher(props)
 
-// 带 id 的标题都作为可阅读块（instant：hover 标题即标记已读）。
-// 无论其下是否有代码块/引用/互动任务，标题 hover 都会变绿并计入完成；
-// 与 useChapterTask.blockLayout 一致（标题始终登记为 byHeading 可读块）。
-function isAutoCompleteHeading(child, index) {
-  if (child.type !== 'heading') return false
-  if (!child.attrs?.id && !child.attrs?.['data-toc-id']) return false
-  return true
-}
+// 全屏播放状态：用 useState 直接读取（与 useChapterBtns 同 key），
+// 避免为每个 RenderNode 实例都注册 watcher / 全屏事件监听
+const playFullscreen = useState('chapter-play-fullscreen', () => false)
+
+/**
+ * 播放模式下把 doc 的子块按 heading 聚合为「知识卡片」分组：
+ * 每个 heading（含其下方直到下一个 heading 的所有内容）构成一张卡片。
+ * - 仅在播放模式 + 章节主内容区（trackReading）生效，不影响题目/作业等嵌套渲染
+ * - 返回 null 时走常规逐块渲染，未播放时零行为变化
+ * - 每块携带原始 index，供 ReadingBlock 生成与 useChapterTask 一致的 blockKey
+ */
+const cardSections = computed(() => {
+  if (props.node.type !== 'doc') return null
+  if (!props.trackReading || !playFullscreen.value) return null
+  const content = Array.isArray(props.node.content) ? props.node.content : []
+  if (!content.length) return null
+
+  const sections = []
+  let current = { heading: null, leading: [], items: [] }
+  content.forEach((child, index) => {
+    if (!child) return
+    if (child.type === 'heading') {
+      // 前面的分组有内容（有标题或前言块）才收尾，避免产生空分组
+      if (current.heading || current.leading.length) sections.push(current)
+      current = { heading: { node: child, index }, leading: [], items: [] }
+    } else if (current.heading) {
+      current.items.push({ node: child, index })
+    } else {
+      current.leading.push({ node: child, index })
+    }
+  })
+  if (current.heading || current.leading.length) sections.push(current)
+  return sections
+})
 
 // 仅在显式传入时透传 blockKeyPrefix / blockKey，避免非列表组件的属性穿透
 const componentProps = computed(() => {

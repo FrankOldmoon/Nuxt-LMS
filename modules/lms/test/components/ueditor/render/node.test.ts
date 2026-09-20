@@ -5,7 +5,7 @@
 // Recursive component (renders itself for child nodes).
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { resetAllStubs, setMockI18n } from '../../../../../../test/setup/nuxt-stubs'
+import { resetAllStubs, setMockI18n, useState } from '../../../../../../test/setup/nuxt-stubs'
 
 beforeEach(() => {
   resetAllStubs()
@@ -106,5 +106,52 @@ describe('ueditor/render/node.vue', () => {
       global: _globalConfig,
     })
     expect(wrapper.html()).toContain('item')
+  })
+
+  it('does not group content into cards when not in play mode', async () => {
+    const { default: RenderNode } = await import('../../../../components/ueditor/render/node.vue')
+    const wrapper = mount(RenderNode, {
+      props: {
+        node: {
+          type: 'doc',
+          content: [
+            { type: 'heading', attrs: { id: 'h1', level: 2 }, content: [{ type: 'text', text: 'Title' }] },
+            { type: 'paragraph', content: [{ type: 'text', text: 'Body' }] },
+          ],
+        },
+        trackReading: true,
+      },
+      global: _globalConfig,
+    })
+    expect(wrapper.findAll('.chapter-play-card')).toHaveLength(0)
+    expect(wrapper.html()).toContain('Body')
+  })
+
+  it('groups each heading and its content into a knowledge card in play mode', async () => {
+    const { default: RenderNode } = await import('../../../../components/ueditor/render/node.vue')
+    useState<boolean>('chapter-play-fullscreen').value = true
+    const wrapper = mount(RenderNode, {
+      props: {
+        node: {
+          type: 'doc',
+          content: [
+            { type: 'heading', attrs: { id: 'h1', level: 2 }, content: [{ type: 'text', text: 'Title A' }] },
+            { type: 'paragraph', content: [{ type: 'text', text: 'Body A' }] },
+            { type: 'heading', attrs: { id: 'h2', level: 3 }, content: [{ type: 'text', text: 'Title B' }] },
+            { type: 'paragraph', content: [{ type: 'text', text: 'Body B' }] },
+          ],
+        },
+        trackReading: true,
+      },
+      global: _globalConfig,
+    })
+    const cards = wrapper.findAll('.chapter-play-card')
+    expect(cards).toHaveLength(2)
+    // 每个卡片包含各自的标题与正文
+    expect(cards[0].html()).toContain('Title A')
+    expect(cards[0].html()).toContain('Body A')
+    expect(cards[0].html()).not.toContain('Body B')
+    expect(cards[1].html()).toContain('Title B')
+    expect(cards[1].html()).toContain('Body B')
   })
 })

@@ -6,8 +6,8 @@
     <div class="flex-1 min-w-0 max-w-none">
       <slot name="access-bar" />
 
-      <!-- 章节头部 -->
-      <div class="mb-8 pb-6 border-b border-default">
+      <!-- 章节头部（全屏播放时作为封面卡片） -->
+      <div class="mb-8 pb-6 border-b border-default" :class="{ 'chapter-play-cover': playFullscreen }">
         <div class="flex items-center gap-2 text-sm text-muted mb-3">
           <UIcon :name="data.course.icon" class="size-4" />
           <span>{{ data.course.title }}</span>
@@ -93,6 +93,10 @@ const { chapterPageCfg, aiRecord, saveRecord } = useChapterView(props)
 const { user } = useAuth()
 // 章节标题 hover 即完成一级标题（null 时（如课程页）静默忽略）
 const chapterTask = useChapterTask()
+
+// 全屏播放模式：章节标题作为「封面卡片」（与正文知识卡片统一视觉）
+// 直接读 useState（与 useChapterBtns 同 key），避免重复注册全屏事件监听
+const playFullscreen = useState<boolean>('chapter-play-fullscreen', () => false)
 
 // MMO 副本入口（受课程按钮配置 showMmo 控制）
 const { courseBtnsConfig } = useLayoutState()
