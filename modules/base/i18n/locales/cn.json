@@ -182,8 +182,6 @@
     "defaultUserRolePlaceholder": "例如 student",
     "passwordMinLength": "密码最小长度",
     "sessionMaxAge": "会话有效期（秒）",
-    "loginMaxAttempts": "最大登录尝试次数（0=不限）",
-    "loginLockoutMinutes": "登录锁定分钟数",
     "driveQuota": "网盘配额（字节）",
     "driveQuotaPlaceholder": "例如 1073741824（1GB）",
     "teacherDriveMultiplier": "教师网盘倍数",

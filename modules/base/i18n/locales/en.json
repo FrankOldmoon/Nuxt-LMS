@@ -182,8 +182,6 @@
     "defaultUserRolePlaceholder": "e.g. student",
     "passwordMinLength": "Password Min Length",
     "sessionMaxAge": "Session Max Age (sec)",
-    "loginMaxAttempts": "Login Max Attempts (0=unlimited)",
-    "loginLockoutMinutes": "Login Lockout Minutes",
     "driveQuota": "Drive Quota (bytes)",
     "driveQuotaPlaceholder": "e.g. 1073741824 (1GB)",
     "teacherDriveMultiplier": "Teacher Drive Multiplier",

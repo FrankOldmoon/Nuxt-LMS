@@ -11,12 +11,9 @@ export default defineEventHandler(async (event) => {
     return cResp(null, 'Username and password are required', false)
   }
 
-  // 校验账号密码 + 暴力破解防护（失败计数 / 指数退避锁定，与 startup 访问门共用同一实现）
+  // 校验账号密码（与 startup 访问门共用同一实现；已移除失败锁定防护）
   const result = await verifyCredentials(username, password)
   if (!result.ok) {
-    if (result.locked) {
-      return cResp(null, `账号已锁定，请 ${result.remainingMinutes} 分钟后再试`, false)
-    }
     return cResp(null, 'Invalid username or password', false)
   }
 

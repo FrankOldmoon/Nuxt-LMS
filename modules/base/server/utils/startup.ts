@@ -52,8 +52,7 @@ function verifyToken(token: string | undefined): boolean {
 
 /**
  * 用真实账号密码校验访问门，等价于登录的开锁：通过后签发 startup cookie。
- * 凭据校验与暴力破解防护（失败计数 / 指数退避锁定）复用 login 的同一实现，
- * 使访问门不再成为绕过账号锁定保护的旁路（IP 限流由 rate-limit 中间件覆盖）。
+ * 凭据校验复用 login 的同一实现（IP 限流由 rate-limit 中间件覆盖）。
  */
 export async function verifyStartupLogin(event: StartupEvent, username: string, password: string): Promise<CredentialResult> {
   if (!username || !password) return { ok: false, locked: false }

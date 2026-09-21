@@ -24,8 +24,6 @@ export const DEFAULT_SITE_CONFIG: Record<string, any> = {
   'site:defaultUserRole': 'student',
   'site:passwordMinLength': 6,
   'site:sessionMaxAge': 604800,
-  'site:loginMaxAttempts': 5,
-  'site:loginLockoutMinutes': 15,
   // 网盘配额
   'site:driveQuota': 1073741824,
   'site:teacherDriveMultiplier': 1,

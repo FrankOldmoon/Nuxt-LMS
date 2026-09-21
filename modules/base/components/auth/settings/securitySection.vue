@@ -20,15 +20,9 @@
         <UInput v-model.number="form.sitePasswordMinLength" type="number" :min="1" class="w-full" />
       </UFormField>
     </div>
-    <div class="grid grid-cols-3 gap-3">
+    <div class="grid grid-cols-1 gap-3">
       <UFormField :label="$t('settings.sessionMaxAge')" class="w-full">
         <UInput v-model.number="form.siteSessionMaxAge" type="number" :min="0" class="w-full" />
-      </UFormField>
-      <UFormField :label="$t('settings.loginMaxAttempts')" class="w-full">
-        <UInput v-model.number="form.siteLoginMaxAttempts" type="number" :min="0" class="w-full" />
-      </UFormField>
-      <UFormField :label="$t('settings.loginLockoutMinutes')" class="w-full">
-        <UInput v-model.number="form.siteLoginLockoutMinutes" type="number" :min="0" class="w-full" />
       </UFormField>
     </div>
   </div>

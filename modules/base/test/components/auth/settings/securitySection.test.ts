@@ -19,8 +19,6 @@ function makeForm(overrides: any = {}) {
     siteDefaultUserRole: 'student',
     sitePasswordMinLength: 6,
     siteSessionMaxAge: 604800,
-    siteLoginMaxAttempts: 0,
-    siteLoginLockoutMinutes: 15,
     ...overrides,
   }
 }
@@ -61,7 +59,7 @@ describe('auth/settings/securitySection.vue', () => {
     expect(labelTexts.some(t => t.includes('settings.passwordMinLength'))).toBe(true)
   })
 
-  it('渲染会话和登录尝试相关字段', async () => {
+  it('渲染会话字段', async () => {
     const { default: SecuritySection } = await import('../../../../components/auth/settings/securitySection.vue')
     const wrapper = mount(SecuritySection, {
       props: { form: makeForm() },
@@ -70,7 +68,5 @@ describe('auth/settings/securitySection.vue', () => {
     const labels = wrapper.findAll('label')
     const labelTexts = labels.map(l => l.text())
     expect(labelTexts.some(t => t.includes('settings.sessionMaxAge'))).toBe(true)
-    expect(labelTexts.some(t => t.includes('settings.loginMaxAttempts'))).toBe(true)
-    expect(labelTexts.some(t => t.includes('settings.loginLockoutMinutes'))).toBe(true)
   })
 })
