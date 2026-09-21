@@ -21,7 +21,7 @@ export function useCourseLeaderboard(
   const step = computed(() => Number(levelStep.value) || 100)
 
   // 我的排名（使用后端返回的全程排名，而非前10截断）
-  const myRank = ref<{ rank: number, userId: number, score: number, exp: number } | null>(null)
+  const myRank = ref<{ rank: number, userId: number, score: number, exp: number, classId: number | null, className: string } | null>(null)
   // 我的等级（跟随配置的升级曲线）
   const myLv = computed(() => expToLevel(myRank.value?.exp ?? 0, step.value))
 
@@ -39,6 +39,9 @@ export function useCourseLeaderboard(
         score: r.score ?? 0,
         exp: r.exp ?? 0,
         lv: expToLevel(Number(r.exp) || 0, step.value),
+        // 班级名称（数据来源 users.class_id，由后端解析）
+        classId: r.classId ?? null,
+        className: r.className ?? '',
       }
     })
     // 自己不在前10时，在末尾追加自己的行（顶部"我的名次"卡片仍显示全程排名）
@@ -54,13 +57,16 @@ export function useCourseLeaderboard(
         score: myRank.value?.score ?? 0,
         exp: myRank.value?.exp ?? 0,
         lv: expToLevel(myRank.value?.exp ?? 0, step.value),
+        classId: myRank.value?.classId ?? null,
+        className: myRank.value?.className ?? '',
       })
     }
     return base
   })
 
-  // 额外列：等级 + 总分
+  // 额外列：班级名称 + 等级 + 总分
   const extraColumns = computed(() => [
+    { id: 'class', header: t('coursePanel.className'), accessorKey: 'className' },
     { id: 'lv', header: t('coursePanel.level') },
     { id: 'score', header: t('coursePanel.score') },
   ])
@@ -84,6 +90,8 @@ export function useCourseLeaderboard(
             userId: data.myInfo.userId,
             score: Number(data.myInfo.score) || 0,
             exp: Number(data.myInfo.exp) || 0,
+            classId: data.myInfo.classId ?? null,
+            className: data.myInfo.className ?? '',
           }
         : null
     } catch (e) {

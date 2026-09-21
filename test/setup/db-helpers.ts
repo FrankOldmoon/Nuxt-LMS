@@ -138,6 +138,7 @@ export function installLmsAutoImports(overrides: Record<string, any> = {}) {
     addCourseScoreMax: vi.fn().mockResolvedValue(undefined),
     checkAndAwardMedals: vi.fn().mockResolvedValue(undefined),
     getClassUsers: vi.fn().mockResolvedValue([]),
+    getUserClassInfo: vi.fn().mockResolvedValue(new Map()),
     getCourseMembers: vi.fn().mockResolvedValue([]),
     mergeCourseLmsConfig: vi.fn().mockImplementation((def: any, ov: any) => ({ ...def, ...ov })),
     isCourseTeacher: vi.fn().mockResolvedValue(false),
@@ -161,7 +162,7 @@ export function installLmsAutoImports(overrides: Record<string, any> = {}) {
 export function uninstallLmsAutoImports() {
   const keys = [
     'getCourseLmsConfig', 'addChapterScore', 'addCourseScore', 'addCourseScoreMax',
-    'checkAndAwardMedals', 'getClassUsers', 'getCourseMembers', 'mergeCourseLmsConfig',
+    'checkAndAwardMedals', 'getClassUsers', 'getUserClassInfo', 'getCourseMembers', 'mergeCourseLmsConfig',
     'isCourseTeacher', 'requireChapterTeacher',
     'getContentVersion', 'listContentVersions', 'restoreContentVersion',
     'upsertUserChapter', 'upsertUserCourse',

@@ -36,16 +36,26 @@ export default eventHandler(async (event) => {
     // 合并：有成绩的用实际分，无成绩的补0（确保至少10条）
     const scoreMap = new Map(rows.map(r => [r.userId, Number(r.score) || 0]))
     const expMap = new Map(rows.map(r => [r.userId, Number(r.exp) || 0]))
+    // 班级信息（数据来源 users.class_id → classes.name），供「班级名称」列展示
+    const classInfo = await getUserClassInfo(studentIds)
     const allStudents = studentIds.map(userId => ({
         userId,
         score: scoreMap.get(userId) ?? 0,
         exp: expMap.get(userId) ?? 0,
+        classId: classInfo.get(userId)?.classId ?? null,
+        className: classInfo.get(userId)?.className ?? '',
     })).sort((a, b) => b.score - a.score)
 
     // 我的排名（全程，不含截断）
     const myRank = allStudents.findIndex(s => s.userId === user.id)
     const myInfo = myRank >= 0
-        ? { userId: user.id, score: allStudents[myRank].score, exp: allStudents[myRank].exp }
+        ? {
+            userId: user.id,
+            score: allStudents[myRank].score,
+            exp: allStudents[myRank].exp,
+            classId: allStudents[myRank].classId,
+            className: allStudents[myRank].className,
+        }
         : null
 
     return cResp({

@@ -33,9 +33,10 @@ describe('composables/useCourseLeaderboard', () => {
     expect(r.scoreRows.value).toEqual([])
     expect(r.myRank.value).toBeNull()
     expect(r.tableRows.value).toEqual([])
-    expect(r.extraColumns.value).toHaveLength(2)
-    expect(r.extraColumns.value[0].id).toBe('lv')
-    expect(r.extraColumns.value[1].id).toBe('score')
+    expect(r.extraColumns.value).toHaveLength(3)
+    expect(r.extraColumns.value[0].id).toBe('class')
+    expect(r.extraColumns.value[1].id).toBe('lv')
+    expect(r.extraColumns.value[2].id).toBe('score')
   })
 
   it('loadData 无 courseId 时不加载', async () => {
@@ -112,11 +113,11 @@ describe('composables/useCourseLeaderboard', () => {
         return {
           data: {
             top10: [
-              { userId: 1, score: 100, exp: 1200 },
+              { userId: 1, score: 100, exp: 1200, classId: 10, className: 'ClassA' },
               { userId: 2, score: 80, exp: 150 },
             ],
             myRank: 3,
-            myInfo: { userId: 3, score: 60, exp: 0 },
+            myInfo: { userId: 3, score: 60, exp: 0, classId: 10, className: 'ClassA' },
           },
           success: true,
           msg: '',
@@ -134,6 +135,9 @@ describe('composables/useCourseLeaderboard', () => {
     expect(byId(1).score).toBe(100)
     expect(byId(2).score).toBe(80)
     expect(byId(3).score).toBe(60) // 自己的行使用 myInfo.score
+    // 班级名称（来自 users.class_id，由后端返回）
+    expect(byId(1).className).toBe('ClassA')
+    expect(byId(3).className).toBe('ClassA')
     // lv 由 exp 换算：exp=1200 → Lv.5（levelStep=100）
     expect(byId(1).lv).toBe(5)
     expect(byId(1).exp).toBe(1200)
@@ -168,7 +172,7 @@ describe('composables/useCourseLeaderboard', () => {
     const { useCourseLeaderboard } = await import('../../composables/useCourseLeaderboard')
     const r = useCourseLeaderboard({ courseId: 1, classId: 10 }, isOpen)
     await r.loadData()
-    expect(r.myRank.value).toEqual({ rank: 2, userId: 2, score: 80, exp: 150 })
+    expect(r.myRank.value).toEqual({ rank: 2, userId: 2, score: 80, exp: 150, classId: null, className: '' })
   })
 
   it('myRank 未登录时为 null', async () => {
