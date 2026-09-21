@@ -237,7 +237,7 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
 
     const ctx = {
         t, effectiveCourseId, moduleLms, RecordsModal,
-        homework, pending, homeworkId, isTeacher,
+        homework, pending, homeworkId, isTeacher, isLoggedIn,
         editOpen, recordsOpen, refresh,
         submittedContent, submittedFiles, submitted, submittedFileList,
         submitting, submitLocked, submitMsg, submitOk,

@@ -52,8 +52,8 @@
             </span>
         </div>
 
-        <!-- 学生提交区域 -->
-        <HomeworkSubmitSection v-if="homework" />
+        <!-- 学生提交区域：未登录时不显示 -->
+        <HomeworkSubmitSection v-if="homework && isLoggedIn" />
 
         <!-- 优秀作业：教师或"已打分"的学生可见 -->
         <FeaturedBlock v-if="homework && (isTeacher || selfScore !== null)" />
@@ -87,7 +87,7 @@ const emit = defineEmits(['saved'])
 
 const {
     t, moduleLms, RecordsModal,
-    homework, pending, homeworkId, isTeacher,
+    homework, pending, homeworkId, isTeacher, isLoggedIn,
     editOpen, recordsOpen, refresh,
     selfScore, submitted,
     fetchRecord, fetchFeatured, onSaved,
