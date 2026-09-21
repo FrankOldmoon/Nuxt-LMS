@@ -1,5 +1,5 @@
 /**
- * courses/global-leaderboard.get.ts 端点测试：本课程全局得分前 10（排除教师）
+ * courses/global-leaderboard.get.ts 端点测试：本课程全局得分前 10（排除教职工 teacher/admin）
  * @see modules/lms/server/api/courses/global-leaderboard.get.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -29,7 +29,7 @@ beforeEach(() => {
   installLmsAutoImports()
 })
 
-// 依次 mock 2 次链式 where 查询：1) user_courses 选课  2) user_roles（teacher 角色）
+// 依次 mock 2 次链式 where 查询：1) user_courses 选课  2) user_roles（teacher / admin 角色）
 // getUserClassInfo 由 auto-import 桩提供（在 case 中按需覆盖）
 function mockWhereSeq(results: any[][]) {
   let i = 0
@@ -65,7 +65,7 @@ describe('API: courses/global-leaderboard.get', () => {
     expect(r.data.rows).toEqual([])
   })
 
-  it('排除课程教师/编辑者与 teacher 角色，按得分降序且带班级名称', async () => {
+  it('排除课程教师/编辑者与 teacher/admin 角色，按得分降序且带班级名称', async () => {
     setMockAuthState({ id: 1, username: 's', name: 'S', roles: ['student'], permissions: [] })
     mockClassInfo([
       [1, { classId: 10, className: 'ClassA', name: 'alice', avatarImg: null }],
@@ -91,6 +91,26 @@ describe('API: courses/global-leaderboard.get', () => {
     expect(rows.map((x: any) => x.userId)).toEqual([1, 2])
     expect(rows[0]).toMatchObject({ userId: 1, rank: 1, score: 100, className: 'ClassA', name: 'alice' })
     expect(rows[1]).toMatchObject({ userId: 2, rank: 2, score: 80, className: 'ClassB', name: 'bob' })
+  })
+
+  it('排除 admin 角色（不进入学生榜）', async () => {
+    setMockAuthState({ id: 1, username: 's', name: 'S', roles: ['student'], permissions: [] })
+    mockClassInfo([
+      [1, { classId: 10, className: 'ClassA', name: 'stu', avatarImg: null }],
+      [9, { classId: 10, className: 'ClassA', name: 'adm', avatarImg: null }],
+    ])
+    mockWhereSeq([
+      [
+        { userId: 1, score: '100', exp: '0', isTeacher: false, isEditor: false },
+        { userId: 9, score: '999', exp: '0', isTeacher: false, isEditor: false },
+      ],
+      // admin 角色：SQL 已按 roles.code IN ('teacher','admin') 过滤出该用户
+      [{ userId: 9 }],
+    ])
+    const handler = (await import('../../server/api/courses/global-leaderboard.get')).default
+    const r = await handler(makeEvent({ query: { courseId: '1' } }))
+    expect(r.success).toBe(true)
+    expect(r.data.rows.map((x: any) => x.userId)).toEqual([1])
   })
 
   it('超过10人时只取前10并带 rank', async () => {

@@ -22,11 +22,6 @@ beforeEach(() => {
     tableRows: ref([]),
     extraColumns: ref([]),
   })
-  // stub useCourseGlobalLeaderboard（全局排行）
-  ;(globalThis as any).useCourseGlobalLeaderboard = (_props: any, _isOpen: any) => ({
-    loading: ref(false),
-    rows: ref([]),
-  })
 })
 
 const _globalStubs = {
@@ -40,9 +35,13 @@ const _globalStubs = {
   },
   UIcon: { template: '<span class="uicon" />', props: ['name'] },
   UTooltip: { template: '<span class="utooltip"><slot /></span>', props: ['text'] },
-  UButton: { template: '<button class="ubtn" @click="$emit(\'click\')"><slot /></button>', props: ['icon', 'label', 'color', 'variant', 'size'] },
+  UButton: { template: '<button class="ubtn" @click="$emit(\'click\')">{{ label }}<slot /></button>', props: ['icon', 'label', 'color', 'variant', 'size'] },
   CourseClassAvgLeaderboardModal: {
     template: '<div class="class-avg-modal" />',
+    props: ['open', 'courseId'],
+  },
+  CourseGlobalLeaderboardModal: {
+    template: '<div v-if="open" class="global-modal" />',
     props: ['open', 'courseId'],
   },
   ClassUsersTable: {
@@ -131,24 +130,21 @@ describe('course/leaderboardModal.vue', () => {
     expect(wrapper.props('classId')).toBe(7)
   })
 
-  it('渲染全局排行面板（含班级名称）', async () => {
-    ;(globalThis as any).useCourseGlobalLeaderboard = (_props: any, _isOpen: any) => ({
-      loading: ref(false),
-      rows: ref([
-        { userId: 1, rank: 1, name: 'TopOne', className: 'ClassA', score: 99.5, exp: 100, lv: 3 },
-      ]),
-    })
+  it('全局排行改为按钮弹出的独立弹窗（与各班生均分一致），不再内联展示', async () => {
     const { default: LeaderboardModal } = await import('../../../components/course/leaderboardModal.vue')
     const wrapper = mount(LeaderboardModal, {
       props: { open: true, courseId: '1', classId: '1' },
       global: _globalConfig,
     })
     await flushPromises()
-    const text = wrapper.text()
-    expect(text).toContain('coursePanel.globalRank')
-    expect(text).toContain('coursePanel.className')
-    expect(text).toContain('TopOne')
-    expect(text).toContain('ClassA')
-    expect(text).toContain('99.5')
+
+    // 本弹窗内不再内联渲染全局排行表格
+    expect(wrapper.find('.global-modal').exists()).toBe(false)
+
+    // 头部有「全局排行」按钮，点击后才弹出全局排行弹窗
+    const btn = wrapper.findAll('.ubtn').find(b => b.text().includes('coursePanel.globalRank'))
+    expect(btn).toBeTruthy()
+    await btn!.trigger('click')
+    expect(wrapper.find('.global-modal').exists()).toBe(true)
   })
 })
