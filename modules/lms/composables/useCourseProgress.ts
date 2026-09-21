@@ -65,6 +65,8 @@ export function useCourseProgress(
 ) {
   const { t } = useI18n()
   const { hasRole } = useAuth()
+  // 切换/恢复身份后需刷新课程导航（章节 accessible 随登录用户变化）
+  const { notifyCourseNavUpdate } = useLayoutState()
 
   const { UButton, UTooltip, UIcon, NuxtLink } = ui
 
@@ -251,6 +253,8 @@ export function useCourseProgress(
 
   async function onImpersonated() {
     await nextTick()
+    // 身份切换/恢复后，章节可访问性随登录用户变化 → 刷新课程详情/侧边栏缓存
+    notifyCourseNavUpdate()
     await loadData()
   }
 

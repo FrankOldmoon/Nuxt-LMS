@@ -119,6 +119,10 @@ export default defineNuxtModule({
     // （教师在 accessBar 切换章节 isOpen 或开放给班级时，服务端广播此消息）
     addPlugin(resolve('./plugins/ws-sync.client.ts'))
 
+    // 客户端插件：登录 / 注册 / 登出后（auth:changed）刷新课程导航，
+    // 使章节 accessible 按新的登录态重算（否则一直沿用未登录时的加锁状态）
+    addPlugin(resolve('./plugins/auth-sync.client.ts'))
+
     // 共享数据单例插件：应用启动时预拉取一次 /api/home 和 /api/config/lms-public，
     // 存入 useState 后所有组件通过 useHome() / useLmsPublicConfig() 共享同一份数据。
     // 注：模块 plugins/ 目录不会被 Nuxt 自动发现，必须显式 addPlugin() 注册
