@@ -19,7 +19,7 @@
             :class="submitted ? (isCorrect ? 'bg-green-500 text-white' : 'bg-gray-300 dark:bg-gray-600 text-gray-600') : 'bg-blue-500 text-white'">
             {{ index + 1 }}
           </span>
-          <span class="flex-1 text-sm">{{ getItemText(element.originalIndex) }}</span>
+          <span class="flex-1 text-sm whitespace-pre-wrap">{{ getItemText(element.originalIndex) }}</span>
         </div>
       </template>
     </draggable>

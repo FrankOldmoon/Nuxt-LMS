@@ -30,7 +30,7 @@
             <div class="flex flex-wrap gap-2 mt-1">
                 <div v-for="(ans, idx) in formattedAnswers" :key="idx"
                     class="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded text-sm">
-                    <span class="font-medium text-green-700 dark:text-green-300">{{ ans }}</span>
+                    <span class="font-medium text-green-700 dark:text-green-300 whitespace-pre-wrap">{{ ans }}</span>
                 </div>
             </div>
         </div>
