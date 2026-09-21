@@ -9,21 +9,26 @@ import { mount, flushPromises } from '@vue/test-utils'
 import { resetAllStubs, setMockI18n } from '../../../../../../../test/setup/nuxt-stubs'
 
 // mock useCommentRecords（本地导入）
-vi.mock('../../../../../components/lms/recordsModal/comment/useCommentRecords', () => ({
-  useCommentRecords: (props: any, emit: any) => {
-    const { ref, computed }: any = globalThis as any
-    return {
-      open: computed({
-        get: () => props.modelValue,
-        set: (v: boolean) => emit('update:modelValue', v),
-      }),
-      rows: ref([]),
-      pending: ref(false),
-      extraColumns: computed(() => [{ id: 'record', header: 'Record' }]),
-      defaultSort: [{ id: 'record', desc: true }],
-    }
-  },
-}))
+vi.mock('../../../../../components/lms/recordsModal/comment/useCommentRecords', () => {
+  // 提升到工厂作用域：所有 useCommentRecords() 调用共享同一个 fetchRecords mock
+  const fetchRecords = vi.fn()
+  return {
+    useCommentRecords: (props: any, emit: any) => {
+      const { ref, computed }: any = globalThis as any
+      return {
+        open: computed({
+          get: () => props.modelValue,
+          set: (v: boolean) => emit('update:modelValue', v),
+        }),
+        rows: ref([]),
+        pending: ref(false),
+        extraColumns: computed(() => [{ id: 'record', header: 'Record' }]),
+        defaultSort: [{ id: 'record', desc: true }],
+        fetchRecords,
+      }
+    },
+  }
+})
 
 beforeEach(() => {
   resetAllStubs()
@@ -40,6 +45,12 @@ const _globalStubs = {
     props: ['rows', 'loading', 'extraColumns', 'hideActions', 'hideTeachers', 'defaultSort'],
   },
   UIcon: { template: '<span class="uicon" />', props: ['name'] },
+  UTooltip: { template: '<span class="utooltip"><slot /></span>', props: ['text'] },
+  UButton: {
+    template: '<button type="button" @click="$emit(\'click\')"><slot /></button>',
+    props: ['icon', 'variant', 'size', 'loading', 'disabled', 'label'],
+    emits: ['click'],
+  },
 }
 
 const _globalConfig = {
@@ -97,5 +108,21 @@ describe('lms/recordsModal/comment/index.vue', () => {
     await flushPromises()
     expect(wrapper.props('courseId')).toBe(42)
     expect(wrapper.props('cid')).toBe(999)
+  })
+
+  it('点击刷新按钮触发 fetchRecords', async () => {
+    const { useCommentRecords } = await import('../../../../../components/lms/recordsModal/comment/useCommentRecords')
+    const mocked = useCommentRecords as any as () => { fetchRecords: ReturnType<typeof vi.fn> }
+    const { default: CommentRecords } = await import('../../../../../components/lms/recordsModal/comment/index.vue')
+    const wrapper = mount(CommentRecords, {
+      props: { modelValue: true, courseId: 1, cid: 100 },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    const refreshBtn = wrapper.find('button')
+    expect(refreshBtn.exists()).toBe(true)
+    await refreshBtn.trigger('click')
+    await flushPromises()
+    expect(mocked().fetchRecords).toHaveBeenCalled()
   })
 })

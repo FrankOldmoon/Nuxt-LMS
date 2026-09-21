@@ -324,7 +324,7 @@ export function useQuestionRecords(props: QuestionRecordsProps, emit: QuestionRe
     })
 
     return {
-        open, rows, pending, extraColumns, defaultSort,
+        open, rows, pending, extraColumns, defaultSort, fetchRecords,
         recordIcon, recordIconClass, formatUserAnswer, answerItemClass, formatCorrectRate,
         showOptionChart, optionChartOption,
     }

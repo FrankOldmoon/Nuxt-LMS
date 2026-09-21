@@ -9,42 +9,47 @@ import { mount, flushPromises } from '@vue/test-utils'
 import { resetAllStubs, setMockI18n } from '../../../../../../../test/setup/nuxt-stubs'
 
 // mock useQuizRecords（本地导入）
-vi.mock('../../../../../components/lms/recordsModal/quiz/useQuizRecords', () => ({
-  useQuizRecords: (props: any, emit: any) => {
-    const { ref, computed }: any = globalThis as any
-    return {
-      open: computed({
-        get: () => props.modelValue,
-        set: (v: boolean) => emit('update:modelValue', v),
-      }),
-      rows: ref([]),
-      pending: ref(false),
-      extraColumns: computed(() => {
-        const cols = [
-          { id: 'score', header: 'Score', canSort: true },
-          { id: 'correctRate', header: 'Rate', canSort: true },
-          { id: 'submitCount', header: 'Count', canSort: true },
-        ]
-        props.questions.forEach((q: any, idx: number) => {
-          cols.push({ id: `q${q.id}`, header: `Q${idx + 1}`, canSort: true })
-        })
-        return cols
-      }),
-      defaultSort: [{ id: 'score', desc: true }],
-      getQuestionRecord: () => null,
-      scoreClass: () => '',
-      formatRate: () => '0%',
-      rateIcon: () => 'i-lucide-check',
-      rateIconClass: () => '',
-      summary: computed(() => ({ total: 0, submitted: 0, avgScore: 0, passCount: 0, passRate: 0, topScore: 0 })),
-      detailOpen: ref(false),
-      detailRow: ref(null),
-      openDetail: () => {},
-      closeDetail: () => {},
-      getInitialRecord: () => null,
-    }
-  },
-}))
+vi.mock('../../../../../components/lms/recordsModal/quiz/useQuizRecords', () => {
+  // 提升到工厂作用域：所有 useQuizRecords() 调用共享同一个 fetchRecords mock
+  const fetchRecords = vi.fn()
+  return {
+    useQuizRecords: (props: any, emit: any) => {
+      const { ref, computed }: any = globalThis as any
+      return {
+        open: computed({
+          get: () => props.modelValue,
+          set: (v: boolean) => emit('update:modelValue', v),
+        }),
+        rows: ref([]),
+        pending: ref(false),
+        extraColumns: computed(() => {
+          const cols = [
+            { id: 'score', header: 'Score', canSort: true },
+            { id: 'correctRate', header: 'Rate', canSort: true },
+            { id: 'submitCount', header: 'Count', canSort: true },
+          ]
+          props.questions.forEach((q: any, idx: number) => {
+            cols.push({ id: `q${q.id}`, header: `Q${idx + 1}`, canSort: true })
+          })
+          return cols
+        }),
+        defaultSort: [{ id: 'score', desc: true }],
+        fetchRecords,
+        getQuestionRecord: () => null,
+        scoreClass: () => '',
+        formatRate: () => '0%',
+        rateIcon: () => 'i-lucide-check',
+        rateIconClass: () => '',
+        summary: computed(() => ({ total: 0, submitted: 0, avgScore: 0, passCount: 0, passRate: 0, topScore: 0 })),
+        detailOpen: ref(false),
+        detailRow: ref(null),
+        openDetail: () => {},
+        closeDetail: () => {},
+        getInitialRecord: () => null,
+      }
+    },
+  }
+})
 
 beforeEach(() => {
   resetAllStubs()
@@ -61,6 +66,12 @@ const _globalStubs = {
     props: ['rows', 'loading', 'extraColumns', 'hideActions', 'hideTeachers', 'defaultSort'],
   },
   UIcon: { template: '<span class="uicon" />', props: ['name'] },
+  UTooltip: { template: '<span class="utooltip"><slot /></span>', props: ['text'] },
+  UButton: {
+    template: '<button type="button" @click="$emit(\'click\')"><slot /></button>',
+    props: ['icon', 'variant', 'size', 'loading', 'disabled', 'label'],
+    emits: ['click'],
+  },
 }
 
 const _globalConfig = {
@@ -128,5 +139,21 @@ describe('lms/recordsModal/quiz/index.vue', () => {
     })
     await flushPromises()
     expect(wrapper.props('questions')).toEqual(questions)
+  })
+
+  it('点击刷新按钮触发 fetchRecords', async () => {
+    const { useQuizRecords } = await import('../../../../../components/lms/recordsModal/quiz/useQuizRecords')
+    const mocked = useQuizRecords as any as () => { fetchRecords: ReturnType<typeof vi.fn> }
+    const { default: QuizRecords } = await import('../../../../../components/lms/recordsModal/quiz/index.vue')
+    const wrapper = mount(QuizRecords, {
+      props: { modelValue: true, courseId: 1, cid: 100, quizPoint: 100, questions: [] },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    const refreshBtn = wrapper.find('button')
+    expect(refreshBtn.exists()).toBe(true)
+    await refreshBtn.trigger('click')
+    await flushPromises()
+    expect(mocked().fetchRecords).toHaveBeenCalled()
   })
 })

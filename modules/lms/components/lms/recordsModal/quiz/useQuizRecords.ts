@@ -185,7 +185,7 @@ export function useQuizRecords(props: QuizRecordsProps, emit: QuizRecordsEmit) {
     }
 
     return {
-        open, rows, pending, extraColumns, defaultSort,
+        open, rows, pending, extraColumns, defaultSort, fetchRecords,
         getQuestionRecord, scoreClass, formatRate, rateIcon, rateIconClass,
         summary, detailOpen, detailRow, openDetail, closeDetail, getInitialRecord,
     }
