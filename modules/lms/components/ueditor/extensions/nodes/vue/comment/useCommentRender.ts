@@ -108,12 +108,27 @@ export function useCommentRender(props: CommentRenderProps) {
     // - 刚回复成功：onReply 已把新回复乐观插入 children，立即为 true
     // - 重新进入：服务端列表里包含自己发的评论（自己发的无论是否过审，作者都可见）
     // - 主题评论本身由自己创建（老师/管理员）也算已发表
+    // 注意：这里只是「已参与」的视觉状态（回复即变绿）；章节进度完成另走 hasApprovedReply，
+    // 需老师审核通过后才算，二者刻意解耦，勿互相「对齐」。
     const hasPosted = computed(() => {
         const uid = Number(user.value?.id) || 0
         if (!uid) return false
         if (Number(rootComment.value?.userId) === uid) return true
         return children.value.some((c: any) => Number(c.userId) === uid)
     })
+
+    /**
+     * 我在本主题下是否已有「过审」的回复。
+     * 完成判定以此为准：回复默认 status='audit'（待审核），只有老师审核通过
+     * （status='published'）后才计入章节进度。
+     */
+    function hasApprovedReply(list: any[]) {
+        const uid = Number(user.value?.id) || 0
+        if (!uid) return false
+        return (Array.isArray(list) ? list : []).some(
+            (c: any) => Number(c.userId) === uid && c.status === 'published'
+        )
+    }
 
     async function fetchComments() {
         if (!commentId.value || !effectiveCourseId.value) return
@@ -123,9 +138,8 @@ export function useCommentRender(props: CommentRenderProps) {
             if (data) {
                 rootComment.value = data.root || null
                 children.value = data.children || []
-                // 若当前用户已回复过，上报完成状态
-                const uid = user.value?.id
-                if (uid && Array.isArray(data.children) && data.children.some((c: any) => c.userId === uid)) {
+                // 已有过审回复才上报完成（老师审核通过后经 WS commentRefresh 广播触发到这里补上）
+                if (hasApprovedReply(data.children)) {
                     chapterTask?.reportNodeDone('comment', commentId.value, true)
                 }
             }
@@ -194,8 +208,10 @@ export function useCommentRender(props: CommentRenderProps) {
                 })
                 // 跳转到最后一页，让用户看到新回复
                 page.value = totalPages.value
-                // 上报评论完成（回复即完成）
-                chapterTask?.reportNodeDone('comment', commentId.value, true)
+                // 上报评论完成：仅当已存在过审回复（回复默认待审核，需老师 approve 后才计入进度）
+                if (hasApprovedReply(children.value)) {
+                    chapterTask?.reportNodeDone('comment', commentId.value, true)
+                }
                 // 回复成功 toast
                 toast.add({ title: t('comment.replySuccess'), color: 'success' })
             }

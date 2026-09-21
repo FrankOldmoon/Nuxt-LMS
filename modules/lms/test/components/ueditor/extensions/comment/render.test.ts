@@ -185,4 +185,50 @@ describe('comment/render.vue', () => {
 
     expect(wrapper.find('.comment-render').classes()).toContain('border-green-400')
   })
+
+  // ── 章节完成判定：回复默认待审核，需老师 approve（status='published'）后才计入进度 ──
+
+  /** 用 spy 替换 useChapterTask，收集 reportNodeDone 调用 */
+  function spyReportNodeDone() {
+    const calls: any[][] = []
+    ;(globalThis as any).useChapterTask = () => ({
+      reportNodeDone: (...args: any[]) => calls.push(args),
+    })
+    return calls
+  }
+
+  it('回复仅待审核（audit）时不上报完成', async () => {
+    setMockAuthUser({ id: 10, name: 'Alice' })
+    const calls = spyReportNodeDone()
+    const wrapper = await mountWith({ children: [] })
+    expect(calls).toEqual([])
+
+    await wrapper.find('textarea').setValue('我的回复')
+    await wrapper.findAll('button').find(b => b.text().includes('comment.reply'))!.trigger('click')
+    await flushPromises()
+
+    // 新回复 status='audit'：不能算完成
+    expect(calls).toEqual([])
+  })
+
+  it('自己的回复仍待审核时（重新进入）不上报完成', async () => {
+    setMockAuthUser({ id: 10, name: 'Alice' })
+    const calls = spyReportNodeDone()
+    await mountWith({ children: [{ cid: 2, userId: 10, userName: 'Alice', content: 'mine', status: 'audit' }] })
+    expect(calls).toEqual([])
+  })
+
+  it('已有过审回复时上报完成', async () => {
+    setMockAuthUser({ id: 10, name: 'Alice' })
+    const calls = spyReportNodeDone()
+    await mountWith({ children: [{ cid: 2, userId: 10, userName: 'Alice', content: 'mine', status: 'published' }] })
+    expect(calls).toEqual([['comment', 1, true]])
+  })
+
+  it('别人的过审回复不触发我的完成', async () => {
+    setMockAuthUser({ id: 10, name: 'Alice' })
+    const calls = spyReportNodeDone()
+    await mountWith({ children: [{ cid: 3, userId: 20, userName: 'Bob', content: 'his', status: 'published' }] })
+    expect(calls).toEqual([])
+  })
 })
