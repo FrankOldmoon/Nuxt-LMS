@@ -5,7 +5,7 @@
  *
  * 覆盖：
  * - handleClassMessage  dispatcher（type 路由 + 未知 type 返回 false）
- * - handleClassJoin  加入班级 + joined 推送 + onlineUpdate 广播
+ * - handleClassJoin  加入班级 + joined 推送 + onlineUpdate 上线广播 + 在线快照
  * - handleClassInvite  邀请广播
  * - handleClassDanmaku  弹幕（截断 200 字符）
  * - handleClassOnline  在线状态
@@ -73,6 +73,46 @@ describe('ws/class: join', () => {
     const p1Sends = sendsOf(peer1)
     expect(p1Sends).toContainEqual({
       type: 'onlineUpdate', classId: 1, userId: 2, from: 'bob', online: true,
+    })
+  })
+
+  // 回归：base 层 joinRoom 只发 { type:'join', room }，不带 userId；
+  // 原实现要求 data.userId 才广播上线，导致班级在线状态永不更新（老师端恒为离线）
+  it('【回归】join 未带 userId 时用已认证身份广播上线', () => {
+    const teacher = makeMockPeer({ userId: 1, userName: 'teacher' })
+    handleClassMessage(teacher, { type: 'join', room: 1 })
+
+    const student = makeMockPeer({ userId: 2, userName: 'bob' })
+    handleClassMessage(student, { type: 'join', room: 1 })
+
+    expect(student._userId).toBe(2)
+    expect(sendsOf(teacher)).toContainEqual({
+      type: 'onlineUpdate', classId: 1, userId: 2, from: 'bob', online: true,
+    })
+  })
+
+  it('后加入者收到房间内已在线用户的快照', () => {
+    const a = makeMockPeer({ userId: 1, userName: 'alice' })
+    handleClassMessage(a, { type: 'join', room: 3 })
+    const b = makeMockPeer({ userId: 2, userName: 'bob' })
+    handleClassMessage(b, { type: 'join', room: 3 })
+
+    const late = makeMockPeer({ userId: 3, userName: 'carol' })
+    handleClassMessage(late, { type: 'join', room: 3 })
+
+    const sends = sendsOf(late)
+    expect(sends).toContainEqual({ type: 'onlineUpdate', classId: 3, userId: 1, from: 'alice', online: true })
+    expect(sends).toContainEqual({ type: 'onlineUpdate', classId: 3, userId: 2, from: 'bob', online: true })
+    // 自己的上线也广播给自己
+    expect(sends).toContainEqual({ type: 'onlineUpdate', classId: 3, userId: 3, from: 'carol', online: true })
+  })
+
+  it('已认证身份优先于 data.userId（防伪造他人上线）', () => {
+    const peer = makeMockPeer({ userId: 9, userName: 'real' })
+    handleClassMessage(peer, { type: 'join', room: 4, userId: 999 })
+    expect(peer._userId).toBe(9)
+    expect(sendsOf(peer)).toContainEqual({
+      type: 'onlineUpdate', classId: 4, userId: 9, from: 'real', online: true,
     })
   })
 

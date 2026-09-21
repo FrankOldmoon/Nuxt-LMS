@@ -103,10 +103,21 @@ describe('composables/useClassUsersTable', () => {
     expect(r.onlineMap[5]).toBe(false)
   })
 
-  it('onRaceOnlineUpdate 也更新 onlineMap', async () => {
+  it('onlineSource 默认（class）时竞赛上下线事件不写入 onlineMap', async () => {
     const { useClassUsersTable } = await import('../../composables/useClassUsersTable')
-    const r = useClassUsersTable(makeProps(), { UButton: () => {} })
+    const r = useClassUsersTable(makeProps({ showOnline: true }), { UButton: () => {} })
     const handlers = (globalThis as any).__wsHandlers
+    // 默认来源为 class：不应订阅竞赛在线事件
+    expect(handlers.raceOnline).toBeUndefined()
+    expect(r.onlineMap[7]).toBeUndefined()
+  })
+
+  it('onlineSource=race 时只订阅竞赛上下线事件', async () => {
+    const { useClassUsersTable } = await import('../../composables/useClassUsersTable')
+    const r = useClassUsersTable(makeProps({ showOnline: true, onlineSource: 'race' }), { UButton: () => {} })
+    const handlers = (globalThis as any).__wsHandlers
+    // 来源为 race：不应订阅班级在线事件
+    expect(handlers.online).toBeUndefined()
     handlers.raceOnline[0]({ userId: 7, online: true })
     expect(r.onlineMap[7]).toBe(true)
   })

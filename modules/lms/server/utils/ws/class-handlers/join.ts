@@ -1,7 +1,7 @@
 /**
  * 班级消息：join / invite / danmaku / online / chatroom
  */
-import { broadcastToClass, joinClassRoom } from '../state'
+import { classRooms, broadcastToClass, joinClassRoom } from '../state'
 import { isStaffUser } from '../staff'
 
 /** join: 加入班级房间
@@ -11,17 +11,44 @@ import { isStaffUser } from '../staff'
  * 修复 bug：客户端 useWsConnection().joinRoom() 实际发送 { type: 'join', room: <id> }，
  *   但本函数原本只读 data.classId，导致 join 静默失败、classRooms 始终为空，
  *   进而所有班级广播（danmaku / online / chatroom / vote / quickAnswer / submitBroadcast / invite）落空。
+ *
+ * 上线广播（onlineUpdate online:true）：
+ *   - 身份以「连接已认证的 peer._authUserId / peer._userId」为准，data.userId 仅作兜底，
+ *     避免客户端伪造他人 userId 广播虚假在线；
+ *   - 客户端 joinRoom 并不携带 userId（原实现要求 data.userId，导致上线广播永不触发，
+ *     老师端在线列表因此恒为离线），故改为从 peer 身份推导；
+ *   - 加入成功后向本人补发房间内已在线用户快照，避免后进入者（如稍后才打开
+ *     select-class 弹窗的老师）错过此前的上线广播；随后再向房间广播自己的上线。
  */
 export function handleClassJoin(peer: any, data: any) {
   const cid = Number(data.room ?? data.classId)
   if (!cid) return
   joinClassRoom(cid, peer)
-  if (data.userId) peer._userId = Number(data.userId)
+
+  const uid = Number(peer._authUserId || peer._userId || data.userId) || 0
+  if (uid) peer._userId = uid
   if (data.from) peer._userName = String(data.from)
   peer.send(JSON.stringify({ type: 'joined', classId: cid }))
-  if (data.userId) {
-    broadcastToClass(cid, JSON.stringify({ type: 'onlineUpdate', classId: cid,
-      userId: Number(data.userId), from: data.from || 'anonymous', online: true }))
+
+  // 在线快照：告知新加入者房间内当前已在线的人
+  const room = classRooms.get(cid)
+  if (room) {
+    for (const p of room) {
+      const pid = Number(p._userId)
+      if (!pid || pid === uid) continue
+      peer.send(JSON.stringify({
+        type: 'onlineUpdate', classId: cid,
+        userId: pid, from: p._userName || 'anonymous', online: true,
+      }))
+    }
+  }
+
+  // 广播自己的上线
+  if (uid) {
+    broadcastToClass(cid, JSON.stringify({
+      type: 'onlineUpdate', classId: cid,
+      userId: uid, from: data.from || peer._userName || 'anonymous', online: true,
+    }))
   }
 }
 

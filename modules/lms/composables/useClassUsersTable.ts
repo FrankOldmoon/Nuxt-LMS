@@ -26,6 +26,13 @@ interface ClassUsersTableProps {
   defaultSort?: { id: string, desc: boolean }[]
   showChart?: boolean
   showOnline?: boolean
+  /**
+   * 在线状态来源：
+   * - 'class'（默认）：班级在线广播 onlineUpdate（select class 弹窗等）
+   * - 'race'：竞赛在线广播 raceOnlineUpdate（竞赛得分表）
+   * 区分来源可避免竞赛上下线事件把班级在线列标记为离线（反之亦然）。
+   */
+  onlineSource?: 'class' | 'race'
   showGroup?: boolean
   /** 前三名 name 右侧显示金银铜奖杯 */
   showMedal?: boolean
@@ -86,13 +93,18 @@ export function useClassUsersTable(
 
   const onlineMap = reactive<Record<number, boolean>>({})
 
+  // 在线状态订阅：按来源只订阅对应事件，避免两者混写同一 onlineMap
+  // （竞赛节点卸载会发 raceOnlineUpdate online:false，若混用会把班级在线列误判为离线）
   const { onOnlineUpdate, onRaceOnlineUpdate } = useWebSocket()
-  onOnlineUpdate((data) => {
-    onlineMap[data.userId] = data.online
-  })
-  onRaceOnlineUpdate((data) => {
-    onlineMap[data.userId] = data.online
-  })
+  if (props.onlineSource === 'race') {
+    onRaceOnlineUpdate((data) => {
+      onlineMap[data.userId] = data.online
+    })
+  } else {
+    onOnlineUpdate((data) => {
+      onlineMap[data.userId] = data.online
+    })
+  }
 
   function isOnlineByLoginAt(loginAt: any): boolean {
     if (!loginAt) return false

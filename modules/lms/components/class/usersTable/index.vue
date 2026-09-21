@@ -46,6 +46,8 @@ const props = defineProps<{
   defaultSort?: { id: string, desc: boolean }[]
   showChart?: boolean
   showOnline?: boolean
+  /** 在线状态来源：'class'（默认，班级在线）| 'race'（竞赛在线） */
+  onlineSource?: 'class' | 'race'
   showGroup?: boolean
   /** 前三名 name 右侧显示金银铜奖杯 */
   showMedal?: boolean
