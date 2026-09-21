@@ -87,6 +87,26 @@ describe('question/render/multiple.vue', () => {
     }
   })
 
+  it('显示答案（questionShowAnswer=true）时按原始顺序 A/B/C/D 展示，字母与原始下标一致', async () => {
+    const { default: MultipleRender } = await import(
+      '../../../../../../components/ueditor/extensions/nodes/vue/question/render/multiple.vue'
+    )
+    const question = { ...sampleQuestion, options: ['Option A', 'Option B', 'Option C', 'Option D'], answer: [0, 2], record: [] }
+    const wrapper = mount(MultipleRender, {
+      props: { question, questionId: 1 },
+      global: {
+        stubs: _globalStubs,
+        provide: { ..._globalConfig.provide, questionShowAnswer: ref(true) },
+        mocks: { $t: (k: string) => k },
+      },
+    })
+    const labels = wrapper.findAll('label')
+    // 展示顺序 == 原始顺序：第 i 个展示位的字母就是 A/B/C/D，内容是原始选项 i
+    expect(labels.map((l) => l.text())).toEqual([
+      'AOption A', 'BOption B', 'COption C', 'DOption D',
+    ])
+  })
+
   it('exposes submit/reset/fillCorrectAnswer methods', async () => {
     const { default: MultipleRender } = await import(
       '../../../../../../components/ueditor/extensions/nodes/vue/question/render/multiple.vue'

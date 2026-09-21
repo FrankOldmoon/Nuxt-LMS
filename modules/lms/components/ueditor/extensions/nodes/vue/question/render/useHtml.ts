@@ -2,6 +2,24 @@ import { ref, computed, inject, watch, onMounted, onBeforeUnmount } from 'vue'
 import { submitQuestion, recordAnswer } from './shared'
 import { buildSrcdocWithHeightReport } from '../../html/buildSrcdoc'
 
+/**
+ * 给 URL 追加 query 参数（保留原有 query 与 hash），
+ * 供 iframe 内的页面读取当前用户/房间；值为空时跳过该参数，无 url 时原样返回。
+ */
+function appendParams(rawUrl: any, params: Record<string, any>) {
+  const url = String(rawUrl || '').trim()
+  if (!url) return url
+  const entries = Object.entries(params).filter(([, v]) => v !== null && v !== undefined && v !== '')
+  if (!entries.length) return url
+  const hashIndex = url.indexOf('#')
+  const base = hashIndex >= 0 ? url.slice(0, hashIndex) : url
+  const hash = hashIndex >= 0 ? url.slice(hashIndex) : ''
+  const query = entries
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
+    .join('&')
+  return `${base}${base.includes('?') ? '&' : '?'}${query}${hash}`
+}
+
 export function useHtml(props: any) {
   const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')
   const isCorrect = inject<import('vue').Ref<boolean>>('questionIsCorrect')
@@ -10,6 +28,9 @@ export function useHtml(props: any) {
   // 让提交状态/toast/烟花/进度上报等完整流程一并触发（保留叶子 submit 作为兜底）。
   const triggerAutoSubmit = inject<(() => void) | null>('questionTriggerAutoSubmit', null)
   const { courseId, chapterId } = useLmsContext()
+  const { user } = useAuth()
+  // 房间号 = 章节id_班级id（同竞赛 pin 的拼接口径）；无班级（如未登录/无班级）时不传
+  const classId = computed(() => user.value?.defaultClass?.id || user.value?.classId || 0)
 
   const iframeRef = ref(null)
   const containerRef = ref(null)
@@ -19,7 +40,11 @@ export function useHtml(props: any) {
 
   // 模式：'url' 以 src 加载外部页面；'html' 用 srcdoc 渲染代码
   const isUrlMode = computed(() => props.question?.extra?.mode === 'url')
-  const urlSrc = computed(() => (props.question?.extra?.url || '').trim())
+  // URL 模式：附上当前用户名与房间号，便于 iframe 内页面识别使用者与班级房间
+  const urlSrc = computed(() => appendParams(props.question?.extra?.url, {
+    username: user.value?.name,
+    room: classId.value && chapterId.value ? `${chapterId.value}_${classId.value}` : '',
+  }))
 
   // 全屏切换
   function toggleFullscreen() {

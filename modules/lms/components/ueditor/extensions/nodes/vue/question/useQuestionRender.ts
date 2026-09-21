@@ -116,6 +116,8 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
     provide('questionIsCorrect', isCorrect)
     provide('questionFromRecord', fromRecord)
     provide('questionId', questionId)
+    // 多选题「显示答案」时选项按原始顺序展示，叶子组件（useMultiple）据此切换顺序
+    provide('questionShowAnswer', showAnswer)
     // html 题在 iframe 上报 rate=1 时触发的"真正提交按钮"路径（走 onSubmit 全流程，
     // 而非子组件叶子 submit，确保提交状态/toast/烟花/进度上报同步触发）。onSubmit 为函数声明，已被提升。
     provide('questionTriggerAutoSubmit', onSubmit)
@@ -131,6 +133,10 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
         const answer = question.value.answer
         const type = question.value.type
         if (type === 'single' || type === 'multiple') {
+            // 多选题「显示答案」时选项已按原始顺序排列，字母即原始下标
+            if (type === 'multiple' && showAnswer.value) {
+                return answer.map((idx: number) => String.fromCharCode(65 + idx))
+            }
             // 选项随机展示：答案存的是原始下标，这里映射为展示位置字母，与题面选项标号一致
             const order = getShuffledOptionOrder(question.value)
             const posOf = new Map(order.map((ori: number, pos: number) => [ori, pos]))

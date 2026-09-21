@@ -34,6 +34,17 @@ export function getShuffledOptionOrder(question: any): number[] {
 }
 
 /**
+ * 原始展示顺序（按出题顺序 A/B/C/D）
+ *
+ * 多选题「显示答案」时使用：此时选项不再乱序，字母标号回到原始下标，
+ * 便于学生把答案字母与题面选项一一对照。
+ */
+export function getOriginalOptionOrder(question: any): number[] {
+  const options = Array.isArray(question?.options) ? question.options : []
+  return options.map((_: any, i: number) => i)
+}
+
+/**
  * 实时记录作答到 question.record（用户选择/输入时立即调用）
  * record 只存答案数组，如 [1]、[2,3]、["122","444"]
  */

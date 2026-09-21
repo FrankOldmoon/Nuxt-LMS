@@ -42,6 +42,8 @@ export function useSubQuestion(props: any, emit: (event: string, ...args: any[])
   provide('questionSubmitted', submitted)
   provide('questionIsCorrect', isCorrect)
   provide('questionFromRecord', fromRecord)
+  // 多选题「显示答案」时选项按原始顺序展示，叶子组件（useMultiple）据此切换顺序
+  provide('questionShowAnswer', computed(() => !!props.showAnswer))
 
   // 渲染组件映射
   const componentMap: Record<string, any> = {
@@ -78,6 +80,10 @@ export function useSubQuestion(props: any, emit: (event: string, ...args: any[])
     const answer = props.subQuestion.answer || []
     const type = props.subQuestion.type
     if (type === 'single' || type === 'multiple') {
+      // 多选题「显示答案」时选项已按原始顺序排列，字母即原始下标
+      if (type === 'multiple' && props.showAnswer) {
+        return answer.map((idx: number) => String.fromCharCode(65 + idx)).join(', ')
+      }
       // 选项随机展示：答案存原始下标，需映射为展示位置字母；
       // 这里必须用子题实际渲染的 localQuestion 对象，才能拿到同一份随机顺序
       const order = getShuffledOptionOrder(localQuestion.value)

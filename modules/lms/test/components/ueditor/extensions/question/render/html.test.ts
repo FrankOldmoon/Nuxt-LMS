@@ -5,7 +5,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { ref } from 'vue'
-import { resetAllStubs, setMockI18n } from '../../../../../../../../test/setup/nuxt-stubs'
+import { resetAllStubs, setMockI18n, setMockAuthUser, setMockLmsContext } from '../../../../../../../../test/setup/nuxt-stubs'
 
 beforeEach(() => {
   resetAllStubs()
@@ -119,6 +119,24 @@ describe('question/render/html.vue', () => {
     expect(iframe.exists()).toBe(true)
     expect(iframe.attributes('src')).toBe('https://example.com')
     expect(iframe.attributes('srcdoc')).toBeUndefined()
+  })
+
+  it('url 模式：附带 username 与 room（章节id_班级id）', async () => {
+    setMockLmsContext(1, 7)
+    setMockAuthUser({ id: 9, username: 'alice', name: 'Alice', classId: 3, defaultClass: { id: 3, name: 'C3' } })
+    const { default: HtmlRender } = await import(
+      '../../../../../../components/ueditor/extensions/nodes/vue/question/render/html.vue'
+    )
+    const urlQuestion = {
+      ...sampleQuestion,
+      extra: { mode: 'url', url: 'https://example.com/play' },
+    }
+    const wrapper = mount(HtmlRender, {
+      props: { question: urlQuestion, questionId: 1 },
+      global: _globalConfig,
+    })
+    expect(wrapper.find('iframe').attributes('src'))
+      .toBe('https://example.com/play?username=Alice&room=7_3')
   })
 
   it('html 默认模式：extra 缺失时依旧使用 srcdoc', async () => {

@@ -1,15 +1,20 @@
 import { ref, computed, inject, watch } from 'vue'
-import { submitQuestion, recordAnswer, getShuffledOptionOrder } from './shared'
+import { submitQuestion, recordAnswer, getShuffledOptionOrder, getOriginalOptionOrder } from './shared'
 
 export function useMultiple(props: any) {
   const submitted = inject<import('vue').Ref<boolean>>('questionSubmitted')
   const isCorrect = inject<import('vue').Ref<boolean>>('questionIsCorrect')
   const fromRecord = inject<import('vue').Ref<boolean>>('questionFromRecord')
+  // 「显示答案」状态（useQuestionRender / useSubQuestion 提供）
+  const showAnswer = inject<import('vue').Ref<boolean> | null>('questionShowAnswer', null)
   const { courseId, chapterId } = useLmsContext()
   const selected = ref<number[]>([])
 
-  // 选项随机展示顺序（原始下标数组）；selected/record 始终存原始下标
-  const optionOrder = computed(() => getShuffledOptionOrder(props.question))
+  // 选项展示顺序（原始下标数组）；selected/record 始终存原始下标。
+  // 显示答案时回到原始顺序（A/B/C/D），便于与答案字母对照；其余情况随机展示。
+  const optionOrder = computed(() => (
+    showAnswer?.value ? getOriginalOptionOrder(props.question) : getShuffledOptionOrder(props.question)
+  ))
   // 展示位置字母：按展示顺序 A/B/C/D...
   function optionLabel(pos: number) {
     return String.fromCharCode(65 + pos)

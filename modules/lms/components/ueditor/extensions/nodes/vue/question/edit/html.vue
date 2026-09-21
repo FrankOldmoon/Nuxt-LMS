@@ -28,7 +28,7 @@
             <div v-if="url" class="mt-3">
                 <label class="text-xs text-gray-500 mb-1 block">{{ $t('question.htmlPreview') }}</label>
                 <div class="border border-neutral-900 dark:border-neutral-900 rounded overflow-hidden">
-                    <iframe :src="url" sandbox="allow-scripts allow-same-origin" class="w-full"
+                    <iframe :src="previewSrc" sandbox="allow-scripts allow-same-origin" class="w-full"
                         style="min-height: 200px; border: 0;" />
                 </div>
             </div>
@@ -74,4 +74,29 @@ const url = computed({
     get: () => props.form.extra.url || '',
     set: (v) => { props.form.extra.url = v },
 })
+
+const { user } = useAuth()
+const { chapterId } = useLmsContext()
+const classId = computed(() => user.value?.defaultClass?.id || user.value?.classId || 0)
+
+/**
+ * 预览地址：在原 url 上追加 username / room 参数（保留原有 query 与 hash），
+ * 便于 iframe 内页面识别当前用户与班级房间；仅用于预览，不写回 form.extra.url。
+ */
+function appendParams(rawUrl, params) {
+    const url = String(rawUrl || '').trim()
+    if (!url) return url
+    const entries = Object.entries(params).filter(([, v]) => v !== null && v !== undefined && v !== '')
+    if (!entries.length) return url
+    const hashIndex = url.indexOf('#')
+    const base = hashIndex >= 0 ? url.slice(0, hashIndex) : url
+    const hash = hashIndex >= 0 ? url.slice(hashIndex) : ''
+    const query = entries.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).join('&')
+    return `${base}${base.includes('?') ? '&' : '?'}${query}${hash}`
+}
+
+const previewSrc = computed(() => appendParams(url.value, {
+    username: user.value?.name,
+    room: classId.value && chapterId.value ? `${chapterId.value}_${classId.value}` : '',
+}))
 </script>
