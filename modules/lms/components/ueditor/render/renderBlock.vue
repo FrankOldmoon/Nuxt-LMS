@@ -15,6 +15,7 @@
 <script setup>
 import RenderNode from './node.vue'
 import ReadingBlock from './readingBlock.vue'
+import { progressHeadingId } from '../../../utils/progressHeading'
 
 defineOptions({ name: 'RenderBlock' })
 
@@ -30,9 +31,8 @@ const props = defineProps({
 
 const blockKey = computed(() => String(props.index))
 
-// 带 id 的标题都作为可阅读块（instant：hover 标题即标记已读）
-const isAutoCompleteHeading = computed(() => {
-  if (props.node.type !== 'heading') return false
-  return !!(props.node.attrs?.id || props.node.attrs?.['data-toc-id'])
-})
+// 「计入进度的标题」作为可阅读块（instant：hover 标题即标记已读）。
+// 用 progressHeadingId 与 blockLayout / 服务端 is_pass 同口径：
+// 空文本标题不计入，也就不该出现 hover 高亮。
+const isAutoCompleteHeading = computed(() => !!progressHeadingId(props.node))
 </script>

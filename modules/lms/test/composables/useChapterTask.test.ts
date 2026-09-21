@@ -420,6 +420,26 @@ describe('composables/useChapterTask', () => {
     expect(ctx.isBlockRead('0')).toBe(false)
   })
 
+  it('applyServerTaskStatus：口径修正后本地已满足全部 heading → isPass 自愈', async () => {
+    const { setupChapterTask } = await import('../../composables/useChapterTask')
+    const content = ref(makeContent([
+      { type: 'heading', attrs: { id: 'h1', level: 2 }, content: [{ type: 'text', text: 'H1' }] },
+      // 空标题：按新口径不计入进度（修复前它会永远卡住 isPass）
+      { type: 'heading', attrs: { id: 'blank', level: 2 }, content: [] },
+    ]))
+    const ctx = setupChapterTask({
+      content,
+      chapterId: ref(5),
+      courseId: ref(1),
+      chapterTitle: ref('Chapter Title'),
+    })
+    // 空标题不计入：只剩合成章节标题 '5' 与 h1
+    expect(ctx.taskMap.value.headings.map(h => h.id)).toEqual(['5', 'h1'])
+    // 服务端已记录完成（含空标题的旧数据），但 is_pass 仍是旧值 false → 本地按新口径重算自愈
+    ctx.applyServerTaskStatus({ '5': true, h1: true, blank: true }, false)
+    expect(ctx.isPass.value).toBe(true)
+  })
+
   it('completeChapterHeading：hover 章节标题即完成一级标题（sticky）', async () => {
     const { setupChapterTask } = await import('../../composables/useChapterTask')
     const ctx = setupChapterTask({

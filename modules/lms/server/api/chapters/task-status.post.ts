@@ -1,5 +1,6 @@
 import { db, schema } from "@nuxthub/db"
 import { eq, and, inArray, sql } from "drizzle-orm"
+import { listProgressHeadingIds } from '../../../utils/progressHeading'
 
 
 /**
@@ -7,8 +8,8 @@ import { eq, and, inArray, sql } from "drizzle-orm"
  * body: { chapter_id, task_status: { [headingId]: boolean }, is_pass: boolean }
  *
  * 安全策略（防客户端伪造）：
- *  - task_status 的 key 必须是章节内容中真实存在的 heading id（含合成的章节标题 id），
- *    未知的 key 一律丢弃
+ *  - task_status 的 key 必须是章节内容中真实存在的 heading id（含合成的章节标题 id，
+ *    且与前端 progressHeadingId 同口径：顶层 + 带 id + 标题文本非空），未知的 key 一律丢弃
  *  - is_pass 由服务端根据「全部合法 heading 是否完成」重算，不信任客户端
  *
  * 当某个 heading 从未完成变为完成时，奖励 chapter.headingExp 经验 + chapter.headingCoin 金币 +
@@ -19,18 +20,9 @@ import { eq, and, inArray, sql } from "drizzle-orm"
  * （整个课程所有章节的通过比 = 已通过章节数 / 课程总章节数）。
  */
 
-/** 从章节 tiptap JSON 中提取合法 heading id 集合（与前端 useChapterTask 对齐） */
+/** 合法 heading id 集合：合成章节标题 + 顶层且标题文本非空的 heading（与前端同口径） */
 function extractHeadingIds(content: any, chapterId: number): Set<string> {
-  const ids = new Set<string>()
-  // 合成 heading：章节标题（h1）以 chapterId 作为 id
-  ids.add(String(chapterId))
-  const topBlocks: any[] = Array.isArray(content?.content) ? content.content : []
-  for (const child of topBlocks) {
-    if (!child || child.type !== 'heading') continue
-    const id = child.attrs?.id || child.attrs?.['data-toc-id']
-    if (id) ids.add(String(id))
-  }
-  return ids
+  return new Set<string>([String(chapterId), ...listProgressHeadingIds(content)])
 }
 
 export default eventHandler(async (event) => {

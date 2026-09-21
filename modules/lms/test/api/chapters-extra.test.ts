@@ -418,7 +418,7 @@ describe('API: chapters/task-status', () => {
     _mockDb.query.userChapters.findFirst = vi.fn().mockResolvedValue(null)
     // 章节 content 含 heading id 'h1'：合法集合 = { '1', 'h1' }（两次调用共用）
     _mockDb.limit = vi.fn().mockResolvedValue([{ courseId: 10, content: { content: [
-      { type: 'heading', attrs: { id: 'h1' } },
+      { type: 'heading', attrs: { id: 'h1' }, content: [{ type: 'text', text: 'Heading 1' }] },
     ] } }])
     // updateCourseProgress 内部 where 终端链需要 thenable
     _mockDb.then = (resolve: any) => resolve([])
@@ -441,7 +441,7 @@ describe('API: chapters/task-status', () => {
       userId: 1, chapterId: 1, isPass: false, taskStatus: { '1': true },
     })
     _mockDb.limit = vi.fn().mockResolvedValue([{ courseId: 10, content: { content: [
-      { type: 'heading', attrs: { id: 'h1' } },
+      { type: 'heading', attrs: { id: 'h1' }, content: [{ type: 'text', text: 'Heading 1' }] },
     ] } }])
     _mockDb.then = (resolve: any) => resolve([])
     const handler = (await import('../../server/api/chapters/task-status.post')).default
@@ -453,6 +453,32 @@ describe('API: chapters/task-status', () => {
     // 验证落库的 taskStatus 中 '1' 保持 true
     const setArg = _mockDb.set.mock.calls.map(c => c[0]).find((s: any) => 'taskStatus' in s)
     expect(setArg.taskStatus['1']).toBe(true)
+  })
+
+  // 回归：章节 57 的空标题（有 id 但文本为空）曾被计入合法集合，
+  // 导致 is_pass 永远无法为 true（用户卡在 24/25）
+  it('标题文本为空的 heading 不计入合法集合，不阻塞 is_pass', async () => {
+    setMockAuthState({ id: 1, username: 's', name: 's', roles: ['student'], permissions: [] })
+    _mockDb.query.userChapters.findFirst = vi.fn().mockResolvedValue(null)
+    _mockDb.limit = vi.fn().mockResolvedValue([{ courseId: 10, content: { content: [
+      { type: 'heading', attrs: { id: 'h1' }, content: [{ type: 'text', text: 'Heading 1' }] },
+      { type: 'heading', attrs: { id: 'blank' }, content: [] },
+      { type: 'paragraph' },
+    ] } }])
+    _mockDb.then = (resolve: any) => resolve([])
+    const handler = (await import('../../server/api/chapters/task-status.post')).default
+
+    // 1) 只完成空标题：其 true 被丢弃 → 仍缺 h1 → 不通过
+    const r1 = await handler(makeEvent({
+      body: { chapter_id: 1, task_status: { '1': true, blank: true }, is_pass: true },
+    }))
+    expect(r1.data.isPass).toBe(false)
+
+    // 2) 完整完成合法 heading（空标题不参与）→ 通过
+    const r2 = await handler(makeEvent({
+      body: { chapter_id: 1, task_status: { '1': true, h1: true, blank: false }, is_pass: false },
+    }))
+    expect(r2.data.isPass).toBe(true)
   })
 
   it('更新已存在记录', async () => {

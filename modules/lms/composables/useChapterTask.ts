@@ -1,5 +1,6 @@
 import { shallowRef, type Ref } from 'vue'
 import type { ChapterTaskMap } from '../utils/chapterTask'
+import { progressHeadingId } from '../utils/progressHeading'
 
 /**
  * 章节任务完成状态上下文
@@ -124,7 +125,7 @@ export function setupChapterTask(opts: {
       const c = topBlocks[i]
       if (!c) continue
       if (c.type === 'heading') {
-        const id = c.attrs?.id || c.attrs?.['data-toc-id']
+        const id = progressHeadingId(c)
         lastHIndex = id ? i : lastHIndex
       } else if (lastHIndex >= 0) {
         const info = belowInfo.get(lastHIndex) || { hasTracked: false, hasAny: false }
@@ -138,8 +139,8 @@ export function setupChapterTask(opts: {
     topBlocks.forEach((child: any, index: number) => {
       if (!child) return
       if (child.type === 'heading') {
-        const id = child.attrs?.id || child.attrs?.['data-toc-id']
-        if (id) curHeading = String(id)
+        const id = progressHeadingId(child)
+        if (id) curHeading = id
         const info = belowInfo.get(index)
         // 标题自身始终作为可阅读块（hover 标题即标记已读、变绿并计入完成）。
         // 无论其下是否有代码块/引用/互动任务，标题都在 byHeading 中登记。
@@ -278,6 +279,13 @@ export function setupChapterTask(opts: {
     }
     taskStatus.value = merged
     if (serverIsPass && !isPass.value) isPass.value = true
+    // 服务端返回的 taskStatus 可能已满足全部 heading，而库里 is_pass 仍是旧值
+    // （典型场景：口径修正后，此前被「空标题」卡住的用户本地其实已全部完成）。
+    // 此处按最新口径本地重算一次，翻转则安排落库，让 is_pass / 课程通过比 / 奖章自愈。
+    if (!isPass.value) {
+      recomputePass()
+      if (isPass.value) schedulePersist()
+    }
     // 服务端状态已同步：同步通知水位，避免下次 persist 重复 notify/checkMedals。
     // 水位应反映「服务端已知的通过状态」（左侧章节列表展示的正是服务端 is_pass）：
     // 若本地已通过但 me 仍返回旧值（答题/作业刚完成、task-status 尚未落库），

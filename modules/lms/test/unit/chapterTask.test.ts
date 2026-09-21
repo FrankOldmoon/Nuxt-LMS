@@ -162,7 +162,7 @@ describe('utils/chapterTask - extractChapterTasks', () => {
     expect(result.headings).toHaveLength(0)
   })
 
-  it('空 content 的 node 安全处理', async () => {
+  it('空 content 的 node 安全处理（空标题不计入进度）', async () => {
     const { extractChapterTasks } = await import('../../utils/chapterTask')
     const content = {
       type: 'doc',
@@ -173,6 +173,41 @@ describe('utils/chapterTask - extractChapterTasks', () => {
       ],
     }
     const result = extractChapterTasks(content as any)
-    expect(result.headings).toHaveLength(1)
+    expect(result.headings).toHaveLength(0)
+  })
+
+  it('标题文本为空的 heading 不计入进度（与目录口径一致）', async () => {
+    const { extractChapterTasks } = await import('../../utils/chapterTask')
+    const content = {
+      type: 'doc',
+      content: [
+        { type: 'heading', attrs: { id: 'h1', level: 2 }, content: [{ type: 'text', text: '有标题' }] },
+        { type: 'heading', attrs: { id: 'blank', level: 2 }, content: [] },
+        { type: 'vue', attrs: { type: 'question', content: '10' } },
+      ],
+    }
+    const result = extractChapterTasks(content as any)
+    expect(result.headings.map(h => h.id)).toEqual(['h1'])
+    // 空标题不作为归属点：其下的任务仍归属上一个计入进度的 heading
+    expect(result.tasksByHeading['blank']).toBeUndefined()
+    expect(result.tasksByHeading['h1']).toHaveLength(1)
+  })
+
+  it('嵌套在容器里的 heading 不计入进度（仅统计顶层）', async () => {
+    const { extractChapterTasks } = await import('../../utils/chapterTask')
+    const content = {
+      type: 'doc',
+      content: [
+        { type: 'heading', attrs: { id: 'h1', level: 2 }, content: [{ type: 'text', text: '顶层' }] },
+        {
+          type: 'blockquote',
+          content: [
+            { type: 'heading', attrs: { id: 'nested', level: 3 }, content: [{ type: 'text', text: '嵌套' }] },
+          ],
+        },
+      ],
+    }
+    const result = extractChapterTasks(content as any)
+    expect(result.headings.map(h => h.id)).toEqual(['h1'])
   })
 })

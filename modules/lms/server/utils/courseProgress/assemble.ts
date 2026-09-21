@@ -2,6 +2,7 @@
  * 学习进度：装配工具（纯函数，可独立 unit test）
  */
 import type { ItemStatus } from './courseProgress/query'
+import { listProgressHeadingIds } from '../../../utils/progressHeading'
 
 /** 收集所有章节中的 question / homework / comment cid（去重由 query 函数内部处理） */
 export function collectAllItemCids(chapters: any[]) {
@@ -29,17 +30,9 @@ export type ProgressContext = {
   accessibleSet: Set<number>
 }
 
-/** 从章节 content 提取合法 heading id（与 useChapterTask / task-status.post 对齐：含合成章节标题 id） */
+/** 合法 heading id 列表：合成章节标题 + 顶层且标题文本非空的 heading（与 useChapterTask / task-status.post 同口径） */
 function extractHeadingIds(content: any, chapterId: number): string[] {
-  const ids: string[] = []
-  ids.push(String(chapterId))
-  const topBlocks: any[] = Array.isArray(content?.content) ? content.content : []
-  for (const child of topBlocks) {
-    if (!child || child.type !== 'heading') continue
-    const id = child.attrs?.id || child.attrs?.['data-toc-id']
-    if (id) ids.push(String(id))
-  }
-  return ids
+  return [String(chapterId), ...listProgressHeadingIds(content)]
 }
 
 /** 装配每章节的 items + score + isPass + accessible + progress（标题完成率） */

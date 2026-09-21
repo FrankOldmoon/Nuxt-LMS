@@ -5,11 +5,14 @@
  * （question / homework / comment / quiz / race），用于判断每个 heading 的完成状态。
  *
  * 规则：
- * - 一个 heading 的范围从它本身到下一个 heading（任意层级）为止
- * - 范围内若无可提交任务 → 纯文字 heading，需停留 5s 完成
+ * - 只有「顶层 + 带 id + 标题文本非空」的 heading 才计入进度（progressHeadingId）
+ *   —— 与目录 extractTocFromContent、渲染端 blockLayout、服务端 is_pass 口径一致；
+ * - 一个 heading 的范围从它本身到下一个**计入进度**的 heading 为止
+ * - 范围内若无可提交任务 → 纯文字 heading，需停留 3s 完成
  * - 范围内若有可提交任务 → 全部答对/提交后才算完成
  */
 import { extractText } from './tiptapText'
+import { progressHeadingId } from './progressHeading'
 
 /** 可提交的任务节点类型（对应 vue 节点的 attrs.type） */
 export const SUBMITTABLE_TYPES = ['question', 'homework', 'comment', 'quiz', 'race'] as const
@@ -49,15 +52,15 @@ export function extractChapterTasks(
   const tasksByHeading: Record<string, HeadingTask[]> = {}
   let currentHeadingId: string | null = preHeadingId ?? null
 
-  function walk(node: any) {
+  // topLevel=true 表示 doc 的直接子块：只有它们能作为「计入进度的 heading」
+  // （与 blockLayout / 服务端 is_pass 口径一致：嵌套在容器里的 heading 不计入）
+  function walk(node: any, topLevel: boolean) {
     if (!node) return
 
-    if (node.type === 'heading') {
-      const id = node.attrs?.id || node.attrs?.['data-toc-id']
-      const level = node.attrs?.level ?? 1
-      const text = extractText(node.content)
+    if (topLevel) {
+      const id = progressHeadingId(node)
       if (id) {
-        headings.push({ id, level, text })
+        headings.push({ id, level: node.attrs?.level ?? 1, text: extractText(node.content) })
         currentHeadingId = id
         if (!tasksByHeading[id]) tasksByHeading[id] = []
       }
@@ -74,11 +77,12 @@ export function extractChapterTasks(
     }
 
     if (node.content && Array.isArray(node.content)) {
-      node.content.forEach(walk)
+      node.content.forEach((child: any) => walk(child, false))
     }
   }
 
-  walk(content)
+  const topBlocks: any[] = Array.isArray(content?.content) ? content.content : []
+  topBlocks.forEach((block: any) => walk(block, true))
 
   return { headings, tasksByHeading }
 }
