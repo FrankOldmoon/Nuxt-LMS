@@ -57,7 +57,7 @@
 </template>
 
 <script setup>
-import { computeModelTransforms } from './modelTransform'
+import { computeModelTransforms, computeCameraFit } from './modelTransform'
 
 const props = defineProps({
     node: { type: Object, default: () => ({}) },
@@ -425,12 +425,15 @@ function frameAll(meshes) {
     const bounds = mergeBounds(meshes)
     if (!bounds) return
     const center = bounds.min.add(bounds.max).scale(0.5)
-    const size = Math.max(bounds.maxDim, 0.01)
+    const fit = computeCameraFit(bounds.maxDim)
     camera.target.copyFrom(center)
-    const radius = size * 1.6
-    camera.radius = radius
-    camera.lowerRadiusLimit = radius * 0.2
-    camera.upperRadiusLimit = radius * 10
+    camera.radius = fit.radius
+    camera.lowerRadiusLimit = fit.lowerRadiusLimit
+    camera.upperRadiusLimit = fit.upperRadiusLimit
+    // 近/远裁剪面必须随场景尺度缩放：Babylon 默认 minZ=1，
+    // 小模型（如 0.29 单位、取景半径约 0.46）会整个落在近裁剪面内被裁掉 → 完全看不见
+    camera.minZ = fit.minZ
+    camera.maxZ = fit.maxZ
 }
 
 function resetCamera() {

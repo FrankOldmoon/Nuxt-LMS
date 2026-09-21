@@ -26,6 +26,34 @@ function num(v) {
 }
 
 /**
+ * 由场景尺度推导相机取景参数（纯函数，便于单测）。
+ *
+ * 关键：**近/远裁剪面必须随场景尺度缩放**。
+ * Babylon 相机默认 minZ = 1，若模型尺寸只有零点几单位
+ * （例如 0.29 的盒子，取景半径仅 0.29 × 1.6 ≈ 0.46），
+ * 整个模型都会落在近裁剪面之内被裁掉 —— 画面上什么都看不到。
+ * 这正是「只有一个很小的 3D 模型时完全看不见」的原因。
+ *
+ * @param {number} maxDim 场景包围盒的最大边
+ * @returns {{radius:number, lowerRadiusLimit:number, upperRadiusLimit:number, minZ:number, maxZ:number}}
+ */
+export function computeCameraFit(maxDim) {
+    const raw = Number(maxDim)
+    const size = (Number.isFinite(raw) && raw > 0) ? raw : 0.01
+    const radius = size * 1.6
+    return {
+        radius,
+        lowerRadiusLimit: radius * 0.2,
+        upperRadiusLimit: radius * 10,
+        // 近裁剪面取取景半径的 1/20：远小于「最近几何面到相机的距离」(≈ radius - size/2)，
+        // 保证任意尺度的模型都不会被裁掉；同时保持 maxZ/minZ 比例不至于过大影响深度精度。
+        minZ: Math.max(radius / 20, 1e-4),
+        // 远裁剪面需覆盖场景（含暗色背景下的 20 单位地面）
+        maxZ: Math.max(size * 10, 100),
+    }
+}
+
+/**
  * 计算每个模型最终要应用的变换。
  * @param {Array<{scale?:number, position?:number[], rotation?:number[]}>} models 模型配置（与 dims 同序）
  * @param {number[]} dims 每个模型自身包围盒的最大边（加载失败置 0）
