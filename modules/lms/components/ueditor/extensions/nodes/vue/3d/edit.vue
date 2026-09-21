@@ -14,14 +14,48 @@
                 <div
                     v-for="(m, idx) in modelList"
                     :key="idx"
-                    class="flex items-center gap-2 p-2 bg-muted/30 rounded"
+                    class="flex flex-col gap-2 p-2 bg-muted/30 rounded"
                 >
-                    <span class="text-xs w-6 text-muted">#{{ idx + 1 }}</span>
-                    <input v-model="m.name" class="flex-1 text-sm px-2 py-1 rounded border border-default bg-default" />
                     <div class="flex items-center gap-2">
-                        <UIcon name="i-lucide-move-up" class="size-4 cursor-pointer text-muted hover:text-primary" :class="{ 'opacity-30 cursor-not-allowed': idx === 0 }" @click="moveModel(idx, -1)" />
-                        <UIcon name="i-lucide-move-down" class="size-4 cursor-pointer text-muted hover:text-primary" :class="{ 'opacity-30 cursor-not-allowed': idx === modelList.length - 1 }" @click="moveModel(idx, 1)" />
-                        <UIcon name="i-lucide-trash-2" class="size-4 cursor-pointer text-muted hover:text-error" @click="removeModel(idx)" />
+                        <span class="text-xs w-6 text-muted">#{{ idx + 1 }}</span>
+                        <input v-model="m.name" class="flex-1 text-sm px-2 py-1 rounded border border-default bg-default" />
+                        <div class="flex items-center gap-2">
+                            <UIcon name="i-lucide-move-up" class="size-4 cursor-pointer text-muted hover:text-primary" :class="{ 'opacity-30 cursor-not-allowed': idx === 0 }" @click="moveModel(idx, -1)" />
+                            <UIcon name="i-lucide-move-down" class="size-4 cursor-pointer text-muted hover:text-primary" :class="{ 'opacity-30 cursor-not-allowed': idx === modelList.length - 1 }" @click="moveModel(idx, 1)" />
+                            <UIcon name="i-lucide-trash-2" class="size-4 cursor-pointer text-muted hover:text-error" @click="removeModel(idx)" />
+                        </div>
+                    </div>
+
+                    <!-- 每个模型的变换：scale / position / rotation（度） -->
+                    <div class="flex flex-col gap-1.5">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-muted w-16 shrink-0 whitespace-nowrap">{{ t('ueditor.modelScale') }}</span>
+                            <input v-model.number="m.scale" type="number" step="0.1" min="0" class="w-20 text-xs px-1.5 py-1 rounded border border-default bg-default" />
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-muted w-16 shrink-0 whitespace-nowrap">{{ t('ueditor.modelPosition') }}</span>
+                            <input
+                                v-for="(axis, ai) in ['X', 'Y', 'Z']"
+                                :key="`pos-${idx}-${ai}`"
+                                v-model.number="m.position[ai]"
+                                type="number"
+                                step="1"
+                                :placeholder="axis"
+                                class="w-16 text-xs px-1.5 py-1 rounded border border-default bg-default"
+                            />
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-muted w-16 shrink-0 whitespace-nowrap">{{ t('ueditor.modelRotation') }}</span>
+                            <input
+                                v-for="(axis, ai) in ['X', 'Y', 'Z']"
+                                :key="`rot-${idx}-${ai}`"
+                                v-model.number="m.rotation[ai]"
+                                type="number"
+                                step="5"
+                                :placeholder="axis"
+                                class="w-16 text-xs px-1.5 py-1 rounded border border-default bg-default"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -66,7 +100,14 @@ const fileInputRef = ref(null)
 const modelList = computed({
     get: () => {
         if (Array.isArray(props.config?.models) && props.config.models.length) {
-            return props.config.models.map((m) => ({ ...m }))
+            // 补齐变换字段默认值，保证面板里的 m.scale / m.position[ai] / m.rotation[ai] 可直接编辑
+            // （列表项是副本，编辑后由 apply() / applyWithList() 统一 emit 回父级）
+            return props.config.models.map((m) => ({
+                ...m,
+                scale: (Number.isFinite(Number(m?.scale)) && Number(m.scale) !== 0) ? Number(m.scale) : 1,
+                position: Array.isArray(m?.position) && m.position.length === 3 ? [...m.position] : [0, 0, 0],
+                rotation: Array.isArray(m?.rotation) && m.rotation.length === 3 ? [...m.rotation] : [0, 0, 0],
+            }))
         }
         return []
     },

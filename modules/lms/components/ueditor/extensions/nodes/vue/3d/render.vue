@@ -57,6 +57,8 @@
 </template>
 
 <script setup>
+import { computeModelTransforms } from './modelTransform'
+
 const props = defineProps({
     node: { type: Object, default: () => ({}) },
 })
@@ -331,6 +333,10 @@ async function loadModels() {
 
     loadingCount.value = models.length
     const allMeshes = []
+    // 先逐个加载并量出各自包围盒，再统一计算/应用变换：
+    // 尺寸归一化需要「同一节点内最大模型」作为基准
+    const containers = new Array(models.length).fill(null)
+    const dims = new Array(models.length).fill(0)
 
     for (let i = 0; i < models.length; i++) {
         const m = models[i]
@@ -355,27 +361,14 @@ async function loadModels() {
             // 释放 blob URL
             URL.revokeObjectURL(blobUrl)
             loadedMeshes.push({ container, meshes: container.meshes, modelIdx: i })
+            containers[i] = container
 
             const name = m.name || fname || `Model ${i + 1}`
             const color = palette(i)
             modelList.value.push({ name, url: m.url, visible: true, color })
 
-            // Per-model transform (scale/position/rotation)
-            const scale = m.scale ?? 1
-            const pos = Array.isArray(m.position) ? m.position : [0, 0, 0]
-            const rot = Array.isArray(m.rotation) ? m.rotation : [0, 0, 0]
-            container.meshes.forEach((mesh) => {
-                if (mesh.parent) return // 只调整顶层
-                mesh.scaling = mesh.scaling.scale(scale)
-                mesh.position.x += pos[0] || 0
-                mesh.position.y += pos[1] || 0
-                mesh.position.z += pos[2] || 0
-                mesh.rotation.x += rot[0] || 0
-                mesh.rotation.y += rot[1] || 0
-                mesh.rotation.z += rot[2] || 0
-                mesh.cullingStrategy = BABYLON.AbstractMesh.CULLINGSTRATEGY_BOUNDINGSPHERE_ONLY
-            })
-            allMeshes.push(...container.meshes)
+            const bounds = mergeBounds(container.meshes)
+            if (bounds) dims[i] = bounds.maxDim
         } catch (err) {
             errors.value.push(`${m.name || `model${i + 1}`}: ${err?.message || String(err)}`)
         } finally {
@@ -383,32 +376,56 @@ async function loadModels() {
         }
     }
 
+    // 尺寸归一化 + 每个模型的 scale / position / rotation（rotation 配置单位：度）
+    const transforms = computeModelTransforms(models, dims)
+    transforms.forEach((tf, i) => {
+        const container = containers[i]
+        if (!container) return
+        container.meshes.forEach((mesh) => {
+            if (mesh.parent) return // 只调整顶层
+            mesh.scaling = mesh.scaling.scale(tf.scale)
+            mesh.position.x += tf.position[0]
+            mesh.position.y += tf.position[1]
+            mesh.position.z += tf.position[2]
+            mesh.rotation.x += tf.rotation[0]
+            mesh.rotation.y += tf.rotation[1]
+            mesh.rotation.z += tf.rotation[2]
+            mesh.cullingStrategy = BABYLON.AbstractMesh.CULLINGSTRATEGY_BOUNDINGSPHERE_ONLY
+        })
+        allMeshes.push(...container.meshes)
+    })
+
     if (allMeshes.length) {
         frameAll(allMeshes)
     }
 }
 
-function frameAll(meshes) {
+/**
+ * 合并一组 mesh 的世界包围盒（含子节点变换）。
+ * 供 frameAll 取景与「尺寸归一化」量测各自模型尺寸复用。
+ * @returns {{min:any,max:any,size:any,maxDim:number}|null} 无有效包围盒时返回 null
+ */
+function mergeBounds(meshes) {
     const BABYLON = window.BABYLON
-    const minVec = new BABYLON.Vector3(Infinity, Infinity, Infinity)
-    const maxVec = new BABYLON.Vector3(-Infinity, -Infinity, -Infinity)
+    const min = new BABYLON.Vector3(Infinity, Infinity, Infinity)
+    const max = new BABYLON.Vector3(-Infinity, -Infinity, -Infinity)
     meshes.forEach((mesh) => {
         if (!mesh.getBoundingInfo) return
         mesh.computeWorldMatrix(true)
-        const bi = mesh.getBoundingInfo()
-        const bbMin = bi.boundingBox.minimumWorld
-        const bbMax = bi.boundingBox.maximumWorld
-        minVec.x = Math.min(minVec.x, bbMin.x)
-        minVec.y = Math.min(minVec.y, bbMin.y)
-        minVec.z = Math.min(minVec.z, bbMin.z)
-        maxVec.x = Math.max(maxVec.x, bbMax.x)
-        maxVec.y = Math.max(maxVec.y, bbMax.y)
-        maxVec.z = Math.max(maxVec.z, bbMax.z)
+        const bb = mesh.getBoundingInfo().boundingBox
+        min.minimizeInPlace(bb.minimumWorld)
+        max.maximizeInPlace(bb.maximumWorld)
     })
-    if (!isFinite(minVec.x)) return
-    const center = minVec.add(maxVec).scale(0.5)
-    const sizeVec = maxVec.subtract(minVec)
-    const size = Math.max(sizeVec.x, sizeVec.y, sizeVec.z, 0.01)
+    if (!isFinite(min.x)) return null
+    const size = max.subtract(min)
+    return { min, max, size, maxDim: Math.max(size.x, size.y, size.z) }
+}
+
+function frameAll(meshes) {
+    const bounds = mergeBounds(meshes)
+    if (!bounds) return
+    const center = bounds.min.add(bounds.max).scale(0.5)
+    const size = Math.max(bounds.maxDim, 0.01)
     camera.target.copyFrom(center)
     const radius = size * 1.6
     camera.radius = radius
