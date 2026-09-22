@@ -48,11 +48,8 @@ const PLAN = [
   { file: '09-oj-question-and-sort-answer.md', chapterId: null, name: 'OJ Question & Sort Answer' },
 ]
 
-/** 1081 概览里为新增章节补的两条目录项 */
-const NEW_INDEX_ITEMS = [
-  '✅ Generating and uploading course covers (SVG → PNG)',
-  '✅ OJ questions and sort-answer authoring conventions',
-]
+/** 概览页（分组章节 1081，AI 的入口页）的正文来源：与 01-09 同一套转换流程，但不进 orders */
+const OVERVIEW_FILE = '00-about-ai-skills.md'
 
 const MAX_VERSIONS_KEPT = 50
 
@@ -155,6 +152,22 @@ function blocksOf(doc) {
   return doc && Array.isArray(doc.content) ? doc.content : []
 }
 
+/** 覆盖章节前先快照旧内容（保留最近 N 份），再写入新内容 */
+async function updateContent(chapterId, oldContent, newDoc) {
+  await sql.begin(async (tx) => {
+    await tx`insert into chapter_versions (chapter_id, content) values (${chapterId}, ${tx.json(oldContent)})`
+    await tx`
+      delete from chapter_versions
+      where chapter_id = ${chapterId}
+        and id not in (
+          select id from chapter_versions
+          where chapter_id = ${chapterId}
+          order by id desc limit ${MAX_VERSIONS_KEPT}
+        )`
+    await tx`update chapters set content = ${tx.json(newDoc)}, updated_at = now() where id = ${chapterId}`
+  })
+}
+
 const sql = postgres(loadPostgresUrl(), { max: 1, connect_timeout: 15 })
 
 try {
@@ -218,18 +231,7 @@ try {
       }
 
       if (APPLY && changed) {
-        await sql.begin(async (tx) => {
-          await tx`insert into chapter_versions (chapter_id, content) values (${item.chapterId}, ${tx.json(row.content)})`
-          await tx`
-            delete from chapter_versions
-            where chapter_id = ${item.chapterId}
-              and id not in (
-                select id from chapter_versions
-                where chapter_id = ${item.chapterId}
-                order by id desc limit ${MAX_VERSIONS_KEPT}
-              )`
-          await tx`update chapters set content = ${tx.json(doc)}, updated_at = now() where id = ${item.chapterId}`
-        })
+        await updateContent(item.chapterId, row.content, doc)
         console.log('   ✅ 已更新（旧内容已存 chapter_versions）')
       }
     } else {
@@ -249,32 +251,17 @@ try {
     }
   }
 
-  // ---------- 1081 概览目录：补上新增章节的两条 ----------
-  const groupDoc = structuredClone(groupChapter.content)
-  const bulletList = blocksOf(groupDoc).find((b) => b.type === 'bulletList')
-  if (!bulletList) throw new Error(`章节 ${GROUP_ID} 里找不到目录 bulletList，已中止`)
+  // ---------- 1081 概览页：由 skills/00-about-ai-skills.md 生成（单一来源） ----------
+  {
+    const md = readFileSync(resolve(ROOT, 'skills', OVERVIEW_FILE), 'utf8')
+    const doc = docOf(md)
+    adoptHeadingIds(doc, groupChapter.content)
+    const changed = canon(groupChapter.content) !== canon(doc)
 
-  const existingBullets = collectTexts(bulletList)
-  const missingItems = NEW_INDEX_ITEMS.filter(
-    (label) => !existingBullets.some((t) => t.includes(label.replace(/^✅\s*/, '').slice(0, 20)))
-  )
-
-  console.log(`\n#${GROUP_ID} ${groupChapter.name}（概览目录）`)
-  if (!missingItems.length) {
-    console.log('   目录清单已包含新增章节，无需改动')
-  } else {
-    missingItems.forEach((label) => console.log(`   + ${label}`))
-    if (APPLY) {
-      for (const label of missingItems) {
-        bulletList.content.push({
-          type: 'listItem',
-          content: [{ type: 'paragraph', content: [{ type: 'text', text: label }] }],
-        })
-      }
-      await sql.begin(async (tx) => {
-        await tx`insert into chapter_versions (chapter_id, content) values (${GROUP_ID}, ${tx.json(groupChapter.content)})`
-        await tx`update chapters set content = ${tx.json(groupDoc)}, updated_at = now() where id = ${GROUP_ID}`
-      })
+    console.log(`\n#${GROUP_ID} ${groupChapter.name}（概览页）`)
+    console.log(`   ${OVERVIEW_FILE} | blocks ${blocksOf(groupChapter.content).length} → ${blocksOf(doc).length} | ${changed ? '内容有变化' : '已是最新（无需写入）'}`)
+    if (APPLY && changed) {
+      await updateContent(GROUP_ID, groupChapter.content, doc)
       console.log('   ✅ 已更新（旧内容已存 chapter_versions）')
     }
   }
