@@ -12,8 +12,11 @@
  */
 const fs = require('fs')
 const path = require('path')
+const { getOjBase } = require('./lib/oj-config.cjs')
 
 const BASE = 'https://aics.oldmoon.cn'
+// OJ 平台基址取自 BASE 所在站点的系统设置（oj.url），不硬编码；启动时解析
+let OJ_BASE = ''
 const COURSE_ID = 7
 const CHAPTER_ID = 14
 const OUT_DIR = path.join(__dirname, '..', 'storage', 'oj_problems')
@@ -145,7 +148,7 @@ function buildIndexTable() {
     byYear[y][lvl].push(d.pid)
   }
   const years = Object.keys(byYear).sort((a, b) => Number(a) - Number(b))
-  const link = (pid) => `[${pid}](http://oj.oldmoon.cn/p/${pid})`
+  const link = (pid) => `[${pid}](${OJ_BASE}/p/${pid})`
   let md = '| 年份 | 🥉 初级 J1–J5 | 🥇 高级 S1–S5 |\n| --- | --- | --- |\n'
   for (const y of years) {
     const j = byYear[y].J.map(link).join(' ')
@@ -157,6 +160,9 @@ function buildIndexTable() {
 
 /* ---------- 主流程 ---------- */
 ;(async () => {
+  OJ_BASE = await getOjBase({ site: BASE })
+  console.log(`OJ base: ${OJ_BASE}`)
+
   // 1. 登录
   const loginRes = await fetch(BASE + '/api/auth/login', {
     method: 'POST',

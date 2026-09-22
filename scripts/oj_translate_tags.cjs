@@ -1,5 +1,5 @@
 /**
- * 批量把 10.28.1.155 OJ 题目标签改成英文
+ * 批量把 OJ（地址取系统设置 oj.url）题目标签改成英文
  *
  * 用法：node scripts/oj_translate_tags.cjs <username> <password>
  * 安全点（沿用标题翻译的教训）：edit 四字段全带（pid + 当前 title + 当前 content + 新 tag），
@@ -9,8 +9,10 @@
  */
 const fs = require('fs')
 const path = require('path')
+const { getOjBase } = require('./lib/oj-config.cjs')
 
-const BASE = 'http://10.28.1.155'
+// OJ 平台基址来自系统设置（configs 表 lms:oj.url），不硬编码；启动时解析
+let BASE = ''
 const OUT_DIR = path.join(__dirname, '..', 'storage', 'oj_problems')
 const BACKUP = path.join(OUT_DIR, 'oj155_tag_backup.json')
 
@@ -86,6 +88,8 @@ const translateTag = (t) => {
 }
 
 ;(async () => {
+  BASE = await getOjBase()
+  console.log(`OJ base: ${BASE}`)
   const [uname, password] = process.argv.slice(2)
   if (!uname || !password) {
     console.error('用法: node scripts/oj_translate_tags.cjs <username> <password>')

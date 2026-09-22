@@ -11,7 +11,8 @@
 > must come before the sort node**.
 >
 > Prerequisites: the question types / `answer` formats table and the tiptap node rules are in **skills/03**.
-> The OJ platform base URL comes from the LMS config `oj.url` (env `OJ`), never hard-coded.
+> The OJ platform base URL comes from the LMS **system config** (`oj.url`, i.e. 管理后台 → 系统设置 →
+> 学习行为配置 →「OJ 基础地址」, DB key `lms:oj.url`), never hard-coded and with no env fallback.
 
 ## 1. Fetch the OJ problem statement (the source of truth)
 
@@ -19,11 +20,17 @@ The LMS stores only the **pid**; the statement is fetched at read time by `fetch
 (`modules/lms/server/utils/questions/oj.ts`) and swapped into `content` by `GET /api/questions/show`.
 
 ```bash
-# GET <oj.url>/p/<pid>  with header  Accept: application/json
-# -> body.pdoc.content  is a JSON string -> { zh, en }
-curl -s -H 'Accept: application/json' http://10.28.1.155/p/P1004 \
+# 1) 先取系统设置里的 OJ 基础地址（唯一来源，别写死）
+OJ=$(curl -s <lms-host>/api/config/lms-public | jq -r '.data.oj.url')
+
+# 2) GET <oj.url>/p/<pid>  with header  Accept: application/json
+#    -> body.pdoc.content  is a JSON string -> { zh, en }
+curl -s -H 'Accept: application/json' "$OJ/p/P1004" \
   | jq -r '.pdoc.content' | jq -r '.en // .zh'
 ```
+
+- 脚本里要读同一份配置，用 `scripts/lib/oj-config.cjs` 的 `getOjBase()`（读 `lms:oj.url`），
+  不要把 OJ 地址写进脚本。
 
 - ⚠️ **Do not** read statements from `storage/oj_problems/oj155_all_details.json` — that cache strips
   Unicode (`−`, `×`, …) and is lossy. Always use `fetchOj` / the OJ API.

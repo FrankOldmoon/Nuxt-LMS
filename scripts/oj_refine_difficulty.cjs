@@ -1,5 +1,5 @@
 /**
- * 细化 10.28.1.155 OJ difficulty 分布（1-10 制）
+ * 细化 OJ（地址取系统设置 oj.url）difficulty 分布（1-10 制）
  *
  * 策略：按 tag 签名（去掉 Beginner/Algorithms 前缀）分组，每组给一个难度区间 [lo,hi]，
  * 组内按 pid 顺序插值（越靠后越难），铺满 1-10。
@@ -14,7 +14,7 @@
  * 用法：node scripts/oj_refine_difficulty.cjs <username> <password> [--dry]
  *
  * ─────────────────────────────────────────────────────────────────
- * ⚠️ Hydro OJ (10.28.1.155) edit 接口踩坑大全（2026-09-09 实测）
+ * ⚠️ Hydro OJ（系统设置 oj.url 所指向的平台）edit 接口踩坑大全（2026-09-09 实测）
  * ─────────────────────────────────────────────────────────────────
  * ① 必须登录会话
  *    POST /login 用 form 表单（uname/password），从 Set-Cookie 拿 sid。
@@ -50,8 +50,10 @@
  */
 const fs = require('fs')
 const path = require('path')
+const { getOjBase } = require('./lib/oj-config.cjs')
 
-const BASE = 'http://10.28.1.155'
+// OJ 平台基址来自系统设置（configs 表 lms:oj.url），不硬编码；启动时解析
+let BASE = ''
 const OUT_DIR = path.join(__dirname, '..', 'storage', 'oj_problems')
 const BACKUP = path.join(OUT_DIR, 'oj155_difficulty_backup_v2.json')
 
@@ -122,6 +124,8 @@ async function api(p, method = 'GET', form) {
 }
 
 ;(async () => {
+  BASE = await getOjBase()
+  console.log(`OJ base: ${BASE}`)
   const dry = process.argv.includes('--dry')
   const args = process.argv.slice(2).filter((a) => !a.startsWith('--'))
   const [uname, password] = args

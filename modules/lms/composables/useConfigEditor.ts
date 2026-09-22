@@ -51,7 +51,7 @@ export function useConfigEditor(props: ConfigEditorProps, emit: (e: 'update:mode
       questionOnlyOnCorrect: true,
       onlyOnReward: true,
     },
-    // OJ 在线评测平台基址（fetchOj / getOjStatus 拼接地址用，只从 config/env 加载，不硬编码）
+    // OJ 在线评测平台基址（fetchOj / getOjStatus 拼接地址用，只从系统设置 lms:oj.url 读取，不硬编码、无 env 兜底）
     oj: { url: '' },
     // Python 在线运行器（codeflow/IDE）基址，供 codeBlock 运行按钮使用
     codeflow: { url: 'http://10.28.1.152/ide' },

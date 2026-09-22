@@ -1,5 +1,5 @@
 /**
- * 批量把 10.28.1.155 OJ 题目标题改成英文
+ * 批量把 OJ（地址取系统设置 oj.url）题目标题改成英文
  *
  * ⚠️ Hydro edit 接口踩坑大全见 scripts/oj_refine_difficulty.cjs 头部注释
  *    （登录会话 / Accept 头 / form-urlencoded / tag 逗号串 / pid 必带 / 302 需回读验证）。
@@ -10,8 +10,10 @@
  */
 const fs = require('fs')
 const path = require('path')
+const { getOjBase } = require('./lib/oj-config.cjs')
 
-const BASE = 'http://10.28.1.155'
+// OJ 平台基址来自系统设置（configs 表 lms:oj.url），不硬编码；启动时解析
+let BASE = ''
 const OUT_DIR = path.join(__dirname, '..', 'storage', 'oj_problems')
 const BACKUP = path.join(OUT_DIR, 'oj155_title_backup.json')
 
@@ -239,6 +241,8 @@ async function api(p, method = 'GET', body, form) {
 }
 
 ;(async () => {
+  BASE = await getOjBase()
+  console.log(`OJ base: ${BASE}`)
   const [uname, password] = process.argv.slice(2)
   if (!uname || !password) {
     console.error('用法: node scripts/oj_translate_titles.cjs <username> <password>')

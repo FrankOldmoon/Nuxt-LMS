@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
+const { getOjBase } = require('./lib/oj-config.cjs');
 
-const BASE = 'http://oj.oldmoon.cn';
+// OJ 平台基址来自系统设置（configs 表 lms:oj.url），不硬编码；启动时解析
+let BASE = '';
 const OUT = path.join(__dirname, '..', 'storage', 'oj_problems');
 const HEADERS = { Accept: 'application/json' };
 
@@ -12,6 +14,8 @@ async function getJSON(url) {
 }
 
 (async () => {
+  BASE = await getOjBase();
+  console.log(`OJ base: ${BASE}`);
   // 1. Fetch all list pages
   const allPdocs = [];
   for (let page = 1; page <= 2; page++) {

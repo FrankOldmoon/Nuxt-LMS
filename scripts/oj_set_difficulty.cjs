@@ -1,5 +1,5 @@
 /**
- * 批量设置 10.28.1.155 OJ 每道题的 difficulty（当前全部为 0 未评级）
+ * 批量设置 OJ（地址取系统设置 oj.url）每道题的 difficulty（当前全部为 0 未评级）
  *
  * ⚠️ Hydro edit 接口有一堆坑（登录会话 / Accept 头 / form-urlencoded / tag 逗号串 /
  *    pid 必带 / 302 不代表成功），完整踩坑文档见 scripts/oj_refine_difficulty.cjs 头部注释。
@@ -17,8 +17,10 @@
  */
 const fs = require('fs')
 const path = require('path')
+const { getOjBase } = require('./lib/oj-config.cjs')
 
-const BASE = 'http://10.28.1.155'
+// OJ 平台基址来自系统设置（configs 表 lms:oj.url），不硬编码；启动时解析
+let BASE = ''
 const OUT_DIR = path.join(__dirname, '..', 'storage', 'oj_problems')
 const BACKUP = path.join(OUT_DIR, 'oj155_difficulty_backup.json')
 
@@ -56,6 +58,8 @@ async function api(p, method = 'GET', body, form) {
 }
 
 ;(async () => {
+  BASE = await getOjBase()
+  console.log(`OJ base: ${BASE}`)
   const [uname, password] = process.argv.slice(2)
   if (!uname || !password) {
     console.error('用法: node scripts/oj_set_difficulty.cjs <username> <password>')

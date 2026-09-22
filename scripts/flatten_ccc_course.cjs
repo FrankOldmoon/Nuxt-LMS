@@ -11,8 +11,11 @@
  */
 const fs = require('fs')
 const path = require('path')
+const { getOjBase } = require('./lib/oj-config.cjs')
 
 const BASE = 'https://aics.oldmoon.cn'
+// OJ 平台基址取自 BASE 所在站点的系统设置（oj.url），不硬编码；启动时解析
+let OJ_BASE = ''
 const COURSE_ID = 7
 const OUT_DIR = path.join(__dirname, '..', 'storage', 'oj_problems')
 const CHECKPOINT = path.join(OUT_DIR, 'qcids.json')
@@ -40,7 +43,7 @@ function buildIndexTable() {
     byYear[y][lvl].push(d.pid)
   }
   const years = Object.keys(byYear).sort((a, b) => Number(a) - Number(b))
-  const link = (pid) => `[${pid}](http://oj.oldmoon.cn/p/${pid})`
+  const link = (pid) => `[${pid}](${OJ_BASE}/p/${pid})`
   let md = '| Year | 🥉 Junior J1–J5 | 🥇 Senior S1–S5 |\n| --- | --- | --- |\n'
   for (const y of years) {
     md += `| 20${y} | ${byYear[y].J.map(link).join(' ')} | ${byYear[y].S.map(link).join(' ')} |\n`
@@ -92,6 +95,9 @@ async function fillChapter(id, name, md, qmap, expectedQ) {
 }
 
 ;(async () => {
+  OJ_BASE = await getOjBase({ site: BASE })
+  console.log(`OJ base: ${OJ_BASE}`)
+
   const loginRes = await fetch(BASE + '/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

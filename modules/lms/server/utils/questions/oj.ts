@@ -1,8 +1,11 @@
 /**
  * OJ（在线评测）平台对接
  *
- * 基址只来自 LMS 配置 oj.url（默认由环境变量 OJ 提供，可在管理后台覆盖），不硬编码。
+ * 基址只来自 LMS 系统设置「学习行为配置 → OJ 基础地址」（configs 表 lms:oj.url），
+ * 不硬编码、也没有环境变量兜底；留空则不启用 OJ 题目拉取与判题状态查询。
  * getLmsConfigSync 通过 Nuxt auto-import 引入（不显式 import），与其它 server util 一致。
+ *
+ * 脚本侧要读同一份配置，用 scripts/lib/oj-config.cjs 的 getOjBase()。
  */
 
 /** 获取 OJ 平台基址（去掉末尾斜杠）；未配置时返回空串 */

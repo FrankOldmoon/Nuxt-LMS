@@ -1,11 +1,13 @@
 /**
- * 抓取 10.28.1.155 全部题目详情（title/tag/content 摘要），供细化 difficulty 定级分析
+ * 抓取 OJ（地址取系统设置 oj.url）全部题目详情（title/tag/content 摘要），供细化 difficulty 定级分析
  * 输出: storage/oj_problems/oj155_all_details.json
  */
 const fs = require('fs')
 const path = require('path')
+const { getOjBase } = require('./lib/oj-config.cjs')
 
-const BASE = 'http://10.28.1.155'
+// OJ 平台基址来自系统设置（configs 表 lms:oj.url），不硬编码；启动时解析
+let BASE = ''
 const OUT = path.join(__dirname, '..', 'storage', 'oj_problems', 'oj155_all_details.json')
 let COOKIE = ''
 
@@ -22,6 +24,8 @@ async function api(p, method = 'GET', form) {
 }
 
 ;(async () => {
+  BASE = await getOjBase()
+  console.log(`OJ base: ${BASE}`)
   const [uname, password] = process.argv.slice(2)
   await api('/login', 'POST', { uname, password })
   if (!COOKIE) throw new Error('登录失败')
