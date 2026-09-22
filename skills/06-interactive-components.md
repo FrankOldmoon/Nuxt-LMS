@@ -101,12 +101,58 @@ Comments are **user-generated content** (`requireAuth`, records userId), unlike 
 - Embed: `{ "type": "vue", "attrs": { "type": "comment", "content": "<cid>" } }`;
   students reply inside the node (when creating a comment node in the editor, the entity is created first and its cid written back to attrs.content)
 
-## 5. Suggested order
+## 5. Body content: minimum quality bar (homework / comment)
+
+`content` is what the student reads before doing the task — **one short sentence is not enough**. Rules:
+
+- **Always pass tiptap doc JSON, never a bare string.** `/api/homeworks/update` and `/api/comments/update`
+  write the value straight through (no `normalizeContent`), so a string stays a string and other clients
+  render it inconsistently. ⚠️ The **chapters / courses** endpoints *do* convert markdown → doc; these two
+  do **not**. (History: chapter 161's homework/comment were one-sentence strings until 2026-09-22.)
+- **At least 2 sentences, laid out as 2 paragraphs**:
+  1. 第 1 段 = **做什么**：学生要操作什么、看什么；关键词可用 `bold` 标出；
+  2. 第 2 段 = **交什么 / 检查点**：怎么提交，以及验收要求（用 `✅` 开头）。
+- 每段用语义 emoji 开头（📷 / 📸 截图提交、💡 讨论、🤔 追问）。
+- **comment 也要 ≥2 句**：先让学生用自己的话复述概念，再让他举一个真实例子或提问。
+- `name` 同样是学生可见文本，别留拼写错误（历史坑：`Feature and edge dectection`）。
+
+Example（homework，course 5 / chapter 161 cid=8）:
+
+```json
+{
+  "type": "doc",
+  "content": [
+    { "type": "paragraph", "content": [
+      { "type": "text", "text": "📷 Open both AI vision demos above and try them with a picture: the first one pulls " },
+      { "type": "text", "text": "features", "marks": [{ "type": "bold" }] },
+      { "type": "text", "text": " out of it, the second one finds the " },
+      { "type": "text", "text": "edges", "marks": [{ "type": "bold" }] },
+      { "type": "text", "text": " of the objects." }
+    ] },
+    { "type": "paragraph", "content": [
+      { "type": "text", "text": "📸 Take a screenshot of the result and submit it here. ✅ Make sure the screenshot clearly shows what the demo detected." }
+    ] }
+  ]
+}
+```
+
+**Update an existing entity**（`add` 之外的入口，只改你要改的字段）：
+
+```json
+POST /api/homeworks/update   { "course_id": 5, "id": 8,  "content": <doc> }
+POST /api/comments/update    { "course_id": 5, "id": 125, "content": <doc> }
+```
+
+- `homeworks/update`：`{course_id, id}` + 任意字段（`id` 即 cid，`cid` 会被删除，不允许改）
+- `comments/update`：字段白名单只有 `name / code / content / tags / point`，且 content 会过
+  `validateCommentContent`（禁 iframe/script）且不能为空
+
+## 6. Suggested order
 
 1. Create questions (skills/03, collect cids) → 2. Create homework/quiz/race (quiz/race reference question cids) →
 3. Assemble chapter content (vue nodes referencing entity cids) → 4. Save via `POST /api/chapters/update`
 
-## 6. Inspect and verify
+## 7. Inspect and verify
 
 - `GET /api/homeworks/show?course_id=<id>&cid=<cid>` (quiz/race/comment are isomorphic: `/api/quizzes/show`, `/api/races/show`, `/api/comments/show`)
 - Delete a single entity: `POST /api/courses/delete`, body `{ "course_id", "cid", "type": "homework|quiz|race|comment|question" }` (see skills/05)
@@ -115,6 +161,8 @@ Comments are **user-generated content** (`requireAuth`, records userId), unlike 
   - `GET /api/quizzes/show?course_id=&cid=` — `questions` must be a **non-empty number array**
   - `GET /api/races/show` — same for `questionIds`
   - `GET /api/comments/show` — `name` and `content` must be non-empty
+  - `GET /api/homeworks/show` / `GET /api/comments/show` — `content` must be an **object** (tiptap doc)
+    with **≥2 paragraphs**, not a one-line string
   - The quiz/race/comment renderers type-filter their reference fields; **string cids silently become empty-shell components**
     (the page shows no error but has no content), and a 200 from add alone does not reveal it
 - The id-extraction map of chapters/update only contains question/homework/comment/quiz (**no race**; the chapters table

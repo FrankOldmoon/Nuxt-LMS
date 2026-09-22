@@ -75,6 +75,195 @@ directly via the API does not get them**, so add them manually to every heading:
 }
 ```
 
+## Chapter layout template (locked — follow this for every new chapter)
+
+> 本节是 course 5 / chapter 161、162 定稿后固化的排版模式。**新增章节一律照此写**，
+> 写完按下面的《自查表》逐条过一遍。目的是让学生在任何一章里都能用同一套视觉线索定位内容。
+
+### The skeleton
+
+```
+> <整章概览>                        ← 全章最前面一个 blockquote，在 Learning Objectives 之前
+> 1. <本章要点>                      ← 块内紧跟 orderedList，一条对应一个 Activity
+> 2. <本章要点>
+## 🎯 Learning Objectives          ← h2，有序列表 4–5 条，每条以 emoji 开头，最后一条固定是 (Extra) …
+### 📖 Glossary                    ← h3，2 列表格（Term | Definition），约 6 条术语，Term 列带 emoji
+## 🧪 Activity 1 <name>            ← h2
+  ⬇️ 整段说明放在**一个 blockquote** 里（容器）：
+     ▸ 第 1 段 paragraph             ← 一句总述：这一节是什么 / 要做什么
+     ▸ 紧跟一个 orderedList          ← 2–4 条步骤，逐行列出，最后一条是「交什么」
+### 🎬 <sub-step h3>
+### 📸 <sub-step h3>
+## 🧪 Activity N (Extra) Finish more   ← 最后一个活动固定叫这个名字
+```
+
+### Chapter intro (goes before Learning Objectives)
+
+每一章的 `content[0]` 必须是一个 **blockquote 整章介绍**，位置在 `## 🎯 Learning Objectives` **之前**。
+它和 Activity 那层的介绍块**形状一致**（见规则 2）：**先一行概览，再用有序列表逐条列出本章要做什么**。
+
+```json
+{
+  "type": "blockquote",
+  "content": [
+    { "type": "paragraph",
+      "attrs": {"indent":null,"margin":null,"wordWrap":"normal","textAlign":null,"indentUnit":null,"lineHeight":1.75},
+      "content": [{ "type": "text", "text": "📘 In this chapter you will find out how a computer sees a picture." }] },
+    { "type": "orderedList",
+      "attrs": { "type": null, "start": 1, "margin": null, "listType": "decimal" },
+      "content": [
+        { "type": "listItem", "attrs": {"indent":null,"indentUnit":null},
+          "content": [{ "type": "paragraph", "attrs": {"...":"同 paragraph attrs"},
+            "content": [{ "type": "text", "text": "🎨 Try two AI vision demos — one for features, one for edges." }] }] }
+      ] }
+  ]
+}
+```
+
+- **第 1 段 paragraph = 概览**：一句话说清这一章讲什么（用学生能懂的说法），以 **📘** 开头。
+- **第 2 个节点 = orderedList = 本章要点**：**逐条列出学生这一章要做的事，一条对应一个 Activity**，
+  每条以语义 emoji 开头（🎨 体验 / 🖼️ 读材料 / 🎮 游戏 / 💡 概念 / 🤖 工具 / 🏆 额外练习 / 🧮 OJ）。
+  条目数与 Activity 数一致（161、162 各 5 条）。
+- 顺序不能颠倒，也不能只留概览不留列表（或反过来）。
+- Markdown 写法同规则 2：每行都带 `> `（含 `> 1. …`），**不要用空 `>` 行分隔**；或用 `:::blockquote` 围栏包住。
+  节点层面它必须是顶层 `content[0]`。
+
+参考（chapter 162）：
+
+```markdown
+> 📘 In this chapter you will find out how a computer tells what is inside a picture.
+> 1. 🎨 Try the image classification demo and submit a screenshot.
+> 2. 🖼️ Read the poster and answer the questions about it.
+> 3. 🎮 Play the spot-the-difference game.
+> 4. 🤖 Build your own slide deck with the AI PPT tool.
+> 5. 🏆 Finish five extra OJ problems, P1011 to P1015.
+
+## 🎯 Learning Objectives
+```
+
+### Rules
+
+1. **h2 = Activity，h3 = 子步骤**；正文不出现 h1。
+2. **每个 Activity 的 h2 正下方固定放一个 blockquote**，里面装两样东西、顺序不能颠倒：
+   - **第 1 段 paragraph**：1 句总述，点出这个 Activity 是什么 / 要做什么（emoji 开头）——
+     让学生一眼知道本节主题。
+   - **紧跟一个 orderedList**：**逐行列出 2–4 个步骤**，每步一条、以 emoji 开头，
+     最后一条通常是「交什么 / 提交到哪」。
+   - 不要用一整段说明文字（学生只会扫读）；不要只写总述不列步骤，也不要只列步骤不给总述。
+
+   **节点结构**（一段总述 + 一个有序列表，都在 blockquote 里）：
+
+   ```json
+   {
+     "type": "blockquote",
+     "content": [
+       { "type": "paragraph", "attrs": {"indent":null,"margin":null,"wordWrap":"normal","textAlign":null,"indentUnit":null,"lineHeight":1.75},
+         "content": [{ "type": "text", "text": "💻 One typing game, then seven OJ problems." }] },
+       { "type": "orderedList",
+         "attrs": { "type": null, "start": 1, "margin": null, "listType": "decimal" },
+         "content": [
+           { "type": "listItem", "attrs": {"indent":null,"indentUnit":null},
+             "content": [{ "type": "paragraph", "attrs": {"...": "同 paragraph attrs"},
+               "content": [{ "type": "text", "text": "🎮 Play the typing game to warm up." }] }] }
+         ] }
+     ]
+   }
+   ```
+
+   **Markdown 写法**（两种都验证过等价，**不要用空 `>` 行分隔**）：
+
+   ```markdown
+   ## 🧪 Activity 3 Arithmetic OJ Exercise
+
+   > 💻 One typing game, then seven OJ problems.
+   > 1. 🎮 Play the typing game to warm up.
+   > 2. 🧮 Read the statement of each OJ problem first.
+   > 3. 🖱️ Drag the code lines into the correct order.
+   ```
+
+   ⚠️ **坑**：在总述和列表之间插一行**空的 `>`**，`markdownToTiptap` 会把它拆成
+   *两个* blockquote + 一个内容是 `">"` 的垃圾 paragraph。要么像上面那样每一行都带 `> ` 连续写，
+   要么用 `:::blockquote` 围栏包住（围栏内可以用空行）。
+3. **每个 heading（h2 + h3）的文字都要带 `marks: [{ type: "bold" }]`**，一个都不能漏。
+4. **每个 h3 都要有语义 emoji 前缀**，且**同一角色的子步骤在所有章节里用同一个 emoji**：
+
+   | 子步骤角色 | 固定 emoji | 示例标题 |
+   | --- | --- | --- |
+   | 体验 / 打开演示 | 🎬 | 🎬 Experience AI Vision |
+   | 读海报 / 看材料 | 🖼️ | 🖼️ Read posters |
+   | 提问 / 自测 | 🧩（多张材料）或 📝（单张） | 🧩 Questions on Both Posters |
+   | 交作业 / 交文件 | 📤 | 📤 Submit your homework |
+   | 截图作业 | 📸 | 📸 Submit your screenshot |
+   | 分享想法 / 评论 | 💬 | 💬 Share your idea |
+   | 小游戏 | 🎮 | 🎮 Type game |
+   | OJ 题 | 🧮 | 🧮 P1016 Absolute Value |
+
+   > 「有 emoji」的判定：`\p{Extended_Pictographic}`，或者**数字键盘序列**（`1️⃣` = `1` + U+FE0F + U+20E3）。
+   > 分步走流程那种子步骤（`1️⃣ First` … `5️⃣ Fifth`）用 keycap 也算合规，不要为了凑图标改成别的。
+
+5. **Activity 的 emoji 统一用 🧪**（不要混 🌿、🎯 之类）。最后一个活动固定
+   `(Extra) Finish more`。
+6. **OJ 题统一成一对**：`### 🧮 <pid> <OJ 英文题名>` → OJ 题 → 紧随一道 Code Order 排序题，
+   题名从 OJ 接口取，不要自己编（完整规则见 **skills/09**）。
+7. **文档结尾不要留空 paragraph**（编辑器会残留一个，保存前删掉）。
+8. **所有 heading 的 `id` + `data-toc-id` 必须存在、文档内唯一**，否则右侧 TOC 缺条目
+   （校验：`extractTocFromContent` in `modules/lms/utils/toc.ts`）。
+9. **不要只靠 iframe / 图片承载内容**：外链一旦不可用（自签证书 → 白屏；http iframe 在 https
+   页面下被混合内容拦截），整节就只剩空白 + 一串题目。所以每个 Activity 的 h2 下面必须有那个
+   **装着总述 + 步骤列表的 blockquote**（见规则 2）——它同时就是这一节的兜底文字，
+   讲代码的节再配一段带 `language` 的 codeBlock。
+
+### Glossary 的写法（两章已统一，照此写）
+
+- **表结构**：2 列 `Term | Definition`，表头行用 `tableHeader`（背景 `rgb(242, 243, 245)`，
+  文字加 `bold`），数据行用 `tableCell`；约 6 条术语。
+- **Term 列要加语义 emoji 前缀**，且**整门课复用同一套图标**，例如：
+
+  | Term | emoji |
+  | --- | --- |
+  | Feature Extraction | 🧩 |
+  | Image Feature | 🔎 |
+  | Edge Detection | ✏️ |
+  | Image Edge | 📐 |
+  | Python Branching Structure | 🔀 |
+  | Conditional Statement | ❓ |
+  | Image Classification | 🖼️ |
+  | Training Data | 🏷️ |
+  | Classification Model | 🧠 |
+  | AI Presentation Maker | 📽️ |
+  | Content Summarizer | 📝 |
+  | Auto‑Design | 🎨 |
+
+- Term 文字本身保持 `bold` mark（和表头一致）。
+- **释义统一用技术书面语**：一句话、以名词短语开头（`A …` / `An …` / `The …`），
+  `that …` / `used to …` 收在用途上；**不要**写成第二人称讲课口吻
+  （❌ "Teaching a computer to look at a picture and tell you what it shows"）。
+  正例：`A core computer vision task that assigns an input image to one of several predefined categories.`
+- 度量：每条释义约 12–20 词，全章语气一致（这是同一个作者写的同一个术语表）。
+
+### Self-check table (run before saving)
+
+| 检查项 | 不合格的样子 | 合格的样子 |
+| --- | --- | --- |
+| 全章开头有整章介绍 blockquote | 文档第一个节点就是 `## 🎯 Learning Objectives` | `content[0]` = 一个 blockquote，内含 `[概览 paragraph, 要点 orderedList]` → 然后才是 Learning Objectives |
+| Activity 下方是一个 blockquote（内装总述 + 有序列表） | h2 下面直接接 h3（整节 0 字），或只丢一整段说明文字，或把 blockquote 与 orderedList 拆成两个顶层节点 | h2 → 一个 blockquote，其中 `[总述 paragraph, 步骤 orderedList]` |
+| h3 有 emoji | `Submit your homework` / `Read posters` / `Type game` | `📤 Submit your homework` / `🖼️ Read posters` / `🎮 Type game` |
+| heading 有 bold mark | heading 的 text 节点 `marks: []` | `marks: [{ type: "bold" }]` |
+| emoji 跨章一致 | 这章 `🖼️ Read posters`、那章 `📖 Read posters` | 两章都用 🖼️ |
+| Activity emoji 一致 | `## 🌿 Activity 4 …` 混在 🧪 里 | `## 🧪 Activity 4 …` |
+| h3 标题范围与内容相符 | `Questions on the Feature Extraction poster` 下挂了 6 题（含另一张海报的题） | 标题写清范围，或拆成两个 h3 |
+| OJ h3 带题名 | `### P1016 `（末尾还有空格） | `### 🧮 P1016 Absolute Value` |
+| 拼写 | `Experience AI vison` | `Experience AI vision` |
+| 文末无空段 | 最后一个节点是空 `paragraph` | 最后节点是内容节点 |
+| heading id 唯一 | 两个 heading 共用同一个 id | 每个 heading 一个唯一 id |
+| Glossary 的 Term 带 emoji | `Feature Extraction`（裸文字） | `🧩 Feature Extraction` |
+| Glossary 释义语气统一 | 一章书面语、一章 `Teaching a computer to look at a picture…` | 全章都用 `A … that …` / `The … used to …` |
+
+### 排版体检
+
+自检脚本在本文末尾的 **Post-generation self-check → Quick validation script** 一处维护（已包含
+heading 缺 id / 缺 bold / 缺 emoji / id ≠ data-toc-id 这几条），不要在别处再抄一份。
+
 ## Save endpoints
 
 `POST /api/chapters/update` (admin or the chapter's teacher)
@@ -410,10 +599,52 @@ After generating chapter content or a question, **before saving** run a script t
 | ④ text `marks` must be an array | `marks: {marks:[{type:'bold'}]}` (marks is not iterable) | `marks: [{type:'bold'}]` |
 | ⑤ fill stems need an `inputs` node; select stems need a `select` node | stem is text only (no input box) | `{"type":"inputs","attrs":{"content":"answer"}}` / `{"type":"select","attrs":{"content":"option"}}` |
 | ⑥ single/multiple options containing markdown must be wrapped in a ```markdown fence | option written as `---`, `**text**` directly (gets rendered) | `"```markdown\n**text**\n```"` |
+| ⑦ every heading text must carry a `bold` mark | heading text node with `marks: []` | `marks: [{type:"bold"}]` |
+| ⑧ every heading must start with a semantic emoji | `Submit your homework` / `Read posters` | `📤 Submit your homework` / `🖼️ Read posters` |
+| ⑨ every Activity h2 must be followed by one blockquote holding `[paragraph, orderedList]` | h2 → h3 directly; a single prose paragraph; or blockquote and orderedList as two sibling top-level nodes | h2 → blockquote → `[总述 paragraph, 步骤 orderedList]` |
+| ⑩ no trailing empty paragraph at the end of the doc | last node is an empty `paragraph` | last node is a content node |
+| ⑪ the doc must open with the chapter-intro blockquote holding `[paragraph, orderedList]` | `content[0]` is `## 🎯 Learning Objectives`; or the intro blockquote has only a paragraph | `content[0]` = blockquote `[概览 paragraph, 要点 orderedList]` → `content[1]` = Learning Objectives |
 
-### Quick validation script (recursively checks ①②③④⑤)
+### Quick validation script (recursively checks ①②③④⑤⑦⑧, top-level ⑨⑩⑪)
 
 Run against the final content JSON; it lists violations:
+
+```js
+/** 顶层排版检查：⑨ Activity 结构 / ⑩ 文末空段 / ⑪ 整章介绍 blockquote */
+function validateChapterLayout(content) {
+  const issues = []
+  const nodes = content?.content || []
+  const txt = (n) => (!n || typeof n !== 'object') ? '' : n.type === 'text' ? (n.text || '') : Array.isArray(n.content) ? n.content.map(txt).join('') : typeof n.content === 'object' ? txt(n.content) : ''
+  // ⑪ 开头必须是整章介绍 blockquote（概览 paragraph + 要点 orderedList），紧接着才是 Learning Objectives
+  const first = nodes[0]
+  if (!first || first.type !== 'blockquote') issues.push('⑪ doc does not start with the chapter-intro blockquote')
+  else {
+    const k = (first.content || []).map(c => c.type)
+    if (k[0] !== 'paragraph') issues.push('⑪ chapter-intro blockquote first child is not an overview paragraph')
+    if (k[1] !== 'orderedList') issues.push('⑪ chapter-intro blockquote has no orderedList of chapter points')
+    else if ((first.content[1].content || []).length < 2) issues.push('⑪ chapter-intro orderedList needs >=2 items')
+  }
+  if (!(nodes[1] && nodes[1].type === 'heading' && /Learning Objectives/.test(txt(nodes[1])))) issues.push('⑪ chapter-intro is not immediately followed by Learning Objectives')
+  // ⑨ 每个 Activity h2 下面必须是一个 blockquote，内含 [paragraph, orderedList]
+  for (let i = 0; i < nodes.length; i++) {
+    const n = nodes[i]
+    if (!(n.type === 'heading' && n.attrs?.level === 2 && /Activity \d/.test(txt(n)))) continue
+    const a = nodes[i + 1]
+    const kids = a && a.type === 'blockquote' ? (a.content || []) : []
+    if (a?.type !== 'blockquote') issues.push('⑨ Activity has no intro blockquote: ' + txt(n))
+    else if (kids[0]?.type !== 'paragraph') issues.push('⑨ intro blockquote first child is not a paragraph: ' + txt(n))
+    else if (kids[1]?.type !== 'orderedList') issues.push('⑨ intro blockquote has no orderedList: ' + txt(n))
+    else if ((kids[1].content || []).length < 2) issues.push('⑨ orderedList needs >=2 items: ' + txt(n))
+    if (a && (a.type === 'orderedList' || nodes[i + 2]?.type === 'orderedList')) issues.push('⑨ intro blockquote and list must not be siblings: ' + txt(n))
+  }
+  // ⑩ 文末不能是空 paragraph
+  const last = nodes[nodes.length - 1]
+  if (last && last.type === 'paragraph' && !txt(last).trim()) issues.push('⑩ trailing empty paragraph')
+  return issues
+}
+```
+
+节点级检查（①②③④⑤⑦⑧，递归遍历每个节点）：
 
 ```js
 function validateContent(node, issues = []) {
@@ -422,7 +653,13 @@ function validateContent(node, issues = []) {
     if (typeof node.text !== 'string') issues.push('text.text is not a string')
     if (node.marks !== undefined && !Array.isArray(node.marks)) issues.push('marks is not an array')
   }
-  if (node.type === 'heading' && !node.attrs?.id) issues.push('heading missing id')
+  if (node.type === 'heading') {
+    const t = node.content?.[0]?.text || ''
+    if (!node.attrs?.id) issues.push('heading missing id: ' + t)
+    if (node.attrs?.id !== node.attrs?.['data-toc-id']) issues.push('heading id !== data-toc-id: ' + t)
+    if (!(node.content?.[0]?.marks || []).some(m => m.type === 'bold')) issues.push('heading missing bold: ' + t)
+    if (!(/\p{Extended_Pictographic}/u.test(t) || /\u20E3/u.test(t))) issues.push('heading missing emoji: ' + t)
+  }
   if (node.type === 'codeBlock' && !node.attrs?.language) issues.push('codeBlock missing language')
   if (Array.isArray(node.content)) node.content.forEach(n => validateContent(n, issues))
   else if (node.content && typeof node.content === 'object') validateContent(node.content, issues)
@@ -431,3 +668,4 @@ function validateContent(node, issues = []) {
 ```
 
 > ⑤ is validated at the question level: for fill, `JSON.stringify(content).includes('"inputs"')` must be true; for select, check `'"select"'` the same way.
+> ⑨⑩⑪ are top-level checks: `validateChapterLayout(content)` — Activity 结构、文末空段、整章介绍 blockquote。

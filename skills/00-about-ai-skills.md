@@ -10,6 +10,7 @@ This chapter collects the AI course-building skill documents, covering the full 
 - ✅ Batch course creation and course intros
 - ✅ Nested chapter tree (orders) conventions
 - ✅ Writing chapter content (tiptap / markdown / rich components / question embedding)
+- ✅ **Chapter layout template** — the locked skeleton every new chapter must follow (Activity h2 + sub-step h3, per-Activity intro paragraph, emoji + bold on every heading, self-check table)
 - ✅ Local run + full course-building walkthrough
 - ✅ Deleting and restoring courses & chapters
 - ✅ Homework / quiz / race / comment interactive component APIs
@@ -48,7 +49,7 @@ curl -s "http://10.28.1.151/api/chapters/show?id=1084"
 | --- | --- | --- |
 | skills/01-batch-create-courses.md | 1082 | Batch Course Creation |
 | skills/02-create-course-orders.md | 1083 | Course Tree & Orders |
-| skills/03-create-chapter-content.md | 1084 | Writing Chapter Content |
+| skills/03-create-chapter-content.md | 1084 | Writing Chapter Content (layout template) |
 | skills/04-local-run-markdown-course.md | 1085 | Local Run End-to-End |
 | skills/05-delete-course-chapter.md | 1086 | Delete & Restore |
 | skills/06-interactive-components.md | 1087 | Interactive Components |
