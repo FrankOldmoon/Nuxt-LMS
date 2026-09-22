@@ -5,9 +5,10 @@
             ? 'border-2 border-green-400 dark:border-green-500'
             : 'border border-amber-400 dark:border-amber-500'"
         :data-comment-id="commentId">
-        <!-- 评论未找到 -->
+        <!-- 评论不存在 / 尚未保存（新建节点 cid 为 0，不误报「未找到」） -->
         <div v-if="!comment" class="text-center py-6 text-gray-400">
-            {{ $t('comment.notFound') }} (cid: {{ commentId }})
+            <span v-if="!commentId">{{ $t('comment.unsaved') }}</span>
+            <span v-else-if="!pending">{{ $t('comment.notFound') }} (cid: {{ commentId }})</span>
         </div>
 
         <template v-else>
@@ -103,7 +104,7 @@ const props = defineProps({
 
 const {
     effectiveCourseId, moduleLms, RecordsModal, comment, commentId, isTeacher, user,
-    editOpen, recordsOpen, listPending, pagedChildren, hasPosted, fetchComments,
+    editOpen, recordsOpen, listPending, pagedChildren, hasPosted, pending, fetchComments,
     onReply, toggleLike, onDelete, onApprove, onSaved,
 } = useCommentRender(props)
 

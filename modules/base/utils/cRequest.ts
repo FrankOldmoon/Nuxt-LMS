@@ -119,8 +119,21 @@ cRequest.use = <T = any>(url: string | (() => string) | Ref<string>, options: Re
   const { hasRole } = useAuth()
   const isTeacherPlus = () => hasRole('admin') || hasRole('teacher')
 
+  // 空 URL 守卫：url 解析为空时（如「尚未保存、cid 为 0」的新建评论节点）不发起请求。
+  // 否则 $fetch('') 会按相对地址请求「当前页面」，把返回的 HTML 当成接口数据，
+  // 经 transform 变成脏对象，导致误显示「未找到」且初始分值被算成 0。
+  // 仅客户端注入（typeof window 判定与 import.meta.client 等价，且可在测试环境生效），
+  // 避免影响 SSR 下 useRequestFetch 的 cookie/header 透传。
+  const canGuardEmptyUrl = typeof window !== 'undefined'
+  const guardedFetch = (request: any, opts: any) => {
+    if (!request) return Promise.resolve(null)
+    const base = (rest.$fetch as any) || (globalThis as any).$fetch
+    return base(request, opts)
+  }
+
   const fetchResult = useFetch<T>(wrappedUrl, {
     ...rest,
+    ...(canGuardEmptyUrl ? { $fetch: guardedFetch } : {}),
     key,
     // 同一 key 可能被多个 useFetch 实例注册（如课程页 useSidebarNav + useCourseDetailPage，
     // 章节页 useChapterPage + useAside），默认 dedupe='cancel' 会让后挂载的实例

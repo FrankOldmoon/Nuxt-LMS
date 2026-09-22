@@ -42,7 +42,7 @@ const apiUrl = computed(() => {
 
 const { data: comment } = cRequest.use(apiUrl, {
     transform: (raw) => {
-        if (!raw) return null
+        if (!raw || typeof raw !== 'object') return null
         return {
             name: raw.name || '',
             content: raw.content || '',

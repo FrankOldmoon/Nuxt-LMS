@@ -44,7 +44,7 @@ export function useCommentRender(props: CommentRenderProps) {
 
     const { data: fetchedComment, pending: fetchedPending, refresh } = cRequest.use(apiUrl, {
         transform: (raw: any) => {
-            if (!raw) return null
+            if (!raw || typeof raw !== 'object') return null
             return {
                 name: raw.name || '',
                 content: raw.content || '',

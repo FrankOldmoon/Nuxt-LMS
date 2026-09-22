@@ -55,6 +55,39 @@ describe('comment/render.vue', () => {
     expect(wrapper.text()).toContain('comment.notFound')
   })
 
+  it('新建评论（cid 为 0）不发起请求、不显示「未找到」，显示「尚未保存」', async () => {
+    const calls: string[] = []
+    setMockFetchHandler(async (url: string) => {
+      calls.push(String(url))
+      return { success: true, msg: '', data: null }
+    })
+    const { default: CommentRender } = await import(
+      '../../../../../components/ueditor/extensions/nodes/vue/comment/render.vue'
+    )
+    const wrapper = mount(CommentRender, {
+      props: { node: { attrs: { content: '' } }, comment: null, courseId: 1 },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    expect(calls).toEqual([])
+    expect(wrapper.text()).not.toContain('comment.notFound')
+    expect(wrapper.text()).toContain('comment.unsaved')
+  })
+
+  it('接口返回非对象（如 HTML 字符串）时不当作评论数据', async () => {
+    setMockFetchHandler(async () => '<!DOCTYPE html><html></html>' as any)
+    const { default: CommentRender } = await import(
+      '../../../../../components/ueditor/extensions/nodes/vue/comment/render.vue'
+    )
+    const wrapper = mount(CommentRender, {
+      props: { node: { attrs: { content: '5' } }, comment: null, courseId: 1 },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    expect(wrapper.text()).toContain('comment.notFound')
+    expect(wrapper.text()).not.toContain('DOCTYPE')
+  })
+
   it('renders comment name and tags when comment provided', async () => {
     const { default: CommentRender } = await import(
       '../../../../../components/ueditor/extensions/nodes/vue/comment/render.vue'

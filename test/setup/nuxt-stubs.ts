@@ -80,8 +80,11 @@ export function useFetch(url: any, options: any = {}) {
     status.value = 'pending'
     try {
       let resp: any
-      // 优先用 _mockFetchHandler（可完整 mock 响应）
-      if (_mockFetchHandler) {
+      // 真实 Nuxt 会优先使用 options.$fetch（若提供）；cRequest.use 借此注入「空 URL 守卫」
+      if (typeof options.$fetch === 'function') {
+        resp = await options.$fetch(toValue(url), options)
+      } else if (_mockFetchHandler) {
+        // 优先用 _mockFetchHandler（可完整 mock 响应）
         resp = await _mockFetchHandler(toValue(url), options)
       } else if (url === '/api/auth/me' && _mockAuthUser) {
         // 兼容旧的 _mockAuthUser 短路
@@ -993,8 +996,15 @@ export async function cRequest<T = any>(url: string, options: any = {}): Promise
 /** 给 cRequest 加 .use 方法（composables 测试用） — 模拟真实 cRequest.use 的 transform 解包逻辑 */
 ;(cRequest as any).use = (url: any, options: any = {}) => {
   const { transform: customTransform, ...rest } = options
+  // 与真实 cRequest.use 一致：空 URL 不发起请求（如新建评论节点 cid 为 0）
+  const guardedFetch = (request: any, opts: any) => {
+    if (!request) return Promise.resolve(null)
+    const base = (rest.$fetch as any) || $fetch
+    return base(request, opts)
+  }
   return useFetch(url, {
     ...rest,
+    ...(typeof window !== 'undefined' ? { $fetch: guardedFetch } : {}),
     transform: (raw: any) => {
       if (raw && typeof raw === 'object' && 'data' in raw && 'success' in raw) {
         return customTransform ? customTransform(raw.data) : raw.data

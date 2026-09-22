@@ -107,4 +107,17 @@ describe('comment/edit.vue', () => {
     const pointInput = wrapper.findAllComponents(_globalStubs.UInput).find(c => c.props('modelValue') === 10)
     expect(pointInput).toBeTruthy()
   })
+
+  it('新建评论（commentId 为 0）即使传入脏 comment 也默认 10 分', async () => {
+    const { default: CommentEdit } = await import(
+      '../../../../../components/ueditor/extensions/nodes/vue/comment/edit.vue'
+    )
+    const wrapper = mount(CommentEdit, {
+      props: { commentId: 0, comment: { name: '', content: '', tags: [], point: 0 } },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    const pointInput = wrapper.findAllComponents(_globalStubs.UInput).find(c => c.props('modelValue') === 10)
+    expect(pointInput).toBeTruthy()
+  })
 })

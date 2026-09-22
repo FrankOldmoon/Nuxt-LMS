@@ -37,11 +37,14 @@ export function useCommentEdit(props: CommentEditProps, emit: CommentEditEmit) {
     let originalData: any = null
 
     function initForm() {
-        if (!props.comment) {
+        // 新建评论（尚未保存，commentId 为 0）：使用默认值，分值固定为 10。
+        // 即使传入的 comment 是空对象/脏对象（例如一次误请求返回的 HTML 被解析），
+        // 也不会把分值算成 0。
+        if (!props.commentId || !props.comment) {
             form.value = {
-                name: '',
-                content: '',
-                tags: [],
+                name: props.comment?.name || '',
+                content: props.comment?.content || '',
+                tags: Array.isArray(props.comment?.tags) ? [...props.comment.tags] : [],
                 point: 10,
             }
             originalData = JSON.parse(JSON.stringify(form.value))

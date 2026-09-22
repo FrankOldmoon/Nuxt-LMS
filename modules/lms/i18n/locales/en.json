@@ -1225,6 +1225,7 @@
     "label": "Comment",
     "loading": "Loading...",
     "notFound": "Comment not found",
+    "unsaved": "Not saved yet",
     "editTitle": "Edit Comment",
     "namePlaceholder": "Comment name",
     "contentLabel": "Comment content",

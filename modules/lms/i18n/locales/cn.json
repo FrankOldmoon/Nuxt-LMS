@@ -1225,6 +1225,7 @@
     "label": "评论",
     "loading": "加载中…",
     "notFound": "未找到评论",
+    "unsaved": "尚未保存",
     "editTitle": "编辑评论",
     "namePlaceholder": "评论名称",
     "contentLabel": "评论内容",
