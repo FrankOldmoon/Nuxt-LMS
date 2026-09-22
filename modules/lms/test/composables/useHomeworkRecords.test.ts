@@ -177,6 +177,40 @@ describe('useHomeworkRecords 全屏评阅', () => {
     }
   })
 
+  it('downloadAllFiles：文件夹名为「姓名(用户名)」，缺用户名时只用姓名', async () => {
+    ;(globalThis as any).useClassUsers = () => ({
+      students: ref([
+        { id: 1, name: '张三', preferName: '小张', rollNumber: '', username: 'zhangsan', avatarImg: '', isTeacher: false },
+        { id: 2, name: '李四', preferName: '', rollNumber: '', username: '', avatarImg: '', isTeacher: false },
+      ]),
+      teachers: ref([]),
+    })
+    const ctx = await makeCtx([
+      { userId: 1, record: { files: ['/api/files/serve?pathname=1%2Fa.pdf'], record: { _submitCount: 1 } } },
+      { userId: 2, record: { files: ['/api/files/serve?pathname=2%2Fb.pdf'], record: { _submitCount: 1 } } },
+    ])
+    await ctx.fetchRecords()
+    ;(globalThis as any).cRequest = async () => ({ name: 'x.pdf' })
+    ;(globalThis as any).getFileNameFromUrl = () => 'x.pdf'
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, blob: async () => new Blob(['f']) })))
+    ;(URL as any).createObjectURL = vi.fn(() => 'blob:x')
+    ;(URL as any).revokeObjectURL = vi.fn()
+    const fakeLink: any = { href: '', download: '', click: vi.fn(), remove: vi.fn() }
+    const createEl = vi.spyOn(document, 'createElement').mockReturnValue(fakeLink)
+    const append = vi.spyOn(document.body, 'appendChild').mockImplementation(() => fakeLink)
+
+    try {
+      await ctx.downloadAllFiles()
+      const folders = zipEntries.map(e => e.folder)
+      expect(folders).toContain('张三(zhangsan)')   // 姓名 + 用户名
+      expect(folders).toContain('李四')              // 没有用户名时只用姓名
+    } finally {
+      createEl.mockRestore()
+      append.mockRestore()
+      vi.unstubAllGlobals()
+    }
+  })
+
   it('downloadAllFiles：外链附件不实际下载，生成本站外链可双击的 .url 文件', async () => {
     const ctx = await makeCtx([
       { userId: 1, record: { files: ['https://example.com/share/a.pdf'], record: { _submitCount: 1 } } },

@@ -344,6 +344,17 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
             .trim() || 'unknown'
     }
 
+    /**
+     * 一键导出时的学生文件夹名：姓名(用户名)，如「张三(zhangsan)」。
+     * 缺用户名时只用姓名，姓名也缺时退回昵称 / 用户名 / user-<id>。
+     */
+    function folderNameOf(r: any): string {
+        const name = String(r?.name || r?.preferName || '').trim()
+        const username = String(r?.username || '').trim()
+        if (name && username) return `${name}(${username})`
+        return name || username || `user-${r?.id}`
+    }
+
     /** 解析附件的原始文件名：优先 /api/files/meta，失败回退 url 解析 */
     async function resolveFileName(url: string): Promise<string> {
         try {
@@ -397,7 +408,8 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
         const groups = rows.value
             .filter(r => hasSubmission(r.record))
             .map(r => ({
-                name: safeSegment(r.preferName || r.name || r.username || `user-${r.id}`),
+                // 文件夹名：姓名(用户名)
+                name: safeSegment(folderNameOf(r)),
                 files: attachmentUrls(r.record),
             }))
             .filter(g => g.files.length > 0)
