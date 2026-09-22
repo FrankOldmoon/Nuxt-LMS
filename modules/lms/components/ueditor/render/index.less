@@ -17,7 +17,10 @@
     margin: 0;
     padding-inline-start: 1.5em;
   }
-  // 十进制有序列表：用 CSS 计数器实现层级编号（1. / 2.1. / 2.2.），与编辑器一致
+  // 十进制有序列表：用 CSS 计数器实现层级编号（1. / 2.1. / 2.2.）
+  // 顶层列表（含 blockquote 等块级容器包裹的独立列表）只显示本级编号（counter），
+  // 避免前序兄弟列表的计数被 counters() 误带入（如上一列表 5 项，本列表错变成 5.1 / 5.2 / 5.3）。
+  // 仅真正嵌套在 <li> 内的子列表（li > ol）才用 counters() 保留层级前缀（1.1 / 1.2）。
   ol[data-type='decimal'] {
     list-style: none;
     counter-reset: olc;
@@ -27,12 +30,16 @@
     position: relative;
   }
   ol[data-type='decimal'] > li::before {
-    content: counters(olc, ".") ". ";
+    content: counter(olc) ". ";
     position: absolute;
     right: 100%;
     margin-right: 0.4em;
     white-space: nowrap;
     color: inherit;
+  }
+  // <li> 内的嵌套有序列表：保留父级编号前缀
+  li ol[data-type='decimal'] > li::before {
+    content: counters(olc, ".") ". ";
   }
   // 任务列表：无项目符号（复选框由 task-item 渲染）
   ul[data-type='taskList'] {

@@ -68,8 +68,8 @@
                     <!-- 分页控件：放在所有评论上方 -->
                     <CommentPagination />
 
-                    <!-- 回复表单 -->
-                    <CommentForm :parent-cid="commentId" :placeholder="$t('comment.replyPlaceholder')"
+                    <!-- 回复表单（仅登录用户显示） -->
+                    <CommentForm v-if="user" :parent-cid="commentId" :placeholder="$t('comment.replyPlaceholder')"
                         @submit="onReply" />
 
                     <!-- 子评论列表（分页） -->
