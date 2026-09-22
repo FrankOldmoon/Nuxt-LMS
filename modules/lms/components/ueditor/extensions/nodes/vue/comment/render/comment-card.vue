@@ -27,10 +27,10 @@
                         <UIcon name="i-heroicons-clock" class="w-3.5 h-3.5" />
                         <span>{{ $t('comment.auditPending') }}</span>
                     </span>
-                    <!-- 批准（仅老师/管理员） -->
+                    <!-- 批准（仅老师/管理员）：默认即为绿色（成功色） -->
                     <template v-if="isTeacher && comment.status === 'audit'">
                         <button
-                            class="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full text-amber-600 bg-amber-50 hover:text-emerald-600 hover:bg-emerald-50 dark:bg-amber-900/30 dark:hover:bg-emerald-900/30 transition-colors"
+                            class="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full text-emerald-600 bg-emerald-50 hover:text-emerald-700 hover:bg-emerald-100 dark:text-emerald-300 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 transition-colors"
                             @click="$emit('approve', comment)">
                             <UIcon name="i-heroicons-check-badge" class="w-3.5 h-3.5" />
                             <span>{{ $t('comment.approve') }}</span>

@@ -129,4 +129,22 @@ describe('comment/render/comment-card.vue', () => {
     })
     expect(wrapper.text()).not.toContain('comment.auditPending')
   })
+
+  it('教师看待审核评论：批准按钮默认即绿色（不再是琥珀色）', async () => {
+    setMockAuthUser({ id: 99, name: 'Teacher' }, [{ code: 'teacher' }])
+    const { default: CommentCard } = await import(
+      '../../../../../../components/ueditor/extensions/nodes/vue/comment/render/comment-card.vue'
+    )
+    const wrapper = mount(CommentCard, {
+      props: { comment: { ...sampleComment, status: 'audit' }, isRoot: false, currentUserId: 99 },
+      global: _globalConfig,
+    })
+    const approveBtn = wrapper.findAll('button').find((b) => b.text().includes('comment.approve'))!
+    expect(approveBtn.exists()).toBe(true)
+    const cls = approveBtn.classes()
+    expect(cls).toContain('text-emerald-600')
+    expect(cls).toContain('bg-emerald-50')
+    expect(cls).not.toContain('text-amber-600')
+    expect(cls).not.toContain('bg-amber-50')
+  })
 })
