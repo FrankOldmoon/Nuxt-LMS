@@ -262,4 +262,24 @@ describe('lms/recordsModal/homework/index.vue', () => {
     await wrapper.find('button[data-icon="i-lucide-chevron-right"]').trigger('click')
     expect(h.nextSubmission).toHaveBeenCalled()
   })
+
+  // ==================== 满分按钮图标 ====================
+  it('「一键满分」按钮用 percent-badge 图标且带字面「100%」文字（score 列 + view detail）', async () => {
+    openDetail()
+    const { default: HomeworkRecords } = await import('../../../../../components/lms/recordsModal/homework/index.vue')
+    const wrapper = mount(HomeworkRecords, {
+      props: { modelValue: true, courseId: 1, cid: 100, maxScore: 100 },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    // 顶栏「一键全部满分」+ 详情弹窗里的「一键满分」
+    expect(wrapper.findAll('button[data-icon="i-heroicons-percent-badge"]').length).toBe(2)
+    // 按钮上必须有字面「100%」文字（不能只有图标）。
+    // 注意：这里只断言到 1 个 —— score 列的那个按钮在 ClassUsersTable 的 #score-cell 插槽里，
+    // 而桩组件不渲染插槽；详情弹窗里的那个能直接断言。
+    expect(wrapper.findAll('button').filter((b) => b.text().includes('100%')).length).toBe(1)
+    // 不应再出现打钩类图标
+    expect(wrapper.findAll('button[data-icon="i-heroicons-check"]').length).toBe(0)
+    expect(wrapper.findAll('button[data-icon="i-heroicons-check-badge"]').length).toBe(0)
+  })
 })

@@ -11,7 +11,7 @@
                         </span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <UButton icon="i-heroicons-check-badge" color="warning" variant="soft" size="sm"
+                        <UButton icon="i-heroicons-percent-badge" color="warning" variant="soft" size="sm"
                             :loading="scoringAll" :label="$t('record.scoreAllSubmitted')"
                             @click="scoreAllConfirmOpen = true" />
                         <UButton icon="i-heroicons-arrow-down-tray" variant="soft" size="sm"
@@ -52,7 +52,7 @@
                                 size="xs" class="w-16" min="0" :max="maxScore" step="any"
                                 @blur="onScoreBlur(row.original)" @keydown.enter="$event.target.blur()" />
                             <UTooltip :text="$t('homework.quickScore')">
-                                <UButton icon="i-heroicons-check" color="primary" variant="soft" size="xs"
+                                <UButton icon="i-heroicons-percent-badge" label="100%" color="primary" variant="soft" size="xs"
                                     @click="onQuickScore(row.original, maxScore)" />
                             </UTooltip>
                         </div>
@@ -135,7 +135,7 @@
                                         @blur="onScoreBlur(detailData)" @keydown.enter="$event.target.blur()" />
                                     <span class="text-sm text-muted whitespace-nowrap">/ {{ maxScore }}</span>
                                     <UTooltip :text="$t('homework.quickScore')">
-                                        <UButton icon="i-heroicons-check" color="primary" variant="soft" size="sm"
+                                        <UButton icon="i-heroicons-percent-badge" label="100%" color="primary" variant="soft" size="sm"
                                             @click="onQuickScore(detailData, maxScore)" />
                                     </UTooltip>
                                 </div>
