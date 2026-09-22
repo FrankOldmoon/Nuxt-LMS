@@ -66,9 +66,11 @@
                 <Fireworks @done="emit('celebrateEnd')" />
             </div>
 
-            <!-- 中奖卡片：从小到大放大；烟花结束后不自动收起，点击卡片才关闭 -->
+            <!-- 中奖卡片：纯白底、尺寸为默认卡片的 2 倍；烟花结束后不自动收起，点击卡片才关闭 -->
             <div v-if="winner" class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div class="winner-card-wrap pointer-events-auto cursor-pointer" @click="emit('winnerClose')">
+                <div
+                    class="winner-card-wrap pointer-events-auto cursor-pointer bg-white text-gray-900 rounded-xl p-2 shadow-xl"
+                    @click="emit('winnerClose')">
                     <AuthUserCard :user="winner" size="lg" class="winner-card" />
                 </div>
             </div>
@@ -281,8 +283,30 @@ defineExpose({ spinTo, rotateTo })
     fill: #374151;
 }
 
-.winner-card {
+.winner-card-wrap {
+    /* 长宽增大一倍：对外层整体缩放；卡片自身的弹出动画（transform）叠加在它之上 */
+    transform: scale(2);
+}
+
+/* 纯白卡片：压掉 AuthUserCard 默认的主题底色与边框，
+   否则暗色模式下会是一块深色卡压在白底上；hover 用极浅灰给一点可点击提示 */
+.winner-card,
+.winner-card:hover {
+    border-color: transparent;
     animation: winner-pop 0.6s cubic-bezier(0.22, 1.2, 0.36, 1) both;
+}
+
+.winner-card {
+    background-color: #fff;
+}
+
+.winner-card:hover {
+    background-color: #f9fafb;
+}
+
+/* 白底上的副标题（用户名）用固定的深灰，避免暗色模式的浅灰在白底上看不清 */
+.winner-card :deep(.text-muted) {
+    color: #6b7280;
 }
 
 @keyframes winner-pop {

@@ -175,6 +175,16 @@ describe('chapter/selectModal/wheel.vue', () => {
     expect(wrapper.emitted('winnerClose')).toHaveLength(1)
   })
 
+  it('中奖卡片为纯白底（背景色见样式，类名带 bg-white），尺寸由样式放大一倍', async () => {
+    const wrapper = await mountWheel({ winner: USERS[0], celebrate: false })
+    const wrap = wrapper.find('.winner-card-wrap')
+    expect(wrap.exists()).toBe(true)
+    expect(wrap.classes()).toContain('bg-white')
+    // 2 倍缩放在 scoped 样式里（transform: scale(2)），类名无法断言；
+    // 这里守住「卡片包一层 .winner-card-wrap」这个结构，样式变更时至少不会静默失效
+    expect(wrap.find('.user-card').exists()).toBe(true)
+  })
+
   it('spinTo：转到目标扇区并在动画结束后 resolve', async () => {
     vi.useFakeTimers()
     const wrapper = await mountWheel()
