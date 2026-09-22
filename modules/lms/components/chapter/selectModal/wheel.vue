@@ -66,9 +66,11 @@
                 <Fireworks @done="emit('celebrateEnd')" />
             </div>
 
-            <!-- 中奖卡片：从小到大放大 -->
+            <!-- 中奖卡片：从小到大放大；烟花结束后不自动收起，点击卡片才关闭 -->
             <div v-if="winner" class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <AuthUserCard :user="winner" size="lg" class="winner-card" />
+                <div class="winner-card-wrap pointer-events-auto cursor-pointer" @click="emit('winnerClose')">
+                    <AuthUserCard :user="winner" size="lg" class="winner-card" />
+                </div>
             </div>
         </div>
 
@@ -97,6 +99,7 @@ const emit = defineEmits<{
     spin: []
     pick: [user: any]
     celebrateEnd: []
+    winnerClose: []
 }>()
 
 // 转盘几何：以 360×360 视口中心为圆心

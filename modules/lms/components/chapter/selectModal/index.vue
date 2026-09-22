@@ -41,7 +41,7 @@
           </div>
           <ChapterSelectModalWheel v-if="pickerMode === 'wheel'" ref="wheelRef" :users="students"
             :selected-ids="selectedIds" :winner="winner" :celebrate="celebrate" :spinning="spinning"
-            @spin="spinWheel" @pick="onWheelPick" @celebrate-end="onCelebrateEnd" />
+            @spin="spinWheel" @pick="onWheelPick" @celebrate-end="onCelebrateEnd" @winner-close="onWinnerClose" />
           <div v-else class="max-h-[400px] overflow-y-auto">
             <div class="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-1.5">
               <AuthUserCard v-for="s in students" :key="s.id" :user="s"
@@ -147,9 +147,13 @@ function onWheelPick(user: any) {
   celebrate.value = false
 }
 
-// 烟花播放结束 → 收起放大卡片
+// 烟花播放结束 → 只收起烟花特效；中奖卡片保留，改为点击卡片才收起
 function onCelebrateEnd() {
   celebrate.value = false
+}
+
+// 点击中奖卡片 → 收起放大卡片
+function onWinnerClose() {
   winner.value = null
 }
 

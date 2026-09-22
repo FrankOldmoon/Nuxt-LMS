@@ -167,6 +167,14 @@ describe('chapter/selectModal/wheel.vue', () => {
     expect(wrapper.emitted('celebrateEnd')).toHaveLength(1)
   })
 
+  it('中奖卡片不随烟花结束消失：烟花已停（celebrate=false）仍渲染，点击卡片 emit winnerClose', async () => {
+    const wrapper = await mountWheel({ winner: USERS[0], celebrate: false })
+    expect(wrapper.find('.user-card').exists()).toBe(true)
+
+    await wrapper.find('.winner-card-wrap').trigger('click')
+    expect(wrapper.emitted('winnerClose')).toHaveLength(1)
+  })
+
   it('spinTo：转到目标扇区并在动画结束后 resolve', async () => {
     vi.useFakeTimers()
     const wrapper = await mountWheel()

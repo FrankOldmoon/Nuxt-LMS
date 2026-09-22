@@ -48,7 +48,7 @@ function mockChapterSelect(overrides: any = {}) {
 const WheelStub = {
   template: '<div class="wheel-stub" />',
   props: ['users', 'selectedIds', 'winner', 'celebrate', 'spinning'],
-  emits: ['spin', 'pick', 'celebrateEnd'],
+  emits: ['spin', 'pick', 'celebrateEnd', 'winnerClose'],
   // 与真实组件 defineExpose 的 spinTo 对齐：父组件 await 转盘旋转结束
   methods: { spinTo: async () => {} },
 }
@@ -236,5 +236,34 @@ describe('chapter/selectModal/index.vue', () => {
     await flushPromises()
 
     expect(ctx.toggleSelect).toHaveBeenCalledWith(1)
+  })
+
+  it('抽中后中奖卡片不自动消失：烟花结束仍保留，点击卡片才关闭', async () => {
+    const ctx = mockChapterSelect({
+      loading: ref(false),
+      students: ref([{ id: 7, name: '张三' }]),
+    })
+    ;(globalThis as any).useChapterSelect = () => ctx
+    const { default: SelectModal } = await import('../../../../components/chapter/selectModal/index.vue')
+    const wrapper = mount(SelectModal, {
+      props: { open: true, courseId: 1, classId: 1 },
+      global: _globalConfig,
+    })
+    await wrapper.find('.picker-mode-btn').trigger('click')
+
+    await wrapper.findAll('button').find(b => b.text().includes('chapter.wheelSpin'))!.trigger('click')
+    await flushPromises()
+    // 抽中 → 中奖卡片出现
+    expect(wrapper.findComponent(WheelStub).props('winner')).toMatchObject({ id: 7 })
+
+    // 烟花播放结束 → 卡片必须保留（不能自动消失）
+    wrapper.findComponent(WheelStub).vm.$emit('celebrateEnd')
+    await flushPromises()
+    expect(wrapper.findComponent(WheelStub).props('winner')).toMatchObject({ id: 7 })
+
+    // 点击卡片 → 收起
+    wrapper.findComponent(WheelStub).vm.$emit('winnerClose')
+    await flushPromises()
+    expect(wrapper.findComponent(WheelStub).props('winner')).toBeNull()
   })
 })
