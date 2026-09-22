@@ -6,6 +6,7 @@
       item-key="originalIndex"
       animation="200"
       class="space-y-2"
+      @start="onDragStart"
     >
       <template #item="{ element, index }">
         <div
@@ -45,6 +46,7 @@ const {
   submit,
   reset,
   fillCorrectAnswer,
+  onDragStart,
 } = useSort(props)
 
 defineExpose({ submit, reset, hasAnswer, fillCorrectAnswer })

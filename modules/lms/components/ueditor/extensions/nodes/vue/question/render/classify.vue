@@ -14,6 +14,7 @@
           item-key="flatIndex"
           animation="200"
           class="min-h-[80px] space-y-1.5 p-2 rounded-md border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50"
+          @start="onDragStart"
         >
           <template #item="{ element }">
             <div
@@ -38,6 +39,7 @@
             item-key="flatIndex"
             animation="200"
             class="flex-1 min-h-[80px] space-y-1.5 p-2 rounded-md border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50"
+            @start="onDragStart"
           >
             <template #item="{ element }">
               <div
@@ -65,7 +67,7 @@ const props = defineProps({
 
 const {
   pool, catBuckets, categories, hasAnswer,
-  poolItemClass, bucketItemClass, submit, reset, fillCorrectAnswer,
+  poolItemClass, bucketItemClass, submit, reset, fillCorrectAnswer, onDragStart,
 } = useClassify(props)
 
 defineExpose({ submit, reset, hasAnswer, fillCorrectAnswer })

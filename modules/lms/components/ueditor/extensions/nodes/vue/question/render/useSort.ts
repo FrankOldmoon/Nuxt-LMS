@@ -13,10 +13,23 @@ export function useSort(props: any) {
   let isRecording = false
   // 记录回填中：由 record watcher 设置，期间 dragList watcher 不应清除 submitted/fromRecord
   let restoring = false
+  // 加固①：用户是否真正拖过。拖过之后，迟到 / 重复的 record 回填一律忽略，
+  // 否则会把学生正在进行的排序覆盖掉（表现为"拖过去又被弹回"）
+  let userTouched = false
+  // 加固②：上次初始化对应的题目身份与结构签名。
+  // 同一道题被重新请求（网络重试 / 重新拉取）会拿到新的 question 对象，
+  // 若照着对象变化就 shuffle，会把学生的排序清掉重洗；只有换题或题目结构变了才重建。
+  let lastKey: any = null
+  let lastShape = ''
   // userOrder: 从 dragList 派生的原始索引数组
   const userOrder = computed(() => dragList.value.map(item => item.originalIndex))
 
   const hasAnswer = computed(() => userOrder.value.length > 0)
+
+  /** 结构签名：题号 + 选项个数，用来判断"还是不是同一道题" */
+  function shapeOf(q: any) {
+    return `${q?.type}|${Array.isArray(q?.options) ? q.options.length : 0}`
+  }
 
   // 初始化：打乱顺序
   function shuffle() {
@@ -33,17 +46,35 @@ export function useSort(props: any) {
     dragList.value = indices.map(idx => ({ originalIndex: idx }))
   }
 
+  /** 换题 / 首次进入：重新打乱，并视为"尚未作答" */
+  function resetForNewQuestion() {
+    userTouched = false
+    shuffle()
+  }
+
+  /** 用户真正开始拖动（vuedraggable 的 start 事件）→ 标记为已作答 */
+  function onDragStart() {
+    userTouched = true
+  }
+
   // 监听 question 变化时初始化
   watch(() => props.question, (q) => {
-    if (q?.type === 'sort' && Array.isArray(q.options) && q.options.length) {
-      shuffle()
-    }
+    if (q?.type !== 'sort' || !Array.isArray(q.options) || !q.options.length) return
+    const key = props.questionId || q
+    const shape = shapeOf(q)
+    // 同一道题重新请求：保留学生当前排序，不重洗
+    if (key === lastKey && shape === lastShape) return
+    lastKey = key
+    lastShape = shape
+    resetForNewQuestion()
   }, { immediate: true })
 
   // 监听 record 变化（fetchRecord 回填场景）
   watch(() => props.question?.record, (record) => {
     if (isRecording) return
     if (!Array.isArray(record) || record.length === 0) return
+    // 学生已开始作答：忽略后到的回填，避免覆盖进行中的排序
+    if (userTouched) return
     restoring = true
     dragList.value = record.map(idx => ({ originalIndex: idx }))
     nextTick(() => { restoring = false })
@@ -126,5 +157,6 @@ export function useSort(props: any) {
     submit,
     reset,
     fillCorrectAnswer,
+    onDragStart,
   }
 }

@@ -28,6 +28,21 @@ export function useClassify(props: any) {
 
   // 防止 record ↔ 拖拽 互相触发的循环
   let restoring = false
+  // 加固①：用户是否真正拖过。拖过之后，迟到 / 重复的 record 回填一律忽略，
+  // 否则会把学生正在进行的分类覆盖掉（表现为"拖过去又被弹回"）
+  let userTouched = false
+  // 加固②：上次初始化对应的题目身份与结构签名。
+  // 同一道题被重新请求（网络重试 / 重新拉取）会拿到新的 question 对象，
+  // 若照着对象变化就 initBuckets，会把学生已拖好的分桶清空重洗；
+  // 只有换题或题目结构变了才重建。
+  let lastKey: any = null
+  let lastShape = ''
+
+  /** 结构签名：题号 + 分类个数 + 每个分类的项目数，用来判断"还是不是同一道题" */
+  function shapeOf(q: any) {
+    const options = Array.isArray(q?.options) ? q.options : []
+    return `${q?.type}|${options.length}|${options.map((c: any) => (c?.items || []).length).join(',')}`
+  }
 
   // 初始化：所有项打乱后放入池子
   function initBuckets() {
@@ -41,6 +56,17 @@ export function useClassify(props: any) {
     }
     pool.value = items
     doSyncRecord()
+  }
+
+  /** 换题 / 首次进入：重建分桶，并视为"尚未作答" */
+  function resetForNewQuestion() {
+    userTouched = false
+    initBuckets()
+  }
+
+  /** 用户真正开始拖动（vuedraggable 的 start 事件）→ 标记为已作答 */
+  function onDragStart() {
+    userTouched = true
   }
 
   // 从当前 pool/catBuckets 构建 record 数组
@@ -73,14 +99,21 @@ export function useClassify(props: any) {
 
   // 监听 question 变化初始化
   watch(() => props.question, (q: any) => {
-    if (q?.type === 'classify' && Array.isArray(q.options) && q.options.length) {
-      initBuckets()
-    }
+    if (q?.type !== 'classify' || !Array.isArray(q.options) || !q.options.length) return
+    const key = props.questionId || q
+    const shape = shapeOf(q)
+    // 同一道题重新请求：保留学生当前分桶，不重洗
+    if (key === lastKey && shape === lastShape) return
+    lastKey = key
+    lastShape = shape
+    resetForNewQuestion()
   }, { immediate: true })
 
   // 监听 record 变化（fetchRecord 回填场景）
   watch(() => props.question?.record, (record: any) => {
     if (!Array.isArray(record) || record.length === 0) return
+    // 学生已开始作答：忽略后到的回填，避免覆盖进行中的分类
+    if (userTouched) return
     // 检查是否与当前状态一致，避免循环
     const current = buildRecord()
     if (current.length === record.length && record.every((v: any, i: number) => v === current[i])) return
@@ -187,5 +220,6 @@ export function useClassify(props: any) {
     submit,
     reset,
     fillCorrectAnswer,
+    onDragStart,
   }
 }
