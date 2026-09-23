@@ -262,6 +262,8 @@ export function useClassModal(open: Ref<boolean>) {
   }
 
   // ==================== 初始化 ====================
+  // immediate：调用方是 <LazyClassModal v-if="classModalOpen" v-model:open="classModalOpen" />，
+  // 组件 setup 执行时 open 已经是 true，watch 的初始值不触发会漏掉首次加载（班级列表/成员为空）。
   watch(open, async (val) => {
     if (val) {
       selectedItem.value = selectedClassId.value ?? undefined
@@ -281,7 +283,7 @@ export function useClassModal(open: Ref<boolean>) {
         await fetchUsers(selectedClassId.value, courseId.value)
       }
     }
-  })
+  }, { immediate: true })
 
   // 用户加载完成后存在 default_class 时，无需弹开 select-class，一进页面即预取学生名单
   watch(

@@ -246,4 +246,32 @@ describe('composables/useClassModal', () => {
     expect(toasts.some((t) => t.color === 'success')).toBe(true)
     expect(r.selectedStudents.value.length).toBe(0)
   })
+
+  // 回归：aside.vue 用 <LazyClassModal v-if="classModalOpen" v-model:open="classModalOpen" /> 挂载，
+  // 组件创建时 open 已为 true。watch(open) 若不 immediate，初始值不触发 → 班级列表/成员永不加载。
+  it('以 open=true 初始化（v-if 门控场景）时应立即执行首次加载', async () => {
+    const loadClasses = vi.fn()
+    const fetchUsers = vi.fn()
+    ;(globalThis as any).useClasses = () => ({
+      classes: ref([{ id: 10, name: 'Class A' }]),
+      classOptions: ref([{ label: 'Class A', value: 10 }]),
+      loadClasses,
+    })
+    ;(globalThis as any).useClassUsers = () => ({
+      classUsers: ref([]),
+      classUsersLoading: ref(false),
+      students: ref([]),
+      teachers: ref([]),
+      fetchUsers,
+      clearUsers: vi.fn(),
+    })
+
+    const open = ref(true)
+    const { useClassModal } = await import('../../composables/useClassModal')
+    useClassModal(open)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(loadClasses).toHaveBeenCalled()
+    expect(fetchUsers).toHaveBeenCalled()
+  })
 })

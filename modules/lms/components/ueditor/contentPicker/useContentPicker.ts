@@ -294,6 +294,9 @@ export function useContentPicker(props: ContentPickerProps, emit: ContentPickerE
         toast.add({ title: t('contentPicker.exportSuccess', { count: cleanItems.length }), color: 'success' })
     }
 
+    // immediate：调用方用 <LazyUeditorContentPicker v-if="contentPickerOpen" v-model="contentPickerOpen" />
+    // 这种「v-if 门控 + Lazy」的挂载方式下，组件 setup 执行时 modelValue 已经是 true。
+    // 此时 watch 的初始值不触发（watch 只监听变化），fetchItems() 永不执行 → 弹窗恒显 "No content"。
     watch(open, (val) => {
         if (val) {
             if (!props.previewMode) selected.value = [...props.initialSelected]
@@ -302,7 +305,7 @@ export function useContentPicker(props: ContentPickerProps, emit: ContentPickerE
             currentIndex.value = 0
             fetchItems()
         }
-    })
+    }, { immediate: true })
 
     const ctx = {
         t, moduleLms, open, title, previewMode: props.previewMode,
