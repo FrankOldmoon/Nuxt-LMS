@@ -77,7 +77,7 @@ const props = defineProps({
 
 const emit = defineEmits(['toggle-like', 'delete', 'approve'])
 
-const { hasRole } = useAuth()
+const { hasRole, user: authUser } = useAuth()
 const { siteTimeZone } = useSiteConfig()
 
 // 仅客户端渲染时间（SSR 阶段留空，避免服务端/客户端不一致）
@@ -88,14 +88,32 @@ onMounted(() => { hydratedTime.value = true })
 const isTeacher = computed(() => hasRole('teacher') || hasRole('admin'))
 
 // 构造 user 对象供 AuthUserCard 使用
-const userObj = computed(() => ({
-    id: props.comment.userId,
-    name: props.comment.name || props.comment.userName || 'U',
-    preferName: props.comment.userName || props.comment.name || null,
-    avatarImg: props.comment.avatarImg || null,
-    avatarFrame: props.comment.avatarFrame || null,
-    rollNumber: null,
-}))
+// 当评论作者是当前登录用户时，优先使用实时登录态的真实个人信息填充，
+// 避免新提交/未过审评论缺省 name/userName 时退化为显示 "U"。
+const userObj = computed(() => {
+    const isOwn = authUser.value && props.comment.userId === props.currentUserId
+    if (isOwn) {
+        return {
+            id: authUser.value.id,
+            name: authUser.value.name || props.comment.name || 'U',
+            preferName: authUser.value.preferName || props.comment.userName || props.comment.name || null,
+            username: authUser.value.username || props.comment.userName || null,
+            avatarImg: authUser.value.avatarImg || props.comment.avatarImg || null,
+            avatarFrame: authUser.value.avatarFrame || props.comment.avatarFrame || null,
+            rollNumber: authUser.value.rollNumber || null,
+            number: authUser.value.number || null,
+        }
+    }
+    return {
+        id: props.comment.userId,
+        name: props.comment.name || props.comment.userName || 'U',
+        preferName: props.comment.userName || props.comment.name || null,
+        username: props.comment.userName || null,
+        avatarImg: props.comment.avatarImg || null,
+        avatarFrame: props.comment.avatarFrame || null,
+        rollNumber: null,
+    }
+})
 
 // 是否可删除：作者本人或教师/管理员
 const canDelete = computed(() => {
