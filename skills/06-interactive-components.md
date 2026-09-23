@@ -141,11 +141,16 @@ Example（homework，course 5 / chapter 161 cid=8）:
 ```json
 POST /api/homeworks/update   { "course_id": 5, "id": 8,  "content": <doc> }
 POST /api/comments/update    { "course_id": 5, "id": 125, "content": <doc> }
+POST /api/questions/update   { "course_id": 5, "id": 43, "options": [...], "answer": [...] }
 ```
 
+- ⚠️ **`add` 用 `course_id`，`update` 用 `id`（= cid）**：update 传 `cid` 会返回
+  `{"data":null,"msg":"缺少 id 参数","success":false}`（questions / homeworks / comments 三者一致）。
 - `homeworks/update`：`{course_id, id}` + 任意字段（`id` 即 cid，`cid` 会被删除，不允许改）
 - `comments/update`：字段白名单只有 `name / code / content / tags / point`，且 content 会过
   `validateCommentContent`（禁 iframe/script）且不能为空
+- `questions/update`：`{course_id, id}` + 任意字段（常见 `options` / `answer` / `point` / `name`）；
+  改完回读确认 `options` / `answer` 仍是数组（存量老题有的是「jsonb 里塞 JSON 字符串」）
 
 ## 6. Suggested order
 

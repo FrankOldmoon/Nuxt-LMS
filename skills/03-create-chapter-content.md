@@ -533,7 +533,7 @@ Questions go through `POST /api/questions/add` (teacher/admin), body:
 | --- | --- | --- | --- |
 | single | array of option strings | `[0]` | single choice, answer is the index |
 | multiple | array of option strings | `[0, 2]` | multiple choice, several indexes |
-| judge | `["Correct","Wrong"]` | `[0]` correct / `[1]` wrong | true/false |
+| judge | `["✓ Correct","✗ Wrong"]` | `[0]` correct / `[1]` wrong | true/false. ⚠️ Use the library convention `✓ Correct` / `✗ Wrong` (existing questions in production all use it); plain `["Correct","Wrong"]` works but is inconsistent |
 | fill | `["", "", ""]` or `["regex"]` | `["answer1","answer2"]` | fill-in: **content must contain an `inputs` node** (`attrs.content` holds each blank's answer), one per blank |
 | select | array of dropdown options | `["Option text"]` | dropdown: **content must contain a `select` node** (`attrs.content` holds the answer text) |
 | sort | array of items (in correct order) | `[0,1,2,3]` | ordering, answer is the correct order of indexes |
