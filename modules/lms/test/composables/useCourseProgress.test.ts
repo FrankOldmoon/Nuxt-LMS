@@ -187,6 +187,53 @@ describe('composables/useCourseProgress', () => {
     // 无进度（null）：不渲染
     expect(barCol!.cell({ row: { original: { progress: null } } as any } as any)).toBeNull()
   })
+
+  it('onTaskSubmitted：静默重拉进度（不切 loading），圆点状态随之更新', async () => {
+    let questionStatus: 'todo' | 'done' = 'todo'
+    let fetchCount = 0
+    setMockFetchHandler(async (url) => {
+      if (url.includes('/api/courses/progress')) {
+        fetchCount++
+        return {
+          data: [{
+            chapterId: 2, score: 0, isPass: false, isOpen: true, accessible: true,
+            items: [{ id: 7, type: 'question', status: questionStatus }],
+          }],
+          success: true, msg: '',
+        }
+      }
+      return { data: null, success: true, msg: '' }
+    })
+    const { useCourseProgress } = await import('../../composables/useCourseProgress')
+    const isOpen = ref(false)
+    const ui = { UButton: {}, UTooltip: {}, UIcon: {}, NuxtLink: {} }
+    const nav = [{ label: 'Home', to: '/course/1' }, { label: 'Ch2', to: '/course/1/2' }]
+    const { loadData, onTaskSubmitted, loading, tableData, taskModalItem, onItemClick } = useCourseProgress(
+      { courseId: '1', navigation: nav },
+      isOpen,
+      ui,
+    )
+    await loadData()
+    expect(fetchCount).toBe(1)
+    expect(tableData.value[0].items[0].status).toBe('todo')
+
+    // 点开圆点 → 任务弹窗拿到当时的状态
+    onItemClick({ id: 7, type: 'question', status: 'todo' })
+    expect(taskModalItem.status).toBe('todo')
+
+    // 任务弹窗里提交答对 → 服务端记录变成 done
+    questionStatus = 'done'
+    const pending = onTaskSubmitted()
+    // 静默刷新：不进入 loading 态（否则表格被「加载中」占位顶掉）
+    expect(loading.value).toBe(false)
+    await pending
+    expect(fetchCount).toBe(2)
+    expect(loading.value).toBe(false)
+    expect(tableData.value[0].items[0].status).toBe('done')
+    expect(tableData.value[0].items[0].type).toBe('question')
+    // 任务弹窗标题徽标同步为最新状态（done），不必等弹窗关闭
+    expect(taskModalItem.status).toBe('done')
+  })
 })
 
 /** 递归收集 vnode 树中的文本，用于断言渲染文案 */

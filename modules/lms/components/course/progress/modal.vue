@@ -31,7 +31,7 @@
         </UModal>
 
         <TaskModal v-model:open="taskModalOpen" :course-id="courseId" :type="taskModalItem.type" :id="taskModalItem.id"
-            :status="taskModalItem.status" />
+            :status="taskModalItem.status" @submitted="onTaskSubmitted" />
     </div>
 </template>
 
@@ -58,6 +58,6 @@ const {
     loading, taskModalOpen, taskModalItem, canSelectStudent,
     tableData, expanded, columns,
     totalCount, passedCount, overallProgress,
-    onImpersonated,
+    onImpersonated, onTaskSubmitted,
 } = useCourseProgress(props, isOpen, { UButton, UTooltip, UIcon, NuxtLink })
 </script>

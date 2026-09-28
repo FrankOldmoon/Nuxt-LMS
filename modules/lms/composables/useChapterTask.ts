@@ -1,4 +1,4 @@
-import { shallowRef, type Ref } from 'vue'
+import { ref, shallowRef, type Ref } from 'vue'
 import type { ChapterTaskMap } from '../utils/chapterTask'
 import { progressHeadingId } from '../utils/progressHeading'
 
@@ -61,6 +61,40 @@ const sharedChapterTaskCtx = shallowRef<ChapterTaskContext | null>(null)
 export function useChapterTask(): ChapterTaskContext | null {
   const injected = inject<ChapterTaskContext | null>(CHAPTER_TASK_KEY, null)
   return injected || sharedChapterTaskCtx.value
+}
+
+/**
+ * 为「只预览单个任务的容器」注入一条极简上报通道。
+ *
+ * 场景：课程进度弹窗（course/progress/modal.vue）里点开某个 question/homework/comment
+ * 预览，互动组件提交后仍会照常调用 `chapterTask.reportNodeDone(type, cid, done)`，
+ * 但该容器不属于任何章节——既不能写章节进度，也不该落到页面级章节上下文
+ * （sharedChapterTaskCtx）里被误记。故这里提供一个只实现 reportNodeDone 的空壳上下文：
+ * ① 抢占 inject，把上报隔离在容器内；② 把「任务已提交」转发给容器宿主
+ * （如进度弹窗据此静默重拉进度，让对应圆点变绿）。
+ * 注意：空壳只保证互动组件现有的 `chapterTask?.reportNodeDone(...)` 调用链可用，
+ * 其余方法均为空实现（容器内没有 heading 完成判定，也不需要落库）。
+ */
+export function provideChapterTaskReporter(
+  report: (type: string, cid: number, done: boolean) => void,
+): void {
+  const noop = () => {}
+  const ctx: ChapterTaskContext = {
+    taskMap: ref<ChapterTaskMap>({ headings: [], tasksByHeading: {} }),
+    taskStatus: ref<Record<string, boolean>>({}),
+    nodeStatus: ref<Record<string, boolean>>({}),
+    isPass: ref(false),
+    reportNodeDone: report,
+    blockHeadingOf: () => null,
+    isBlockRead: () => false,
+    markBlockRead: noop,
+    isHeadingDone: () => false,
+    completeChapterHeading: noop,
+    applyServerTaskStatus: noop,
+    resetProgress: noop,
+    flushPersist: async () => {},
+  }
+  provide(CHAPTER_TASK_KEY, ctx)
 }
 
 /**

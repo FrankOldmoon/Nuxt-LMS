@@ -6,7 +6,10 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
-import { resetAllStubs, setMockI18n } from '../../../../../../test/setup/nuxt-stubs'
+import {
+  resetAllStubs, setMockI18n,
+  getMockTaskReporter,
+} from '../../../../../../test/setup/nuxt-stubs'
 
 beforeEach(() => {
   resetAllStubs()
@@ -116,5 +119,22 @@ describe('course/task/modal.vue', () => {
     expect(wrapper.props('type')).toBe('homework')
     expect(wrapper.props('id')).toBe(5)
     expect(wrapper.props('status')).toBe('partial')
+  })
+
+  it('注入任务上报通道：互动组件提交上报后转发 submitted 事件', async () => {
+    const { default: TaskModal } = await import('../../../../components/course/task/modal.vue')
+    const wrapper = mount(TaskModal, {
+      props: { open: true, courseId: '1', type: 'homework', id: 9, status: 'todo' },
+      global: _globalConfig,
+    })
+    await flushPromises()
+
+    // useChapterTask() 在弹窗内被替换为一条只转发的通道（预览容器无章节上下文）
+    const reporter = getMockTaskReporter()
+    expect(typeof reporter).toBe('function')
+    reporter!('homework', 9, true)
+    await flushPromises()
+
+    expect(wrapper.emitted('submitted')?.[0]).toEqual([{ type: 'homework', id: 9 }])
   })
 })

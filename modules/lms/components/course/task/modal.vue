@@ -37,6 +37,15 @@ const props = defineProps({
     status: { type: String, default: '' },  // done | partial | todo
 })
 
+const emit = defineEmits(['submitted'])
+
+// 预览容器不属于任何章节：注入一条只转发上报的通道，
+// 互动组件（question/homework/comment/quiz）提交后的 reportNodeDone 回流到这里，
+// 再抛给宿主（课程进度弹窗）刷新对应任务的完成状态（圆点变绿/变黄）
+provideChapterTaskReporter((type, cid) => {
+    emit('submitted', { type, id: cid })
+})
+
 // 构造 node 对象供渲染组件使用（与 Tiptap vue node 格式一致）
 const renderNode = computed(() => {
     if (!props.id || !props.type) return null

@@ -120,8 +120,11 @@ export function useCourseProgress(
   const tableData = computed(() => buildTree(props.navigation.slice(1), chapterData.value))
 
   watch(tableData, (data: ProgressRow[]) => {
-    expanded.value = {}
-    data.forEach((_: ProgressRow, i: number) => { expanded.value[i] = true })
+    // 保留已有的展开/收起状态：静默刷新（任务提交后重拉）会重建 tableData，
+    // 若无条件重置，用户手动收起的父章节会莫名弹开
+    const next: Record<number, boolean> = {}
+    data.forEach((_: ProgressRow, i: number) => { next[i] = expanded.value[i] ?? true })
+    expanded.value = next
   }, { immediate: true })
 
   const columns: TableColumn<ProgressRow>[] = [
@@ -203,9 +206,9 @@ export function useCourseProgress(
     },
   ]
 
-  async function loadData() {
+  async function loadData(opts: { silent?: boolean } = {}) {
     if (!props.courseId) return
-    loading.value = true
+    if (!opts.silent) loading.value = true
     try {
       const data = await cRequest(`/api/courses/progress?courseId=${props.courseId}`) as { chapterId: number; score: number; isPass?: boolean; isOpen?: boolean; accessible?: boolean; items?: TaskItem[] }[]
       const map: Record<number, ChapterData> = {}
@@ -220,7 +223,25 @@ export function useCourseProgress(
     } catch (e) {
       console.error('加载进度失败', e)
     } finally {
-      loading.value = false
+      if (!opts.silent) loading.value = false
+    }
+  }
+
+  /**
+   * 任务弹窗内提交成功后的回调（@submitted）。
+   *
+   * 任务完成状态（question 正确率 / homework 提交记录 / comment 记录）都落在服务端，
+   * 进度弹窗只在打开时拉过一次快照 —— 提交后必须重拉，对应圆点才会变绿/变黄。
+   * 静默（不切 loading）：否则表格会被「加载中」占位顶掉，造成整表闪烁。
+   */
+  async function onTaskSubmitted() {
+    await loadData({ silent: true })
+    // 重拉后把该任务的最新状态同步给任务弹窗的标题徽标（不关弹窗也能看到状态翻转）
+    const { type, id } = taskModalItem
+    if (!type || !id) return
+    for (const ch of Object.values(chapterData.value)) {
+      const hit = (ch.items || []).find(it => it.type === type && it.id === id)
+      if (hit) { taskModalItem.status = hit.status; return }
     }
   }
 
@@ -269,6 +290,6 @@ export function useCourseProgress(
     loading, taskModalOpen, taskModalItem, canSelectStudent,
     tableData, expanded, columns,
     totalCount, passedCount, overallProgress,
-    onItemClick, onImpersonated, loadData,
+    onItemClick, onImpersonated, loadData, onTaskSubmitted,
   }
 }

@@ -6,7 +6,7 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
-import { ref, reactive } from 'vue'
+import { ref, reactive, nextTick } from 'vue'
 import { resetAllStubs, setMockI18n } from '../../../../../../test/setup/nuxt-stubs'
 
 beforeEach(() => {
@@ -25,6 +25,7 @@ beforeEach(() => {
     passedCount: ref(0),
     overallProgress: ref(null),
     onImpersonated: vi.fn(),
+    onTaskSubmitted: vi.fn(),
   })
 })
 
@@ -70,7 +71,7 @@ describe('course/progress/modal.vue', () => {
       taskModalItem: reactive({ type: '', id: 0, status: 'todo' }),
       canSelectStudent: ref(false), tableData: ref([]), expanded: ref({}),
       columns: ref([]), totalCount: ref(10), passedCount: ref(5),
-      overallProgress: ref(50), onImpersonated: vi.fn(),
+      overallProgress: ref(50), onImpersonated: vi.fn(), onTaskSubmitted: vi.fn(),
     })
     const { default: ProgressModal } = await import('../../../../components/course/progress/modal.vue')
     const wrapper = mount(ProgressModal, {
@@ -87,7 +88,7 @@ describe('course/progress/modal.vue', () => {
       taskModalItem: reactive({ type: '', id: 0, status: 'todo' }),
       canSelectStudent: ref(true), tableData: ref([]), expanded: ref({}),
       columns: ref([]), totalCount: ref(0), passedCount: ref(0),
-      overallProgress: ref(null), onImpersonated: vi.fn(),
+      overallProgress: ref(null), onImpersonated: vi.fn(), onTaskSubmitted: vi.fn(),
     })
     const { default: ProgressModal } = await import('../../../../components/course/progress/modal.vue')
     const wrapper = mount(ProgressModal, {
@@ -107,5 +108,27 @@ describe('course/progress/modal.vue', () => {
     await flushPromises()
     expect(wrapper.props('courseId')).toBe('42')
     expect(wrapper.props('navigation')).toEqual([{ label: 'ch1', to: '/c/1/1' }])
+  })
+
+  it('任务弹窗内提交后转发 submitted → 触发 onTaskSubmitted（重拉进度让圆点变绿）', async () => {
+    const onTaskSubmitted = vi.fn()
+    ;(globalThis as any).useCourseProgress = (_props: any, _isOpen: any, _ui: any) => ({
+      loading: ref(false), taskModalOpen: ref(true),
+      taskModalItem: reactive({ type: 'question', id: 7, status: 'todo' }),
+      canSelectStudent: ref(false), tableData: ref([]), expanded: ref({}),
+      columns: ref([]), totalCount: ref(0), passedCount: ref(0),
+      overallProgress: ref(null), onImpersonated: vi.fn(), onTaskSubmitted,
+    })
+    const { default: ProgressModal } = await import('../../../../components/course/progress/modal.vue')
+    const wrapper = mount(ProgressModal, {
+      props: { open: true, courseId: '1', navigation: [] },
+      global: _globalConfig,
+    })
+    await flushPromises()
+
+    // 任务弹窗把「互动组件提交上报」转发出来
+    wrapper.findComponent(_globalStubs.TaskModal as any).vm.$emit('submitted', { type: 'question', id: 7 })
+    await nextTick()
+    expect(onTaskSubmitted).toHaveBeenCalledTimes(1)
   })
 })

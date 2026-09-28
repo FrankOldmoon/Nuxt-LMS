@@ -262,6 +262,21 @@ export function useChapterTask() {
   return null
 }
 
+/**
+ * provideChapterTaskReporter 桩 — 任务预览容器（course/task/modal.vue）注入的极简上报通道。
+ * 记录最后一次注册的回调，供测试直接触发「互动组件提交上报」验证转发链路。
+ */
+let _mockTaskReporter: ((type: string, cid: number, done: boolean) => void) | null = null
+export function provideChapterTaskReporter(report: (type: string, cid: number, done: boolean) => void) {
+  _mockTaskReporter = report
+}
+export function getMockTaskReporter() {
+  return _mockTaskReporter
+}
+export function resetMockTaskReporter() {
+  _mockTaskReporter = null
+}
+
 /** useUserCard 桩 — 全局 userCard 刷新触发器（任何操作完成后调用 refresh() 通知 userCard.vue） */
 let _mockUserCardRefreshTrigger = ref(0)
 let _mockUserCardRefreshCount = 0
@@ -1307,6 +1322,9 @@ const _stubsToExpose: Record<string, any> = {
   // LMS reading tracker auto-imports
   useReadingTracker,
   useChapterTask,
+  provideChapterTaskReporter,
+  getMockTaskReporter,
+  resetMockTaskReporter,
   useUserCard,
   getUserCardRefreshCount,
   clearUserCardRefreshCount,
@@ -1490,6 +1508,7 @@ export function resetAllStubs() {
   _mockCookies = {}
   _mockSchemaTables = ['users', 'courses', 'chapters', 'questions', 'roles', 'permissions']
   _mockLayoutState = { notifyCourseNavUpdate: () => {} }
+  _mockTaskReporter = null
   clearProvideStore()
   _mockLmsCourseId.value = 0
   _mockLmsChapterId.value = 0
