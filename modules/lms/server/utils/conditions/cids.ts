@@ -4,14 +4,14 @@
  * 所有类型共享的"value 为 cid 数组，需全部完成"逻辑：
  *  - question: userQuestions.questionCid
  *  - homework: userHomeworks.homeworkCid
- *  - comment:  userComments.commentCid
+ *  - comment:  comments.parentId（主题下已过审的回复；userComments 是点赞记录，不能用）
  *  - quiz:     userQuizzes.quizCid
  *  - race:     userRaces.raceCid
  *
  * 每种类型构造不同的 SELECT 和 IN 字段。
  */
 import { db, schema } from '@nuxthub/db'
-import { and, eq, inArray } from 'drizzle-orm'
+import { and, eq, inArray, isNull } from 'drizzle-orm'
 import { homeworkSubmitted } from '../submit/record'
 
 type CidTable = {
@@ -51,7 +51,14 @@ export async function checkAllCidsCompleted(
 const TABLES: Record<string, CidTable> = {
   question: { table: schema.userQuestions, userIdField: schema.userQuestions.userId, cidField: schema.userQuestions.questionCid, cidAlias: 'questionCid' },
   homework: { table: schema.userHomeworks, userIdField: schema.userHomeworks.userId, cidField: schema.userHomeworks.homeworkCid, cidAlias: 'homeworkCid', extraWhere: homeworkSubmitted() },
-  comment:  { table: schema.userComments,  userIdField: schema.userComments.userId,  cidField: schema.userComments.commentCid,  cidAlias: 'commentCid' },
+  comment:  {
+    table: schema.comments,
+    userIdField: schema.comments.userId,
+    cidField: schema.comments.parentId,
+    cidAlias: 'parentId',
+    // 仅「已过审」（published）且未删除的回复计入；待审核/已删除不算完成
+    extraWhere: and(eq(schema.comments.status, 'published'), isNull(schema.comments.deletedAt)),
+  },
   quiz:     { table: schema.userQuizzes,   userIdField: schema.userQuizzes.userId,   cidField: schema.userQuizzes.quizCid,   cidAlias: 'quizCid' },
   race:     { table: schema.userRaces,     userIdField: schema.userRaces.userId,     cidField: schema.userRaces.raceCid,     cidAlias: 'raceCid' },
 }

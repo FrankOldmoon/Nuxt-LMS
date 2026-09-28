@@ -4,10 +4,11 @@
  * 输入：用户 id + 课程 id + 该课程下所有章节的 questionIds / homeworkIds / commentIds
  * 输出：3 个 Map<cid, 'done' | 'partial' | 'todo'>
  *  - question: rate >= 1 → done；0 < rate < 1 → partial
- *  - homework / comment: 存在记录 → done
+ *  - homework: 存在已提交记录 → done
+ *  - comment:  在主题下存在自己「已过审」的回复 → done
  */
 import { db, schema } from '@nuxthub/db'
-import { eq, and, inArray } from 'drizzle-orm'
+import { eq, and, inArray, isNull } from 'drizzle-orm'
 import { homeworkSubmitted } from '../submit/record'
 
 export type ItemStatus = 'done' | 'partial' | 'todo'
@@ -56,7 +57,15 @@ export async function queryHomeworkStatus(
   return map
 }
 
-/** 批量查询评论互动情况 */
+/**
+ * 批量查询评论完成情况。
+ *
+ * 章节里的 commentIds 是「主题（root comment）」的 cid，学生以回复（parentId = 主题 cid）参与。
+ * 完成口径与前端 useCommentRender.hasApprovedReply 一致：本人在该主题下有 status='published'
+ * （老师审核通过）的回复才算完成。
+ *
+ * 注意：userComments 表存的是「点赞」记录（like 标记），不是发表记录，故不能用于此判断。
+ */
 export async function queryCommentStatus(
   userId: number,
   courseId: number,
@@ -65,14 +74,18 @@ export async function queryCommentStatus(
   const map = new Map<number, ItemStatus>()
   if (!cids.length) return map
   const rows = await db
-    .select({ commentCid: schema.userComments.commentCid })
-    .from(schema.userComments)
+    .select({ parentId: schema.comments.parentId })
+    .from(schema.comments)
     .where(and(
-      eq(schema.userComments.userId, userId),
-      eq(schema.userComments.courseId, courseId),
-      inArray(schema.userComments.commentCid, [...new Set(cids)]),
+      eq(schema.comments.userId, userId),
+      eq(schema.comments.courseId, courseId),
+      eq(schema.comments.status, 'published'),
+      isNull(schema.comments.deletedAt),
+      inArray(schema.comments.parentId, [...new Set(cids)]),
     ))
-  for (const c of rows) map.set(c.commentCid, 'done')
+  for (const c of rows) {
+    if (c.parentId != null) map.set(Number(c.parentId), 'done')
+  }
   return map
 }
 

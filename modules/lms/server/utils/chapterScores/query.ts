@@ -7,7 +7,7 @@
  *  - 返回 key 形如 "userId:cid"，handler 据此查表
  */
 import { db, schema } from '@nuxthub/db'
-import { and, eq, inArray } from 'drizzle-orm'
+import { and, eq, inArray, isNull } from 'drizzle-orm'
 import type { ItemStatus } from '../courseProgress/query'
 import { homeworkSubmitted } from '../submit/record'
 
@@ -59,7 +59,10 @@ export async function queryStudentHomeworkStatus(
   return map
 }
 
-/** 批量查询某课程下，指定学生在 comment cids 上的状态 */
+/**
+ * 批量查询某课程下，指定学生在 comment cids（主题 cid）上的状态。
+ * 口径同 queryCommentStatus：学生在主题下有 status='published'（已过审）的回复才算完成。
+ */
 export async function queryStudentCommentStatus(
   courseId: number,
   studentIds: number[],
@@ -68,14 +71,18 @@ export async function queryStudentCommentStatus(
   const map = new Map<string, ItemStatus>()
   if (!cids.length || !studentIds.length) return map
   const rows = await db
-    .select({ userId: schema.userComments.userId, commentCid: schema.userComments.commentCid })
-    .from(schema.userComments)
+    .select({ userId: schema.comments.userId, parentId: schema.comments.parentId })
+    .from(schema.comments)
     .where(and(
-      eq(schema.userComments.courseId, courseId),
-      inArray(schema.userComments.userId, studentIds),
-      inArray(schema.userComments.commentCid, [...new Set(cids)]),
+      eq(schema.comments.courseId, courseId),
+      eq(schema.comments.status, 'published'),
+      isNull(schema.comments.deletedAt),
+      inArray(schema.comments.userId, studentIds),
+      inArray(schema.comments.parentId, [...new Set(cids)]),
     ))
-  for (const c of rows) map.set(`${c.userId}:${c.commentCid}`, 'done')
+  for (const c of rows) {
+    if (c.parentId != null) map.set(`${c.userId}:${c.parentId}`, 'done')
+  }
   return map
 }
 

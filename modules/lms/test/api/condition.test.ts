@@ -22,6 +22,7 @@ const _mockSchema = {
   userQuestions: { userId: 'userId', questionCid: 'questionCid' },
   userHomeworks: { userId: 'userId', homeworkCid: 'homeworkCid' },
   userComments: { userId: 'userId', commentCid: 'commentCid' },
+  comments: { userId: 'userId', parentId: 'parentId', status: 'status', deletedAt: 'deletedAt' },
   userQuizzes: { userId: 'userId', quizCid: 'quizCid' },
   userRaces: { userId: 'userId', raceCid: 'raceCid' },
 }
