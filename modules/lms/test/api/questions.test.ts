@@ -35,7 +35,7 @@ const _mockSchema = {
 }
 vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
 
-import { resetAllStubs, setMockAuthState } from '../../../../test/setup/nuxt-stubs'
+import { resetAllStubs, setMockAuthState, setMockLmsConfig, setMockFetchHandler } from '../../../../test/setup/nuxt-stubs'
 
 beforeEach(() => {
     // 本文件的教师场景均假定为该课程的任课教师（requireCourseTeacher 守卫通过）
@@ -510,6 +510,61 @@ describe('API: questions/records', () => {
     const result = await handler(makeEvent({ query: { course_id: '1', cid: '1' } }))
     expect(result.success).toBe(true)
     expect(result.data).toEqual([])
+  })
+})
+
+// ====================== oj-records.get.ts ======================
+
+describe('API: questions/oj-records', () => {
+  it('未登录（无 teacher/admin 权限）抛错', async () => {
+    const handler = (await import('../../server/api/questions/oj-records.get')).default
+    await expect(handler(makeEvent({ query: { course_id: '1', cid: '1' } }))).rejects.toThrow()
+  })
+
+  it('缺少参数返回失败', async () => {
+    setMockAuthState({ id: 1, username: 'teacher', roles: ['teacher'], permissions: [] })
+    const handler = (await import('../../server/api/questions/oj-records.get')).default
+    const result = await handler(makeEvent({ query: {} }))
+    expect(result.success).toBe(false)
+  })
+
+  it('非 OJ 题型返回空列表', async () => {
+    setMockAuthState({ id: 1, username: 'teacher', roles: ['teacher'], permissions: [] })
+    _mockDb.query.questions.findFirst = vi.fn().mockResolvedValue({ type: 'single', options: [] })
+    setMockLmsConfig({ oj: { url: 'http://oj.test' } })
+    const handler = (await import('../../server/api/questions/oj-records.get')).default
+    const result = await handler(makeEvent({ query: { course_id: '1', cid: '1' } }))
+    expect(result.success).toBe(true)
+    expect(result.data.records).toEqual([])
+  })
+
+  it('返回每个学生最新一次 OJ 提交', async () => {
+    setMockAuthState({ id: 1, username: 'teacher', roles: ['teacher'], permissions: [] })
+    _mockDb.query.questions.findFirst = vi.fn().mockResolvedValue({ type: 'oj', options: { pid: 'P1004' } })
+    _mockDb.limit = vi.fn().mockResolvedValue([{ defaultClass: { id: 10 } }])
+    ;(globalThis as any).getClassUsers = vi.fn().mockResolvedValue([
+      { id: 100, username: '20250001', isTeacher: false },
+      { id: 101, username: '20250002', isTeacher: false },
+      { id: 200, username: 't1', isTeacher: true },
+    ])
+    setMockLmsConfig({ oj: { url: 'http://oj.test' } })
+    setMockFetchHandler(async (url: string) => {
+      if (String(url).includes('uidOrName=20250001')) {
+        return {
+          rdocs: [
+            { _id: 'r-old', status: 0, score: 0, lang: 'py.py3', judgeAt: '2026-09-01T00:00:00.000Z' },
+            { _id: 'r-new', status: 1, score: 100, lang: 'py.py3', judgeAt: '2026-09-10T00:00:00.000Z' },
+          ],
+        }
+      }
+      return { rdocs: [] }
+    })
+    const handler = (await import('../../server/api/questions/oj-records.get')).default
+    const result = await handler(makeEvent({ query: { course_id: '1', cid: '5' } }))
+    expect(result.success).toBe(true)
+    expect(result.data.url).toBe('http://oj.test')
+    expect(result.data.records).toHaveLength(1)
+    expect(result.data.records[0]).toMatchObject({ userId: 100, rid: 'r-new', count: 2 })
   })
 })
 

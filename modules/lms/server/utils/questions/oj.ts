@@ -9,7 +9,7 @@
  */
 
 /** 获取 OJ 平台基址（去掉末尾斜杠）；未配置时返回空串 */
-function getOjUrl(): string {
+export function getOjUrl(): string {
   const cfg = (typeof getLmsConfigSync === 'function') ? getLmsConfigSync() : null
   const url = (cfg?.oj?.url || '') as string
   return String(url).replace(/\/+$/, '')
@@ -75,4 +75,24 @@ export const getOjStatus = async (pid: string, username: string): Promise<boolea
         return null;
     }
     return data.rdocs.length > 0
+}
+
+/**
+ * 查询某用户在指定 OJ 题目上的全部提交记录（列表字段，不含代码）。
+ *
+ * 用于教师在「题目记录」弹窗里查看学生的 OJ 提交：记录页地址为 `${base}/record/{_id}`，
+ * 代码只在 OJ 侧已登录且有权查看时才会显示，故这里只返回提交列表供前端跳转。
+ * 未配置 OJ / 无参数 / 查询失败均返回 []。
+ */
+export const fetchOjUserRecords = async (pid: string, username: string): Promise<any[]> => {
+    const base = getOjUrl()
+    if (!base || !pid || !username) return []
+    const url = `${base}/record?uidOrName=${encodeURIComponent(username)}&pid=${encodeURIComponent(pid)}`
+    const data: any = await $fetch(url, {
+        headers: {
+            'Accept': 'application/json',
+        },
+    })
+    if (!data || !Array.isArray(data.rdocs)) return []
+    return data.rdocs
 }

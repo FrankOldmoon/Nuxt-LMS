@@ -11,6 +11,7 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ref } from 'vue'
+import { flushPromises } from '@vue/test-utils'
 import { resetAllStubs, setMockI18n, setMockFetchHandler } from '../../../../test/setup/nuxt-stubs'
 
 const baseProps = { modelValue: false, courseId: 1, cid: 2 }
@@ -45,5 +46,31 @@ describe('recordsModal composables 导出 fetchRecords', () => {
     const { useQuizRecords } = await import('../../components/lms/recordsModal/quiz/useQuizRecords')
     const ctx: any = useQuizRecords({ ...baseProps, quizPoint: 1, questions: [] } as any, () => {})
     expect(typeof ctx.fetchRecords).toBe('function')
+  })
+
+  it('useQuestionRecords 对 OJ 题拉取 oj-records 并合并到 rows', async () => {
+    setMockFetchHandler(async (url: string) => {
+      if (String(url).includes('/api/questions/oj-records')) {
+        return {
+          data: { url: 'http://oj.test', records: [{ userId: 1, rid: 'rid-1', count: 2 }] },
+          success: true,
+          msg: '',
+        }
+      }
+      return { data: [], success: true, msg: '' }
+    })
+    const { useQuestionRecords } = await import('../../components/lms/recordsModal/question/useQuestionRecords')
+    const ctx: any = useQuestionRecords({ ...baseProps, question: { type: 'oj' } } as any, () => {})
+    expect(ctx.isOj.value).toBe(true)
+    await ctx.fetchRecords()
+    await flushPromises()
+
+    const row = ctx.rows.value.find((r: any) => r.id === 1)
+    expect(row.oj?.rid).toBe('rid-1')
+
+    const opened: string[] = []
+    ;(globalThis as any).window.open = (u: string) => { opened.push(u); return null }
+    ctx.openOjRecord({ original: row })
+    expect(opened).toEqual(['http://oj.test/record/rid-1'])
   })
 })

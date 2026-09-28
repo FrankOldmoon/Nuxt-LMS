@@ -22,22 +22,38 @@ export function useQuestionRecords(props: QuestionRecordsProps, emit: QuestionRe
     const rows = ref<any[]>([])
     const pending = ref(false)
 
-    const extraColumns = computed(() => [{
-        id: 'record',
-        header: t('record.colRecord'),
-        sortingFn: (a, b) => (a.original.record ? 1 : 0) - (b.original.record ? 1 : 0),
-    },{
-        id: 'score',
-        header: t('record.score'),
-        canSort: true,
-        sortingFn: (a, b) => (a.original.record?.score || 0) - (b.original.record?.score || 0),
-    }])
+    // ====================== OJ 题：查看学生 OJ 提交代码 ======================
+    const isOj = computed(() => props.question?.type === 'oj')
+    const ojUrl = ref('')
+    const ojRecords = ref<Map<number, any>>(new Map())
+    const ojPending = ref(false)
+
+    const extraColumns = computed(() => {
+        const cols: any[] = [{
+            id: 'record',
+            header: t('record.colRecord'),
+            sortingFn: (a, b) => (a.original.record ? 1 : 0) - (b.original.record ? 1 : 0),
+        }, {
+            id: 'score',
+            header: t('record.score'),
+            canSort: true,
+            sortingFn: (a, b) => (a.original.record?.score || 0) - (b.original.record?.score || 0),
+        }]
+        if (isOj.value) {
+            cols.push({ id: 'ojRecord', header: t('record.ojRecord') })
+        }
+        return cols
+    })
 
     const defaultSort = [{ id: 'score', desc: true }]
 
+    // 最近一次 records 数据（OJ 记录异步返回后据此重建 rows）
+    let lastRecordsData: any[] = []
+
     // 先用缓存学生数据填充 table，再异步合并 records
     function buildRows(recordsData) {
-        const recordMap = new Map((recordsData || []).map(r => [r.userId, r.record]))
+        lastRecordsData = recordsData || []
+        const recordMap = new Map(lastRecordsData.map(r => [r.userId, r.record]))
         rows.value = students.value.map(s => ({
             id: s.id,
             name: s.name,
@@ -47,6 +63,7 @@ export function useQuestionRecords(props: QuestionRecordsProps, emit: QuestionRe
             avatarImg: s.avatarImg,
             avatarFrame: s.avatarFrame,
             record: recordMap.get(s.id) || null,
+            oj: ojRecords.value.get(s.id) || null,
         }))
         // 有记录的排前面
         rows.value.sort((a, b) => {
@@ -68,10 +85,35 @@ export function useQuestionRecords(props: QuestionRecordsProps, emit: QuestionRe
             const data = await cRequest(`/api/questions/records?course_id=${props.courseId}&cid=${props.cid}`)
             buildRows(data)
         } catch {
-            rows.value = []
+            buildRows([])
         } finally {
             pending.value = false
         }
+        // OJ 题：额外拉取每个学生在 OJ 上的提交记录
+        if (isOj.value) fetchOjRecords()
+    }
+
+    async function fetchOjRecords() {
+        ojPending.value = true
+        try {
+            const data = await cRequest(`/api/questions/oj-records?course_id=${props.courseId}&cid=${props.cid}`)
+            ojUrl.value = data?.url || ''
+            const map = new Map<number, any>()
+            for (const r of (data?.records || [])) map.set(r.userId, r)
+            ojRecords.value = map
+        } catch {
+            ojRecords.value = new Map()
+        } finally {
+            ojPending.value = false
+            buildRows(lastRecordsData)
+        }
+    }
+
+    // 打开学生最新一次 OJ 提交的记录页（代码需在 OJ 侧已登录且有权查看）
+    function openOjRecord(row: any) {
+        const rid = row?.original?.oj?.rid
+        if (!rid || !ojUrl.value) return
+        window.open(`${ojUrl.value}/record/${rid}`, '_blank', 'noopener')
     }
 
     watch(open, (val) => {
@@ -325,6 +367,7 @@ export function useQuestionRecords(props: QuestionRecordsProps, emit: QuestionRe
 
     return {
         open, rows, pending, extraColumns, defaultSort, fetchRecords,
+        isOj, ojPending, openOjRecord,
         recordIcon, recordIconClass, formatUserAnswer, answerItemClass, formatCorrectRate,
         showOptionChart, optionChartOption,
     }

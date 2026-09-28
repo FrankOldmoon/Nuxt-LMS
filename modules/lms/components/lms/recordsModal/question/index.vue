@@ -33,6 +33,14 @@
           <template #score-cell="{ row }">
             {{ row.original.record?.score || '-'  }}
           </template>
+          <!-- OJ 记录列：跳转到该生在 OJ 上最新一次提交的代码记录页 -->
+          <template v-if="isOj" #ojRecord-cell="{ row }">
+            <UButton v-if="row.original.oj?.rid" icon="i-lucide-code-xml" variant="soft" size="xs"
+              :label="$t('record.viewOjRecord')" :title="$t('record.viewOjRecordHint')"
+              @click="openOjRecord(row)" />
+            <UIcon v-else-if="ojPending" name="i-lucide-loader-2" class="animate-spin size-3.5 text-muted" />
+            <span v-else class="text-xs text-gray-400">-</span>
+          </template>
         </ClassUsersTable>
 
         <!-- 选项分布柱状图（仅 single/multiple 类型） -->
@@ -61,6 +69,7 @@ const emit = defineEmits(['update:modelValue'])
 
 const {
   open, rows, pending, extraColumns, defaultSort, fetchRecords,
+  isOj, ojPending, openOjRecord,
   recordIcon, recordIconClass, formatUserAnswer, answerItemClass, formatCorrectRate,
   showOptionChart, optionChartOption,
 } = useQuestionRecords(props, emit)
