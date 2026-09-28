@@ -182,6 +182,9 @@ export default defineNuxtModule({
     // 注册客户端 plugin：恢复登录态
     addPlugin(resolve('./plugins/restore.client.ts'))
 
+    // 注册客户端 plugin：全站禁止内容复制与拖拽（放行可编辑区域与业务拖拽控件）
+    addPlugin(resolve('./plugins/no-copy.client.ts'))
+
     // 注册插件：站点配置单例预拉取（应用启动时调一次 /api/config/get，结果存 useState）
     addPlugin(resolve('./plugins/site-config.ts'))
     // 注册插件：界面语言决策（个人语言 > 站点默认语言 > en）
