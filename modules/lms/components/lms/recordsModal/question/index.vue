@@ -14,9 +14,17 @@
 
         <ClassUsersTable :rows="rows" :loading="pending" :extra-columns="extraColumns" :hide-actions="true"
           :hide-teachers="true" :default-sort="defaultSort">
-          <!-- record 列：显示学生选择/填写的具体内容 + 正确与否 -->
+          <!-- record 列：常规题型显示学生选择/填写的具体内容 + 正确与否；
+               OJ 题直接放「查看代码」（跳转到该生在 OJ 上最新一次提交记录页），不另开一列 -->
           <template #record-cell="{ row }">
-            <div class="flex items-start gap-2">
+            <template v-if="isOj">
+              <UButton v-if="row.original.oj?.rid" icon="i-lucide-code-xml" variant="soft" size="xs"
+                :label="$t('record.viewOjRecord')" :title="$t('record.viewOjRecordHint')"
+                @click="openOjRecord(row)" />
+              <UIcon v-else-if="ojPending" name="i-lucide-loader-2" class="animate-spin size-3.5 text-muted" />
+              <span v-else class="text-xs text-gray-400">-</span>
+            </template>
+            <div v-else class="flex items-start gap-2">
               <template v-if="row.original.record">
                 <UIcon :name="recordIcon(row.original.record)" class="w-3.5 h-3.5 mt-0.5 shrink-0"
                   :class="recordIconClass(row.original.record)" />
@@ -32,14 +40,6 @@
           </template>
           <template #score-cell="{ row }">
             {{ row.original.record?.score || '-'  }}
-          </template>
-          <!-- OJ 记录列：跳转到该生在 OJ 上最新一次提交的代码记录页 -->
-          <template v-if="isOj" #ojRecord-cell="{ row }">
-            <UButton v-if="row.original.oj?.rid" icon="i-lucide-code-xml" variant="soft" size="xs"
-              :label="$t('record.viewOjRecord')" :title="$t('record.viewOjRecordHint')"
-              @click="openOjRecord(row)" />
-            <UIcon v-else-if="ojPending" name="i-lucide-loader-2" class="animate-spin size-3.5 text-muted" />
-            <span v-else class="text-xs text-gray-400">-</span>
           </template>
         </ClassUsersTable>
 

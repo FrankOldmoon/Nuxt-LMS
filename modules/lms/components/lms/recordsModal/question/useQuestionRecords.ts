@@ -28,22 +28,17 @@ export function useQuestionRecords(props: QuestionRecordsProps, emit: QuestionRe
     const ojRecords = ref<Map<number, any>>(new Map())
     const ojPending = ref(false)
 
-    const extraColumns = computed(() => {
-        const cols: any[] = [{
-            id: 'record',
-            header: t('record.colRecord'),
-            sortingFn: (a, b) => (a.original.record ? 1 : 0) - (b.original.record ? 1 : 0),
-        }, {
-            id: 'score',
-            header: t('record.score'),
-            canSort: true,
-            sortingFn: (a, b) => (a.original.record?.score || 0) - (b.original.record?.score || 0),
-        }]
-        if (isOj.value) {
-            cols.push({ id: 'ojRecord', header: t('record.ojRecord') })
-        }
-        return cols
-    })
+    // 列定义：record / score 两列。OJ 题的「查看代码」直接渲染在 record 列内（见 index.vue），不单开一列
+    const extraColumns = computed(() => [{
+        id: 'record',
+        header: t('record.colRecord'),
+        sortingFn: (a, b) => (a.original.record ? 1 : 0) - (b.original.record ? 1 : 0),
+    }, {
+        id: 'score',
+        header: t('record.score'),
+        canSort: true,
+        sortingFn: (a, b) => (a.original.record?.score || 0) - (b.original.record?.score || 0),
+    }])
 
     const defaultSort = [{ id: 'score', desc: true }]
 
