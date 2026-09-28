@@ -6,6 +6,8 @@
  * 拖拽图片/链接等方式把内容带走。
  *
  * 放行规则（否则会破坏正常输入与既有交互）：
+ * - 教师（teacher）/ 管理员（admin）：整页允许复制/剪切，靠给 <html> 加 .allow-select
+ *   恢复文本选中（见 assets/css/main.css），这里同步跳过 copy/cut 拦截
  * - 表单控件、富文本/代码编辑器（contenteditable 编辑器、Monaco）内部可正常复制/剪切
  * - 带 .allow-copy 类的容器
  * - 业务拖拽控件：原生 draggable="true"（流程图/逻辑门/分组）+ vuedraggable 的
@@ -44,8 +46,26 @@ export default defineNuxtPlugin(() => {
     return !!el?.closest?.(EDITABLE_SELECTOR)
   }
 
+  /** 教师 / 管理员：整页放行复制与剪切 */
+  function canCopy(): boolean {
+    const roles = (useNuxtApp().payload.data['auth:me'] as { roles?: { code: string }[] } | null)
+      ?.roles ?? []
+    return roles.some(r => r.code === 'teacher' || r.code === 'admin')
+  }
+
+  /**
+   * 给 <html> 打上 .allow-select：恢复整页文本选中（CSS 用 user-select: text）。
+   * 登录 / 登出只刷新 /api/auth/me 并广播 auth:changed，故需在启动与切换后重算。
+   */
+  function syncAllowSelect() {
+    document.documentElement.classList.toggle('allow-select', canCopy())
+  }
+  syncAllowSelect()
+  useNuxtApp().hook('app:mounted', syncAllowSelect)
+  window.addEventListener('auth:changed', syncAllowSelect)
+
   function onCopyCut(e: Event) {
-    if (inAllowedArea(e.target)) return
+    if (canCopy() || inAllowedArea(e.target)) return
     e.preventDefault()
   }
 

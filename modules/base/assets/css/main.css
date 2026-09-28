@@ -14,8 +14,8 @@
  * ============================================================
  * 全站禁止内容复制与拖拽
  * 1) 默认：所有内容不可选中（连带 Ctrl+C 取不到内容）、图片/链接/媒体不可拖拽
- * 2) 放行：表单控件、富文本/代码编辑器的可编辑区域（否则无法正常输入/编辑），
- *         以及带 .allow-copy 类的容器
+ * 2) 放行：表单控件、富文本/代码编辑器的可编辑区域（否则无法正常输入/编辑）、
+ *         带 .allow-copy 类的容器，以及教师/管理员（<html> 带 .allow-select）整页可选中
  * 快捷键与浏览器菜单的复制/拖拽，以及业务拖拽控件（排序题/流程图等）的放行，
  * 统一由 plugins/no-copy.client.ts 处理
  *
@@ -50,6 +50,15 @@ select,
 [contenteditable]:not([contenteditable="false"]),
 .allow-copy,
 .allow-copy * {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* 教师 / 管理员整页恢复文本选中（no-copy.client.ts 按角色给 <html> 加 .allow-select） */
+html.allow-select,
+html.allow-select body {
   -webkit-user-select: text;
   -moz-user-select: text;
   -ms-user-select: text;
