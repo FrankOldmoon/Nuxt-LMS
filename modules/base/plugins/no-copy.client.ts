@@ -8,9 +8,10 @@
  * 放行规则（否则会破坏正常输入与既有交互）：
  * - 表单控件、富文本/代码编辑器（contenteditable 编辑器、Monaco）内部可正常复制/剪切
  * - 带 .allow-copy 类的容器
- * - 显式声明 draggable="true" 的业务拖拽控件（拖拽排序/分组/流程图/文件拖入等）；
- *   放行时仍会「消毒」拖拽数据：清空浏览器自动附带的 text/plain、text/html、
- *   text/uri-list，仅保留业务代码自设的自定义 MIME，保证拖到其它文本框/站点不带出任何文字
+ * - 业务拖拽控件：原生 draggable="true"（流程图/逻辑门/分组）+ vuedraggable 的
+ *   data-draggable（排序题/分类题等，SortableJS 原生拖拽模式）
+ *   → 拖拽可用，但数据会在冒泡阶段被「消毒」：清空 text/plain、Text、text/html、
+ *     text/uri-list，保证拖到其它文本框/站点不带出任何文字（自定义 MIME 不受影响）
  *
  * 注：不拦截 contextmenu，避免与流程图的右键菜单等自定义行为冲突。
  */
@@ -27,6 +28,16 @@ export default defineNuxtPlugin(() => {
     '.allow-copy',
   ].join(',')
 
+  /**
+   * 业务拖拽控件选择器：
+   * - draggable="true"：原生 HTML5 拖拽（流程图 / 逻辑门 / 课程分组学生卡片）
+   * - data-draggable：vuedraggable（SortableJS）给拖拽项加的标记（排序题 / 分类题）
+   */
+  const DRAG_WIDGET_SELECTOR = '[draggable="true"], [data-draggable]'
+
+  /** 需要清空的文本类拖拽数据类型（含大小写变体与旧式 'Text'） */
+  const TEXT_DRAG_TYPES = ['text/plain', 'Text', 'text', 'text/html', 'text/uri-list']
+
   /** 事件目标是否位于可编辑/放行区域内 */
   function inAllowedArea(target: EventTarget | null): boolean {
     const el = target as Element | null
@@ -39,35 +50,41 @@ export default defineNuxtPlugin(() => {
   }
 
   /**
-   * 拖拽拦截 + 数据消毒。
+   * 捕获阶段：决定是否允许本次拖拽。
    *
-   * - 非业务拖拽控件（图片/链接/普通文本等）：直接阻止，拖不起来。
-   * - 业务拖拽控件（[draggable="true"]）：允许拖拽，但立即清空拖拽数据并显式置空
-   *   文本/链接类型，只留下业务 handler 随后写入的自定义 MIME。这样即使拖到其它
-   *   网站的文本框/编辑器，也不会粘出任何文字或 URL。
+   * - 业务拖拽控件（排序题等）：放行，交给 SortableJS / 组件自身处理
+   * - 其它（图片、链接、正文选中文字等）：阻止，拖不起来
    *
-   * 注意：本监听在捕获阶段（document → target），先于组件自身的 dragstart 执行，
-   * 因此 clearData 不会清掉组件随后 setData 的自定义类型。
+   * 此时不清空数据：SortableJS 会在元素自身的 dragstart 里
+   * setData('Text', textContent)，必须等它写完再消毒（见 onDragStartSanitize）。
    */
-  function onDragStart(e: DragEvent) {
+  function onDragStartCapture(e: DragEvent) {
     const el = e.target as Element | null
-    if (!el?.closest?.('[draggable="true"]')) {
-      e.preventDefault()
-      return
-    }
+    if (el?.closest?.(DRAG_WIDGET_SELECTOR)) return
+    e.preventDefault()
+  }
+
+  /**
+   * 冒泡阶段（document 最后触发）：清空拖拽数据里的文本内容。
+   *
+   * 保留自定义 MIME（流程图 application/flowchart、逻辑门 application/vueflow），
+   * 只把文本类数据置空，这样拖到其它网站的文本框/编辑器不会粘出任何文字或 URL。
+   */
+  function onDragStartSanitize(e: DragEvent) {
+    if (e.defaultPrevented) return
     const dt = e.dataTransfer
     if (!dt) return
-    try {
-      dt.clearData()
-      // 显式置空文本类数据：部分浏览器 clearData 后仍会带上默认文本/选中内容
-      dt.setData('text/plain', '')
-      dt.setData('text/html', '')
-      dt.setData('text/uri-list', '')
-    } catch { /* 个别浏览器在异常时机写入会抛错，忽略即可 */ }
+    for (const type of TEXT_DRAG_TYPES) {
+      try {
+        dt.setData(type, '')
+      } catch { /* 个别浏览器不接受某些类型，忽略即可 */ }
+    }
   }
 
   // 捕获阶段拦截，确保在其他监听器之前生效
   document.addEventListener('copy', onCopyCut, true)
   document.addEventListener('cut', onCopyCut, true)
-  document.addEventListener('dragstart', onDragStart, true)
+  document.addEventListener('dragstart', onDragStartCapture, true)
+  // 冒泡阶段消毒：晚于组件自身的 dragstart（如 SortableJS 的 setData）
+  document.addEventListener('dragstart', onDragStartSanitize, false)
 })

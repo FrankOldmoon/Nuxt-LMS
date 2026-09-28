@@ -16,8 +16,13 @@
  * 1) 默认：所有内容不可选中（连带 Ctrl+C 取不到内容）、图片/链接/媒体不可拖拽
  * 2) 放行：表单控件、富文本/代码编辑器的可编辑区域（否则无法正常输入/编辑），
  *         以及带 .allow-copy 类的容器
- * 3) 放行：显式声明 draggable="true" 的业务拖拽控件（拖拽排序/分组/流程图/文件拖入等）
- * 快捷键与浏览器菜单的复制/拖拽由 plugins/no-copy.client.ts 兜底拦截
+ * 快捷键与浏览器菜单的复制/拖拽，以及业务拖拽控件（排序题/流程图等）的放行，
+ * 统一由 plugins/no-copy.client.ts 处理
+ *
+ * 注意：切勿给 [draggable] / [data-draggable] 或其子元素写 -webkit-user-drag: auto。
+ * 实测（Chromium）这样会让原生拖拽完全失效——拖拽控件本身默认即可拖拽，
+ * 而 img/a/svg 上的 user-drag:none 也不会阻断祖先拖拽，
+ * 所以无需也无法用 CSS 去「恢复」控件的可拖拽性。
  * ============================================================ */
 html,
 body {
@@ -38,13 +43,7 @@ svg {
   -o-user-drag: none;
 }
 
-/* 业务显式声明的拖拽控件及其内部元素保持可拖拽 */
-[draggable="true"],
-[draggable="true"] * {
-  -webkit-user-drag: auto;
-}
-
-/* 可编辑区域恢复文本选中/拖拽（表单、contenteditable 编辑器、显式放行容器） */
+/* 可编辑区域恢复文本选中（表单、contenteditable 编辑器、显式放行容器） */
 input,
 textarea,
 select,
@@ -55,5 +54,4 @@ select,
   -moz-user-select: text;
   -ms-user-select: text;
   user-select: text;
-  -webkit-user-drag: auto;
 }
