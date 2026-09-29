@@ -105,14 +105,16 @@ export function useSettingsForm(isOpen: Ref<boolean | undefined>) {
     slotSaveHandler.value = handler
   }
 
+  // immediate：header 里是 <LazyAuthSettingsModal v-if v-model:open>，组件创建时 isOpen 已为 true，
+  // 不加 immediate 首次打开永远不会触发 loadSettings（表单停在默认值，保存会覆盖线上配置）
   watch(isOpen, async (val) => {
     if (val) await loadSettings()
-  })
+  }, { immediate: true })
 
   async function loadSettings() {
     loading.value = true
     try {
-      const rows = await cRequest<{ key: string; value: any }[]>('/api/config/list')
+      const rows = (await cRequest<{ key: string; value: any }[]>('/api/config/list')) || []
       const cfg: Record<string, any> = {}
       for (const r of rows) cfg[r.key] = r.value
 

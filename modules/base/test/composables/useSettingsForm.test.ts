@@ -180,4 +180,30 @@ describe('composables/useSettingsForm - watch isOpen', () => {
       expect(form.value.siteTitle).toBe('Watched')
     })
   })
+
+  // v-if 门控挂载（LazyAuthSettingsModal v-if + v-model:open）：组件创建时 isOpen 已是 true，
+  // watch 必须 immediate 才能在首次打开时加载配置
+  it('挂载时 isOpen 已为 true（v-if 门控）也立即加载配置', async () => {
+    setMockFetchHandler(async (url) => {
+      if (url.includes('/api/config/list')) {
+        return {
+          data: [
+            { key: 'site:title', value: 'MountedOpen' },
+            { key: 'site:peertube.url', value: 'http://10.28.1.156' },
+            { key: 'site:peertube.username', value: 'root' },
+          ],
+          success: true,
+          msg: '',
+        }
+      }
+      return { data: null, success: true, msg: '' }
+    })
+    const { useSettingsForm } = await import('../../composables/useSettingsForm')
+    const { form } = useSettingsForm(ref(true))
+    await vi.waitFor(() => {
+      expect(form.value.siteTitle).toBe('MountedOpen')
+      expect(form.value.peertube.url).toBe('http://10.28.1.156')
+      expect(form.value.peertube.username).toBe('root')
+    })
+  })
 })
