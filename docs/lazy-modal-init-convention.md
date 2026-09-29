@@ -45,6 +45,7 @@
 | 通知中心 | 列表空白 | `useNotifications.ts`（已修） |
 | 意见反馈 | 管理员列表为空 | `feedbackModal.vue`（已修） |
 | 登录后设置 | 设置项为空 | `auth/settingsModal.vue`（已修） |
+| 登录后设置（二次踩坑） | 保存后重开，PeerTube 等字段为空 | `useSettingsForm.ts` 的 `watch(isOpen)`——重构进 composable 时丢了 immediate（2026-09-29 已修，回归测试：`useSettingsForm(ref(true))` 挂载即加载） |
 
 ## 3. 约定（强制）
 
