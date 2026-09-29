@@ -35,6 +35,13 @@ export const DEFAULT_SITE_CONFIG: Record<string, any> = {
   'site:mail.pass': '',
   'site:mail.from': '',
   'site:mail.siteUrl': '',
+  // PeerTube 视频上传（ueditor 视频走 PeerTube，插入 embed iframe）
+  // 系统设置 → 存储 里可编辑；为空时回退读 .env 的 NUXT_PEERTUBE_* 变量
+  'site:peertube.url': 'http://10.28.1.156',
+  'site:peertube.username': 'root',
+  'site:peertube.password': 'REDACTED',
+  'site:peertube.privacy': '1',
+  'site:peertube.channelId': '1',
   // 前端页面显示控制（拍平）
   'site:showNotify': true,
   'site:showMsg': true,

@@ -33,6 +33,13 @@ const DEFAULTS = {
     from: '',
     siteUrl: '',
   },
+  peertube: {
+    url: '',
+    username: '',
+    password: '',
+    privacy: '1',
+    channelId: '1',
+  },
 }
 
 /** form ↔ API key 映射表 */
@@ -71,6 +78,14 @@ const MAIL_KEY_MAP: { field: string; key: string }[] = [
   { field: 'siteUrl', key: 'site:mail.siteUrl' },
 ]
 
+const PEERTUBE_KEY_MAP: { field: string; key: string }[] = [
+  { field: 'url', key: 'site:peertube.url' },
+  { field: 'username', key: 'site:peertube.username' },
+  { field: 'password', key: 'site:peertube.password' },
+  { field: 'privacy', key: 'site:peertube.privacy' },
+  { field: 'channelId', key: 'site:peertube.channelId' },
+]
+
 /**
  * 站点设置表单：状态管理 + 加载/保存 + slot 扩展保存回调
  */
@@ -82,7 +97,7 @@ export function useSettingsForm(isOpen: Ref<boolean | undefined>) {
   const loading = ref(false)
   const saving = ref(false)
 
-  const form = ref<any>({ ...DEFAULTS, mail: { ...DEFAULTS.mail } })
+  const form = ref<any>({ ...DEFAULTS, mail: { ...DEFAULTS.mail }, peertube: { ...DEFAULTS.peertube } })
 
   // 扩展 slot：后续模块可通过 settings-extra slot 注入额外配置编辑器
   const slotSaveHandler = ref<(() => Promise<void>) | null>(null)
@@ -109,6 +124,10 @@ export function useSettingsForm(isOpen: Ref<boolean | undefined>) {
       for (const { field, key } of MAIL_KEY_MAP) {
         next.mail[field] = cfg[key] ?? (DEFAULTS.mail as any)[field]
       }
+      next.peertube = {}
+      for (const { field, key } of PEERTUBE_KEY_MAP) {
+        next.peertube[field] = cfg[key] ?? (DEFAULTS.peertube as any)[field]
+      }
       form.value = next
     } catch (e: any) {
       toast.add({ title: e.message || t('settings.loadFailed'), color: 'error' })
@@ -127,6 +146,7 @@ export function useSettingsForm(isOpen: Ref<boolean | undefined>) {
       const items = [
         ...KEY_MAP.map(({ field, key }) => ({ key, value: form.value[field] })),
         ...MAIL_KEY_MAP.map(({ field, key }) => ({ key, value: form.value.mail[field] })),
+        ...PEERTUBE_KEY_MAP.map(({ field, key }) => ({ key, value: form.value.peertube[field] })),
       ]
       await cRequest('/api/config/update-batch', { method: 'POST', body: { items } })
       await cRequest('/api/config/reload', { method: 'POST' }).catch(() => {})

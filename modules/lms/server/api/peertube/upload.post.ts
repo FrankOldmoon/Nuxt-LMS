@@ -4,7 +4,8 @@
  *
  * 将 ueditor 上传的视频改为走 PeerTube，返回 embed 格式 URL，
  * 前端插入 iframe 框（http://{host}/videos/embed/{uuid}）。
- * 配置（runtimeConfig.peertube）可通过环境变量 NUXT_PEERTUBE_URL 等覆盖。
+ * 配置来源：系统设置 site:peertube.*（系统设置 → 存储，可编辑）优先；
+ * 未配置时回退读 runtimeConfig（环境变量 NUXT_PEERTUBE_URL 等）。
  */
 import { uploadVideoToPeerTube } from '../../utils/peertube/upload'
 
@@ -18,9 +19,20 @@ export default eventHandler(async (event) => {
     return cResp(null, '仅教师和管理员可上传视频', false)
   }
 
-  const peertube = useRuntimeConfig(event).peertube
+  // 系统设置优先，env（runtimeConfig）兜底
+  const siteCfg = await getConfigByPrefix('site:peertube.')
+  const rc = useRuntimeConfig(event).peertube || {}
+  const peertube = {
+    url: siteCfg.url || rc.url || '',
+    username: siteCfg.username || rc.username || '',
+    password: siteCfg.password || rc.password || '',
+    privacy: siteCfg.privacy || rc.privacy || '1',
+    channelId: siteCfg.channelId || rc.channelId || '',
+    maxSizeMB: rc.maxSizeMB,
+  }
+
   // 视频大小上限（MB，可配 NUXT_PEERTUBE_MAX_SIZE_MB），默认 2GB
-  const maxSizeMB = Number(peertube?.maxSizeMB) || 2048
+  const maxSizeMB = Number(peertube.maxSizeMB) || 2048
   const MAX_SIZE = maxSizeMB * 1024 * 1024
 
   const parts = await readMultipartFormData(event)
@@ -36,7 +48,7 @@ export default eventHandler(async (event) => {
     return cResp(null, `视频文件超过 ${maxSizeMB}MB 限制`, false)
   }
 
-  if (!peertube?.url || !peertube?.username || !peertube?.password) {
+  if (!peertube.url || !peertube.username || !peertube.password) {
     // 未配置 PeerTube → 前端据此回退为普通视频上传
     return cResp({ enabled: false }, '未配置 PeerTube，使用普通视频上传', false)
   }

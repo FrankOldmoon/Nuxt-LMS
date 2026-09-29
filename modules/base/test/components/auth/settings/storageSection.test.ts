@@ -16,6 +16,7 @@ function makeForm(overrides: any = {}) {
   return {
     siteDriveQuota: 1073741824,
     siteTeacherDriveMultiplier: 1,
+    peertube: { url: '', username: '', password: '', privacy: '1', channelId: '1' },
     ...overrides,
   }
 }
@@ -50,5 +51,20 @@ describe('auth/settings/storageSection.vue', () => {
     })
     const numberInputs = wrapper.findAll('input[type="number"]')
     expect(numberInputs).toHaveLength(2)
+  })
+
+  it('渲染 PeerTube 配置字段（含密码框）', async () => {
+    const { default: StorageSection } = await import('../../../../components/auth/settings/storageSection.vue')
+    const wrapper = mount(StorageSection, {
+      props: { form: makeForm() },
+      global: _globalConfig,
+    })
+    const labels = wrapper.findAll('label').map(l => l.text())
+    expect(labels.some(t => t.includes('settings.peertubeUrl'))).toBe(true)
+    expect(labels.some(t => t.includes('settings.peertubeUsername'))).toBe(true)
+    expect(labels.some(t => t.includes('settings.peertubePassword'))).toBe(true)
+    expect(labels.some(t => t.includes('settings.peertubePrivacy'))).toBe(true)
+    expect(labels.some(t => t.includes('settings.peertubeChannelId'))).toBe(true)
+    expect(wrapper.findAll('input[type="password"]')).toHaveLength(1)
   })
 })
