@@ -93,7 +93,7 @@ describe('auth/loginForm.vue', () => {
     expect(wrapper.text()).toContain('auth.noAccount')
   })
 
-  it('点击登录后 3 秒冷却：期间禁用且再次提交被拦截，倒计时结束后恢复', async () => {
+  it('登录请求返回后 10 秒冷却：期间禁用且再次提交被拦截，倒计时结束后恢复', async () => {
     vi.useFakeTimers()
     // loginForm 成功/失败提示走 useNuxtApp().$i18n.t，测试桩未提供 $i18n，这里补上
     const originalUseNuxtApp = (globalThis as any).useNuxtApp
@@ -116,7 +116,7 @@ describe('auth/loginForm.vue', () => {
       const loginBtn = wrapper.findAll('button.ubtn').find(b => b.text().includes('auth.login'))!
       expect(loginBtn).toBeTruthy()
 
-      // 首次提交：发起登录，进入冷却
+      // 首次提交：发起登录，返回后进入冷却
       await wrapper.find('form').trigger('submit')
       await flushPromises()
       expect(loginCalls).toBe(1)
@@ -129,8 +129,13 @@ describe('auth/loginForm.vue', () => {
       await flushPromises()
       expect(loginCalls).toBe(1)
 
-      // 倒计时 3 秒结束，按钮恢复可用
-      vi.advanceTimersByTime(3000)
+      // 9 秒后仍在冷却期内
+      vi.advanceTimersByTime(9000)
+      await flushPromises()
+      expect(loginBtn.attributes('disabled')).toBeDefined()
+
+      // 倒计时 10 秒结束，按钮恢复可用
+      vi.advanceTimersByTime(1000)
       await flushPromises()
       expect(loginBtn.attributes('disabled')).toBeUndefined()
 
@@ -141,6 +146,31 @@ describe('auth/loginForm.vue', () => {
     } finally {
       ;(globalThis as any).useNuxtApp = originalUseNuxtApp
       vi.useRealTimers()
+    }
+  })
+
+  it('登录失败时密码框切换为明文显示', async () => {
+    // loginForm 成功/失败提示走 useNuxtApp().$i18n.t，测试桩未提供 $i18n，这里补上
+    const originalUseNuxtApp = (globalThis as any).useNuxtApp
+    ;(globalThis as any).useNuxtApp = () => ({ $i18n: { t: (k: string) => k } })
+    try {
+      setMockFetchHandler(async () => ({ data: null, success: false, msg: '密码错误' }))
+      const { default: LoginForm } = await import('../../../components/auth/loginForm.vue')
+      const wrapper = mount(LoginForm, { global: _globalConfig })
+      const inputs = wrapper.findAll('input')
+      await inputs[0].setValue('alice')
+      await inputs[1].setValue('secret')
+
+      expect(wrapper.find('input[type="password"]').exists()).toBe(true)
+
+      await wrapper.find('form').trigger('submit')
+      await flushPromises()
+
+      // 失败后明文显示密码，便于核对输入
+      expect(wrapper.find('input[type="password"]').exists()).toBe(false)
+      expect(wrapper.find('input[type="text"]').exists()).toBe(true)
+    } finally {
+      ;(globalThis as any).useNuxtApp = originalUseNuxtApp
     }
   })
 })

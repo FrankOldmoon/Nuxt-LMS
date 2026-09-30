@@ -80,8 +80,8 @@ const loading = ref(false)
 // 密码明文切换（右侧「查看」按钮）
 const showPassword = ref(false)
 
-// 登录冷却：点击一次后倒计时 3 秒才允许再次点击
-const COOLDOWN_SECONDS = 3
+// 登录冷却：请求返回后（无论成功失败）倒计时 10 秒才允许再次点击
+const COOLDOWN_SECONDS = 10
 const cooldown = ref(0)
 let cooldownTimer: ReturnType<typeof setInterval> | null = null
 
@@ -119,7 +119,6 @@ async function handleLogin() {
   if (disabled.value) return
   if (!username.value.trim() || !password.value) return
 
-  startCooldown()
   loading.value = true
   try {
     await login(username.value.trim(), password.value)
@@ -129,6 +128,8 @@ async function handleLogin() {
     })
     emit('success')
   } catch (err: any) {
+    // 登录失败时明文显示密码，便于核对输入
+    showPassword.value = true
     toast.add({
       title: useNuxtApp().$i18n.t('auth.loginFailed'),
       description: err.message || '',
@@ -136,6 +137,7 @@ async function handleLogin() {
     })
   } finally {
     loading.value = false
+    startCooldown()
   }
 }
 </script>
