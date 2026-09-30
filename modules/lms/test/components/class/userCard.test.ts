@@ -104,6 +104,40 @@ describe('class/userCard.vue', () => {
     expect(wrapper.find('.ucard').exists()).toBe(false)
   })
 
+  it('未登录时不请求 /api/courses/me（访客浏览章节页）', async () => {
+    let meCallCount = 0
+    setMockFetchHandler(async (url: string) => {
+      if (String(url).includes('/api/courses/me')) meCallCount++
+      return { data: null, success: true, msg: '' }
+    })
+    // 不调用 setMockAuthUser → user 为 null
+    setMockRoute({ params: { id: '5', cid: '26' }, query: {}, path: '/course/5/26', fullPath: '/course/5/26' })
+    const { default: UserCard } = await import('../../../components/class/userCard.vue')
+    mount(UserCard, { global: _globalConfig })
+    await flushPromises()
+    await flushPromises()
+    expect(meCallCount).toBe(0)
+  })
+
+  it('未登录时 refresh() 也不发 me 请求', async () => {
+    let meCallCount = 0
+    setMockFetchHandler(async (url: string) => {
+      if (String(url).includes('/api/courses/me')) {
+        meCallCount++
+        return { data: { courseScore: 1, exp: 2, coin: 3, chapterScore: 4 }, success: true, msg: '' }
+      }
+      return { data: null, success: true, msg: '' }
+    })
+    // 不调用 setMockAuthUser → user 为 null
+    setMockRoute({ params: { id: '5', cid: '26' }, query: {}, path: '/course/5/26', fullPath: '/course/5/26' })
+    const { default: UserCard } = await import('../../../components/class/userCard.vue')
+    const wrapper = mount(UserCard, { global: _globalConfig })
+    await flushPromises()
+    await (wrapper.vm as any).refresh()
+    await flushPromises()
+    expect(meCallCount).toBe(0)
+  })
+
   it('课程上下文中显示等级和积分信息', async () => {
     setMockAuthUser({ id: 1, name: 'Alice', preferName: '', rollNumber: '', avatarImg: null })
     setMockRoute({ params: { id: '5' }, query: {}, path: '/course/5', fullPath: '/course/5' })

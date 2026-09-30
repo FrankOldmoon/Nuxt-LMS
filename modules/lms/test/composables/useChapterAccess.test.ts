@@ -17,10 +17,11 @@ beforeEach(() => {
   setMockI18n({ locale: ref('en'), t: (k: string) => k, d: (v: any) => String(v) })
   // 桩 useClasses（auto-import from base）
   const classesRef = ref<any[]>([])
+  const loadClassesMock = vi.fn()
   ;(globalThis as any).useClasses = () => ({
     classes: classesRef,
     classOptions: computed(() => classesRef.value.map((c: any) => ({ label: c.name, value: c.id }))),
-    loadClasses: vi.fn(),
+    loadClasses: loadClassesMock,
   })
   // 桩 useAuthLms（auto-import from lms）
   ;(globalThis as any).useAuthLms = () => ({
@@ -28,9 +29,31 @@ beforeEach(() => {
     isCourseEditor: (cid: number) => cid === 5,
   })
   ;(globalThis as any).__classesRef = classesRef
+  ;(globalThis as any).__loadClassesMock = loadClassesMock
 })
 
 describe('composables/useChapterAccess', () => {
+  it('未登录访客不调用 loadClasses（不请求 /api/classes/list）', async () => {
+    // 不调用 setMockAuthUser → user 为 null
+    const { useChapterAccess } = await import('../../composables/useChapterAccess')
+    useChapterAccess({ chapterId: 1, courseId: 1 })
+    expect((globalThis as any).__loadClassesMock).not.toHaveBeenCalled()
+  })
+
+  it('学生（非可编辑角色）不调用 loadClasses', async () => {
+    setMockAuthUser({ id: 2, name: 'student' }, [{ code: 'student', name: 'Student' }])
+    const { useChapterAccess } = await import('../../composables/useChapterAccess')
+    useChapterAccess({ chapterId: 1, courseId: 99 })
+    expect((globalThis as any).__loadClassesMock).not.toHaveBeenCalled()
+  })
+
+  it('admin 调用 loadClasses 加载班级列表', async () => {
+    setMockAuthUser({ id: 1, name: 'admin' }, [{ code: 'admin', name: 'Admin' }])
+    const { useChapterAccess } = await import('../../composables/useChapterAccess')
+    useChapterAccess({ chapterId: 1, courseId: 1 })
+    expect((globalThis as any).__loadClassesMock).toHaveBeenCalledTimes(1)
+  })
+
   it('admin 永远 canEdit', async () => {
     setMockAuthUser({ id: 1, name: 'admin' }, [{ code: 'admin', name: 'Admin' }])
     const { useChapterAccess } = await import('../../composables/useChapterAccess')

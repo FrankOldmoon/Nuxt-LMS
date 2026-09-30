@@ -58,6 +58,8 @@ export function useUserCardSetup() {
         'server-chapter-progress', () => null)
 
     async function fetchStats() {
+        // 未登录不请求 /api/courses/me：访客浏览课程/章节页时无个人进度可拉
+        if (!user.value) return
         if (!courseId.value) {
             stats.value = { courseScore: 0, exp: 0, coin: 0, chapterScore: null, number: null }
             return
@@ -106,6 +108,10 @@ export function useUserCardSetup() {
     // 路由课程变化（进入课程/首次挂载）时拉取；
     // 章节切换由 [cid].vue 的切换流程统一触发（flush 旧章节后拉一次 me），此处不监听 chapterId
     watch(courseId, () => { fetchStats() }, { immediate: true })
+
+    // 登录状态就绪后再拉取：首屏未登录时上面的 immediate 调用被守卫跳过，
+    // 登录成功（或 auth 数据 hydration 完成）后需补一次，否则卡片一直是空数据
+    watch(user, (u) => { if (u) fetchStats() })
 
     // 监听全局 trigger：
     // - refresh()：答题/交作业/评论等提交操作后 → 刷新积分 + 检查奖章授予

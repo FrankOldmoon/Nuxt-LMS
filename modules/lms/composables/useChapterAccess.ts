@@ -118,8 +118,14 @@ export function useChapterAccess(props: ChapterAccessProps) {
     if (nuxtApp.static?.data) delete nuxtApp.static.data[key]
   }
 
-  // 首次加载班级列表（全局缓存）
-  loadClasses()
+  // 首次加载班级列表（全局缓存）：仅 admin / 本课程教师需要（访问控制条仅对他们渲染），
+  // 未登录访客与学生不请求 /api/classes/list（该接口对非教师不可见）
+  function loadClassesIfEditable() {
+    if (canEdit.value) loadClasses()
+  }
+  loadClassesIfEditable()
+  // auth 数据 hydration 完成后 canEdit 才可判定，就绪后补一次加载
+  watch(canEdit, (v) => { if (v) loadClasses() })
 
   return {
     canEdit,
