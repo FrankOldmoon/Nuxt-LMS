@@ -12,7 +12,7 @@ import { resetAllStubs, setMockI18n } from '../../../../../../../test/setup/nuxt
 // mock useHomeworkRecords（本地导入）
 // 可变的评阅详情状态：测试中通过 helpers 控制
 const h = vi.hoisted(() => ({
-  state: { detailOpen: false, detailData: null as any, detailIndex: 0, detailTotal: 0, previewable: true },
+  state: { detailOpen: false, detailData: null as any, detailIndex: 0, detailTotal: 0, previewable: true, video: false },
   files: [] as { url: string; name: string }[],
   prevSubmission: vi.fn(),
   nextSubmission: vi.fn(),
@@ -56,6 +56,7 @@ vi.mock('../../../../../components/lms/recordsModal/homework/useHomeworkRecords'
       scoreAllSubmitted: h.scoreAllSubmitted,
       isRichDoc: (content: any) => typeof content === 'object',
       isPreviewableFile: () => h.state.previewable,
+      isVideoFile: () => h.state.video,
     }
   },
 }))
@@ -68,6 +69,7 @@ beforeEach(() => {
   h.state.detailIndex = 0
   h.state.detailTotal = 0
   h.state.previewable = true
+  h.state.video = false
   h.files = []
   // useFileNames 由 base 模块 addImportsDir 自动导入，测试中 globalThis stub
   ;(globalThis as any).useFileNames = () => ref(h.files)
@@ -232,6 +234,23 @@ describe('lms/recordsModal/homework/index.vue', () => {
     expect(wrapper.text()).toContain('2/3')       // 当前序号/总数
     expect(wrapper.text()).toContain('Stu7')        // 当前用户
     expect(wrapper.text()).toContain('a.pdf')       // 文件名 chip
+  })
+
+  it('详情弹窗：视频文件用原生播放器且高度拉满（无 iframe）', async () => {
+    openDetail()
+    h.state.previewable = true
+    h.state.video = true
+    h.files = [{ url: '/api/files/serve?pathname=7%2Fa.mp4', name: 'a.mp4' }]
+    const { default: HomeworkRecords } = await import('../../../../../components/lms/recordsModal/homework/index.vue')
+    const wrapper = mount(HomeworkRecords, {
+      props: { modelValue: true, courseId: 1, cid: 100, maxScore: 100 },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    const video = wrapper.find('video')
+    expect(video.exists()).toBe(true)
+    expect(video.classes()).toContain('h-full')
+    expect(wrapper.find('iframe').exists()).toBe(false)
   })
 
   it('详情弹窗：不可预览文件显示下载按钮（无 iframe）', async () => {

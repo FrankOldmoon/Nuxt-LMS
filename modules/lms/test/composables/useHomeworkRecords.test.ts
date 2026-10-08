@@ -138,6 +138,14 @@ describe('useHomeworkRecords 全屏评阅', () => {
     expect(ctx.isPreviewableFile('/api/files/serve?pathname=2%2Fx.rar')).toBe(false)
   })
 
+  it('isVideoFile 仅识别视频类型（改用原生播放器撑满高度）', async () => {
+    const ctx = await makeCtx([])
+    expect(ctx.isVideoFile('/api/files/serve?pathname=2%2Fx.mp4')).toBe(true)
+    expect(ctx.isVideoFile('/api/files/serve?pathname=2%2Fx.webm')).toBe(true)
+    expect(ctx.isVideoFile('/api/files/serve?pathname=2%2Fx.pdf')).toBe(false)
+    expect(ctx.isVideoFile('/api/files/serve?pathname=2%2Fx.mp3')).toBe(false)
+  })
+
   it('downloadAllFiles：没有附件时只提示，不触发下载', async () => {
     const ctx = await makeCtx([
       { userId: 1, record: { files: [], record: { _submitCount: 1 } } },

@@ -202,8 +202,11 @@
                         <!-- 有附件：文件预览 iframe -->
                         <div v-if="activeFile" ref="previewRef"
                             class="relative flex-1 overflow-auto border border-gray-200 dark:border-gray-800 rounded-md bg-white">
+                            <!-- 视频：原生播放器，高度拉满容器 -->
+                            <video v-if="isVideoFile(activeFile.url)" :key="activeFile.url" :src="activeFile.url"
+                                controls preload="metadata" class="block w-full h-full bg-black" />
                             <!-- 可内联预览：iframe（内容按自然尺寸缩放适配容器宽度） -->
-                            <div v-if="activeFilePreviewable && activeFile.url" :style="iframeWrapperStyle">
+                            <div v-else-if="activeFilePreviewable && activeFile.url" :style="iframeWrapperStyle">
                                 <iframe ref="iframeRef" :key="activeFile.url" :src="activeFile.url"
                                     @load="onIframeLoad" class="block bg-white border-0 max-w-none"
                                     :style="iframeElStyle" />
@@ -259,7 +262,7 @@ const {
     downloadingAll, downloadAllFiles,
     scoringAll, scoreAllSubmitted,
     detailOpen, detailData, detailRecord, detailSubmittedAt, detailIndex, detailTotal,
-    openHomeworkDetail, prevSubmission, nextSubmission, closeDetail, isRichDoc, hasSubmission, submittedAtOf, isPreviewableFile,
+    openHomeworkDetail, prevSubmission, nextSubmission, closeDetail, isRichDoc, hasSubmission, submittedAtOf, isPreviewableFile, isVideoFile,
 } = useHomeworkRecords(props, emit)
 
 // 一键全部满分：二次确认后执行，避免误覆盖已有分数

@@ -328,6 +328,12 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
         return PREVIEWABLE_EXTS.has(getFileUrlExt(url))
     }
 
+    // 视频文件：改用原生播放器渲染（iframe 直开视频无法撑满容器高度）
+    const VIDEO_EXTS = new Set(['.mp4', '.webm'])
+    function isVideoFile(url: string): boolean {
+        return VIDEO_EXTS.has(getFileUrlExt(url))
+    }
+
     // ==================== 一键下载全部附件 ====================
     /** 归一化 record.files → url 字符串数组（兼容 [{url}] 与字符串两种历史格式） */
     function attachmentUrls(record: any): string[] {
@@ -544,6 +550,6 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
         scoringAll, scoreAllSubmitted,
         detailOpen, detailData, detailRecord, detailSubmittedAt, detailIndex, detailTotal,
         openHomeworkDetail, prevSubmission, nextSubmission, closeDetail,
-        isRichDoc, strFromComment, hasSubmission, submittedAtOf, isPreviewableFile,
+        isRichDoc, strFromComment, hasSubmission, submittedAtOf, isPreviewableFile, isVideoFile,
     }
 }
