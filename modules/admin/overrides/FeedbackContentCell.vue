@@ -3,7 +3,7 @@
     v-if="imageSrc"
     class="group inline-flex items-center gap-1 max-w-[180px]"
     :title="t('admin.table.view')"
-    @click.stop="openFullImage"
+    @click.stop="$emit('view', row)"
   >
     <img :src="imageSrc" class="h-10 w-16 rounded border border-default/50 object-cover" alt="feedback" />
     <UIcon name="i-lucide-maximize-2" class="size-3.5 text-muted opacity-0 group-hover:opacity-100" />
@@ -17,6 +17,8 @@ const props = defineProps<{
   value: any
   fkLabel?: string
 }>()
+
+const emit = defineEmits<{ view: [row: Record<string, any>] }>()
 
 const { t } = useI18n()
 
@@ -36,7 +38,8 @@ const imageSrc = computed(() => {
   return ''
 })
 
+/** 点击缩略图打开该行详情（由 TableRow 转发给表格的 view 事件），不再新开浏览器标签 */
 function openFullImage() {
-  if (imageSrc.value) window.open(imageSrc.value, '_blank')
+  emit('view', props.row)
 }
 </script>

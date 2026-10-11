@@ -274,7 +274,13 @@
     "reChoose": "重新选择",
     "empty": "暂无反馈",
     "total": "{n} 条反馈",
-    "submitSuccess": "反馈提交成功"
+    "submitSuccess": "反馈提交成功",
+    "username": "账号",
+    "noImage": "无图片",
+    "detail": "反馈详情",
+    "rowsPerPage": "每页条数",
+    "viewDetail": "查看详情",
+    "closeDetail": "关闭详情"
   },
   "ide": {
     "title": "代码 IDE",

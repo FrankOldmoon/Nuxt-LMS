@@ -27,7 +27,9 @@ export default eventHandler(async (event) => {
         type: schema.feedbacks.type,
         content: schema.feedbacks.content,
         userId: schema.feedbacks.userId,
+        // name = 显示名（Lucas(賴錦瀚)），username = 登录名/学号（20246480），两者都返回
         userName: schema.users.name,
+        username: schema.users.username,
         createdAt: schema.feedbacks.createdAt,
       })
       .from(schema.feedbacks)

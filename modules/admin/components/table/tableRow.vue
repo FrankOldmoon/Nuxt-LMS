@@ -21,6 +21,7 @@
         :column="col"
         :value="row[col.jsName]"
         :fk-label="resolveFk(col, row)"
+        @view="$emit('view', $event)"
       />
       <TableCellView
         v-else

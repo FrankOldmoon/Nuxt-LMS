@@ -274,7 +274,13 @@
     "reChoose": "Re-choose",
     "empty": "No feedback yet",
     "total": "{n} feedbacks",
-    "submitSuccess": "Feedback submitted successfully"
+    "submitSuccess": "Feedback submitted successfully",
+    "username": "Username",
+    "noImage": "No image",
+    "detail": "Feedback detail",
+    "rowsPerPage": "Rows per page",
+    "viewDetail": "View detail",
+    "closeDetail": "Close detail"
   },
   "ide": {
     "title": "Code IDE",

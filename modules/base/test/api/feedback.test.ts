@@ -28,7 +28,7 @@ const _mockSchema = {
     id: 'id', name: 'name', type: 'type', content: 'content',
     userId: 'userId', createdAt: 'createdAt', deletedAt: 'deletedAt',
   },
-  users: { id: 'id', name: 'name' },
+  users: { id: 'id', name: 'name', username: 'username' },
   tokens: { name: 'name', userId: 'userId', deletedAt: 'deletedAt' },
 }
 vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
@@ -76,7 +76,7 @@ describe('API: feedback/list.get', () => {
       orderBy: vi.fn().mockReturnThis(),
       limit: vi.fn().mockReturnThis(),
       offset: vi.fn().mockResolvedValue([
-        { id: 1, name: 'Bug report', type: 'bug', content: 'data:image/png;base64,abc', userId: 2, userName: 'Alice', createdAt: new Date() },
+        { id: 1, name: 'Bug report', type: 'bug', content: 'data:image/png;base64,abc', userId: 2, userName: 'Alice', username: '20230001', createdAt: new Date() },
       ]),
     }
     _mockDb.select = vi.fn().mockReturnValueOnce(totalChain).mockReturnValueOnce(listChain)
@@ -85,6 +85,9 @@ describe('API: feedback/list.get', () => {
     expect(result.success).toBe(true)
     expect(result.data.data).toHaveLength(1)
     expect(result.data.total).toBe(1)
+    // 列表项须同时带显示名与登录账号（管理员要靠 username 区分同名学生）
+    expect(result.data.data[0].userName).toBe('Alice')
+    expect(result.data.data[0].username).toBe('20230001')
   })
 })
 
