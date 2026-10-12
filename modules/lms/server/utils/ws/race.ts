@@ -17,14 +17,16 @@ import { handleRaceQuestionEnd, handleRaceEnd } from './race-handlers/end'
 /** 返回 true 表示消息已被处理 */
 export function handleRaceMessage(peer: any, data: any): boolean {
   const { type } = data
+  // 鉴权/判分类 handler 为 async，统一捕获异常避免 unhandled rejection
+  const run = (p: Promise<void>) => { p.catch((e) => console.error('[ws] race handler error:', e)) }
   switch (type) {
-    case 'raceJoin':       return handleRaceJoin(peer, data), true
-    case 'raceOnline':     return handleRaceOnline(peer, data), true
-    case 'raceStart':      return handleRaceStart(peer, data), true
-    case 'raceQuestion':   return handleRaceQuestion(peer, data), true
-    case 'raceAnswer':     return handleRaceAnswer(peer, data), true
-    case 'raceQuestionEnd':return handleRaceQuestionEnd(peer, data), true
-    case 'raceEnd':        return handleRaceEnd(peer, data), true
+    case 'raceJoin':       handleRaceJoin(peer, data); return true
+    case 'raceOnline':     handleRaceOnline(peer, data); return true
+    case 'raceStart':      run(handleRaceStart(peer, data)); return true
+    case 'raceQuestion':   run(handleRaceQuestion(peer, data)); return true
+    case 'raceAnswer':     run(handleRaceAnswer(peer, data)); return true
+    case 'raceQuestionEnd':run(handleRaceQuestionEnd(peer, data)); return true
+    case 'raceEnd':        run(handleRaceEnd(peer, data)); return true
   }
   return false
 }

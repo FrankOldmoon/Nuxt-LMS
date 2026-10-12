@@ -27,12 +27,14 @@ export function handleRaceJoin(peer: any, data: any) {
   broadcastToRace(pin, JSON.stringify({ type: 'raceOnlineUpdate', pin, onlineUsers: getRaceOnlineUsers(pin) }))
 }
 
-/** raceOnline: 广播某用户在线状态变更 */
-export function handleRaceOnline(_peer: any, data: any) {
+/** raceOnline: 广播某用户在线状态变更（身份取 WS 登录用户，不采信客户端 userId/from） */
+export function handleRaceOnline(peer: any, data: any) {
   const pin = String(data.pin || ''); if (!pin) return
+  const userId = Number(peer?._authUserId) || 0
+  if (!userId) return
   broadcastToRace(pin, JSON.stringify({
     type: 'raceOnlineUpdate', pin,
-    userId: Number(data.userId), from: String(data.from || 'anonymous'),
+    userId, from: String(peer._authUserName || peer._userName || 'anonymous'),
     online: data.online !== false,
   }))
 }

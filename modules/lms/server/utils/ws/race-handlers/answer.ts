@@ -1,9 +1,13 @@
 /**
  * raceAnswer：记录单用户答案 + 广播 raceAnswerUpdate / raceScores
  *
- * 判分安全：rate/correct 不信任客户端（show 不再下发答案，客户端本也算不出）。
- * 服务端按 questions 表定义重算（与 /api/questions/submit 同一判分逻辑），
- * 用重算结果覆盖后存储与广播。
+ * 判分安全：
+ *  - rate/correct 不信任客户端（show 不再下发答案，客户端本也算不出）。
+ *    服务端按 questions 表定义重算（与 /api/questions/submit 同一判分逻辑）。
+ *  - 答题者身份强制取 WS 登录用户（peer._authUserId），客户端传的 userId 一律忽略，
+ *    防止冒充他人答题；未登录不允许答题。
+ *  - 题目必须在本场竞赛白名单内（raceStart 时从 DB 载入），白名单外题目忽略。
+ *  - 题目在 DB 中不存在时判 0 分（不再回退客户端 rate），杜绝伪造题 id 得满分。
  */
 import { db, schema } from '@nuxthub/db'
 import { and, eq } from 'drizzle-orm'
@@ -13,14 +17,24 @@ import { computeServerRate } from '../../submit/verify'
 export async function handleRaceAnswer(peer: any, data: any) {
   const pin = String(data.pin || '')
   const race = raceStates.get(pin); if (!race || !race.activeQuestionCid) return
-  const userId = Number(data.userId)
+
+  // 身份校验：必须登录，且只能以本人身份答题（客户端 data.userId 一律忽略）
+  const userId = Number(peer?._authUserId) || 0
+  if (!userId) {
+    try { peer?.send(JSON.stringify({ type: 'error', message: 'Unauthorized' })) } catch { /* 断开 */ }
+    return
+  }
+
   const questionCid = race.activeQuestionCid
   const qAnswers = race.answers.get(questionCid)
   if (!qAnswers || qAnswers.has(userId)) return
 
-  // 服务端判分：按题目定义重算（客户端传的 rate/correct 仅作参考，不采信）
-  let rate = Math.max(0, Math.min(1, Number(data.rate) || 0))
-  let correct = !!data.correct
+  // 题目必须属于本场竞赛（raceStart 时从 DB 载入的白名单）
+  if (!race.questionIds.includes(Number(questionCid))) return
+
+  // 服务端判分：按题目定义重算；查不到题目一律 0 分（不采信客户端 rate/correct）
+  let rate = 0
+  let correct = false
   // 正确答案 / 解析：判分时一并取出，答完私发给答题者本人（不向房间广播，避免泄露给未作答学生）
   let correctAnswer: any = null
   let explanation: any = null
@@ -38,10 +52,10 @@ export async function handleRaceAnswer(peer: any, data: any) {
       correctAnswer = (question as any).answer ?? null
       explanation = (question as any).explanation ?? null
     }
-  } catch { /* 判分失败退回客户端值 */ }
+  } catch { /* 判分异常按 0 分处理 */ }
 
   qAnswers.set(userId, {
-    answer: data.answer, from: String(data.from || 'anonymous'), userId,
+    answer: data.answer, from: String(peer._authUserName || data.from || 'anonymous'), userId,
     avatarImg: data.avatarImg || null, avatarFrame: data.avatarFrame || null,
     rate, correct, submittedAt: Date.now(),
   })
@@ -71,7 +85,7 @@ export async function handleRaceAnswer(peer: any, data: any) {
       raceCid: race.raceCid,
       questionCid,
       userId,
-      from: String(data.from || 'anonymous'),
+      from: String(peer._authUserName || data.from || 'anonymous'),
       gain: Math.round(rate * point * 100) / 100,
     }))
   }

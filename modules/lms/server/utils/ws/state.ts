@@ -32,6 +32,8 @@ export type RaceState = {
   answers: Map<number, Map<number, RaceAnswerInfo>>
   /** 题目分值（questionCid → point），answer 判分时写入，供计分对齐 point */
   questionPoints: Map<number, number>
+  /** 本场竞赛题目白名单（raceStart 时从 DB races.questionIds 载入），答题/推题只允许白名单内题目 */
+  questionIds: number[]
 }
 export const votes        = new Map<string, VoteRecord>()
 export const quickAnswers = new Map<number, QuickAnswerRecord>()

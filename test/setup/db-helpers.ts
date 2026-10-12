@@ -202,12 +202,19 @@ export function makeEvent(opts: {
 export function makeMockPeer(opts: {
   userId?: number
   userName?: string
+  /** 覆盖认证用户（含角色）；缺省时提供 userId 即视为 student 角色 */
+  authUser?: { id: number; name?: string; roles?: string[] } | null
   classId?: number
   racePin?: string
   groupId?: string
   lockId?: string
   readyState?: number
 } = {}) {
+  const authUser = opts.authUser !== undefined
+    ? opts.authUser
+    : (opts.userId != null
+        ? { id: opts.userId, name: opts.userName || 'test-user', roles: ['student'] }
+        : null)
   const peer: any = {
     send: vi.fn(),
     readyState: opts.readyState ?? 1,
@@ -219,8 +226,9 @@ export function makeMockPeer(opts: {
     _lockId: opts.lockId,
     // 模拟已通过 WS 认证：提供 userId 即视为已登录用户（registerUser 身份校验用）
     _authResolved: true,
-    _authUserId: opts.userId ?? null,
-    _authUserName: opts.userName || null,
+    _authUser: authUser,
+    _authUserId: authUser?.id ?? null,
+    _authUserName: authUser?.name || null,
   }
   return peer
 }

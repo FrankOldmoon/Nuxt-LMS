@@ -9,6 +9,9 @@ const _mockDb = {
     classRaces: { findFirst: vi.fn() },
     races: { findFirst: vi.fn(), findMany: vi.fn() },
     raceParticipants: { findMany: vi.fn() },
+    userRaces: { findFirst: vi.fn() },
+    chapters: { findFirst: vi.fn() },
+    questions: { findFirst: vi.fn(), findMany: vi.fn() },
   },
   select: vi.fn().mockReturnThis(),
   from: vi.fn().mockReturnThis(),
@@ -35,6 +38,9 @@ const _mockSchema = {
     classId: 'classId', courseId: 'courseId', raceCid: 'raceCid', status: 'status',
   },
   raceParticipants: { raceId: 'raceId', userId: 'userId', score: 'score', finishedAt: 'finishedAt' },
+  userRaces: { userId: 'userId', courseId: 'courseId', raceCid: 'raceCid', score: 'score' },
+  chapters: { id: 'id', courseId: 'courseId' },
+  questions: { courseId: 'courseId', cid: 'cid' },
   users: { id: 'id', username: 'username', name: 'name' },
 }
 vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
@@ -107,6 +113,63 @@ describe('API: races/submit.post', () => {
     setMockAuthState(null)
     const handler = (await import('../../server/api/races/submit.post')).default
     await expect(handler(makeEvent({ body: { raceId: 1, score: 100 } }))).rejects.toThrow()
+  })
+
+  /** 竞赛提交公共 stub：课程 1 / 竞赛 cid 10 / 章节分 8 */
+  function stubSubmit(opts: { existing?: any; chapter?: any } = {}) {
+    ;(globalThis as any).getCourseLmsConfig = vi.fn().mockResolvedValue({
+      race: { participateExp: 5, chapterScore: 8 },
+    })
+    ;(globalThis as any).addChapterScore = vi.fn().mockResolvedValue(undefined)
+    ;(globalThis as any).addCourseScore = vi.fn().mockResolvedValue(undefined)
+    ;(globalThis as any).addCourseScoreMax = vi.fn().mockResolvedValue(undefined)
+    ;(globalThis as any).checkAndAwardMedals = vi.fn().mockResolvedValue(undefined)
+    _mockDb.query.races.findFirst = vi.fn().mockResolvedValue({ courseId: 1, cid: 10, questionIds: [1] })
+    _mockDb.query.userRaces.findFirst = vi.fn().mockResolvedValue(opts.existing ?? null)
+    _mockDb.query.questions.findMany = vi.fn().mockResolvedValue([])
+    _mockDb.query.chapters.findFirst = vi.fn().mockResolvedValue(opts.chapter ?? null)
+    _mockDb.update = vi.fn().mockReturnThis()
+    _mockDb.set = vi.fn().mockReturnThis()
+    _mockDb.where = vi.fn().mockResolvedValue(undefined)
+    _mockDb.insert = vi.fn().mockReturnThis()
+    _mockDb.values = vi.fn().mockResolvedValue(undefined)
+  }
+
+  it('首次提交：章节分发放一次', async () => {
+    setMockAuthState({ id: 1, username: 'stu', roles: ['student'], permissions: [] })
+    stubSubmit({ chapter: { id: 5, courseId: 1 } })
+    const handler = (await import('../../server/api/races/submit.post')).default
+    const result = await handler(makeEvent({
+      body: { course_id: 1, race_cid: 10, chapter_id: 5, records: [] },
+    }))
+    expect(result.success).toBe(true)
+    expect(_mockDb.query.chapters.findFirst).toHaveBeenCalled()
+    expect((globalThis as any).addChapterScore).toHaveBeenCalledWith(1, 5, 8)
+  })
+
+  it('重复提交：不再发放章节分（防循环提交刷分）', async () => {
+    setMockAuthState({ id: 1, username: 'stu', roles: ['student'], permissions: [] })
+    stubSubmit({
+      existing: { userId: 1, courseId: 1, raceCid: 10, score: '5', records: [] },
+      chapter: { id: 5, courseId: 1 },
+    })
+    const handler = (await import('../../server/api/races/submit.post')).default
+    const result = await handler(makeEvent({
+      body: { course_id: 1, race_cid: 10, chapter_id: 5, records: [] },
+    }))
+    expect(result.success).toBe(true)
+    expect((globalThis as any).addChapterScore).not.toHaveBeenCalled()
+  })
+
+  it('chapter_id 不属于本课程：不发放章节分（防跨课程注入）', async () => {
+    setMockAuthState({ id: 1, username: 'stu', roles: ['student'], permissions: [] })
+    stubSubmit({ chapter: null }) // 查无该课程下的章节
+    const handler = (await import('../../server/api/races/submit.post')).default
+    const result = await handler(makeEvent({
+      body: { course_id: 1, race_cid: 10, chapter_id: 999, records: [] },
+    }))
+    expect(result.success).toBe(true)
+    expect((globalThis as any).addChapterScore).not.toHaveBeenCalled()
   })
 })
 

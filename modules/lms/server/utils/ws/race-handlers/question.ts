@@ -1,12 +1,23 @@
 /**
  * raceQuestion：设置当前题 + 广播 raceQuestion + 服务端自动收题 + 进度持久化
+ *
+ * 安全策略：仅课程教师/管理员可推进题目；questionCid 必须在本场竞赛白名单内
+ * （raceStart 时从 DB 载入），防止伪造 questionCid 引入白名单外题目计分。
  */
 import { raceStates, broadcastToRace, raceAutoEndTimers } from '../state'
+import { requireWsRaceTeacher } from './auth'
 
-export function handleRaceQuestion(_peer: any, data: any) {
+export async function handleRaceQuestion(peer: any, data: any) {
   const pin = String(data.pin || '')
   const race = raceStates.get(pin); if (!race) return
+
+  // 教师鉴权：推题属于教师控制消息
+  const teacher = await requireWsRaceTeacher(peer, race.courseId)
+  if (!teacher) return
+
   const questionCid = Number(data.questionCid)
+  // 题目必须属于本场竞赛（白名单校验）
+  if (!race.questionIds.includes(questionCid)) return
   const questionIndex = Number(data.questionIndex) || 0
   race.currentQuestion = questionIndex
   race.activeQuestionCid = questionCid

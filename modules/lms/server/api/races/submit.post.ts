@@ -103,10 +103,17 @@ export default withSubmitHandler('提交竞赛成绩失败', async (event) => {
   })
 
   // 3.25 竞赛提交章节分（可调参数 race.chapterScore）
+  // 防刷：竞赛无提交次数限制，章节分仅在首次提交时发放一次，防止循环提交无限刷章节分；
+  // chapter_id 必须属于本课程，防止跨课程章节分注入。
   const chapterId = Number(ctx.body.chapter_id) || 0
   const raceChapterScore = Number(rConfig.chapterScore) || 0
-  if (chapterId && raceChapterScore > 0) {
-    await addChapterScore(user.id, chapterId, raceChapterScore)
+  if (chapterId && raceChapterScore > 0 && isFirstSubmit) {
+    const chapter = await db.query.chapters.findFirst({
+      where: and(eq(schema.chapters.id, chapterId), eq(schema.chapters.courseId, courseId)),
+    })
+    if (chapter) {
+      await addChapterScore(user.id, chapterId, raceChapterScore)
+    }
   }
 
   // 3.5 被其他课程 iframe 嵌入时，将相同加分镜像给宿主课程
