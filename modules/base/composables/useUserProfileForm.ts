@@ -42,9 +42,10 @@ export function useUserProfileForm(form: Ref<UserProfileForm>) {
     { label: t('profile.genderOther'), value: 'other' },
   ])
 
-  // 界面语言选项：空值 = 跟随站点默认语言（已取消「中文」选项）
+  // 界面语言选项：'follow' = 跟随站点默认语言（已取消「中文」选项）
+  // 注意：SelectItem 禁止空字符串 value，故用 'follow' 哨兵值代替 ''
   const localeOptions = computed(() => [
-    { label: t('profile.localeFollowSite'), value: '' },
+    { label: t('profile.localeFollowSite'), value: 'follow' },
     { label: t('profile.localeEnglish'), value: 'en' },
   ])
 

@@ -9,15 +9,14 @@ interface UserProfileForm {
   avatarImg: string
   telephone: string
   classId: number | null
-  /** 界面语言：''=跟随站点默认，'cn'=中文，'en'=英文 */
+  /** 界面语言：'follow'=跟随站点默认，'en'=英文 */
   defaultLocale: string
 }
 
-/** 归一化个人语言值为表单取值（'' / 'cn' / 'en'） */
+/** 归一化个人语言值为表单取值（'' / 'cn' / 'en'），空值或中文一律视为跟随站点 */
 function normalizeLocale(raw: string | null | undefined): string {
   const v = (raw || '').trim().toLowerCase()
   if (!v) return ''
-  if (v === 'zh-cn' || v === 'zh' || v === 'cn' || v === '中文') return 'cn'
   if (v === 'en-us' || v === 'en' || v === '英文') return 'en'
   return ''
 }
@@ -55,7 +54,8 @@ export function useProfileModal(isOpen: Ref<boolean>) {
       avatarImg: user.value?.avatarImg || '',
       telephone: user.value?.telephone || '',
       classId: user.value?.classId ?? null,
-      defaultLocale: normalizeLocale(user.value?.defaultLocale),
+      // '' / 'cn' 等非英文值统一映射为 'follow'（跟随站点默认）
+      defaultLocale: normalizeLocale(user.value?.defaultLocale) || 'follow',
     }
   }
 
@@ -67,8 +67,8 @@ export function useProfileModal(isOpen: Ref<boolean>) {
     saving.value = true
     try {
       const body: any = { ...form.value }
-      // 个人语言：''=跟随站点默认 → 存 null
-      body.defaultLocale = body.defaultLocale ? body.defaultLocale : null
+      // 个人语言：'follow'=跟随站点默认 → 存 null
+      body.defaultLocale = body.defaultLocale === 'en' ? 'en' : null
       await cRequest('/api/auth/me', {
         method: 'PUT',
         body,
