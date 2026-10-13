@@ -3,6 +3,12 @@
         <UModal v-model:open="isOpen" :ui="{ content: 'max-w-4xl' }" scrollable>
             <template #content>
                 <div class="p-6">
+                    <div class="flex flex-col items-center mb-4">
+                        <AvatarWithFrame :src="user?.avatarImg ?? undefined" :alt="user?.name"
+                            :text="user?.name?.charAt(0)" size="xl" />
+                        <p class="mt-2 text-base font-semibold text-highlighted">{{ user?.name }}</p>
+                    </div>
+
                     <CourseUserSelect v-if="canSelectStudent" :course-id="Number(courseId)"
                         @impersonated="onImpersonated" @restored="onImpersonated" />
 
@@ -46,6 +52,9 @@ interface ProgressModalProps {
 
 const props = defineProps<ProgressModalProps>()
 const isOpen = defineModel<boolean>('open', { default: false })
+
+// 头像/姓名展示当前登录用户（教师 impersonate 后 user 已刷新，自动跟随切换）
+const { user } = useAuth()
 
 // 在 setup 阶段解析 UI 组件引用，传入 composable。
 // 避免 composable 内部 resolveComponent 返回的字符串在 h() 渲染时 lookup 失败。
