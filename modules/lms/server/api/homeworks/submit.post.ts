@@ -25,6 +25,17 @@ export default withSubmitHandler('提交作业失败', async (event) => {
 
   const { files, content } = body
 
+  // 0. 截止时间校验（deadline 为空 = 不限制）
+  const homework = await db.query.homeworks.findFirst({
+    where: and(
+      eq(schema.homeworks.courseId, courseId),
+      eq(schema.homeworks.cid, Number(homeworkCid)),
+    ),
+  })
+  if (homework?.deadline && new Date() > new Date(homework.deadline)) {
+    return cResp(null, '已过截止时间，无法提交', false, 'homework_deadline_passed')
+  }
+
   // 1. 查找已有记录（仅统计学生真实提交；教师「仅评分」行不算）
   const existing = await findUserSubmitRecord(user.id, courseId, 'homework', homeworkCid)
   const recordMeta: any = (existing?.record && typeof existing.record === 'object') ? existing.record : {}

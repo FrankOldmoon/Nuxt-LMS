@@ -508,6 +508,8 @@
     "explanationLabel": "Explanation (shown after score)",
     "uploadLabel": "Upload homework files",
     "uploadHint": "Drag files here to upload",
+    "deadline": "Deadline",
+    "deadlinePassed": "Past the deadline, submission closed",
     "submit": "Submit Homework",
     "resubmit": "Resubmit",
     "submitSuccess": "Submitted successfully",

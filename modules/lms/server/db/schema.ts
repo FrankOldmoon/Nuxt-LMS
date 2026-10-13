@@ -214,6 +214,8 @@ export const homeworks = pgTable(
     submitCount: integer('submit_count').default(0),
     avgPoint: numeric('avg_point', { precision: 10, scale: 2 }).default('0'),
     point: integer('point').default(10),
+    /** 截止时间（null = 不限制）；到期后学生端禁止提交，服务端同步校验 */
+    deadline: timestamp('deadline', { withTimezone: true }),
     extra: jsonb('extra'),
     tags: jsonb('tags'),
     explanation: jsonb('explanation'),

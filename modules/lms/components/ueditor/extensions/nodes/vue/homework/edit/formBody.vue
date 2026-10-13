@@ -2,10 +2,13 @@
     <!-- 标题 -->
     <h2 class="text-lg font-semibold">{{ t('common.edit') }} - {{ form.name || t('homework.namePlaceholder') }}</h2>
 
-    <!-- 名称 / 分值 -->
+    <!-- 名称 / 分值 / 截止时间 -->
     <div class="flex items-center gap-3">
         <UInput v-model="form.name" :placeholder="t('homework.namePlaceholder')" class="flex-1" size="sm" />
         <UInput v-model.number="form.point" type="number" :placeholder="t('question.pointPlaceholder')" size="sm" class="w-20" />
+        <UFormField :label="t('homework.deadline')" size="sm">
+            <UInput v-model="form.deadline" type="datetime-local" size="sm" />
+        </UFormField>
     </div>
 
     <!-- 作业内容（编辑时为 Content） -->

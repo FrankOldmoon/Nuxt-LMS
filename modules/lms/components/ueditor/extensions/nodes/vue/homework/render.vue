@@ -38,6 +38,14 @@
                 </div>
             </div>
 
+            <!-- 截止时间（过期红色提示） -->
+            <div v-if="homework.deadline" class="flex items-center gap-1 mb-3 text-xs"
+                :class="deadlinePassed ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'">
+                <UIcon name="i-lucide-alarm-clock" class="size-3 shrink-0" />
+                <span>{{ t('homework.deadline') }}: {{ formatDeadline(homework.deadline) }}</span>
+                <span v-if="deadlinePassed" class="font-medium">（{{ t('homework.deadlinePassed') }}）</span>
+            </div>
+
             <!-- 作业内容 -->
             <div class="prose prose-sm dark:prose-invert max-w-none">
                 <ueditorRender :json="homework.content" />
@@ -89,6 +97,7 @@ const {
     t, moduleLms, RecordsModal,
     homework, pending, homeworkId, isTeacher, isLoggedIn,
     editOpen, recordsOpen, refresh,
+    deadlinePassed, formatDeadline,
     selfScore, submitted,
     fetchRecord, fetchFeatured, onSaved,
 } = useHomeworkRender(props, emit)

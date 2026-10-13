@@ -41,6 +41,7 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
         code: '',
         content: '',
         point: 10,
+        deadline: null as string | null,
         tags: [],
         explanation: '',
     })
@@ -59,6 +60,7 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
                 code: raw.code || '',
                 content: raw.content || '',
                 point: Number(raw.point) || 0,
+                deadline: raw.deadline || null,
                 tags: Array.isArray(raw.tags) ? [...raw.tags] : [],
                 explanation: raw.explanation || '',
             })
@@ -77,6 +79,18 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
 
     // homeworkId 为空时不显示加载态
     const pending = computed(() => !!homeworkId.value && fetchedPending.value)
+
+    // ── 截止时间 ──
+    // 按站点时区展示（与评论/提交时间显示口径一致）
+    const { siteTimeZone } = useSiteConfig()
+    const deadlinePassed = computed(() => {
+        const d = homework.value?.deadline
+        return !!d && new Date() > new Date(d)
+    })
+    function formatDeadline(d?: string | null) {
+        if (!d) return ''
+        return formatTime(d, siteTimeZone.value)
+    }
 
     const editOpen = ref(false)
     const recordsOpen = ref(false)
@@ -136,6 +150,11 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
         // 未登录时禁止提交
         if (!isLoggedIn.value) {
             toast.add({ title: t('common.loginRequired'), color: 'warning' })
+            return
+        }
+        // 已过截止时间禁止提交（服务端 submit API 同步校验兜底）
+        if (deadlinePassed.value) {
+            toast.add({ title: t('homework.deadlinePassed'), color: 'warning' })
             return
         }
         if (!homeworkId.value || !effectiveCourseId.value) return
@@ -239,6 +258,7 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
         t, effectiveCourseId, moduleLms, RecordsModal,
         homework, pending, homeworkId, isTeacher, isLoggedIn,
         editOpen, recordsOpen, refresh,
+        deadlinePassed, formatDeadline,
         submittedContent, submittedFiles, submitted, submittedFileList,
         submitting, submitLocked, submitMsg, submitOk,
         selfScore, selfComment, featuredList, featuredPending,

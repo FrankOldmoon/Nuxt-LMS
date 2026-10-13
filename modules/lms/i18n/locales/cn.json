@@ -508,6 +508,8 @@
     "explanationLabel": "解析（打分后显示）",
     "uploadLabel": "上传作业文件",
     "uploadHint": "拖拽文件到此处上传",
+    "deadline": "截止时间",
+    "deadlinePassed": "已过截止时间，无法提交",
     "submit": "提交作业",
     "resubmit": "重新提交",
     "submitSuccess": "提交成功",

@@ -11,6 +11,8 @@ import { resetAllStubs, setMockI18n, setMockLmsContext } from '../../../../../..
 ;(globalThis as any).useChapterTask = () => null
 ;(globalThis as any).useUserCard = () => ({ refreshTrigger: ref(0), refresh: () => {} })
 ;(globalThis as any).useFileNames = () => ref([])
+// render 使用 useSiteConfig 按站点时区渲染截止时间
+;(globalThis as any).useSiteConfig = () => ({ config: ref({}), siteTimeZone: ref('Asia/Shanghai') })
 
 beforeEach(() => {
   resetAllStubs()

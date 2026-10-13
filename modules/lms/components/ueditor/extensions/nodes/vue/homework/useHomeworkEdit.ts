@@ -53,6 +53,7 @@ export function useHomeworkEdit(props: HomeworkEditProps, emit: HomeworkEditEmit
                 code: '',
                 content: '',
                 point: 10,
+                deadline: '',
                 tags: [],
                 explanation: '',
             }
@@ -64,11 +65,20 @@ export function useHomeworkEdit(props: HomeworkEditProps, emit: HomeworkEditEmit
             code: props.homework.code || '',
             content: props.homework.content || '',
             point: Number(props.homework.point) || 0,
+            // datetime-local 输入格式（与 quiz startAt/endAt 一致）
+            deadline: props.homework.deadline ? formatDateTime(props.homework.deadline) : '',
             tags: Array.isArray(props.homework.tags) ? [...props.homework.tags] : [],
             explanation: props.homework.explanation || '',
         }
         form.value = normalized
         originalData = JSON.parse(JSON.stringify(normalized))
+    }
+
+    /** DB 时间字符串 → datetime-local 输入格式（本地墙上时间） */
+    function formatDateTime(d: any) {
+        const date = new Date(d)
+        const pad = (n: number) => String(n).padStart(2, '0')
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
     }
 
     function resetForm() {
@@ -81,20 +91,23 @@ export function useHomeworkEdit(props: HomeworkEditProps, emit: HomeworkEditEmit
         saving.value = true
         saveMsg.value = ''
         try {
+            const payload = { ...form.value }
+            // 空字符串 → null（清除截止时间）
+            if (!payload.deadline) payload.deadline = null
             if (props.homeworkId) {
                 // 已有作业：更新
                 await cRequest('/api/homeworks/update', {
                     method: 'POST',
-                    body: { id: props.homeworkId, course_id: effectiveCourseId.value, ...form.value },
+                    body: { id: props.homeworkId, course_id: effectiveCourseId.value, ...payload },
                 })
-                emit('saved', form.value)
+                emit('saved', payload)
             } else {
                 // 新作业：新增并拿回 cid
                 const result = await cRequest('/api/homeworks/add', {
                     method: 'POST',
-                    body: { course_id: effectiveCourseId.value, ...form.value },
+                    body: { course_id: effectiveCourseId.value, ...payload },
                 })
-                emit('saved', { ...form.value, cid: result.cid })
+                emit('saved', { ...payload, cid: result.cid })
             }
             saveOk.value = true
             saveMsg.value = t('homework.saveSuccess')

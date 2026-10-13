@@ -17,7 +17,8 @@
 
         <!-- 提交/重置按钮 -->
         <div class="flex items-center gap-2">
-            <span v-if="submitMsg" class="text-xs" :class="submitOk ? 'text-green-500' : 'text-red-500'">{{
+            <span v-if="deadlinePassed" class="text-xs font-medium text-red-500">{{ t('homework.deadlinePassed') }}</span>
+            <span v-else-if="submitMsg" class="text-xs" :class="submitOk ? 'text-green-500' : 'text-red-500'">{{
                 submitMsg
                 }}</span>
             <div class="flex gap-2 ml-auto">
@@ -26,7 +27,7 @@
                     {{ t('common.reset') }}
                 </UButton>
                 <UButton color="primary" variant="solid" size="sm" icon="i-lucide-send" :loading="submitting"
-                    :disabled="submitLocked || !submittedFiles || (Array.isArray(submittedFiles) && submittedFiles.length === 0)"
+                    :disabled="deadlinePassed || submitLocked || !submittedFiles || (Array.isArray(submittedFiles) && submittedFiles.length === 0)"
                     @click="onSubmit">
                     {{ submitted ? t('homework.resubmit') : t('homework.submit') }}
                 </UButton>
@@ -76,6 +77,7 @@ const {
     t, effectiveCourseId,
     submittedContent, submittedFiles, submitted, submittedFileList,
     submitting, submitLocked, submitMsg, submitOk,
+    deadlinePassed,
     selfScore, selfComment,
     onSubmit, onReset, isRichDoc,
 } = useHomeworkRenderContext()
