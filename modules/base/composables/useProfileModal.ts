@@ -38,11 +38,13 @@ export function useProfileModal(isOpen: Ref<boolean>) {
     defaultLocale: '',
   })
 
+  // immediate：组件为 v-if 惰性挂载，打开时 isOpen 初始即 true 且不再变化，
+  // 非 immediate 的 watch 不会触发，导致表单无数据
   watch(isOpen, (val) => {
     if (val && user.value) {
       loadFormData()
     }
-  })
+  }, { immediate: true })
 
   function loadFormData() {
     form.value = {
