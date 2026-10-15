@@ -68,6 +68,11 @@ export default defineNuxtConfig({
     "@nuxt/test-utils/module"
   ],
   ui: { fonts: false },
+  // OpenAI 兼容对外网关（/api/openai/**）：允许浏览器端 OpenAI SDK 跨域调用，
+  // Nitro 自动处理 OPTIONS 预检并附加 Access-Control-* 响应头
+  routeRules: {
+    '/api/openai/**': { cors: true },
+  },
   // 顶层 runtimeConfig：仅该域名（如 mxlms.oldmoon.cn）在首页做 Access Verification，
   // 其他访问（IP/localhost/其余域名）直接放行。
   // 放在 public 段（客户端需判断）：环境变量用 NUXT_PUBLIC_VERIFICATION_URL 覆盖。
