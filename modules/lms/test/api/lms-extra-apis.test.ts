@@ -142,8 +142,14 @@ describe('API: classes/update', () => {
     expect(r.success).toBe(false)
   })
 
-  it('教师更新成功', async () => {
+  it('教师被拒（仅管理员可改名）', async () => {
     setMockAuthState({ id: 1, username: 't', name: 't', roles: ['teacher'], permissions: [] })
+    const handler = (await import('../../server/api/classes/update.post')).default
+    await expect(handler(makeEvent({ body: { id: 1, name: 'New' } }))).rejects.toThrow()
+  })
+
+  it('管理员更新成功', async () => {
+    setMockAuthState({ id: 1, username: 'a', name: 'a', roles: ['admin'], permissions: [] })
     const handler = (await import('../../server/api/classes/update.post')).default
     const r = await handler(makeEvent({ body: { id: 1, name: 'New' } }))
     expect(r.success).toBe(true)

@@ -526,21 +526,24 @@ describe('API: courses/members-search.get', () => {
 // ====================== number.post.ts ======================
 
 describe('API: courses/number.post', () => {
-  it('非教师/管理员抛 403', async () => {
+  it('学生/未授权角色抛 403', async () => {
     setMockAuthState({ id: 1, username: 's', name: 'S', roles: ['student'], permissions: [] })
     const handler = (await import('../../server/api/courses/number.post')).default
     await expect(handler(makeEvent({ body: { course_id: 1, user_id: 2, number: '001' } }))).rejects.toThrow()
   })
 
-  it('缺少 course_id 或 user_id 返回失败', async () => {
+  it('课程教师（非课程编辑者）抛 403', async () => {
     setMockAuthState({ id: 1, username: 't', name: 'T', roles: ['teacher'], permissions: [] })
+    // requireCourseTeacher 守卫未通过（非编辑者）
+    ;(globalThis as any).isCourseTeacher = vi.fn().mockResolvedValue(false)
     const handler = (await import('../../server/api/courses/number.post')).default
-    const r = await handler(makeEvent({ body: { course_id: 1 } }))
-    expect(r.success).toBe(false)
+    await expect(handler(makeEvent({ body: { course_id: 1, user_id: 2, number: '001' } }))).rejects.toThrow()
   })
 
-  it('已有记录时更新学号', async () => {
+  it('课程编辑者（courseEditor）可修改学号（已有记录更新）', async () => {
     setMockAuthState({ id: 1, username: 't', name: 'T', roles: ['teacher'], permissions: [] })
+    // requireCourseTeacher 守卫通过（课程编辑者）
+    ;(globalThis as any).isCourseTeacher = vi.fn().mockResolvedValue(true)
     _mockDb.query.userCourses.findFirst = vi.fn().mockResolvedValue({ userId: 2, courseId: 1, number: '001' })
     _mockDb.returning = vi.fn().mockResolvedValue([{ userId: 2, courseId: 1, number: '002', group: 'g1' }])
     const handler = (await import('../../server/api/courses/number.post')).default
@@ -551,8 +554,8 @@ describe('API: courses/number.post', () => {
     expect(_mockDb.insert).not.toHaveBeenCalled()
   })
 
-  it('无记录时插入新学号', async () => {
-    setMockAuthState({ id: 1, username: 't', name: 'T', roles: ['teacher'], permissions: [] })
+  it('管理员可修改学号（无记录时插入）', async () => {
+    setMockAuthState({ id: 1, username: 'admin', name: 'A', roles: ['admin'], permissions: [] })
     _mockDb.query.userCourses.findFirst = vi.fn().mockResolvedValue(null)
     _mockDb.returning = vi.fn().mockResolvedValue([{ userId: 2, courseId: 1, number: '001', group: null }])
     const handler = (await import('../../server/api/courses/number.post')).default
@@ -560,6 +563,13 @@ describe('API: courses/number.post', () => {
     expect(r.success).toBe(true)
     expect(r.data.number).toBe('001')
     expect(_mockDb.insert).toHaveBeenCalled()
+  })
+
+  it('缺少 course_id 或 user_id 返回失败', async () => {
+    setMockAuthState({ id: 1, username: 't', name: 'T', roles: ['teacher'], permissions: [] })
+    const handler = (await import('../../server/api/courses/number.post')).default
+    const r = await handler(makeEvent({ body: { course_id: 1 } }))
+    expect(r.success).toBe(false)
   })
 })
 

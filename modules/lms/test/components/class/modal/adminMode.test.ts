@@ -8,11 +8,24 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { ref } from 'vue'
-import { resetAllStubs, setMockI18n } from '../../../../../../test/setup/nuxt-stubs'
+import { resetAllStubs, setMockI18n, setMockLmsContext } from '../../../../../../test/setup/nuxt-stubs'
 
 beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
+  setMockLmsContext(0)
+  _authLmsState.roles = []
+  _authLmsState.editorCourseIds = []
+})
+
+/** useAuthLms 桩的可控状态（hasRole / 学号编辑权限测试用） */
+const _authLmsState = {
+  roles: [] as string[],
+  editorCourseIds: [] as number[],
+}
+;(globalThis as any).useAuthLms = () => ({
+  hasRole: (code: string) => _authLmsState.roles.includes(code),
+  isCourseEditor: (courseId: number) => _authLmsState.editorCourseIds.includes(courseId),
 })
 
 const _globalStubs = {
@@ -31,10 +44,11 @@ const _globalStubs = {
   },
   UButton: {
     template: '<button :disabled="loading" @click="$emit(\'click\')">{{ label }}<slot /></button>',
-    props: ['label', 'icon', 'size', 'color', 'variant', 'loading', 'aria-label'],
+    props: ['label', 'icon', 'size', 'color', 'variant', 'loading'],
   },
   UIcon: { template: '<span />', props: ['name'] },
   ClassUsersTable: {
+    name: 'ClassUsersTable',
     template: '<div class="class-users-table" />',
     props: ['classId', 'courseId', 'rows', 'showOnline', 'editableNumber'],
   },
@@ -98,14 +112,16 @@ describe('class/modal/adminMode.vue', () => {
   })
 
   it('admin 角色显示新增班级输入框', async () => {
-    setupMockContext({ hasRole: () => true })
+    _authLmsState.roles = ['admin']
+    setupMockContext()
     const { default: AdminMode } = await import('../../../../components/class/modal/adminMode.vue')
     const wrapper = mount(AdminMode, { global: _globalConfig })
     expect(wrapper.text()).toContain('classSelector.addClass')
   })
 
   it('非 admin 角色不显示新增班级区域', async () => {
-    setupMockContext({ hasRole: () => false })
+    _authLmsState.roles = ['teacher']
+    setupMockContext()
     const { default: AdminMode } = await import('../../../../components/class/modal/adminMode.vue')
     const wrapper = mount(AdminMode, { global: _globalConfig })
     expect(wrapper.text()).not.toContain('classSelector.addClass')
@@ -123,5 +139,65 @@ describe('class/modal/adminMode.vue', () => {
     const { default: AdminMode } = await import('../../../../components/class/modal/adminMode.vue')
     const wrapper = mount(AdminMode, { global: _globalConfig })
     expect(wrapper.text()).not.toContain('classSelector.addMembers')
+  })
+
+  // ====================== 编辑班级名称按钮（仅管理员可见） ======================
+
+  it('admin 角色显示编辑班级名称按钮', async () => {
+    _authLmsState.roles = ['admin']
+    setupMockContext({ selectedClassId: ref(1) })
+    const { default: AdminMode } = await import('../../../../components/class/modal/adminMode.vue')
+    const wrapper = mount(AdminMode, { global: _globalConfig })
+    expect(wrapper.find('button[aria-label="classSelector.editClassName"]').exists()).toBe(true)
+  })
+
+  it('非 admin 角色（teacher）不显示编辑班级名称按钮', async () => {
+    _authLmsState.roles = ['teacher']
+    setupMockContext({ selectedClassId: ref(1) })
+    const { default: AdminMode } = await import('../../../../components/class/modal/adminMode.vue')
+    const wrapper = mount(AdminMode, { global: _globalConfig })
+    expect(wrapper.find('button[aria-label="classSelector.editClassName"]').exists()).toBe(false)
+  })
+
+  // ====================== 学号编辑权限（editableNumber） ======================
+
+  it('课程编辑者（courseEditor）number 列可编辑', async () => {
+    setMockLmsContext(10)
+    _authLmsState.roles = []
+    _authLmsState.editorCourseIds = [10]
+    setupMockContext({ selectedClassId: ref(1) })
+    const { default: AdminMode } = await import('../../../../components/class/modal/adminMode.vue')
+    const wrapper = mount(AdminMode, { global: _globalConfig })
+    expect(wrapper.findComponent({ name: 'ClassUsersTable' }).props('editableNumber')).toBe(true)
+  })
+
+  it('课程教师（非编辑者）number 列只读', async () => {
+    setMockLmsContext(10)
+    _authLmsState.roles = ['teacher']
+    _authLmsState.editorCourseIds = []
+    setupMockContext({ selectedClassId: ref(1) })
+    const { default: AdminMode } = await import('../../../../components/class/modal/adminMode.vue')
+    const wrapper = mount(AdminMode, { global: _globalConfig })
+    expect(wrapper.findComponent({ name: 'ClassUsersTable' }).props('editableNumber')).toBe(false)
+  })
+
+  it('管理员 number 列可编辑', async () => {
+    setMockLmsContext(10)
+    _authLmsState.roles = ['admin']
+    _authLmsState.editorCourseIds = []
+    setupMockContext({ selectedClassId: ref(1) })
+    const { default: AdminMode } = await import('../../../../components/class/modal/adminMode.vue')
+    const wrapper = mount(AdminMode, { global: _globalConfig })
+    expect(wrapper.findComponent({ name: 'ClassUsersTable' }).props('editableNumber')).toBe(true)
+  })
+
+  it('无课程上下文（courseId=0）时 number 列只读', async () => {
+    setMockLmsContext(0)
+    _authLmsState.roles = ['admin']
+    _authLmsState.editorCourseIds = []
+    setupMockContext({ selectedClassId: ref(1) })
+    const { default: AdminMode } = await import('../../../../components/class/modal/adminMode.vue')
+    const wrapper = mount(AdminMode, { global: _globalConfig })
+    expect(wrapper.findComponent({ name: 'ClassUsersTable' }).props('editableNumber')).toBe(false)
   })
 })

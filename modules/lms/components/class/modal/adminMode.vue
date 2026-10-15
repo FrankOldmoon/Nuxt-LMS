@@ -13,7 +13,8 @@
     <UButton v-if="selectedClassId && editingClassName" icon="i-lucide-x" size="sm" color="neutral"
       variant="ghost" @click="cancelEditClassName" />
 
-    <UButton v-if="selectedClassId && !editingClassName" icon="i-lucide-pencil" size="xs" color="neutral"
+    <!-- 编辑班级名称（仅管理员） -->
+    <UButton v-if="selectedClassId && !editingClassName && hasRole('admin')" icon="i-lucide-pencil" size="xs" color="neutral"
       variant="ghost" :aria-label="$t('classSelector.editClassName')" @click="startEditClassName" />
   </div>
 
@@ -25,9 +26,9 @@
       :loading="adding" @click="addClass" />
   </div>
 
-  <!-- 班级用户表格 -->
+  <!-- 班级用户表格（学号列仅管理员/课程编辑者可编辑，课程教师只读） -->
   <div v-if="selectedClassId" class="mt-4">
-    <ClassUsersTable ref="classUsersTableRef" :class-id="selectedClassId" show-online editable-number />
+    <ClassUsersTable ref="classUsersTableRef" :class-id="selectedClassId" show-online :editable-number="canEditNumber" />
   </div>
 
   <!-- 添加学生/教师到班级 -->
@@ -74,7 +75,7 @@
 
 <script setup lang="ts">
 const {
-  hasRole, classOptions, selectedItem, classLoading, onClassChange,
+  classOptions, selectedItem, classLoading, onClassChange,
   editingClassName, editClassName, savingClassName, saveClassName, cancelEditClassName, startEditClassName,
   newClassName, adding, addClass,
   selectedClassId, classUsersTableRef,
@@ -83,4 +84,12 @@ const {
   teacherSearch, teacherSearching, teacherSearchResults, selectedTeachers, addingTeachers,
   toggleTeacherSelect, removeSelectedTeacher, onTeacherSearchInput, addTeachersToClass,
 } = useClassModalContext()
+
+// 学号（number）编辑权限：仅管理员或当前课程的编辑者（courseEditor），课程教师（courseTeacher）只读
+const { hasRole, isCourseEditor } = useAuthLms()
+const { courseId } = useLmsContext()
+const canEditNumber = computed(() => {
+  const cid = Number(courseId.value)
+  return cid > 0 && (hasRole('admin') || isCourseEditor(cid))
+})
 </script>

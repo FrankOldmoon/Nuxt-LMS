@@ -20,7 +20,7 @@ interface ClassUsersTableProps {
   hideActions?: boolean
   hideTeachers?: boolean
   hideNumber?: boolean
-  /** 编号列是否可编辑（仅 select class 弹窗为 true，其它只读显示） */
+  /** 编号列是否可编辑（仅管理员/课程编辑者，由 select class 弹窗按权限传入） */
   editableNumber?: boolean
   loading?: boolean
   defaultSort?: { id: string, desc: boolean }[]

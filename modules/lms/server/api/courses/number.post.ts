@@ -2,8 +2,6 @@ import { db, schema } from "@nuxthub/db"
 import { eq, and } from "drizzle-orm"
 
 export default eventHandler(async (event) => {
-  await requireRole(event, ['teacher', 'admin'])
-
   const body = await readBody(event)
   const { course_id, user_id, number, group } = body
 
@@ -13,6 +11,9 @@ export default eventHandler(async (event) => {
 
   const courseId = Number(course_id)
   const userId = Number(user_id)
+
+  // 仅管理员或课程编辑者（courseEditor）可修改学号/分组；课程教师（courseTeacher）只读
+  await requireCourseTeacher(event, courseId)
 
   try {
     // 查询是否已有记录
