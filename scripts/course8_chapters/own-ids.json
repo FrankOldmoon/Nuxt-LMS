@@ -1,0 +1,140 @@
+{
+  "ids": {
+    "198": {
+      "hw": 6,
+      "q": [
+        86,
+        87,
+        88
+      ],
+      "c": 451
+    },
+    "199": {
+      "hw": 7,
+      "q": [
+        89,
+        90,
+        91
+      ],
+      "c": 452
+    },
+    "200": {
+      "hw": 8,
+      "q": [
+        92,
+        93,
+        94
+      ],
+      "c": 453
+    },
+    "201": {
+      "hw": 9,
+      "q": [
+        95,
+        96,
+        97
+      ],
+      "c": 454
+    }
+  },
+  "created": {
+    "homeworks": [
+      {
+        "cid": 6,
+        "name": "📸 Screenshot of the humanoid robot structure demo"
+      },
+      {
+        "cid": 7,
+        "name": "📸 Screenshot of the robot arm control demo"
+      },
+      {
+        "cid": 8,
+        "name": "📸 Screenshot of the autonomous driving demo"
+      },
+      {
+        "cid": 9,
+        "name": "📸 Screenshot of the five-robot lab"
+      }
+    ],
+    "questions": [
+      {
+        "cid": 86,
+        "name": "🦴 Which part of a robot turns a motor rotation into a joint movement?",
+        "type": "single"
+      },
+      {
+        "cid": 87,
+        "name": "🤖 Which of these are parts of a robot structure?",
+        "type": "multiple"
+      },
+      {
+        "cid": 88,
+        "name": "🦾 What does the D in DoF stand for?",
+        "type": "fill"
+      },
+      {
+        "cid": 89,
+        "name": "⚡ What does an actuator do in a robot?",
+        "type": "single"
+      },
+      {
+        "cid": 90,
+        "name": "🔁 Which of these are ways to control a robot joint?",
+        "type": "multiple"
+      },
+      {
+        "cid": 91,
+        "name": "📡 What does a servo motor return to the controller?",
+        "type": "fill"
+      },
+      {
+        "cid": 92,
+        "name": "🚗 What does a self-driving car use to see obstacles?",
+        "type": "single"
+      },
+      {
+        "cid": 93,
+        "name": "🧠 Which of these are steps inside the auto-drive decision loop?",
+        "type": "multiple"
+      },
+      {
+        "cid": 94,
+        "name": "🛑 What must the car do when it sees a person crossing?",
+        "type": "fill"
+      },
+      {
+        "cid": 95,
+        "name": "📡 What does the R in ROS stand for?",
+        "type": "single"
+      },
+      {
+        "cid": 96,
+        "name": "🔗 Which of these are parts of a ROS robot system?",
+        "type": "multiple"
+      },
+      {
+        "cid": 97,
+        "name": "🗣️ What is the ROS word for a named channel that nodes use to send messages?",
+        "type": "fill"
+      }
+    ],
+    "comments": [
+      {
+        "cid": 451,
+        "name": "💬 Share your idea: robot structure"
+      },
+      {
+        "cid": 452,
+        "name": "💬 Share your idea: actuation and control"
+      },
+      {
+        "cid": 453,
+        "name": "💬 Share your idea: auto-drive"
+      },
+      {
+        "cid": 454,
+        "name": "💬 Share your idea: Robot Operating System"
+      }
+    ]
+  }
+}
