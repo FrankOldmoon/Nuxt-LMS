@@ -44,17 +44,61 @@ describe('3d/modelTransform', () => {
     expect(degToRad(45)).toBeCloseTo(Math.PI / 4, 6)
   })
 
-  it('缺省/非法值兜底：position 缺失补 [0,0,0]，scale 为 0 或 NaN 时视为 1', () => {
+  it('缺省/非法值兜底：scale 为 0 或 NaN 时视为 1，非法 position 按 [0,0,0] 处理', () => {
     const t = computeModelTransforms([{ scale: 0 }, { scale: 'abc', position: 'bad' }], [2, 4])
     expect(t[0].scale).toBeCloseTo(2, 6)
     expect(t[1].scale).toBeCloseTo(1, 6)
-    expect(t[1].position).toEqual([0, 0, 0])
+    // 两个模型均未手工摆位（全零/非法）→ 参与自动 grid：cols=2，间距 4×1.5=6
+    expect(t[0].position).toEqual([-3, 0, 0])
+    expect(t[1].position).toEqual([3, 0, 0])
     expect(t[1].rotation).toEqual([0, 0, 0])
   })
 
-  it('全部模型加载失败（dims 全 0）时不缩放', () => {
+  it('全部模型加载失败（dims 全 0）时不缩放，也不触发 grid', () => {
     const t = computeModelTransforms([{ scale: 1 }, { scale: 1 }], [0, 0])
     expect(t.map(x => x.scale)).toEqual([1, 1])
+    expect(t.map(x => x.position)).toEqual([[0, 0, 0], [0, 0, 0]])
+  })
+
+  it('自动 grid：22 个未摆位模型按 5 列网格分散在 XZ 平面（间距 = 目标尺寸×1.5）', () => {
+    const n = 22
+    const models = Array.from({ length: n }, () => ({ scale: 1, position: [0, 0, 0], rotation: [0, 0, 0] }))
+    const dims = Array.from({ length: n }, () => 30)
+    const t = computeModelTransforms(models, dims)
+    const cols = 5 // ceil(sqrt(22))
+    const spacing = 30 * 1.5 // 45
+    // 第 0 个 → 第 0 行 0 列（居中后 x=-2sp, z=-2sp）
+    expect(t[0].position).toEqual([-2 * spacing, 0, -2 * spacing])
+    // 第 4 个 → 0 行 4 列
+    expect(t[4].position).toEqual([2 * spacing, 0, -2 * spacing])
+    // 第 5 个 → 1 行 0 列
+    expect(t[5].position).toEqual([-2 * spacing, 0, -1 * spacing])
+    // 第 21 个（最后一行第 2 个）→ 4 行 1 列
+    expect(t[21].position).toEqual([-1 * spacing, 0, 2 * spacing])
+    // 每列 x 间距相等、每行 z 间距相等
+    expect(t[1].position[0] - t[0].position[0]).toBeCloseTo(spacing, 6)
+    expect(t[cols].position[2] - t[0].position[2]).toBeCloseTo(spacing, 6)
+    // 所有位置 y=0（XZ 平面）
+    expect(t.every(x => x.position[1] === 0)).toBe(true)
+  })
+
+  it('自动 grid：配置了非零 position 的模型尊重显式值，其余模型仍参与 grid', () => {
+    const models = [
+      { position: [10, 5, -8] },
+      { position: [0, 0, 0] },
+      { position: [0, 0, 0] },
+    ]
+    const t = computeModelTransforms(models, [10, 10, 10])
+    expect(t[0].position).toEqual([10, 5, -8])
+    // 剩余 2 个 grid：cols=2，spacing=15
+    expect(t[1].position).toEqual([-7.5, 0, 0])
+    expect(t[2].position).toEqual([7.5, 0, 0])
+  })
+
+  it('自动 grid：单模型不触发（保持原点），target=0 也不触发', () => {
+    expect(computeModelTransforms([{ scale: 1 }], [12.5])[0].position).toEqual([0, 0, 0])
+    const t = computeModelTransforms([{ position: [0, 0, 0] }, { position: [0, 0, 0] }], [0, 0])
+    expect(t.map(x => x.position)).toEqual([[0, 0, 0], [0, 0, 0]])
   })
 })
 

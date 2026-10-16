@@ -55,6 +55,12 @@ export function computeCameraFit(maxDim) {
 
 /**
  * 计算每个模型最终要应用的变换。
+ *
+ * 自动网格布局：position 未手工摆位（缺失或全为 [0,0,0]）的模型 ≥2 个时，
+ * 按 grid 分散排列在 XZ 平面（行距/列距 = 归一化后模型最大边 × 1.5），
+ * 整体居中；避免多模型全部堆叠在原点互相遮挡（如章节 215 的 22 个模型）。
+ * 任一模型配置了非零 position 则尊重显式值、不参与 grid。
+ *
  * @param {Array<{scale?:number, position?:number[], rotation?:number[]}>} models 模型配置（与 dims 同序）
  * @param {number[]} dims 每个模型自身包围盒的最大边（加载失败置 0）
  * @returns {Array<{scale:number, position:number[], rotation:number[]}>} rotation 为弧度
@@ -66,6 +72,31 @@ export function computeModelTransforms(models, dims) {
     // 归一化目标：本节点内最大模型的尺寸；没有任何有效模型时为 0（系数退化为 1）
     const target = valid.length ? Math.max(...valid) : 0
 
+    // —— 自动 grid：收集未摆位的模型下标，按 cols=ceil(√n) 排成居中网格 ——
+    const gridIdx = []
+    list.forEach((m, i) => {
+        const pos = m?.position
+        const hasOffset = Array.isArray(pos) && pos.some((v) => Number(v) !== 0)
+        if (!hasOffset) gridIdx.push(i)
+    })
+    let gridPos = null
+    const n = gridIdx.length
+    if (n >= 2 && target > 0) {
+        const cols = Math.ceil(Math.sqrt(n))
+        const rows = Math.ceil(n / cols)
+        const spacing = target * 1.5
+        gridPos = new Map()
+        gridIdx.forEach((modelIdx, k) => {
+            const r = Math.floor(k / cols)
+            const c = k % cols
+            gridPos.set(modelIdx, [
+                (c - (cols - 1) / 2) * spacing,
+                0,
+                (r - (rows - 1) / 2) * spacing,
+            ])
+        })
+    }
+
     return list.map((m, i) => {
         const dim = Number(measured[i])
         const normFactor = (target > 0 && Number.isFinite(dim) && dim > 0) ? target / dim : 1
@@ -75,10 +106,11 @@ export function computeModelTransforms(models, dims) {
 
         const pos = Array.isArray(m?.position) ? m.position : []
         const rot = Array.isArray(m?.rotation) ? m.rotation : []
+        const position = gridPos?.get(i) || [num(pos[0]), num(pos[1]), num(pos[2])]
 
         return {
             scale: normFactor * userScale,
-            position: [num(pos[0]), num(pos[1]), num(pos[2])],
+            position,
             rotation: [degToRad(rot[0]), degToRad(rot[1]), degToRad(rot[2])],
         }
     })
