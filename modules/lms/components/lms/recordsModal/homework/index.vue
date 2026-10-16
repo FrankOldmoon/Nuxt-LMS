@@ -199,25 +199,10 @@
 
                     <!-- 右主区：附件预览 / 无附件时作答内容占满 / 均无时占位 -->
                     <div class="flex-1 p-5 overflow-hidden flex flex-col min-w-0">
-                        <!-- 有附件：文件预览 iframe -->
-                        <div v-if="activeFile" ref="previewRef"
+                        <!-- 有附件：ueditor file 扩展模式预览（office/zip/text/3d 在线预览，图片/视频/pdf 原生渲染） -->
+                        <div v-if="activeFile"
                             class="relative flex-1 overflow-auto border border-gray-200 dark:border-gray-800 rounded-md bg-white">
-                            <!-- 视频：原生播放器，高度拉满容器 -->
-                            <video v-if="isVideoFile(activeFile.url)" :key="activeFile.url" :src="activeFile.url"
-                                controls preload="metadata" class="block w-full h-full bg-black" />
-                            <!-- 可内联预览：iframe（内容按自然尺寸缩放适配容器宽度） -->
-                            <div v-else-if="activeFilePreviewable && activeFile.url" :style="iframeWrapperStyle">
-                                <iframe ref="iframeRef" :key="activeFile.url" :src="activeFile.url"
-                                    @load="onIframeLoad" class="block bg-white border-0 max-w-none"
-                                    :style="iframeElStyle" />
-                            </div>
-                            <!-- 不可预览：仅下载 -->
-                            <div v-else class="h-full min-h-[60vh] flex flex-col items-center justify-center gap-3 text-muted">
-                                <UIcon :name="fileIcon(activeFile.url)" class="w-10 h-10" />
-                                <span class="text-sm">{{ activeFile.name }}</span>
-                                <UButton :to="activeFile.url" target="_blank" icon="i-heroicons-arrow-down-tray"
-                                    :label="$t('common.download')" color="primary" size="sm" />
-                            </div>
+                            <UeditorFilePreview :key="activeFile.url" :url="activeFile.url" :name="activeFile.name" />
                         </div>
 
                         <!-- 无附件：作答内容占满主区 -->
@@ -242,6 +227,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useHomeworkRecords } from './useHomeworkRecords'
+import UeditorFilePreview from '../../../ueditor/render/nodes/file-preview.vue'
 
 const props = defineProps({
     modelValue: { type: Boolean, default: false },
@@ -262,7 +248,7 @@ const {
     downloadingAll, downloadAllFiles,
     scoringAll, scoreAllSubmitted,
     detailOpen, detailData, detailRecord, detailSubmittedAt, detailIndex, detailTotal,
-    openHomeworkDetail, prevSubmission, nextSubmission, closeDetail, isRichDoc, hasSubmission, submittedAtOf, isPreviewableFile, isVideoFile,
+    openHomeworkDetail, prevSubmission, nextSubmission, closeDetail, isRichDoc, hasSubmission, submittedAtOf,
 } = useHomeworkRecords(props, emit)
 
 // 一键全部满分：二次确认后执行，避免误覆盖已有分数
@@ -292,61 +278,6 @@ function fileIcon(url) {
 
 // 切换作业时重置为预览第一个文件
 watch(() => detailIndex.value, () => { selectedFileIndex.value = 0 })
-
-// ==================== iframe 内容自适应容器宽度 ====================
-// 同源文件（/api/files/serve）加载后读取其自然尺寸，再用 transform:scale 缩放到外部容器宽度
-const previewRef = ref(null)
-const iframeRef = ref(null)
-const measured = ref(false)
-const iframeScale = ref(1)
-const iframeNaturalW = ref(0)
-const iframeNaturalH = ref(0)
-
-function resetIframe() {
-    measured.value = false
-    iframeScale.value = 1
-    iframeNaturalW.value = 0
-    iframeNaturalH.value = 0
-}
-
-// 切换文件时重置测量状态
-watch(() => activeFile.value?.url, resetIframe)
-watch(() => detailIndex.value, resetIframe)
-
-function onIframeLoad() {
-    resetIframe()
-    const win = iframeRef.value?.contentWindow
-    const doc = win?.document
-    if (!doc) return
-    const nw = doc.documentElement?.scrollWidth || doc.body?.scrollWidth || 0
-    const nh = doc.documentElement?.scrollHeight || doc.body?.scrollHeight || 0
-    if (!nw || !nh) return
-    const cw = previewRef.value?.clientWidth || nw
-    iframeScale.value = Math.max(0.1, Math.min(1, cw / nw))
-    iframeNaturalW.value = nw
-    iframeNaturalH.value = nh
-    measured.value = true
-}
-
-// 未测量时用 100% 填满容器；测量后按自然尺寸 + 缩放
-const iframeElStyle = computed(() => {
-    if (!measured.value) return { width: '100%', height: '100%' }
-    return {
-        width: iframeNaturalW.value + 'px',
-        height: iframeNaturalH.value + 'px',
-        transform: `scale(${iframeScale.value})`,
-        transformOrigin: 'top left',
-    }
-})
-
-// 外层包裹占用缩放后的实际显示尺寸，保证滚动区域正确
-const iframeWrapperStyle = computed(() => {
-    if (!measured.value) return {}
-    return {
-        width: Math.round(iframeNaturalW.value * iframeScale.value) + 'px',
-        height: Math.round(iframeNaturalH.value * iframeScale.value) + 'px',
-    }
-})
 
 // 当前评阅用户的卡片数据
 const detailUser = computed(() => {

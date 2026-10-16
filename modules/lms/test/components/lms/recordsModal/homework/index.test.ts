@@ -12,7 +12,7 @@ import { resetAllStubs, setMockI18n } from '../../../../../../../test/setup/nuxt
 // mock useHomeworkRecords（本地导入）
 // 可变的评阅详情状态：测试中通过 helpers 控制
 const h = vi.hoisted(() => ({
-  state: { detailOpen: false, detailData: null as any, detailIndex: 0, detailTotal: 0, previewable: true, video: false },
+  state: { detailOpen: false, detailData: null as any, detailIndex: 0, detailTotal: 0 },
   files: [] as { url: string; name: string }[],
   prevSubmission: vi.fn(),
   nextSubmission: vi.fn(),
@@ -55,9 +55,15 @@ vi.mock('../../../../../components/lms/recordsModal/homework/useHomeworkRecords'
       scoringAll: ref(false),
       scoreAllSubmitted: h.scoreAllSubmitted,
       isRichDoc: (content: any) => typeof content === 'object',
-      isPreviewableFile: () => h.state.previewable,
-      isVideoFile: () => h.state.video,
     }
+  },
+}))
+
+// 附件预览统一走 ueditor file 扩展的预览组件（stub 后断言分发的 url/name）
+vi.mock('../../../../../components/ueditor/render/nodes/file-preview.vue', () => ({
+  default: {
+    template: '<div class="file-preview-stub" :data-url="url" :data-name="name" />',
+    props: ['url', 'name'],
   },
 }))
 
@@ -68,8 +74,6 @@ beforeEach(() => {
   h.state.detailData = null
   h.state.detailIndex = 0
   h.state.detailTotal = 0
-  h.state.previewable = true
-  h.state.video = false
   h.files = []
   // useFileNames 由 base 模块 addImportsDir 自动导入，测试中 globalThis stub
   ;(globalThis as any).useFileNames = () => ref(h.files)
@@ -221,49 +225,33 @@ describe('lms/recordsModal/homework/index.vue', () => {
     h.files = [{ url: '/api/files/serve?pathname=7%2Fa.pdf', name: 'a.pdf' }]
   }
 
-  it('详情弹窗：可预览文件用 iframe，并显示序号/总数与用户', async () => {
+  it('详情弹窗：附件用 ueditor file 扩展预览组件渲染，并显示序号/总数与用户', async () => {
     openDetail()
-    h.state.previewable = true
     const { default: HomeworkRecords } = await import('../../../../../components/lms/recordsModal/homework/index.vue')
     const wrapper = mount(HomeworkRecords, {
       props: { modelValue: true, courseId: 1, cid: 100, maxScore: 100 },
       global: _globalConfig,
     })
     await flushPromises()
-    expect(wrapper.find('iframe').exists()).toBe(true)
+    const preview = wrapper.find('.file-preview-stub')
+    expect(preview.exists()).toBe(true)
+    expect(preview.attributes('data-url')).toBe('/api/files/serve?pathname=7%2Fa.pdf')
+    expect(preview.attributes('data-name')).toBe('a.pdf')
     expect(wrapper.text()).toContain('2/3')       // 当前序号/总数
     expect(wrapper.text()).toContain('Stu7')        // 当前用户
     expect(wrapper.text()).toContain('a.pdf')       // 文件名 chip
   })
 
-  it('详情弹窗：视频文件用原生播放器且高度拉满（无 iframe）', async () => {
+  it('详情弹窗：无附件时不渲染预览组件，作答内容占满主区', async () => {
     openDetail()
-    h.state.previewable = true
-    h.state.video = true
-    h.files = [{ url: '/api/files/serve?pathname=7%2Fa.mp4', name: 'a.mp4' }]
+    h.files = []
     const { default: HomeworkRecords } = await import('../../../../../components/lms/recordsModal/homework/index.vue')
     const wrapper = mount(HomeworkRecords, {
       props: { modelValue: true, courseId: 1, cid: 100, maxScore: 100 },
       global: _globalConfig,
     })
     await flushPromises()
-    const video = wrapper.find('video')
-    expect(video.exists()).toBe(true)
-    expect(video.classes()).toContain('h-full')
-    expect(wrapper.find('iframe').exists()).toBe(false)
-  })
-
-  it('详情弹窗：不可预览文件显示下载按钮（无 iframe）', async () => {
-    openDetail()
-    h.state.previewable = false
-    const { default: HomeworkRecords } = await import('../../../../../components/lms/recordsModal/homework/index.vue')
-    const wrapper = mount(HomeworkRecords, {
-      props: { modelValue: true, courseId: 1, cid: 100, maxScore: 100 },
-      global: _globalConfig,
-    })
-    await flushPromises()
-    expect(wrapper.find('iframe').exists()).toBe(false)
-    expect(wrapper.text()).toContain('common.download')
+    expect(wrapper.find('.file-preview-stub').exists()).toBe(false)
   })
 
   it('详情弹窗：前后切换按钮触发 prev/next 回调', async () => {

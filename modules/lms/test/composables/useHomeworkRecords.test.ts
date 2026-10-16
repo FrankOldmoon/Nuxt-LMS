@@ -1,5 +1,5 @@
 /**
- * useHomeworkRecords composable 测试（全屏逐份评阅：导航循环 + 文件预览类型判断）
+ * useHomeworkRecords composable 测试（全屏逐份评阅：导航循环 + 一键下载附件）
  * @see modules/lms/components/lms/recordsModal/homework/useHomeworkRecords.ts
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -127,23 +127,6 @@ describe('useHomeworkRecords 全屏评阅', () => {
     expect(ctx.submittedAtOf({ record: { _submitCount: 0 }, createdAt: '2026-01-01T00:00:00.000Z' }))
       .toBe('2026-01-01T00:00:00.000Z')
     expect(ctx.submittedAtOf(null)).toBe(null)
-  })
-
-  it('isPreviewableFile 区分可预览与仅下载类型', async () => {
-    const ctx = await makeCtx([])
-    expect(ctx.isPreviewableFile('/api/files/serve?pathname=2%2Fx.pdf')).toBe(true)
-    expect(ctx.isPreviewableFile('/api/files/serve?pathname=2%2Fx.png')).toBe(true)
-    expect(ctx.isPreviewableFile('/api/files/serve?pathname=2%2Fscript.py')).toBe(true)
-    expect(ctx.isPreviewableFile('/api/files/serve?pathname=2%2Fx.zip')).toBe(false)
-    expect(ctx.isPreviewableFile('/api/files/serve?pathname=2%2Fx.rar')).toBe(false)
-  })
-
-  it('isVideoFile 仅识别视频类型（改用原生播放器撑满高度）', async () => {
-    const ctx = await makeCtx([])
-    expect(ctx.isVideoFile('/api/files/serve?pathname=2%2Fx.mp4')).toBe(true)
-    expect(ctx.isVideoFile('/api/files/serve?pathname=2%2Fx.webm')).toBe(true)
-    expect(ctx.isVideoFile('/api/files/serve?pathname=2%2Fx.pdf')).toBe(false)
-    expect(ctx.isVideoFile('/api/files/serve?pathname=2%2Fx.mp3')).toBe(false)
   })
 
   it('downloadAllFiles：没有附件时只提示，不触发下载', async () => {

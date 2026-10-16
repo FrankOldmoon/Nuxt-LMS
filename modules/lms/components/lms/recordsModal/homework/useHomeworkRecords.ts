@@ -290,50 +290,6 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
         return content && typeof content === 'object' && !Array.isArray(content) && !!content.type
     }
 
-    // ==================== 文件预览 ====================
-    // 与 /api/files/serve 一致：这些类型可在 iframe 内联预览，其余类型仅提供下载
-    const PREVIEWABLE_EXTS = new Set([
-        // 图片
-        '.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico',
-        // PDF
-        '.pdf',
-        // 音频 / 视频
-        '.mp3', '.wav', '.mp4', '.webm',
-        // 文本 / 代码（服务端以 text/plain 返回）
-        '.txt', '.md', '.markdown', '.log', '.csv', '.tsv',
-        '.js', '.mjs', '.cjs', '.ts', '.jsx', '.tsx',
-        '.json', '.json5', '.css', '.scss', '.less', '.sass',
-        '.html', '.htm', '.xml', '.yaml', '.yml', '.toml', '.ini', '.conf', '.cfg', '.env', '.properties',
-        '.py', '.java', '.c', '.cpp', '.cc', '.cxx', '.h', '.hpp', '.hxx',
-        '.go', '.rs', '.rb', '.php', '.swift', '.kt', '.kts', '.dart', '.lua', '.r', '.scala', '.groovy',
-        '.sh', '.bash', '.zsh', '.fish', '.bat', '.cmd', '.ps1',
-        '.sql', '.graphql', '.gql', '.proto',
-        '.vue', '.svelte', '.astro',
-    ])
-
-    /** 从文件 url 提取扩展名（优先 pathname 查询参数） */
-    function getFileUrlExt(url: string): string {
-        try {
-            const u = new URL(url, window.location.origin)
-            const p = u.searchParams.get('pathname') || u.pathname
-            const clean = decodeURIComponent(p).split('?')[0]
-            const ext = clean.split('.').pop()?.toLowerCase() || ''
-            return '.' + ext
-        } catch {
-            return ''
-        }
-    }
-
-    function isPreviewableFile(url: string): boolean {
-        return PREVIEWABLE_EXTS.has(getFileUrlExt(url))
-    }
-
-    // 视频文件：改用原生播放器渲染（iframe 直开视频无法撑满容器高度）
-    const VIDEO_EXTS = new Set(['.mp4', '.webm'])
-    function isVideoFile(url: string): boolean {
-        return VIDEO_EXTS.has(getFileUrlExt(url))
-    }
-
     // ==================== 一键下载全部附件 ====================
     /** 归一化 record.files → url 字符串数组（兼容 [{url}] 与字符串两种历史格式） */
     function attachmentUrls(record: any): string[] {
@@ -550,6 +506,6 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
         scoringAll, scoreAllSubmitted,
         detailOpen, detailData, detailRecord, detailSubmittedAt, detailIndex, detailTotal,
         openHomeworkDetail, prevSubmission, nextSubmission, closeDetail,
-        isRichDoc, strFromComment, hasSubmission, submittedAtOf, isPreviewableFile, isVideoFile,
+        isRichDoc, strFromComment, hasSubmission, submittedAtOf,
     }
 }
