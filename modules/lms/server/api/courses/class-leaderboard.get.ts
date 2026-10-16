@@ -5,6 +5,7 @@
  * 生均得分 = 该班在本课程选课学生的 score 之和 ÷ 选课学生人数。
  * 仅统计学生成员（排除教师），未在该课程选课的学生不计入该班。
  * 一个用户如属于多个班级，则其得分计入每个所属班。
+ * 仅统计学生人数大于 MIN_RANK_STUDENTS 的班级，人数不足的班级不参与排名。
  *
  * 教师 / 测试 / 观察者等系统班级（class code = teacher / test / observer）不参与班级排名。
  */
@@ -13,6 +14,9 @@ import { eq, and, inArray, isNull } from 'drizzle-orm'
 
 // 系统/教工班级编码：不参与班级排行（教师班、测试班、观察者班）
 const NON_STUDENT_CLASS_CODES = new Set(['teacher', 'test', 'observer'])
+
+// 参与生均排行所需的最低学生人数（班级学生数必须大于该值）
+const MIN_RANK_STUDENTS = 10
 
 export default eventHandler(async (event) => {
     await requireAuth(event)
@@ -99,6 +103,8 @@ export default eventHandler(async (event) => {
 
     const rows = [...agg.entries()]
         .filter(([classId]) => !excludedClassIds.has(classId))
+        // 学生人数不足的班级不参与排名
+        .filter(([, a]) => a.count > MIN_RANK_STUDENTS)
         .map(([classId, a]) => ({
             classId,
             name: nameMap.get(classId) || `Class ${classId}`,
