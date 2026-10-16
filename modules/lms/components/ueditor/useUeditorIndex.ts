@@ -1,6 +1,26 @@
 import { ref, computed, nextTick, onBeforeUnmount } from 'vue'
 import extensions from './extensions'
 
+/**
+ * 删除 tiptap doc 中空白 heading（无内容或仅含空白文本）。
+ * heading 内含非 text 节点（图片/公式等）时不算空白，保留。
+ * 就地修改并返回该节点。
+ */
+export function removeEmptyHeadings(node: any): any {
+    if (!node || typeof node !== 'object') return node
+    if (Array.isArray(node.content)) {
+        node.content = node.content
+            .filter((c: any) => {
+                if (c?.type !== 'heading') return true
+                const content = c.content
+                if (!Array.isArray(content) || content.length === 0) return false
+                return !content.every((t: any) => t?.type === 'text' && !String(t.text ?? '').trim())
+            })
+            .map(removeEmptyHeadings)
+    }
+    return node
+}
+
 export interface UeditorIndexProps {
     saveHandler: {
         type: Function,
@@ -112,6 +132,8 @@ export function useUeditorIndex(props: any, json: any) {
         readonly: isReadonly.value,
         extensions,
         async onSave(content: any, page: any, document: any) {
+            // 保存前删除空白 heading，避免文档中残留无内容的空标题
+            removeEmptyHeadings(content?.json)
             if (props.saveHandler) {
                 return props.saveHandler(content)
             }
@@ -282,7 +304,8 @@ export function useUeditorIndex(props: any, json: any) {
 
     const onChanged = () => {
         const markdown = editorRef.value.useEditor().getMarkdown()
-        json.value = editorRef.value.getJSON()
+        // v-model 同步时同步清理空白 heading，保证外部直接保存（如 handleSaveClick）拿到的 json 也干净
+        json.value = removeEmptyHeadings(editorRef.value.getJSON())
         //console.log({ markdown, json: json.value })
         tiptapEditor.value = editorRef.value.useEditor()
     }
