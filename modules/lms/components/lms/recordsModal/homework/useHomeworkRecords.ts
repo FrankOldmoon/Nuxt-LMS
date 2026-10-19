@@ -445,6 +445,38 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
         }
     }
 
+    // ==================== 详情弹窗单文件下载 ====================
+    /** 正在下载的附件 url（同一时间只允许一个下载请求） */
+    const downloadingFileUrl = ref('')
+
+    /** 下载单个附件：本站文件 fetch blob 后按原始文件名保存；外部链接直接新标签页打开 */
+    async function downloadFile(file: { url?: string, name?: string }) {
+        const url = file?.url
+        if (!url || downloadingFileUrl.value) return
+        if (isExternalLink(url)) {
+            window.open(url, '_blank')
+            return
+        }
+        downloadingFileUrl.value = url
+        try {
+            const resp = await fetch(url)
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+            const blob = await resp.blob()
+            const fileName = safeSegment(await resolveFileName(url))
+            const link = document.createElement('a')
+            link.href = URL.createObjectURL(blob)
+            link.download = fileName
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+            setTimeout(() => URL.revokeObjectURL(link.href), 1000)
+        } catch {
+            toast.add({ title: t('record.downloadFileFailed'), color: 'error' })
+        } finally {
+            downloadingFileUrl.value = ''
+        }
+    }
+
     // ==================== 一键全部满分 ====================
     const scoringAll = ref(false)
 
@@ -502,7 +534,7 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
     return {
         open, rows, pending, extraColumns, defaultSort, scoreMap, commentMap, excellentMap,
         fetchRecords, onScoreBlur, onQuickScore, onCommentBlur, toggleExcellent,
-        downloadingAll, downloadAllFiles,
+        downloadingAll, downloadAllFiles, downloadingFileUrl, downloadFile,
         scoringAll, scoreAllSubmitted,
         detailOpen, detailData, detailRecord, detailSubmittedAt, detailIndex, detailTotal,
         openHomeworkDetail, prevSubmission, nextSubmission, closeDetail,

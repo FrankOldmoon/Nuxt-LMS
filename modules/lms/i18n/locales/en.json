@@ -1216,6 +1216,7 @@
     "downloadAllFiles": "Download All Files",
     "downloadAllDone": "Packaged {saved}/{total} attachments",
     "downloadAllFailed": "Failed to package attachments",
+    "downloadFileFailed": "Failed to download file",
     "noAttachments": "No student attachments to download",
     "scoreAllSubmitted": "Full Score All",
     "scoreAllConfirmTitle": "Give full score to all submitted students?",

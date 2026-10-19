@@ -184,15 +184,28 @@
                         <div>
                             <label class="text-xs text-muted mb-1.5 block">{{ $t('homework.uploadLabel') }}（{{ fileItems.length }}）</label>
                             <div class="space-y-1">
-                                <button v-for="(file, i) in fileItems" :key="i" type="button"
-                                    class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-left text-sm transition-colors"
+                                <div v-for="(file, i) in fileItems" :key="i"
+                                    class="w-full flex items-center rounded-md transition-colors"
                                     :class="selectedFileIndex === i
-                                        ? 'bg-primary-50 dark:bg-primary-950/40 text-primary-500'
-                                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'"
-                                    @click="selectedFileIndex = i">
-                                    <UIcon :name="fileIcon(file.url)" class="w-4 h-4 shrink-0" />
-                                    <span class="truncate">{{ file.name }}</span>
-                                </button>
+                                        ? 'bg-primary-50 dark:bg-primary-950/40'
+                                        : 'hover:bg-gray-100 dark:hover:bg-gray-800'">
+                                    <!-- 单文件下载按钮 -->
+                                    <UTooltip :text="$t('common.download')">
+                                        <UButton icon="i-heroicons-arrow-down-tray" size="xs" color="neutral"
+                                            variant="ghost" class="shrink-0"
+                                            :loading="downloadingFileUrl === file.url"
+                                            @click.stop="downloadFile(file)" />
+                                    </UTooltip>
+                                    <button type="button"
+                                        class="flex-1 min-w-0 flex items-center gap-2 px-2 py-1.5 rounded-md text-left text-sm"
+                                        :class="selectedFileIndex === i
+                                            ? 'text-primary-500'
+                                            : 'text-gray-600 dark:text-gray-300'"
+                                        @click="selectedFileIndex = i">
+                                        <UIcon :name="fileIcon(file.url)" class="w-4 h-4 shrink-0" />
+                                        <span class="truncate">{{ file.name }}</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </aside>
@@ -245,7 +258,7 @@ const { siteTimeZone } = useSiteConfig()
 const {
     open, rows, pending, extraColumns, defaultSort, scoreMap, commentMap, excellentMap, fetchRecords,
     onScoreBlur, onQuickScore, onCommentBlur, toggleExcellent,
-    downloadingAll, downloadAllFiles,
+    downloadingAll, downloadAllFiles, downloadingFileUrl, downloadFile,
     scoringAll, scoreAllSubmitted,
     detailOpen, detailData, detailRecord, detailSubmittedAt, detailIndex, detailTotal,
     openHomeworkDetail, prevSubmission, nextSubmission, closeDetail, isRichDoc, hasSubmission, submittedAtOf,

@@ -1216,6 +1216,7 @@
     "downloadAllFiles": "下载全部附件",
     "downloadAllDone": "已打包下载 {saved}/{total} 个附件",
     "downloadAllFailed": "附件打包下载失败",
+    "downloadFileFailed": "附件下载失败",
     "noAttachments": "没有可下载的学生附件",
     "scoreAllSubmitted": "全部满分",
     "scoreAllConfirmTitle": "确认给已提交的同学全部满分？",
