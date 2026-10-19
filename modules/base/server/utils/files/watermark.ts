@@ -25,14 +25,16 @@ import { resolve } from 'node:path'
 /** 允许加水印的扩展名（均为可安全重编码的单帧光栅格式） */
 export const WATERMARK_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif', '.tif', '.tiff'])
 
-/** 水印不透明度（需求：50%） */
-export const WATERMARK_OPACITY = 0.5
+/** 水印不透明度（需求：20%） */
+export const WATERMARK_OPACITY = 0.2
 
-/** logo 长边占图片短边的比例（logo 为竖版 1288×2332，按长边定尺寸更接近视觉预期） */
-const LOGO_LONG_SIDE_RATIO = 0.28
-/** logo 长边上下限（像素），避免小图水印过大 / 大图水印过小 */
-const LOGO_LONG_SIDE_MIN = 48
-const LOGO_LONG_SIDE_MAX = 360
+/**
+ * 水印尺寸上限：长、宽分别不超过原图的 5%（两者同时约束，取更严的一边）。
+ * logo 是竖版 1288×2332（宽高比 ≈ 0.552），按高度上限换算宽度通常才是实际生效的那一边。
+ */
+const MAX_SIZE_RATIO = 0.05
+/** 小于该宽度就不画了（再小只是几个像素的噪点，没有识别意义） */
+const MIN_MARK_WIDTH = 4
 /** 水印与图片边缘的留白：取短边的 3%，且不小于 8px */
 const MARGIN_RATIO = 0.03
 const MARGIN_MIN = 8
@@ -111,8 +113,7 @@ const markCache = new Map<number, { buf: Buffer; width: number; height: number }
  * 前者只会等比削弱，后者不会覆盖已有 alpha。
  */
 async function renderMark(logo: Buffer, targetWidth: number) {
-  // 向下取整到 8px 分桶：保证渲染结果不大于请求宽度（composite 不允许超出画布）
-  const width = Math.max(8, Math.floor(targetWidth / 8) * 8)
+  const width = Math.max(1, Math.round(targetWidth))
   const cached = markCache.get(width)
   if (cached) return cached
 
@@ -136,25 +137,14 @@ async function renderMark(logo: Buffer, targetWidth: number) {
 }
 
 /**
- * 计算水印渲染宽度：先按 logo 长边定尺寸，再按画布上限等比收缩。
- * logo 是竖版（1288×2332），只按宽度算会把高度撑出画布。
+ * 计算水印渲染宽度：宽、高分别不超过原图的 5%，取更严的一边。
+ * logo 是竖版（1288×2332），高 5% 通常比宽 5% 更早触顶，因此实际以高度为准。
  */
 function markWidthFor(logo: LogoInfo, width: number, height: number): number {
-  const aspect = logo.width / logo.height
-  const longSide = Math.min(
-    Math.max(Math.round(Math.min(width, height) * LOGO_LONG_SIDE_RATIO), LOGO_LONG_SIDE_MIN),
-    LOGO_LONG_SIDE_MAX,
-  )
-  let markW = aspect >= 1 ? longSide : Math.round(longSide * aspect)
-  const markH = aspect >= 1 ? Math.round(longSide / aspect) : longSide
-
-  // 不超过画布的一半，避免小图上水印盖住主体
-  const maxW = Math.max(8, Math.floor(width * 0.5))
-  const maxH = Math.max(8, Math.floor(height * 0.5))
-  if (markW > maxW || markH > maxH) {
-    markW = Math.max(1, Math.floor(markW * Math.min(maxW / markW, maxH / markH)))
-  }
-  return markW
+  const aspect = logo.width / logo.height // 宽 / 高
+  const byWidth = width * MAX_SIZE_RATIO
+  const byHeight = height * MAX_SIZE_RATIO * aspect
+  return Math.floor(Math.min(byWidth, byHeight))
 }
 
 /** 按扩展名选择编码参数，尽量贴近原图体积 */
@@ -276,9 +266,17 @@ export async function applyWatermark(absolutePath: string, ext: string): Promise
       if (!width || !height) return null
       if (width * height > MAX_PIXELS) return null
 
-      const mark = await renderMark(logo.buf, markWidthFor(logo, width, height))
-      // 兜底：分桶后仍大于画布则不合成（sharp 会直接报错）
+      const targetW = markWidthFor(logo, width, height)
+      // 图太小（水印不足 4px）就不画，几个像素只会变成噪点
+      if (targetW < MIN_MARK_WIDTH) return null
+
+      const mark = await renderMark(logo.buf, targetW)
+      // 兜底：超出画布（sharp 会直接报错）或超出 5% 上限则不合成
       if (!mark.width || !mark.height || mark.width > width || mark.height > height) return null
+      if (
+        mark.width > Math.ceil(width * MAX_SIZE_RATIO)
+        || mark.height > Math.ceil(height * MAX_SIZE_RATIO)
+      ) return null
 
       const margin = Math.max(MARGIN_MIN, Math.round(Math.min(width, height) * MARGIN_RATIO))
       const left = Math.max(0, width - mark.width - margin)

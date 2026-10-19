@@ -103,6 +103,49 @@ describe('watermark: applyWatermark', () => {
     expect(meta.height).toBe(240)
   })
 
+  it('尺寸约束：水印外接框宽、高都不超过原图的 5%，且贴右下角', async () => {
+    const src = join(dir, 'size.png')
+    await sharp({
+      create: { width: 1000, height: 600, channels: 3, background: { r: 0, g: 0, b: 0 } },
+    }).png().toFile(src)
+
+    const out = await applyWatermark(src, '.png')
+    expect(out).toBeInstanceOf(Buffer)
+
+    const before = await sharp(src).raw().toBuffer({ resolveWithObject: true })
+    const after = await sharp(out!).raw().toBuffer({ resolveWithObject: true })
+    const w = after.info.width
+    const h = after.info.height
+    const ch = after.info.channels
+
+    let minX = w, minY = h, maxX = -1, maxY = -1, maxVal = 0
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const i = (y * w + x) * ch
+        const b = (y * w + x) * before.info.channels
+        const d = Math.abs(after.data[i]! - before.data[b]!)
+          + Math.abs(after.data[i + 1]! - before.data[b + 1]!)
+          + Math.abs(after.data[i + 2]! - before.data[b + 2]!)
+        if (d === 0) continue
+        if (x < minX) minX = x
+        if (x > maxX) maxX = x
+        if (y < minY) minY = y
+        if (y > maxY) maxY = y
+        maxVal = Math.max(maxVal, after.data[i]!, after.data[i + 1]!, after.data[i + 2]!)
+      }
+    }
+
+    expect(maxX).toBeGreaterThanOrEqual(0)
+    // 宽高各自 ≤ 5%（+1 容忍渲染取整）
+    expect(maxX - minX + 1).toBeLessThanOrEqual(Math.ceil(w * 0.05) + 1)
+    expect(maxY - minY + 1).toBeLessThanOrEqual(Math.ceil(h * 0.05) + 1)
+    // 贴右下角：起点都落在右下 20% 区域
+    expect(minX).toBeGreaterThan(w * 0.8)
+    expect(minY).toBeGreaterThan(h * 0.8)
+    // 20% 不透明度：黑底上白色 logo 最亮也应远低于不透明的 255
+    expect(maxVal).toBeLessThanOrEqual(80)
+  })
+
   it('缓存：同一文件第二次调用命中缓存（返回同一 Buffer 实例）', async () => {
     const src = join(dir, 'cache.png')
     await sharp({
