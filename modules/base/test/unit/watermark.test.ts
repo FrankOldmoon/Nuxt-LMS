@@ -12,7 +12,7 @@ import sharp from 'sharp'
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { applyWatermark, isWatermarkableImage, clearWatermarkCache } from '../../server/utils/files/watermark'
+import { applyWatermark, isWatermarkableImage, clearWatermarkCache, MAX_SIZE_RATIO, WATERMARK_OPACITY } from '../../server/utils/files/watermark'
 
 let dir = ''
 
@@ -136,14 +136,14 @@ describe('watermark: applyWatermark', () => {
     }
 
     expect(maxX).toBeGreaterThanOrEqual(0)
-    // 宽高各自 ≤ 5%（+1 容忍渲染取整）
-    expect(maxX - minX + 1).toBeLessThanOrEqual(Math.ceil(w * 0.05) + 1)
-    expect(maxY - minY + 1).toBeLessThanOrEqual(Math.ceil(h * 0.05) + 1)
+    // 宽高各自 ≤ MAX_SIZE_RATIO（+1 容忍渲染取整）
+    expect(maxX - minX + 1).toBeLessThanOrEqual(Math.ceil(w * MAX_SIZE_RATIO) + 1)
+    expect(maxY - minY + 1).toBeLessThanOrEqual(Math.ceil(h * MAX_SIZE_RATIO) + 1)
     // 贴右下角：起点都落在右下 20% 区域
     expect(minX).toBeGreaterThan(w * 0.8)
     expect(minY).toBeGreaterThan(h * 0.8)
-    // 20% 不透明度：黑底上白色 logo 最亮也应远低于不透明的 255
-    expect(maxVal).toBeLessThanOrEqual(80)
+    // 半透明：黑底上最亮像素应接近 255×不透明度，而不是不透明的 255
+    expect(maxVal).toBeLessThanOrEqual(Math.ceil(255 * WATERMARK_OPACITY) + 12)
   })
 
   it('缓存：同一文件第二次调用命中缓存（返回同一 Buffer 实例）', async () => {

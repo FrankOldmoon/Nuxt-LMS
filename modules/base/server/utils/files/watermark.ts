@@ -25,14 +25,14 @@ import { resolve } from 'node:path'
 /** 允许加水印的扩展名（均为可安全重编码的单帧光栅格式） */
 export const WATERMARK_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif', '.tif', '.tiff'])
 
-/** 水印不透明度（需求：20%） */
-export const WATERMARK_OPACITY = 0.2
+/** 水印不透明度（需求：30%） */
+export const WATERMARK_OPACITY = 0.3
 
 /**
- * 水印尺寸上限：长、宽分别不超过原图的 5%（两者同时约束，取更严的一边）。
+ * 水印尺寸上限：长、宽分别不超过原图的 10%（两者同时约束，取更严的一边）。
  * logo 是竖版 1288×2332（宽高比 ≈ 0.552），按高度上限换算宽度通常才是实际生效的那一边。
  */
-const MAX_SIZE_RATIO = 0.05
+export const MAX_SIZE_RATIO = 0.1
 /** 小于该宽度就不画了（再小只是几个像素的噪点，没有识别意义） */
 const MIN_MARK_WIDTH = 4
 /** 水印与图片边缘的留白：取短边的 3%，且不小于 8px */
@@ -137,8 +137,8 @@ async function renderMark(logo: Buffer, targetWidth: number) {
 }
 
 /**
- * 计算水印渲染宽度：宽、高分别不超过原图的 5%，取更严的一边。
- * logo 是竖版（1288×2332），高 5% 通常比宽 5% 更早触顶，因此实际以高度为准。
+ * 计算水印渲染宽度：宽、高分别不超过原图的 MAX_SIZE_RATIO（10%），取更严的一边。
+ * logo 是竖版（1288×2332），高 10% 通常比宽 10% 更早触顶，因此实际以高度为准。
  */
 function markWidthFor(logo: LogoInfo, width: number, height: number): number {
   const aspect = logo.width / logo.height // 宽 / 高
@@ -271,7 +271,7 @@ export async function applyWatermark(absolutePath: string, ext: string): Promise
       if (targetW < MIN_MARK_WIDTH) return null
 
       const mark = await renderMark(logo.buf, targetW)
-      // 兜底：超出画布（sharp 会直接报错）或超出 5% 上限则不合成
+      // 兜底：超出画布（sharp 会直接报错）或超出 MAX_SIZE_RATIO 上限则不合成
       if (!mark.width || !mark.height || mark.width > width || mark.height > height) return null
       if (
         mark.width > Math.ceil(width * MAX_SIZE_RATIO)
