@@ -5,10 +5,12 @@ import { access } from 'node:fs'
 import { setResponseHeader, createError } from 'h3'
 import { serveFileWithRange } from '../../utils/files/serveFile'
 import { guardAvatarAccess } from '../../utils/files/avatarGuard'
+import { applyWatermark, isWatermarkableImage } from '../../utils/files/watermark'
 
 /**
  * 按 pathname 流式返回上传文件（替代原 /api/file）
  * path-traversal 守卫 + 按扩展名设 Content-Type + 强缓存
+ * 图片（头像除外）在服务端统一叠加右下角半透明 logo 水印
  */
 const UPLOAD_ROOT = resolve('./storage')
 
@@ -99,5 +101,16 @@ export default eventHandler(async (event) => {
   )
 
   // Range 支持：视频/音频拖动进度条需要 206 分段响应
+  // 图片（头像除外）统一加右下角 50% 透明 logo 水印：改为返回整块 Buffer，
+  // 因此不走 Range（图片请求不需要分段，浏览器也不会对 <img> 发 Range）。
+  // 水印失败（logo 缺失 / 格式不支持 / 解码异常）时返回 null → 回退原文件流。
+  if (!isAvatar && isWatermarkableImage(ext)) {
+    const marked = await applyWatermark(absolutePath, ext)
+    if (marked) {
+      setResponseHeader(event, 'Content-Length', marked.length)
+      return marked
+    }
+  }
+
   return serveFileWithRange(event, absolutePath)
 })

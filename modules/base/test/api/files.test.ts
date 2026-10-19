@@ -93,12 +93,22 @@ vi.mock('../../server/utils/files/avatarGuard', () => ({
   invalidateAvatarCache: vi.fn(),
 }))
 
+// 图片水印：默认不产出水印（回退原文件流），避免单测依赖真实图片解码；
+// 需要验证「是否走水印分支」的用例单独断言调用参数
+vi.mock('../../server/utils/files/watermark', () => ({
+  WATERMARK_EXTS: new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif', '.tif', '.tiff']),
+  isWatermarkableImage: (ext: string) => new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif', '.tif', '.tiff']).has(String(ext || '').toLowerCase()),
+  applyWatermark: vi.fn(async () => null),
+  clearWatermarkCache: vi.fn(),
+}))
+
 import { resetAllStubs, setMockAuthState, setMockDriveSpace, setMockDriveQuota, setMockDriveUsed } from '../../../../test/setup/nuxt-stubs'
 import { access, statSync } from 'fs'
 import { resolveUploadSource, UploadError } from '../../server/utils/upload/parse'
 import { validateUpload } from '../../server/utils/upload/validate'
 import { persistUploadedFile } from '../../server/utils/upload/persist'
 import { guardAvatarAccess } from '../../server/utils/files/avatarGuard'
+import { applyWatermark } from '../../server/utils/files/watermark'
 
 beforeEach(() => {
   resetAllStubs()
@@ -132,6 +142,8 @@ function resetChain() {
   vi.mocked(statSync).mockImplementation((() => ({ size: 1024 })) as any)
   // 头像守卫默认「不是头像」（不改变既有公开只读行为）
   vi.mocked(guardAvatarAccess).mockResolvedValue(false)
+  // 水印默认不产出（回退原文件流）
+  vi.mocked(applyWatermark).mockResolvedValue(null)
 }
 
 describe('API: files/delete.post (soft delete)', () => {
@@ -542,6 +554,54 @@ describe('API: files/serve.get', () => {
     await handler(makeEvent(undefined, { pathname: 'dir/1.png' }))
     const cc = spy.mock.calls.find((c: any[]) => c[1] === 'Cache-Control')
     expect(String(cc![2])).toContain('public, max-age=31536000')
+  })
+
+  // ===== 图片水印（头像除外） =====
+
+  it('普通图片：走水印分支，返回 Buffer 且 Content-Length 为水印图长度', async () => {
+    setMockAuthState(null)
+    const marked = Buffer.from('watermarked-bytes')
+    vi.mocked(applyWatermark).mockResolvedValue(marked)
+    const h3 = await import('h3')
+    const spy = vi.mocked(h3.setResponseHeader)
+    const handler = (await import('../../server/api/files/serve.get')).default
+    const result = await handler(makeEvent(undefined, { pathname: 'dir/1.png' }))
+
+    expect(result).toBe(marked)
+    // 传入磁盘绝对路径与原扩展名
+    expect(vi.mocked(applyWatermark)).toHaveBeenCalledWith(
+      expect.stringContaining('/storage/dir/1.png'),
+      '.png',
+    )
+    expect(spy.mock.calls).toContainEqual([expect.anything(), 'Content-Length', marked.length])
+    // 返回整块 Buffer 时不设 Accept-Ranges（图片无需分段）
+    expect(spy.mock.calls.find((c: any[]) => c[1] === 'Accept-Ranges')).toBeUndefined()
+  })
+
+  it('水印生成失败（null）时回退原文件流', async () => {
+    setMockAuthState(null)
+    vi.mocked(applyWatermark).mockResolvedValue(null)
+    const handler = (await import('../../server/api/files/serve.get')).default
+    const result = await handler(makeEvent(undefined, { pathname: 'dir/1.webp' }))
+    expect(result).toBe('mock-stream')
+  })
+
+  it('头像图片：不加水印（直接原图流 + 私有缓存）', async () => {
+    vi.mocked(guardAvatarAccess).mockResolvedValue(true)
+    setMockAuthState({ id: 2, username: 'teacher', roles: ['teacher'], permissions: [] })
+    const handler = (await import('../../server/api/files/serve.get')).default
+    const result = await handler(makeEvent(undefined, { pathname: 'dir/avatar.webp' }))
+    expect(result).toBe('mock-stream')
+    expect(vi.mocked(applyWatermark)).not.toHaveBeenCalled()
+  })
+
+  it('非图片文件（pdf/mp4/svg）：不调用水印', async () => {
+    setMockAuthState(null)
+    const handler = (await import('../../server/api/files/serve.get')).default
+    await handler(makeEvent(undefined, { pathname: 'dir/1.pdf' }))
+    await handler(makeEvent(undefined, { pathname: 'dir/1.svg' }))
+    await handler(makeEvent(undefined, { pathname: 'dir/1.mp4' }))
+    expect(vi.mocked(applyWatermark)).not.toHaveBeenCalled()
   })
 })
 
