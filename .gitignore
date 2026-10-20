@@ -28,6 +28,7 @@ logs
 .trae
 ecosystem.config.cjs
 .workbuddy
+.workbuddy-ai
 
 # 章节 SSR 冒烟测试留下的页面转储（体积大、可随时重生成，勿入库）
 smoke*.html

@@ -43,6 +43,13 @@
       "when": 1791875589484,
       "tag": "0005_flat_the_stranger",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792466710153,
+      "tag": "0006_tense_red_ghost",
+      "breakpoints": true
     }
   ]
 }

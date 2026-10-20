@@ -163,6 +163,12 @@ export default defineNuxtModule({
         path: '/monitor',
         file: resolve('./pages/monitor.vue'),
       })
+      // OAuth 授权专用登录页（/api/oauth/authorize 未登录时跳这里，登录后原路返回）
+      pages.push({
+        name: 'base-oauth-login',
+        path: '/oauth/login',
+        file: resolve('./pages/oauth-login.vue'),
+      })
     })
 
     // 注册 server 路由 / utils / middleware / plugins / tasks

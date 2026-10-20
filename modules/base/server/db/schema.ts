@@ -258,6 +258,50 @@ export const feedbacks = pgTable(
   }),
 );
 
+// ====================== OAuth / SSO ======================
+
+/**
+ * 允许通过 LMS 登录的第三方系统（OAuth client 注册表）
+ *
+ * 一个 client 对应一个外部系统（Hydro OJ / Vision / ...）。
+ * clientSecret 存 hashPassword() 的结果，不存明文。
+ * redirectUris 必须是完整地址数组，回调时精确比对（禁止前缀匹配，防开放重定向）。
+ */
+export const oauthClients = pgTable('oauth_clients', {
+  id: serial('id').primaryKey(),
+  clientId: varchar('client_id', { length: 64 }).notNull().unique(),
+  clientSecret: varchar('client_secret', { length: 255 }).notNull(),
+  name: varchar('name', { length: 100 }).notNull(),
+  redirectUris: jsonb('redirect_uris').notNull(),
+  enabled: boolean('enabled').default(true).notNull(),
+  ...withTimestamps,
+});
+
+/**
+ * 一次性授权码
+ *
+ * 有效期 60 秒，换取 access_token 时立即标记 used。
+ * 复用 tokens 表存 access_token，不另建会话表。
+ */
+export const oauthCodes = pgTable(
+  'oauth_codes',
+  {
+    // generateToken() = randomBytes(32).toString('hex') = 64 字符
+    code: varchar('code', { length: 128 }).primaryKey(),
+    clientId: varchar('client_id', { length: 64 }).notNull(),
+    userId: integer('user_id').notNull(),
+    redirectUri: varchar('redirect_uri', { length: 500 }).notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    used: boolean('used').default(false).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (t) => ({
+    userFk: foreignKey({ columns: [t.userId], foreignColumns: [users.id] }).onDelete('cascade'),
+    expireIdx: index('idx_oauth_codes_expires').on(t.expiresAt),
+    clientIdx: index('idx_oauth_codes_client').on(t.clientId),
+  }),
+);
+
 // ====================== Relations ======================
 
 export const usersRelations = relations(users, ({ one, many }) => ({
