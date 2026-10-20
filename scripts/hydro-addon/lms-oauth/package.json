@@ -1,0 +1,6 @@
+{
+  "name": "lms-oauth",
+  "version": "1.0.0",
+  "description": "Login to Hydro via LMS OAuth2",
+  "main": "index.ts"
+}
