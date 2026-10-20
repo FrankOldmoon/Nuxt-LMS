@@ -444,13 +444,57 @@ LMS 侧无重复邮箱。8 条差异全部核实：
 | Hydro 绑定预填 | ✅ **1037 条** upsert（email 1034 + 姓名兜底 2 + admin 手工 1） |
 | Hydro 插件 | ✅ 已注册、4 项配置已写、`pm2 restart` 通过 |
 | 跳转验证 | ✅ `GET /oauth/lms/login` → 302 到 LMS authorize，参数正确 |
+| LMS 发版 | ✅ 已上线，端到端登录通过 |
+| **关闭密码登录** | ✅ `server.login = false`（布尔），表单 0 处、`POST /login` 403 |
 
-未完成（需要 LMS 发版）：
+关闭后实测：
 
-| 项 | 说明 |
+| 检查项 | 结果 |
 |---|---|
-| LMS 部署 | 生产 `/api/oauth/authorize` 仍是 404 —— 新代码没上线 |
-| 关闭 `server.login` | **必须等单人登录验证通过后再关** |
+| 登录页 `name="uname"` 输入框 | **0 处**（表单已消失） |
+| 「Sign in with LMS」按钮 | 2 处（登录页 + 登录弹窗） |
+| `GET /oauth/lms/login` | 302 正常 |
+| `POST /login` | **403**（后端拒绝，不只是藏 UI） |
+| `GET /` 首页 | 200 |
+
+遗留：`/lostpass` 仍可访问（返回 200），登录页也还有 "Forgot password" 链接 ——
+因为该链接在模板 `{% if %}` **外面**，不受 `server.login` 控制。用户点进去能重置密码，
+但密码登录已关闭，重置完仍然登不进去，属于纯困惑项。处理方式见 8.10。
+
+### 8.10 关闭 `server.login` 的两个坑
+
+**① CLI 写入的是字符串 `"false"`，不是布尔 `false`**
+
+```bash
+hydrooj cli system set server.login false   # mongo 里变成 "false"（string）
+```
+
+字符串 `"false"` 是 truthy，所以：
+
+- 模板 `{% if system.get('server.login') %}` 仍然成立 → **表单还在**
+- 但后端 `if (!system.get('server.login'))` 判假 → 登录被拒（403）
+
+结果就是「表单还在、但登不进去」。正确做法是直接写布尔值：
+
+```js
+db.system.updateOne({ _id: 'server.login' }, { $set: { value: false } })
+```
+
+写完必须 `pm2 restart hydrooj`。验证：`typeof db.system.findOne({_id:'server.login'}).value === 'boolean'`。
+
+**② `/lostpass` 不受 `server.login` 控制**
+
+`handler/user.ts` 只给 `UserLoginHandler.post` 和 `UserRegisterHandler.post` 加了
+`BuiltinLoginError` 检查，`UserLostPassHandler` 没有。要挡可以在插件里加：
+
+```ts
+ctx.on('handler/before/user_lostpass#get', (h) => {
+    h.response.redirect = '/login'
+    return 'cleanup'   // 跳过原 handler；该返回值取自 framework 的 steps 机制，需实测
+})
+```
+
+---
 
 剩余未绑定的 4 个 Hydro 账号：
 
