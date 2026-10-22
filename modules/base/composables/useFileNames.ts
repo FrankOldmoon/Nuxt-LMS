@@ -7,8 +7,9 @@ import { ref, watch } from 'vue'
 import { getFileNameFromUrl } from './useFileUploader'
 
 export function useFileNames(urls: () => any[]) {
-  const items = ref<{ url: string; name: string }[]>([])
+  const items = ref<{ url: string; name: string; size?: number }[]>([])
   const nameByUrl = new Map<string, string>()
+  const sizeByUrl = new Map<string, number>()
 
   async function fetchMeta(url: string) {
     try {
@@ -18,9 +19,10 @@ export function useFileNames(urls: () => any[]) {
       const data = await cRequest(`/api/files/meta?pathname=${encodeURIComponent(pathname)}`)
       if (!data?.name) return
       nameByUrl.set(url, data.name)
+      if (data.size) sizeByUrl.set(url, data.size)
       const idx = items.value.findIndex((it) => it.url === url)
       if (idx >= 0) {
-        items.value[idx] = { ...items.value[idx], name: data.name }
+        items.value[idx] = { ...items.value[idx], name: data.name, size: data.size || undefined }
       }
     } catch {
       // 补全失败保持 url 解析名
@@ -37,6 +39,7 @@ export function useFileNames(urls: () => any[]) {
       items.value = arr.map((url) => ({
         url,
         name: nameByUrl.get(url) || getFileNameFromUrl(url),
+        size: sizeByUrl.get(url),
       }))
       // 异步补全服务端原始文件名
       for (const url of arr) {
