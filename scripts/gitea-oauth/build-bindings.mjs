@@ -25,13 +25,14 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import postgres from 'postgres'
 
 function parseArgs(argv) {
-  const args = { users: '', sourceId: 0, sql: '', map: [] }
+  const args = { users: '', sourceId: 0, sql: '', map: [], extra: [] }
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
     if (a === '--users') args.users = argv[++i]
     else if (a === '--source-id') args.sourceId = Number(argv[++i])
     else if (a === '--sql') args.sql = argv[++i]
-    else if (a === '--map') args.map.push(argv[++i]) // giteaId:lmsId 手工补
+    else if (a === '--map') args.map.push(argv[++i]) // giteaId:lmsId 覆盖主绑定
+    else if (a === '--extra') args.extra.push(argv[++i]) // lmsId:giteaId 附加绑定
     else if (a === '--help' || a === '-h') args.help = true
   }
   return args
@@ -40,13 +41,14 @@ function parseArgs(argv) {
 const args = parseArgs(process.argv.slice(2))
 if (args.help || !args.users || !args.sourceId) {
   console.log(`用法:
-  node scripts/gitea-oauth/build-bindings.mjs --users /tmp/gitea_users.csv --source-id <login_source.id> [--sql out.sql] [--map 12:34]
+  node scripts/gitea-oauth/build-bindings.mjs --users /tmp/gitea_users.csv --source-id <login_source.id> [--sql out.sql] [--map 12:34] [--extra 34:12]
 
 参数:
   --users      gitea 侧导出的 CSV：id,lower_name,email,is_admin,is_active,...
   --source-id  login_source 表里新建那条 oauth2 source 的 id
   --sql        输出 SQL 文件路径
-  --map        手工绑定，格式 giteaUserId:lmsUserId，可重复`)
+  --map        giteaUserId:lmsUserId，覆盖自动匹配（可重复）
+  --extra      lmsUserId:giteaUserId，给同一个 gitea 账号追加一个 LMS 身份（可重复）`)
   process.exit(args.help ? 0 : 1)
 }
 
@@ -122,6 +124,21 @@ for (const pair of args.map) {
   if (idx >= 0) unmatched.splice(idx, 1)
   const prev = matched.findIndex((m) => m.g.id === gid)
   if (prev >= 0) matched.splice(prev, 1)
+  matched.push({ g, lms })
+}
+
+// ---------- 4b. 附加绑定（同一个 gitea 账号再接受另外一个 LMS 身份）----------
+// 例：gitea `frank` 主绑 LMS `Frank Hu`(#32)，再额外接受 LMS `admin`(#1)。
+// external_login_user 的主键是 (external_id, login_source_id)，所以一个 gitea 用户
+// 可以挂多条，登录时任一条命中即可。
+for (const pair of args.extra) {
+  const [lid, gid] = pair.split(':').map(Number)
+  const g = giteaUsers.find((x) => x.id === gid)
+  const lms = lmsUsers.find((x) => x.id === lid)
+  if (!g || !lms) {
+    console.error(`⚠️  --extra ${pair} 无效：gitea=${!!g} lms=${!!lms}`)
+    continue
+  }
   matched.push({ g, lms })
 }
 

@@ -628,6 +628,33 @@ sudo -u git env GITEA_WORK_DIR=/data/gitea GITEA_CUSTOM=/data/gitea \
 git over HTTP 用密码也会一起失效（`ENABLE_BASIC_AUTHENTICATION=false` 的本意）。学生要 `git push` 得先 SSO 登录 → Settings → Applications → 生成 access token，用 token 当密码。留一行可回退：
 `[service] ENABLE_BASIC_AUTHENTICATION = true`（只放开 API/git 的密码认证，**不会**恢复网页登录表单）。
 
+### 9.7 修正：只预绑定会让教师掉进死胡同（同日 13:00 修复）
+
+第一版只做「按学号预绑定」，问题在真机上立刻暴露：
+
+- Gitea 的 1030 个账号里 **1028 个是学生学号**，只有一个 `frank` 和一个从没用过的 `teacher-admin`。
+- LMS 的 **10 个教师账号在 Gitea 侧根本不存在** → 点登录必然走 `showLinkingLogin` → `/user/link_account`。
+- 而 link_account 页要输 Gitea 用户名 + 密码 —— 密码登录已经关了，等于**死胡同**。
+- 具体触发：Frank 在 LMS 用的是 `Frank Hu`(#32)，而第一版把 Gitea `frank` 绑给了 LMS `admin`(#1)，于是他一登录就撞上 link 页。
+
+两处修正：
+
+1. **改绑**：`frank` 主绑 LMS `Frank Hu`(#32)，同时用 `--extra 1:1` 把 LMS `admin`(#1) 作为**附加绑定**。`external_login_user` 主键是 `(external_id, login_source_id)`，一个 Gitea 用户挂多条是允许的，任一条命中即可登录。
+2. **打开自动建号**：`[oauth2_client] ENABLE_AUTO_REGISTRATION = true`。LMS 是唯一身份源，教师/新学生首次登录直接建号，用户名取 `preferred_username`（Gitea 会把空格换成 `-`：`Jessica Yang` → `jessica-yang`）。已预绑定的 1029 条不受影响（`external_login_user` 先命中）。
+
+实测（LMS id → Gitea）：
+
+| LMS 账号 | 结果 |
+|---|---|
+| `Frank Hu` #32 | 303 回首页，身份是 `frank` |
+| `Jessica Yang` #34（原本无 Gitea 账号） | 303 回首页，**自动建号** `jessica-yang`（`login_type=6`, `login_source=2`） |
+| `20220498` #444（学生） | 仍然走预绑定，身份 `20220498`，没有重复建号 |
+| `Anna Zhong` #35（**LMS 里 email 为空**） | 仍是 `/user/link_account` —— Gitea 自动建号强制要 email |
+
+所以最后一个坑：**LMS 用户必须有邮箱**，否则永远建不了号。Anna Zhong 是唯一一个 email 为空的，在 LMS 补上即可（其他人都有 `@minxinnansha.org.cn`）。
+
+风险提示：自动建号后，「LMS 用户名和 Gitea 用户名不一致的老账号」可能被新建成第二个号（只有靠预绑定避免）。目前只有 `frank` 属于这种情况，已手工绑好。
+
 ---
 
 ## 10. 待确认

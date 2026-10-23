@@ -56,22 +56,26 @@ psql_g() {
   PGPASSWORD="$PGPASSWORD_VAL" psql -h 127.0.0.1 -U "$PGUSER" -d "$PGDB" "$@"
 }
 
-# 在 app.ini 指定 section 内设置 key=value（存在则改，不存在则补在段末）
+# 在 app.ini 指定 section 内设置 key=value（存在则改，不存在则补在段末；section 不存在则整段追加）
 ini_set() {
   local sect="$1" key="$2" val="$3" tmp
   tmp=$(mktemp)
   awk -v sect="[$sect]" -v key="$key" -v val="$val" '
-    BEGIN { insect = 0; done = 0 }
+    BEGIN { insect = 0; done = 0; seen = 0 }
     /^\[/ {
       if (insect && !done) { print key " = " val; done = 1 }
       insect = ($0 == sect)
+      if (insect) seen = 1
       print; next
     }
     {
       if (insect && !done && $0 ~ "^[ \t]*" key "[ \t]*=") { print key " = " val; done = 1; next }
       print
     }
-    END { if (insect && !done) print key " = " val }
+    END {
+      if (insect && !done) print key " = " val
+      else if (!seen) printf "\n%s\n%s = %s\n", sect, key, val
+    }
   ' "$APP_INI" > "$tmp"
   cat "$tmp" > "$APP_INI"
   rm -f "$tmp"
@@ -94,6 +98,7 @@ if [[ $ROLLBACK -eq 1 ]]; then
   ini_set service ENABLE_PASSWORD_SIGNIN_FORM true
   ini_set service ENABLE_BASIC_AUTHENTICATION true
   ini_set service ENABLE_PASSKEY_AUTHENTICATION true
+  ini_set oauth2_client ENABLE_AUTO_REGISTRATION false
   restart_gitea
   ok "已恢复密码登录（OAuth 源保留，可继续用 LMS 按钮登录）"
   exit 0
@@ -141,22 +146,34 @@ fi
 psql_g -c "select count(*) as bound from external_login_user where login_source_id = $SRC_ID;"
 
 # ---------------- 3. 关掉本地登录 ----------------
-say "3. 关闭密码 / Passkey 登录"
+say "3. 关闭本地登录（密码 / Passkey），打开 OAuth 自动建号"
 ini_set service ENABLE_PASSWORD_SIGNIN_FORM false
 ini_set service ENABLE_BASIC_AUTHENTICATION false
 ini_set service ENABLE_PASSKEY_AUTHENTICATION false
+# LMS 是唯一身份源：教师账号在 Gitea 侧原本不存在（1028 个全是学生学号），
+# 不开自动建号的话，教师点登录会掉进 /user/link_account 死胡同（那里要输 Gitea 密码，
+# 而密码登录已经关了）。开自动建号后首次登录直接建号，用户名取 preferred_username。
+ini_set oauth2_client ENABLE_AUTO_REGISTRATION true
 ok "app.ini 已更新："
-grep -E "^ENABLE_(PASSWORD_SIGNIN_FORM|BASIC_AUTHENTICATION|PASSKEY_AUTHENTICATION)" "$APP_INI" | sed 's/^/    /'
+grep -E "^ENABLE_(PASSWORD_SIGNIN_FORM|BASIC_AUTHENTICATION|PASSKEY_AUTHENTICATION|AUTO_REGISTRATION)" "$APP_INI" | sed 's/^/    /'
 
 # ---------------- 4. 重启 + 自检 ----------------
 say "4. 重启并自检"
 restart_gitea
 
-LOGIN_HTML=$(curl -s http://127.0.0.1/user/login)
-[[ "$LOGIN_HTML" == *'name="password"'* ]] && bad "登录页仍有密码输入框" || ok "登录页无密码输入框"
-[[ "$LOGIN_HTML" == *"/user/oauth2/$SOURCE_NAME"* ]] && ok "登录页有 LMS 按钮" || bad "登录页找不到 LMS 按钮"
+LOGIN_HDR=$(curl -s -o /dev/null -D - http://127.0.0.1/user/login | tr -d '\r')
+# 关掉密码表单 + 只剩 1 个 provider 时，Gitea 会 performAutoLoginOAuth2，
+# 自己 303 到 /user/oauth2/<name>，所以这里检查的是跳转目标而不是页面内容
+if grep -qi "^location: /user/oauth2/$SOURCE_NAME" <<<"$LOGIN_HDR"; then
+  ok "GET /user/login → 303 /user/oauth2/$SOURCE_NAME（无独立登录页）"
+elif grep -qi 'name="password"' <<<"$(curl -s http://127.0.0.1/user/login)"; then
+  bad "登录页仍有密码输入框"
+else
+  ok "登录页已无密码输入框"
+fi
 CODE=$(curl -s -o /dev/null -w '%{http_code}' -X POST -d 'user_name=frank&password=x' http://127.0.0.1/user/login)
 [[ "$CODE" == "403" ]] && ok "POST /user/login 已拒绝（403）" || bad "POST /user/login 返回 $CODE"
+grep -q '^ENABLE_AUTO_REGISTRATION = true' "$APP_INI" && ok "OAuth 自动建号已开启（教师/新学生首次登录直接建号）" || bad "自动建号未开启"
 CODE=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1/api/v1/user)
 ok "匿名 GET /api/v1/user → $CODE（401 正常）"
 
