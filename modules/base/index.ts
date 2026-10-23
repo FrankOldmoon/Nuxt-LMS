@@ -174,6 +174,16 @@ export default defineNuxtModule({
     // 注册 server 路由 / utils / middleware / plugins / tasks
     addServerScanDir(resolve('./server'))
 
+    // db-audit 插件必须最先执行（打 drizzle 拦截补丁）。
+    // lms 模块为覆盖 base 同路径 API，会把 lms/server 挪到 scanDirs 最前，
+    // 导致 lms 的启动插件先于 base 扫描插件执行；这里把 db-audit 直接
+    // unshift 进 nitroConfig.plugins（nitro 会把扫描到的插件追加在尾部，
+    // 同路径去重），保证补丁先于所有模块的启动写库生效。
+    nuxt.hook('nitro:config', (nitroConfig) => {
+      nitroConfig.plugins = nitroConfig.plugins || []
+      nitroConfig.plugins.unshift(resolve('./server/plugins/db-audit.ts'))
+    })
+
     // 注册 i18n locale（注：必须调用 registerModule 回调，而非 return config）
     nuxt.hook('i18n:registerModule', (registerModule) => {
       registerModule({
