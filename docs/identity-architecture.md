@@ -607,6 +607,27 @@ sudo -u git env GITEA_WORK_DIR=/data/gitea GITEA_CUSTOM=/data/gitea \
   /usr/local/bin/gitea admin user change-password -u frank -p 'xxx'   # ② 改管理员密码
 ```
 
+### 9.6 实测结果（2026-10-23 已上线）
+
+| 项 | 结果 |
+|---|---|
+| 登录源 | `login_source` id=**2**（不是 1，序列早先被消耗过），`Provider=openidConnect`，`is_active=t` |
+| 绑定 | `external_login_user` **1028 条**，`login_source_id=2` |
+| 管理员链路 | LMS admin → Gitea `frank`：303 回首页，导航出现 `/user/logout`，页面含 `frank` ×23 |
+| 学生链路 | LMS 20220498（id 444）→ Gitea `20220498`：303 回首页，页面含 `20220498` ×44 |
+| 未绑定账号 | LMS `test01`（无绑定）→ 303 `/user/link_account`，**未登录**（`ENABLE_AUTO_REGISTRATION=false` 生效，不会自动建号） |
+| 密码表单 | 登录页已无表单；`POST /user/login` → **403** |
+| token 交换 | Go x/oauth2 先用 `client_secret_basic`，端点两种都认；请求体是 urlencoded，端点自己解析 |
+
+**注意 `/user/login` 现在直接 303 → `/user/oauth2/lms`**：因为满足 `performAutoLoginOAuth2` 的条件
+（只有 1 个 OAuth provider + 关密码表单 + 关 OpenID + 关 passkey + 无 SSPI），Gitea 会跳过自己的登录页。
+这是想要的效果，但也意味着**没有「登录页」可以放错误提示** —— LMS 挂了用户直接看到 LMS 的连接错误。
+
+残留：`/user/forgot_password` 仍返回 200。密码登录已关，重置出来的密码没有任何入口可用（`ENABLE_BASIC_AUTHENTICATION=false`），属无害残留。
+
+git over HTTP 用密码也会一起失效（`ENABLE_BASIC_AUTHENTICATION=false` 的本意）。学生要 `git push` 得先 SSO 登录 → Settings → Applications → 生成 access token，用 token 当密码。留一行可回退：
+`[service] ENABLE_BASIC_AUTHENTICATION = true`（只放开 API/git 的密码认证，**不会**恢复网页登录表单）。
+
 ---
 
 ## 10. 待确认
