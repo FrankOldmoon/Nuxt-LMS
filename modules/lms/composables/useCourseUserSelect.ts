@@ -25,11 +25,13 @@ export function useCourseUserSelect(
   const impersonating = ref(false)
   const allStudents = ref<any[]>([])
 
-  // 与 select class 一致：始终显示当前班级（defaultClass）的学生
-  const userOptions = computed(() => students.value.map(s => ({
-    label: s.name || `#${s.id}`,
-    value: s.id,
-  })))
+  // 与 select class 一致：始终显示当前班级（defaultClass）的学生；View As 列表按字母顺序排序
+  const userOptions = computed(() => students.value
+    .map(s => ({
+      label: s.name || `#${s.id}`,
+      value: s.id,
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label, 'en', { sensitivity: 'base' })))
 
   // 加载学生列表：使用当前 defaultClass 班级（与 select class 的班级学生一致）
   async function loadStudents() {

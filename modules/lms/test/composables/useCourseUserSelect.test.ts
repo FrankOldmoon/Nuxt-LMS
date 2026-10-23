@@ -173,4 +173,29 @@ describe('composables/useCourseUserSelect', () => {
     expect(userOptions.value[0].label).toBe('Alice')
     expect(userOptions.value[1].label).toBe('Bob')
   })
+
+  it('userOptions 按字母顺序排序（大小写不敏感）', async () => {
+    setMockAuthUser(
+      { id: 1, name: 'Admin', defaultClass: { id: 10 } },
+      [{ code: 'admin', name: 'Admin' }],
+      [],
+    )
+    const studentsRef = ref<any[]>([])
+    ;(globalThis as any).useClassUsers = () => ({
+      students: studentsRef,
+      teachers: ref<any[]>([]),
+      fetchUsers: async () => {
+        studentsRef.value = [
+          { id: 1, name: 'charlie' },
+          { id: 2, name: 'Bob' },
+          { id: 3, name: 'alice' },
+          { id: 4 }, // 无 name → #id 占位
+        ]
+      },
+    })
+    const { useCourseUserSelect } = await import('../../composables/useCourseUserSelect')
+    const { userOptions, loadStudents } = useCourseUserSelect({ courseId: 1 }, () => {})
+    await loadStudents()
+    expect(userOptions.value.map((o: any) => o.label)).toEqual(['#4', 'alice', 'Bob', 'charlie'])
+  })
 })
