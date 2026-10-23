@@ -18,6 +18,9 @@ export const DEFAULT_SITE_CONFIG: Record<string, any> = {
   'site:maxFileSize': 50,
   'site:allowedFileTypes': '',
   'site:maintenanceMode': false,
+  // OAuth2/OIDC 对外基址（issuer）。留空 = 用请求 origin；
+  // 反代没透传 Host 导致 origin 变成内网地址时，在这里填 http://10.28.1.151 兜底
+  'site:oauth.issuer': '',
   // 账号安全
   'site:allowRegistration': false,
   'site:allowForgotPassword': true,

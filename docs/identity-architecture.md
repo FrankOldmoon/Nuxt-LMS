@@ -543,7 +543,73 @@ name: 'lms',                // 内部标识，不可改（mongo oauth 的 platfo
 
 ---
 
-## 9. 待确认
+## 9. 接入 Gitea（10.28.1.160）
+
+### 9.1 Gitea 侧的现实约束
+
+| 事实 | 影响 |
+|---|---|
+| Gitea 1.27.3，systemd 直跑（无 docker、无 nginx），`/data/gitea/conf/app.ini`，PostgreSQL | 改配置 = 改 app.ini + `systemctl restart gitea` |
+| 没有「通用 OAuth2」provider，通用档只有 **OpenID Connect** | 必须让 LMS 变成真正的 OIDC Provider |
+| `openidConnect.New(...)` 强制 ① discovery 文档 ② token 响应里有 `id_token` | 只做 OAuth2 不够，goth 直接报 `cannot get user information without id_token` |
+| goth 的 `getOpenIDConfig` 是 `GET` 传入的整个 URL，**不拼** `/.well-known/openid-configuration` | discovery 可以放在任意路径，不必占根目录 |
+| goth 只校验 `aud` / `iss` / `exp`，**不验签** id_token | 先用 HS256(client_secret) 签名即可，不必上 JWKS/RS256 |
+| 1030 个账号里 1029 个邮箱是 `<学号>@students.local` 占位符 | **不能像 Hydro 那样按 email 认领**，只能按「学号 = LMS username」预绑定 |
+
+### 9.2 LMS 侧新增（OIDC 补齐）
+
+| 文件 | 作用 |
+|---|---|
+| `modules/base/server/api/oauth/openid-configuration.get.ts` | discovery 文档（issuer / 三个端点 / 支持的 alg 与 claims） |
+| `oauth/token.post.ts` | 增加 `id_token` 签发；同时接受 `client_secret_post` 与 `client_secret_basic`；自己解析 urlencoded 与 JSON 两种请求体 |
+| `oauth/userinfo.get.ts` | 补 `preferred_username` / `nickname` / `picture` / `email_verified`（Gitea 读 nickname→preferred_username、picture） |
+
+issuer 默认取请求 origin，可用配置项 `site:oauth.issuer` 覆盖（反代没透传 Host 时兜底）。
+三个端点、discovery、`id_token.iss` 必须同源，否则客户端 `iss` 校验直接失败。
+
+### 9.3 账号绑定（不是 email，是学号）
+
+Gitea 回调查找顺序（`routers/web/auth/oauth.go` → `oAuth2UserLoginCallback`）：
+
+1. `users.login_source` + `login_name` —— 只有 OAuth 自动注册的账号才有
+2. **`external_login_user(login_source_id, external_id)`** ← 预绑定写这里，`external_id = sub = LMS users.id`
+3. 都没命中 → 因为 `ENABLE_AUTO_REGISTRATION=false`，弹「关联已有账号」页 —— 那时密码登录已关，等于进不去
+
+实测匹配（`scripts/gitea-oauth/build-bindings.mjs`）：1030 → 1027 条按学号自动命中，剩 3 条：
+
+| gitea | 情况 | 处理 |
+|---|---|---|
+| `frank`（admin） | LMS 无 `frank`，Frank 本人是 LMS `admin`(#1) | `--map 1:1` 手工绑 |
+| `ict-demo` | LMS 无对应，从未登录过 | 不绑（登录不了，仓库仍在） |
+| `teacher-admin` | 同上 | 不绑 |
+
+### 9.4 关掉 Gitea 本地登录
+
+```ini
+[service]
+ENABLE_PASSWORD_SIGNIN_FORM = false   ; 隐藏登录表单，且 POST /user/login 直接 403
+ENABLE_BASIC_AUTHENTICATION = false   ; 密码式 Basic Auth（含 git over http 用密码）全关
+ENABLE_PASSKEY_AUTHENTICATION = false ; 否则登录页留一个 passkey 入口
+```
+
+`DISABLE_REGISTRATION = true` 原本就开着，注册入口不存在。
+注意 `ENABLE_BASIC_AUTHENTICATION=false` **不影响** token 形式的 Basic Auth —— 现在是 0 个 token，全是密码，届时若有人用 `git clone http://user:pass@...` 会失效，需改用 token。
+
+一键脚本：`scripts/gitea-oauth/switch-to-sso.sh`（幂等；`--rollback` 恢复密码登录）。
+
+### 9.5 break-glass
+
+LMS 挂了 = Gitea 全站登不上。三条自救通道，都不需要登录页：
+
+```bash
+bash scripts/gitea-oauth/switch-to-sso.sh --rollback            # ① 开回密码登录
+sudo -u git env GITEA_WORK_DIR=/data/gitea GITEA_CUSTOM=/data/gitea \
+  /usr/local/bin/gitea admin user change-password -u frank -p 'xxx'   # ② 改管理员密码
+```
+
+---
+
+## 10. 待确认
 
 - [ ] 学校是否已有 Workspace / Entra ID，`@minxinnansha.org.cn` 是否在其中
 - [ ] Hydro 1042 个用户与 LMS 用户的 email 匹配率（决定阶段 0 的清洗工作量）
