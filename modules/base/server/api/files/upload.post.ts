@@ -8,13 +8,14 @@
  *
  * 流程：解析来源 → 校验 → 配额 → 哈希+查重 → 落盘写库
  */
-import { db } from '@nuxthub/db'
+import { db, schema } from '@nuxthub/db'
+import { eq } from 'drizzle-orm'
 import { resolveUploadSource, UploadError } from '../../utils/upload/parse'
 import { compressGifBuffer } from '../../utils/files/remoteImage'
 import {
   validateUpload, isSvgContent, sanitizeSvg, buildDedupWhere,
 } from '../../utils/upload/validate'
-import { sha256Hex, persistUploadedFile } from '../../utils/upload/persist'
+import { sha256Hex, persistUploadedFile, storedFileExists } from '../../utils/upload/persist'
 import { formatBytes } from '../../../utils/fileUtils'
 const UPLOAD_ROOT = './storage/'
 
@@ -65,12 +66,18 @@ export default eventHandler(async (event) => {
     )
   }
 
-  // 4. 哈希 + 查重
+  // 4. 哈希 + 查重（记录命中后还需校验物理文件仍在，避免返回僵尸记录的 404 链接）
   const hash = sha256Hex(buffer)
   const dedupWhere = buildDedupWhere(hash, group)
   const existing = await db.query.files.findFirst({ where: dedupWhere })
   if (existing) {
-    return cResp({ url: `/api/files/serve?pathname=${encodeURIComponent(existing.path.replace(/^\/+/, ''))}` }, '文件已存在', true)
+    if (await storedFileExists(existing.path, UPLOAD_ROOT)) {
+      return cResp({ url: `/api/files/serve?pathname=${encodeURIComponent(existing.path.replace(/^\/+/, ''))}` }, '文件已存在', true)
+    }
+    // 物理文件已丢失（历史手动删除/迁移残留）：软删僵尸记录后继续落盘，避免下次再命中
+    await db.update(schema.files)
+      .set({ deletedAt: new Date() })
+      .where(eq(schema.files.id, existing.id))
   }
 
   // 5. 落盘 + 写库（path 唯一冲突在 persist 内恢复：软删记录复活 / 复用现有记录）

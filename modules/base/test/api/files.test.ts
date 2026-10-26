@@ -83,6 +83,7 @@ vi.mock('../../server/utils/upload/validate', () => ({
 vi.mock('../../server/utils/upload/persist', () => ({
   sha256Hex: vi.fn(() => 'mock-hash'),
   persistUploadedFile: vi.fn(),
+  storedFileExists: vi.fn(),
 }))
 
 // 头像访问守卫：默认「不是头像」→ 不影响既有公开只读用例；头像用例单独开启
@@ -106,13 +107,15 @@ import { resetAllStubs, setMockAuthState, setMockDriveSpace, setMockDriveQuota, 
 import { access, statSync } from 'fs'
 import { resolveUploadSource, UploadError } from '../../server/utils/upload/parse'
 import { validateUpload } from '../../server/utils/upload/validate'
-import { persistUploadedFile } from '../../server/utils/upload/persist'
+import { persistUploadedFile, storedFileExists } from '../../server/utils/upload/persist'
 import { guardAvatarAccess } from '../../server/utils/files/avatarGuard'
 import { applyWatermark } from '../../server/utils/files/watermark'
 
 beforeEach(() => {
   resetAllStubs()
   vi.clearAllMocks()
+  // 默认：查重命中的记录物理文件仍在（僵尸记录场景由用例单独关闭）
+  vi.mocked(storedFileExists).mockResolvedValue(true)
 })
 
 function makeEvent(body: any = undefined, query: any = {}) {
@@ -331,6 +334,25 @@ describe('API: files/upload.post (functional)', () => {
     expect(result.success).toBe(true)
     expect(result.msg).toMatch(/已存在/)
     expect(result.data.url).toContain('/api/files/serve?pathname=')
+  })
+
+  it('查重命中但物理文件丢失：软删旧记录并重新落盘', async () => {
+    setMockAuthState({ id: 1, username: 'alice', roles: ['student'], permissions: [] })
+    vi.mocked(resolveUploadSource).mockResolvedValue({
+      buffer: Buffer.from('x'), originalName: 'gone.pdf', ext: '.pdf', fileType: 'application/pdf', group: '',
+    })
+    vi.mocked(validateUpload).mockImplementation(() => {})
+    vi.mocked(storedFileExists).mockResolvedValue(false)
+    const { db } = await import('@nuxthub/db')
+    vi.mocked(db.query.files.findFirst).mockResolvedValue({ id: 99, path: '/250/gone.pdf' } as any)
+    vi.mocked(persistUploadedFile).mockResolvedValue({ id: 100, finalDbPath: '/298/new.pdf' })
+    const handler = (await import('../../server/api/files/upload.post')).default
+    const result = await handler(makeEvent({}))
+    expect(result.success).toBe(true)
+    expect(result.msg).toMatch(/上传成功/)
+    expect(result.data.url).toContain('298')
+    expect(vi.mocked(persistUploadedFile)).toHaveBeenCalled()
+    expect(vi.mocked(db.update)).toHaveBeenCalled()
   })
 
   it('成功上传新文件', async () => {

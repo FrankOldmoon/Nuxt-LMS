@@ -11,12 +11,23 @@
 import { db, schema } from '@nuxthub/db'
 import { and, eq, isNotNull } from 'drizzle-orm'
 import { createHash } from 'node:crypto'
-import { writeFile, mkdir, rm } from 'node:fs/promises'
-import { join } from 'node:path'
+import { writeFile, mkdir, rm, access } from 'node:fs/promises'
+import { join, resolve } from 'node:path'
 
 /** sha256 hex */
 export function sha256Hex(buffer: Buffer): string {
   return createHash('sha256').update(buffer).digest('hex')
+}
+
+/** DB 中记录的相对路径在 UPLOAD_ROOT 下是否仍有物理文件（用于识别僵尸记录） */
+export async function storedFileExists(dbPath: string, uploadRoot: string): Promise<boolean> {
+  const absolutePath = resolve(uploadRoot, String(dbPath).replace(/^\/+/, ''))
+  try {
+    await access(absolutePath)
+    return true
+  } catch {
+    return false
+  }
 }
 
 /** 在 UPLOAD_ROOT 下按"距 2026-01-01 天数"生成目录名 */
