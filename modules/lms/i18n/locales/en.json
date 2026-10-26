@@ -785,7 +785,7 @@
     "criteria": "Grading Criteria",
     "criteriaHint": "Score weights & grade-level thresholds",
     "weights": "Score Weights",
-    "weightsHint": "Final score = Σ( score / maxScore × percent ). Defaults: maxScore=100, percents sum to 100.",
+    "weightsHint": "Final score = Σ( min(score / maxScore, 1) × percent ). Each item is capped at its percent; External counts as full score when 0. Defaults: maxScore=100, percents sum to 100.",
     "item": "Item",
     "maxScore": "Max",
     "percent": "Percent",

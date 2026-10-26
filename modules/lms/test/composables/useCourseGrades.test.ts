@@ -150,6 +150,35 @@ describe('composables/useCourseGrades', () => {
     expect(g.letter).toBe('F')
   })
 
+  it('computeGrade：单项超过满分时只按该项占比计入', async () => {
+    setMockAuthUser({ id: 1, name: 'admin' }, [{ code: 'admin', name: 'Admin' }])
+    const isOpen = ref(false)
+    const { GRADE_WEIGHT_KEYS, useCourseGrades } = await import('../../composables/useCourseGrades')
+    const r = useCourseGrades({ courseId: 1, classId: 1 }, isOpen)
+    r.gradeCriteria.value = {
+      weights: GRADE_WEIGHT_KEYS.map(key => ({ key, maxScore: 100, percent: key === 'questionScore' ? 20 : 0 })),
+      levels: [{ letter: 'A', min: 90 }],
+    }
+    // questionScore 300 / 满分 100 → 折算上限为 20 分
+    const g = r.computeGrade({ questionScore: 300 })
+    expect(g.finalScore).toBeCloseTo(20, 1)
+  })
+
+  it('computeGrade：externalScore 为 0 时按满分计入', async () => {
+    setMockAuthUser({ id: 1, name: 'admin' }, [{ code: 'admin', name: 'Admin' }])
+    const isOpen = ref(false)
+    const { GRADE_WEIGHT_KEYS, useCourseGrades } = await import('../../composables/useCourseGrades')
+    const r = useCourseGrades({ courseId: 1, classId: 1 }, isOpen)
+    r.gradeCriteria.value = {
+      weights: GRADE_WEIGHT_KEYS.map(key => ({ key, maxScore: 100, percent: key === 'externalScore' ? 60 : 0 })),
+      levels: [{ letter: 'A', min: 90 }],
+    }
+    // 0 分 → 直接计入 60 分
+    expect(r.computeGrade({ externalScore: 0 }).finalScore).toBeCloseTo(60, 1)
+    // 非 0 时照常按比例折算：50 / 100 × 60 = 30
+    expect(r.computeGrade({ externalScore: 50 }).finalScore).toBeCloseTo(30, 1)
+  })
+
   it('buildRows：合并学生与成绩并按 score 降序', async () => {
     setMockAuthUser({ id: 1, name: 'admin' }, [{ code: 'admin', name: 'Admin' }])
     const isOpen = ref(false)

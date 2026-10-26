@@ -15,7 +15,8 @@ export function useGradesContext() {
 
 // ====================== 评分标准默认值 ======================
 // grade_criteria 为空时的初始值：每项分满分(maxScore) + 占比(percent)，百分比之和应为 100
-// 等第阈值按百分制换算：finalScore = Σ( subscore / maxScore × percent )
+// 等第阈值按百分制换算：finalScore = Σ( min(subscore / maxScore, 1) × percent )
+// externalScore 为 0 时按满分计入（直接加上该项 percent）
 const DEFAULT_PERCENTS: Record<string, number> = {
   questionScore: 30,
   homeworkScore: 20,
@@ -96,14 +97,19 @@ export function useCourseGrades(
   const criteriaDirty = ref(false)
 
   /** 根据行数据计算等第：最终分 + 字母等级
-   *  finalScore = Σ( subscore / maxScore × percent )，按百分制归一化后对照等第阈值 */
+   *  finalScore = Σ( min(subscore / maxScore, 1) × percent )
+   *  单项折算不得超过该项占比；externalScore 为 0 时按满分计入 */
   function computeGrade(row: any) {
     const crit = effectiveCriteria.value
     const finalScore = crit.weights.reduce((sum: number, w: any) => {
       const max = Number(w.maxScore) || 0
+      const percent = Number(w.percent) || 0
       if (max <= 0) return sum
       const subscore = Number(row?.[w.key]) || 0
-      return sum + (subscore / max) * (Number(w.percent) || 0)
+      // 外部分为 0 分时默认按满分计算
+      if (w.key === 'externalScore' && subscore === 0) return sum + percent
+      // 超出满分的部分不计入，单项贡献上限为该项占比
+      return sum + Math.min(subscore / max, 1) * percent
     }, 0)
     return {
       letter: letterForScore(finalScore, crit.levels),
