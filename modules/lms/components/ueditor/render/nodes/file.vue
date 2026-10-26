@@ -83,7 +83,7 @@
             <Model3dRender v-if="previewKind === '3d'" :node="modelNode" />
             <OfficeRender v-else-if="previewKind === 'office'" :node="officeNode" />
             <ZipPreview v-else-if="previewKind === 'zip'" :url="attrs.url" :name="attrs.name" />
-            <TextPreview v-else-if="previewKind === 'text'" :url="attrs.url" :name="attrs.name" />
+            <TextPreview v-else-if="previewKind === 'text'" :url="attrs.url" :name="attrs.name" :allow-blob="allowBlob" />
             <div v-else class="py-10 text-center text-sm text-gray-400">{{ $t('common.loading') }}</div>
           </div>
         </div>
@@ -180,6 +180,8 @@ const getFileIcon = (filename) => {
 
 const props = defineProps({
   node: { type: Object, required: true },
+  // 允许 blob: URL 预览（zip 解包条目、本地文件预览等场景）
+  allowBlob: { type: Boolean, default: false },
 })
 
 const attrs = computed(() => props.node.attrs || {})
@@ -243,6 +245,8 @@ const ext = computed(() => (attrs.value.name || '').split('.').pop()?.toLowerCas
 
 const MODEL_EXT = ['stl', 'obj', 'glb', 'gltf', 'fbx', '3ds', 'ply', 'dae', 'off', 'step', 'stp', 'iges', 'igs', 'ifc', '3mf', 'amf', 'blend', 'dwg', 'dxf']
 const OFFICE_EXT = ['doc', 'docx', 'docm', 'dot', 'rtf', 'wps', 'xls', 'xlsx', 'csv', 'ods', 'ppt', 'pptx', 'dps', 'pot']
+// 图片扩展名（供图标加载失败时选择 lucide 兜底图标）
+const IMG_EXT = ['png', 'bmp', 'jpg', 'jpeg', 'gif', 'webp', 'tga', 'exif', 'fpx', 'svg', 'hdri', 'raw', 'ico', 'jfif', 'dib', 'pbm', 'pgm', 'ppm', 'rgb', 'avif']
 // 压缩包：zip 可用 jszip 浏览器端解析预览；rar/7z/tar/gz 无法纯前端解析，走新开 tab
 const ZIP_EXT = ['zip']
 // 常见压缩/归档扩展（zip 图标直接走本地 lucide 兜底）

@@ -96,6 +96,12 @@ export default defineNuxtModule({
         path: '/showcase/:id',
         file: resolve('./pages/showcase/[id].vue'),
       })
+      // 本地文件预览页（拖拽 / 点击选择文件后在线预览）
+      pages.push({
+        name: 'lms-preview',
+        path: '/preview',
+        file: resolve('./pages/preview.vue'),
+      })
     })
 
     addServerScanDir(resolve('./server'))

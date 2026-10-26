@@ -966,6 +966,7 @@
     "officeHeight": "Preview Height",
     "officeLoading": "Loading preview…",
     "officeFailToLoad": "Failed to load preview",
+    "officeLocalUnsupported": "This legacy Office format cannot be previewed locally (only docx / xlsx / csv / pptx are supported)",
     "mindmapFullscreen": "Fullscreen preview",
     "textPreviewLines": "lines",
     "textPreviewChars": "chars",
@@ -1367,6 +1368,15 @@
     "quizFailed": "📝 completed the quiz ({score} points)",
     "comment": "💬 posted a comment",
     "submit": "submitted"
+  },
+  "filePreview": {
+    "title": "File Preview",
+    "subtitle": "Preview a local file in your browser. Nothing is uploaded.",
+    "dragHint": "Drag & drop a file here",
+    "dropNow": "Drop to preview",
+    "clickHint": "or click to choose a file — Office, PDF, images, video, archives, code and 3D models are supported",
+    "replace": "Choose another file",
+    "clear": "Remove file"
   },
   "showcase": {
     "title": "Showcase",

@@ -16,6 +16,8 @@ import CodeBlockView from './code-block.vue'
 const props = defineProps({
   url: { type: String, required: true },
   name: { type: String, default: '' },
+  // 允许 blob: URL（本地文件预览场景）；编辑器内残留的 blob 仍按「未上传」处理
+  allowBlob: { type: Boolean, default: false },
 })
 
 const { t } = useI18n()
@@ -48,7 +50,7 @@ const codeNode = computed(() => ({
 
 onMounted(async () => {
   try {
-    if (/^blob:/i.test(props.url)) {
+    if (!props.allowBlob && /^blob:/i.test(props.url)) {
       error.value = t('ueditor.file.notUploaded')
       return
     }

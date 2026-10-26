@@ -966,6 +966,7 @@
     "officeHeight": "预览高度",
     "officeLoading": "正在加载预览…",
     "officeFailToLoad": "预览加载失败",
+    "officeLocalUnsupported": "该 Office 旧格式不支持本地预览（仅支持 docx / xlsx / csv / pptx）",
     "mindmapFullscreen": "全屏预览",
     "textPreviewLines": "行",
     "textPreviewChars": "字符",
@@ -1367,6 +1368,15 @@
     "quizFailed": "📝 完成了测验 ({score}分)",
     "comment": "💬 发表了评论",
     "submit": "提交了"
+  },
+  "filePreview": {
+    "title": "文件预览",
+    "subtitle": "在浏览器本地预览文件，文件不会被上传。",
+    "dragHint": "将文件拖拽到此处",
+    "dropNow": "松开鼠标即可预览",
+    "clickHint": "或点击选择文件，支持 Office、PDF、图片、视频、压缩包、文本代码、3D 模型等",
+    "replace": "更换文件",
+    "clear": "移除文件"
   },
   "showcase": {
     "title": "作品展示",

@@ -18,6 +18,7 @@
           v-for="e in files"
           :key="e.name"
           :node="e.node"
+          allow-blob
           class="zip-file-row"
         />
       </div>

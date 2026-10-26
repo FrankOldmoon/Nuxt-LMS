@@ -77,7 +77,11 @@ async function load() {
     if (!url) return
 
     const key = vueOfficeKey.value
-    if (!key) return // 交给 MS 嵌入分支（或什么都不做）
+    if (!key) {
+        // blob: 是浏览器本地临时地址，MS 在线预览服务无法访问，直接提示不支持
+        if (/^blob:/i.test(url)) error.value = t('ueditor.officeLocalUnsupported')
+        return // 交给 MS 嵌入分支（或什么都不做）
+    }
 
     loading.value = true
     try {
@@ -97,6 +101,8 @@ async function load() {
 const embedUrl = computed(() => {
     // 仅当 vue-office 不支持、但属于旧 office 格式时使用 MS 在线嵌入
     if (vueOfficeKey.value || !config.value.url) return ''
+    // 本地 blob 文件无法被 MS 在线预览服务访问
+    if (/^blob:/i.test(config.value.url)) return ''
     if (MS_EMBED_EXT.includes(ext.value)) {
         const url = config.value.url
         return `https://view.officeapps.live.com/embed/?url=${encodeURIComponent(encodeURI(url))}`

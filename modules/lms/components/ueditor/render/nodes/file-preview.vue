@@ -9,7 +9,7 @@
   <Model3dRender v-else-if="kind === '3d'" :node="modelNode" />
   <OfficeRender v-else-if="kind === 'office'" :node="officeNode" />
   <ZipPreview v-else-if="kind === 'zip'" :url="url" :name="name" />
-  <TextPreview v-else-if="kind === 'text'" :url="url" :name="name" />
+  <TextPreview v-else-if="kind === 'text'" :url="url" :name="name" :allow-blob="allowBlob" />
   <!-- 其他类型：无法在线预览，仅提供下载 -->
   <div v-else class="fp-fallback">
     <UIcon name="i-heroicons-paperclip" class="w-10 h-10" />
@@ -32,6 +32,8 @@ import TextPreview from './text-preview.vue'
 const props = defineProps({
   url: { type: String, default: '' },
   name: { type: String, default: '' },
+  // 允许 blob: URL（本地文件预览，如 /preview 页面）
+  allowBlob: { type: Boolean, default: false },
 })
 
 // 与 file.vue 一致的类型分类
