@@ -9,7 +9,7 @@
  * 用法：node scripts/exam-course5/smoke-answer.mjs --id khsjLN
  * 测完会自动删掉这份测试答卷。
  */
-import { createClient, SK } from './sk-client.mjs'
+import { createClient, SK } from '../surveyking-oauth/sk-client.mjs'
 
 const argv = process.argv.slice(2)
 const opt = (n, d) => {

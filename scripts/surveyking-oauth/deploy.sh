@@ -94,6 +94,12 @@ curl -s -X POST "http://$HOST/api/public/oauth/login/google/start" \
   | python3 -c "import json,sys; print(json.load(sys.stdin)['data']['authorizationUrl'].split('?')[0])"
 echo -n "  第三方登录可用      : "
 curl -s "http://$HOST/api/system" | python3 -c "import json,sys; print(json.load(sys.stdin)['data']['oauthProviders'])"
+echo -n "  自助注册开关        : "
+curl -s "http://$HOST/api/system" | python3 -c "
+import json,sys
+r = (json.load(sys.stdin)['data'].get('registerInfo') or {})
+print('已开启 ✓' if r.get('registerEnabled') else '❌ 已关闭 —— 没绑定的 LMS 用户会被拒（报 not_bound），用 set-register.mjs --enable 打开')
+"
 
 # 登录页 chunk 的文件名从**本地刚打好的 jar** 里读（服务器上的 /asset-manifest.json
 # 会被 SPA 兜底成首页，取不到 JSON），再去服务器拉这个文件看内容对不对。

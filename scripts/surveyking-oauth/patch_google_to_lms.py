@@ -113,6 +113,53 @@ FRONTEND_REPLACEMENTS = [
         b'(null!==(a=F.oauthProviders)&&void 0!==a&&a.google||o.length>0)&&g.push({title:"Google"',
         b'(null!==(a=F.oauthProviders)&&void 0!==a&&a.google||o.length>0)&&!1&&g.push({title:"Google"',
     ),
+    # 注册页：LMS 里没有对应账号的人，首次登录会落到 /user/register?oauthTicket=xxx，
+    # 原本要手动填姓名/账号/密码/确认密码。
+    # 这里改成：拿到预填信息后，自动生成一个随机强密码、自动提交 ——
+    # 用户点了「LMS 账号登录」就直接进系统，不需要设密码。
+    # 密码是随机的、用户永远用不到（之后都走 SSO），只是为了满足后端的建号约束。
+    (
+        b'if(e)return null===(s=T.current)||void 0===s||s.setFieldsValue(e),void P(!0);',
+        b'if(e){'
+        b'var _pw="Aa1"+(Math.random().toString(36)+"aaaaaaaa").slice(2,11);'
+        b'null===(s=T.current)||void 0===s||s.setFieldsValue(Object.assign({},e,{password:_pw,rePassword:_pw})),P(!0),'
+        b'setTimeout(function(){try{'
+        b'var _f=document.querySelector("#root form");'
+        b'_f&&_f.requestSubmit?_f.requestSubmit():(T.current&&T.current.submit&&T.current.submit())'
+        b'}catch(_e){console.warn("[auto-register]",_e)}},400);'
+        b'return}',
+    ),
+]
+
+# 追加到指定 CSS 末尾的规则（按文件名模式匹配）
+#
+# 登录页「只留 LMS 登录按钮」：
+#   实测 DOM 里 LMS 按钮挂在 .socialLogin 下，**不在 <form> 里**，
+#   所以直接把 form 藏掉即可，不依赖 CSS module 的 hash 类名（升级也不怕）。
+#   顺便藏掉「立即注册」入口 —— 现在账号是自动创建的，用不到。
+FRONTEND_CSS_APPEND = [
+    (
+        'p__user__Login.',
+        '\n/* LMS-only 登录：隐藏账号密码表单与注册入口 */\n'
+        '#root form{display:none!important}\n'
+        '#root a[href*="/user/register"]{display:none!important}\n'
+        '/* 链接藏了之后「No account yet?」这行会孤零零留着 */\n'
+        '#root [class*=registerPrompt]{display:none!important}\n'
+        '#root .ant-divider{margin:4px 0 18px}\n'
+        '/* 那个图标是 Google 的 G，跟 LMS 没关系，藏掉 */\n'
+        '#root [class*=socialIcon]{display:none!important}\n'
+        '/* 把社交项做成一条像样的主按钮 */\n'
+        '#root [class*=socialLogin]{display:block!important}\n'
+        '#root [class*=socialOption]{display:flex!important;align-items:center;justify-content:center;'
+        'width:100%;min-height:46px;border:1px solid #d9d9d9;border-radius:8px;background:#fff;'
+        'font-size:16px;font-weight:600;color:#1f1f1f;cursor:pointer;transition:all .15s}\n'
+        '#root [class*=socialOption]:hover{border-color:#1677ff;color:#1677ff;background:#f0f7ff}\n',
+    ),
+    (
+        'p__user__Register.',
+        '\n/* 自动建号：表单由脚本自动填并提交，这里只留一句提示 */\n'
+        '#root form{opacity:.35;pointer-events:none}\n',
+    ),
 ]
 
 HASH_RE = re.compile(r'\.([0-9a-f]{8})(\.(?:async\.js|js|chunk\.css|css))$')
@@ -218,14 +265,19 @@ def patch_class(data: bytes, replacements: dict) -> tuple:
 
 
 # ---------------------------------------------------------------- 前端处理
-def patch_frontend(payload: bytes) -> tuple:
-    """对前端静态资源做文案替换，返回 (新内容, 命中数)"""
+def patch_frontend(payload: bytes, name: str = '') -> tuple:
+    """对前端静态资源做文案替换（+ 按文件名追加 CSS），返回 (新内容, 命中数)"""
     hits = 0
     for old, new in FRONTEND_REPLACEMENTS:
         n = payload.count(old)
         if n:
             payload = payload.replace(old, new)
             hits += n
+    if name.endswith('.css'):
+        for prefix, extra in FRONTEND_CSS_APPEND:
+            if name.startswith(prefix):
+                payload = payload + extra.encode('utf-8')
+                hits += 1
     return payload, hits
 
 
@@ -348,8 +400,8 @@ def patch_fat_jar(src_path: str, dst_path: str, replacements: dict) -> dict:
     frontend_files = []
     changed = set()
     for key in static_order:
-        if key.endswith(('.js', '.json', '.html')):
-            payload, n = patch_frontend(static[key])
+        if key.endswith(('.js', '.json', '.html', '.css')):
+            payload, n = patch_frontend(static[key], key)
             if n:
                 static[key] = payload
                 changed.add(key)

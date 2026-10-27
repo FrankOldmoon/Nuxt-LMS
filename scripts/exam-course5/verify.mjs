@@ -10,7 +10,7 @@
  * 用法：node scripts/exam-course5/verify.mjs --id khsjLN
  */
 import { readFileSync } from 'node:fs'
-import { createClient, SK } from './sk-client.mjs'
+import { createClient, SK } from '../surveyking-oauth/sk-client.mjs'
 
 const argv = process.argv.slice(2)
 const opt = (n, d) => {

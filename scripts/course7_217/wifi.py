@@ -18,12 +18,12 @@ import socket
 from machine import Pin, PWM
 
 # ---------- 1. Calibration (same table as Program 1) ----------
-ANG = {'hip_r': 52, 'knee_r': 54, 'ankle_r': 91,
-       'hip_l': 135, 'knee_l': 142, 'ankle_l': 95,
+ANG = {'leg_r': 30, 'knee_r': 54, 'ankle_r': 91,
+       'leg_l': 150, 'knee_l': 142, 'ankle_l': 95,
        'shoulder_r': 32, 'arm_r': 144, 'hand_r': 40,
-       'shoulder_l': 146, 'arm_l': 37, 'hand_l': 153}
+       'shoulder_l': 150, 'arm_l': 37, 'hand_l': 130}
 
-LEAN = 3          # forward lean while standing; raise it if the robot falls backwards
+LEAN = 0   # extra forward lean while walking; 0 = the same pose as Program 1
 SPEED = 2         # gait speed, larger value = slower
 AHEAD_R = 12      # side tilt (right) used to free the left foot when walking forward
 AHEAD_L = 12      # side tilt (left) used to free the right foot when walking forward
@@ -36,20 +36,20 @@ WIFI_SSID = 'MINXIN-S'
 WIFI_PASS = 'Minxin520'
 
 # ---------- 2. Hardware ----------
-PINS = {'hip_r': 14, 'knee_r': 13, 'ankle_r': 12,
-        'hip_l': 5, 'knee_l': 4, 'ankle_l': 2,
+PINS = {'leg_r': 14, 'knee_r': 13, 'ankle_r': 12,
+        'leg_l': 5, 'knee_l': 4, 'ankle_l': 2,
         'shoulder_r': 15, 'arm_r': 25, 'hand_r': 26,
         'shoulder_l': 27, 'arm_l': 32, 'hand_l': 33}
 
-HIP_R = ANG['hip_r'] + LEAN   # right hip angle in the standing pose
-HIP_L = ANG['hip_l'] - LEAN   # left hip angle in the standing pose
+LEG_R = ANG['leg_r'] + LEAN   # right leg angle in the standing pose
+LEG_L = ANG['leg_l'] - LEAN   # left leg angle in the standing pose
 
 srv = {j: PWM(Pin(p, Pin.OUT), freq=50) for j, p in PINS.items()}
 
 # Last angle we told each servo to go to. Taken from the calibration table, so at
 # power-up the pose is known without reading anything back from the PWM hardware.
 pos = dict(ANG)
-pos['hip_r'], pos['hip_l'] = HIP_R, HIP_L
+pos['leg_r'], pos['leg_l'] = LEG_R, LEG_L
 
 
 def w(joint, deg):
@@ -65,7 +65,7 @@ def stand(force=False):
     already thinks the robot is standing, so /reset really re-drives the servos.
     """
     target = dict(ANG)
-    target['hip_r'], target['hip_l'] = HIP_R, HIP_L
+    target['leg_r'], target['leg_l'] = LEG_R, LEG_L
     while pos != target:
         for j in srv:
             if pos[j] < target[j]:
@@ -82,8 +82,8 @@ def stand(force=False):
 def goahead(steps=5):
     """Walk forward the given number of full gait cycles."""
     stand()
-    w('hip_r', HIP_R - 2)
-    w('hip_l', HIP_L + 2)
+    w('leg_r', LEG_R - 2)
+    w('leg_l', LEG_L + 2)
     time.sleep_ms(200)
 
     # Shift the weight, step with the left leg.
@@ -95,9 +95,9 @@ def goahead(steps=5):
     w('ankle_l', ANG['ankle_l'] - AHEAD_R)
     time.sleep_ms(SPEED * 50)
     for a in range(13):
-        w('hip_r', HIP_R - a - 2)
+        w('leg_r', LEG_R - a - 2)
         w('knee_r', ANG['knee_r'] - a)
-        w('hip_l', HIP_L - a - 4)
+        w('leg_l', LEG_L - a - 4)
         w('knee_l', ANG['knee_l'] - a + 4)
         w('shoulder_r', ANG['shoulder_r'] + 2 * a)
         time.sleep_ms(SPEED * 10 + 30)
@@ -116,9 +116,9 @@ def goahead(steps=5):
     w('ankle_r', ANG['ankle_r'] + AHEAD_L)
     time.sleep_ms(SPEED * 50)
     for a in range(13):
-        w('hip_r', HIP_R - 15 + a)
+        w('leg_r', LEG_R - 15 + a)
         w('knee_r', ANG['knee_r'] - 13 + a)
-        w('hip_l', HIP_L - 13 + a - 2)
+        w('leg_l', LEG_L - 13 + a - 2)
         w('knee_l', ANG['knee_l'] - 13 + a)
         w('shoulder_r', ANG['shoulder_r'] - 2 * a + 52)
         w('shoulder_l', ANG['shoulder_l'] - 2 * a)
@@ -127,9 +127,9 @@ def goahead(steps=5):
     # Remaining gait cycles.
     for _ in range(steps):
         for a in range(13):
-            w('hip_r', HIP_R + a - 2)
+            w('leg_r', LEG_R + a - 2)
             w('knee_r', ANG['knee_r'] + a - 3)
-            w('hip_l', HIP_L + a - 2)
+            w('leg_l', LEG_L + a - 2)
             w('knee_l', ANG['knee_l'] + a - 3)
             w('shoulder_r', ANG['shoulder_r'] - 2 * a + 26)
             w('shoulder_l', ANG['shoulder_l'] - 2 * a - 26)
@@ -147,18 +147,18 @@ def goahead(steps=5):
         w('ankle_l', ANG['ankle_l'] - AHEAD_R)
         time.sleep_ms(SPEED * 50)
         for a in range(13):
-            w('hip_r', HIP_R + 13 - a - 2)
+            w('leg_r', LEG_R + 13 - a - 2)
             w('knee_r', ANG['knee_r'] + 13 - a)
-            w('hip_l', HIP_L + 13 - a - 4)
+            w('leg_l', LEG_L + 13 - a - 4)
             w('knee_l', ANG['knee_l'] + 13 - a + 4)
             w('shoulder_r', ANG['shoulder_r'] + 2 * a)
             w('shoulder_l', ANG['shoulder_l'] + 2 * a - 52)
             time.sleep_ms(SPEED * 10 + 20)
 
         for a in range(13):
-            w('hip_r', HIP_R - a - 2)
+            w('leg_r', LEG_R - a - 2)
             w('knee_r', ANG['knee_r'] - a)
-            w('hip_l', HIP_L - a + 1)
+            w('leg_l', LEG_L - a + 1)
             w('knee_l', ANG['knee_l'] - a + 4)
             w('shoulder_r', ANG['shoulder_r'] + 26 + 2 * a)
             w('shoulder_l', ANG['shoulder_l'] + 2 * a - 26)
@@ -176,9 +176,9 @@ def goahead(steps=5):
         w('ankle_r', ANG['ankle_r'] + AHEAD_L)
         time.sleep_ms(50)
         for a in range(13):
-            w('hip_r', HIP_R - 13 + a - 2)
+            w('leg_r', LEG_R - 13 + a - 2)
             w('knee_r', ANG['knee_r'] - 13 + a - 3)
-            w('hip_l', HIP_L - 13 + a - 2)
+            w('leg_l', LEG_L - 13 + a - 2)
             w('knee_l', ANG['knee_l'] - 13 + a)
             w('shoulder_r', ANG['shoulder_r'] - 2 * a + 52)
             w('shoulder_l', ANG['shoulder_l'] - 2 * a)
@@ -191,8 +191,8 @@ def goback(steps=5):
     """Walk backwards the given number of full gait cycles."""
     stand()
     for a in range(3):
-        w('hip_r', HIP_R + a)
-        w('hip_l', HIP_L - a)
+        w('leg_r', LEG_R + a)
+        w('leg_l', LEG_L - a)
         time.sleep_ms(50)
 
     for a in range(BACK_R):
@@ -203,7 +203,7 @@ def goback(steps=5):
     w('ankle_l', ANG['ankle_l'] - BACK_R)
     time.sleep_ms(SPEED * 50 + 50)
     for a in range(15):
-        w('hip_r', HIP_R + a + 3)
+        w('leg_r', LEG_R + a + 3)
         w('knee_r', ANG['knee_r'] + a)
         w('knee_l', ANG['knee_l'] - a / 3)
         w('shoulder_l', ANG['shoulder_l'] - 2 * a)
@@ -225,9 +225,9 @@ def goback(steps=5):
 
     for _ in range(steps):
         for a in range(15):
-            w('hip_r', HIP_R + 15 - a + 3)
+            w('leg_r', LEG_R + 15 - a + 3)
             w('knee_r', ANG['knee_r'] + 15 - a + 5)
-            w('hip_l', HIP_L - 3 - a)
+            w('leg_l', LEG_L - 3 - a)
             w('knee_l', ANG['knee_l'] - a)
             w('shoulder_r', ANG['shoulder_r'] + 2 * a)
             w('shoulder_l', ANG['shoulder_l'] - 30 + 2 * a)
@@ -246,9 +246,9 @@ def goback(steps=5):
         time.sleep_ms(SPEED * 50 + 50)
 
         for a in range(15):
-            w('hip_r', HIP_R + a + 3)
+            w('leg_r', LEG_R + a + 3)
             w('knee_r', ANG['knee_r'] + a)
-            w('hip_l', HIP_L - 15 + a - 3)
+            w('leg_l', LEG_L - 15 + a - 3)
             w('knee_l', ANG['knee_l'] - 15 + a + 5)
             w('shoulder_r', ANG['shoulder_r'] + 30 - 2 * a)
             w('shoulder_l', ANG['shoulder_l'] - 2 * a)
@@ -278,9 +278,9 @@ def turnleft():
         time.sleep_ms(SPEED * 10 + 20)
     time.sleep_ms(SPEED * 50 + 50)
     for a in range(16):
-        w('hip_l', ANG['hip_l'] + a)
+        w('leg_l', ANG['leg_l'] + a)
         w('knee_l', ANG['knee_l'] + a)
-        w('hip_r', ANG['hip_r'] + a)
+        w('leg_r', ANG['leg_r'] + a)
         w('knee_r', ANG['knee_r'] + a)
         time.sleep_ms(40)
     time.sleep_ms(SPEED * 50 + 50)
@@ -292,9 +292,9 @@ def turnleft():
         time.sleep_ms(20)
     time.sleep_ms(SPEED * 100 + 200)
     for a in range(16):
-        w('hip_l', ANG['hip_l'] + 15 - a)
+        w('leg_l', ANG['leg_l'] + 15 - a)
         w('knee_l', ANG['knee_l'] + 15 - a)
-        w('hip_r', ANG['hip_r'] + 15 - a)
+        w('leg_r', ANG['leg_r'] + 15 - a)
         w('knee_r', ANG['knee_r'] + 15 - a)
         time.sleep_ms(10)
     time.sleep_ms(SPEED * 50 + 50)
@@ -308,9 +308,9 @@ def turnright():
         time.sleep_ms(SPEED * 10 + 20)
     time.sleep_ms(SPEED * 50 + 50)
     for a in range(16):
-        w('hip_l', ANG['hip_l'] - a)
+        w('leg_l', ANG['leg_l'] - a)
         w('knee_l', ANG['knee_l'] - a)
-        w('hip_r', ANG['hip_r'] - a)
+        w('leg_r', ANG['leg_r'] - a)
         w('knee_r', ANG['knee_r'] - a)
         time.sleep_ms(40)
     w('knee_l', ANG['knee_l'] - 16 + 6)
@@ -323,9 +323,9 @@ def turnright():
         time.sleep_ms(20)
     time.sleep_ms(SPEED * 100 + 200)
     for a in range(16):
-        w('hip_l', ANG['hip_l'] - 15 + a)
+        w('leg_l', ANG['leg_l'] - 15 + a)
         w('knee_l', ANG['knee_l'] - 15 + a)
-        w('hip_r', ANG['hip_r'] - 15 + a)
+        w('leg_r', ANG['leg_r'] - 15 + a)
         w('knee_r', ANG['knee_r'] - 15 + a)
         time.sleep_ms(10)
     time.sleep_ms(SPEED * 50 + 50)
@@ -334,8 +334,8 @@ def turnright():
 def kick():
     """Lean, swing the right leg back and kick."""
     for a in range(9):
-        w('hip_r', HIP_R + a)
-        w('hip_l', HIP_L - a)
+        w('leg_r', LEG_R + a)
+        w('leg_l', LEG_L - a)
         time.sleep_ms(50)
     for a in range(15):
         w('ankle_r', ANG['ankle_r'] + a)
@@ -348,13 +348,13 @@ def kick():
         w('ankle_r', ANG['ankle_r'] + 30 - a)
         time.sleep_ms(10)
     for a in range(30):
-        w('hip_r', HIP_R + 10 - a)
+        w('leg_r', LEG_R + 10 - a)
         w('knee_r', ANG['knee_r'] + 2 * a)
         w('shoulder_l', ANG['shoulder_l'] - 2 * a)
         w('hand_l', ANG['hand_l'] - 2 * a)
         time.sleep_ms(20)
     time.sleep_ms(1000)
-    w('hip_r', HIP_R + 60)
+    w('leg_r', LEG_R + 60)
     w('knee_r', ANG['knee_r'] + 10)
     time.sleep_ms(1000)
     stand()
@@ -363,8 +363,8 @@ def kick():
 def pushup():
     """Lie down on the hands, do three push-ups, then stand up."""
     for a in range(114):
-        w('hip_r', ANG['hip_r'] + a)
-        w('hip_l', ANG['hip_l'] - a)
+        w('leg_r', ANG['leg_r'] + a)
+        w('leg_l', ANG['leg_l'] - a)
         w('knee_r', ANG['knee_r'] + a / 2)
         w('knee_l', ANG['knee_l'] - a / 2)
         time.sleep_ms(30)
@@ -377,8 +377,8 @@ def pushup():
         w('knee_l', ANG['knee_l'] - 57 + a)
         time.sleep_ms(10)
     for a in range(114):
-        w('hip_r', HIP_R + 114 - a)
-        w('hip_l', HIP_L - 114 + a)
+        w('leg_r', LEG_R + 114 - a)
+        w('leg_l', LEG_L - 114 + a)
         time.sleep_ms(10)
     time.sleep_ms(300)
 
@@ -397,8 +397,8 @@ def pushup():
             time.sleep_ms(10)
 
     for a in range(100 + RISE_DEG):         # tuck the thighs
-        w('hip_r', HIP_R + a)
-        w('hip_l', HIP_L - a)
+        w('leg_r', LEG_R + a)
+        w('leg_l', LEG_L - a)
         time.sleep_ms(10)
     time.sleep_ms(500)
     for a in range(60):
@@ -414,41 +414,41 @@ def pushup():
         w('knee_l', ANG['knee_l'] - 60 - a)
         time.sleep_ms(5)
     for a in range(10):
-        w('hip_r', HIP_R + 100 + RISE_DEG - a)
-        w('hip_l', HIP_L - 100 - RISE_DEG + a)
+        w('leg_r', LEG_R + 100 + RISE_DEG - a)
+        w('leg_l', LEG_L - 100 - RISE_DEG + a)
         time.sleep_ms(3)
     for a in range(RISE_DEG):
-        w('hip_r', HIP_R + 90 + RISE_DEG - a)
-        w('hip_l', HIP_L - 90 - RISE_DEG + a)
+        w('leg_r', LEG_R + 90 + RISE_DEG - a)
+        w('leg_l', LEG_L - 90 - RISE_DEG + a)
         time.sleep_ms(30)
     time.sleep_ms(100)
     for a in range(15):
         w('knee_r', ANG['knee_r'] + 70 - a)
         w('knee_l', ANG['knee_l'] - 70 + a)
-        w('hip_r', HIP_R + 92 - a)
-        w('hip_l', HIP_L - 92 + a)
+        w('leg_r', LEG_R + 92 - a)
+        w('leg_l', LEG_L - 92 + a)
         time.sleep_ms(50)
     time.sleep_ms(100)
     for a in range(15):
         w('knee_r', ANG['knee_r'] + 55 - a)
         w('knee_l', ANG['knee_l'] - 55 + a)
-        w('hip_r', HIP_R + 77 - a)
-        w('hip_l', HIP_L - 77 + a)
+        w('leg_r', LEG_R + 77 - a)
+        w('leg_l', LEG_L - 77 + a)
         time.sleep_ms(50)
     time.sleep_ms(100)
     for a in range(10):
-        w('hip_r', HIP_R + 62 - a)
-        w('hip_l', HIP_L - 62 + a)
+        w('leg_r', LEG_R + 62 - a)
+        w('leg_l', LEG_L - 62 + a)
         time.sleep_ms(50)
     for a in range(40):
         w('knee_r', ANG['knee_r'] + 40 - a)
         w('knee_l', ANG['knee_l'] - 40 + a)
-        w('hip_r', HIP_R + 52 - a)
-        w('hip_l', HIP_L - 52 + a)
+        w('leg_r', LEG_R + 52 - a)
+        w('leg_l', LEG_L - 52 + a)
         time.sleep_ms(50)
     for a in range(12):
-        w('hip_r', HIP_R + 12 - a)
-        w('hip_l', HIP_L - 12 + a)
+        w('leg_r', LEG_R + 12 - a)
+        w('leg_l', LEG_L - 12 + a)
         time.sleep_ms(50)
 
 
@@ -458,12 +458,12 @@ def punch():
     for a in range(30):
         w('knee_r', ANG['knee_r'] + a)
         w('knee_l', ANG['knee_l'] - a)
-        w('hip_r', HIP_R + 2 * a)
-        w('hip_l', HIP_L - 2 * a)
+        w('leg_r', LEG_R + 2 * a)
+        w('leg_l', LEG_L - 2 * a)
         time.sleep_ms(50)
     for a in range(25):
-        w('hip_r', HIP_R + 60 - a)
-        w('hip_l', HIP_L - 60 + a)
+        w('leg_r', LEG_R + 60 - a)
+        w('leg_l', LEG_L - 60 + a)
         time.sleep_ms(50)
     time.sleep_ms(100)
     time.sleep_ms(300)
@@ -502,12 +502,12 @@ def punch():
     for a in range(30):                     # straighten up
         w('knee_r', ANG['knee_r'] + 30 - a)
         w('knee_l', ANG['knee_l'] - 30 + a)
-        w('hip_r', HIP_R + 35 - a)
-        w('hip_l', HIP_L - 35 + a)
+        w('leg_r', LEG_R + 35 - a)
+        w('leg_l', LEG_L - 35 + a)
         time.sleep_ms(50)
     for a in range(5):
-        w('hip_r', HIP_R + 5 - a)
-        w('hip_l', HIP_L - 5 + a)
+        w('leg_r', LEG_R + 5 - a)
+        w('leg_l', LEG_L - 5 + a)
         time.sleep_ms(20)
     stand()
 

@@ -9,32 +9,32 @@
 #   2) Run it. The robot stands up, dances one round, then repeats.
 #   3) Put the robot on a table with 1 m of clear space around it.
 #
-# Warning: the first move bends forward 70 deg. If your robot tends to fall
-# forward, raise LEAN a little BEFORE dancing (see Program 1).
+# Warning: the first move folds the body forward 70 deg. If your robot tends
+# to fall forward, raise LEAN above 0 before dancing.
 # ============================================================
 
 from machine import Pin, PWM
 import time
 
 # ---------- 1. Calibration (same table as Program 1 and 2) ----------
-ANG = {'hip_r': 52, 'knee_r': 54, 'ankle_r': 91,
-       'hip_l': 135, 'knee_l': 142, 'ankle_l': 95,
+ANG = {'leg_r': 30, 'knee_r': 54, 'ankle_r': 91,
+       'leg_l': 150, 'knee_l': 142, 'ankle_l': 95,
        'shoulder_r': 32, 'arm_r': 144, 'hand_r': 40,
-       'shoulder_l': 146, 'arm_l': 37, 'hand_l': 153}
+       'shoulder_l': 150, 'arm_l': 37, 'hand_l': 130}
 
-LEAN = 3
+LEAN = 0   # extra forward lean while walking; 0 = the same pose as Program 1
 
-PINS = {'hip_r': 14, 'knee_r': 13, 'ankle_r': 12,
-        'hip_l': 5, 'knee_l': 4, 'ankle_l': 2,
+PINS = {'leg_r': 14, 'knee_r': 13, 'ankle_r': 12,
+        'leg_l': 5, 'knee_l': 4, 'ankle_l': 2,
         'shoulder_r': 15, 'arm_r': 25, 'hand_r': 26,
         'shoulder_l': 27, 'arm_l': 32, 'hand_l': 33}
 
-HIP_R = ANG['hip_r'] + LEAN
-HIP_L = ANG['hip_l'] - LEAN
+LEG_R = ANG['leg_r'] + LEAN
+LEG_L = ANG['leg_l'] - LEAN
 
 srv = {j: PWM(Pin(p, Pin.OUT), freq=50) for j, p in PINS.items()}
 pos = dict(ANG)
-pos['hip_r'], pos['hip_l'] = HIP_R, HIP_L
+pos['leg_r'], pos['leg_l'] = LEG_R, LEG_L
 
 
 def w(joint, deg):
@@ -46,7 +46,7 @@ def w(joint, deg):
 def stand():
     """Ease every joint back to the standing pose, all at the same time."""
     target = dict(ANG)
-    target['hip_r'], target['hip_l'] = HIP_R, HIP_L
+    target['leg_r'], target['leg_l'] = LEG_R, LEG_L
     while pos != target:
         for j in ANG:
             if pos[j] < target[j]:
@@ -64,8 +64,8 @@ def stand():
 
 def bow():                              # 鞠躬 - fold forward from the hips
     for a in range(70):
-        w('hip_r', ANG['hip_r'] + a)
-        w('hip_l', ANG['hip_l'] - a)
+        w('leg_r', ANG['leg_r'] + a)
+        w('leg_l', ANG['leg_l'] - a)
         w('knee_r', ANG['knee_r'] + a / 2)
         w('knee_l', ANG['knee_l'] - a / 2)
         w('shoulder_r', ANG['shoulder_r'] + a)
@@ -73,8 +73,8 @@ def bow():                              # 鞠躬 - fold forward from the hips
         time.sleep_ms(10)
     time.sleep_ms(600)
     for a in range(70):
-        w('hip_r', ANG['hip_r'] + 70 - a)
-        w('hip_l', ANG['hip_l'] - 70 + a)
+        w('leg_r', ANG['leg_r'] + 70 - a)
+        w('leg_l', ANG['leg_l'] - 70 + a)
         w('knee_r', ANG['knee_r'] + 35 - a / 2)
         w('knee_l', ANG['knee_l'] - 35 + a / 2)
         w('shoulder_r', ANG['shoulder_r'] + 70 - a)
@@ -207,9 +207,9 @@ def fan(base, step, open_arm):
         w('hand_l', ANG['hand_l'] + 60)
     for a in range(20):
         h = base + step * a
-        w('hip_r', ANG['hip_r'] + h)
+        w('leg_r', ANG['leg_r'] + h)
         w('knee_r', ANG['knee_r'] + h / 2)
-        w('hip_l', ANG['hip_l'] - h)
+        w('leg_l', ANG['leg_l'] - h)
         w('knee_l', ANG['knee_l'] - h / 2)
         time.sleep_ms(25)
 

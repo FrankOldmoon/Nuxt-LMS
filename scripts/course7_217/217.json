@@ -30,7 +30,7 @@
             },
             {
               "type": "text",
-              "text": " Each program does exactly one job, and each one is short enough to read in a sitting. You start by finding the twelve numbers that make your robot stand up straight, then teach it to walk from your phone, then to dance, and finally to obey your voice."
+              "text": " Each program does exactly one job, and each one is short enough to read in a sitting. You start with the smallest program that can possibly work: twelve numbers that make the robot stand up on its own. Then it walks from your phone, then it dances, and finally it obeys your voice."
             }
           ]
         },
@@ -63,7 +63,7 @@
                   "content": [
                     {
                       "type": "text",
-                      "text": "Program 1 - pose tester: find the standing angle of every joint."
+                      "text": "Program 1 - standing pose: twelve numbers, one upright robot."
                     }
                   ]
                 }
@@ -167,7 +167,7 @@
                   "content": [
                     {
                       "type": "text",
-                      "text": "Extra - add your own pose, your own button and your own voice command."
+                      "text": "Extra - add a second pose, your own web button and your own voice command."
                     }
                   ]
                 }
@@ -180,7 +180,7 @@
     {
       "type": "heading",
       "attrs": {
-        "id": "p01mpc",
+        "id": "p0rwrz",
         "level": 2,
         "indent": null,
         "margin": null,
@@ -188,7 +188,7 @@
         "textAlign": null,
         "indentUnit": null,
         "lineHeight": 1.75,
-        "data-toc-id": "p01mpc"
+        "data-toc-id": "p0rwrz"
       },
       "content": [
         {
@@ -257,7 +257,7 @@
               "content": [
                 {
                   "type": "text",
-                  "text": "Find your own robot's standing numbers by testing one joint at a time instead of guessing."
+                  "text": "Write the standing pose from one dictionary, and tune it one value at a time by watching which way the robot falls."
                 }
               ]
             }
@@ -361,7 +361,7 @@
               "content": [
                 {
                   "type": "text",
-                  "text": "(Extra) Add one new pose, one new web button and one new voice command of your own."
+                  "text": "(Extra) Add a second pose, one new web button and one new voice command of your own."
                 }
               ]
             }
@@ -372,7 +372,7 @@
     {
       "type": "heading",
       "attrs": {
-        "id": "p1rivs",
+        "id": "p1najm",
         "level": 3,
         "indent": null,
         "margin": null,
@@ -380,7 +380,7 @@
         "textAlign": null,
         "indentUnit": null,
         "lineHeight": 1.75,
-        "data-toc-id": "p1rivs"
+        "data-toc-id": "p1najm"
       },
       "content": [
         {
@@ -737,7 +737,7 @@
                   "content": [
                     {
                       "type": "text",
-                      "text": "A complete assignment of angles to all twelve joints; standing, bowing and squatting are all poses."
+                      "text": "A complete assignment of angles to all twelve joints; standing is one pose, bowing is another."
                     }
                   ]
                 }
@@ -890,7 +890,7 @@
     {
       "type": "heading",
       "attrs": {
-        "id": "p2ayuo",
+        "id": "p2ifqi",
         "level": 2,
         "indent": null,
         "margin": null,
@@ -898,12 +898,12 @@
         "textAlign": null,
         "indentUnit": null,
         "lineHeight": 1.75,
-        "data-toc-id": "p2ayuo"
+        "data-toc-id": "p2ifqi"
       },
       "content": [
         {
           "type": "text",
-          "text": "🧪 Activity 1 The Pose Tester",
+          "text": "🧪 Activity 1 Standing Pose",
           "marks": [
             {
               "type": "bold"
@@ -928,7 +928,7 @@
           "content": [
             {
               "type": "text",
-              "text": "🦿 One program, one job: find the twelve numbers that make your robot stand up straight."
+              "text": "🧍 One program, one job: write twelve angles once and let the robot stand. No walking, no dancing, no sensor, no screen - if this one is wrong, nothing after it can be right."
             }
           ]
         },
@@ -987,7 +987,7 @@
                   "content": [
                     {
                       "type": "text",
-                      "text": "pose.py",
+                      "text": "stand.py",
                       "marks": [
                         {
                           "type": "code"
@@ -1101,7 +1101,7 @@
                   "content": [
                     {
                       "type": "text",
-                      "text": "Watch which joint looks wrong, then change only that number in the ANG table."
+                      "text": "Hold the robot upright while it boots, then let go and watch which way it falls."
                     }
                   ]
                 }
@@ -1127,7 +1127,7 @@
                   "content": [
                     {
                       "type": "text",
-                      "text": "Press Ctrl-C to stop the loop and type "
+                      "text": "Change one value in "
                     }
                   ]
                 }
@@ -1153,7 +1153,7 @@
                   "content": [
                     {
                       "type": "text",
-                      "text": "w('knee_l', 150)",
+                      "text": "ANG",
                       "marks": [
                         {
                           "type": "code"
@@ -1184,7 +1184,7 @@
                   "content": [
                     {
                       "type": "text",
-                      "text": " to test one joint by hand."
+                      "text": ", save, and run again until it holds itself up."
                     }
                   ]
                 }
@@ -1197,7 +1197,7 @@
     {
       "type": "heading",
       "attrs": {
-        "id": "p32fi3",
+        "id": "p3rq17",
         "level": 3,
         "indent": null,
         "margin": null,
@@ -1205,7 +1205,7 @@
         "textAlign": null,
         "indentUnit": null,
         "lineHeight": 1.75,
-        "data-toc-id": "p32fi3"
+        "data-toc-id": "p3rq17"
       },
       "content": [
         {
@@ -1232,7 +1232,7 @@
       "content": [
         {
           "type": "text",
-          "text": "🔌 Program 1 is about 100 lines: a table of twelve angles, a table of twelve pins, one three-line helper and three test poses. Nothing else - no WiFi, no dancing, no OLED."
+          "text": "🔌 Thirty-seven lines, and most of them are numbers. There is no loop body worth speaking of: the program writes all twelve joints once at start-up, then sleeps forever."
         }
       ]
     },
@@ -1244,14 +1244,14 @@
       "content": [
         {
           "type": "text",
-          "text": "# ============================================================\n# Biped robot - Program 1: pose tester\n#\n# The smallest useful program: 12 servos, one helper, three poses.\n# Use it to find the number every joint needs in the standing pose.\n#\n# How to use:\n#   1) Paste this file into Thonny.\n#   2) Save it to the robot as main.py, then run it.\n#   3) Watch which joint is wrong, then change ONLY the numbers in ANG.\n#   4) To test one joint by hand: press Ctrl-C to stop the loop,\n#      then type e.g.  w('knee_l', 150)  and press Enter.\n# ============================================================\n\nfrom machine import Pin, PWM\nimport time\n\n# ---------- 1. Calibration: angle of every joint in the standing pose ----------\n# These are the class robot's numbers. Every robot is a little different, so\n# your own robot will need its own numbers. Change nothing but the numbers.\nANG = {'hip_r': 52, 'knee_r': 54, 'ankle_r': 91,\n       'hip_l': 135, 'knee_l': 142, 'ankle_l': 95,\n       'shoulder_r': 32, 'arm_r': 144, 'hand_r': 40,\n       'shoulder_l': 146, 'arm_l': 37, 'hand_l': 153}\n\n# ---------- 2. Which GPIO pin drives which joint ----------\n# Same pin order as the wiring tutorial: right leg, left leg, right arm, left arm.\nPINS = {'hip_r': 14, 'knee_r': 13, 'ankle_r': 12,\n        'hip_l': 5, 'knee_l': 4, 'ankle_l': 2,\n        'shoulder_r': 15, 'arm_r': 25, 'hand_r': 26,\n        'shoulder_l': 27, 'arm_l': 32, 'hand_l': 33}\n\nLEAN = 3   # forward lean while standing. Raise it if the robot tips backwards.\n\n# One PWM channel per joint, all at 50 Hz (the rate every hobby servo expects).\nsrv = {j: PWM(Pin(p, Pin.OUT), freq=50) for j, p in PINS.items()}\n\n\ndef w(joint, deg):\n    \"\"\"Turn one joint to an angle in degrees.\n\n    A servo expects a 0.5 ms pulse for 0 deg and a 2.5 ms pulse for 180 deg.\n    At 50 Hz one period is 20 ms, and duty() is 0..1023 on the ESP32, so\n    0 deg -> 26, 180 deg -> 127.  That is exactly  deg * 0.56 + 25.\n    \"\"\"\n    srv[joint].duty(int(deg * 0.56) + 25)\n\n\ndef pose(**over):\n    \"\"\"Drive all twelve joints: standing pose first, then apply the overrides.\n\n    pose(hip_r=80) means: stand, but with the right hip at 80 deg.\n    \"\"\"\n    for j, d in ANG.items():\n        w(j, d)\n    for j, d in over.items():\n        w(j, d)\n\n\ndef stand():\n    \"\"\"The pose the robot should hold when nothing else is happening.\"\"\"\n    pose(hip_r=ANG['hip_r'] + LEAN, hip_l=ANG['hip_l'] - LEAN)\n\n\n# ---------- 3. Three test poses, one per group of joints ----------\n# Signs matter: on the right side a bigger number lifts the limb, on the left\n# side a smaller number does. That is why the left values are always negated.\ndef t_pose():          # both arms out sideways -> checks the two shoulders\n    pose(shoulder_r=ANG['shoulder_r'] + 90,\n         shoulder_l=ANG['shoulder_l'] - 90)\n\n\ndef squat():           # knees bent -> checks hips, knees and ankles together\n    pose(hip_r=ANG['hip_r'] + 35, hip_l=ANG['hip_l'] - 35,\n         knee_r=ANG['knee_r'] + 35, knee_l=ANG['knee_l'] - 35)\n\n\ndef wave(times=4):     # right arm up, hand swinging -> checks one single joint\n    pose(shoulder_r=ANG['shoulder_r'] + 130, arm_r=90)\n    for _ in range(times):\n        for d in range(70, 111, 5):\n            w('hand_r', d)\n            time.sleep_ms(20)\n        for d in range(110, 69, -5):\n            w('hand_r', d)\n            time.sleep_ms(20)\n\n\n# ---------- 4. Run the show ----------\nstand()\ntime.sleep(2)\n\nwhile True:\n    t_pose()\n    time.sleep(2)\n    squat()\n    time.sleep(2)\n    wave()\n    time.sleep(1)\n    stand()\n    time.sleep(2)"
+          "text": "# Biped robot - standing pose only.\n# Writes every joint once from ANG, then holds still.\n# To tune: edit a value in ANG, save, and run again.\n\nfrom machine import Pin, PWM\nimport time\n\n# Standing pose: body upright, both arms hanging straight down.\nANG = {'leg_r': 30, 'knee_r': 54, 'ankle_r': 91,\n       'leg_l': 150, 'knee_l': 142, 'ankle_l': 95,\n       'shoulder_r': 32, 'arm_r': 144, 'hand_r': 40,\n       'shoulder_l': 150, 'arm_l': 37, 'hand_l': 130}\n\nPINS = {'leg_r': 14, 'knee_r': 13, 'ankle_r': 12,\n        'leg_l': 5, 'knee_l': 4, 'ankle_l': 2,\n        'shoulder_r': 15, 'arm_r': 25, 'hand_r': 26,\n        'shoulder_l': 27, 'arm_l': 32, 'hand_l': 33}\n\nsrv = {j: PWM(Pin(p, Pin.OUT), freq=50) for j, p in PINS.items()}\n\n\ndef w(joint, deg):\n    # 0 deg needs a 0.5 ms pulse, 180 deg needs 2.5 ms. At 50 Hz duty() spans\n    # 0..1023, so 0 deg is 26 counts and 180 deg is 127: duty = deg * 0.56 + 25.\n    srv[joint].duty(int(deg * 0.56) + 25)\n\n\ndef stand():\n    # Write every joint to its ANG value.\n    for j, d in ANG.items():\n        w(j, d)\n\n\nstand()\n\nwhile True:\n    time.sleep(1)"
         }
       ]
     },
     {
       "type": "heading",
       "attrs": {
-        "id": "p40z54",
+        "id": "p4kvhz",
         "level": 3,
         "indent": null,
         "margin": null,
@@ -1259,12 +1259,12 @@
         "textAlign": null,
         "indentUnit": null,
         "lineHeight": 1.75,
-        "data-toc-id": "p40z54"
+        "data-toc-id": "p4kvhz"
       },
       "content": [
         {
           "type": "text",
-          "text": "🦿 Twelve Joints, One Dictionary",
+          "text": "🦿 Twelve Joints, Two Tables",
           "marks": [
             {
               "type": "bold"
@@ -1286,7 +1286,46 @@
       "content": [
         {
           "type": "text",
-          "text": "🧩 The old version of this program declared twelve separate objects, "
+          "text": "🧩 Two dictionaries carry the whole program. "
+        },
+        {
+          "type": "text",
+          "text": "PINS",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": " says which GPIO pin drives which joint; "
+        },
+        {
+          "type": "text",
+          "text": "ANG",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": " says what angle that joint should hold. Both are keyed by a name you can read, so "
+        },
+        {
+          "type": "text",
+          "text": "ANG['knee_l']",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": " needs no comment to be understood - and the old "
         },
         {
           "type": "text",
@@ -1299,20 +1338,7 @@
         },
         {
           "type": "text",
-          "text": " to "
-        },
-        {
-          "type": "text",
-          "text": "servo11",
-          "marks": [
-            {
-              "type": "code"
-            }
-          ]
-        },
-        {
-          "type": "text",
-          "text": ", and kept their calibration in twelve variables called "
+          "text": " / "
         },
         {
           "type": "text",
@@ -1325,20 +1351,7 @@
         },
         {
           "type": "text",
-          "text": " to "
-        },
-        {
-          "type": "text",
-          "text": "angleC11",
-          "marks": [
-            {
-              "type": "code"
-            }
-          ]
-        },
-        {
-          "type": "text",
-          "text": ". It works, but nothing in the code tells you which number belongs to which leg."
+          "text": " style, where you had to remember that number 4 was the left knee, is gone."
         }
       ]
     },
@@ -1355,63 +1368,7 @@
       "content": [
         {
           "type": "text",
-          "text": "📚 Here the wiring is one dictionary and the calibration is another, both keyed by a name you can read: "
-        },
-        {
-          "type": "text",
-          "text": "hip_r",
-          "marks": [
-            {
-              "type": "code"
-            }
-          ]
-        },
-        {
-          "type": "text",
-          "text": ", "
-        },
-        {
-          "type": "text",
-          "text": "knee_l",
-          "marks": [
-            {
-              "type": "code"
-            }
-          ]
-        },
-        {
-          "type": "text",
-          "text": ", "
-        },
-        {
-          "type": "text",
-          "text": "hand_r",
-          "marks": [
-            {
-              "type": "code"
-            }
-          ]
-        },
-        {
-          "type": "text",
-          "text": ". The whole servo driver becomes twelve characters long, because the pin and the angle now live in the same place they are looked up."
-        }
-      ]
-    },
-    {
-      "type": "paragraph",
-      "attrs": {
-        "indent": null,
-        "margin": null,
-        "wordWrap": "normal",
-        "textAlign": null,
-        "indentUnit": null,
-        "lineHeight": 1.75
-      },
-      "content": [
-        {
-          "type": "text",
-          "text": "⚙️ The one line worth memorising is the duty conversion. A servo wants a 0.5 ms pulse for 0 degrees and 2.5 ms for 180 degrees, out of a 20 ms period. At 50 Hz the ESP32's "
+          "text": "⚙️ The only arithmetic in the file is the duty conversion. A servo wants a 0.5 ms pulse for 0 degrees and 2.5 ms for 180, out of a 20 ms period. At 50 Hz the ESP32 "
         },
         {
           "type": "text",
@@ -1424,7 +1381,7 @@
         },
         {
           "type": "text",
-          "text": " spans 0-1023 across those 20 ms, so 0.5 ms is 26 counts and 2.5 ms is 127 counts. Straight-line between them: "
+          "text": " spans 0..1023 across those 20 ms, so 0 degrees is 26 counts and 180 degrees is 127 counts. Interpolating between them gives "
         },
         {
           "type": "text",
@@ -1437,14 +1394,44 @@
         },
         {
           "type": "text",
-          "text": ". If you ever change the PWM frequency, this constant changes with it."
+          "text": "; change the PWM frequency and this constant changes with it."
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "🔁 "
+        },
+        {
+          "type": "text",
+          "text": "stand()",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": " just walks the dictionary and writes every joint. It runs exactly once, and calling it again moves nothing because the servos are already there - which is all you want from a program whose entire job is \"hold this pose\"."
         }
       ]
     },
     {
       "type": "heading",
       "attrs": {
-        "id": "p5qunb",
+        "id": "p52x3j",
         "level": 3,
         "indent": null,
         "margin": null,
@@ -1452,12 +1439,12 @@
         "textAlign": null,
         "indentUnit": null,
         "lineHeight": 1.75,
-        "data-toc-id": "p5qunb"
+        "data-toc-id": "p52x3j"
       },
       "content": [
         {
           "type": "text",
-          "text": "🎚️ Finding Your Robot's Numbers",
+          "text": "🎚️ Tuning by Eye",
           "marks": [
             {
               "type": "bold"
@@ -1479,46 +1466,770 @@
       "content": [
         {
           "type": "text",
-          "text": "🧪 The three test poses are deliberately chosen to isolate different groups. "
-        },
+          "text": "👀 There is no sensor here, so your eyes are the instrument. Power on, hold the robot for a second, let go. If it stays up, the table is right. If it drops forward, backward or sideways, exactly one number is wrong - and the direction of the fall tells you which one."
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "attrs": {
+        "margin": null
+      },
+      "content": [
         {
-          "type": "text",
-          "text": "t_pose",
-          "marks": [
+          "type": "tableRow",
+          "content": [
             {
-              "type": "bold"
+              "type": "tableHeader",
+              "attrs": {
+                "align": null,
+                "color": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "colwidth": null,
+                "background": "rgb(242,243,245)"
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "indent": null,
+                    "margin": null,
+                    "wordWrap": "normal",
+                    "textAlign": null,
+                    "indentUnit": null,
+                    "lineHeight": 1.75
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "What you see"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableHeader",
+              "attrs": {
+                "align": null,
+                "color": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "colwidth": null,
+                "background": "rgb(242,243,245)"
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "indent": null,
+                    "margin": null,
+                    "wordWrap": "normal",
+                    "textAlign": null,
+                    "indentUnit": null,
+                    "lineHeight": 1.75
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Which joint"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableHeader",
+              "attrs": {
+                "align": null,
+                "color": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "colwidth": null,
+                "background": "rgb(242,243,245)"
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "indent": null,
+                    "margin": null,
+                    "wordWrap": "normal",
+                    "textAlign": null,
+                    "indentUnit": null,
+                    "lineHeight": 1.75
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Which way to move it"
+                    }
+                  ]
+                }
+              ]
             }
           ]
         },
         {
-          "type": "text",
-          "text": " moves only the shoulders, so if one arm is off you know which number to touch. "
-        },
-        {
-          "type": "text",
-          "text": "squat",
-          "marks": [
+          "type": "tableRow",
+          "content": [
             {
-              "type": "bold"
+              "type": "tableCell",
+              "attrs": {
+                "align": null,
+                "color": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "colwidth": null,
+                "background": null
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "indent": null,
+                    "margin": null,
+                    "wordWrap": "normal",
+                    "textAlign": null,
+                    "indentUnit": null,
+                    "lineHeight": 1.75
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "falls forward"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "attrs": {
+                "align": null,
+                "color": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "colwidth": null,
+                "background": null
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "indent": null,
+                    "margin": null,
+                    "wordWrap": "normal",
+                    "textAlign": null,
+                    "indentUnit": null,
+                    "lineHeight": 1.75
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "leg_r",
+                      "marks": [
+                        {
+                          "type": "code"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "text": " + "
+                    },
+                    {
+                      "type": "text",
+                      "text": "leg_l",
+                      "marks": [
+                        {
+                          "type": "code"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "attrs": {
+                "align": null,
+                "color": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "colwidth": null,
+                "background": null
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "indent": null,
+                    "margin": null,
+                    "wordWrap": "normal",
+                    "textAlign": null,
+                    "indentUnit": null,
+                    "lineHeight": 1.75
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "leg_r down 2, leg_l up 2 - the body leans back"
+                    }
+                  ]
+                }
+              ]
             }
           ]
         },
         {
-          "type": "text",
-          "text": " moves hips, knees and ankles together, which exposes a leg that is one number away from straight. "
-        },
-        {
-          "type": "text",
-          "text": "wave",
-          "marks": [
+          "type": "tableRow",
+          "content": [
             {
-              "type": "bold"
+              "type": "tableCell",
+              "attrs": {
+                "align": null,
+                "color": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "colwidth": null,
+                "background": null
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "indent": null,
+                    "margin": null,
+                    "wordWrap": "normal",
+                    "textAlign": null,
+                    "indentUnit": null,
+                    "lineHeight": 1.75
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "falls backward"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "attrs": {
+                "align": null,
+                "color": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "colwidth": null,
+                "background": null
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "indent": null,
+                    "margin": null,
+                    "wordWrap": "normal",
+                    "textAlign": null,
+                    "indentUnit": null,
+                    "lineHeight": 1.75
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "leg_r",
+                      "marks": [
+                        {
+                          "type": "code"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "text": " + "
+                    },
+                    {
+                      "type": "text",
+                      "text": "leg_l",
+                      "marks": [
+                        {
+                          "type": "code"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "attrs": {
+                "align": null,
+                "color": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "colwidth": null,
+                "background": null
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "indent": null,
+                    "margin": null,
+                    "wordWrap": "normal",
+                    "textAlign": null,
+                    "indentUnit": null,
+                    "lineHeight": 1.75
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "leg_r up 2, leg_l down 2 - the body leans forward"
+                    }
+                  ]
+                }
+              ]
             }
           ]
         },
         {
-          "type": "text",
-          "text": " moves a single joint through a range, so you can see where it starts buzzing at the end stop."
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableCell",
+              "attrs": {
+                "align": null,
+                "color": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "colwidth": null,
+                "background": null
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "indent": null,
+                    "margin": null,
+                    "wordWrap": "normal",
+                    "textAlign": null,
+                    "indentUnit": null,
+                    "lineHeight": 1.75
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "falls to the right"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "attrs": {
+                "align": null,
+                "color": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "colwidth": null,
+                "background": null
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "indent": null,
+                    "margin": null,
+                    "wordWrap": "normal",
+                    "textAlign": null,
+                    "indentUnit": null,
+                    "lineHeight": 1.75
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "ankle_r",
+                      "marks": [
+                        {
+                          "type": "code"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "text": " + "
+                    },
+                    {
+                      "type": "text",
+                      "text": "ankle_l",
+                      "marks": [
+                        {
+                          "type": "code"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "attrs": {
+                "align": null,
+                "color": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "colwidth": null,
+                "background": null
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "indent": null,
+                    "margin": null,
+                    "wordWrap": "normal",
+                    "textAlign": null,
+                    "indentUnit": null,
+                    "lineHeight": 1.75
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "raise both ankles 3 - the body tilts back to the left"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableCell",
+              "attrs": {
+                "align": null,
+                "color": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "colwidth": null,
+                "background": null
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "indent": null,
+                    "margin": null,
+                    "wordWrap": "normal",
+                    "textAlign": null,
+                    "indentUnit": null,
+                    "lineHeight": 1.75
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "falls to the left"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "attrs": {
+                "align": null,
+                "color": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "colwidth": null,
+                "background": null
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "indent": null,
+                    "margin": null,
+                    "wordWrap": "normal",
+                    "textAlign": null,
+                    "indentUnit": null,
+                    "lineHeight": 1.75
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "ankle_r",
+                      "marks": [
+                        {
+                          "type": "code"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "text": " + "
+                    },
+                    {
+                      "type": "text",
+                      "text": "ankle_l",
+                      "marks": [
+                        {
+                          "type": "code"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "attrs": {
+                "align": null,
+                "color": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "colwidth": null,
+                "background": null
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "indent": null,
+                    "margin": null,
+                    "wordWrap": "normal",
+                    "textAlign": null,
+                    "indentUnit": null,
+                    "lineHeight": 1.75
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "lower both ankles 3"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableCell",
+              "attrs": {
+                "align": null,
+                "color": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "colwidth": null,
+                "background": null
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "indent": null,
+                    "margin": null,
+                    "wordWrap": "normal",
+                    "textAlign": null,
+                    "indentUnit": null,
+                    "lineHeight": 1.75
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "one shoulder hangs lower"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "attrs": {
+                "align": null,
+                "color": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "colwidth": null,
+                "background": null
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "indent": null,
+                    "margin": null,
+                    "wordWrap": "normal",
+                    "textAlign": null,
+                    "indentUnit": null,
+                    "lineHeight": 1.75
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "shoulder_r",
+                      "marks": [
+                        {
+                          "type": "code"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "text": " / "
+                    },
+                    {
+                      "type": "text",
+                      "text": "shoulder_l",
+                      "marks": [
+                        {
+                          "type": "code"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "attrs": {
+                "align": null,
+                "color": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "colwidth": null,
+                "background": null
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "indent": null,
+                    "margin": null,
+                    "wordWrap": "normal",
+                    "textAlign": null,
+                    "indentUnit": null,
+                    "lineHeight": 1.75
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "compare the two arms, move the low one up 3"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableCell",
+              "attrs": {
+                "align": null,
+                "color": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "colwidth": null,
+                "background": null
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "indent": null,
+                    "margin": null,
+                    "wordWrap": "normal",
+                    "textAlign": null,
+                    "indentUnit": null,
+                    "lineHeight": 1.75
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "a joint buzzes or gets warm"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "attrs": {
+                "align": null,
+                "color": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "colwidth": null,
+                "background": null
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "indent": null,
+                    "margin": null,
+                    "wordWrap": "normal",
+                    "textAlign": null,
+                    "indentUnit": null,
+                    "lineHeight": 1.75
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "that one joint"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "attrs": {
+                "align": null,
+                "color": null,
+                "colspan": 1,
+                "rowspan": 1,
+                "colwidth": null,
+                "background": null
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "indent": null,
+                    "margin": null,
+                    "wordWrap": "normal",
+                    "textAlign": null,
+                    "indentUnit": null,
+                    "lineHeight": 1.75
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "move it 5 back toward the middle of its range"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -1551,7 +2262,7 @@
               "content": [
                 {
                   "type": "text",
-                  "text": "Run the program and let it cycle: T-pose, squat, wave, stand."
+                  "text": "One row at a time. Change two numbers and you will not know which one helped."
                 }
               ]
             }
@@ -1577,7 +2288,7 @@
               "content": [
                 {
                   "type": "text",
-                  "text": "For each pose, note the joint that is wrong. Do not touch a joint that is already right."
+                  "text": "Two or three degrees is a visible change on this robot; one degree usually is not."
                 }
               ]
             }
@@ -1603,37 +2314,11 @@
               "content": [
                 {
                   "type": "text",
-                  "text": "Change that one number by 5 degrees, save, and let the program restart. Repeat until it looks symmetric."
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "listItem",
-          "attrs": {
-            "indent": null,
-            "indentUnit": null
-          },
-          "content": [
-            {
-              "type": "paragraph",
-              "attrs": {
-                "indent": null,
-                "margin": null,
-                "wordWrap": "normal",
-                "textAlign": null,
-                "indentUnit": null,
-                "lineHeight": 1.75
-              },
-              "content": [
-                {
-                  "type": "text",
-                  "text": "Only then adjust "
+                  "text": "Write the final table down. Programs 2, 3 and 4 carry the same twelve numbers - copy your finished "
                 },
                 {
                   "type": "text",
-                  "text": "LEAN",
+                  "text": "ANG",
                   "marks": [
                     {
                       "type": "code"
@@ -1642,7 +2327,7 @@
                 },
                 {
                   "type": "text",
-                  "text": " - it tilts both hips forward so the robot stops falling backwards when it walks."
+                  "text": " into them, or the robot will stand differently in each lesson."
                 }
               ]
             }
@@ -1672,42 +2357,59 @@
           "content": [
             {
               "type": "text",
-              "text": "🔍 The signs are not a bug: on the right side a bigger angle lifts the limb, on the left side a smaller angle does. That is why every left joint is written as "
+              "text": "🔍 The left side is the mirror of the right, and the numbers show it: "
             },
             {
               "type": "text",
-              "text": "ANG - something",
+              "text": "leg_r",
               "marks": [
                 {
-                  "type": "bold"
+                  "type": "code"
                 }
               ]
             },
             {
               "type": "text",
-              "text": " and every right joint as "
+              "text": " 30 against "
             },
             {
               "type": "text",
-              "text": "ANG + something",
+              "text": "leg_l",
               "marks": [
                 {
-                  "type": "bold"
+                  "type": "code"
                 }
               ]
             },
             {
               "type": "text",
-              "text": ". Once you notice the mirror, the whole file becomes readable."
+              "text": " 150 is almost exactly 180 minus, because the two servo horns are mounted opposite ways. But 54 and 142 for the knees are not, and neither are the arms. That is the lesson: you cannot calculate the partner, you measure it - which is why the table above says \"compare the two\" instead of \"add 180\"."
             }
           ]
         }
       ]
     },
     {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "↔️ If a correction makes the fall worse instead of better, go the other way on that joint. The sign depends on which way the horn was mounted, and no amount of reasoning beats one five second test."
+        }
+      ]
+    },
+    {
       "type": "heading",
       "attrs": {
-        "id": "p62ghk",
+        "id": "p69cyh",
         "level": 2,
         "indent": null,
         "margin": null,
@@ -1715,7 +2417,7 @@
         "textAlign": null,
         "indentUnit": null,
         "lineHeight": 1.75,
-        "data-toc-id": "p62ghk"
+        "data-toc-id": "p69cyh"
       },
       "content": [
         {
@@ -1957,7 +2659,7 @@
     {
       "type": "heading",
       "attrs": {
-        "id": "p71657",
+        "id": "p7uy71",
         "level": 3,
         "indent": null,
         "margin": null,
@@ -1965,7 +2667,7 @@
         "textAlign": null,
         "indentUnit": null,
         "lineHeight": 1.75,
-        "data-toc-id": "p71657"
+        "data-toc-id": "p7uy71"
       },
       "content": [
         {
@@ -2017,14 +2719,14 @@
       "content": [
         {
           "type": "text",
-          "text": "# ============================================================\n# Biped robot - Program 2: WiFi remote\n#\n# The robot joins your WiFi and serves a small web page.\n# Open that page on a phone in the same network and press the buttons.\n#\n# How to use:\n#   1) Put your WiFi name and password in WIFI_SSID / WIFI_PASS.\n#   2) Paste this file into Thonny, save it to the robot as main.py.\n#   3) Run it and read the IP address in the Shell, e.g. 192.168.1.23\n#   4) Type that address into the phone browser. Keep the phone on the\n#      same WiFi - the robot has no internet access.\n# ============================================================\n\nimport time\nimport network\nimport socket\nfrom machine import Pin, PWM\n\n# ---------- 1. Calibration (same table as Program 1) ----------\nANG = {'hip_r': 52, 'knee_r': 54, 'ankle_r': 91,\n       'hip_l': 135, 'knee_l': 142, 'ankle_l': 95,\n       'shoulder_r': 32, 'arm_r': 144, 'hand_r': 40,\n       'shoulder_l': 146, 'arm_l': 37, 'hand_l': 153}\n\nLEAN = 3          # forward lean while standing; raise it if the robot falls backwards\nSPEED = 2         # gait speed, larger value = slower\nAHEAD_R = 12      # side tilt (right) used to free the left foot when walking forward\nAHEAD_L = 12      # side tilt (left) used to free the right foot when walking forward\nBACK_R = 12       # side tilt used when walking backwards\nBACK_L = 12\nKICK_DEG = 14     # body tilt while kicking\nRISE_DEG = 17     # thigh tuck angle used when standing up from the floor\n\nWIFI_SSID = 'MINXIN-S'\nWIFI_PASS = 'Minxin520'\n\n# ---------- 2. Hardware ----------\nPINS = {'hip_r': 14, 'knee_r': 13, 'ankle_r': 12,\n        'hip_l': 5, 'knee_l': 4, 'ankle_l': 2,\n        'shoulder_r': 15, 'arm_r': 25, 'hand_r': 26,\n        'shoulder_l': 27, 'arm_l': 32, 'hand_l': 33}\n\nHIP_R = ANG['hip_r'] + LEAN   # right hip angle in the standing pose\nHIP_L = ANG['hip_l'] - LEAN   # left hip angle in the standing pose\n\nsrv = {j: PWM(Pin(p, Pin.OUT), freq=50) for j, p in PINS.items()}\n\n# Last angle we told each servo to go to. Taken from the calibration table, so at\n# power-up the pose is known without reading anything back from the PWM hardware.\npos = dict(ANG)\npos['hip_r'], pos['hip_l'] = HIP_R, HIP_L\n\n\ndef w(joint, deg):\n    \"\"\"Set one joint to an angle in degrees.\"\"\"\n    pos[joint] = int(deg)\n    srv[joint].duty(int(deg * 0.56) + 25)\n\n\ndef stand(force=False):\n    \"\"\"Ease every servo back to the standing pose, all at the same time.\n\n    With force=True the standing angles are written again even if the code\n    already thinks the robot is standing, so /reset really re-drives the servos.\n    \"\"\"\n    target = dict(ANG)\n    target['hip_r'], target['hip_l'] = HIP_R, HIP_L\n    while pos != target:\n        for j in srv:\n            if pos[j] < target[j]:\n                w(j, pos[j] + 1)\n            elif pos[j] > target[j]:\n                w(j, pos[j] - 1)\n        time.sleep_ms(10)\n    if force:\n        for j, d in target.items():\n            w(j, d)\n\n\n# ---------- 3. Motions ----------\ndef goahead(steps=5):\n    \"\"\"Walk forward the given number of full gait cycles.\"\"\"\n    stand()\n    w('hip_r', HIP_R - 2)\n    w('hip_l', HIP_L + 2)\n    time.sleep_ms(200)\n\n    # Shift the weight, step with the left leg.\n    for a in range(AHEAD_R):\n        w('ankle_r', ANG['ankle_r'] - a)\n        w('ankle_l', ANG['ankle_l'] - 5 - a)\n        time.sleep_ms(SPEED * 10 + 30)\n    time.sleep_ms(SPEED * 100 + 200)\n    w('ankle_l', ANG['ankle_l'] - AHEAD_R)\n    time.sleep_ms(SPEED * 50)\n    for a in range(13):\n        w('hip_r', HIP_R - a - 2)\n        w('knee_r', ANG['knee_r'] - a)\n        w('hip_l', HIP_L - a - 4)\n        w('knee_l', ANG['knee_l'] - a + 4)\n        w('shoulder_r', ANG['shoulder_r'] + 2 * a)\n        time.sleep_ms(SPEED * 10 + 30)\n\n    # Level the body, shift to the other side, step with the right leg.\n    for a in range(AHEAD_R):\n        w('ankle_r', ANG['ankle_r'] - AHEAD_R + a)\n        w('ankle_l', ANG['ankle_l'] - AHEAD_R + a)\n        time.sleep_ms(SPEED * 20 + 20)\n    time.sleep_ms(SPEED * 100 + 500)\n    for a in range(AHEAD_L):\n        w('ankle_l', ANG['ankle_l'] + a)\n        w('ankle_r', ANG['ankle_r'] + 5 + a)\n        time.sleep_ms(SPEED * 10 + 30)\n    time.sleep_ms(SPEED * 100 + 200)\n    w('ankle_r', ANG['ankle_r'] + AHEAD_L)\n    time.sleep_ms(SPEED * 50)\n    for a in range(13):\n        w('hip_r', HIP_R - 15 + a)\n        w('knee_r', ANG['knee_r'] - 13 + a)\n        w('hip_l', HIP_L - 13 + a - 2)\n        w('knee_l', ANG['knee_l'] - 13 + a)\n        w('shoulder_r', ANG['shoulder_r'] - 2 * a + 52)\n        w('shoulder_l', ANG['shoulder_l'] - 2 * a)\n        time.sleep_ms(SPEED * 10 + 20)\n\n    # Remaining gait cycles.\n    for _ in range(steps):\n        for a in range(13):\n            w('hip_r', HIP_R + a - 2)\n            w('knee_r', ANG['knee_r'] + a - 3)\n            w('hip_l', HIP_L + a - 2)\n            w('knee_l', ANG['knee_l'] + a - 3)\n            w('shoulder_r', ANG['shoulder_r'] - 2 * a + 26)\n            w('shoulder_l', ANG['shoulder_l'] - 2 * a - 26)\n            time.sleep_ms(SPEED * 10 + 20)\n        for a in range(AHEAD_L):\n            w('ankle_r', ANG['ankle_r'] + AHEAD_L - a)\n            w('ankle_l', ANG['ankle_l'] + AHEAD_L - a)\n            time.sleep_ms(SPEED * 20 + 20)\n        time.sleep_ms(SPEED * 100 + 500)\n        for a in range(AHEAD_R):\n            w('ankle_r', ANG['ankle_r'] - a)\n            w('ankle_l', ANG['ankle_l'] - 5 - a)\n            time.sleep_ms(SPEED * 20 + 20)\n        time.sleep_ms(SPEED * 100)\n        w('ankle_l', ANG['ankle_l'] - AHEAD_R)\n        time.sleep_ms(SPEED * 50)\n        for a in range(13):\n            w('hip_r', HIP_R + 13 - a - 2)\n            w('knee_r', ANG['knee_r'] + 13 - a)\n            w('hip_l', HIP_L + 13 - a - 4)\n            w('knee_l', ANG['knee_l'] + 13 - a + 4)\n            w('shoulder_r', ANG['shoulder_r'] + 2 * a)\n            w('shoulder_l', ANG['shoulder_l'] + 2 * a - 52)\n            time.sleep_ms(SPEED * 10 + 20)\n\n        for a in range(13):\n            w('hip_r', HIP_R - a - 2)\n            w('knee_r', ANG['knee_r'] - a)\n            w('hip_l', HIP_L - a + 1)\n            w('knee_l', ANG['knee_l'] - a + 4)\n            w('shoulder_r', ANG['shoulder_r'] + 26 + 2 * a)\n            w('shoulder_l', ANG['shoulder_l'] + 2 * a - 26)\n            time.sleep_ms(SPEED * 10 + 20)\n        for a in range(AHEAD_R):\n            w('ankle_r', ANG['ankle_r'] - AHEAD_R + a)\n            w('ankle_l', ANG['ankle_l'] - AHEAD_R + a)\n            time.sleep_ms(SPEED * 20 + 20)\n        time.sleep_ms(SPEED * 100 + 500)\n        for a in range(AHEAD_L):\n            w('ankle_l', ANG['ankle_l'] + a)\n            w('ankle_r', ANG['ankle_r'] + 5 + a)\n            time.sleep_ms(SPEED * 20 + 20)\n        time.sleep_ms(SPEED * 100 + 200)\n        w('ankle_r', ANG['ankle_r'] + AHEAD_L)\n        time.sleep_ms(50)\n        for a in range(13):\n            w('hip_r', HIP_R - 13 + a - 2)\n            w('knee_r', ANG['knee_r'] - 13 + a - 3)\n            w('hip_l', HIP_L - 13 + a - 2)\n            w('knee_l', ANG['knee_l'] - 13 + a)\n            w('shoulder_r', ANG['shoulder_r'] - 2 * a + 52)\n            w('shoulder_l', ANG['shoulder_l'] - 2 * a)\n            time.sleep_ms(SPEED * 10 + 20)\n\n    stand()\n\n\ndef goback(steps=5):\n    \"\"\"Walk backwards the given number of full gait cycles.\"\"\"\n    stand()\n    for a in range(3):\n        w('hip_r', HIP_R + a)\n        w('hip_l', HIP_L - a)\n        time.sleep_ms(50)\n\n    for a in range(BACK_R):\n        w('ankle_r', ANG['ankle_r'] - a)\n        w('ankle_l', ANG['ankle_l'] - 5 - a)\n        time.sleep_ms(SPEED * 10 + 20)\n    time.sleep_ms(SPEED * 100 + 200)\n    w('ankle_l', ANG['ankle_l'] - BACK_R)\n    time.sleep_ms(SPEED * 50 + 50)\n    for a in range(15):\n        w('hip_r', HIP_R + a + 3)\n        w('knee_r', ANG['knee_r'] + a)\n        w('knee_l', ANG['knee_l'] - a / 3)\n        w('shoulder_l', ANG['shoulder_l'] - 2 * a)\n        time.sleep_ms(SPEED * 10 + 20)\n\n    for a in range(BACK_R):\n        w('ankle_r', ANG['ankle_r'] - BACK_R + a)\n        w('ankle_l', ANG['ankle_l'] - BACK_R + a)\n        time.sleep_ms(SPEED * 20 + 20)\n    w('knee_l', ANG['knee_l'])\n    time.sleep_ms(SPEED * 100 + 500)\n    for a in range(BACK_L):\n        w('ankle_l', ANG['ankle_l'] + a)\n        w('ankle_r', ANG['ankle_r'] + 5 + a)\n        time.sleep_ms(SPEED * 20 + 20)\n    time.sleep_ms(SPEED * 100 + 200)\n    w('ankle_r', ANG['ankle_r'] + BACK_L)\n    time.sleep_ms(SPEED * 50)\n\n    for _ in range(steps):\n        for a in range(15):\n            w('hip_r', HIP_R + 15 - a + 3)\n            w('knee_r', ANG['knee_r'] + 15 - a + 5)\n            w('hip_l', HIP_L - 3 - a)\n            w('knee_l', ANG['knee_l'] - a)\n            w('shoulder_r', ANG['shoulder_r'] + 2 * a)\n            w('shoulder_l', ANG['shoulder_l'] - 30 + 2 * a)\n            time.sleep_ms(SPEED * 20 + 20)\n        for a in range(BACK_L):\n            w('ankle_r', ANG['ankle_r'] + BACK_L - a)\n            w('ankle_l', ANG['ankle_l'] + BACK_L - a)\n            time.sleep_ms(SPEED * 20 + 20)\n        w('knee_r', ANG['knee_r'])\n        time.sleep_ms(SPEED * 100 + 500)\n        for a in range(BACK_R):\n            w('ankle_r', ANG['ankle_r'] - a)\n            w('ankle_l', ANG['ankle_l'] - 5 - a)\n            time.sleep_ms(SPEED * 20 + 30)\n        w('ankle_l', ANG['ankle_l'] - BACK_R)\n        time.sleep_ms(SPEED * 50 + 50)\n\n        for a in range(15):\n            w('hip_r', HIP_R + a + 3)\n            w('knee_r', ANG['knee_r'] + a)\n            w('hip_l', HIP_L - 15 + a - 3)\n            w('knee_l', ANG['knee_l'] - 15 + a + 5)\n            w('shoulder_r', ANG['shoulder_r'] + 30 - 2 * a)\n            w('shoulder_l', ANG['shoulder_l'] - 2 * a)\n            time.sleep_ms(SPEED * 10 + 30)\n        for a in range(BACK_R):\n            w('ankle_r', ANG['ankle_r'] - BACK_R + a)\n            w('ankle_l', ANG['ankle_l'] - BACK_R + a)\n            time.sleep_ms(SPEED * 20 + 20)\n        w('knee_l', ANG['knee_l'])\n        time.sleep_ms(SPEED * 100 + 500)\n        for a in range(BACK_L):\n            w('ankle_l', ANG['ankle_l'] + a)\n            w('ankle_r', ANG['ankle_r'] + 5 + a)\n            time.sleep_ms(SPEED * 20 + 20)\n        time.sleep_ms(SPEED * 100 + 200)\n        w('ankle_r', ANG['ankle_r'] + BACK_L)\n        time.sleep_ms(SPEED * 50)\n\n    stand()\n\n\ndef turnleft():\n    \"\"\"Turn in place to the left once.\"\"\"\n    for a in range(11):\n        w('ankle_r', ANG['ankle_r'] + 5 + a)\n        w('ankle_l', ANG['ankle_l'] + a)\n        time.sleep_ms(SPEED * 10 + 20)\n    time.sleep_ms(SPEED * 50 + 50)\n    for a in range(16):\n        w('hip_l', ANG['hip_l'] + a)\n        w('knee_l', ANG['knee_l'] + a)\n        w('hip_r', ANG['hip_r'] + a)\n        w('knee_r', ANG['knee_r'] + a)\n        time.sleep_ms(40)\n    time.sleep_ms(SPEED * 50 + 50)\n    for a in range(12):\n        w('ankle_l', ANG['ankle_l'] + 10 - a)\n        time.sleep_ms(SPEED * 30 + 30)\n    for a in range(16):\n        w('ankle_r', ANG['ankle_r'] + 16 - a)\n        time.sleep_ms(20)\n    time.sleep_ms(SPEED * 100 + 200)\n    for a in range(16):\n        w('hip_l', ANG['hip_l'] + 15 - a)\n        w('knee_l', ANG['knee_l'] + 15 - a)\n        w('hip_r', ANG['hip_r'] + 15 - a)\n        w('knee_r', ANG['knee_r'] + 15 - a)\n        time.sleep_ms(10)\n    time.sleep_ms(SPEED * 50 + 50)\n\n\ndef turnright():\n    \"\"\"Turn in place to the right once.\"\"\"\n    for a in range(11):\n        w('ankle_r', ANG['ankle_r'] - a)\n        w('ankle_l', ANG['ankle_l'] - 5 - a)\n        time.sleep_ms(SPEED * 10 + 20)\n    time.sleep_ms(SPEED * 50 + 50)\n    for a in range(16):\n        w('hip_l', ANG['hip_l'] - a)\n        w('knee_l', ANG['knee_l'] - a)\n        w('hip_r', ANG['hip_r'] - a)\n        w('knee_r', ANG['knee_r'] - a)\n        time.sleep_ms(40)\n    w('knee_l', ANG['knee_l'] - 16 + 6)\n    time.sleep_ms(SPEED * 20 + 50)\n    for a in range(11):\n        w('ankle_r', ANG['ankle_r'] - 11 + a + 3)\n        time.sleep_ms(SPEED * 30 + 30)\n    for a in range(16):\n        w('ankle_l', ANG['ankle_l'] - 16 + a)\n        time.sleep_ms(20)\n    time.sleep_ms(SPEED * 100 + 200)\n    for a in range(16):\n        w('hip_l', ANG['hip_l'] - 15 + a)\n        w('knee_l', ANG['knee_l'] - 15 + a)\n        w('hip_r', ANG['hip_r'] - 15 + a)\n        w('knee_r', ANG['knee_r'] - 15 + a)\n        time.sleep_ms(10)\n    time.sleep_ms(SPEED * 50 + 50)\n\n\ndef kick():\n    \"\"\"Lean, swing the right leg back and kick.\"\"\"\n    for a in range(9):\n        w('hip_r', HIP_R + a)\n        w('hip_l', HIP_L - a)\n        time.sleep_ms(50)\n    for a in range(15):\n        w('ankle_r', ANG['ankle_r'] + a)\n        time.sleep_ms(10)\n    for a in range(KICK_DEG):\n        w('ankle_r', ANG['ankle_r'] + 15 + a)\n        w('ankle_l', ANG['ankle_l'] + a)\n        time.sleep_ms(80)\n    for a in range(15):\n        w('ankle_r', ANG['ankle_r'] + 30 - a)\n        time.sleep_ms(10)\n    for a in range(30):\n        w('hip_r', HIP_R + 10 - a)\n        w('knee_r', ANG['knee_r'] + 2 * a)\n        w('shoulder_l', ANG['shoulder_l'] - 2 * a)\n        w('hand_l', ANG['hand_l'] - 2 * a)\n        time.sleep_ms(20)\n    time.sleep_ms(1000)\n    w('hip_r', HIP_R + 60)\n    w('knee_r', ANG['knee_r'] + 10)\n    time.sleep_ms(1000)\n    stand()\n\n\ndef pushup():\n    \"\"\"Lie down on the hands, do three push-ups, then stand up.\"\"\"\n    for a in range(114):\n        w('hip_r', ANG['hip_r'] + a)\n        w('hip_l', ANG['hip_l'] - a)\n        w('knee_r', ANG['knee_r'] + a / 2)\n        w('knee_l', ANG['knee_l'] - a / 2)\n        time.sleep_ms(30)\n    for a in range(90):\n        w('shoulder_r', ANG['shoulder_r'] + a)\n        w('shoulder_l', ANG['shoulder_l'] - a)\n        time.sleep_ms(5)\n    for a in range(57):\n        w('knee_r', ANG['knee_r'] + 57 - a)\n        w('knee_l', ANG['knee_l'] - 57 + a)\n        time.sleep_ms(10)\n    for a in range(114):\n        w('hip_r', HIP_R + 114 - a)\n        w('hip_l', HIP_L - 114 + a)\n        time.sleep_ms(10)\n    time.sleep_ms(300)\n\n    for _ in range(3):                      # number of push-ups\n        for a in range(50):\n            w('arm_r', ANG['arm_r'] - a)\n            w('hand_r', ANG['hand_r'] + 2 * a)\n            w('arm_l', ANG['arm_l'] + a)\n            w('hand_l', ANG['hand_l'] - 2 * a)\n            time.sleep_ms(10)\n        for a in range(50):\n            w('arm_r', ANG['arm_r'] - 50 + a)\n            w('hand_r', ANG['hand_r'] + 100 - 2 * a)\n            w('arm_l', ANG['arm_l'] + 50 - a)\n            w('hand_l', ANG['hand_l'] - 100 + 2 * a)\n            time.sleep_ms(10)\n\n    for a in range(100 + RISE_DEG):         # tuck the thighs\n        w('hip_r', HIP_R + a)\n        w('hip_l', HIP_L - a)\n        time.sleep_ms(10)\n    time.sleep_ms(500)\n    for a in range(60):\n        w('knee_r', ANG['knee_r'] + a)\n        w('knee_l', ANG['knee_l'] - a)\n        time.sleep_ms(30)\n    for a in range(90):\n        w('shoulder_r', ANG['shoulder_r'] + 90 - a)\n        w('shoulder_l', ANG['shoulder_l'] - 90 + a)\n        time.sleep_ms(5)\n    for a in range(10):\n        w('knee_r', ANG['knee_r'] + 60 + a)\n        w('knee_l', ANG['knee_l'] - 60 - a)\n        time.sleep_ms(5)\n    for a in range(10):\n        w('hip_r', HIP_R + 100 + RISE_DEG - a)\n        w('hip_l', HIP_L - 100 - RISE_DEG + a)\n        time.sleep_ms(3)\n    for a in range(RISE_DEG):\n        w('hip_r', HIP_R + 90 + RISE_DEG - a)\n        w('hip_l', HIP_L - 90 - RISE_DEG + a)\n        time.sleep_ms(30)\n    time.sleep_ms(100)\n    for a in range(15):\n        w('knee_r', ANG['knee_r'] + 70 - a)\n        w('knee_l', ANG['knee_l'] - 70 + a)\n        w('hip_r', HIP_R + 92 - a)\n        w('hip_l', HIP_L - 92 + a)\n        time.sleep_ms(50)\n    time.sleep_ms(100)\n    for a in range(15):\n        w('knee_r', ANG['knee_r'] + 55 - a)\n        w('knee_l', ANG['knee_l'] - 55 + a)\n        w('hip_r', HIP_R + 77 - a)\n        w('hip_l', HIP_L - 77 + a)\n        time.sleep_ms(50)\n    time.sleep_ms(100)\n    for a in range(10):\n        w('hip_r', HIP_R + 62 - a)\n        w('hip_l', HIP_L - 62 + a)\n        time.sleep_ms(50)\n    for a in range(40):\n        w('knee_r', ANG['knee_r'] + 40 - a)\n        w('knee_l', ANG['knee_l'] - 40 + a)\n        w('hip_r', HIP_R + 52 - a)\n        w('hip_l', HIP_L - 52 + a)\n        time.sleep_ms(50)\n    for a in range(12):\n        w('hip_r', HIP_R + 12 - a)\n        w('hip_l', HIP_L - 12 + a)\n        time.sleep_ms(50)\n\n\ndef punch():\n    \"\"\"Bend down, raise both fists and throw five punches.\"\"\"\n    stand()\n    for a in range(30):\n        w('knee_r', ANG['knee_r'] + a)\n        w('knee_l', ANG['knee_l'] - a)\n        w('hip_r', HIP_R + 2 * a)\n        w('hip_l', HIP_L - 2 * a)\n        time.sleep_ms(50)\n    for a in range(25):\n        w('hip_r', HIP_R + 60 - a)\n        w('hip_l', HIP_L - 60 + a)\n        time.sleep_ms(50)\n    time.sleep_ms(100)\n    time.sleep_ms(300)\n    w('shoulder_r', ANG['shoulder_r'] + 110)\n    w('shoulder_l', ANG['shoulder_l'] - 110)\n    time.sleep_ms(100)\n    for a in range(60):                     # pull the fists in\n        w('arm_r', ANG['arm_r'] - a)\n        w('hand_r', ANG['hand_r'] + 2 * a)\n        w('arm_l', ANG['arm_l'] + a)\n        w('hand_l', ANG['hand_l'] - 2 * a)\n        time.sleep_ms(10)\n    time.sleep_ms(500)\n    for a in range(60):\n        w('arm_r', ANG['arm_r'] - 60 + a)\n        w('hand_r', ANG['hand_r'] + 120 - 2 * a)\n        time.sleep_ms(3)\n    time.sleep_ms(500)\n\n    for _ in range(5):                      # number of punches per arm\n        for a in range(60):\n            w('arm_r', ANG['arm_r'] - a)\n            w('hand_r', ANG['hand_r'] + 2 * a)\n            w('arm_l', ANG['arm_l'] + 60 - a)\n            w('hand_l', ANG['hand_l'] - 120 + 2 * a)\n            time.sleep_ms(3)\n        time.sleep_ms(500)\n        for a in range(60):\n            w('arm_r', ANG['arm_r'] - 60 + a)\n            w('hand_r', ANG['hand_r'] + 120 - 2 * a)\n            w('arm_l', ANG['arm_l'] + a)\n            w('hand_l', ANG['hand_l'] - 2 * a)\n            time.sleep_ms(3)\n        time.sleep_ms(500)\n\n    for a in range(30):                     # straighten up\n        w('knee_r', ANG['knee_r'] + 30 - a)\n        w('knee_l', ANG['knee_l'] - 30 + a)\n        w('hip_r', HIP_R + 35 - a)\n        w('hip_l', HIP_L - 35 + a)\n        time.sleep_ms(50)\n    for a in range(5):\n        w('hip_r', HIP_R + 5 - a)\n        w('hip_l', HIP_L - 5 + a)\n        time.sleep_ms(20)\n    stand()\n\n\n# ---------- 4. The web page ----------\n# Buttons call fetch() instead of navigating, so the address bar stays at the IP.\nPAGE = \"\"\"<!DOCTYPE html><html><head><meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<title>Robot</title>\n<style>button{padding:16px 22px;font-size:16px;margin:4px}</style></head>\n<body style=\"font-family:sans-serif;text-align:center\">\n<h2>Robot Control</h2>\n<p><button onclick=\"send('/go')\">Forward</button></p>\n<p><button onclick=\"send('/left')\">Left</button>\n<button onclick=\"send('/right')\">Right</button></p>\n<p><button onclick=\"send('/back')\">Back</button></p>\n<p><button onclick=\"send('/punch')\">Punch</button>\n<button onclick=\"send('/kick')\">Kick</button>\n<button onclick=\"send('/pushup')\">Push-up</button></p>\n<p><button onclick=\"send('/reset')\">Reset</button></p>\n<script>function send(p){fetch(p,{cache:'no-store'})}</script>\n</body></html>\"\"\"\n\n# ---------- 5. Run: connect, then answer one request at a time ----------\nfor j, d in pos.items():                    # snap every servo straight to the standing pose\n    w(j, d)\n\nwlan = network.WLAN(network.STA_IF)\nwlan.active(True)\nwlan.connect(WIFI_SSID, WIFI_PASS)\nfor _ in range(20):                         # wait up to 10 s for the link\n    if wlan.isconnected():\n        break\n    time.sleep_ms(500)\nprint('connected:', wlan.isconnected())\nprint('open http://%s/' % wlan.ifconfig()[0])\n\ns = socket.socket()\ns.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)\ns.bind(('0.0.0.0', 80))\ns.listen(3)\n\nwhile True:\n    conn, addr = s.accept()\n    conn.settimeout(2)                      # never block forever on an idle socket\n    try:\n        req = conn.recv(1024).decode()\n    except OSError:                         # browser pre-connect that sent nothing\n        conn.close()\n        continue\n    if not req:\n        conn.close()\n        continue\n    path = req.split(' ')[1] if ' ' in req else '/'\n\n    if path == '/':                         # the page itself\n        conn.send('HTTP/1.1 200 OK\\r\\nContent-Type: text/html\\r\\n'\n                  'Cache-Control: no-store\\r\\nConnection: close\\r\\n\\r\\n')\n        conn.send(PAGE)\n        conn.close()\n        continue\n\n    conn.send('HTTP/1.1 204 No Content\\r\\nCache-Control: no-store\\r\\n'\n              'Connection: close\\r\\n\\r\\n')\n    conn.close()\n\n    if path == '/reset':                    # back to the standing pose\n        stand(True)\n    elif path == '/go':\n        goahead()\n    elif path == '/back':\n        goback()\n    elif path == '/left':\n        for _ in range(5):\n            turnleft()\n    elif path == '/right':\n        for _ in range(5):\n            turnright()\n    elif path == '/punch':\n        punch()\n    elif path == '/kick':\n        kick()\n    elif path == '/pushup':\n        pushup()\n    stand()                                 # every action ends exactly like /reset\n    time.sleep_ms(10)"
+          "text": "# ============================================================\n# Biped robot - Program 2: WiFi remote\n#\n# The robot joins your WiFi and serves a small web page.\n# Open that page on a phone in the same network and press the buttons.\n#\n# How to use:\n#   1) Put your WiFi name and password in WIFI_SSID / WIFI_PASS.\n#   2) Paste this file into Thonny, save it to the robot as main.py.\n#   3) Run it and read the IP address in the Shell, e.g. 192.168.1.23\n#   4) Type that address into the phone browser. Keep the phone on the\n#      same WiFi - the robot has no internet access.\n# ============================================================\n\nimport time\nimport network\nimport socket\nfrom machine import Pin, PWM\n\n# ---------- 1. Calibration (same table as Program 1) ----------\nANG = {'leg_r': 30, 'knee_r': 54, 'ankle_r': 91,\n       'leg_l': 150, 'knee_l': 142, 'ankle_l': 95,\n       'shoulder_r': 32, 'arm_r': 144, 'hand_r': 40,\n       'shoulder_l': 150, 'arm_l': 37, 'hand_l': 130}\n\nLEAN = 0   # extra forward lean while walking; 0 = the same pose as Program 1\nSPEED = 2         # gait speed, larger value = slower\nAHEAD_R = 12      # side tilt (right) used to free the left foot when walking forward\nAHEAD_L = 12      # side tilt (left) used to free the right foot when walking forward\nBACK_R = 12       # side tilt used when walking backwards\nBACK_L = 12\nKICK_DEG = 14     # body tilt while kicking\nRISE_DEG = 17     # thigh tuck angle used when standing up from the floor\n\nWIFI_SSID = 'MINXIN-S'\nWIFI_PASS = 'Minxin520'\n\n# ---------- 2. Hardware ----------\nPINS = {'leg_r': 14, 'knee_r': 13, 'ankle_r': 12,\n        'leg_l': 5, 'knee_l': 4, 'ankle_l': 2,\n        'shoulder_r': 15, 'arm_r': 25, 'hand_r': 26,\n        'shoulder_l': 27, 'arm_l': 32, 'hand_l': 33}\n\nLEG_R = ANG['leg_r'] + LEAN   # right leg angle in the standing pose\nLEG_L = ANG['leg_l'] - LEAN   # left leg angle in the standing pose\n\nsrv = {j: PWM(Pin(p, Pin.OUT), freq=50) for j, p in PINS.items()}\n\n# Last angle we told each servo to go to. Taken from the calibration table, so at\n# power-up the pose is known without reading anything back from the PWM hardware.\npos = dict(ANG)\npos['leg_r'], pos['leg_l'] = LEG_R, LEG_L\n\n\ndef w(joint, deg):\n    \"\"\"Set one joint to an angle in degrees.\"\"\"\n    pos[joint] = int(deg)\n    srv[joint].duty(int(deg * 0.56) + 25)\n\n\ndef stand(force=False):\n    \"\"\"Ease every servo back to the standing pose, all at the same time.\n\n    With force=True the standing angles are written again even if the code\n    already thinks the robot is standing, so /reset really re-drives the servos.\n    \"\"\"\n    target = dict(ANG)\n    target['leg_r'], target['leg_l'] = LEG_R, LEG_L\n    while pos != target:\n        for j in srv:\n            if pos[j] < target[j]:\n                w(j, pos[j] + 1)\n            elif pos[j] > target[j]:\n                w(j, pos[j] - 1)\n        time.sleep_ms(10)\n    if force:\n        for j, d in target.items():\n            w(j, d)\n\n\n# ---------- 3. Motions ----------\ndef goahead(steps=5):\n    \"\"\"Walk forward the given number of full gait cycles.\"\"\"\n    stand()\n    w('leg_r', LEG_R - 2)\n    w('leg_l', LEG_L + 2)\n    time.sleep_ms(200)\n\n    # Shift the weight, step with the left leg.\n    for a in range(AHEAD_R):\n        w('ankle_r', ANG['ankle_r'] - a)\n        w('ankle_l', ANG['ankle_l'] - 5 - a)\n        time.sleep_ms(SPEED * 10 + 30)\n    time.sleep_ms(SPEED * 100 + 200)\n    w('ankle_l', ANG['ankle_l'] - AHEAD_R)\n    time.sleep_ms(SPEED * 50)\n    for a in range(13):\n        w('leg_r', LEG_R - a - 2)\n        w('knee_r', ANG['knee_r'] - a)\n        w('leg_l', LEG_L - a - 4)\n        w('knee_l', ANG['knee_l'] - a + 4)\n        w('shoulder_r', ANG['shoulder_r'] + 2 * a)\n        time.sleep_ms(SPEED * 10 + 30)\n\n    # Level the body, shift to the other side, step with the right leg.\n    for a in range(AHEAD_R):\n        w('ankle_r', ANG['ankle_r'] - AHEAD_R + a)\n        w('ankle_l', ANG['ankle_l'] - AHEAD_R + a)\n        time.sleep_ms(SPEED * 20 + 20)\n    time.sleep_ms(SPEED * 100 + 500)\n    for a in range(AHEAD_L):\n        w('ankle_l', ANG['ankle_l'] + a)\n        w('ankle_r', ANG['ankle_r'] + 5 + a)\n        time.sleep_ms(SPEED * 10 + 30)\n    time.sleep_ms(SPEED * 100 + 200)\n    w('ankle_r', ANG['ankle_r'] + AHEAD_L)\n    time.sleep_ms(SPEED * 50)\n    for a in range(13):\n        w('leg_r', LEG_R - 15 + a)\n        w('knee_r', ANG['knee_r'] - 13 + a)\n        w('leg_l', LEG_L - 13 + a - 2)\n        w('knee_l', ANG['knee_l'] - 13 + a)\n        w('shoulder_r', ANG['shoulder_r'] - 2 * a + 52)\n        w('shoulder_l', ANG['shoulder_l'] - 2 * a)\n        time.sleep_ms(SPEED * 10 + 20)\n\n    # Remaining gait cycles.\n    for _ in range(steps):\n        for a in range(13):\n            w('leg_r', LEG_R + a - 2)\n            w('knee_r', ANG['knee_r'] + a - 3)\n            w('leg_l', LEG_L + a - 2)\n            w('knee_l', ANG['knee_l'] + a - 3)\n            w('shoulder_r', ANG['shoulder_r'] - 2 * a + 26)\n            w('shoulder_l', ANG['shoulder_l'] - 2 * a - 26)\n            time.sleep_ms(SPEED * 10 + 20)\n        for a in range(AHEAD_L):\n            w('ankle_r', ANG['ankle_r'] + AHEAD_L - a)\n            w('ankle_l', ANG['ankle_l'] + AHEAD_L - a)\n            time.sleep_ms(SPEED * 20 + 20)\n        time.sleep_ms(SPEED * 100 + 500)\n        for a in range(AHEAD_R):\n            w('ankle_r', ANG['ankle_r'] - a)\n            w('ankle_l', ANG['ankle_l'] - 5 - a)\n            time.sleep_ms(SPEED * 20 + 20)\n        time.sleep_ms(SPEED * 100)\n        w('ankle_l', ANG['ankle_l'] - AHEAD_R)\n        time.sleep_ms(SPEED * 50)\n        for a in range(13):\n            w('leg_r', LEG_R + 13 - a - 2)\n            w('knee_r', ANG['knee_r'] + 13 - a)\n            w('leg_l', LEG_L + 13 - a - 4)\n            w('knee_l', ANG['knee_l'] + 13 - a + 4)\n            w('shoulder_r', ANG['shoulder_r'] + 2 * a)\n            w('shoulder_l', ANG['shoulder_l'] + 2 * a - 52)\n            time.sleep_ms(SPEED * 10 + 20)\n\n        for a in range(13):\n            w('leg_r', LEG_R - a - 2)\n            w('knee_r', ANG['knee_r'] - a)\n            w('leg_l', LEG_L - a + 1)\n            w('knee_l', ANG['knee_l'] - a + 4)\n            w('shoulder_r', ANG['shoulder_r'] + 26 + 2 * a)\n            w('shoulder_l', ANG['shoulder_l'] + 2 * a - 26)\n            time.sleep_ms(SPEED * 10 + 20)\n        for a in range(AHEAD_R):\n            w('ankle_r', ANG['ankle_r'] - AHEAD_R + a)\n            w('ankle_l', ANG['ankle_l'] - AHEAD_R + a)\n            time.sleep_ms(SPEED * 20 + 20)\n        time.sleep_ms(SPEED * 100 + 500)\n        for a in range(AHEAD_L):\n            w('ankle_l', ANG['ankle_l'] + a)\n            w('ankle_r', ANG['ankle_r'] + 5 + a)\n            time.sleep_ms(SPEED * 20 + 20)\n        time.sleep_ms(SPEED * 100 + 200)\n        w('ankle_r', ANG['ankle_r'] + AHEAD_L)\n        time.sleep_ms(50)\n        for a in range(13):\n            w('leg_r', LEG_R - 13 + a - 2)\n            w('knee_r', ANG['knee_r'] - 13 + a - 3)\n            w('leg_l', LEG_L - 13 + a - 2)\n            w('knee_l', ANG['knee_l'] - 13 + a)\n            w('shoulder_r', ANG['shoulder_r'] - 2 * a + 52)\n            w('shoulder_l', ANG['shoulder_l'] - 2 * a)\n            time.sleep_ms(SPEED * 10 + 20)\n\n    stand()\n\n\ndef goback(steps=5):\n    \"\"\"Walk backwards the given number of full gait cycles.\"\"\"\n    stand()\n    for a in range(3):\n        w('leg_r', LEG_R + a)\n        w('leg_l', LEG_L - a)\n        time.sleep_ms(50)\n\n    for a in range(BACK_R):\n        w('ankle_r', ANG['ankle_r'] - a)\n        w('ankle_l', ANG['ankle_l'] - 5 - a)\n        time.sleep_ms(SPEED * 10 + 20)\n    time.sleep_ms(SPEED * 100 + 200)\n    w('ankle_l', ANG['ankle_l'] - BACK_R)\n    time.sleep_ms(SPEED * 50 + 50)\n    for a in range(15):\n        w('leg_r', LEG_R + a + 3)\n        w('knee_r', ANG['knee_r'] + a)\n        w('knee_l', ANG['knee_l'] - a / 3)\n        w('shoulder_l', ANG['shoulder_l'] - 2 * a)\n        time.sleep_ms(SPEED * 10 + 20)\n\n    for a in range(BACK_R):\n        w('ankle_r', ANG['ankle_r'] - BACK_R + a)\n        w('ankle_l', ANG['ankle_l'] - BACK_R + a)\n        time.sleep_ms(SPEED * 20 + 20)\n    w('knee_l', ANG['knee_l'])\n    time.sleep_ms(SPEED * 100 + 500)\n    for a in range(BACK_L):\n        w('ankle_l', ANG['ankle_l'] + a)\n        w('ankle_r', ANG['ankle_r'] + 5 + a)\n        time.sleep_ms(SPEED * 20 + 20)\n    time.sleep_ms(SPEED * 100 + 200)\n    w('ankle_r', ANG['ankle_r'] + BACK_L)\n    time.sleep_ms(SPEED * 50)\n\n    for _ in range(steps):\n        for a in range(15):\n            w('leg_r', LEG_R + 15 - a + 3)\n            w('knee_r', ANG['knee_r'] + 15 - a + 5)\n            w('leg_l', LEG_L - 3 - a)\n            w('knee_l', ANG['knee_l'] - a)\n            w('shoulder_r', ANG['shoulder_r'] + 2 * a)\n            w('shoulder_l', ANG['shoulder_l'] - 30 + 2 * a)\n            time.sleep_ms(SPEED * 20 + 20)\n        for a in range(BACK_L):\n            w('ankle_r', ANG['ankle_r'] + BACK_L - a)\n            w('ankle_l', ANG['ankle_l'] + BACK_L - a)\n            time.sleep_ms(SPEED * 20 + 20)\n        w('knee_r', ANG['knee_r'])\n        time.sleep_ms(SPEED * 100 + 500)\n        for a in range(BACK_R):\n            w('ankle_r', ANG['ankle_r'] - a)\n            w('ankle_l', ANG['ankle_l'] - 5 - a)\n            time.sleep_ms(SPEED * 20 + 30)\n        w('ankle_l', ANG['ankle_l'] - BACK_R)\n        time.sleep_ms(SPEED * 50 + 50)\n\n        for a in range(15):\n            w('leg_r', LEG_R + a + 3)\n            w('knee_r', ANG['knee_r'] + a)\n            w('leg_l', LEG_L - 15 + a - 3)\n            w('knee_l', ANG['knee_l'] - 15 + a + 5)\n            w('shoulder_r', ANG['shoulder_r'] + 30 - 2 * a)\n            w('shoulder_l', ANG['shoulder_l'] - 2 * a)\n            time.sleep_ms(SPEED * 10 + 30)\n        for a in range(BACK_R):\n            w('ankle_r', ANG['ankle_r'] - BACK_R + a)\n            w('ankle_l', ANG['ankle_l'] - BACK_R + a)\n            time.sleep_ms(SPEED * 20 + 20)\n        w('knee_l', ANG['knee_l'])\n        time.sleep_ms(SPEED * 100 + 500)\n        for a in range(BACK_L):\n            w('ankle_l', ANG['ankle_l'] + a)\n            w('ankle_r', ANG['ankle_r'] + 5 + a)\n            time.sleep_ms(SPEED * 20 + 20)\n        time.sleep_ms(SPEED * 100 + 200)\n        w('ankle_r', ANG['ankle_r'] + BACK_L)\n        time.sleep_ms(SPEED * 50)\n\n    stand()\n\n\ndef turnleft():\n    \"\"\"Turn in place to the left once.\"\"\"\n    for a in range(11):\n        w('ankle_r', ANG['ankle_r'] + 5 + a)\n        w('ankle_l', ANG['ankle_l'] + a)\n        time.sleep_ms(SPEED * 10 + 20)\n    time.sleep_ms(SPEED * 50 + 50)\n    for a in range(16):\n        w('leg_l', ANG['leg_l'] + a)\n        w('knee_l', ANG['knee_l'] + a)\n        w('leg_r', ANG['leg_r'] + a)\n        w('knee_r', ANG['knee_r'] + a)\n        time.sleep_ms(40)\n    time.sleep_ms(SPEED * 50 + 50)\n    for a in range(12):\n        w('ankle_l', ANG['ankle_l'] + 10 - a)\n        time.sleep_ms(SPEED * 30 + 30)\n    for a in range(16):\n        w('ankle_r', ANG['ankle_r'] + 16 - a)\n        time.sleep_ms(20)\n    time.sleep_ms(SPEED * 100 + 200)\n    for a in range(16):\n        w('leg_l', ANG['leg_l'] + 15 - a)\n        w('knee_l', ANG['knee_l'] + 15 - a)\n        w('leg_r', ANG['leg_r'] + 15 - a)\n        w('knee_r', ANG['knee_r'] + 15 - a)\n        time.sleep_ms(10)\n    time.sleep_ms(SPEED * 50 + 50)\n\n\ndef turnright():\n    \"\"\"Turn in place to the right once.\"\"\"\n    for a in range(11):\n        w('ankle_r', ANG['ankle_r'] - a)\n        w('ankle_l', ANG['ankle_l'] - 5 - a)\n        time.sleep_ms(SPEED * 10 + 20)\n    time.sleep_ms(SPEED * 50 + 50)\n    for a in range(16):\n        w('leg_l', ANG['leg_l'] - a)\n        w('knee_l', ANG['knee_l'] - a)\n        w('leg_r', ANG['leg_r'] - a)\n        w('knee_r', ANG['knee_r'] - a)\n        time.sleep_ms(40)\n    w('knee_l', ANG['knee_l'] - 16 + 6)\n    time.sleep_ms(SPEED * 20 + 50)\n    for a in range(11):\n        w('ankle_r', ANG['ankle_r'] - 11 + a + 3)\n        time.sleep_ms(SPEED * 30 + 30)\n    for a in range(16):\n        w('ankle_l', ANG['ankle_l'] - 16 + a)\n        time.sleep_ms(20)\n    time.sleep_ms(SPEED * 100 + 200)\n    for a in range(16):\n        w('leg_l', ANG['leg_l'] - 15 + a)\n        w('knee_l', ANG['knee_l'] - 15 + a)\n        w('leg_r', ANG['leg_r'] - 15 + a)\n        w('knee_r', ANG['knee_r'] - 15 + a)\n        time.sleep_ms(10)\n    time.sleep_ms(SPEED * 50 + 50)\n\n\ndef kick():\n    \"\"\"Lean, swing the right leg back and kick.\"\"\"\n    for a in range(9):\n        w('leg_r', LEG_R + a)\n        w('leg_l', LEG_L - a)\n        time.sleep_ms(50)\n    for a in range(15):\n        w('ankle_r', ANG['ankle_r'] + a)\n        time.sleep_ms(10)\n    for a in range(KICK_DEG):\n        w('ankle_r', ANG['ankle_r'] + 15 + a)\n        w('ankle_l', ANG['ankle_l'] + a)\n        time.sleep_ms(80)\n    for a in range(15):\n        w('ankle_r', ANG['ankle_r'] + 30 - a)\n        time.sleep_ms(10)\n    for a in range(30):\n        w('leg_r', LEG_R + 10 - a)\n        w('knee_r', ANG['knee_r'] + 2 * a)\n        w('shoulder_l', ANG['shoulder_l'] - 2 * a)\n        w('hand_l', ANG['hand_l'] - 2 * a)\n        time.sleep_ms(20)\n    time.sleep_ms(1000)\n    w('leg_r', LEG_R + 60)\n    w('knee_r', ANG['knee_r'] + 10)\n    time.sleep_ms(1000)\n    stand()\n\n\ndef pushup():\n    \"\"\"Lie down on the hands, do three push-ups, then stand up.\"\"\"\n    for a in range(114):\n        w('leg_r', ANG['leg_r'] + a)\n        w('leg_l', ANG['leg_l'] - a)\n        w('knee_r', ANG['knee_r'] + a / 2)\n        w('knee_l', ANG['knee_l'] - a / 2)\n        time.sleep_ms(30)\n    for a in range(90):\n        w('shoulder_r', ANG['shoulder_r'] + a)\n        w('shoulder_l', ANG['shoulder_l'] - a)\n        time.sleep_ms(5)\n    for a in range(57):\n        w('knee_r', ANG['knee_r'] + 57 - a)\n        w('knee_l', ANG['knee_l'] - 57 + a)\n        time.sleep_ms(10)\n    for a in range(114):\n        w('leg_r', LEG_R + 114 - a)\n        w('leg_l', LEG_L - 114 + a)\n        time.sleep_ms(10)\n    time.sleep_ms(300)\n\n    for _ in range(3):                      # number of push-ups\n        for a in range(50):\n            w('arm_r', ANG['arm_r'] - a)\n            w('hand_r', ANG['hand_r'] + 2 * a)\n            w('arm_l', ANG['arm_l'] + a)\n            w('hand_l', ANG['hand_l'] - 2 * a)\n            time.sleep_ms(10)\n        for a in range(50):\n            w('arm_r', ANG['arm_r'] - 50 + a)\n            w('hand_r', ANG['hand_r'] + 100 - 2 * a)\n            w('arm_l', ANG['arm_l'] + 50 - a)\n            w('hand_l', ANG['hand_l'] - 100 + 2 * a)\n            time.sleep_ms(10)\n\n    for a in range(100 + RISE_DEG):         # tuck the thighs\n        w('leg_r', LEG_R + a)\n        w('leg_l', LEG_L - a)\n        time.sleep_ms(10)\n    time.sleep_ms(500)\n    for a in range(60):\n        w('knee_r', ANG['knee_r'] + a)\n        w('knee_l', ANG['knee_l'] - a)\n        time.sleep_ms(30)\n    for a in range(90):\n        w('shoulder_r', ANG['shoulder_r'] + 90 - a)\n        w('shoulder_l', ANG['shoulder_l'] - 90 + a)\n        time.sleep_ms(5)\n    for a in range(10):\n        w('knee_r', ANG['knee_r'] + 60 + a)\n        w('knee_l', ANG['knee_l'] - 60 - a)\n        time.sleep_ms(5)\n    for a in range(10):\n        w('leg_r', LEG_R + 100 + RISE_DEG - a)\n        w('leg_l', LEG_L - 100 - RISE_DEG + a)\n        time.sleep_ms(3)\n    for a in range(RISE_DEG):\n        w('leg_r', LEG_R + 90 + RISE_DEG - a)\n        w('leg_l', LEG_L - 90 - RISE_DEG + a)\n        time.sleep_ms(30)\n    time.sleep_ms(100)\n    for a in range(15):\n        w('knee_r', ANG['knee_r'] + 70 - a)\n        w('knee_l', ANG['knee_l'] - 70 + a)\n        w('leg_r', LEG_R + 92 - a)\n        w('leg_l', LEG_L - 92 + a)\n        time.sleep_ms(50)\n    time.sleep_ms(100)\n    for a in range(15):\n        w('knee_r', ANG['knee_r'] + 55 - a)\n        w('knee_l', ANG['knee_l'] - 55 + a)\n        w('leg_r', LEG_R + 77 - a)\n        w('leg_l', LEG_L - 77 + a)\n        time.sleep_ms(50)\n    time.sleep_ms(100)\n    for a in range(10):\n        w('leg_r', LEG_R + 62 - a)\n        w('leg_l', LEG_L - 62 + a)\n        time.sleep_ms(50)\n    for a in range(40):\n        w('knee_r', ANG['knee_r'] + 40 - a)\n        w('knee_l', ANG['knee_l'] - 40 + a)\n        w('leg_r', LEG_R + 52 - a)\n        w('leg_l', LEG_L - 52 + a)\n        time.sleep_ms(50)\n    for a in range(12):\n        w('leg_r', LEG_R + 12 - a)\n        w('leg_l', LEG_L - 12 + a)\n        time.sleep_ms(50)\n\n\ndef punch():\n    \"\"\"Bend down, raise both fists and throw five punches.\"\"\"\n    stand()\n    for a in range(30):\n        w('knee_r', ANG['knee_r'] + a)\n        w('knee_l', ANG['knee_l'] - a)\n        w('leg_r', LEG_R + 2 * a)\n        w('leg_l', LEG_L - 2 * a)\n        time.sleep_ms(50)\n    for a in range(25):\n        w('leg_r', LEG_R + 60 - a)\n        w('leg_l', LEG_L - 60 + a)\n        time.sleep_ms(50)\n    time.sleep_ms(100)\n    time.sleep_ms(300)\n    w('shoulder_r', ANG['shoulder_r'] + 110)\n    w('shoulder_l', ANG['shoulder_l'] - 110)\n    time.sleep_ms(100)\n    for a in range(60):                     # pull the fists in\n        w('arm_r', ANG['arm_r'] - a)\n        w('hand_r', ANG['hand_r'] + 2 * a)\n        w('arm_l', ANG['arm_l'] + a)\n        w('hand_l', ANG['hand_l'] - 2 * a)\n        time.sleep_ms(10)\n    time.sleep_ms(500)\n    for a in range(60):\n        w('arm_r', ANG['arm_r'] - 60 + a)\n        w('hand_r', ANG['hand_r'] + 120 - 2 * a)\n        time.sleep_ms(3)\n    time.sleep_ms(500)\n\n    for _ in range(5):                      # number of punches per arm\n        for a in range(60):\n            w('arm_r', ANG['arm_r'] - a)\n            w('hand_r', ANG['hand_r'] + 2 * a)\n            w('arm_l', ANG['arm_l'] + 60 - a)\n            w('hand_l', ANG['hand_l'] - 120 + 2 * a)\n            time.sleep_ms(3)\n        time.sleep_ms(500)\n        for a in range(60):\n            w('arm_r', ANG['arm_r'] - 60 + a)\n            w('hand_r', ANG['hand_r'] + 120 - 2 * a)\n            w('arm_l', ANG['arm_l'] + a)\n            w('hand_l', ANG['hand_l'] - 2 * a)\n            time.sleep_ms(3)\n        time.sleep_ms(500)\n\n    for a in range(30):                     # straighten up\n        w('knee_r', ANG['knee_r'] + 30 - a)\n        w('knee_l', ANG['knee_l'] - 30 + a)\n        w('leg_r', LEG_R + 35 - a)\n        w('leg_l', LEG_L - 35 + a)\n        time.sleep_ms(50)\n    for a in range(5):\n        w('leg_r', LEG_R + 5 - a)\n        w('leg_l', LEG_L - 5 + a)\n        time.sleep_ms(20)\n    stand()\n\n\n# ---------- 4. The web page ----------\n# Buttons call fetch() instead of navigating, so the address bar stays at the IP.\nPAGE = \"\"\"<!DOCTYPE html><html><head><meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<title>Robot</title>\n<style>button{padding:16px 22px;font-size:16px;margin:4px}</style></head>\n<body style=\"font-family:sans-serif;text-align:center\">\n<h2>Robot Control</h2>\n<p><button onclick=\"send('/go')\">Forward</button></p>\n<p><button onclick=\"send('/left')\">Left</button>\n<button onclick=\"send('/right')\">Right</button></p>\n<p><button onclick=\"send('/back')\">Back</button></p>\n<p><button onclick=\"send('/punch')\">Punch</button>\n<button onclick=\"send('/kick')\">Kick</button>\n<button onclick=\"send('/pushup')\">Push-up</button></p>\n<p><button onclick=\"send('/reset')\">Reset</button></p>\n<script>function send(p){fetch(p,{cache:'no-store'})}</script>\n</body></html>\"\"\"\n\n# ---------- 5. Run: connect, then answer one request at a time ----------\nfor j, d in pos.items():                    # snap every servo straight to the standing pose\n    w(j, d)\n\nwlan = network.WLAN(network.STA_IF)\nwlan.active(True)\nwlan.connect(WIFI_SSID, WIFI_PASS)\nfor _ in range(20):                         # wait up to 10 s for the link\n    if wlan.isconnected():\n        break\n    time.sleep_ms(500)\nprint('connected:', wlan.isconnected())\nprint('open http://%s/' % wlan.ifconfig()[0])\n\ns = socket.socket()\ns.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)\ns.bind(('0.0.0.0', 80))\ns.listen(3)\n\nwhile True:\n    conn, addr = s.accept()\n    conn.settimeout(2)                      # never block forever on an idle socket\n    try:\n        req = conn.recv(1024).decode()\n    except OSError:                         # browser pre-connect that sent nothing\n        conn.close()\n        continue\n    if not req:\n        conn.close()\n        continue\n    path = req.split(' ')[1] if ' ' in req else '/'\n\n    if path == '/':                         # the page itself\n        conn.send('HTTP/1.1 200 OK\\r\\nContent-Type: text/html\\r\\n'\n                  'Cache-Control: no-store\\r\\nConnection: close\\r\\n\\r\\n')\n        conn.send(PAGE)\n        conn.close()\n        continue\n\n    conn.send('HTTP/1.1 204 No Content\\r\\nCache-Control: no-store\\r\\n'\n              'Connection: close\\r\\n\\r\\n')\n    conn.close()\n\n    if path == '/reset':                    # back to the standing pose\n        stand(True)\n    elif path == '/go':\n        goahead()\n    elif path == '/back':\n        goback()\n    elif path == '/left':\n        for _ in range(5):\n            turnleft()\n    elif path == '/right':\n        for _ in range(5):\n            turnright()\n    elif path == '/punch':\n        punch()\n    elif path == '/kick':\n        kick()\n    elif path == '/pushup':\n        pushup()\n    stand()                                 # every action ends exactly like /reset\n    time.sleep_ms(10)"
         }
       ]
     },
     {
       "type": "heading",
       "attrs": {
-        "id": "p8t94y",
+        "id": "p8owfm",
         "level": 3,
         "indent": null,
         "margin": null,
@@ -2032,7 +2734,7 @@
         "textAlign": null,
         "indentUnit": null,
         "lineHeight": 1.75,
-        "data-toc-id": "p8t94y"
+        "data-toc-id": "p8owfm"
       },
       "content": [
         {
@@ -3157,7 +3859,7 @@
     {
       "type": "heading",
       "attrs": {
-        "id": "p9jv6o",
+        "id": "p9of8u",
         "level": 3,
         "indent": null,
         "margin": null,
@@ -3165,7 +3867,7 @@
         "textAlign": null,
         "indentUnit": null,
         "lineHeight": 1.75,
-        "data-toc-id": "p9jv6o"
+        "data-toc-id": "p9of8u"
       },
       "content": [
         {
@@ -3395,7 +4097,7 @@
     {
       "type": "heading",
       "attrs": {
-        "id": "pajs68",
+        "id": "paeyg2",
         "level": 2,
         "indent": null,
         "margin": null,
@@ -3403,7 +4105,7 @@
         "textAlign": null,
         "indentUnit": null,
         "lineHeight": 1.75,
-        "data-toc-id": "pajs68"
+        "data-toc-id": "paeyg2"
       },
       "content": [
         {
@@ -3702,7 +4404,7 @@
     {
       "type": "heading",
       "attrs": {
-        "id": "pbxxqt",
+        "id": "pbduez",
         "level": 3,
         "indent": null,
         "margin": null,
@@ -3710,7 +4412,7 @@
         "textAlign": null,
         "indentUnit": null,
         "lineHeight": 1.75,
-        "data-toc-id": "pbxxqt"
+        "data-toc-id": "pbduez"
       },
       "content": [
         {
@@ -3749,14 +4451,14 @@
       "content": [
         {
           "type": "text",
-          "text": "# ============================================================\n# Biped robot - Program 3: dance show\n#\n# Seven moves, each one a plain loop, plus a show() that strings them\n# together. Change the order in show() and you have a new performance.\n#\n# How to use:\n#   1) Paste this file into Thonny, save it to the robot as main.py.\n#   2) Run it. The robot stands up, dances one round, then repeats.\n#   3) Put the robot on a table with 1 m of clear space around it.\n#\n# Warning: the first move bends forward 70 deg. If your robot tends to fall\n# forward, raise LEAN a little BEFORE dancing (see Program 1).\n# ============================================================\n\nfrom machine import Pin, PWM\nimport time\n\n# ---------- 1. Calibration (same table as Program 1 and 2) ----------\nANG = {'hip_r': 52, 'knee_r': 54, 'ankle_r': 91,\n       'hip_l': 135, 'knee_l': 142, 'ankle_l': 95,\n       'shoulder_r': 32, 'arm_r': 144, 'hand_r': 40,\n       'shoulder_l': 146, 'arm_l': 37, 'hand_l': 153}\n\nLEAN = 3\n\nPINS = {'hip_r': 14, 'knee_r': 13, 'ankle_r': 12,\n        'hip_l': 5, 'knee_l': 4, 'ankle_l': 2,\n        'shoulder_r': 15, 'arm_r': 25, 'hand_r': 26,\n        'shoulder_l': 27, 'arm_l': 32, 'hand_l': 33}\n\nHIP_R = ANG['hip_r'] + LEAN\nHIP_L = ANG['hip_l'] - LEAN\n\nsrv = {j: PWM(Pin(p, Pin.OUT), freq=50) for j, p in PINS.items()}\npos = dict(ANG)\npos['hip_r'], pos['hip_l'] = HIP_R, HIP_L\n\n\ndef w(joint, deg):\n    \"\"\"Set one joint to an angle in degrees.\"\"\"\n    pos[joint] = int(deg)\n    srv[joint].duty(int(deg * 0.56) + 25)\n\n\ndef stand():\n    \"\"\"Ease every joint back to the standing pose, all at the same time.\"\"\"\n    target = dict(ANG)\n    target['hip_r'], target['hip_l'] = HIP_R, HIP_L\n    while pos != target:\n        for j in ANG:\n            if pos[j] < target[j]:\n                w(j, pos[j] + 1)\n            elif pos[j] > target[j]:\n                w(j, pos[j] - 1)\n        time.sleep_ms(8)\n\n\n# ---------- 2. The moves ----------\n# Every move is the same shape: a loop that walks one variable from 0 to N,\n# with each joint written as  base + k * variable.  Change k and the joint\n# moves further; change the loop length and the move gets slower.\n# Reminder for the signs: right side = bigger angle lifts, left side = smaller.\n\ndef bow():                              # 鞠躬 - fold forward from the hips\n    for a in range(70):\n        w('hip_r', ANG['hip_r'] + a)\n        w('hip_l', ANG['hip_l'] - a)\n        w('knee_r', ANG['knee_r'] + a / 2)\n        w('knee_l', ANG['knee_l'] - a / 2)\n        w('shoulder_r', ANG['shoulder_r'] + a)\n        w('hand_r', ANG['hand_r'] + a)\n        time.sleep_ms(10)\n    time.sleep_ms(600)\n    for a in range(70):\n        w('hip_r', ANG['hip_r'] + 70 - a)\n        w('hip_l', ANG['hip_l'] - 70 + a)\n        w('knee_r', ANG['knee_r'] + 35 - a / 2)\n        w('knee_l', ANG['knee_l'] - 35 + a / 2)\n        w('shoulder_r', ANG['shoulder_r'] + 70 - a)\n        w('hand_r', ANG['hand_r'] + 70 - a)\n        time.sleep_ms(10)\n\n\ndef nod():                              # 点头 - tap the right toe twice\n    for _ in range(2):\n        for a in range(14):\n            w('ankle_r', ANG['ankle_r'] + a)\n            time.sleep_ms(17)\n        for a in range(14):\n            w('ankle_r', ANG['ankle_r'] + 13 - a)\n            time.sleep_ms(17)\n\n\ndef twist():                            # 扭胯 - hips sway, arms punch out one at a time\n    for _ in range(4):\n        for a in range(14):\n            w('ankle_r', ANG['ankle_r'] + a)\n            w('ankle_l', ANG['ankle_l'] - a)\n            w('shoulder_r', ANG['shoulder_r'] + 100 - 2 * a)\n            w('hand_r', ANG['hand_r'] + 70)\n            w('arm_l', ANG['arm_l'] + 90 - 2 * a)\n            w('hand_l', ANG['hand_l'] + 2 * a)\n            time.sleep_ms(17)\n        for a in range(14):\n            w('ankle_r', ANG['ankle_r'] + 14 - a)\n            w('ankle_l', ANG['ankle_l'] - 14 + a)\n            w('shoulder_r', ANG['shoulder_r'] + 72 + 2 * a)\n            w('hand_r', ANG['hand_r'] + 70)\n            w('arm_l', ANG['arm_l'] + 62 + 2 * a)\n            w('hand_l', ANG['hand_l'] + 28 - 2 * a)\n            time.sleep_ms(17)\n    for _ in range(4):\n        for a in range(14):\n            w('ankle_r', ANG['ankle_r'] + a)\n            w('ankle_l', ANG['ankle_l'] - a)\n            w('shoulder_l', ANG['shoulder_l'] - 100 + 2 * a)\n            w('hand_l', ANG['hand_l'] - 70)\n            w('arm_r', ANG['arm_r'] - 90 + 2 * a)\n            w('hand_r', ANG['hand_r'] - 2 * a)\n            time.sleep_ms(17)\n        for a in range(14):\n            w('ankle_r', ANG['ankle_r'] + 14 - a)\n            w('ankle_l', ANG['ankle_l'] - 14 + a)\n            w('shoulder_l', ANG['shoulder_l'] - 72 - 2 * a)\n            w('hand_l', ANG['hand_l'] - 70)\n            w('arm_r', ANG['arm_r'] - 62 - 2 * a)\n            w('hand_r', ANG['hand_r'] - 28 + 2 * a)\n            time.sleep_ms(17)\n\n\ndef flap():                             # 摆臂 - both arms swing like wings\n    for _ in range(4):\n        for a in range(14):\n            w('ankle_r', ANG['ankle_r'] + a)\n            w('ankle_l', ANG['ankle_l'] - a)\n            w('shoulder_r', ANG['shoulder_r'] + 80 - 2 * a)\n            w('arm_r', ANG['arm_r'] - 90)\n            w('hand_r', ANG['hand_r'] + 90)\n            w('arm_l', ANG['arm_l'] + 2 * a)\n            w('hand_l', ANG['hand_l'] - 4 * a)\n            time.sleep_ms(17)\n        for a in range(14):\n            w('ankle_r', ANG['ankle_r'] + 14 - a)\n            w('ankle_l', ANG['ankle_l'] - 14 + a)\n            w('shoulder_r', ANG['shoulder_r'] + 52 + 2 * a)\n            w('arm_r', ANG['arm_r'] - 90)\n            w('hand_r', ANG['hand_r'] + 90)\n            w('arm_l', ANG['arm_l'] + 28 - 2 * a)\n            w('hand_l', ANG['hand_l'] - 56 + 4 * a)\n            time.sleep_ms(17)\n    for _ in range(4):\n        for a in range(14):\n            w('ankle_r', ANG['ankle_r'] + a)\n            w('ankle_l', ANG['ankle_l'] - a)\n            w('shoulder_l', ANG['shoulder_l'] - 140 + 2 * a)\n            w('arm_l', ANG['arm_l'] + 90)\n            w('hand_l', ANG['hand_l'] - 90)\n            w('shoulder_r', ANG['shoulder_r'] + 140 - 2 * a)\n            w('arm_r', ANG['arm_r'] - 90)\n            w('hand_r', ANG['hand_r'] + 90)\n            time.sleep_ms(17)\n        for a in range(14):\n            w('ankle_r', ANG['ankle_r'] + 14 - a)\n            w('ankle_l', ANG['ankle_l'] - 14 + a)\n            w('shoulder_l', ANG['shoulder_l'] - 112 - 2 * a)\n            w('arm_l', ANG['arm_l'] + 90)\n            w('hand_l', ANG['hand_l'] - 90)\n            w('shoulder_r', ANG['shoulder_r'] + 112 + 2 * a)\n            w('arm_r', ANG['arm_r'] - 90)\n            w('hand_r', ANG['hand_r'] + 90)\n            time.sleep_ms(17)\n\n\ndef toe_tap():                          # 点脚 - toe taps while both arms are up\n    w('shoulder_r', ANG['shoulder_r'] + 90)\n    w('shoulder_l', ANG['shoulder_l'] - 90)\n    w('hand_r', ANG['hand_r'] + 90)\n    w('hand_l', ANG['hand_l'] - 90)\n    for a in range(14):\n        w('ankle_r', ANG['ankle_r'] + a)\n        w('shoulder_r', ANG['shoulder_r'] + 75 + 2 * a)\n        w('shoulder_l', ANG['shoulder_l'] - 105 + 2 * a)\n        time.sleep_ms(17)\n    for a in range(14):\n        w('ankle_r', ANG['ankle_r'] + 13 - a)\n        w('shoulder_r', ANG['shoulder_r'] + 103 - 2 * a)\n        w('shoulder_l', ANG['shoulder_l'] - 77 - 2 * a)\n        time.sleep_ms(17)\n\n\ndef fan(base, step, open_arm):\n    \"\"\"One 20-step slice of the peacock move.\n\n    base = where the hips start, step = +1 while going down, -1 while coming up,\n    open_arm picks which of the two arm poses this slice uses.\n    \"\"\"\n    if open_arm:\n        w('arm_r', ANG['arm_r'] - 70)\n        w('hand_r', ANG['hand_r'] - 60)\n        w('arm_l', ANG['arm_l'] + 130)\n        w('hand_l', ANG['hand_l'] - 30)\n    else:\n        w('arm_r', ANG['arm_r'] - 130)\n        w('hand_r', ANG['hand_r'] + 30)\n        w('arm_l', ANG['arm_l'] + 70)\n        w('hand_l', ANG['hand_l'] + 60)\n    for a in range(20):\n        h = base + step * a\n        w('hip_r', ANG['hip_r'] + h)\n        w('knee_r', ANG['knee_r'] + h / 2)\n        w('hip_l', ANG['hip_l'] - h)\n        w('knee_l', ANG['knee_l'] - h / 2)\n        time.sleep_ms(25)\n\n\ndef peacock():                          # 孔雀开屏 - deep squat, arms open and close\n    w('shoulder_r', ANG['shoulder_r'] + 70)\n    w('shoulder_l', ANG['shoulder_l'] - 70)\n    fan(0, 1, True)\n    fan(20, 1, False)\n    fan(40, 1, True)\n    fan(60, 1, False)\n    fan(80, -1, True)\n    fan(60, -1, False)\n    fan(40, -1, True)\n    fan(20, -1, False)\n\n\ndef lotus():                            # 莲花手 - the arm flourish at the end\n    w('shoulder_r', ANG['shoulder_r'])\n    w('shoulder_l', ANG['shoulder_l'])\n    w('arm_r', ANG['arm_r'] - 100)\n    w('arm_l', ANG['arm_l'] + 100)\n    w('hand_r', ANG['hand_r'])\n    for a in range(20):\n        w('hand_l', ANG['hand_l'] + a)\n        time.sleep_ms(8)\n    for a in range(40):\n        w('hand_l', ANG['hand_l'] + 20 - 2 * a)\n        w('arm_l', ANG['arm_l'] + 100 + a)\n        time.sleep_ms(8)\n    for a in range(40):\n        w('arm_l', ANG['arm_l'] + 140 - a)\n        time.sleep_ms(8)\n    for a in range(20):\n        w('hand_l', ANG['hand_l'] - 60 + 4 * a)\n        w('arm_l', ANG['arm_l'] + 100 - a)\n        w('hand_r', ANG['hand_r'] + a)\n        w('arm_r', ANG['arm_r'] - 100 - a)\n        time.sleep_ms(8)\n    for a in range(20):\n        w('hand_l', ANG['hand_l'] + 20 - a)\n        w('arm_l', ANG['arm_l'] + 80 + a)\n        w('hand_r', ANG['hand_r'] + 20 + 2 * a)\n        w('arm_r', ANG['arm_r'] - 120 - a)\n        time.sleep_ms(8)\n    for a in range(40):\n        w('arm_r', ANG['arm_r'] - 140 + a)\n        time.sleep_ms(8)\n    for a in range(20):\n        w('hand_r', ANG['hand_r'] + 60 - 4 * a)\n        w('arm_r', ANG['arm_r'] - 100 + a)\n        time.sleep_ms(8)\n    for a in range(20):\n        w('hand_r', ANG['hand_r'] - 20 + a)\n        w('arm_r', ANG['arm_r'] - 80 - a)\n        time.sleep_ms(8)\n\n\n# ---------- 3. The show ----------\n# One line per move. Reorder them, repeat them, delete them - that is the\n# whole choreography language.\ndef show():\n    stand()\n    nod()\n    nod()\n    twist()\n    twist()\n    flap()\n    toe_tap()\n    toe_tap()\n    toe_tap()\n    toe_tap()\n    peacock()\n    lotus()\n    lotus()\n    bow()\n    stand()\n\n\n# ---------- 4. Run ----------\nstand()\ntime.sleep(1)\n\nwhile True:\n    show()\n    time.sleep(2)"
+          "text": "# ============================================================\n# Biped robot - Program 3: dance show\n#\n# Seven moves, each one a plain loop, plus a show() that strings them\n# together. Change the order in show() and you have a new performance.\n#\n# How to use:\n#   1) Paste this file into Thonny, save it to the robot as main.py.\n#   2) Run it. The robot stands up, dances one round, then repeats.\n#   3) Put the robot on a table with 1 m of clear space around it.\n#\n# Warning: the first move folds the body forward 70 deg. If your robot tends\n# to fall forward, raise LEAN above 0 before dancing.\n# ============================================================\n\nfrom machine import Pin, PWM\nimport time\n\n# ---------- 1. Calibration (same table as Program 1 and 2) ----------\nANG = {'leg_r': 30, 'knee_r': 54, 'ankle_r': 91,\n       'leg_l': 150, 'knee_l': 142, 'ankle_l': 95,\n       'shoulder_r': 32, 'arm_r': 144, 'hand_r': 40,\n       'shoulder_l': 150, 'arm_l': 37, 'hand_l': 130}\n\nLEAN = 0   # extra forward lean while walking; 0 = the same pose as Program 1\n\nPINS = {'leg_r': 14, 'knee_r': 13, 'ankle_r': 12,\n        'leg_l': 5, 'knee_l': 4, 'ankle_l': 2,\n        'shoulder_r': 15, 'arm_r': 25, 'hand_r': 26,\n        'shoulder_l': 27, 'arm_l': 32, 'hand_l': 33}\n\nLEG_R = ANG['leg_r'] + LEAN\nLEG_L = ANG['leg_l'] - LEAN\n\nsrv = {j: PWM(Pin(p, Pin.OUT), freq=50) for j, p in PINS.items()}\npos = dict(ANG)\npos['leg_r'], pos['leg_l'] = LEG_R, LEG_L\n\n\ndef w(joint, deg):\n    \"\"\"Set one joint to an angle in degrees.\"\"\"\n    pos[joint] = int(deg)\n    srv[joint].duty(int(deg * 0.56) + 25)\n\n\ndef stand():\n    \"\"\"Ease every joint back to the standing pose, all at the same time.\"\"\"\n    target = dict(ANG)\n    target['leg_r'], target['leg_l'] = LEG_R, LEG_L\n    while pos != target:\n        for j in ANG:\n            if pos[j] < target[j]:\n                w(j, pos[j] + 1)\n            elif pos[j] > target[j]:\n                w(j, pos[j] - 1)\n        time.sleep_ms(8)\n\n\n# ---------- 2. The moves ----------\n# Every move is the same shape: a loop that walks one variable from 0 to N,\n# with each joint written as  base + k * variable.  Change k and the joint\n# moves further; change the loop length and the move gets slower.\n# Reminder for the signs: right side = bigger angle lifts, left side = smaller.\n\ndef bow():                              # 鞠躬 - fold forward from the hips\n    for a in range(70):\n        w('leg_r', ANG['leg_r'] + a)\n        w('leg_l', ANG['leg_l'] - a)\n        w('knee_r', ANG['knee_r'] + a / 2)\n        w('knee_l', ANG['knee_l'] - a / 2)\n        w('shoulder_r', ANG['shoulder_r'] + a)\n        w('hand_r', ANG['hand_r'] + a)\n        time.sleep_ms(10)\n    time.sleep_ms(600)\n    for a in range(70):\n        w('leg_r', ANG['leg_r'] + 70 - a)\n        w('leg_l', ANG['leg_l'] - 70 + a)\n        w('knee_r', ANG['knee_r'] + 35 - a / 2)\n        w('knee_l', ANG['knee_l'] - 35 + a / 2)\n        w('shoulder_r', ANG['shoulder_r'] + 70 - a)\n        w('hand_r', ANG['hand_r'] + 70 - a)\n        time.sleep_ms(10)\n\n\ndef nod():                              # 点头 - tap the right toe twice\n    for _ in range(2):\n        for a in range(14):\n            w('ankle_r', ANG['ankle_r'] + a)\n            time.sleep_ms(17)\n        for a in range(14):\n            w('ankle_r', ANG['ankle_r'] + 13 - a)\n            time.sleep_ms(17)\n\n\ndef twist():                            # 扭胯 - hips sway, arms punch out one at a time\n    for _ in range(4):\n        for a in range(14):\n            w('ankle_r', ANG['ankle_r'] + a)\n            w('ankle_l', ANG['ankle_l'] - a)\n            w('shoulder_r', ANG['shoulder_r'] + 100 - 2 * a)\n            w('hand_r', ANG['hand_r'] + 70)\n            w('arm_l', ANG['arm_l'] + 90 - 2 * a)\n            w('hand_l', ANG['hand_l'] + 2 * a)\n            time.sleep_ms(17)\n        for a in range(14):\n            w('ankle_r', ANG['ankle_r'] + 14 - a)\n            w('ankle_l', ANG['ankle_l'] - 14 + a)\n            w('shoulder_r', ANG['shoulder_r'] + 72 + 2 * a)\n            w('hand_r', ANG['hand_r'] + 70)\n            w('arm_l', ANG['arm_l'] + 62 + 2 * a)\n            w('hand_l', ANG['hand_l'] + 28 - 2 * a)\n            time.sleep_ms(17)\n    for _ in range(4):\n        for a in range(14):\n            w('ankle_r', ANG['ankle_r'] + a)\n            w('ankle_l', ANG['ankle_l'] - a)\n            w('shoulder_l', ANG['shoulder_l'] - 100 + 2 * a)\n            w('hand_l', ANG['hand_l'] - 70)\n            w('arm_r', ANG['arm_r'] - 90 + 2 * a)\n            w('hand_r', ANG['hand_r'] - 2 * a)\n            time.sleep_ms(17)\n        for a in range(14):\n            w('ankle_r', ANG['ankle_r'] + 14 - a)\n            w('ankle_l', ANG['ankle_l'] - 14 + a)\n            w('shoulder_l', ANG['shoulder_l'] - 72 - 2 * a)\n            w('hand_l', ANG['hand_l'] - 70)\n            w('arm_r', ANG['arm_r'] - 62 - 2 * a)\n            w('hand_r', ANG['hand_r'] - 28 + 2 * a)\n            time.sleep_ms(17)\n\n\ndef flap():                             # 摆臂 - both arms swing like wings\n    for _ in range(4):\n        for a in range(14):\n            w('ankle_r', ANG['ankle_r'] + a)\n            w('ankle_l', ANG['ankle_l'] - a)\n            w('shoulder_r', ANG['shoulder_r'] + 80 - 2 * a)\n            w('arm_r', ANG['arm_r'] - 90)\n            w('hand_r', ANG['hand_r'] + 90)\n            w('arm_l', ANG['arm_l'] + 2 * a)\n            w('hand_l', ANG['hand_l'] - 4 * a)\n            time.sleep_ms(17)\n        for a in range(14):\n            w('ankle_r', ANG['ankle_r'] + 14 - a)\n            w('ankle_l', ANG['ankle_l'] - 14 + a)\n            w('shoulder_r', ANG['shoulder_r'] + 52 + 2 * a)\n            w('arm_r', ANG['arm_r'] - 90)\n            w('hand_r', ANG['hand_r'] + 90)\n            w('arm_l', ANG['arm_l'] + 28 - 2 * a)\n            w('hand_l', ANG['hand_l'] - 56 + 4 * a)\n            time.sleep_ms(17)\n    for _ in range(4):\n        for a in range(14):\n            w('ankle_r', ANG['ankle_r'] + a)\n            w('ankle_l', ANG['ankle_l'] - a)\n            w('shoulder_l', ANG['shoulder_l'] - 140 + 2 * a)\n            w('arm_l', ANG['arm_l'] + 90)\n            w('hand_l', ANG['hand_l'] - 90)\n            w('shoulder_r', ANG['shoulder_r'] + 140 - 2 * a)\n            w('arm_r', ANG['arm_r'] - 90)\n            w('hand_r', ANG['hand_r'] + 90)\n            time.sleep_ms(17)\n        for a in range(14):\n            w('ankle_r', ANG['ankle_r'] + 14 - a)\n            w('ankle_l', ANG['ankle_l'] - 14 + a)\n            w('shoulder_l', ANG['shoulder_l'] - 112 - 2 * a)\n            w('arm_l', ANG['arm_l'] + 90)\n            w('hand_l', ANG['hand_l'] - 90)\n            w('shoulder_r', ANG['shoulder_r'] + 112 + 2 * a)\n            w('arm_r', ANG['arm_r'] - 90)\n            w('hand_r', ANG['hand_r'] + 90)\n            time.sleep_ms(17)\n\n\ndef toe_tap():                          # 点脚 - toe taps while both arms are up\n    w('shoulder_r', ANG['shoulder_r'] + 90)\n    w('shoulder_l', ANG['shoulder_l'] - 90)\n    w('hand_r', ANG['hand_r'] + 90)\n    w('hand_l', ANG['hand_l'] - 90)\n    for a in range(14):\n        w('ankle_r', ANG['ankle_r'] + a)\n        w('shoulder_r', ANG['shoulder_r'] + 75 + 2 * a)\n        w('shoulder_l', ANG['shoulder_l'] - 105 + 2 * a)\n        time.sleep_ms(17)\n    for a in range(14):\n        w('ankle_r', ANG['ankle_r'] + 13 - a)\n        w('shoulder_r', ANG['shoulder_r'] + 103 - 2 * a)\n        w('shoulder_l', ANG['shoulder_l'] - 77 - 2 * a)\n        time.sleep_ms(17)\n\n\ndef fan(base, step, open_arm):\n    \"\"\"One 20-step slice of the peacock move.\n\n    base = where the hips start, step = +1 while going down, -1 while coming up,\n    open_arm picks which of the two arm poses this slice uses.\n    \"\"\"\n    if open_arm:\n        w('arm_r', ANG['arm_r'] - 70)\n        w('hand_r', ANG['hand_r'] - 60)\n        w('arm_l', ANG['arm_l'] + 130)\n        w('hand_l', ANG['hand_l'] - 30)\n    else:\n        w('arm_r', ANG['arm_r'] - 130)\n        w('hand_r', ANG['hand_r'] + 30)\n        w('arm_l', ANG['arm_l'] + 70)\n        w('hand_l', ANG['hand_l'] + 60)\n    for a in range(20):\n        h = base + step * a\n        w('leg_r', ANG['leg_r'] + h)\n        w('knee_r', ANG['knee_r'] + h / 2)\n        w('leg_l', ANG['leg_l'] - h)\n        w('knee_l', ANG['knee_l'] - h / 2)\n        time.sleep_ms(25)\n\n\ndef peacock():                          # 孔雀开屏 - deep squat, arms open and close\n    w('shoulder_r', ANG['shoulder_r'] + 70)\n    w('shoulder_l', ANG['shoulder_l'] - 70)\n    fan(0, 1, True)\n    fan(20, 1, False)\n    fan(40, 1, True)\n    fan(60, 1, False)\n    fan(80, -1, True)\n    fan(60, -1, False)\n    fan(40, -1, True)\n    fan(20, -1, False)\n\n\ndef lotus():                            # 莲花手 - the arm flourish at the end\n    w('shoulder_r', ANG['shoulder_r'])\n    w('shoulder_l', ANG['shoulder_l'])\n    w('arm_r', ANG['arm_r'] - 100)\n    w('arm_l', ANG['arm_l'] + 100)\n    w('hand_r', ANG['hand_r'])\n    for a in range(20):\n        w('hand_l', ANG['hand_l'] + a)\n        time.sleep_ms(8)\n    for a in range(40):\n        w('hand_l', ANG['hand_l'] + 20 - 2 * a)\n        w('arm_l', ANG['arm_l'] + 100 + a)\n        time.sleep_ms(8)\n    for a in range(40):\n        w('arm_l', ANG['arm_l'] + 140 - a)\n        time.sleep_ms(8)\n    for a in range(20):\n        w('hand_l', ANG['hand_l'] - 60 + 4 * a)\n        w('arm_l', ANG['arm_l'] + 100 - a)\n        w('hand_r', ANG['hand_r'] + a)\n        w('arm_r', ANG['arm_r'] - 100 - a)\n        time.sleep_ms(8)\n    for a in range(20):\n        w('hand_l', ANG['hand_l'] + 20 - a)\n        w('arm_l', ANG['arm_l'] + 80 + a)\n        w('hand_r', ANG['hand_r'] + 20 + 2 * a)\n        w('arm_r', ANG['arm_r'] - 120 - a)\n        time.sleep_ms(8)\n    for a in range(40):\n        w('arm_r', ANG['arm_r'] - 140 + a)\n        time.sleep_ms(8)\n    for a in range(20):\n        w('hand_r', ANG['hand_r'] + 60 - 4 * a)\n        w('arm_r', ANG['arm_r'] - 100 + a)\n        time.sleep_ms(8)\n    for a in range(20):\n        w('hand_r', ANG['hand_r'] - 20 + a)\n        w('arm_r', ANG['arm_r'] - 80 - a)\n        time.sleep_ms(8)\n\n\n# ---------- 3. The show ----------\n# One line per move. Reorder them, repeat them, delete them - that is the\n# whole choreography language.\ndef show():\n    stand()\n    nod()\n    nod()\n    twist()\n    twist()\n    flap()\n    toe_tap()\n    toe_tap()\n    toe_tap()\n    toe_tap()\n    peacock()\n    lotus()\n    lotus()\n    bow()\n    stand()\n\n\n# ---------- 4. Run ----------\nstand()\ntime.sleep(1)\n\nwhile True:\n    show()\n    time.sleep(2)"
         }
       ]
     },
     {
       "type": "heading",
       "attrs": {
-        "id": "pc1tmt",
+        "id": "pcdbq9",
         "level": 3,
         "indent": null,
         "margin": null,
@@ -3764,7 +4466,7 @@
         "textAlign": null,
         "indentUnit": null,
         "lineHeight": 1.75,
-        "data-toc-id": "pc1tmt"
+        "data-toc-id": "pcdbq9"
       },
       "content": [
         {
@@ -4696,7 +5398,7 @@
     {
       "type": "heading",
       "attrs": {
-        "id": "pd9wt4",
+        "id": "pdd51h",
         "level": 3,
         "indent": null,
         "margin": null,
@@ -4704,7 +5406,7 @@
         "textAlign": null,
         "indentUnit": null,
         "lineHeight": 1.75,
-        "data-toc-id": "pd9wt4"
+        "data-toc-id": "pdd51h"
       },
       "content": [
         {
@@ -4779,7 +5481,7 @@
     {
       "type": "heading",
       "attrs": {
-        "id": "pe5a60",
+        "id": "pexfon",
         "level": 2,
         "indent": null,
         "margin": null,
@@ -4787,7 +5489,7 @@
         "textAlign": null,
         "indentUnit": null,
         "lineHeight": 1.75,
-        "data-toc-id": "pe5a60"
+        "data-toc-id": "pexfon"
       },
       "content": [
         {
@@ -5029,7 +5731,7 @@
     {
       "type": "heading",
       "attrs": {
-        "id": "pfgaq3",
+        "id": "pf5tru",
         "level": 3,
         "indent": null,
         "margin": null,
@@ -5037,7 +5739,7 @@
         "textAlign": null,
         "indentUnit": null,
         "lineHeight": 1.75,
-        "data-toc-id": "pfgaq3"
+        "data-toc-id": "pf5tru"
       },
       "content": [
         {
@@ -5076,14 +5778,14 @@
       "content": [
         {
           "type": "text",
-          "text": "# ============================================================\n# Biped robot - Program 4: talk to it\n#\n# The AI is NOT in this program. The AI module (XIAO ZHI) does the\n# listening and the thinking, then sends one short Chinese phrase over\n# UART. This program only has to recognise that phrase and act.\n#\n# How to use:\n#   1) Wire the AI module to UART2: its TX -> GPIO16 (RX), its RX -> GPIO17,\n#      and share GND. Baud rate 115200.\n#   2) Paste this file into Thonny, save it to the robot as main.py.\n#   3) Paste the prompt of section 3 into the AI module (see the chapter).\n#   4) Say \"挥挥手\" and watch the OLED face change, then the arm move.\n# ============================================================\n\nfrom machine import Pin, PWM, UART, I2C\nimport ssd1306\nimport time\n\n# ---------- 1. Calibration (same table as Program 1-3) ----------\nANG = {'hip_r': 52, 'knee_r': 54, 'ankle_r': 91,\n       'hip_l': 135, 'knee_l': 142, 'ankle_l': 95,\n       'shoulder_r': 32, 'arm_r': 144, 'hand_r': 40,\n       'shoulder_l': 146, 'arm_l': 37, 'hand_l': 153}\n\nLEAN = 3\n\nPINS = {'hip_r': 14, 'knee_r': 13, 'ankle_r': 12,\n        'hip_l': 5, 'knee_l': 4, 'ankle_l': 2,\n        'shoulder_r': 15, 'arm_r': 25, 'hand_r': 26,\n        'shoulder_l': 27, 'arm_l': 32, 'hand_l': 33}\n\nHIP_R = ANG['hip_r'] + LEAN\nHIP_L = ANG['hip_l'] - LEAN\n\nsrv = {j: PWM(Pin(p, Pin.OUT), freq=50) for j, p in PINS.items()}\npos = dict(ANG)\npos['hip_r'], pos['hip_l'] = HIP_R, HIP_L\n\n\ndef w(joint, deg):\n    pos[joint] = int(deg)\n    srv[joint].duty(int(deg * 0.56) + 25)\n\n\ndef ramp(target, steps=20, ms=15):\n    \"\"\"Move several joints to new angles at the same time.\n\n    target is a dict like {'shoulder_r': 140, 'hand_r': 90}. Joints that are\n    not in target keep their angle. The move is spread over `steps` frames so\n    the servos glide instead of jumping - a jump risks a fall.\n    \"\"\"\n    start = {j: pos[j] for j in target}\n    for i in range(1, steps + 1):\n        for j, d in target.items():\n            w(j, start[j] + (d - start[j]) * i / steps)\n        time.sleep_ms(ms)\n\n\ndef stand(steps=18):\n    \"\"\"Back to the standing pose, whatever the robot was doing before.\"\"\"\n    target = dict(ANG)\n    target['hip_r'] = HIP_R\n    target['hip_l'] = HIP_L\n    ramp(target, steps, 12)\n\n\n# ---------- 2. A face that shows what the robot thinks ----------\ni2c = I2C(scl=Pin(22), sda=Pin(23))\noled = ssd1306.SSD1306_I2C(128, 64, i2c)\n\n\ndef face(mood='idle'):\n    \"\"\"Draw one of three moods with plain rectangles and lines - no bitmaps.\"\"\"\n    oled.fill(0)\n    if mood == 'happy':\n        oled.fill_rect(40, 24, 10, 4, 1)          # eyes, half closed\n        oled.fill_rect(78, 24, 10, 4, 1)\n        oled.hline(50, 44, 6, 1)                  # a smile made of three lines\n        oled.hline(56, 47, 16, 1)\n        oled.hline(72, 44, 6, 1)\n    elif mood == 'angry':\n        oled.line(38, 20, 52, 27, 1)              # slanted brows\n        oled.line(90, 20, 76, 27, 1)\n        oled.fill_rect(42, 32, 10, 6, 1)\n        oled.fill_rect(76, 32, 10, 6, 1)\n        oled.hline(52, 50, 24, 1)                 # flat mouth\n    else:                                         # idle\n        oled.fill_rect(42, 24, 10, 10, 1)\n        oled.fill_rect(76, 24, 10, 10, 1)\n        oled.hline(54, 46, 20, 1)\n    oled.show()\n\n\n# ---------- 3. Six actions the voice can trigger ----------\ndef wave():\n    ramp({'shoulder_r': ANG['shoulder_r'] + 130, 'arm_r': 95})\n    for _ in range(3):\n        ramp({'hand_r': 70}, 6, 20)\n        ramp({'hand_r': 110}, 6, 20)\n    stand()\n\n\ndef bow():\n    ramp({'hip_r': ANG['hip_r'] + 45, 'hip_l': ANG['hip_l'] - 45,\n          'knee_r': ANG['knee_r'] + 22, 'knee_l': ANG['knee_l'] - 22,\n          'shoulder_r': ANG['shoulder_r'] + 45})\n    time.sleep_ms(500)\n    stand()\n\n\ndef kick():\n    ramp({'hip_r': HIP_R + 12, 'hip_l': HIP_L - 12})        # lean back a little\n    ramp({'knee_r': ANG['knee_r'] + 55}, 12, 20)            # wind up\n    ramp({'knee_r': ANG['knee_r'], 'ankle_r': ANG['ankle_r'] + 25}, 6, 8)   # kick!\n    time.sleep_ms(400)\n    stand()\n\n\ndef punch():\n    ramp({'shoulder_r': ANG['shoulder_r'] + 110,\n          'shoulder_l': ANG['shoulder_l'] - 110,\n          'arm_r': ANG['arm_r'] - 60, 'arm_l': ANG['arm_l'] + 60})\n    for _ in range(2):\n        ramp({'arm_r': ANG['arm_r'], 'arm_l': ANG['arm_l']}, 5, 6)     # out\n        ramp({'arm_r': ANG['arm_r'] - 60, 'arm_l': ANG['arm_l'] + 60}, 5, 6)\n    stand()\n\n\ndef squat():\n    ramp({'hip_r': ANG['hip_r'] + 30, 'hip_l': ANG['hip_l'] - 30,\n          'knee_r': ANG['knee_r'] + 30, 'knee_l': ANG['knee_l'] - 30})\n    time.sleep_ms(600)\n    stand()\n\n\ndef dance():\n    bow()\n    wave()\n    kick()\n\n\n# ---------- 4. What the AI module says -> what the robot does ----------\n# (phrase to look for, face to show, action to run)\n# The phrase is in Chinese because the AI module speaks Chinese. If you set the\n# module up in English, just edit the left column.\nCMDS = (('挥手', 'happy', wave),\n        ('鞠躬', 'happy', bow),\n        ('踢球', 'angry', kick),\n        ('打拳', 'angry', punch),\n        ('蹲下', 'idle', squat),\n        ('跳舞', 'happy', dance),\n        ('起立', 'idle', stand))\n\nuart = UART(2, 115200)          # GPIO16 = RX, GPIO17 = TX on the ESP32\n\n\ndef listen():\n    \"\"\"Read one line from the AI module, run the first matching command.\"\"\"\n    if not uart.any():\n        return\n    try:\n        line = uart.readline().decode('utf-8').strip()\n    except Exception:            # half a line, wrong baud rate, noise\n        return\n    if not line:\n        return\n    print('heard:', line)\n    for key, mood, action in CMDS:\n        if key in line:\n            face(mood)\n            action()\n            face('idle')\n            return\n\n\n# ---------- 5. Run ----------\nstand()\nface('idle')\nprint('ready')\n\nwhile True:\n    listen()\n    time.sleep_ms(20)            # 50 checks per second is plenty for speech"
+          "text": "# ============================================================\n# Biped robot - Program 4: talk to it\n#\n# The AI is NOT in this program. The AI module (XIAO ZHI) does the\n# listening and the thinking, then sends one short Chinese phrase over\n# UART. This program only has to recognise that phrase and act.\n#\n# How to use:\n#   1) Wire the AI module to UART2: its TX -> GPIO16 (RX), its RX -> GPIO17,\n#      and share GND. Baud rate 115200.\n#   2) Paste this file into Thonny, save it to the robot as main.py.\n#   3) Paste the prompt of section 3 into the AI module (see the chapter).\n#   4) Say \"挥挥手\" and watch the OLED face change, then the arm move.\n# ============================================================\n\nfrom machine import Pin, PWM, UART, I2C\nimport ssd1306\nimport time\n\n# ---------- 1. Calibration (same table as Program 1-3) ----------\nANG = {'leg_r': 30, 'knee_r': 54, 'ankle_r': 91,\n       'leg_l': 150, 'knee_l': 142, 'ankle_l': 95,\n       'shoulder_r': 32, 'arm_r': 144, 'hand_r': 40,\n       'shoulder_l': 150, 'arm_l': 37, 'hand_l': 130}\n\nLEAN = 0   # extra forward lean while walking; 0 = the same pose as Program 1\n\nPINS = {'leg_r': 14, 'knee_r': 13, 'ankle_r': 12,\n        'leg_l': 5, 'knee_l': 4, 'ankle_l': 2,\n        'shoulder_r': 15, 'arm_r': 25, 'hand_r': 26,\n        'shoulder_l': 27, 'arm_l': 32, 'hand_l': 33}\n\nLEG_R = ANG['leg_r'] + LEAN\nLEG_L = ANG['leg_l'] - LEAN\n\nsrv = {j: PWM(Pin(p, Pin.OUT), freq=50) for j, p in PINS.items()}\npos = dict(ANG)\npos['leg_r'], pos['leg_l'] = LEG_R, LEG_L\n\n\ndef w(joint, deg):\n    pos[joint] = int(deg)\n    srv[joint].duty(int(deg * 0.56) + 25)\n\n\ndef ramp(target, steps=20, ms=15):\n    \"\"\"Move several joints to new angles at the same time.\n\n    target is a dict like {'shoulder_r': 140, 'hand_r': 90}. Joints that are\n    not in target keep their angle. The move is spread over `steps` frames so\n    the servos glide instead of jumping - a jump risks a fall.\n    \"\"\"\n    start = {j: pos[j] for j in target}\n    for i in range(1, steps + 1):\n        for j, d in target.items():\n            w(j, start[j] + (d - start[j]) * i / steps)\n        time.sleep_ms(ms)\n\n\ndef stand(steps=18):\n    \"\"\"Back to the standing pose, whatever the robot was doing before.\"\"\"\n    target = dict(ANG)\n    target['leg_r'] = LEG_R\n    target['leg_l'] = LEG_L\n    ramp(target, steps, 12)\n\n\n# ---------- 2. A face that shows what the robot thinks ----------\ni2c = I2C(scl=Pin(22), sda=Pin(23))\noled = ssd1306.SSD1306_I2C(128, 64, i2c)\n\n\ndef face(mood='idle'):\n    \"\"\"Draw one of three moods with plain rectangles and lines - no bitmaps.\"\"\"\n    oled.fill(0)\n    if mood == 'happy':\n        oled.fill_rect(40, 24, 10, 4, 1)          # eyes, half closed\n        oled.fill_rect(78, 24, 10, 4, 1)\n        oled.hline(50, 44, 6, 1)                  # a smile made of three lines\n        oled.hline(56, 47, 16, 1)\n        oled.hline(72, 44, 6, 1)\n    elif mood == 'angry':\n        oled.line(38, 20, 52, 27, 1)              # slanted brows\n        oled.line(90, 20, 76, 27, 1)\n        oled.fill_rect(42, 32, 10, 6, 1)\n        oled.fill_rect(76, 32, 10, 6, 1)\n        oled.hline(52, 50, 24, 1)                 # flat mouth\n    else:                                         # idle\n        oled.fill_rect(42, 24, 10, 10, 1)\n        oled.fill_rect(76, 24, 10, 10, 1)\n        oled.hline(54, 46, 20, 1)\n    oled.show()\n\n\n# ---------- 3. Six actions the voice can trigger ----------\ndef wave():\n    ramp({'shoulder_r': ANG['shoulder_r'] + 130, 'arm_r': 95})\n    for _ in range(3):\n        ramp({'hand_r': 70}, 6, 20)\n        ramp({'hand_r': 110}, 6, 20)\n    stand()\n\n\ndef bow():\n    ramp({'leg_r': ANG['leg_r'] + 45, 'leg_l': ANG['leg_l'] - 45,\n          'knee_r': ANG['knee_r'] + 22, 'knee_l': ANG['knee_l'] - 22,\n          'shoulder_r': ANG['shoulder_r'] + 45})\n    time.sleep_ms(500)\n    stand()\n\n\ndef kick():\n    ramp({'leg_r': LEG_R + 12, 'leg_l': LEG_L - 12})        # lean back a little\n    ramp({'knee_r': ANG['knee_r'] + 55}, 12, 20)            # wind up\n    ramp({'knee_r': ANG['knee_r'], 'ankle_r': ANG['ankle_r'] + 25}, 6, 8)   # kick!\n    time.sleep_ms(400)\n    stand()\n\n\ndef punch():\n    ramp({'shoulder_r': ANG['shoulder_r'] + 110,\n          'shoulder_l': ANG['shoulder_l'] - 110,\n          'arm_r': ANG['arm_r'] - 60, 'arm_l': ANG['arm_l'] + 60})\n    for _ in range(2):\n        ramp({'arm_r': ANG['arm_r'], 'arm_l': ANG['arm_l']}, 5, 6)     # out\n        ramp({'arm_r': ANG['arm_r'] - 60, 'arm_l': ANG['arm_l'] + 60}, 5, 6)\n    stand()\n\n\ndef squat():\n    ramp({'leg_r': ANG['leg_r'] + 30, 'leg_l': ANG['leg_l'] - 30,\n          'knee_r': ANG['knee_r'] + 30, 'knee_l': ANG['knee_l'] - 30})\n    time.sleep_ms(600)\n    stand()\n\n\ndef dance():\n    bow()\n    wave()\n    kick()\n\n\n# ---------- 4. What the AI module says -> what the robot does ----------\n# (phrase to look for, face to show, action to run)\n# The phrase is in Chinese because the AI module speaks Chinese. If you set the\n# module up in English, just edit the left column.\nCMDS = (('挥手', 'happy', wave),\n        ('鞠躬', 'happy', bow),\n        ('踢球', 'angry', kick),\n        ('打拳', 'angry', punch),\n        ('蹲下', 'idle', squat),\n        ('跳舞', 'happy', dance),\n        ('起立', 'idle', stand))\n\nuart = UART(2, 115200)          # GPIO16 = RX, GPIO17 = TX on the ESP32\n\n\ndef listen():\n    \"\"\"Read one line from the AI module, run the first matching command.\"\"\"\n    if not uart.any():\n        return\n    try:\n        line = uart.readline().decode('utf-8').strip()\n    except Exception:            # half a line, wrong baud rate, noise\n        return\n    if not line:\n        return\n    print('heard:', line)\n    for key, mood, action in CMDS:\n        if key in line:\n            face(mood)\n            action()\n            face('idle')\n            return\n\n\n# ---------- 5. Run ----------\nstand()\nface('idle')\nprint('ready')\n\nwhile True:\n    listen()\n    time.sleep_ms(20)            # 50 checks per second is plenty for speech"
         }
       ]
     },
     {
       "type": "heading",
       "attrs": {
-        "id": "pgj0lf",
+        "id": "pg6uql",
         "level": 3,
         "indent": null,
         "margin": null,
@@ -5091,7 +5793,7 @@
         "textAlign": null,
         "indentUnit": null,
         "lineHeight": 1.75,
-        "data-toc-id": "pgj0lf"
+        "data-toc-id": "pg6uql"
       },
       "content": [
         {
@@ -5975,7 +6677,7 @@
     {
       "type": "heading",
       "attrs": {
-        "id": "phht0s",
+        "id": "phaacn",
         "level": 3,
         "indent": null,
         "margin": null,
@@ -5983,7 +6685,7 @@
         "textAlign": null,
         "indentUnit": null,
         "lineHeight": 1.75,
-        "data-toc-id": "phht0s"
+        "data-toc-id": "phaacn"
       },
       "content": [
         {
@@ -6170,7 +6872,7 @@
     {
       "type": "heading",
       "attrs": {
-        "id": "pixhy4",
+        "id": "piwenk",
         "level": 2,
         "indent": null,
         "margin": null,
@@ -6178,7 +6880,7 @@
         "textAlign": null,
         "indentUnit": null,
         "lineHeight": 1.75,
-        "data-toc-id": "pixhy4"
+        "data-toc-id": "piwenk"
       },
       "content": [
         {
@@ -6241,7 +6943,7 @@
                   "content": [
                     {
                       "type": "text",
-                      "text": "Add a new pose to "
+                      "text": "Add a second pose to "
                     }
                   ]
                 }
@@ -6267,7 +6969,7 @@
                   "content": [
                     {
                       "type": "text",
-                      "text": "pose.py",
+                      "text": "stand.py",
                       "marks": [
                         {
                           "type": "code"
@@ -6298,64 +7000,7 @@
                   "content": [
                     {
                       "type": "text",
-                      "text": " and a matching move to "
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "listItem",
-              "attrs": {
-                "indent": null,
-                "indentUnit": null
-              },
-              "content": [
-                {
-                  "type": "paragraph",
-                  "attrs": {
-                    "indent": null,
-                    "margin": null,
-                    "wordWrap": "normal",
-                    "textAlign": null,
-                    "indentUnit": null,
-                    "lineHeight": 1.75
-                  },
-                  "content": [
-                    {
-                      "type": "text",
-                      "text": "dance.py",
-                      "marks": [
-                        {
-                          "type": "code"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "listItem",
-              "attrs": {
-                "indent": null,
-                "indentUnit": null
-              },
-              "content": [
-                {
-                  "type": "paragraph",
-                  "attrs": {
-                    "indent": null,
-                    "margin": null,
-                    "wordWrap": "normal",
-                    "textAlign": null,
-                    "indentUnit": null,
-                    "lineHeight": 1.75
-                  },
-                  "content": [
-                    {
-                      "type": "text",
-                      "text": "."
+                      "text": " and a way to switch between the two."
                     }
                   ]
                 }
@@ -6477,7 +7122,7 @@
     {
       "type": "heading",
       "attrs": {
-        "id": "pjnugq",
+        "id": "pjq795",
         "level": 3,
         "indent": null,
         "margin": null,
@@ -6485,7 +7130,7 @@
         "textAlign": null,
         "indentUnit": null,
         "lineHeight": 1.75,
-        "data-toc-id": "pjnugq"
+        "data-toc-id": "pjq795"
       },
       "content": [
         {
@@ -6528,7 +7173,7 @@
               "content": [
                 {
                   "type": "text",
-                  "text": "A pose nobody taught you.",
+                  "text": "A second pose.",
                   "marks": [
                     {
                       "type": "bold"
@@ -6537,7 +7182,7 @@
                 },
                 {
                   "type": "text",
-                  "text": " Write a function in Program 1 that puts both hands above the head (hint: shoulder + 140, arm - 40 on the right, mirrored on the left). Get it to look symmetric, then turn it into a dance move by changing the constant angles into a loop."
+                  "text": " Put a second dictionary next to ANG - say SIT, with the legs folded and the arms forward - then write one function that takes a dictionary and a number of steps, and moves every joint from wherever it is to the target without jumping. Calling that function with two poses looks like the start of an animation engine, and it is exactly what Program 3 does by hand."
                 }
               ]
             }
@@ -6631,7 +7276,7 @@
     {
       "type": "heading",
       "attrs": {
-        "id": "pknl5p",
+        "id": "pkl0lq",
         "level": 3,
         "indent": null,
         "margin": null,
@@ -6639,7 +7284,7 @@
         "textAlign": null,
         "indentUnit": null,
         "lineHeight": 1.75,
-        "data-toc-id": "pknl5p"
+        "data-toc-id": "pkl0lq"
       },
       "content": [
         {
@@ -6681,7 +7326,7 @@
     {
       "type": "heading",
       "attrs": {
-        "id": "ploi3k",
+        "id": "plcwof",
         "level": 3,
         "indent": null,
         "margin": null,
@@ -6689,7 +7334,7 @@
         "textAlign": null,
         "indentUnit": null,
         "lineHeight": 1.75,
-        "data-toc-id": "ploi3k"
+        "data-toc-id": "plcwof"
       },
       "content": [
         {

@@ -846,6 +846,59 @@ node scripts/exam-course5/smoke-answer.mjs --id <projectId>  # 提交"全对"答
 但实际靠已加载的内存态在跑；一旦 `pm2 restart` 就会全站 502 ——
 重启前务必确认 `.output/server/index.mjs` 存在。
 
+### 10.11 只留 LMS 登录 + 没账号的人自动建号
+
+**目标**：登录页只有「LMS 账号登录」一个入口；LMS 里有的人第一次点就进去，不用设密码。
+
+**登录页**（改前端 CSS，追加到 `p__user__Login.*.chunk.css`）：
+
+```css
+#root form{display:none!important}                    /* 账号密码表单 */
+#root [class*=registerPrompt]{display:none!important} /* "No account yet?" */
+#root [class*=socialIcon]{display:none!important}     /* 那个图标是 Google 的 G */
+#root [class*=socialOption]{...}                      /* 做成一条完整按钮 */
+```
+
+实测 LMS 按钮**不在 `<form>` 里**（祖先链 `socialLogin → button`），所以藏 form 不会连带藏掉它；
+选择器用 `[class*=xxx]` 而不是完整 hash 类名，升级后也不会失效。
+
+**自动建号**（改前端 JS，`p__user__Register.*.async.js`）：
+SurveyKing 的 OAuth 首次登录走"注册页"（`/user/register?oauthTicket=xxx`，要填姓名/账号/密码）。
+补丁把那段改成：拿到预填信息后 → 自动生成随机强密码 → `setFieldsValue` → 自动 `requestSubmit()`。
+用户点了按钮就直接进系统，**密码是随机的、之后永远走 SSO，用户根本用不到**。
+
+**⚠️ 总开关 `registerInfo.registerEnabled` 必须是 true**
+服务端逻辑是：
+
+```java
+if (!isRegistrationEnabled()) return failure("not_bound");
+```
+
+关着的时候，没绑定的 LMS 用户回调后会被拒，前端提示
+**「该第三方账号尚未绑定，请先使用账号密码登录并在安全设置中绑定」** ——
+看着像是"没绑定所以进不去"，其实只是这个开关被关了。
+
+这个开关在「系统设置」页是一个普通 Switch（Enable Registration），随时可能被关掉；
+它同时也控制公开注册接口 `POST /api/public/register`（匿名可调，注意）。
+
+维护工具：
+
+```bash
+node scripts/surveyking-oauth/set-register.mjs            # 查看状态
+node scripts/surveyking-oauth/set-register.mjs --enable   # 打开（走 admin API，不用停容器）
+```
+
+`deploy.sh` 的校验步骤里也会打印这个开关，部署时一眼能看到。
+
+**端到端验证**（真实浏览器跑完整链路）：
+
+```bash
+node scripts/surveyking-oauth/e2e-login.mjs --lms-user test01 --lms-pass REDACTED
+```
+
+实测（2026-10-27）：未登录 LMS → 点「LMS 账号登录」→ 跳 LMS 认证页（带 state/nonce/code_challenge）
+→ test01 登录（该账号在问卷系统里完全没绑定）→ 自动建号 → 落到 `/home`，`currentUser` = Test01，`ROLE_teacher`。
+
 ---
 
 ## 11. 待确认

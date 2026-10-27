@@ -68,24 +68,24 @@ const py = (name) => readFileSync(join(HERE, name), 'utf8').trimEnd()
 const nodes = [
   // ---------- whole-chapter intro
   quote(
-    p('📘 ', B('Robot Programming: four programs, one robot.'), ' Each program does exactly one job, and each one is short enough to read in a sitting. You start by finding the twelve numbers that make your robot stand up straight, then teach it to walk from your phone, then to dance, and finally to obey your voice.'),
+    p('📘 ', B('Robot Programming: four programs, one robot.'), ' Each program does exactly one job, and each one is short enough to read in a sitting. You start with the smallest program that can possibly work: twelve numbers that make the robot stand up on its own. Then it walks from your phone, then it dances, and finally it obeys your voice.'),
     ol([
-      'Program 1 - pose tester: find the standing angle of every joint.',
+      'Program 1 - standing pose: twelve numbers, one upright robot.',
       'Program 2 - WiFi remote: walk and act from a phone browser.',
       'Program 3 - dance show: arrange named moves into a performance.',
       'Program 4 - talk to it: the AI module sends a phrase over UART, the robot acts.',
-      'Extra - add your own pose, your own button and your own voice command.',
+      'Extra - add a second pose, your own web button and your own voice command.',
     ]),
   ),
 
   h2('🎯 Learning Objectives'),
   ol([
     'Drive all twelve servos from one dictionary and explain why a 50 Hz PWM duty value turns into a servo angle.',
-    'Find your own robot\'s standing numbers by testing one joint at a time instead of guessing.',
+    'Write the standing pose from one dictionary, and tune it one value at a time by watching which way the robot falls.',
     'Serve a web page from the ESP32 and walk the robot by tapping buttons on a phone.',
     'Arrange named moves into a dance show by editing a single function.',
     'Read a phrase from an AI module over UART and run the matching action.',
-    '(Extra) Add one new pose, one new web button and one new voice command of your own.',
+    '(Extra) Add a second pose, one new web button and one new voice command of your own.',
   ]),
 
   h3('📖 Glossary'),
@@ -95,40 +95,51 @@ const nodes = [
       [[B('Servo')], 'A motor with built-in feedback that holds a commanded angle, usually 0-180 degrees, driven by a pulse every 20 ms.'],
       [[B('PWM duty')], 'The width of the pulse inside each 20 ms period. On the ESP32 duty runs 0-1023, so 26 is 0 deg and 127 is 180 deg.'],
       [[B('Calibration')], 'The set of twelve angles that makes one particular robot stand straight - every robot has its own.'],
-      [[B('Pose')], 'A complete assignment of angles to all twelve joints; standing, bowing and squatting are all poses.'],
+      [[B('Pose')], 'A complete assignment of angles to all twelve joints; standing is one pose, bowing is another.'],
       [[B('Gait')], 'A repeating pattern of leg movements that moves the body forward without falling over.'],
       [[B('UART')], 'A two-wire serial link (TX to RX, plus GND) that carries plain text between the AI module and the ESP32.'],
     ],
   ),
 
   // ---------- Activity 1
-  h2('🧪 Activity 1 The Pose Tester'),
+  h2('🧪 Activity 1 Standing Pose'),
   quote(
-    p('🦿 One program, one job: find the twelve numbers that make your robot stand up straight.'),
+    p('🧍 One program, one job: write twelve angles once and let the robot stand. No walking, no dancing, no sensor, no screen - if this one is wrong, nothing after it can be right.'),
     ol([
-      'Paste ', C('pose.py'), ' into Thonny and save it to the robot as ', C('main.py'), '.',
-      'Watch which joint looks wrong, then change only that number in the ANG table.',
-      'Press Ctrl-C to stop the loop and type ', C("w('knee_l', 150)"), ' to test one joint by hand.',
+      'Paste ', C('stand.py'), ' into Thonny and save it to the robot as ', C('main.py'), '.',
+      'Hold the robot upright while it boots, then let go and watch which way it falls.',
+      'Change one value in ', C('ANG'), ', save, and run again until it holds itself up.',
     ]),
   ),
   h3('📋 Copy → Paste → Run'),
-  p('🔌 Program 1 is about 100 lines: a table of twelve angles, a table of twelve pins, one three-line helper and three test poses. Nothing else - no WiFi, no dancing, no OLED.'),
-  code(py('pose.py')),
+  p('🔌 Thirty-seven lines, and most of them are numbers. There is no loop body worth speaking of: the program writes all twelve joints once at start-up, then sleeps forever.'),
+  code(py('stand.py')),
 
-  h3('🦿 Twelve Joints, One Dictionary'),
-  p('🧩 The old version of this program declared twelve separate objects, ', C('servo0'), ' to ', C('servo11'), ', and kept their calibration in twelve variables called ', C('angleC0'), ' to ', C('angleC11'), '. It works, but nothing in the code tells you which number belongs to which leg.'),
-  p('📚 Here the wiring is one dictionary and the calibration is another, both keyed by a name you can read: ', C('hip_r'), ', ', C('knee_l'), ', ', C('hand_r'), '. The whole servo driver becomes twelve characters long, because the pin and the angle now live in the same place they are looked up.'),
-  p('⚙️ The one line worth memorising is the duty conversion. A servo wants a 0.5 ms pulse for 0 degrees and 2.5 ms for 180 degrees, out of a 20 ms period. At 50 Hz the ESP32\'s ', C('duty()'), ' spans 0-1023 across those 20 ms, so 0.5 ms is 26 counts and 2.5 ms is 127 counts. Straight-line between them: ', C('duty = deg * 0.56 + 25'), '. If you ever change the PWM frequency, this constant changes with it.'),
+  h3('🦿 Twelve Joints, Two Tables'),
+  p('🧩 Two dictionaries carry the whole program. ', C('PINS'), ' says which GPIO pin drives which joint; ', C('ANG'), ' says what angle that joint should hold. Both are keyed by a name you can read, so ', C("ANG['knee_l']"), ' needs no comment to be understood - and the old ', C('servo0'), ' / ', C('angleC0'), ' style, where you had to remember that number 4 was the left knee, is gone.'),
+  p('⚙️ The only arithmetic in the file is the duty conversion. A servo wants a 0.5 ms pulse for 0 degrees and 2.5 ms for 180, out of a 20 ms period. At 50 Hz the ESP32 ', C('duty()'), ' spans 0..1023 across those 20 ms, so 0 degrees is 26 counts and 180 degrees is 127 counts. Interpolating between them gives ', C('duty = deg * 0.56 + 25'), '; change the PWM frequency and this constant changes with it.'),
+  p('🔁 ', C('stand()'), ' just walks the dictionary and writes every joint. It runs exactly once, and calling it again moves nothing because the servos are already there - which is all you want from a program whose entire job is "hold this pose".'),
 
-  h3('🎚️ Finding Your Robot\'s Numbers'),
-  p('🧪 The three test poses are deliberately chosen to isolate different groups. ', B('t_pose'), ' moves only the shoulders, so if one arm is off you know which number to touch. ', B('squat'), ' moves hips, knees and ankles together, which exposes a leg that is one number away from straight. ', B('wave'), ' moves a single joint through a range, so you can see where it starts buzzing at the end stop.'),
+  h3('🎚️ Tuning by Eye'),
+  p('👀 There is no sensor here, so your eyes are the instrument. Power on, hold the robot for a second, let go. If it stays up, the table is right. If it drops forward, backward or sideways, exactly one number is wrong - and the direction of the fall tells you which one.'),
+  table(
+    ['What you see', 'Which joint', 'Which way to move it'],
+    [
+      ['falls forward', [C('leg_r'), ' + ', C('leg_l')], 'leg_r down 2, leg_l up 2 - the body leans back'],
+      ['falls backward', [C('leg_r'), ' + ', C('leg_l')], 'leg_r up 2, leg_l down 2 - the body leans forward'],
+      ['falls to the right', [C('ankle_r'), ' + ', C('ankle_l')], 'raise both ankles 3 - the body tilts back to the left'],
+      ['falls to the left', [C('ankle_r'), ' + ', C('ankle_l')], 'lower both ankles 3'],
+      ['one shoulder hangs lower', [C('shoulder_r'), ' / ', C('shoulder_l')], 'compare the two arms, move the low one up 3'],
+      ['a joint buzzes or gets warm', 'that one joint', 'move it 5 back toward the middle of its range'],
+    ],
+  ),
   ol([
-    ['Run the program and let it cycle: T-pose, squat, wave, stand.'],
-    ['For each pose, note the joint that is wrong. Do not touch a joint that is already right.'],
-    ['Change that one number by 5 degrees, save, and let the program restart. Repeat until it looks symmetric.'],
-    ['Only then adjust ', C('LEAN'), ' - it tilts both hips forward so the robot stops falling backwards when it walks.'],
+    ['One row at a time. Change two numbers and you will not know which one helped.'],
+    ['Two or three degrees is a visible change on this robot; one degree usually is not.'],
+    ['Write the final table down. Programs 2, 3 and 4 carry the same twelve numbers - copy your finished ', C('ANG'), ' into them, or the robot will stand differently in each lesson.'],
   ]),
-  call('💡', '🔍 The signs are not a bug: on the right side a bigger angle lifts the limb, on the left side a smaller angle does. That is why every left joint is written as ', B('ANG - something'), ' and every right joint as ', B('ANG + something'), '. Once you notice the mirror, the whole file becomes readable.'),
+  call('💡', '🔍 The left side is the mirror of the right, and the numbers show it: ', C('leg_r'), ' 30 against ', C('leg_l'), ' 150 is almost exactly 180 minus, because the two servo horns are mounted opposite ways. But 54 and 142 for the knees are not, and neither are the arms. That is the lesson: you cannot calculate the partner, you measure it - which is why the table above says "compare the two" instead of "add 180".'),
+  p('↔️ If a correction makes the fall worse instead of better, go the other way on that joint. The sign depends on which way the horn was mounted, and no amount of reasoning beats one five second test.'),
 
   // ---------- Activity 2
   h2('🧪 Activity 2 WiFi Remote'),
@@ -254,14 +265,14 @@ const nodes = [
   quote(
     p('🏆 Four programs, four jobs - now make one of them yours.'),
     ol([
-      'Add a new pose to ', C('pose.py'), ' and a matching move to ', C('dance.py'), '.',
+      'Add a second pose to ', C('stand.py'), ' and a way to switch between the two.',
       'Add a new button to the web page and a matching branch to the server.',
       'Add a new phrase to ', C('CMDS'), ' and teach the AI module to say it.',
     ]),
   ),
   h3('✏️ Three Challenges'),
   ol([
-    [B('A pose nobody taught you.'), ' Write a function in Program 1 that puts both hands above the head (hint: shoulder + 140, arm - 40 on the right, mirrored on the left). Get it to look symmetric, then turn it into a dance move by changing the constant angles into a loop.'],
+    [B('A second pose.'), ' Put a second dictionary next to ANG - say SIT, with the legs folded and the arms forward - then write one function that takes a dictionary and a number of steps, and moves every joint from wherever it is to the target without jumping. Calling that function with two poses looks like the start of an animation engine, and it is exactly what Program 3 does by hand.'],
     [B('A button that does two things.'), ' The page only sends one path per button. Add ', C("/dance"), ' to the server, map it to three moves, and add a fifth button labelled Dance. Watch out: the browser will happily send a second request while the first is still running, so decide what should happen.'],
     [B('A phrase with a condition.'), ' Right now every phrase maps to one action. Add a command that behaves differently depending on what the robot just did - for example "再来一次" repeats the last action. You will need one variable to remember it, and you will discover why stateless commands were easier.'],
   ]),
@@ -298,6 +309,11 @@ for (let i = 0; i < nodes.length; i++) {
   if (nodes[i].type === 'heading' && nodes[i].attrs.level === 2 && /Activity/.test(nodes[i].content[0].text)) {
     if (nodes[i + 1]?.type !== 'blockquote') problems.push('no blockquote right under ' + nodes[i].content[0].text)
   }
+}
+for (const tb of nodes.filter((n) => n.type === 'table')) {
+  const cols = tb.content[0].content.length
+  const bad = tb.content.find((r) => r.content.length !== cols)
+  if (bad) problems.push('table with ' + cols + ' header cells but a row of ' + bad.content.length)
 }
 const last = nodes[nodes.length - 1]
 if (last.type === 'paragraph') problems.push('trailing empty paragraph at the end')

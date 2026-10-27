@@ -10,7 +10,7 @@
  *   node scripts/exam-course5/check-page.mjs --id VFIXcX --admin    # 编辑页（走 LMS SSO 登录）
  */
 import { chromium } from 'playwright-core'
-import { createClient, SK } from './sk-client.mjs'
+import { createClient, SK } from '../surveyking-oauth/sk-client.mjs'
 
 const argv = process.argv.slice(2)
 const opt = (n, d) => {

@@ -18,24 +18,24 @@ import ssd1306
 import time
 
 # ---------- 1. Calibration (same table as Program 1-3) ----------
-ANG = {'hip_r': 52, 'knee_r': 54, 'ankle_r': 91,
-       'hip_l': 135, 'knee_l': 142, 'ankle_l': 95,
+ANG = {'leg_r': 30, 'knee_r': 54, 'ankle_r': 91,
+       'leg_l': 150, 'knee_l': 142, 'ankle_l': 95,
        'shoulder_r': 32, 'arm_r': 144, 'hand_r': 40,
-       'shoulder_l': 146, 'arm_l': 37, 'hand_l': 153}
+       'shoulder_l': 150, 'arm_l': 37, 'hand_l': 130}
 
-LEAN = 3
+LEAN = 0   # extra forward lean while walking; 0 = the same pose as Program 1
 
-PINS = {'hip_r': 14, 'knee_r': 13, 'ankle_r': 12,
-        'hip_l': 5, 'knee_l': 4, 'ankle_l': 2,
+PINS = {'leg_r': 14, 'knee_r': 13, 'ankle_r': 12,
+        'leg_l': 5, 'knee_l': 4, 'ankle_l': 2,
         'shoulder_r': 15, 'arm_r': 25, 'hand_r': 26,
         'shoulder_l': 27, 'arm_l': 32, 'hand_l': 33}
 
-HIP_R = ANG['hip_r'] + LEAN
-HIP_L = ANG['hip_l'] - LEAN
+LEG_R = ANG['leg_r'] + LEAN
+LEG_L = ANG['leg_l'] - LEAN
 
 srv = {j: PWM(Pin(p, Pin.OUT), freq=50) for j, p in PINS.items()}
 pos = dict(ANG)
-pos['hip_r'], pos['hip_l'] = HIP_R, HIP_L
+pos['leg_r'], pos['leg_l'] = LEG_R, LEG_L
 
 
 def w(joint, deg):
@@ -60,8 +60,8 @@ def ramp(target, steps=20, ms=15):
 def stand(steps=18):
     """Back to the standing pose, whatever the robot was doing before."""
     target = dict(ANG)
-    target['hip_r'] = HIP_R
-    target['hip_l'] = HIP_L
+    target['leg_r'] = LEG_R
+    target['leg_l'] = LEG_L
     ramp(target, steps, 12)
 
 
@@ -102,7 +102,7 @@ def wave():
 
 
 def bow():
-    ramp({'hip_r': ANG['hip_r'] + 45, 'hip_l': ANG['hip_l'] - 45,
+    ramp({'leg_r': ANG['leg_r'] + 45, 'leg_l': ANG['leg_l'] - 45,
           'knee_r': ANG['knee_r'] + 22, 'knee_l': ANG['knee_l'] - 22,
           'shoulder_r': ANG['shoulder_r'] + 45})
     time.sleep_ms(500)
@@ -110,7 +110,7 @@ def bow():
 
 
 def kick():
-    ramp({'hip_r': HIP_R + 12, 'hip_l': HIP_L - 12})        # lean back a little
+    ramp({'leg_r': LEG_R + 12, 'leg_l': LEG_L - 12})        # lean back a little
     ramp({'knee_r': ANG['knee_r'] + 55}, 12, 20)            # wind up
     ramp({'knee_r': ANG['knee_r'], 'ankle_r': ANG['ankle_r'] + 25}, 6, 8)   # kick!
     time.sleep_ms(400)
@@ -128,7 +128,7 @@ def punch():
 
 
 def squat():
-    ramp({'hip_r': ANG['hip_r'] + 30, 'hip_l': ANG['hip_l'] - 30,
+    ramp({'leg_r': ANG['leg_r'] + 30, 'leg_l': ANG['leg_l'] - 30,
           'knee_r': ANG['knee_r'] + 30, 'knee_l': ANG['knee_l'] - 30})
     time.sleep_ms(600)
     stand()
