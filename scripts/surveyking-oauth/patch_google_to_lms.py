@@ -5,7 +5,7 @@
 背景
 ----
 SurveyKing 1.13 只内置两种第三方登录：Google、微信，且端点**硬编码**在
-`cn/surveyking.server.impl.OAuthServiceImpl` 的常量池里：
+`cn.surveyking.server.impl.OAuthServiceImpl` 的常量池里：
 
     GOOGLE_AUTHORIZATION_URL = https://accounts.google.com/o/oauth2/v2/auth
     GOOGLE_TOKEN_URL         = https://oauth2.googleapis.com/token
@@ -24,10 +24,19 @@ SurveyKing 1.13 只内置两种第三方登录：Google、微信，且端点**�
 常量池条目是按**索引**引用的，改某条 UTF8 的长度不影响其它条目，
 只要重写常量池本身、保留后续字节流即可。
 
+本脚本做四件事
+--------------
+1. 常量池替换：4 个 Google 端点 → LMS 端点
+2. H2 兼容修复：`BINARY auth_account = {0}` 是 MySQL 专有语法，H2 会报语法错
+3. 前端文案：登录页按钮「Google 登录」→「LMS 账号登录」；个人设置里那条
+   Google 登录方式整个去掉；管理端设置项改叫 LMS Client ID/Secret
+4. 缓存 busting：内容变了的 chunk 换新 hash 文件名（同步 umi.js 的 hash 映射、
+   asset-manifest.json、index.html），否则浏览器会一直用缓存里的旧 JS
+
 安全性
 ------
 - 只做等价的常量替换，不改任何逻辑；
-- 脚本内置 round-trip 自检（解析→重新序列化必须与原文件逐字节相同），
+- 内置 round-trip 自检（解析→重新序列化必须与原文件逐字节相同），
   证明解析器正确后才允许写出；
 - 原 jar 永不覆盖，输出到新文件。
 
@@ -43,7 +52,9 @@ SurveyKing 1.13 只内置两种第三方登录：Google、微信，且端点**�
 """
 
 import argparse
+import hashlib
 import io
+import re
 import shutil
 import struct
 import sys
@@ -52,6 +63,7 @@ import zipfile
 # SurveyKing 把 OAuth 实现在 rdbms 模块里
 RDBMS_ENTRY = 'BOOT-INF/lib/rdbms-v1.13.0.jar'
 CLASS_PATH = 'cn/surveyking/server/impl/OAuthServiceImpl.class'
+STATIC_PREFIX = 'BOOT-INF/classes/static/'
 
 # 需要替换的常量：{原始: 目标}
 DEFAULT_REPLACEMENTS = {
@@ -61,17 +73,49 @@ DEFAULT_REPLACEMENTS = {
     'https://accounts.google.com': None,                   # id_token 的 iss
 }
 
-# H2 兼容修复（与上面的 OAuth 端点无关，是独立的坑）
+# H2 兼容修复（与 OAuth 端点无关，是独立的坑）
 #
 # SurveyKing 查绑定账号时用 MySQL 专有的 `BINARY auth_account = ?`：
 #     accountMapper.selectOne(... .apply("BINARY auth_account = {0}", account))
-# 本部署用的�� H2（MODE=MySQL），H2 没有 BINARY 这个一元运算符 →
+# 本部署用的是 H2（MODE=MySQL），H2 没有 BINARY 这个一元运算符 →
 # 直接抛 BadSqlGrammarException，OAuth 回调返回 provider_error。
 # H2 的字符串比较本来就是大小写敏感（BINARY 在 MySQL 里也是这个意思），
 # 所以去掉 BINARY 前缀语义不变。
 H2_COMPAT_REPLACEMENTS = {
     'BINARY auth_account = {0}': 'auth_account = {0}',
 }
+
+# 前端文案替换（纯文本，字节级替换，长度可不同）
+FRONTEND_REPLACEMENTS = [
+    # 登录页按钮
+    (b'"aria-label":"Google"', b'"aria-label":"LMS \\u8d26\\u53f7\\u767b\\u5f55"'),
+    (b'socialLabel,children:"Google"', b'socialLabel,children:"LMS \\u8d26\\u53f7\\u767b\\u5f55"'),
+    # 管理端：第三方登录设置
+    (b'label:"Google Client ID"', b'label:"LMS Client ID"'),
+    (b'label:"Google Client Secret"', b'label:"LMS Client Secret"'),
+    (b'providerTitle,children:"Google"', b'providerTitle,children:"LMS"'),
+    # i18n（中文在 umi.js 里是 \\uXXXX 转义；umi.js 之外还有一份在 chunk 里）
+    (b'oauth.googleCallback","defaultMessage":"Google ', b'oauth.googleCallback","defaultMessage":"LMS '),
+    (b'oauth.googleCallback":"Google ', b'oauth.googleCallback":"LMS '),
+    (b'oauth.googleCallback",defaultMessage:"Google ', b'oauth.googleCallback",defaultMessage:"LMS '),
+    # 登录页按钮的显示条件：原逻辑是 `ue = !oe && ce.google`
+    #   oe = /MicroMessenger/i.test(navigator.userAgent) —— 微信内置浏览器
+    # 那是为「Google 登录」设计的（微信里登不了 Google），
+    # 现在这个通道走的是 LMS，在微信里完全可用，不该被藏。
+    (
+        b'ue=!oe&&Boolean(null===ce||void 0===ce?void 0:ce.google)',
+        b'ue=Boolean(null===ce||void 0===ce?void 0:ce.google)',
+    ),
+    # 个人设置 → 安全 → 「登录方式」列表里的 Google 条目（含 Google 图标 + 修改按钮）：
+    # 这个通道就是 LMS 本身，绑定是自动的（预置或首次登录建号时完成），
+    # 留着只会让人看到 Google 字样 → 整条去掉。
+    (
+        b'(null!==(a=F.oauthProviders)&&void 0!==a&&a.google||o.length>0)&&g.push({title:"Google"',
+        b'(null!==(a=F.oauthProviders)&&void 0!==a&&a.google||o.length>0)&&!1&&g.push({title:"Google"',
+    ),
+]
+
+HASH_RE = re.compile(r'\.([0-9a-f]{8})(\.(?:async\.js|js|chunk\.css|css))$')
 
 
 # ---------------------------------------------------------------- class 文件解析
@@ -158,8 +202,7 @@ def patch_class(data: bytes, replacements: dict) -> tuple:
                 new_entries.append(e)
                 continue
             if text in replacements:
-                new_text = replacements[text]
-                new_entries.append((tag, new_text.encode('utf-8')))
+                new_entries.append((tag, replacements[text].encode('utf-8')))
                 hits[text] += 1
                 continue
         new_entries.append(e)
@@ -174,35 +217,7 @@ def patch_class(data: bytes, replacements: dict) -> tuple:
     return out, hits
 
 
-# ---------------------------------------------------------------- jar 处理
-# 前端文案：把「Google 登录」改成「LMS 账号登录」
-# 只改内容、不改文件名 —— webpack 的 chunk hash 映射（umi.js 里 9531:"7c34278b"）
-# 与 asset-manifest.json 都指向文件名，改名要连带改映射，级联风险高；
-# 不改名最坏结果是浏览器缓存了旧 JS（按钮文案还是「Google」），
-# 强刷即可，服务端行为不受影响。
-FRONTEND_REPLACEMENTS = [
-    # 登录页按钮
-    (b'"aria-label":"Google"', b'"aria-label":"LMS \\u8d26\\u53f7\\u767b\\u5f55"'),
-    (b'socialLabel,children:"Google"', b'socialLabel,children:"LMS \\u8d26\\u53f7\\u767b\\u5f55"'),
-    # 管理端：第三方登录设置
-    (b'label:"Google Client ID"', b'label:"LMS Client ID"'),
-    (b'label:"Google Client Secret"', b'label:"LMS Client Secret"'),
-    (b'providerTitle,children:"Google"', b'providerTitle,children:"LMS"'),
-    # i18n（中文在 umi.js 里是 \\uXXXX 转义）
-    (b'oauth.googleCallback","defaultMessage":"Google ', b'oauth.googleCallback","defaultMessage":"LMS '),
-    (b'oauth.googleCallback":"Google ', b'oauth.googleCallback":"LMS '),
-    # 登录页按钮的显示条件：原逻辑是 `ue = !oe && ce.google`
-    #   oe = /MicroMessenger/i.test(navigator.userAgent) —— 微信内置浏览器
-    # 那是为「Google 登录」设计的（微信里登不了 Google），
-    # 现在这个通道走的是 LMS，在微信里完全可用，不该被藏。
-    # 去掉 !oe 之后，微信里也能看到「LMS 账号登录」按钮。
-    (
-        b'ue=!oe&&Boolean(null===ce||void 0===ce?void 0:ce.google)',
-        b'ue=Boolean(null===ce||void 0===ce?void 0:ce.google)',
-    ),
-]
-
-
+# ---------------------------------------------------------------- 前端处理
 def patch_frontend(payload: bytes) -> tuple:
     """对前端静态资源做文案替换，返回 (新内容, 命中数)"""
     hits = 0
@@ -214,6 +229,83 @@ def patch_frontend(payload: bytes) -> tuple:
     return payload, hits
 
 
+def bust_hashes(files: dict, changed: set) -> tuple:
+    """
+    给**内容变了的** chunk 换新文件名（= 换 hash），并同步所有引用。
+
+    为什么要做：webpack 的 chunk 文件名里带内容 hash，但我们只改内容不改文件名，
+    浏览器会拿缓存里的旧 JS —— 用户看到的还是「Google 登录」按钮。
+    换 hash 后 URL 变了，浏览器必然重新下载。
+
+    只处理 changed 里的文件（其余原样保留，避免大面积改名带来的引用风险）。
+    需要同步：
+      1. umi.js 里的 chunk hash 映射：  9531:"7c34278b" → 9531:"<新hash>"
+      2. asset-manifest.json 里的文件名映射
+      3. index.html 里对主 chunk（umi.js）的引用
+
+    顺序要点：主 chunk 自身的内容会因为「写入新的 hash 映射」而再次变化，
+    所以它的 hash 必须最后算，且 manifest/index.html 要用**最终**名字替换。
+    """
+    renamed = {}          # 旧名 → 新名
+    hash_map = {}         # 旧 hash → 新 hash
+    umi_name = next((n for n in files if n.startswith('umi.') and n.endswith('.js')), None)
+
+    # 1) 非主 chunk：按新内容算新 hash
+    for name in sorted(changed):
+        if name in ('asset-manifest.json', 'index.html') or name == umi_name:
+            continue
+        m = HASH_RE.search(name)
+        if not m:
+            continue
+        old_hash = m.group(1)
+        new_hash = hashlib.sha256(files[name]).hexdigest()[:8]
+        if new_hash == old_hash:
+            continue
+        renamed[name] = name[: m.start(1)] + new_hash + m.group(2)
+        hash_map[old_hash] = new_hash
+
+    if not hash_map and not (umi_name and umi_name in changed):
+        return files, renamed
+
+    # 2) 把新的 hash 映射写进主 chunk
+    if umi_name and hash_map:
+        content = files[umi_name]
+        for old_hash, new_hash in hash_map.items():
+            content = content.replace(('"%s"' % old_hash).encode(), ('"%s"' % new_hash).encode())
+        files[umi_name] = content
+
+    # 3) 主 chunk 自身改名（此时内容已最终）
+    if umi_name and umi_name in changed:
+        m = HASH_RE.search(umi_name)
+        if m:
+            old_hash = m.group(1)
+            new_hash = hashlib.sha256(files[umi_name]).hexdigest()[:8]
+            if new_hash != old_hash:
+                new_umi = umi_name[: m.start(1)] + new_hash + m.group(2)
+                renamed[umi_name] = new_umi
+                files[new_umi] = files.pop(umi_name)
+                for f in ('index.html', 'asset-manifest.json'):
+                    if f in files:
+                        files[f] = files[f].replace(('/' + umi_name).encode(), ('/' + new_umi).encode())
+
+    # 4) manifest 里的其它改名
+    if 'asset-manifest.json' in files:
+        manifest = files['asset-manifest.json']
+        for old_name, new_name in renamed.items():
+            if old_name == umi_name:
+                continue
+            manifest = manifest.replace(('/' + old_name).encode(), ('/' + new_name).encode())
+        files['asset-manifest.json'] = manifest
+
+    # 5) 落盘改名
+    for old_name, new_name in list(renamed.items()):
+        if old_name in files:
+            files[new_name] = files.pop(old_name)
+
+    return files, renamed
+
+
+# ---------------------------------------------------------------- jar 处理
 def patch_rdbms_jar(data: bytes, replacements: dict) -> tuple:
     src = zipfile.ZipFile(io.BytesIO(data), 'r')
     out_buf = io.BytesIO()
@@ -241,26 +333,62 @@ def patch_fat_jar(src_path: str, dst_path: str, replacements: dict) -> dict:
     rdbms = src.read(RDBMS_ENTRY)
     new_rdbms, hits = patch_rdbms_jar(rdbms, replacements)
 
+    # 前端资源：先读出来做替换，再统一 bust hash
+    static = {}
+    static_order = []
+    for info in src.infolist():
+        name = info.filename
+        if not (name.startswith(STATIC_PREFIX) and name.endswith(('.js', '.json', '.html', '.css'))):
+            continue
+        key = name[len(STATIC_PREFIX):]
+        static[key] = src.read(name)
+        static_order.append(key)
+
     frontend_hits = 0
     frontend_files = []
+    changed = set()
+    for key in static_order:
+        if key.endswith(('.js', '.json', '.html')):
+            payload, n = patch_frontend(static[key])
+            if n:
+                static[key] = payload
+                changed.add(key)
+                frontend_hits += n
+                frontend_files.append((key, n))
+
+    static, renamed = bust_hashes(static, changed)
+
     with zipfile.ZipFile(dst_path, 'w') as dst:
         for info in src.infolist():
             payload = src.read(info.filename)
             if info.filename == RDBMS_ENTRY:
                 payload = new_rdbms
-            elif info.filename.startswith('BOOT-INF/classes/static/') and info.filename.endswith(('.js', '.json')):
-                payload, n = patch_frontend(payload)
-                if n:
-                    frontend_hits += n
-                    frontend_files.append((info.filename, n))
+            elif info.filename.startswith(STATIC_PREFIX):
+                key = info.filename[len(STATIC_PREFIX):]
+                if key in renamed:
+                    continue  # 被改名的文件，由下面统一写入新名字
+                # 文本文件用替换后的内容；png/ico/目录项等原样保留
+                payload = static.get(key, payload)
             new_info = zipfile.ZipInfo(info.filename, date_time=info.date_time)
             new_info.compress_type = info.compress_type
             new_info.external_attr = info.external_attr
             new_info.internal_attr = info.internal_attr
             new_info.create_system = info.create_system
             dst.writestr(new_info, payload)
+
+        # 写入改名后的前端文件
+        for old_name, new_name in renamed.items():
+            old_info = src.getinfo(STATIC_PREFIX + old_name)
+            new_info = zipfile.ZipInfo(STATIC_PREFIX + new_name, date_time=old_info.date_time)
+            new_info.compress_type = old_info.compress_type
+            new_info.external_attr = old_info.external_attr
+            new_info.internal_attr = old_info.internal_attr
+            new_info.create_system = old_info.create_system
+            dst.writestr(new_info, static[new_name])
+
     hits['__frontend__'] = frontend_hits
     hits['__frontend_files__'] = frontend_files
+    hits['__renamed__'] = renamed
     return hits
 
 
@@ -288,28 +416,33 @@ def main():
 
     hits = patch_fat_jar(args.jar, args.out, replacements)
 
-    print('\n替换结果：')
+    print('\n常量替换：')
     for old, new in replacements.items():
         n = hits.get(old, 0)
         flag = '✓' if n else '（未找到，可能上游已改）'
         print('  %-46s → %-46s x%d %s' % (old, new, n, flag))
 
-    frontend_hits = hits.get('__frontend__', 0)
     print('\nH2 兼容修复：')
     for old, new in H2_COMPAT_REPLACEMENTS.items():
         n = hits.get(old, 0)
         print('  %-40s → %-30s x%d %s' % (old, new, n, '✓' if n else '（未找到）'))
 
-    print('\n前端文案替换 %d 处：' % frontend_hits)
+    print('\n前端文案替换 %d 处：' % hits.get('__frontend__', 0))
     for name, n in hits.get('__frontend_files__', []):
         print('  %-60s x%d' % (name, n))
 
-    missing = [k for k, v in hits.items() if v == 0]
+    renamed = hits.get('__renamed__', {})
+    if renamed:
+        print('\n缓存 busting（内容变了的文件换新 hash，浏览器必然重新下载）：')
+        for old_name, new_name in renamed.items():
+            print('  %-56s → %s' % (old_name, new_name))
+
+    missing = [k for k, v in hits.items() if isinstance(v, int) and v == 0 and k in replacements]
     if missing:
         print('\n⚠️  有常量没找到，可能版本不匹配，请人工确认后再部署')
         sys.exit(2)
 
-    # 复核：输出 jar 里应该已经找不到 google 端点
+    # 复核：输出 jar 里应该已经找不到原来的常量
     with zipfile.ZipFile(args.out, 'r') as z:
         blob = b''
         for info in z.infolist():
