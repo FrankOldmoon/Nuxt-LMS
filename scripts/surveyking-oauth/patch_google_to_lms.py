@@ -137,6 +137,31 @@ FRONTEND_REPLACEMENTS = [
 #   实测 DOM 里 LMS 按钮挂在 .socialLogin 下，**不在 <form> 里**，
 #   所以直接把 form 藏掉即可，不依赖 CSS module 的 hash 类名（升级也不怕）。
 #   顺便藏掉「立即注册」入口 —— 现在账号是自动创建的，用不到。
+# 追加到指定 JS 末尾的脚本（按文件名模式匹配）
+#
+# 普通用户（LMS 自动建号/预置的账号）没有 project:create 权限，
+# 但「我的项目」页的 New 按钮是无条件渲染的 —— 点了才在服务端 403。
+# 这里在页面加载后查一次 currentUser，没权限就给 body 打个标记，
+# 再由 CSS 把那个按钮藏掉（按钮的类名 project-create-button 是固定的，不带 hash）。
+FRONTEND_JS_APPEND = [
+    (
+        'p__Project.',
+        '\n/* LMS：没有 project:create 权限的人不显示「新建」按钮 */\n'
+        ';(function(){'
+        'function apply(){'
+        'fetch("/api/currentUser",{credentials:"include"})'
+        '.then(function(r){return r.json()})'
+        '.then(function(d){'
+        'var a=(d&&d.data&&d.data.authorityList)||[];'
+        'var ok=a.indexOf("project:create")>=0;'
+        'document.body.classList.toggle("hide-project-create",!ok)'
+        '}).catch(function(){})'
+        '}'
+        'if(document.readyState==="loading")window.addEventListener("DOMContentLoaded",apply);else apply();'
+        '})();\n',
+    ),
+]
+
 FRONTEND_CSS_APPEND = [
     (
         'p__user__Login.',
@@ -159,6 +184,11 @@ FRONTEND_CSS_APPEND = [
         'p__user__Register.',
         '\n/* 自动建号：表单由脚本自动填并提交，这里只留一句提示 */\n'
         '#root form{opacity:.35;pointer-events:none}\n',
+    ),
+    (
+        'p__Project.',
+        '\n/* 普通用户没有 project:create，见 FRONTEND_JS_APPEND 打的 body 标记 */\n'
+        'body.hide-project-create .project-create-button{display:none!important}\n',
     ),
 ]
 
@@ -275,6 +305,11 @@ def patch_frontend(payload: bytes, name: str = '') -> tuple:
             hits += n
     if name.endswith('.css'):
         for prefix, extra in FRONTEND_CSS_APPEND:
+            if name.startswith(prefix):
+                payload = payload + extra.encode('utf-8')
+                hits += 1
+    if name.endswith('.js'):
+        for prefix, extra in FRONTEND_JS_APPEND:
             if name.startswith(prefix):
                 payload = payload + extra.encode('utf-8')
                 hits += 1

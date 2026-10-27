@@ -899,6 +899,52 @@ node scripts/surveyking-oauth/e2e-login.mjs --lms-user test01 --lms-pass REDACTE
 实测（2026-10-27）：未登录 LMS → 点「LMS 账号登录」→ 跳 LMS 认证页（带 state/nonce/code_challenge）
 → test01 登录（该账号在问卷系统里完全没绑定）→ 自动建号 → 落到 `/home`，`currentUser` = Test01，`ROLE_teacher`。
 
+### 10.12 角色与权限：LMS 进来的账号一律「普通用户」
+
+| 角色 | id | 权限 | 给谁 |
+|---|---|---|---|
+| 超级管理员 `admin` | 1457995481928998914 | 全部 | Frank（LMS #32 / #1 都绑到这一个账号） |
+| 教师 `teacher` | 1780003000000000001 | 管理员去掉 `system:*`、含 `project:create` | 预留（默认不分配） |
+| **普通用户 `user`** | 1780004000000000001 | `home` / `answer*` / `file*`，**没有 `project:create`** | LMS 自动建号 + 预置账号 |
+
+`registerInfo.roles` 指向「普通用户」→ 自动建号的人只有答题和查看的权限，建不了问卷。
+
+**双层拦截**（只藏按钮不够，接口也必须拒）：
+- 服务端：建卷接口对没有 `project:create` 的人返回 `403`（实测）
+- 前端：「我的项目」页的 New 按钮是**无条件渲染**的，点了才 403。
+  补丁在 `p__Project.*.async.js` 末尾追加一小段脚本：查 `currentUser.authorityList`，
+  没有 `project:create` 就给 `body` 加 `hide-project-create`，
+  再由 CSS 把 `.project-create-button`（固定类名，不带 hash）藏掉。
+  实测：普通用户 New 按钮 0 个，管理员 1 个。
+
+### 10.13 「用户管理」页空白（No data）的真因
+
+**症状**：`/system/user` 表格显示 No data，但页面不报错。接口 `/api/system/user/list` 返回 **500**。
+
+**根因**（`UserServiceImpl.getUsers`）：
+
+```java
+Account account = accountMapper.selectOne(... authType = PWD);  // 只查密码账号
+userView.setUsername(account.getAuthAccount());                 // account 为 null → NPE
+```
+
+**它假设每个用户都有密码账号。** 手工只插了 GOOGLE 账号的用户（`sync-teachers.mjs` 早期版本）
+没有 PWD 账号 → 整个列表接口 NPE → 前端把 500 吞成 "No data"。
+
+**修法**：给这类用户补一行 PWD 账号（`auth_secret` 用随机 BCrypt，没人知道，这些账号仍只走 SSO）：
+
+```sql
+INSERT INTO t_account (id, user_type, user_id, auth_type, auth_account, auth_secret, status, is_deleted, create_at)
+SELECT CAST(CAST(a.user_id AS BIGINT) + 3000000 AS VARCHAR), 'SysUser', a.user_id, 'PWD',
+       u.name, '$2a$10$<随机BCrypt>', 1, 0, CURRENT_TIMESTAMP
+FROM t_account a JOIN t_user u ON u.id = a.user_id
+WHERE a.auth_type = 'GOOGLE' AND a.is_deleted = 0
+  AND NOT EXISTS (SELECT 1 FROM t_account p WHERE p.user_id = a.user_id AND p.auth_type = 'PWD');
+```
+
+> 走正常注册流程自动建号的用户不会有这个问题（注册时本来就会建 PWD 账号），
+> 只有手工预置的要补。
+
 ---
 
 ## 11. 待确认

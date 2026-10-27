@@ -13,7 +13,11 @@
  * 绑定键：T_ACCOUNT.auth_type='GOOGLE' + auth_account = LMS users.id
  *   （SurveyKing 不按 email 匹配，auth_account 必须等于 id_token 的 sub）
  *
- * 生成的账号只有 GOOGLE 一种登录方式，**没有密码**，只能通过 LMS 登录。
+ * 生成的账号只有 GOOGLE 一种登录方式，只能通过 LMS 登录。
+ *
+ * 注意：手工只插 GOOGLE 账号会让「系统设置 → 用户管理」列表 500 ——
+ * UserServiceImpl.getUsers 里写死了 `accountMapper.selectOne(authType=PWD).getAuthAccount()`，
+ * 没有密码账号就 NPE。补一行随机密码的 PWD 账号即可（见 2026-10-27 的处理）。
  *
  * 用法：
  *   node scripts/surveyking-oauth/sync-teachers.mjs --role-id <surveykingRoleId> \
@@ -27,7 +31,7 @@ import postgres from 'postgres'
 import { getProdUrl } from '../_prod-url.mjs'
 
 function parseArgs(argv) {
-  const args = { roleId: '', deptId: '', out: '', roles: ['teacher', 'admin', 'observer'] }
+  const args = { roleId: '1780004000000000001', deptId: '1', out: '', roles: ['teacher', 'admin', 'observer'] }
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
     if (a === '--role-id') args.roleId = argv[++i]
@@ -45,8 +49,9 @@ if (args.help || !args.roleId || !args.deptId || !args.out) {
   node scripts/surveyking-oauth/sync-teachers.mjs --role-id <skRoleId> --dept-id <skDeptId> --out <sql文件> [--roles teacher,admin]
 
 说明：
-  --role-id  SurveyKing 的角色 id（t_role.id），预置的账号都挂这个角色
-  --dept-id  SurveyKing 的部门 id（t_dept.id）
+  --role-id  SurveyKing 的角色 id（t_role.id），默认 1780004000000000001 = 普通用户
+             （不能新建问卷；要让他们能建卷才传 1780003000000000001 = 教师）
+  --dept-id  SurveyKing 的部门 id（t_dept.id），默认 1 = 卷王问卷
   --roles    从 LMS 取哪些角色的用户，默认 teacher,admin,observer`)
   process.exit(args.help ? 0 : 1)
 }
