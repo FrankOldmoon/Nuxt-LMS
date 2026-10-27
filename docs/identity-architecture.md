@@ -783,9 +783,13 @@ webpack 的 chunk 文件名带内容 hash。我们改了 JS 内容但**没改文
 
 | 脚本 | 作用 |
 |---|---|
+| `scripts/surveyking-oauth/patch_google_to_lms.py` | 字节补丁（改常量池 + 前端文案 + 缓存 busting） |
+| `scripts/surveyking-oauth/deploy.sh` | **一条命令重新打补丁并部署**：取官方原件 → 打补丁 → 备份（jar + H2 库）→ 塞回容器重启 → 自动校验 |
 | `scripts/surveyking-oauth/sync-teachers.mjs` | 生成「把 LMS 教师预置进 SurveyKing」的 SQL（幂等） |
-| `scripts/surveyking-oauth/mock-idp.mjs` | 模拟 LMS 的 OIDC 端点（authorize/token/jwks），用于不依赖 LMS 部署就能测 SurveyKing 侧逻辑 |
 | `scripts/surveyking-oauth/sk-h2.sh` | 在 H2 上执行 SQL / 配 OAuth / 绑身份 |
+| `scripts/surveyking-oauth/mock-idp.mjs` | 模拟 LMS 的 OIDC 端点（authorize/token/jwks），用于不依赖 LMS 部署就能测 SurveyKing 侧逻辑 |
+
+**官方原件**保存在服务器 `backup/surveyking.jar.orig`（`deploy.sh` 会优先用它，而不是容器里那份已打补丁的 jar —— 否则常量找不到，脚本会正确地拒绝部署）。
 
 ---
 
