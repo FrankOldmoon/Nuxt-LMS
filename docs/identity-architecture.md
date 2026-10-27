@@ -735,6 +735,30 @@ SurveyKing 1.13.0（`javahuang/SurveyKing`），Docker 部署，容器内 `java 
 
 也就是说**在微信里打开问卷系统，LMS 登录按钮整个是隐藏的**（那是为「Google 登不了」设计的，现在这个通道走 LMS，微信里完全可用）。补丁里去掉了 `!oe &&`，微信里也能看到按钮了。
 
+### 10.7.1 界面上的 Google 痕迹已全部清掉
+
+| 位置 | 处理 |
+|---|---|
+| 登录页按钮 | 「Google 登录」→ **「LMS 账号登录」** |
+| 个人设置 → 安全 → 登录方式列表里的 Google 条目（带 Google 图标 + 修改按钮） | **整条去掉**（这个通道就是 LMS 本身，绑定是自动的，留着只会让人困惑） |
+| 管理后台 → 系统设置 → 第三方登录 | 「Google Client ID/Secret」→ 「LMS Client ID/Secret」；「Google 授权回调地址」→「LMS 授权回调地址」 |
+
+代码里仍能搜到 "Google" 的地方只剩**不可见**的两处：浏览器名列表（Chrome/Edge/Firefox/Google…）和被短路掉的死代码。
+
+### 10.7.2 缓存 busting（为什么之前看到的还是旧按钮）
+
+webpack 的 chunk 文件名带内容 hash。我们改了 JS 内容但**没改文件名** → 浏览器继续用缓存里的旧 JS → 看到的还是「Google 登录」按钮，强刷才好。
+
+现在补丁会给**内容变了的** chunk 换新 hash 文件名，并同步三处引用：
+
+1. `umi.js` 里的 chunk hash 映射（`9531:"7c34278b"` → 新值）
+2. `asset-manifest.json` 里的文件名映射
+3. `index.html` 里对主 chunk 的引用
+
+顺序有讲究：主 chunk 自身的内容会因为「写入新的 hash 映射」而再次变化，所以它的 hash 必须最后算，manifest/index.html 要用最终名字替换。
+
+---
+
 ### 10.8 没有账号的人怎么办：两条路都铺好了
 
 **路 1：已预置的账号 → 零表单直接进**
