@@ -723,10 +723,45 @@ SurveyKing 1.13.0（`javahuang/SurveyKing`），Docker 部署，容器内 `java 
 ### 10.6 遗留与注意
 
 - **生产 LMS 部署后才真正可用**：现在 151 上跑的还是旧代码（HS256、无 nonce、无 JWKS），点「LMS 账号登录」会失败。部署新代码即恢复。
-- **只有 Frank 绑定了**：问卷系统目前只有 1 个账号（Admin），已绑 LMS `Frank Hu`(#32)。其他老师要用，需要先在问卷系统里有账号，再按上面的方式绑 LMS id。
-- `registerInfo.registerEnabled = false` → 没绑定的 LMS 用户登录会得到 `not_bound`，不会自动建号（要自动建号得开这个开关）。
 - **升级 SurveyKing 镜像会丢补丁**：升级后重跑 `patch_google_to_lms.py` 即可。
 - 补丁只改内容不改前端文件名，避免动 webpack 的 chunk hash 映射；浏览器缓存了旧 JS 的话按钮文案仍是「Google」，强刷（Ctrl+F5）即可。
+
+### 10.7 登录按钮为什么之前不显示
+
+前端条件是 `ue = !oe && ce.google`：
+
+- `ce.oauthProviders.google` —— 服务端返回，配置好了就是 `true` ✅
+- `oe = /MicroMessenger/i.test(navigator.userAgent)` —— **微信内置浏览器**
+
+也就是说**在微信里打开问卷系统，LMS 登录按钮整个是隐藏的**（那是为「Google 登不了」设计的，现在这个通道走 LMS，微信里完全可用）。补丁里去掉了 `!oe &&`，微信里也能看到按钮了。
+
+### 10.8 没有账号的人怎么办：两条路都铺好了
+
+**路 1：已预置的账号 → 零表单直接进**
+
+`scripts/surveyking-oauth/sync-teachers.mjs` 把 LMS 的 13 个教师/管理员账号预置进 SurveyKing，并绑定 `GOOGLE`(=LMS users.id) 身份：
+
+- LMS `Frank Hu`(#32) 和 `admin`(#1) → 同一个问卷管理员账号（超级管理员角色）
+- 其余 11 位教师 → 各自新建账号 + 新建的「教师」角色
+  （角色权限 = 管理员权限去掉 `system:*` / `user:update` 的子集：问卷、答卷、文件、模板、仓库、练习）
+
+实测（LMS#34 Jessica Yang）：点「LMS 账号登录」→ LMS 授权 → **302 `/` 直接进**，零表单，角色 `ROLE_teacher`。
+
+**路 2：没有预置的人 → 自动进注册页建号**
+
+`T_SYS_INFO.REGISTER_INFO` 从 `{"registerEnabled":false}` 改成 `{"registerEnabled":true,"roles":["<教师角色 id>"]}`。
+
+实测（LMS#2 test01，未预置）：点「LMS 账号登录」→ LMS 授权 → **302 `/user/register?oauthTicket=...`**，进注册页（用户名/姓名已按 LMS 资料预填，只需设个密码）→ 提交后账号自动创建并绑定。
+
+> 想要「完全无声」的自动建号（连表单都不要），得改 Java 源码重编译（服务器只有 JRE，做不到）。现在的形态是：**已知的老师直接进，其余任何人第一次登录时建号**。
+
+新增脚本：
+
+| 脚本 | 作用 |
+|---|---|
+| `scripts/surveyking-oauth/sync-teachers.mjs` | 生成「把 LMS 教师预置进 SurveyKing」的 SQL（幂等） |
+| `scripts/surveyking-oauth/mock-idp.mjs` | 模拟 LMS 的 OIDC 端点（authorize/token/jwks），用于不依赖 LMS 部署就能测 SurveyKing 侧逻辑 |
+| `scripts/surveyking-oauth/sk-h2.sh` | 在 H2 上执行 SQL / 配 OAuth / 绑身份 |
 
 ---
 

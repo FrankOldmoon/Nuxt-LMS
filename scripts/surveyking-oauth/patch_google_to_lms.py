@@ -191,6 +191,15 @@ FRONTEND_REPLACEMENTS = [
     # i18n（中文在 umi.js 里是 \\uXXXX 转义）
     (b'oauth.googleCallback","defaultMessage":"Google ', b'oauth.googleCallback","defaultMessage":"LMS '),
     (b'oauth.googleCallback":"Google ', b'oauth.googleCallback":"LMS '),
+    # 登录页按钮的显示条件：原逻辑是 `ue = !oe && ce.google`
+    #   oe = /MicroMessenger/i.test(navigator.userAgent) —— 微信内置浏览器
+    # 那是为「Google 登录」设计的（微信里登不了 Google），
+    # 现在这个通道走的是 LMS，在微信里完全可用，不该被藏。
+    # 去掉 !oe 之后，微信里也能看到「LMS 账号登录」按钮。
+    (
+        b'ue=!oe&&Boolean(null===ce||void 0===ce?void 0:ce.google)',
+        b'ue=Boolean(null===ce||void 0===ce?void 0:ce.google)',
+    ),
 ]
 
 
