@@ -66,7 +66,15 @@ export async function createClient({ userId = 32 } = {}) {
     const name = me?.data?.name
     if (!name) throw new Error(`currentUser 异常：${JSON.stringify(me).slice(0, 200)}`)
 
-    return { step, userName: name, close }
+    // 把 cookie 交给调用方（比如注入无头浏览器做页面验证）
+    const cookies = [...jar.entries()].map(([k, v]) => ({
+      name: k,
+      value: v,
+      domain: new URL(SK).hostname,
+      path: '/',
+    }))
+
+    return { step, userName: name, cookies, close }
   } catch (e) {
     await close()
     throw e

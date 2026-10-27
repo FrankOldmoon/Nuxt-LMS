@@ -2,6 +2,32 @@
   "name": "ICT - Computer Vision 综合测评（AI 理论 + Python 语法）",
   "mode": "exam",
   "status": 1,
+  "setting": {
+    "status": 1,
+    "mode": "exam",
+    "answerSetting": {
+      "questionNumber": true,
+      "triggerType": "onBlur",
+      "copyEnabled": true,
+      "progressBar": false,
+      "loginRequired": false,
+      "onePageOneQuestion": false,
+      "answerSheetVisible": false,
+      "autoSave": true
+    },
+    "submittedSetting": {
+      "transcriptVisible": true,
+      "answerAnalysis": false,
+      "rankVisible": false,
+      "enableUpdate": false
+    },
+    "examSetting": {
+      "rankingEnabled": false,
+      "randomOrder": false,
+      "passMode": false,
+      "exerciseMode": false
+    }
+  },
   "survey": {
     "id": "survey_root",
     "type": "Survey",

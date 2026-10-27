@@ -348,6 +348,37 @@ const exam = {
   name: 'ICT - Computer Vision 综合测评（AI 理论 + Python 语法）',
   mode: 'exam',
   status: 1,
+  // setting 必须给全：后端 ProjectSetting 的字段为 null 时会被 Jackson 的
+  // default-property-inclusion=non_null 直接省略，前端又直接读 project.setting.status
+  // （没有可选链）→ 报 "Cannot read properties of undefined (reading 'status')"。
+  setting: {
+    status: 1, // 1 开启（可填写）/ 0 停止
+    mode: 'exam',
+    answerSetting: {
+      questionNumber: true,
+      triggerType: 'onBlur',
+      copyEnabled: true,
+      progressBar: false,
+      loginRequired: false,
+      onePageOneQuestion: false,
+      answerSheetVisible: false,
+      autoSave: true,
+    },
+    submittedSetting: {
+      // 交卷后给学生看成绩单（分数 + 每题得分）；
+      // 但不给答案解析（answerAnalysis=false）—— 25 道选择+填空的答案传出去就没法考第二遍
+      transcriptVisible: true,
+      answerAnalysis: false,
+      rankVisible: false,
+      enableUpdate: false,
+    },
+    examSetting: {
+      rankingEnabled: false,
+      randomOrder: false,
+      passMode: false,
+      exerciseMode: false,
+    },
+  },
   survey: {
     id: 'survey_root',
     type: 'Survey',

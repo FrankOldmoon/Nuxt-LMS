@@ -804,7 +804,7 @@ node scripts/exam-course5/verify.mjs --id <projectId>       # 逐题比对远端
 node scripts/exam-course5/smoke-answer.mjs --id <projectId>  # 提交"全对"答卷验证判分
 ```
 
-**SurveyKing exam schema 的四个坑**（都踩过，判分错了卷子照样能建成功）：
+**SurveyKing exam schema 的五个坑**（都踩过；判分错了、前端崩了，接口却都是 200）：
 
 | 坑 | 现象 | 正确做法 |
 |---|---|---|
@@ -812,6 +812,7 @@ node scripts/exam-course5/smoke-answer.mjs --id <projectId>  # 提交"全对"答
 | 填空题结构 | 交卷返回 500（NPE） | 每个"空"必须是**子节点**（`type:'Option'`），不能是空 children |
 | 填空题分值 | 填空全 0 分 | 题目节点也要有 `examScore`（`SelectCorrectEvaluator.support()` 检查它非 null），真正求和用子节点的 |
 | 删除接口参数 | 删除返回 500（NPE） | `deleteProject` 用的是 `request.getId()`，传 `{id}` 不是 `{ids: [...]}` |
+| **`setting` 必须传** | 前端整页崩：`Something went wrong. Cannot read properties of undefined (reading 'status')` | 建卷 payload 里必须带完整 `setting`（`status`/`mode`/`answerSetting`/`submittedSetting`/`examSetting`）。后端把 null 字段省略（`default-property-inclusion=non_null`），而前端直接读 `project.setting.status`（没有可选链） |
 
 另外，**提交答案的 value 是对象 Map**（键 = 选项/空的 id），不是字符串数组：
 
