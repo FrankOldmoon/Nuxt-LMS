@@ -21,8 +21,10 @@ export const DEFAULT_SITE_CONFIG: Record<string, any> = {
   // OAuth2/OIDC 对外基址（issuer）。留空 = 用请求 origin；
   // 反代没透传 Host 导致 origin 变成内网地址时，在这里填 http://10.28.1.151 兜底
   'site:oauth.issuer': '',
-  // id_token 的 RS256 私钥（PKCS8 PEM）。留空 = 首次启动自动生成并写回本表
-  'site:oauth.idPrivateKey': '',
+  // 注意：不要在这里给 site:oauth.idPrivateKey 播种空串。
+  // 该键由 utils/oauthKeys.ts 在首次使用时生成并写入（upsert）；
+  // 播种空值会让「密钥已存在」的判断失效 —— 曾经导致 8 个进程各自生成一把密钥，
+  // JWKS 的 kid 与 id_token 的 kid 不一致，客户端验签全失败。
   // 账号安全
   'site:allowRegistration': false,
   'site:allowForgotPassword': true,

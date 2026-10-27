@@ -1,0 +1,1885 @@
+{
+  "name": "ICT - Computer Vision 综合测评（AI 理论 + Python 语法）",
+  "mode": "exam",
+  "status": 1,
+  "survey": {
+    "id": "survey_root",
+    "type": "Survey",
+    "title": "ICT - Computer Vision — Comprehensive Test",
+    "description": "Part A: 30 single-choice (2 pts each) · Part B: 10 multiple-choice (3 pts each) · Part C: 10 fill-in-the-blank (1 pt each). Total 100 points. AI theory 50% / Python syntax 50%.",
+    "children": [
+      {
+        "id": "q001",
+        "type": "Radio",
+        "title": "What is the smallest single unit that forms a digital image on a computer?",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne"
+        },
+        "children": [
+          {
+            "id": "q001_o1",
+            "type": "Option",
+            "title": "A. Hex code",
+            "attribute": {}
+          },
+          {
+            "id": "q001_o2",
+            "type": "Option",
+            "title": "B. Pixel",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q001_o3",
+            "type": "Option",
+            "title": "C. RGB channel",
+            "attribute": {}
+          },
+          {
+            "id": "q001_o4",
+            "type": "Option",
+            "title": "D. Bit",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q002",
+        "type": "Radio",
+        "title": "An image has a width of 800 pixels and a height of 600 pixels. What is the total number of pixels in this image?",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne"
+        },
+        "children": [
+          {
+            "id": "q002_o1",
+            "type": "Option",
+            "title": "A. 48,000 pixels",
+            "attribute": {}
+          },
+          {
+            "id": "q002_o2",
+            "type": "Option",
+            "title": "B. 480,000 pixels",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q002_o3",
+            "type": "Option",
+            "title": "C. 4,800,000 pixels",
+            "attribute": {}
+          },
+          {
+            "id": "q002_o4",
+            "type": "Option",
+            "title": "D. 1,400,000 pixels",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q003",
+        "type": "Radio",
+        "title": "What is the term for the number of distinct colors that can be displayed in a digital image or on a computer display?",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne"
+        },
+        "children": [
+          {
+            "id": "q003_o1",
+            "type": "Option",
+            "title": "A. Resolution",
+            "attribute": {}
+          },
+          {
+            "id": "q003_o2",
+            "type": "Option",
+            "title": "B. Color depth",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q003_o3",
+            "type": "Option",
+            "title": "C. Pixel density",
+            "attribute": {}
+          },
+          {
+            "id": "q003_o4",
+            "type": "Option",
+            "title": "D. Bit rate",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q004",
+        "type": "Radio",
+        "title": "📄 According to the posters, what is the first step in AI Computer Vision?",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne"
+        },
+        "children": [
+          {
+            "id": "q004_o1",
+            "type": "Option",
+            "title": "A. Feature Extraction 🎨",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q004_o2",
+            "type": "Option",
+            "title": "B. Understanding 🧠",
+            "attribute": {}
+          },
+          {
+            "id": "q004_o3",
+            "type": "Option",
+            "title": "C. Edge Detection 🖍️",
+            "attribute": {}
+          },
+          {
+            "id": "q004_o4",
+            "type": "Option",
+            "title": "D. Feature Map 🗺️",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q005",
+        "type": "Radio",
+        "title": "📄 According to the poster, image classification teaches AI to recognize ___.",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne"
+        },
+        "children": [
+          {
+            "id": "q005_o1",
+            "type": "Option",
+            "title": "A. what object or scene a picture shows",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q005_o2",
+            "type": "Option",
+            "title": "B. how to draw pictures",
+            "attribute": {}
+          },
+          {
+            "id": "q005_o3",
+            "type": "Option",
+            "title": "C. how to play music",
+            "attribute": {}
+          },
+          {
+            "id": "q005_o4",
+            "type": "Option",
+            "title": "D. how to speak a language",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q006",
+        "type": "Radio",
+        "title": "Look at the first poster. What does face keypoint recognition find on a face?",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne"
+        },
+        "children": [
+          {
+            "id": "q006_o1",
+            "type": "Option",
+            "title": "A. Important points on a face, such as the eyes, nose and mouth",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q006_o2",
+            "type": "Option",
+            "title": "B. The name of the person in the photo",
+            "attribute": {}
+          },
+          {
+            "id": "q006_o3",
+            "type": "Option",
+            "title": "C. How many people are in the room",
+            "attribute": {}
+          },
+          {
+            "id": "q006_o4",
+            "type": "Option",
+            "title": "D. The age of the person",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q007",
+        "type": "Radio",
+        "title": "During registration the system stores a unique set of ________ for each person. Choose the best answer.",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne"
+        },
+        "children": [
+          {
+            "id": "q007_o1",
+            "type": "Option",
+            "title": "A. passwords",
+            "attribute": {}
+          },
+          {
+            "id": "q007_o2",
+            "type": "Option",
+            "title": "B. features",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q007_o3",
+            "type": "Option",
+            "title": "C. photographs",
+            "attribute": {}
+          },
+          {
+            "id": "q007_o4",
+            "type": "Option",
+            "title": "D. usernames",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q008",
+        "type": "Radio",
+        "title": "Look at the poster. What happens first in the gesture recognition pipeline?",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne"
+        },
+        "children": [
+          {
+            "id": "q008_o1",
+            "type": "Option",
+            "title": "A. The camera captures your hand movement",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q008_o2",
+            "type": "Option",
+            "title": "B. The AI speaks to you",
+            "attribute": {}
+          },
+          {
+            "id": "q008_o3",
+            "type": "Option",
+            "title": "C. The gesture is stored in a database",
+            "attribute": {}
+          },
+          {
+            "id": "q008_o4",
+            "type": "Option",
+            "title": "D. The robot moves its arm",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q009",
+        "type": "Radio",
+        "title": "Look at the poster. What does pose recognition find on the human body?",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne"
+        },
+        "children": [
+          {
+            "id": "q009_o1",
+            "type": "Option",
+            "title": "A. Key points, such as the head, shoulders, elbows and knees",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q009_o2",
+            "type": "Option",
+            "title": "B. The name of the person",
+            "attribute": {}
+          },
+          {
+            "id": "q009_o3",
+            "type": "Option",
+            "title": "C. The colour of the clothes",
+            "attribute": {}
+          },
+          {
+            "id": "q009_o4",
+            "type": "Option",
+            "title": "D. The age of the person",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q010",
+        "type": "Radio",
+        "title": "Look at the poster. What is a computer vision library?",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne"
+        },
+        "children": [
+          {
+            "id": "q010_o1",
+            "type": "Option",
+            "title": "A. A collection of pre-written Python code that helps computers see",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q010_o2",
+            "type": "Option",
+            "title": "B. A camera you plug into the computer",
+            "attribute": {}
+          },
+          {
+            "id": "q010_o3",
+            "type": "Option",
+            "title": "C. A program that draws pictures for you",
+            "attribute": {}
+          },
+          {
+            "id": "q010_o4",
+            "type": "Option",
+            "title": "D. A new programming language",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q011",
+        "type": "Radio",
+        "title": "Look at the first poster. What does the AI start from in step 3?",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne"
+        },
+        "children": [
+          {
+            "id": "q011_o1",
+            "type": "Option",
+            "title": "A. Random noise",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q011_o2",
+            "type": "Option",
+            "title": "B. A finished photo",
+            "attribute": {}
+          },
+          {
+            "id": "q011_o3",
+            "type": "Option",
+            "title": "C. A blank white page",
+            "attribute": {}
+          },
+          {
+            "id": "q011_o4",
+            "type": "Option",
+            "title": "D. A video clip",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q012",
+        "type": "Radio",
+        "title": "Look at the poster. What is the first step of the AI 3D modelling process?",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne"
+        },
+        "children": [
+          {
+            "id": "q012_o1",
+            "type": "Option",
+            "title": "A. Describe what you want (idea & prompt)",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q012_o2",
+            "type": "Option",
+            "title": "B. Export the model",
+            "attribute": {}
+          },
+          {
+            "id": "q012_o3",
+            "type": "Option",
+            "title": "C. 3D print it",
+            "attribute": {}
+          },
+          {
+            "id": "q012_o4",
+            "type": "Option",
+            "title": "D. Add good lighting",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q013",
+        "type": "Radio",
+        "title": "Look at the posters. What is the first step of AI game generation?",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne"
+        },
+        "children": [
+          {
+            "id": "q013_o1",
+            "type": "Option",
+            "title": "A. Idea & plan",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q013_o2",
+            "type": "Option",
+            "title": "B. Publish & share",
+            "attribute": {}
+          },
+          {
+            "id": "q013_o3",
+            "type": "Option",
+            "title": "C. Test & improve",
+            "attribute": {}
+          },
+          {
+            "id": "q013_o4",
+            "type": "Option",
+            "title": "D. Export the game",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q014",
+        "type": "Radio",
+        "title": "Look at the poster. What does AIGC stand for?",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne"
+        },
+        "children": [
+          {
+            "id": "q014_o1",
+            "type": "Option",
+            "title": "A. AI-Generated Content",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q014_o2",
+            "type": "Option",
+            "title": "B. Automatic Internet Gateway",
+            "attribute": {}
+          },
+          {
+            "id": "q014_o3",
+            "type": "Option",
+            "title": "C. Applied Information Graphics",
+            "attribute": {}
+          },
+          {
+            "id": "q014_o4",
+            "type": "Option",
+            "title": "D. Advanced Intelligence Game",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q015",
+        "type": "Radio",
+        "title": "What does \"training\" mean in image classification?",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne",
+          "examAnalysis": "训练 = 从大量标注样本中学习特征"
+        },
+        "children": [
+          {
+            "id": "q015_o1",
+            "type": "Option",
+            "title": "A. Letting the model learn patterns from many labelled examples",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q015_o2",
+            "type": "Option",
+            "title": "B. Typing the answer for every new photo by hand",
+            "attribute": {}
+          },
+          {
+            "id": "q015_o3",
+            "type": "Option",
+            "title": "C. Taking photos with a better camera",
+            "attribute": {}
+          },
+          {
+            "id": "q015_o4",
+            "type": "Option",
+            "title": "D. Turning the computer off and on again",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q016",
+        "type": "Radio",
+        "title": "Which statement displays text or a value on the screen in Python?",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne",
+          "examAnalysis": "print() 输出"
+        },
+        "children": [
+          {
+            "id": "q016_o1",
+            "type": "Option",
+            "title": "A. input()",
+            "attribute": {}
+          },
+          {
+            "id": "q016_o2",
+            "type": "Option",
+            "title": "B. print()",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q016_o3",
+            "type": "Option",
+            "title": "C. read()",
+            "attribute": {}
+          },
+          {
+            "id": "q016_o4",
+            "type": "Option",
+            "title": "D. show()",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q017",
+        "type": "Radio",
+        "title": "Which function reads what the user types on the keyboard?",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne",
+          "examAnalysis": "input() 输入"
+        },
+        "children": [
+          {
+            "id": "q017_o1",
+            "type": "Option",
+            "title": "A. print()",
+            "attribute": {}
+          },
+          {
+            "id": "q017_o2",
+            "type": "Option",
+            "title": "B. input()",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q017_o3",
+            "type": "Option",
+            "title": "C. get()",
+            "attribute": {}
+          },
+          {
+            "id": "q017_o4",
+            "type": "Option",
+            "title": "D. scan()",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q018",
+        "type": "Radio",
+        "title": "What data type does input() always return?",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne",
+          "examAnalysis": "input() 永远返回字符串"
+        },
+        "children": [
+          {
+            "id": "q018_o1",
+            "type": "Option",
+            "title": "A. int",
+            "attribute": {}
+          },
+          {
+            "id": "q018_o2",
+            "type": "Option",
+            "title": "B. float",
+            "attribute": {}
+          },
+          {
+            "id": "q018_o3",
+            "type": "Option",
+            "title": "C. str",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q018_o4",
+            "type": "Option",
+            "title": "D. bool",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q019",
+        "type": "Radio",
+        "title": "The user types 25. Which line converts it into a whole number so you can do maths with it?",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne",
+          "examAnalysis": "int() 类型转换"
+        },
+        "children": [
+          {
+            "id": "q019_o1",
+            "type": "Option",
+            "title": "A. n = input()",
+            "attribute": {}
+          },
+          {
+            "id": "q019_o2",
+            "type": "Option",
+            "title": "B. n = str(input())",
+            "attribute": {}
+          },
+          {
+            "id": "q019_o3",
+            "type": "Option",
+            "title": "C. n = int(input())",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q019_o4",
+            "type": "Option",
+            "title": "D. n = float(input()) / 2",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q020",
+        "type": "Radio",
+        "title": "What is printed by this code?\n\na = 2\nb = 3\nprint(a + b)",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne",
+          "examAnalysis": "数字相加"
+        },
+        "children": [
+          {
+            "id": "q020_o1",
+            "type": "Option",
+            "title": "A. 23",
+            "attribute": {}
+          },
+          {
+            "id": "q020_o2",
+            "type": "Option",
+            "title": "B. 5",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q020_o3",
+            "type": "Option",
+            "title": "C. a + b",
+            "attribute": {}
+          },
+          {
+            "id": "q020_o4",
+            "type": "Option",
+            "title": "D. An error",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q021",
+        "type": "Radio",
+        "title": "What is printed by this code?\n\na = \"2\"\nb = \"3\"\nprint(a + b)",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne",
+          "examAnalysis": "字符串拼接（与上一题对照）"
+        },
+        "children": [
+          {
+            "id": "q021_o1",
+            "type": "Option",
+            "title": "A. 5",
+            "attribute": {}
+          },
+          {
+            "id": "q021_o2",
+            "type": "Option",
+            "title": "B. 23",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q021_o3",
+            "type": "Option",
+            "title": "C. 2 + 3",
+            "attribute": {}
+          },
+          {
+            "id": "q021_o4",
+            "type": "Option",
+            "title": "D. An error",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q022",
+        "type": "Radio",
+        "title": "What is the value of result?\n\nresult = 7 // 2",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne",
+          "examAnalysis": "整除 //"
+        },
+        "children": [
+          {
+            "id": "q022_o1",
+            "type": "Option",
+            "title": "A. 3",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q022_o2",
+            "type": "Option",
+            "title": "B. 3.5",
+            "attribute": {}
+          },
+          {
+            "id": "q022_o3",
+            "type": "Option",
+            "title": "C. 4",
+            "attribute": {}
+          },
+          {
+            "id": "q022_o4",
+            "type": "Option",
+            "title": "D. 1",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q023",
+        "type": "Radio",
+        "title": "What is the value of result?\n\nresult = 7 % 2",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne",
+          "examAnalysis": "取余 %"
+        },
+        "children": [
+          {
+            "id": "q023_o1",
+            "type": "Option",
+            "title": "A. 0",
+            "attribute": {}
+          },
+          {
+            "id": "q023_o2",
+            "type": "Option",
+            "title": "B. 1",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q023_o3",
+            "type": "Option",
+            "title": "C. 2",
+            "attribute": {}
+          },
+          {
+            "id": "q023_o4",
+            "type": "Option",
+            "title": "D. 3.5",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q024",
+        "type": "Radio",
+        "title": "How many numbers does the screen show, and which ones?\n\nfor i in range(3):\n    print(i)",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne",
+          "examAnalysis": "range(3) → 0..2"
+        },
+        "children": [
+          {
+            "id": "q024_o1",
+            "type": "Option",
+            "title": "A. 1 2 3",
+            "attribute": {}
+          },
+          {
+            "id": "q024_o2",
+            "type": "Option",
+            "title": "B. 0 1 2",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q024_o3",
+            "type": "Option",
+            "title": "C. 0 1 2 3",
+            "attribute": {}
+          },
+          {
+            "id": "q024_o4",
+            "type": "Option",
+            "title": "D. 3",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q025",
+        "type": "Radio",
+        "title": "Which numbers does range(1, 4) produce?",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne",
+          "examAnalysis": "range 左闭右开"
+        },
+        "children": [
+          {
+            "id": "q025_o1",
+            "type": "Option",
+            "title": "A. 1 2 3 4",
+            "attribute": {}
+          },
+          {
+            "id": "q025_o2",
+            "type": "Option",
+            "title": "B. 1 2 3",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q025_o3",
+            "type": "Option",
+            "title": "C. 0 1 2 3",
+            "attribute": {}
+          },
+          {
+            "id": "q025_o4",
+            "type": "Option",
+            "title": "D. 2 3 4",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q026",
+        "type": "Radio",
+        "title": "Which line correctly checks whether score is greater than or equal to 60?",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne",
+          "examAnalysis": "比较运算符"
+        },
+        "children": [
+          {
+            "id": "q026_o1",
+            "type": "Option",
+            "title": "A. if score = 60:",
+            "attribute": {}
+          },
+          {
+            "id": "q026_o2",
+            "type": "Option",
+            "title": "B. if score => 60:",
+            "attribute": {}
+          },
+          {
+            "id": "q026_o3",
+            "type": "Option",
+            "title": "C. if score >= 60:",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q026_o4",
+            "type": "Option",
+            "title": "D. if (score >= 60) then:",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q027",
+        "type": "Radio",
+        "title": "A while loop keeps repeating until…",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne",
+          "examAnalysis": "while 循环条件"
+        },
+        "children": [
+          {
+            "id": "q027_o1",
+            "type": "Option",
+            "title": "A. the program ends",
+            "attribute": {}
+          },
+          {
+            "id": "q027_o2",
+            "type": "Option",
+            "title": "B. its condition becomes False",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q027_o3",
+            "type": "Option",
+            "title": "C. the body has run once",
+            "attribute": {}
+          },
+          {
+            "id": "q027_o4",
+            "type": "Option",
+            "title": "D. the screen is full",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q028",
+        "type": "Radio",
+        "title": "What does this line do?\n\nprint(f\"Average: {total / 3:.2f}\")",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne",
+          "examAnalysis": "f-string 格式化为 2 位小数"
+        },
+        "children": [
+          {
+            "id": "q028_o1",
+            "type": "Option",
+            "title": "A. Prints the value rounded to 2 decimal places",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q028_o2",
+            "type": "Option",
+            "title": "B. Prints the text exactly as written",
+            "attribute": {}
+          },
+          {
+            "id": "q028_o3",
+            "type": "Option",
+            "title": "C. Prints only the integer part",
+            "attribute": {}
+          },
+          {
+            "id": "q028_o4",
+            "type": "Option",
+            "title": "D. Raises an error",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q029",
+        "type": "Radio",
+        "title": "Which line correctly brings the OpenCV library into your program?",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne",
+          "examAnalysis": "import 导入库"
+        },
+        "children": [
+          {
+            "id": "q029_o1",
+            "type": "Option",
+            "title": "A. include cv2",
+            "attribute": {}
+          },
+          {
+            "id": "q029_o2",
+            "type": "Option",
+            "title": "B. import cv2",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q029_o3",
+            "type": "Option",
+            "title": "C. using cv2",
+            "attribute": {}
+          },
+          {
+            "id": "q029_o4",
+            "type": "Option",
+            "title": "D. #import cv2",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q030",
+        "type": "Radio",
+        "title": "What is the value of second?\n\npixels = [12, 45, 7, 30]\nsecond = pixels[1]",
+        "attribute": {
+          "required": true,
+          "examScore": 2,
+          "examAnswerMode": "onlyOne",
+          "examAnalysis": "列表从 0 开始索引"
+        },
+        "children": [
+          {
+            "id": "q030_o1",
+            "type": "Option",
+            "title": "A. 12",
+            "attribute": {}
+          },
+          {
+            "id": "q030_o2",
+            "type": "Option",
+            "title": "B. 45",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q030_o3",
+            "type": "Option",
+            "title": "C. 7",
+            "attribute": {}
+          },
+          {
+            "id": "q030_o4",
+            "type": "Option",
+            "title": "D. 30",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "sec_multi",
+        "type": "Remark",
+        "title": "Part B — Multiple choice (3 points each)"
+      },
+      {
+        "id": "q031",
+        "type": "Checkbox",
+        "title": "🧩 According to the posters, which patterns does AI find during feature extraction? (Choose all that apply)",
+        "attribute": {
+          "required": true,
+          "examScore": 3,
+          "examAnswerMode": "selectAll"
+        },
+        "children": [
+          {
+            "id": "q031_o1",
+            "type": "Option",
+            "title": "A. Edges",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q031_o2",
+            "type": "Option",
+            "title": "B. Corners",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q031_o3",
+            "type": "Option",
+            "title": "C. Textures",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q031_o4",
+            "type": "Option",
+            "title": "D. Shapes",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q031_o5",
+            "type": "Option",
+            "title": "E. Sounds",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q032",
+        "type": "Checkbox",
+        "title": "🧩 According to the poster, where is image classification used? (Choose all that apply)",
+        "attribute": {
+          "required": true,
+          "examScore": 3,
+          "examAnswerMode": "selectAll"
+        },
+        "children": [
+          {
+            "id": "q032_o1",
+            "type": "Option",
+            "title": "A. Face Recognition",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q032_o2",
+            "type": "Option",
+            "title": "B. Self-Driving Cars",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q032_o3",
+            "type": "Option",
+            "title": "C. Medical Imaging",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q032_o4",
+            "type": "Option",
+            "title": "D. Playing Music",
+            "attribute": {}
+          },
+          {
+            "id": "q032_o5",
+            "type": "Option",
+            "title": "E. Cooking Dinner",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q033",
+        "type": "Checkbox",
+        "title": "Both posters list real-world uses. Which of the following are uses of face recognition?",
+        "attribute": {
+          "required": true,
+          "examScore": 3,
+          "examAnswerMode": "selectAll"
+        },
+        "children": [
+          {
+            "id": "q033_o1",
+            "type": "Option",
+            "title": "A. Phone unlock",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q033_o2",
+            "type": "Option",
+            "title": "B. Fun filters and AR effects",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q033_o3",
+            "type": "Option",
+            "title": "C. Surveillance and security",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q033_o4",
+            "type": "Option",
+            "title": "D. Photo and video organization",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q033_o5",
+            "type": "Option",
+            "title": "E. Charging the phone battery faster",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q034",
+        "type": "Checkbox",
+        "title": "Which of the following are steps the AI performs?",
+        "attribute": {
+          "required": true,
+          "examScore": 3,
+          "examAnswerMode": "selectAll"
+        },
+        "children": [
+          {
+            "id": "q034_o1",
+            "type": "Option",
+            "title": "A. Detect keypoints on your hand",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q034_o2",
+            "type": "Option",
+            "title": "B. Analyze the shape of the hand",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q034_o3",
+            "type": "Option",
+            "title": "C. Match the gesture with known gestures",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q034_o4",
+            "type": "Option",
+            "title": "D. Respond with an action",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q034_o5",
+            "type": "Option",
+            "title": "E. Guess your name from your hand shape",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q035",
+        "type": "Checkbox",
+        "title": "Look at the copyright part of the poster. Which of the following are good habits?",
+        "attribute": {
+          "required": true,
+          "examScore": 3,
+          "examAnswerMode": "selectAll"
+        },
+        "children": [
+          {
+            "id": "q035_o1",
+            "type": "Option",
+            "title": "A. Use original content",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q035_o2",
+            "type": "Option",
+            "title": "B. Get permission before using others’ work",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q035_o3",
+            "type": "Option",
+            "title": "C. Give credit when inspired by others",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q035_o4",
+            "type": "Option",
+            "title": "D. Copy the work without permission",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q036",
+        "type": "Checkbox",
+        "title": "Which of these are valid Python data types? (Choose all that apply)",
+        "attribute": {
+          "required": true,
+          "examScore": 3,
+          "examAnswerMode": "selectAll",
+          "examAnalysis": "基本类型"
+        },
+        "children": [
+          {
+            "id": "q036_o1",
+            "type": "Option",
+            "title": "A. int",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q036_o2",
+            "type": "Option",
+            "title": "B. str",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q036_o3",
+            "type": "Option",
+            "title": "C. float",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q036_o4",
+            "type": "Option",
+            "title": "D. list",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q036_o5",
+            "type": "Option",
+            "title": "E. paragraph",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q037",
+        "type": "Checkbox",
+        "title": "Which of these are Python built-in functions that we used in this course? (Choose all that apply)",
+        "attribute": {
+          "required": true,
+          "examScore": 3,
+          "examAnswerMode": "selectAll",
+          "examAnalysis": "内置函数"
+        },
+        "children": [
+          {
+            "id": "q037_o1",
+            "type": "Option",
+            "title": "A. print",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q037_o2",
+            "type": "Option",
+            "title": "B. input",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q037_o3",
+            "type": "Option",
+            "title": "C. int",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q037_o4",
+            "type": "Option",
+            "title": "D. range",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q037_o5",
+            "type": "Option",
+            "title": "E. scan",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q038",
+        "type": "Checkbox",
+        "title": "Which statements about input() are true? (Choose all that apply)",
+        "attribute": {
+          "required": true,
+          "examScore": 3,
+          "examAnswerMode": "selectAll",
+          "examAnalysis": "input 返回字符串，需要转换"
+        },
+        "children": [
+          {
+            "id": "q038_o1",
+            "type": "Option",
+            "title": "A. It always returns a string",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q038_o2",
+            "type": "Option",
+            "title": "B. You need int() to use the value as a number",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q038_o3",
+            "type": "Option",
+            "title": "C. You can pass a prompt message, e.g. input(\"Age: \")",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q038_o4",
+            "type": "Option",
+            "title": "D. It returns a number automatically when you type digits",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q039",
+        "type": "Checkbox",
+        "title": "Which statements about range() are true? (Choose all that apply)",
+        "attribute": {
+          "required": true,
+          "examScore": 3,
+          "examAnswerMode": "selectAll",
+          "examAnalysis": "range 的三种用法"
+        },
+        "children": [
+          {
+            "id": "q039_o1",
+            "type": "Option",
+            "title": "A. range(5) produces 0, 1, 2, 3, 4",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q039_o2",
+            "type": "Option",
+            "title": "B. range(1, 6) produces 1, 2, 3, 4, 5",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q039_o3",
+            "type": "Option",
+            "title": "C. range(0, 10, 2) produces 0, 2, 4, 6, 8",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q039_o4",
+            "type": "Option",
+            "title": "D. range(5) produces 1, 2, 3, 4, 5",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "q040",
+        "type": "Checkbox",
+        "title": "Which lines correctly import a library? (Choose all that apply)",
+        "attribute": {
+          "required": true,
+          "examScore": 3,
+          "examAnswerMode": "selectAll",
+          "examAnalysis": "import 三种写法"
+        },
+        "children": [
+          {
+            "id": "q040_o1",
+            "type": "Option",
+            "title": "A. import cv2",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q040_o2",
+            "type": "Option",
+            "title": "B. from PIL import Image",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q040_o3",
+            "type": "Option",
+            "title": "C. import numpy as np",
+            "attribute": {
+              "examCorrectAnswer": "true"
+            }
+          },
+          {
+            "id": "q040_o4",
+            "type": "Option",
+            "title": "D. include cv2",
+            "attribute": {}
+          }
+        ]
+      },
+      {
+        "id": "sec_fill",
+        "type": "Remark",
+        "title": "Part C — Fill in the blanks (1 point each)"
+      },
+      {
+        "id": "q041",
+        "type": "FillBlank",
+        "title": "📖 Complete the quote from the Edge Detection poster: \"Edges are where ____ happen!\"",
+        "attribute": {
+          "required": true,
+          "examScore": 1,
+          "examAnswerMode": "selectCorrect",
+          "examMatchRule": "completeSame",
+          "content": "📖 Complete the quote from the Edge Detection poster: \"Edges are where ____ happen!\""
+        },
+        "children": [
+          {
+            "id": "q041_b1",
+            "type": "Option",
+            "title": "",
+            "attribute": {
+              "examScore": 1,
+              "examCorrectAnswer": "changes"
+            }
+          }
+        ]
+      },
+      {
+        "id": "q042",
+        "type": "FillBlank",
+        "title": "In step 2 the AI finds the important points called ____ on your hand.",
+        "attribute": {
+          "required": true,
+          "examScore": 1,
+          "examAnswerMode": "selectCorrect",
+          "examMatchRule": "completeSame",
+          "content": "In step 2 the AI finds the important points called ____ on your hand."
+        },
+        "children": [
+          {
+            "id": "q042_b1",
+            "type": "Option",
+            "title": "",
+            "attribute": {
+              "examScore": 1,
+              "examCorrectAnswer": "keypoints"
+            }
+          }
+        ]
+      },
+      {
+        "id": "q043",
+        "type": "FillBlank",
+        "title": "In step 4 the AI connects the key points to build a ____ model.",
+        "attribute": {
+          "required": true,
+          "examScore": 1,
+          "examAnswerMode": "selectCorrect",
+          "examMatchRule": "completeSame",
+          "content": "In step 4 the AI connects the key points to build a ____ model."
+        },
+        "children": [
+          {
+            "id": "q043_b1",
+            "type": "Option",
+            "title": "",
+            "attribute": {
+              "examScore": 1,
+              "examCorrectAnswer": "skeleton"
+            }
+          }
+        ]
+      },
+      {
+        "id": "q044",
+        "type": "FillBlank",
+        "title": "The ____ model gradually turns noise into a clear image.",
+        "attribute": {
+          "required": true,
+          "examScore": 1,
+          "examAnswerMode": "selectCorrect",
+          "examMatchRule": "completeSame",
+          "content": "The ____ model gradually turns noise into a clear image."
+        },
+        "children": [
+          {
+            "id": "q044_b1",
+            "type": "Option",
+            "title": "",
+            "attribute": {
+              "examScore": 1,
+              "examCorrectAnswer": "diffusion"
+            }
+          }
+        ]
+      },
+      {
+        "id": "q045",
+        "type": "FillBlank",
+        "title": "The poster says: AI is a tool. You are the ____.",
+        "attribute": {
+          "required": true,
+          "examScore": 1,
+          "examAnswerMode": "selectCorrect",
+          "examMatchRule": "completeSame",
+          "content": "The poster says: AI is a tool. You are the ____."
+        },
+        "children": [
+          {
+            "id": "q045_b1",
+            "type": "Option",
+            "title": "",
+            "attribute": {
+              "examScore": 1,
+              "examCorrectAnswer": "creator"
+            }
+          }
+        ]
+      },
+      {
+        "id": "q046",
+        "type": "FillBlank",
+        "title": "Fill in the blank so the program reads the name typed by the user.\n\nname = ______(\"Your name: \")",
+        "attribute": {
+          "required": true,
+          "examScore": 1,
+          "examAnswerMode": "selectCorrect",
+          "examMatchRule": "completeSame",
+          "content": "Fill in the blank so the program reads the name typed by the user.\n\nname = ______(\"Your name: \")",
+          "examAnalysis": "input()"
+        },
+        "children": [
+          {
+            "id": "q046_b1",
+            "type": "Option",
+            "title": "",
+            "attribute": {
+              "examScore": 1,
+              "examCorrectAnswer": "input"
+            }
+          }
+        ]
+      },
+      {
+        "id": "q047",
+        "type": "FillBlank",
+        "title": "Fill in the blank so age becomes a whole number that can be used in maths.\n\nage = ______(input(\"Age: \"))",
+        "attribute": {
+          "required": true,
+          "examScore": 1,
+          "examAnswerMode": "selectCorrect",
+          "examMatchRule": "completeSame",
+          "content": "Fill in the blank so age becomes a whole number that can be used in maths.\n\nage = ______(input(\"Age: \"))",
+          "examAnalysis": "int()"
+        },
+        "children": [
+          {
+            "id": "q047_b1",
+            "type": "Option",
+            "title": "",
+            "attribute": {
+              "examScore": 1,
+              "examCorrectAnswer": "int"
+            }
+          }
+        ]
+      },
+      {
+        "id": "q048",
+        "type": "FillBlank",
+        "title": "Fill in the blank to repeat the block 5 times.\n\n______ i in range(5):\n    print(i)",
+        "attribute": {
+          "required": true,
+          "examScore": 1,
+          "examAnswerMode": "selectCorrect",
+          "examMatchRule": "completeSame",
+          "content": "Fill in the blank to repeat the block 5 times.\n\n______ i in range(5):\n    print(i)",
+          "examAnalysis": "for 循环"
+        },
+        "children": [
+          {
+            "id": "q048_b1",
+            "type": "Option",
+            "title": "",
+            "attribute": {
+              "examScore": 1,
+              "examCorrectAnswer": "for"
+            }
+          }
+        ]
+      },
+      {
+        "id": "q049",
+        "type": "FillBlank",
+        "title": "Fill in the blank to give the library a short name.\n\nimport numpy ______ np",
+        "attribute": {
+          "required": true,
+          "examScore": 1,
+          "examAnswerMode": "selectCorrect",
+          "examMatchRule": "completeSame",
+          "content": "Fill in the blank to give the library a short name.\n\nimport numpy ______ np",
+          "examAnalysis": "import ... as ..."
+        },
+        "children": [
+          {
+            "id": "q049_b1",
+            "type": "Option",
+            "title": "",
+            "attribute": {
+              "examScore": 1,
+              "examCorrectAnswer": "as"
+            }
+          }
+        ]
+      },
+      {
+        "id": "q050",
+        "type": "FillBlank",
+        "title": "Fill in the blank so the average is printed with exactly 2 decimal places.\n\nprint(f\"Average: {average:______}\")",
+        "attribute": {
+          "required": true,
+          "examScore": 1,
+          "examAnswerMode": "selectCorrect",
+          "examMatchRule": "completeSame",
+          "content": "Fill in the blank so the average is printed with exactly 2 decimal places.\n\nprint(f\"Average: {average:______}\")",
+          "examAnalysis": "f-string 格式说明符"
+        },
+        "children": [
+          {
+            "id": "q050_b1",
+            "type": "Option",
+            "title": "",
+            "attribute": {
+              "examScore": 1,
+              "examCorrectAnswer": ".2f"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

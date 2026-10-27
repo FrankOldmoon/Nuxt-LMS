@@ -1,0 +1,4925 @@
+[
+  {
+    "cid": 48,
+    "type": "classify",
+    "name": "🗂️ Classification: Two Techniques",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "🗃️ Sort each statement into the correct technique: ",
+              "type": "text"
+            },
+            {
+              "text": "Feature Extraction",
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "text": " or ",
+              "type": "text"
+            },
+            {
+              "text": "Edge Detection",
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "text": ".",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      {
+        "name": "🎨 Feature Extraction",
+        "items": [
+          "Finds patterns like edges, corners and textures",
+          "Turns features into maps that highlight important parts"
+        ]
+      },
+      {
+        "name": "🖍️ Edge Detection",
+        "items": [
+          "Finds the important boundaries in an image",
+          "Turns a normal image into an outline by finding sharp changes"
+        ]
+      }
+    ],
+    "answer": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "Feature extraction = finding feature patterns and building feature maps; edge detection = finding boundaries / outlines where changes happen. ✅",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "cid": 14,
+    "type": "fill",
+    "name": "81-1 ICT2 AC2 Q1",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "Complete the 6 steps of the image processing pipeline. Read the infographic and type the name of each step.",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "1. ",
+              "type": "text"
+            },
+            {
+              "type": "inputs",
+              "attrs": {
+                "content": "Input Image"
+              }
+            },
+            {
+              "text": " — the raw image from the real world.",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "2. ",
+              "type": "text"
+            },
+            {
+              "type": "inputs",
+              "attrs": {
+                "content": "Grayscale"
+              }
+            },
+            {
+              "text": " — convert the image to simplify the information.",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "3. ",
+              "type": "text"
+            },
+            {
+              "type": "inputs",
+              "attrs": {
+                "content": "Noise Reduction"
+              }
+            },
+            {
+              "text": " — remove unwanted noise to make the image clearer.",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "4. ",
+              "type": "text"
+            },
+            {
+              "type": "inputs",
+              "attrs": {
+                "content": "Enhancement"
+              }
+            },
+            {
+              "text": " — adjust brightness and contrast to highlight important details.",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "5. ",
+              "type": "text"
+            },
+            {
+              "type": "inputs",
+              "attrs": {
+                "content": "Feature Emphasis"
+              }
+            },
+            {
+              "text": " — highlight edges and textures to make features easier to see.",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "6. ",
+              "type": "text"
+            },
+            {
+              "type": "inputs",
+              "attrs": {
+                "content": "Processed Image"
+              }
+            },
+            {
+              "text": " — the final image, ready for AI to analyze and understand.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    "answer": [
+      "Input Image",
+      "Grayscale",
+      "Noise Reduction",
+      "Enhancement",
+      "Feature Emphasis",
+      "Processed Image"
+    ],
+    "explanation": "The 6 steps from the infographic are: 1 Input Image -> 2 Grayscale -> 3 Noise Reduction -> 4 Enhancement -> 5 Feature Emphasis -> 6 Processed Image."
+  },
+  {
+    "cid": 45,
+    "type": "fill",
+    "name": "✏️ Fill in the Blank: Where Changes Happen",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "📖 Complete the quote from the ",
+              "type": "text"
+            },
+            {
+              "text": "Edge Detection",
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "text": " poster: \"Edges are where ",
+              "type": "text"
+            },
+            {
+              "type": "inputs",
+              "attrs": {
+                "content": "changes"
+              }
+            },
+            {
+              "text": " happen!\"",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      ""
+    ],
+    "answer": [
+      "changes"
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "The poster says: \"Edges are where changes happen!\" — edge detection looks for big changes in brightness between neighboring pixels. 💡",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "cid": 51,
+    "type": "fill",
+    "name": "✏️ Fill: Output Confidence",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "📊 In the example on the poster, the AI is ",
+              "type": "text"
+            },
+            {
+              "type": "inputs",
+              "attrs": {
+                "content": "95"
+              }
+            },
+            {
+              "text": " % confident the picture is a dog.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      ""
+    ],
+    "answer": [
+      "95"
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "The poster shows: Dog 95%, Cat 3%, Car 1%, Bird 1% — so the model is 95% confident it is a dog. 🐶",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "cid": 90,
+    "type": "fill",
+    "name": "✏️ Fill: what does the AI find on your hand?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "In step 2 the AI finds the important points called ",
+              "type": "text"
+            },
+            {
+              "type": "inputs",
+              "attrs": {
+                "content": "keypoints"
+              }
+            },
+            {
+              "text": " on your hand.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      ""
+    ],
+    "answer": [
+      "keypoints"
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 97,
+    "type": "fill",
+    "name": "✏️ Fill: what does the AI build from the key points?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "In step 4 the AI connects the key points to build a ",
+              "type": "text"
+            },
+            {
+              "type": "inputs",
+              "attrs": {
+                "content": "skeleton"
+              }
+            },
+            {
+              "text": " model.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      ""
+    ],
+    "answer": [
+      "skeleton"
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 107,
+    "type": "fill",
+    "name": "✏️ Fill: the most popular Python CV library",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "According to the poster, the most popular Python CV library is ",
+              "type": "text"
+            },
+            {
+              "type": "inputs",
+              "attrs": {
+                "content": "OpenCV"
+              }
+            },
+            {
+              "text": ".",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      ""
+    ],
+    "answer": [
+      "OpenCV"
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 117,
+    "type": "fill",
+    "name": "✏️ Fill: the model that turns noise into an image",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "The ",
+              "type": "text"
+            },
+            {
+              "type": "inputs",
+              "attrs": {
+                "content": "diffusion"
+              }
+            },
+            {
+              "text": " model gradually turns noise into a clear image.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      ""
+    ],
+    "answer": [
+      "diffusion"
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 126,
+    "type": "fill",
+    "name": "✏️ Fill: tips for better results",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "The tips say: be ",
+              "type": "text"
+            },
+            {
+              "type": "inputs",
+              "attrs": {
+                "content": "specific"
+              }
+            },
+            {
+              "text": " in your prompt, and add details about shape, style and function.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      ""
+    ],
+    "answer": [
+      "specific"
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 138,
+    "type": "fill",
+    "name": "✏️ Fill: be clear when asking AI",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "The tips say: be ",
+              "type": "text"
+            },
+            {
+              "type": "inputs",
+              "attrs": {
+                "content": "clear"
+              }
+            },
+            {
+              "text": " when asking AI (write good prompts).",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      ""
+    ],
+    "answer": [
+      "clear"
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 144,
+    "type": "fill",
+    "name": "✏️ Fill: AI is a tool, you are the ___",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "The poster says: AI is a tool. You are the ",
+              "type": "text"
+            },
+            {
+              "type": "inputs",
+              "attrs": {
+                "content": "creator"
+              }
+            },
+            {
+              "text": ".",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      ""
+    ],
+    "answer": [
+      "creator"
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 17,
+    "type": "html",
+    "name": "Understand image",
+    "content": "<!DOCTYPE html>\n<html lang=\"en\" data-page-node-id=\"jCwuC4XQDjdDyuzGWOTJ5H\">\n\n<head data-page-node-id=\"NhLCSY9B13FUuWPjwhm4dE\">\n    <meta charset=\"UTF-8\" data-page-node-id=\"DywJ3Zx4zq0QFLBmVQhvr9\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" data-page-node-id=\"rhzvlV4YjkhA8jOLqnOW49\">\n    <title>How Computers Display Images · Pixel Explorer</title>\n    <style>\n        * {\n            box-sizing: border-box;\n        }\n\n        :root {\n            --bg: #0b1020;\n            --panel: #11182d;\n            --panel-2: #18213b;\n            --border: #2a365a;\n            --text: #eef3ff;\n            --muted: #9eabd0;\n            --accent: #66a3ff;\n            --accent-2: #7ef0c4;\n            --danger: #ff7f9f;\n        }\n\n        body {\n            margin: 0;\n            background:\n                radial-gradient(circle at top left, #182752 0, transparent 35%),\n                radial-gradient(circle at top right, #183d38 0, transparent 30%),\n                var(--bg);\n            color: var(--text);\n            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;\n            line-height: 1.5;\n        }\n\n        header {\n            padding: 42px 24px 30px;\n            text-align: center;\n        }\n\n        header h1 {\n            margin: 0 0 10px;\n            font-size: clamp(32px, 5vw, 58px);\n            letter-spacing: -1px;\n        }\n\n        header p {\n            max-width: 850px;\n            margin: auto;\n            color: var(--muted);\n            font-size: 18px;\n        }\n\n        .container {\n            width: min(1450px, calc(100% - 32px));\n            margin: 0 auto 50px;\n        }\n\n        .card {\n            background: rgba(17, 24, 45, 0.88);\n            border: 1px solid var(--border);\n            border-radius: 22px;\n            padding: 22px;\n            box-shadow: 0 16px 50px rgba(0, 0, 0, 0.22);\n            backdrop-filter: blur(10px);\n            margin-bottom: 18px;\n        }\n\n        h2 {\n            margin-top: 0;\n            font-size: 24px;\n        }\n\n        h3 {\n            margin-top: 0;\n        }\n\n        .muted {\n            color: var(--muted);\n        }\n\n        .formula {\n            background: #0a1022;\n            border: 1px dashed #36466e;\n            border-radius: 14px;\n            padding: 14px 18px;\n            font-family: monospace;\n            color: #bfe0ff;\n            font-size: 16px;\n        }\n\n        .visual-stage {\n            display: grid;\n            grid-template-columns: 1fr 1fr;\n            gap: 20px;\n            align-items: start;\n        }\n\n        @media (max-width: 800px) {\n            .visual-stage {\n                grid-template-columns: 1fr;\n            }\n        }\n\n        .canvas-wrap {\n            background:\n                linear-gradient(45deg, #20283d 25%, transparent 25%),\n                linear-gradient(-45deg, #20283d 25%, transparent 25%),\n                linear-gradient(45deg, transparent 75%, #20283d 75%),\n                linear-gradient(-45deg, transparent 75%, #20283d 75%);\n            background-size: 26px 26px;\n            background-position: 0 0, 0 13px, 13px -13px, -13px 0;\n            background-color: #101528;\n            border-radius: 18px;\n            padding: 15px;\n            overflow: auto;\n        }\n\n        canvas {\n            width: 100%;\n            display: block;\n            border-radius: 12px;\n            background: #fff;\n            image-rendering: pixelated;\n        }\n\n        .pixel-grid {\n            display: grid;\n            grid-template-columns: repeat(16, 1fr);\n            gap: 1px;\n            background: #20283c;\n            padding: 2px;\n            border-radius: 8px;\n            max-width: 560px;\n            margin: 0 auto;\n        }\n\n        .pixel-cell {\n            aspect-ratio: 1;\n            border: none;\n            border-radius: 1px;\n            cursor: crosshair;\n            background: #444;\n        }\n\n        .pixel-cell:hover {\n            outline: 2px solid white;\n            z-index: 2;\n        }\n\n        .info-grid {\n            display: grid;\n            grid-template-columns: repeat(2, 1fr);\n            gap: 10px;\n        }\n\n        .stat {\n            background: #0c1326;\n            border: 1px solid #28365b;\n            padding: 14px;\n            border-radius: 14px;\n        }\n\n        .stat-value {\n            font-size: 24px;\n            font-weight: 700;\n            color: white;\n        }\n\n        .rgb-preview {\n            width: 100%;\n            height: 130px;\n            border-radius: 18px;\n            border: 1px solid var(--border);\n            margin: 12px 0;\n        }\n\n        .control {\n            background: #0d1429;\n            border: 1px solid #263353;\n            border-radius: 16px;\n            padding: 14px;\n            margin-top: 15px;\n        }\n\n        .button-row {\n            display: flex;\n            flex-wrap: wrap;\n            gap: 8px;\n            margin-top: 12px;\n        }\n\n        button {\n            cursor: pointer;\n            border: 1px solid #33436d;\n            background: #10182f;\n            color: white;\n            border-radius: 10px;\n            padding: 9px 12px;\n            font-size: 14px;\n            transition: 0.2s;\n        }\n\n        button:hover {\n            transform: translateY(-1px);\n            border-color: var(--accent);\n            background: #162243;\n        }\n\n        .footer-note {\n            text-align: center;\n            color: var(--muted);\n            margin-top: 25px;\n        }\n\n        #progressBadge {\n            position: fixed;\n            right: 18px;\n            bottom: 18px;\n            z-index: 99;\n            background: rgba(17, 24, 45, 0.92);\n            border: 1px solid var(--accent);\n            border-radius: 999px;\n            padding: 8px 16px;\n            font-size: 14px;\n            font-weight: 600;\n            color: var(--accent-2);\n            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);\n        }\n    </style>\n</head>\n\n<body data-page-node-id=\"U0EqtZQhFMWvlAn8Ns6t7S\">\n    <header data-page-node-id=\"YEVpKFwQIpJ5x7zFHIutVW\">\n        <h1 data-page-node-id=\"pwXGJ8FLsrzMWBxqT9T74d\">🖼️ How Computers Display Images</h1>\n        <p data-page-node-id=\"jRW00aOeKd7pwpQARIeAuD\">Explore how a picture becomes pixels, how pixels store RGB colors, and how resolution and color depth affect\n            what we see.</p>\n    </header>\n\n    <main class=\"container\" data-page-node-id=\"IH45SWC5rBCjBwIaCJ8AQF\">\n        <!-- PIXEL EXPLORER (modified with rainbow) -->\n        <section class=\"card\" data-page-node-id=\"iQD6dhtIMcLUu9qKTTolQd\">\n            <h2 data-page-node-id=\"6fjiCzXBJ5ONj2gZGmCbMt\">🔍 Pixel Explorer</h2>\n            <p class=\"muted\" data-page-node-id=\"FJXe22OUp5eGzZBBtOBWSm\">\n                Hover over any pixel square in the image grid. The RGB values of that exact pixel will be shown below.\n                Click a cell to lock the inspection.\n            </p>\n\n            <div class=\"visual-stage\" data-page-node-id=\"QTvCoBlCdAQsi8XPqGKNBQ\">\n                <div data-page-node-id=\"lMNMuPHC8HN255nTvTDXEo\">\n                    <div id=\"pixelGridContainer\" class=\"pixel-grid\" style=\"margin-bottom: 15px;\" data-page-node-id=\"K0Te5uotNvMFulJrHpjFFT\"></div>\n                    <div class=\"button-row\" data-page-node-id=\"hgAALSom0xsCGkX5CMQ4rK\">\n                        <button id=\"randomizeGridBtn\" data-page-node-id=\"7Sh6TRNAtfRKROF62Lq2FY\">🎲 Randomize</button>\n                        <button id=\"resetGradientBtn\" data-page-node-id=\"llZczZU0VwNMeRMH3H6HR9\">🔄 Rainbow Gradient</button>\n                    </div>\n                    <p class=\"muted\" style=\"font-size:14px; margin-top:10px;\" data-page-node-id=\"zU053NYa8AoQEUpoGjVRVN\">Grid size: 16×12 pixels (each square is\n                        one pixel)</p>\n                </div>\n\n                <div data-page-node-id=\"0go60D4PPHdeBNfKNMKZNC\">\n                    <div class=\"info-grid\" data-page-node-id=\"NCr6vKAUYHpcDE6LE8mQWR\">\n                        <div class=\"stat\" data-page-node-id=\"g9ySjoveXdXFFQNHa6VCqI\"><span class=\"muted\" data-page-node-id=\"EkwbGBH1sDqmntFCwzCQ0H\">Pixel X</span>\n                            <div class=\"stat-value\" id=\"pixelX\" data-page-node-id=\"AdeVzTTpbVjNkCKPE26k5l\">—</div>\n                        </div>\n                        <div class=\"stat\" data-page-node-id=\"oo6IkV0QzCTUj2RSTI4j7C\"><span class=\"muted\" data-page-node-id=\"JkQlLF3eiEKIlZR7fhS99Q\">Pixel Y</span>\n                            <div class=\"stat-value\" id=\"pixelY\" data-page-node-id=\"LAuexjon1CCWZMTbmWDUat\">—</div>\n                        </div>\n                        <div class=\"stat\" data-page-node-id=\"ZFlxf7Js5nolqDeXVhLCAD\"><span class=\"muted\" data-page-node-id=\"f7NtqaKsn4tjkOZ2CqdcBZ\">Red</span>\n                            <div class=\"stat-value\" id=\"redValue\" data-page-node-id=\"IhEXXKnQX4bD89yrlxrkSd\">—</div>\n                        </div>\n                        <div class=\"stat\" data-page-node-id=\"4U9utXTXuqUKgXkaPHBiLw\"><span class=\"muted\" data-page-node-id=\"mcuT7v6cBAf8JU0jbmFgx7\">Green</span>\n                            <div class=\"stat-value\" id=\"greenValue\" data-page-node-id=\"oZTw8IN9jiS5UC8xX1D4Ee\">—</div>\n                        </div>\n                        <div class=\"stat\" data-page-node-id=\"1nc6OaBpMB7nGHtUYjCHLP\"><span class=\"muted\" data-page-node-id=\"M61Jp4Xzzed81Drg7Il654\">Blue</span>\n                            <div class=\"stat-value\" id=\"blueValue\" data-page-node-id=\"c4GpJhiBW18hWTzmBXjeTd\">—</div>\n                        </div>\n                        <div class=\"stat\" data-page-node-id=\"TrBrCfcCbZOtVLolhBL4pa\"><span class=\"muted\" data-page-node-id=\"LxNHt7NdWWQ6Ei6HlZJ64H\">Hex</span>\n                            <div class=\"stat-value\" id=\"hexValue\" data-page-node-id=\"J7FepvblMHeWXLpj525IlI\">—</div>\n                        </div>\n                    </div>\n                    <div class=\"rgb-preview\" id=\"rgbPreview\" data-page-node-id=\"OeIszmJplvaeAVDcBxT7ev\"></div>\n                    <div class=\"formula\" data-page-node-id=\"EULVEYvfJuRgJgbgpYgiSf\">RGB = (Red, Green, Blue)</div>\n                </div>\n            </div>\n        </section>\n\n        <!-- PIXEL MAGNIFIER (existing) -->\n        <section class=\"card\" data-page-node-id=\"e1148dKGjCKrt1fcj5a5vq\">\n            <h2 data-page-node-id=\"v2UGyHvXiBWITVRPKphOcS\">🔬 Pixel Magnifier</h2>\n            <p class=\"muted\" data-page-node-id=\"vbLEXADA556D2CjDHTbSgT\">Increase the zoom to see how a digital image is made from tiny colored squares.\n                👆 Click any pixel to paint it with the color picked below — build your own image one pixel at a time!</p>\n            <div class=\"control\" data-page-node-id=\"DYQQQJC6pEwuYC3D0n8eml\">\n                <div style=\"display:flex; justify-content:space-between;\" data-page-node-id=\"OUpuRFsnbRcxxy8cXuGD80\">\n                    <strong data-page-node-id=\"3eO7N7jh7f00YxqLiXJyWq\">Zoom</strong><span id=\"zoomValue\" data-page-node-id=\"bGfaCNZ9ylx4s6cu5GHiCN\">10×</span>\n                </div>\n                <input id=\"zoomSlider\" type=\"range\" min=\"2\" max=\"30\" value=\"10\" style=\"width:100%;\" data-page-node-id=\"zLCEdA7SGAHQ50QoBI0eVV\">\n            </div>\n            <div id=\"pixelEditor\" class=\"pixel-grid\" style=\"max-width:520px; margin:10px auto;\" data-page-node-id=\"8AeylDGC53DwDYSJLsJTGw\"></div>\n            <div class=\"button-row\" data-page-node-id=\"5T7n05viuzMfSqF3YgorPF\" style=\"align-items:center;\">\n                <button onclick=\"randomizePixels()\" data-page-node-id=\"ZXkHwjDnyJPsOM74rBW8ra\">🎲 Random Colors</button>\n                <button onclick=\"grayscalePixels()\" data-page-node-id=\"ZHBf9RWVDWmkxw1z4VJ1B1\">⚫ Grayscale</button>\n                <button onclick=\"resetPixels()\" data-page-node-id=\"3A0b4YHHk0RVy565eLT0mJ\">🔄 Reset</button>\n                <label style=\"display:flex; align-items:center; gap:6px; margin-left:4px;\">\n                    🎨 Paint color <input id=\"pixelColor\" type=\"color\" value=\"#ff4d6d\"\n                        style=\"width:42px; height:32px; border:1px solid #33436d; border-radius:8px; background:#10182f; cursor:pointer; padding:2px;\">\n                </label>\n            </div>\n        </section>\n\n        <!-- RGB EXPERIMENT -->\n        <section class=\"card\" data-page-node-id=\"NrvQH8ECCiyd9oR33VgLiI\">\n            <h2 data-page-node-id=\"xZ2rimvCCCivuXkhAvRcSM\">🌈 RGB Color Experiment</h2>\n            <p class=\"muted\" data-page-node-id=\"MCTVWt6nPrgpATb2yxZ3TE\">Each pixel stores a color using different amounts of red, green and blue.</p>\n            <div id=\"rgbExperiment\" class=\"rgb-preview\" data-page-node-id=\"kDeD3h6oNqM2BBBHXN5Mjc\"></div>\n            <div\n                style=\"display:grid; grid-template-columns:70px 1fr 60px; gap:10px; align-items:center; margin:10px 0;\" data-page-node-id=\"7nHzsM63gCNADfPMCKwFeD\">\n                <strong data-page-node-id=\"EkpXbnDmrNNZAAqPVMqJEn\">🔴 Red</strong><input id=\"rSlider\" type=\"range\" min=\"0\" max=\"255\" value=\"120\" data-page-node-id=\"lcmlzVMPL5gVNYb62TcTJQ\"><span\n                    id=\"rNumber\" data-page-node-id=\"pBj0ZCm4afYf9gzzmP51Sx\">120</span>\n            </div>\n            <div\n                style=\"display:grid; grid-template-columns:70px 1fr 60px; gap:10px; align-items:center; margin:10px 0;\" data-page-node-id=\"yYgmZOT2bvlZHZvDvIoYxi\">\n                <strong data-page-node-id=\"DIanzGddX6AcG9Cn6Zu2A4\">🟢 Green</strong><input id=\"gSlider\" type=\"range\" min=\"0\" max=\"255\" value=\"160\" data-page-node-id=\"DwE0RLEWplrIojiV2uyOEF\"><span\n                    id=\"gNumber\" data-page-node-id=\"i6xDVUcUxV6eUz8lJnZx8g\">160</span>\n            </div>\n            <div\n                style=\"display:grid; grid-template-columns:70px 1fr 60px; gap:10px; align-items:center; margin:10px 0;\" data-page-node-id=\"NYZ7J3DnaRER9jsDqUe3kx\">\n                <strong data-page-node-id=\"mZ2vvyhiPnDFFeO9HOS5cl\">🔵 Blue</strong><input id=\"bSlider\" type=\"range\" min=\"0\" max=\"255\" value=\"220\" data-page-node-id=\"LwuetNSNKoSNNfkZpO0h2V\"><span\n                    id=\"bNumber\" data-page-node-id=\"eixoQvGBSQAb9nKdkksgq3\">220</span>\n            </div>\n            <div class=\"formula\" id=\"rgbFormula\" data-page-node-id=\"Yy5ybBAKLrcpiTtkpCrdgJ\">RGB(120, 160, 220)</div>\n        </section>\n\n        <!-- RESOLUTION + COLOR DEPTH + MEMORY (compact) -->\n        <section class=\"card\" data-page-node-id=\"l4QO4r3W82C0wfBzjFMjzM\">\n            <h2 data-page-node-id=\"BHNvi86qDKAYLbMbUd07JH\">📐 Resolution · 🎨 Color Depth · 💾 Memory</h2>\n            <div style=\"display:grid; grid-template-columns:1fr 1fr; gap:20px;\" data-page-node-id=\"wc0RH9yWmeDFSHPvP4R9Cs\">\n                <div data-page-node-id=\"hPVqubkk323NifGKsT0k8B\">\n                    <div class=\"control\" data-page-node-id=\"IJDP4bTwrrsbAoh7D7e1ll\">\n                        <div style=\"display:flex; justify-content:space-between;\" data-page-node-id=\"LgkCbCuzJRyHvX50N7mJlb\"><strong data-page-node-id=\"99sAHakPhAv4MRKV1vX5fC\">Width</strong><span\n                                id=\"widthValue\" data-page-node-id=\"5d0lAWIocLeJpheRqGiHz9\">32</span></div>\n                        <input id=\"widthSlider\" type=\"range\" min=\"8\" max=\"128\" value=\"32\" style=\"width:100%;\" data-page-node-id=\"hHz6lz0z6OMKuAA2AuPibK\">\n                    </div>\n                    <div class=\"control\" data-page-node-id=\"5Ca2uQdqRwHdhCvn0Okdaj\">\n                        <div style=\"display:flex; justify-content:space-between;\" data-page-node-id=\"hvWJaA2pfSATK3l457MNez\"><strong data-page-node-id=\"yUHjqTAkDtpTWf9CX5Pvio\">Height</strong><span\n                                id=\"heightValue\" data-page-node-id=\"ppNlYgdDxN9jBlBYlsE6d1\">24</span></div>\n                        <input id=\"heightSlider\" type=\"range\" min=\"8\" max=\"96\" value=\"24\" style=\"width:100%;\" data-page-node-id=\"cdtJtU4u0FztjQXjkDuNFA\">\n                    </div>\n                </div>\n                <div data-page-node-id=\"TOf3NuBMlnd67RXBQ0Bjwr\">\n                    <div class=\"control\" data-page-node-id=\"7u2YnDEckgs0nT0lYbc9py\">\n                        <div style=\"display:flex; justify-content:space-between;\" data-page-node-id=\"sGmGCQObjVClBQsnytAd0G\"><strong data-page-node-id=\"iPOdFJ4SFFsSl18ydzbgBs\">Bits per Pixel</strong><span\n                                id=\"depthValue\" data-page-node-id=\"Xz9NARBsNxZwRGTbLMVz8T\">24-bit</span></div>\n                        <input id=\"depthSlider\" type=\"range\" min=\"1\" max=\"32\" value=\"24\" style=\"width:100%;\" data-page-node-id=\"AvoBQeqmBQdWW4uJsbJYbD\">\n                    </div>\n                </div>\n            </div>\n            <div style=\"display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:15px;\" data-page-node-id=\"DAGwtI6xfbTMQmIrbngy2k\">\n                <div class=\"stat\" data-page-node-id=\"VrHCHmYUCE40vrlPUpWUe8\"><span class=\"muted\" data-page-node-id=\"vq8KblhFdX6J4gqhnsQ4jM\">Resolution</span>\n                    <div class=\"stat-value\" id=\"memoryResolution\" data-page-node-id=\"Ws9pQF6p2vmCfD4aKCbLA9\">32 × 24</div>\n                </div>\n                <div class=\"stat\" data-page-node-id=\"sChaaHmm8uD4mG4LOT6rLO\"><span class=\"muted\" data-page-node-id=\"pS6PV2sFcI4f1r4wnVJL1f\">Pixels</span>\n                    <div class=\"stat-value\" id=\"memoryPixels\" data-page-node-id=\"fumACW1uELxl0CCo74t89v\">768</div>\n                </div>\n                <div class=\"stat\" data-page-node-id=\"ja8Hzf3tVmjr8h375ZwN0b\"><span class=\"muted\" data-page-node-id=\"MqLjkHDB0SfBH82wa2fxLQ\">Possible Colors</span>\n                    <div class=\"stat-value\" id=\"colorCount\" data-page-node-id=\"uCZGm4VOOVz1oLqKq5jGza\">16,777,216</div>\n                </div>\n                <div class=\"stat\" data-page-node-id=\"BNLo0Gpiltsf5mzmtm3Tcu\"><span class=\"muted\" data-page-node-id=\"d64pkR4tvHhaB0doAXvPRD\">Est. Memory</span>\n                    <div class=\"stat-value\" id=\"memorySize\" data-page-node-id=\"ooHCiQRFKl6Silewg6BaQi\">2.25 KB</div>\n                </div>\n            </div>\n            <div class=\"formula\" style=\"margin-top:15px;\" data-page-node-id=\"4GaHpfWf8fEHAFcVhbJ45P\">File Size ≈ Width × Height × Bits Per Pixel ÷ 8</div>\n        </section>\n\n        <div class=\"footer-note\" data-page-node-id=\"zmGOXuIa56RWAdDFlEoHqR\">💡 Try hovering over the pixel grid above — every square is a single pixel with its own\n            RGB value.</div>\n    </main>\n\n    <div id=\"progressBadge\" data-page-node-id=\"Wgg8mDwTp7f34hDk2qJsQU\">Progress 0%</div>\n\n    <script>\n        (function () {\n            // ========== PROGRESS TRACKING (correct_rate 上报) ==========\n            // 4 个学习阶段各占 25%：explore / magnify / rgb / memory\n            const tasks = {\n                explore: false,  // Pixel Explorer：检视 ≥3 个不同像素\n                magnify: false,  // Pixel Magnifier：调整 zoom 且绘制 ≥1 个像素\n                rgb: false,      // RGB Experiment：R/G/B 三个滑块都调整过\n                memory: false    // Resolution/Memory：宽/高/色深三个滑块都调整过\n            };\n            let lastRate = -1;\n            const progressBadge = document.getElementById('progressBadge');\n\n            function reportProgress() {\n                const done = Object.values(tasks).filter(Boolean).length;\n                const rate = +(done / 4).toFixed(2);\n                if (rate === lastRate) return;\n                lastRate = rate;\n                console.log('[progress] tasks =', tasks, '→ correct_rate =', rate);\n                progressBadge.textContent = `Progress ${Math.round(rate * 100)}%`;\n                progressBadge.style.borderColor = rate >= 1 ? 'var(--accent-2)' : 'var(--accent)';\n                try {\n                    // 通知父页面（LMS iframe 容器）；独立打开时 parent === window，无副作用\n                    parent.postMessage({ type: 'correct_rate', rate }, '*');\n                } catch (e) {\n                    console.warn('[progress] postMessage failed:', e);\n                }\n            }\n\n            // 加载后先上报一次 rate=0，让父页面知道活动已就绪\n            reportProgress();\n\n            // ========== PIXEL EXPLORER with RAINBOW GRID ==========\n            const gridContainer = document.getElementById('pixelGridContainer');\n            const pixelX = document.getElementById('pixelX');\n            const pixelY = document.getElementById('pixelY');\n            const redValue = document.getElementById('redValue');\n            const greenValue = document.getElementById('greenValue');\n            const blueValue = document.getElementById('blueValue');\n            const hexValue = document.getElementById('hexValue');\n            const rgbPreview = document.getElementById('rgbPreview');\n\n            const GRID_COLS = 16;\n            const GRID_ROWS = 12;\n            let pixelGridData = []; // 16x12 array, each element is [r,g,b]\n\n            // Helper: convert HSL to RGB (returns [r,g,b] 0-255)\n            function hslToRgb(h, s, l) {\n                h = h % 360;\n                if (h < 0) h += 360;\n                s = Math.max(0, Math.min(1, s));\n                l = Math.max(0, Math.min(1, l));\n                const c = (1 - Math.abs(2 * l - 1)) * s;\n                const x = c * (1 - Math.abs((h / 60) % 2 - 1));\n                const m = l - c / 2;\n                let r = 0, g = 0, b = 0;\n                if (h < 60) { r = c; g = x; b = 0; }\n                else if (h < 120) { r = x; g = c; b = 0; }\n                else if (h < 180) { r = 0; g = c; b = x; }\n                else if (h < 240) { r = 0; g = x; b = c; }\n                else if (h < 300) { r = x; g = 0; b = c; }\n                else { r = c; g = 0; b = x; }\n                return [\n                    Math.round((r + m) * 255),\n                    Math.round((g + m) * 255),\n                    Math.round((b + m) * 255)\n                ];\n            }\n\n            // Initialize grid with a horizontal rainbow gradient\n            function initRainbowGrid() {\n                pixelGridData = [];\n                for (let row = 0; row < GRID_ROWS; row++) {\n                    const rowData = [];\n                    for (let col = 0; col < GRID_COLS; col++) {\n                        // Hue varies from 0 to 360 across columns\n                        const hue = (col / (GRID_COLS - 1)) * 360;\n                        const saturation = 0.9;\n                        const lightness = 0.6;\n                        const [r, g, b] = hslToRgb(hue, saturation, lightness);\n                        rowData.push([r, g, b]);\n                    }\n                    pixelGridData.push(rowData);\n                }\n            }\n\n            function renderPixelGrid() {\n                gridContainer.innerHTML = '';\n                for (let row = 0; row < GRID_ROWS; row++) {\n                    for (let col = 0; col < GRID_COLS; col++) {\n                        const [r, g, b] = pixelGridData[row][col];\n                        const cell = document.createElement('div');\n                        cell.className = 'pixel-cell';\n                        cell.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;\n                        cell.dataset.row = row;\n                        cell.dataset.col = col;\n                        cell.addEventListener('mouseenter', handleCellHover);\n                        cell.addEventListener('click', handleCellHover);\n                        gridContainer.appendChild(cell);\n                    }\n                }\n            }\n\n            const inspectedPixels = new Set(); // 过程记录：已检视过的像素 \"row,col\"\n\n            function handleCellHover(e) {\n                const cell = e.currentTarget;\n                const row = parseInt(cell.dataset.row);\n                const col = parseInt(cell.dataset.col);\n                if (row >= 0 && row < GRID_ROWS && col >= 0 && col < GRID_COLS) {\n                    const [r, g, b] = pixelGridData[row][col];\n                    updateInspector(col, row, r, g, b);\n                    // 阶段1：检视 ≥3 个不同像素即完成\n                    inspectedPixels.add(`${row},${col}`);\n                    if (!tasks.explore && inspectedPixels.size >= 3) {\n                        tasks.explore = true;\n                        reportProgress();\n                    }\n                }\n            }\n\n            function updateInspector(x, y, r, g, b) {\n                pixelX.textContent = x;\n                pixelY.textContent = y;\n                redValue.textContent = r;\n                greenValue.textContent = g;\n                blueValue.textContent = b;\n                const hex = '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');\n                hexValue.textContent = hex;\n                rgbPreview.style.backgroundColor = hex;\n            }\n\n            // Randomize grid (keep but maybe not needed, still works)\n            document.getElementById('randomizeGridBtn').addEventListener('click', () => {\n                for (let row = 0; row < GRID_ROWS; row++) {\n                    for (let col = 0; col < GRID_COLS; col++) {\n                        pixelGridData[row][col] = [\n                            Math.floor(Math.random() * 256),\n                            Math.floor(Math.random() * 256),\n                            Math.floor(Math.random() * 256)\n                        ];\n                    }\n                }\n                renderPixelGrid();\n            });\n\n            // Reset to rainbow gradient\n            document.getElementById('resetGradientBtn').addEventListener('click', () => {\n                initRainbowGrid();\n                renderPixelGrid();\n            });\n\n            // Initialize with rainbow\n            initRainbowGrid();\n            renderPixelGrid();\n\n            // ========== PIXEL MAGNIFIER (existing) ==========\n            const pixelEditor = document.getElementById('pixelEditor');\n            let pixelColors = [];\n            let magZoomed = false;   // 过程记录：调整过 zoom\n            let magPainted = false;  // 过程记录：绘制过像素\n\n            function checkMagnifyTask() {\n                if (!tasks.magnify && magZoomed && magPainted) {\n                    tasks.magnify = true;\n                    reportProgress();\n                }\n            }\n\n            function initializePixelEditor() {\n                // 默认全白画布，等待学生点击上色\n                pixelColors = new Array(256).fill('#ffffff');\n                renderPixelEditor();\n            }\n\n            function renderPixelEditor() {\n                pixelEditor.innerHTML = '';\n                pixelColors.forEach((color, index) => {\n                    const button = document.createElement('div');\n                    button.className = 'pixel-cell';\n                    button.style.background = color;\n                    button.style.cursor = 'pointer';\n                    button.onclick = () => {\n                        const newColor = document.getElementById('pixelColor') ? document.getElementById('pixelColor').value : '#ff4d6d';\n                        pixelColors[index] = newColor;\n                        renderPixelEditor();\n                        magPainted = true;\n                        checkMagnifyTask();\n                    };\n                    pixelEditor.appendChild(button);\n                });\n            }\n\n            window.randomizePixels = function () {\n                pixelColors = pixelColors.map(() => {\n                    const r = Math.floor(Math.random() * 256);\n                    const g = Math.floor(Math.random() * 256);\n                    const b = Math.floor(Math.random() * 256);\n                    return `rgb(${r}, ${g}, ${b})`;\n                });\n                renderPixelEditor();\n            };\n\n            window.grayscalePixels = function () {\n                pixelColors = pixelColors.map(color => {\n                    const temp = document.createElement('canvas');\n                    temp.width = 1; temp.height = 1;\n                    const tempCtx = temp.getContext('2d');\n                    tempCtx.fillStyle = color;\n                    tempCtx.fillRect(0, 0, 1, 1);\n                    const data = tempCtx.getImageData(0, 0, 1, 1).data;\n                    const gray = Math.round(data[0] * 0.299 + data[1] * 0.587 + data[2] * 0.114);\n                    return `rgb(${gray}, ${gray}, ${gray})`;\n                });\n                renderPixelEditor();\n            };\n\n            window.resetPixels = function () {\n                initializePixelEditor();\n            };\n\n            initializePixelEditor();\n\n            // zoom slider\n            const zoomSlider = document.getElementById('zoomSlider');\n            zoomSlider.addEventListener('input', () => {\n                document.getElementById('zoomValue').textContent = `${zoomSlider.value}×`;\n                pixelEditor.style.transform = `scale(${zoomSlider.value / 10})`;\n                pixelEditor.style.transformOrigin = 'top left';\n                pixelEditor.parentElement.style.minHeight = `${180 * zoomSlider.value / 10}px`;\n                magZoomed = true;\n                checkMagnifyTask();\n            });\n\n            // ========== RGB EXPERIMENT ==========\n            const rSlider = document.getElementById('rSlider');\n            const gSlider = document.getElementById('gSlider');\n            const bSlider = document.getElementById('bSlider');\n\n            function updateRGB() {\n                const r = +rSlider.value, g = +gSlider.value, b = +bSlider.value;\n                document.getElementById('rgbExperiment').style.backgroundColor = `rgb(${r}, ${g}, ${b})`;\n                document.getElementById('rNumber').textContent = r;\n                document.getElementById('gNumber').textContent = g;\n                document.getElementById('bNumber').textContent = b;\n                document.getElementById('rgbFormula').textContent = `RGB(${r}, ${g}, ${b})`;\n            }\n            const rgbMoved = { r: false, g: false, b: false }; // 过程记录：各通道是否调整过\n\n            function checkRgbTask() {\n                if (!tasks.rgb && rgbMoved.r && rgbMoved.g && rgbMoved.b) {\n                    tasks.rgb = true;\n                    reportProgress();\n                }\n            }\n\n            rSlider.addEventListener('input', () => { rgbMoved.r = true; updateRGB(); checkRgbTask(); });\n            gSlider.addEventListener('input', () => { rgbMoved.g = true; updateRGB(); checkRgbTask(); });\n            bSlider.addEventListener('input', () => { rgbMoved.b = true; updateRGB(); checkRgbTask(); });\n            updateRGB();\n\n            // ========== RESOLUTION / DEPTH / MEMORY ==========\n            const widthSlider = document.getElementById('widthSlider');\n            const heightSlider = document.getElementById('heightSlider');\n            const depthSlider = document.getElementById('depthSlider');\n\n            function updateMemory() {\n                const width = +widthSlider.value, height = +heightSlider.value, depth = +depthSlider.value;\n                const pixels = width * height;\n                const bytes = pixels * depth / 8;\n                let displaySize;\n                if (bytes < 1024) displaySize = `${bytes.toFixed(2)} B`;\n                else if (bytes < 1024 * 1024) displaySize = `${(bytes / 1024).toFixed(2)} KB`;\n                else displaySize = `${(bytes / 1024 / 1024).toFixed(2)} MB`;\n\n                document.getElementById('widthValue').textContent = width;\n                document.getElementById('heightValue').textContent = height;\n                document.getElementById('depthValue').textContent = `${depth}-bit`;\n                const colorCount = Math.pow(2, depth);\n                document.getElementById('colorCount').textContent = colorCount > 1e9 ? '> 1 billion' : colorCount.toLocaleString();\n                document.getElementById('memoryResolution').textContent = `${width} × ${height}`;\n                document.getElementById('memoryPixels').textContent = pixels.toLocaleString();\n                document.getElementById('memorySize').textContent = displaySize;\n            }\n\n            const memMoved = { w: false, h: false, d: false }; // 过程记录：各滑块是否调整过\n\n            function checkMemoryTask() {\n                if (!tasks.memory && memMoved.w && memMoved.h && memMoved.d) {\n                    tasks.memory = true;\n                    reportProgress();\n                }\n            }\n\n            widthSlider.addEventListener('input', () => { memMoved.w = true; updateMemory(); checkMemoryTask(); });\n            heightSlider.addEventListener('input', () => { memMoved.h = true; updateMemory(); checkMemoryTask(); });\n            depthSlider.addEventListener('input', () => { memMoved.d = true; updateMemory(); checkMemoryTask(); });\n            updateMemory();\n\n            // hidden pixelColor input for magnifier (if not already in DOM)\n            if (!document.getElementById('pixelColor')) {\n                const colorInput = document.createElement('input');\n                colorInput.type = 'color';\n                colorInput.id = 'pixelColor';\n                colorInput.value = '#ff4d6d';\n                colorInput.style.display = 'none';\n                document.body.appendChild(colorInput);\n            }\n        })();\n    </script>\n</body>\n\n</html>",
+    "options": [],
+    "answer": [
+      1
+    ],
+    "explanation": ""
+  },
+  {
+    "cid": 18,
+    "type": "html",
+    "name": "Operators",
+    "content": "<iframe src=\"http://10.28.1.151:3010/games/operator-sorter/html/index.html\" style=\"width:100%\"/>",
+    "options": [],
+    "answer": [
+      1
+    ],
+    "explanation": ""
+  },
+  {
+    "cid": 19,
+    "type": "html",
+    "name": "Data types",
+    "content": "",
+    "options": [],
+    "answer": [
+      1
+    ],
+    "explanation": ""
+  },
+  {
+    "cid": 21,
+    "type": "html",
+    "name": "Data types",
+    "content": "",
+    "options": [],
+    "answer": [
+      1
+    ],
+    "explanation": ""
+  },
+  {
+    "cid": 42,
+    "type": "html",
+    "name": "Type game",
+    "content": "",
+    "options": [],
+    "answer": [
+      1
+    ],
+    "explanation": ""
+  },
+  {
+    "cid": 52,
+    "type": "html",
+    "name": "🎮 Spot the Difference",
+    "content": "",
+    "options": [],
+    "answer": [
+      1
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 67,
+    "type": "judge",
+    "name": "🤔 True or false: face recognition compares a new face with the database",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Decide if the sentence below is correct: ",
+              "type": "text"
+            },
+            {
+              "text": "\"Face recognition compares a new face image with the faces stored in the database.\"",
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "✓ Correct",
+      "✗ Wrong"
+    ],
+    "answer": [
+      0
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 89,
+    "type": "judge",
+    "name": "🤔 True or false: gesture recognition works without touching the device",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Decide if the sentence below is correct: ",
+              "type": "text"
+            },
+            {
+              "text": "\"Gesture recognition lets you control a device without touching it.\"",
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "✓ Correct",
+      "✗ Wrong"
+    ],
+    "answer": [
+      0
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 96,
+    "type": "judge",
+    "name": "🤔 True or false: pose recognition shows how confident it is",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "The poster shows \"Pose: Jumping Jack, Confidence: 98%\". Decide if the sentence below is correct: ",
+              "type": "text"
+            },
+            {
+              "text": "\"Pose recognition only knows the pose, it cannot show how confident it is.\"",
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "✓ Correct",
+      "✗ Wrong"
+    ],
+    "answer": [
+      1
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 106,
+    "type": "judge",
+    "name": "🤔 True or false: MediaPipe finds 21 key points of a hand",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Look at the MediaPipe example on the poster, then decide: ",
+              "type": "text"
+            },
+            {
+              "text": "\"MediaPipe can detect 21 key points of a hand in real time.\"",
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "✓ Correct",
+      "✗ Wrong"
+    ],
+    "answer": [
+      0
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 116,
+    "type": "judge",
+    "name": "🤔 True or false: AI images are 100% perfect every time",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "The poster asks \"Can AI images be 100% perfect every time?\" Decide if the sentence below is correct: ",
+              "type": "text"
+            },
+            {
+              "text": "\"AI images are always 100% perfect.\"",
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "✓ Correct",
+      "✗ Wrong"
+    ],
+    "answer": [
+      1
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 125,
+    "type": "judge",
+    "name": "🤔 True or false: you can refine the model before exporting",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Step 4 of the poster says you can adjust the shape, change details and improve materials. Decide if the sentence below is correct: ",
+              "type": "text"
+            },
+            {
+              "text": "\"You can refine the model before you export it.\"",
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "✓ Correct",
+      "✗ Wrong"
+    ],
+    "answer": [
+      0
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 137,
+    "type": "judge",
+    "name": "🤔 True or false: test often and keep improving",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "The tips on the posters say a lot about testing. Decide if the sentence below is correct: ",
+              "type": "text"
+            },
+            {
+              "text": "\"You should test often and keep improving your game.\"",
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "✓ Correct",
+      "✗ Wrong"
+    ],
+    "answer": [
+      0
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 143,
+    "type": "judge",
+    "name": "🤔 True or false: saying AI homework is 100% yours is honest",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Look at the honesty example on the poster. Decide if the sentence below is correct: ",
+              "type": "text"
+            },
+            {
+              "text": "\"Using AI to write your homework and saying it’s 100% yours is honest.\"",
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "✓ Correct",
+      "✗ Wrong"
+    ],
+    "answer": [
+      1
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 15,
+    "type": "match",
+    "name": "81-1 ICT2 AC2 Q2",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "Match each benefit of image processing (from the 'Why is it important?' panel) with its description.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      {
+        "left": "Improves Accuracy",
+        "right": "Better images help AI make more accurate predictions."
+      },
+      {
+        "left": "Reduces Errors",
+        "right": "Cleaner images mean fewer mistakes for AI models."
+      },
+      {
+        "left": "Speeds Up Processing",
+        "right": "Simpler, clearer images help AI work faster."
+      },
+      {
+        "left": "Highlights Important Info",
+        "right": "Focuses AI on key features and ignores distractions."
+      }
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": "Improves Accuracy <-> better images -> more accurate predictions; Reduces Errors <-> cleaner images -> fewer mistakes; Speeds Up Processing <-> simpler, clearer images -> AI works faster; Highlights Important Info <-> focuses AI on key features and ignores distractions."
+  },
+  {
+    "cid": 46,
+    "type": "match",
+    "name": "🔗 Matching: Concepts and Descriptions",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "🧷 Match each concept from the two posters with its correct description.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      {
+        "left": "🎨 Feature Extraction",
+        "right": "Finds patterns like edges, corners, textures and shapes"
+      },
+      {
+        "left": "🖍️ Edge Detection",
+        "right": "Finds the important boundaries where changes happen"
+      },
+      {
+        "left": "🗺️ Feature Map",
+        "right": "Highlights the important parts of the image"
+      },
+      {
+        "left": "🧠 Understanding",
+        "right": "AI recognizes and classifies the object"
+      }
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "Feature extraction finds features; edge detection finds boundaries; the feature map highlights important parts; understanding means the AI recognizes the object. 🎯",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "cid": 65,
+    "type": "match",
+    "name": "🔗 Matching: registration or recognition?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Match each term from the second poster with what it does.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      {
+        "left": "Face Registration",
+        "right": "Stores a face and its identity for later"
+      },
+      {
+        "left": "Face Recognition",
+        "right": "Finds out who the person in a new image is"
+      },
+      {
+        "left": "Face Detection",
+        "right": "Locates where the face is inside the image"
+      },
+      {
+        "left": "Face Database",
+        "right": "Keeps the stored features of registered faces"
+      }
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 87,
+    "type": "match",
+    "name": "🔗 Matching: match each step with what it does",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Match each step from the poster with its job.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      {
+        "left": "Input: camera captures",
+        "right": "Records your hand or body movement"
+      },
+      {
+        "left": "Detect keypoints",
+        "right": "Finds important points on your hand"
+      },
+      {
+        "left": "Analyze gesture",
+        "right": "Looks at the shape and movement of the keypoints"
+      },
+      {
+        "left": "Recognize gesture",
+        "right": "Matches the movement with known gestures"
+      }
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 94,
+    "type": "match",
+    "name": "🔗 Matching: where is pose recognition used?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Match each use from the poster with what it does.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      {
+        "left": "Sports Analytics",
+        "right": "Understands what players are doing"
+      },
+      {
+        "left": "Motion Games",
+        "right": "Lets your body control the game"
+      },
+      {
+        "left": "Surveillance Systems",
+        "right": "Watches public places for safety"
+      },
+      {
+        "left": "Health & Rehabilitation",
+        "right": "Helps people recover after illness or injury"
+      }
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 104,
+    "type": "match",
+    "name": "🔗 Matching: match each library with its strength",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Match each library from the poster with what it is best at.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      {
+        "left": "OpenCV",
+        "right": "Image processing, video and real-time applications"
+      },
+      {
+        "left": "MediaPipe",
+        "right": "Hand and pose detection from Google"
+      },
+      {
+        "left": "Pillow",
+        "right": "Opening, editing and saving images"
+      },
+      {
+        "left": "NumPy",
+        "right": "Working with arrays and matrices"
+      }
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 114,
+    "type": "match",
+    "name": "🔗 Matching: match each item with its job",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Match each item from the posters with what it does.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      {
+        "left": "AI creates a plan (noise)",
+        "right": "The starting point of an AI image"
+      },
+      {
+        "left": "AI creates a storyboard",
+        "right": "Key frames planned before the video"
+      },
+      {
+        "left": "Text Encoder",
+        "right": "Turns your words into meaning"
+      },
+      {
+        "left": "AI adds sound",
+        "right": "Music, sound effects and even voice"
+      }
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 123,
+    "type": "match",
+    "name": "🔗 Matching: match each use with its field",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Step 6 of the poster lists where you can use your 3D model. Match each use with what it means.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      {
+        "left": "3D Printing",
+        "right": "Print a real object from the model"
+      },
+      {
+        "left": "Game Design",
+        "right": "Put the model into a game world"
+      },
+      {
+        "left": "Animation",
+        "right": "Make the model move in a film"
+      },
+      {
+        "left": "VR / AR",
+        "right": "Use the model in virtual worlds"
+      }
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 135,
+    "type": "match",
+    "name": "🔗 Matching: match each AI job with what it does",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Match each AI job from the posters with what it does.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      {
+        "left": "AI Generate Assets",
+        "right": "Characters, backgrounds, items & icons"
+      },
+      {
+        "left": "AI Write Code",
+        "right": "Player movement, collision, score system"
+      },
+      {
+        "left": "AI Generate Levels",
+        "right": "Map layouts, enemies and difficulty"
+      },
+      {
+        "left": "Test & Improve",
+        "right": "Find bugs and balance gameplay"
+      }
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 141,
+    "type": "match",
+    "name": "🔗 Matching: match each rule with what it means",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Match each rule from the poster with what it means.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      {
+        "left": "Bias & Fairness",
+        "right": "AI can reflect stereotypes — check for unfairness"
+      },
+      {
+        "left": "Privacy",
+        "right": "Don’t share personal information"
+      },
+      {
+        "left": "Honesty & Transparency",
+        "right": "Don’t pretend AI work is all your own"
+      },
+      {
+        "left": "Think Critically",
+        "right": "AI can make mistakes — always check"
+      }
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 44,
+    "type": "multiple",
+    "name": "✅ Multiple Choice: What Are Features?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "🧩 According to the posters, which patterns does AI find during ",
+              "type": "text"
+            },
+            {
+              "text": "feature extraction",
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "text": "? (Choose all that apply)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Edges",
+      "Corners",
+      "Textures",
+      "Shapes",
+      "Sounds"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "The Feature Extraction poster: \"AI finds patterns like edges, corners, textures, and shapes. These are called features.\" Sounds are not image features. ❌",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "cid": 50,
+    "type": "multiple",
+    "name": "✅ Multiple: Where Is It Used?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "🧩 According to the poster, where is image classification used? (Choose all that apply)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Face Recognition",
+      "Self-Driving Cars",
+      "Medical Imaging",
+      "Playing Music",
+      "Cooking Dinner"
+    ],
+    "answer": [
+      0,
+      1,
+      2
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "The poster lists: Face Recognition, Self-Driving Cars, Product Sorting, Medical Imaging, Scene Recognition, and Security & Surveillance. 🚀",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "cid": 64,
+    "type": "multiple",
+    "name": "✅ Multiple: Where is face recognition used?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Both posters list real-world uses. Which of the following are uses of face recognition?",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Phone unlock",
+      "Fun filters and AR effects",
+      "Surveillance and security",
+      "Photo and video organization",
+      "Charging the phone battery faster"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 86,
+    "type": "multiple",
+    "name": "✅ Multiple: What does the AI do with your hand?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Which of the following are steps the AI performs?",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Detect keypoints on your hand",
+      "Analyze the shape of the hand",
+      "Match the gesture with known gestures",
+      "Respond with an action",
+      "Guess your name from your hand shape"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 93,
+    "type": "multiple",
+    "name": "✅ Multiple: Which steps are part of pose recognition?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "The poster shows six steps. Which of the following are among them?",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Detect human",
+      "Find key points",
+      "Build skeleton",
+      "Analyze pose",
+      "Print the photo"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 103,
+    "type": "multiple",
+    "name": "✅ Multiple: Which of these are Python CV libraries?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "The poster lists popular CV libraries in Python. Which of the following are on the list?",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "OpenCV",
+      "MediaPipe",
+      "Pillow",
+      "NumPy",
+      "HTML"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 113,
+    "type": "multiple",
+    "name": "✅ Multiple: Which steps belong to AI video generation?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Look at the second poster. Which of the following are steps of AI video generation?",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "AI creates a storyboard",
+      "AI adds motion & transitions",
+      "AI adds sound",
+      "AI deletes your prompt",
+      "AI builds a robot body"
+    ],
+    "answer": [
+      0,
+      1,
+      2
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 122,
+    "type": "multiple",
+    "name": "✅ Multiple: Which file formats can you export?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Step 5 of the poster shows the export formats. Which of the following are on the list?",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      ".STL",
+      ".OBJ",
+      ".FBX",
+      ".MP3"
+    ],
+    "answer": [
+      0,
+      1,
+      2
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 134,
+    "type": "multiple",
+    "name": "✅ Multiple: What can AI generate for your game?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Look at the posters. Which of these can AI do for your game?",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Game assets: characters, backgrounds, items",
+      "Game code: movement, collision, score",
+      "Levels: map layouts and difficulty",
+      "Your lunch"
+    ],
+    "answer": [
+      0,
+      1,
+      2
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 140,
+    "type": "multiple",
+    "name": "✅ Multiple: Which are good habits for copyright?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Look at the copyright part of the poster. Which of the following are good habits?",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Use original content",
+      "Get permission before using others’ work",
+      "Give credit when inspired by others",
+      "Copy the work without permission"
+    ],
+    "answer": [
+      0,
+      1,
+      2
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 1,
+    "type": "oj",
+    "name": "P1001",
+    "content": "# Description\nGiven three variables a, b and c (one per line), print only the second one, b.\n\n# Format\n## Input\nThree lines: each line contains one variable. Denote them a, b, c from top to bottom.\n\n## Output\nOne line containing only the second variable b.\n\n# Samples\n\n```input1\n1\n2\n3\n```\n\n```output1\n2\n```\n\n```input2\n10\n20\n30\n```\n\n```output2\n20\n```\n\n# Limitation\n1s, 1024KiB for each test case.\n",
+    "options": {
+      "pid": "P1001"
+    },
+    "answer": [],
+    "explanation": ""
+  },
+  {
+    "cid": 2,
+    "type": "oj",
+    "name": "P1016",
+    "content": "P1016",
+    "options": {
+      "pid": "P1016"
+    },
+    "answer": [],
+    "explanation": ""
+  },
+  {
+    "cid": 3,
+    "type": "oj",
+    "name": "P1017",
+    "content": "P1017",
+    "options": {
+      "pid": "P1017"
+    },
+    "answer": [],
+    "explanation": ""
+  },
+  {
+    "cid": 4,
+    "type": "oj",
+    "name": "P1018",
+    "content": "P1018",
+    "options": {
+      "pid": "P1018"
+    },
+    "answer": [],
+    "explanation": ""
+  },
+  {
+    "cid": 5,
+    "type": "oj",
+    "name": "P1031",
+    "content": "P1031",
+    "options": {
+      "pid": "P1031"
+    },
+    "answer": [],
+    "explanation": ""
+  },
+  {
+    "cid": 6,
+    "type": "oj",
+    "name": "P1026",
+    "content": "P1026",
+    "options": {
+      "pid": "P1026"
+    },
+    "answer": [],
+    "explanation": ""
+  },
+  {
+    "cid": 7,
+    "type": "oj",
+    "name": "P1036",
+    "content": "P1036",
+    "options": {
+      "pid": "P1036"
+    },
+    "answer": [],
+    "explanation": ""
+  },
+  {
+    "cid": 8,
+    "type": "oj",
+    "name": "P1037",
+    "content": "P1037",
+    "options": {
+      "pid": "P1037"
+    },
+    "answer": [],
+    "explanation": ""
+  },
+  {
+    "cid": 9,
+    "type": "oj",
+    "name": "P1046",
+    "content": "P1046",
+    "options": {
+      "pid": "P1046"
+    },
+    "answer": [],
+    "explanation": ""
+  },
+  {
+    "cid": 10,
+    "type": "oj",
+    "name": "P1052",
+    "content": "P1052",
+    "options": {
+      "pid": "P1052"
+    },
+    "answer": [],
+    "explanation": ""
+  },
+  {
+    "cid": 20,
+    "type": "oj",
+    "name": "P1002",
+    "content": "P1002",
+    "options": {
+      "pid": "P1002"
+    },
+    "answer": [],
+    "explanation": ""
+  },
+  {
+    "cid": 22,
+    "type": "oj",
+    "name": "P1003",
+    "content": "P1003",
+    "options": {
+      "pid": "P1003"
+    },
+    "answer": [],
+    "explanation": ""
+  },
+  {
+    "cid": 27,
+    "type": "oj",
+    "name": "P1004",
+    "content": "P1004",
+    "options": {
+      "pid": "P1004"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 29,
+    "type": "oj",
+    "name": "P1005",
+    "content": "P1005",
+    "options": {
+      "pid": "P1005"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 31,
+    "type": "oj",
+    "name": "P1006",
+    "content": "P1006",
+    "options": {
+      "pid": "P1006"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 33,
+    "type": "oj",
+    "name": "P1007",
+    "content": "P1007",
+    "options": {
+      "pid": "P1007"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 35,
+    "type": "oj",
+    "name": "P1008",
+    "content": "P1008",
+    "options": {
+      "pid": "P1008"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 37,
+    "type": "oj",
+    "name": "P1009",
+    "content": "P1009",
+    "options": {
+      "pid": "P1009"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 39,
+    "type": "oj",
+    "name": "P1010",
+    "content": "P1010",
+    "options": {
+      "pid": "P1010"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 41,
+    "type": "oj",
+    "name": "P1016",
+    "content": "P1016",
+    "options": {
+      "pid": "P1016"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 53,
+    "type": "oj",
+    "name": "P1011",
+    "content": "# P1011\nImage Classification OJ exercise (problem fetched from the OJ platform by pid `P1011`).",
+    "options": {
+      "pid": "P1011"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 54,
+    "type": "oj",
+    "name": "P1012",
+    "content": "# P1012\nImage Classification OJ exercise (problem fetched from the OJ platform by pid `P1012`).",
+    "options": {
+      "pid": "P1012"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 55,
+    "type": "oj",
+    "name": "P1013",
+    "content": "# P1013\nImage Classification OJ exercise (problem fetched from the OJ platform by pid `P1013`).",
+    "options": {
+      "pid": "P1013"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 56,
+    "type": "oj",
+    "name": "P1014",
+    "content": "# P1014\nImage Classification OJ exercise (problem fetched from the OJ platform by pid `P1014`).",
+    "options": {
+      "pid": "P1014"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 57,
+    "type": "oj",
+    "name": "P1015",
+    "content": "# P1015\nImage Classification OJ exercise (problem fetched from the OJ platform by pid `P1015`).",
+    "options": {
+      "pid": "P1015"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 71,
+    "type": "oj",
+    "name": "P1019",
+    "content": "P1019",
+    "options": {
+      "pid": "P1019"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 73,
+    "type": "oj",
+    "name": "P1020",
+    "content": "P1020",
+    "options": {
+      "pid": "P1020"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 75,
+    "type": "oj",
+    "name": "P1021",
+    "content": "P1021",
+    "options": {
+      "pid": "P1021"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 77,
+    "type": "oj",
+    "name": "P1022",
+    "content": "P1022",
+    "options": {
+      "pid": "P1022"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 79,
+    "type": "oj",
+    "name": "P1023",
+    "content": "P1023",
+    "options": {
+      "pid": "P1023"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 81,
+    "type": "oj",
+    "name": "P1024",
+    "content": "P1024",
+    "options": {
+      "pid": "P1024"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 83,
+    "type": "oj",
+    "name": "P1025",
+    "content": "P1025",
+    "options": {
+      "pid": "P1025"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 98,
+    "type": "oj",
+    "name": "P1032",
+    "content": "P1032",
+    "options": {
+      "pid": "P1032"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 100,
+    "type": "oj",
+    "name": "P1033",
+    "content": "P1033",
+    "options": {
+      "pid": "P1033"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 108,
+    "type": "oj",
+    "name": "P1034",
+    "content": "P1034",
+    "options": {
+      "pid": "P1034"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 110,
+    "type": "oj",
+    "name": "P1035",
+    "content": "P1035",
+    "options": {
+      "pid": "P1035"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 119,
+    "type": "oj",
+    "name": "P1027",
+    "content": "P1027",
+    "options": {
+      "pid": "P1027"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 127,
+    "type": "oj",
+    "name": "P1028",
+    "content": "P1028",
+    "options": {
+      "pid": "P1028"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 129,
+    "type": "oj",
+    "name": "P1029",
+    "content": "P1029",
+    "options": {
+      "pid": "P1029"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 131,
+    "type": "oj",
+    "name": "P1030",
+    "content": "P1030",
+    "options": {
+      "pid": "P1030"
+    },
+    "answer": [],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 11,
+    "type": "single",
+    "name": "81-1 ICT1 AC1 MCQ 1",
+    "content": "What is the smallest single unit that forms a digital image on a computer?",
+    "options": [
+      "Hex code",
+      "Pixel",
+      "RGB channel",
+      "Bit"
+    ],
+    "answer": [
+      1
+    ],
+    "explanation": "A pixel is the tiny basic unit that makes up all digital images."
+  },
+  {
+    "cid": 12,
+    "type": "single",
+    "name": "Image Resolution",
+    "content": "An image has a width of 800 pixels and a height of 600 pixels. What is the total number of pixels in this image?",
+    "options": [
+      "48,000 pixels",
+      "480,000 pixels",
+      "4,800,000 pixels",
+      "1,400,000 pixels"
+    ],
+    "answer": [
+      1
+    ],
+    "explanation": "To calculate the total number of pixels in an image, multiply the width by the height. In this case, 800 pixels (width) × 600 pixels (height) = 480,000 pixels total."
+  },
+  {
+    "cid": 13,
+    "type": "single",
+    "name": "Color Depth and Resolution",
+    "content": "What is the term for the number of distinct colors that can be displayed in a digital image or on a computer display?",
+    "options": [
+      "Resolution",
+      "Color depth",
+      "Pixel density",
+      "Bit rate"
+    ],
+    "answer": [
+      1
+    ],
+    "explanation": "Color depth refers to the number of distinct colors that can be displayed or represented in an image. It is typically measured in bits per pixel (bpp), with higher values allowing for more colors. For example, 8-bit color depth can display 256 colors (2^8), while 24-bit color depth (true color) can display over 16 million colors (2^24). Resolution, on the other hand, refers to the number of pixels displayed on screen, while pixel density relates to the concentration of pixels in a given area. Bit rate is a measure of data transmission speed and not directly related to color representation."
+  },
+  {
+    "cid": 43,
+    "type": "single",
+    "name": "🔎 Single Choice: The First Step",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "📄 According to the posters, what is the ",
+              "type": "text"
+            },
+            {
+              "text": "first step",
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "text": " in AI Computer Vision?",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Feature Extraction 🎨",
+      "Understanding 🧠",
+      "Edge Detection 🖍️",
+      "Feature Map 🗺️"
+    ],
+    "answer": [
+      0
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "The Feature Extraction poster says: \"The first step in AI Computer Vision!\" ✅",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "cid": 49,
+    "type": "single",
+    "name": "🔎 Single: Goal of Image Classification",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "📄 According to the poster, image classification teaches AI to recognize ___.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "what object or scene a picture shows",
+      "how to draw pictures",
+      "how to play music",
+      "how to speak a language"
+    ],
+    "answer": [
+      0
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "The poster title is \"Teaching AI to Recognize the World!\" — image classification decides what object or scene a picture shows. 🎯",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "cid": 63,
+    "type": "single",
+    "name": "🔎 Single: What does face keypoint recognition find?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Look at the first poster. What does face keypoint recognition find on a face?",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Important points on a face, such as the eyes, nose and mouth",
+      "The name of the person in the photo",
+      "How many people are in the room",
+      "The age of the person"
+    ],
+    "answer": [
+      0
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 68,
+    "type": "single",
+    "name": "❓ Choice: what is stored during registration?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "During registration the system stores a unique set of ",
+              "type": "text"
+            },
+            {
+              "text": "________",
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "text": " for each person. Choose the best answer.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "passwords",
+      "features",
+      "photographs",
+      "usernames"
+    ],
+    "answer": [
+      1
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 85,
+    "type": "single",
+    "name": "🔎 Single: What is the first step of gesture recognition?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Look at the poster. What happens first in the gesture recognition pipeline?",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "The camera captures your hand movement",
+      "The AI speaks to you",
+      "The gesture is stored in a database",
+      "The robot moves its arm"
+    ],
+    "answer": [
+      0
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 92,
+    "type": "single",
+    "name": "🔎 Single: What does the AI find on the body?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Look at the poster. What does pose recognition find on the human body?",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Key points, such as the head, shoulders, elbows and knees",
+      "The name of the person",
+      "The colour of the clothes",
+      "The age of the person"
+    ],
+    "answer": [
+      0
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 102,
+    "type": "single",
+    "name": "🔎 Single: What is a computer vision library?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Look at the poster. What is a computer vision library?",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "A collection of pre-written Python code that helps computers see",
+      "A camera you plug into the computer",
+      "A program that draws pictures for you",
+      "A new programming language"
+    ],
+    "answer": [
+      0
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 112,
+    "type": "single",
+    "name": "🔎 Single: What does the AI start from when it creates an image?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Look at the first poster. What does the AI start from in step 3?",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Random noise",
+      "A finished photo",
+      "A blank white page",
+      "A video clip"
+    ],
+    "answer": [
+      0
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 121,
+    "type": "single",
+    "name": "🔎 Single: What is the first step of AI 3D modelling?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Look at the poster. What is the first step of the AI 3D modelling process?",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Describe what you want (idea & prompt)",
+      "Export the model",
+      "3D print it",
+      "Add good lighting"
+    ],
+    "answer": [
+      0
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 133,
+    "type": "single",
+    "name": "🔎 Single: What is the first step of AI game generation?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Look at the posters. What is the first step of AI game generation?",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Idea & plan",
+      "Publish & share",
+      "Test & improve",
+      "Export the game"
+    ],
+    "answer": [
+      0
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 139,
+    "type": "single",
+    "name": "🔎 Single: What does AIGC stand for?",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Look at the poster. What does AIGC stand for?",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "AI-Generated Content",
+      "Automatic Internet Gateway",
+      "Applied Information Graphics",
+      "Advanced Intelligence Game"
+    ],
+    "answer": [
+      0
+    ],
+    "explanation": {
+      "type": "doc",
+      "content": {}
+    }
+  },
+  {
+    "cid": 16,
+    "type": "sort",
+    "name": "81-1 ICT2 AC2 Q3",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "Arrange the 6 image processing steps in the correct order - from the raw input image to the final image ready for AI.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Input Image",
+      "Grayscale",
+      "Noise Reduction",
+      "Enhancement",
+      "Feature Emphasis",
+      "Processed Image"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "explanation": "Correct order: `Input Image` → `Grayscale` → `Noise Reduction` → `Enhancement` → `Feature Emphasis` → `Processed Image`."
+  },
+  {
+    "cid": 23,
+    "type": "sort",
+    "name": "P1001 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1001 (Output the Second Variable): read three variables and print only the second one, b. (OJ: P1001 — Output the Second Variable)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "a = input()",
+      "b = input()",
+      "c = input()",
+      "print(b)"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": "The three input lines must come first and in order: each `input()` reads one value from its own line, so `a`, `b` and `c` are filled exactly as the input format requires. The last line `print(b)` outputs only the second variable read — which is all the task asks for."
+  },
+  {
+    "cid": 24,
+    "type": "sort",
+    "name": "P1002 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1002 (Print Three Variables on One Line): print a, b and c on a single line separated by spaces. (OJ: P1002 — Print Three Variables on One Line)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "a = input()",
+      "b = input()",
+      "c = input()",
+      "print(a, b, c)"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": "Read `a`, `b` and `c` in the order they appear in the input. Then `print(a, b, c)` writes all three on one line — `print` automatically inserts a space between arguments, which is exactly the required single-line, space-separated format. The print must come after all three variables exist."
+  },
+  {
+    "cid": 25,
+    "type": "sort",
+    "name": "P1003 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1003 (Print Hi): print \"Hi \" followed by the string s. (OJ: P1003 — Print Hi)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "s = input()",
+      "print(\"Hi \" + s)"
+    ],
+    "answer": [
+      0,
+      1
+    ],
+    "explanation": "Read the string first with `s = input()`. The print line glues the greeting onto the user text with string concatenation: `\"Hi \" + s` — the trailing space inside the quotes separates `Hi` from the name. Printing before `s` exists would crash, so the print goes last."
+  },
+  {
+    "cid": 26,
+    "type": "sort",
+    "name": "P1004 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1004 (Addition and Subtraction): read two integers and print their sum on the first line and their difference on the second line. (OJ: P1004 — Addition and Subtraction)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "a = int(input())",
+      "b = int(input())",
+      "print(a + b)",
+      "print(a - b)"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": "Read `a` and `b` first — both must exist before any computing. Then `print(a + b)` writes the sum on the first line and `print(a - b)` writes the difference on the second. Each `print` ends its own line, so two print calls in the right order produce the two required output lines."
+  },
+  {
+    "cid": 28,
+    "type": "sort",
+    "name": "P1005 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1005 (Multiplication and Division): read two integers and print their product on the first line and their quotient on the second line. (OJ: P1005 — Multiplication and Division)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "a = int(input())",
+      "b = int(input())",
+      "print(a * b)",
+      "print(f\"{a / b:.2f}\")"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": "Read `a` and `b`, then print the product `a * b` first and the quotient `a / b` second. In Python `/` is true division and can give a decimal, so the f-string `{a / b:.2f}` rounds the quotient to exactly 2 decimal places as required."
+  },
+  {
+    "cid": 30,
+    "type": "sort",
+    "name": "P1006 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1006 (Quotient and Remainder): read two integers and print the integer quotient on the first line and the remainder on the second line. (OJ: P1006 — Quotient and Remainder)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "a = int(input())",
+      "b = int(input())",
+      "print(a // b)",
+      "print(a % b)"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": "Read `a` and `b`, then use integer division `a // b` for the quotient and modulo `a % b` for the remainder. The two results go on separate lines — quotient first, remainder second — so two `print` calls are needed."
+  },
+  {
+    "cid": 32,
+    "type": "sort",
+    "name": "P1007 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1007 (Rectangle Perimeter and Area): read the length and width and print the perimeter on the first line and the area on the second line. (OJ: P1007 — Rectangle Perimeter and Area)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "a = int(input())",
+      "b = int(input())",
+      "print(2 * (a + b))",
+      "print(a * b)"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": "Read the length `a` and width `b`, then compute the perimeter `2 * (a + b)` and the area `a * b`. The parentheses matter: `2 * (a + b)` doubles the sum of the sides, which is the perimeter formula. Perimeter is printed on the first line and area on the second."
+  },
+  {
+    "cid": 34,
+    "type": "sort",
+    "name": "P1008 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1008 (Circle Circumference and Area): read the radius and print the circumference on the first line and the area on the second line, taking π = 3.14. (OJ: P1008 — Circle Circumference and Area)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "r = int(input())",
+      "pi = 3.14",
+      "print(f\"{2 * pi * r:.2f}\")",
+      "print(f\"{pi * r * r:.2f}\")"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": "Read the radius `r`, then define `pi = 3.14` before it is used. The circumference is `2 * pi * r` and the area is `pi * r * r`; both are formatted with `:.2f` for two decimals. Every name must be defined above the line that uses it — that is what fixes the order."
+  },
+  {
+    "cid": 36,
+    "type": "sort",
+    "name": "P1009 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1009 (Power Operation): read the base and the exponent and print the power a raised to b. (OJ: P1009 — Power Operation)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "a = int(input())",
+      "b = int(input())",
+      "print(a ** b)"
+    ],
+    "answer": [
+      0,
+      1,
+      2
+    ],
+    "explanation": "Read the base `a` and the exponent `b`, then `a ** b` raises `a` to the power `b` (two asterisks mean power in Python). The `print` simply comes last, after both variables exist."
+  },
+  {
+    "cid": 38,
+    "type": "sort",
+    "name": "P1010 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1010: read a temperature in Celsius and convert it to Fahrenheit using F = C × 9 / 5 + 32. (OJ: P1010 — Fahrenheit to Celsius)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "c = int(input())",
+      "f = c * 9 / 5 + 32",
+      "print(f\"{f:.2f}\")"
+    ],
+    "answer": [
+      0,
+      1,
+      2
+    ],
+    "explanation": "Read the Celsius temperature `c`, then apply the formula `F = C × 9 / 5 + 32` — multiplication and division happen before the addition, which is Python's normal operator precedence, so no extra parentheses are needed. Finally `print(f\"{f:.2f}\")` shows the result with two decimals."
+  },
+  {
+    "cid": 40,
+    "type": "sort",
+    "name": "P1016 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1016 (Absolute Value): read an integer n and print its absolute value. (OJ: P1016 — Absolute Value)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "n = int(input())",
+      "if n < 0:",
+      "    n = -n",
+      "print(n)"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": "Read `n`, then flip its sign only when it is negative: the line `n = -n` is indented under `if n < 0:`, so it belongs to the `if` and runs only for negative values. The final `print(n)` sits outside the `if` and outputs the non-negative result in every case."
+  },
+  {
+    "cid": 47,
+    "type": "sort",
+    "name": "🔢 Ordering: The Feature Extraction Pipeline",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "🪜 Put the 4 steps of the ",
+              "type": "text"
+            },
+            {
+              "text": "feature extraction",
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            },
+            {
+              "text": " pipeline in the correct order (see the poster).",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Input Image",
+      "Feature Extraction",
+      "Feature Map",
+      "Understanding"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": "Pipeline:\n1. **Input Image** — the raw picture goes in.\n2. **Feature Extraction** — pull out edges, colors and shapes.\n3. **Feature Map** — organize the extracted features.\n4. **Understanding** — the AI decides what it sees."
+  },
+  {
+    "cid": 58,
+    "type": "sort",
+    "name": "P1011 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1011 (Arithmetic Sequence Sum): read the first term a1, the common difference d and the number of terms n, then print the n-th term on the first line and the sum of the first n terms on the second line. (OJ: P1011 — Arithmetic Sequence Sum)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "a1 = int(input())",
+      "d = int(input())",
+      "n = int(input())",
+      "an = a1 + (n - 1) * d",
+      "sn = n * (a1 + an) // 2",
+      "print(an)",
+      "print(sn)"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "explanation": "Read `a1`, `d` and `n` first. The n-th term is `an = a1 + (n - 1) * d`, and the sum formula `sn = n * (a1 + an) // 2` needs `an`, so it must come after. The `//` keeps the division exact, since `n * (a1 + an)` is always even. Print `an` on the first line and `sn` on the second."
+  },
+  {
+    "cid": 59,
+    "type": "sort",
+    "name": "P1012 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1012 (Chickens and Rabbits in a Cage): read the number of heads h and the number of legs l, then print the number of chickens and rabbits — chickens on the first line and rabbits on the second line. (OJ: P1012 — Chickens and Rabbits in a Cage)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "h = int(input())",
+      "l = int(input())",
+      "r = (l - 2 * h) // 2",
+      "c = h - r",
+      "print(c)",
+      "print(r)"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "explanation": "Read the heads `h` and legs `l`. Giving every head 2 legs uses `2 * h` legs, so the extra `l - 2 * h` legs are the rabbits' second pair — halving gives the rabbit count `r = (l - 2 * h) // 2`, and the rest `c = h - r` are chickens. `r` must be computed before `c` because `c` uses it; print `c` then `r`, one per line. The input is guaranteed valid, so no checks are needed."
+  },
+  {
+    "cid": 60,
+    "type": "sort",
+    "name": "P1013 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1013 (Sum and Average of Three Numbers): read three integers a, b and c, then print their sum on the first line and their average on the second line, rounded to two decimal places. (OJ: P1013 — Sum and Average of Three Numbers)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "a = int(input())",
+      "b = int(input())",
+      "c = int(input())",
+      "print(a + b + c)",
+      "print(f\"{(a + b + c) / 3:.2f}\")"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "explanation": "Read `a`, `b` and `c`, then `print(a + b + c)` writes the sum on the first line. The average `(a + b + c) / 3` goes on the second line, formatted with `:.2f` to show exactly two decimals. The sum itself prints as a plain integer."
+  },
+  {
+    "cid": 61,
+    "type": "sort",
+    "name": "P1014 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1014 (Hours, Minutes and Seconds Conversion): read a non-negative integer n (seconds) and print the equivalent hours, minutes and seconds, one per line. (OJ: P1014 — Hours, Minutes and Seconds Conversion)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "n = int(input())",
+      "print(n // 3600)",
+      "print(n % 3600 // 60)",
+      "print(n % 60)"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": "Read the total seconds `n`. Hours are `n // 3600` (integer division counts whole hours); the leftover `n % 3600` divided by 60 — again with `//` — gives whole minutes; and `n % 60` is what remains as seconds. Each value goes on its own line through a separate `print`, and all computing happens after `n` is read."
+  },
+  {
+    "cid": 62,
+    "type": "sort",
+    "name": "P1015 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1015 (Trapezoid Area): read the upper base a, the lower base b and the height h, then print the trapezoid area on one line, rounded to two decimal places. (OJ: P1015 — Trapezoid Area)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "a = int(input())",
+      "b = int(input())",
+      "h = int(input())",
+      "print(f\"{(a + b) * h / 2:.2f}\")"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": "Read the upper base `a`, lower base `b` and height `h`, then apply the trapezoid area formula `(a + b) * h / 2`. The parentheses make the two bases sum before multiplying by the height, and `:.2f` rounds the result to two decimals."
+  },
+  {
+    "cid": 66,
+    "type": "sort",
+    "name": "🔢 Ordering: the face registration pipeline",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "The second poster shows how registration works. Drag the steps into the correct order.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Capture face",
+      "Detect & align",
+      "Extract features",
+      "Store in database",
+      "Registration complete"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "explanation": "Correct order:\n1. **Capture face** — a photo must exist before anything else.\n2. **Detect & align** — find the face and straighten it.\n3. **Extract features** — compute the face signature from the aligned photo.\n4. **Store in database** — save the record for future comparison.\n5. **Registration complete** — only after storing."
+  },
+  {
+    "cid": 69,
+    "type": "sort",
+    "name": "P1017 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1017 (The Larger of Two Numbers): read two integers and print the larger one. (OJ: P1017 — The Larger of Two Numbers)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "a = int(input())",
+      "b = int(input())",
+      "if a > b:",
+      "    print(a)",
+      "else:",
+      "    print(b)"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "explanation": "Read `a` and `b`, then compare them once: `if a > b:` prints `a`, otherwise the `else` branch prints `b`. The indented lines belong to their `if` / `else`, and exactly one of the two `print` calls runs."
+  },
+  {
+    "cid": 70,
+    "type": "sort",
+    "name": "P1018 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1018 (Odd or Even): read an integer n and print \"Even\" if it is even, otherwise \"Odd\". (OJ: P1018 — Odd or Even)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "n = int(input())",
+      "if n % 2 == 0:",
+      "    print(\"Even\")",
+      "else:",
+      "    print(\"Odd\")"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "explanation": "Read `n` and test `n % 2 == 0` — the remainder after dividing by 2 tells evenness. Even numbers take the `if` branch and print `Even`; everything else falls into `else` and prints `Odd`. The two indented prints belong to their branch."
+  },
+  {
+    "cid": 72,
+    "type": "sort",
+    "name": "P1019 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1019 (Pass or Fail): read a score s and print \"Pass\" if s is at least 60, otherwise \"Fail\". (OJ: P1019 — Pass or Fail)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "s = int(input())",
+      "if s >= 60:",
+      "    print(\"Pass\")",
+      "else:",
+      "    print(\"Fail\")"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "explanation": "Read the score `s`. The condition `s >= 60` is inclusive — exactly 60 still passes — so `Pass` is printed in the `if` branch and `Fail` in the `else`."
+  },
+  {
+    "cid": 74,
+    "type": "sort",
+    "name": "P1020 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1020 (Positive, Negative or Zero): read an integer n and print \"Positive\", \"Negative\" or \"Zero\". (OJ: P1020 — Positive, Negative or Zero)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "n = int(input())",
+      "if n > 0:",
+      "    print(\"Positive\")",
+      "elif n < 0:",
+      "    print(\"Negative\")",
+      "else:",
+      "    print(\"Zero\")"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "explanation": "Read `n` and check the cases top to bottom: `n > 0` prints `Positive`, `elif n < 0` prints `Negative`, and the final `else` catches the only remaining case, `Zero`. `elif` runs only when the previous condition failed, so the three-way chain covers every integer exactly once."
+  },
+  {
+    "cid": 76,
+    "type": "sort",
+    "name": "P1021 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1021 (Grade Evaluation): read a score s and print its grade A, B, C, D or F. (OJ: P1021 — Grade Evaluation)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Read the score s.",
+      "If s is 90 or more, do the following:",
+      "Print the grade A.",
+      "Otherwise, if s is 80 or more, do the following:",
+      "Print the grade B.",
+      "Otherwise, if s is 70 or more, do the following:",
+      "Print the grade C.",
+      "Otherwise, if s is 60 or more, do the following:",
+      "Print the grade D.",
+      "Otherwise, for any score below 60:",
+      "Print the grade F."
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "explanation": "Read the score `s` and walk the grade ladder from the top: 90 and above is `A`, 80–89 `B`, 70–79 `C`, 60–69 `D`, below 60 `F`. Checking from high to low lets each step be a single comparison like `s >= 80` — the `elif` chain guarantees earlier (higher) ranges were already ruled out, so no compound conditions are needed."
+  },
+  {
+    "cid": 78,
+    "type": "sort",
+    "name": "P1022 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1022 (Non-zero Check): read an integer n and print \"Nonzero\" if it is not zero, otherwise \"Zero\". (OJ: P1022 — Non-zero Check)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "n = int(input())",
+      "if n != 0:",
+      "    print(\"Nonzero\")",
+      "else:",
+      "    print(\"Zero\")"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "explanation": "Read `n` and test `n != 0` — `!=` means *not equal*. Non-zero values take the `if` branch and print `Nonzero`; the only remaining value, 0, falls into `else` and prints `Zero`."
+  },
+  {
+    "cid": 80,
+    "type": "sort",
+    "name": "P1023 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1023 (Point in Rectangle): read a point (x, y) and print \"Inside\" if it lies inside or on the rectangle [0,10] x [0,10], otherwise \"Outside\". (OJ: P1023 — Point in Rectangle)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "x = int(input())",
+      "y = int(input())",
+      "if x >= 0 and x <= 10 and y >= 0 and y <= 10:",
+      "    print(\"Inside\")",
+      "else:",
+      "    print(\"Outside\")"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "explanation": "Read `x` and `y`. The point is inside the rectangle only when all four bounds hold: `x` between 0 and 10 **and** `y` between 0 and 10. The `and` operator requires every comparison to be true; any failed bound drops into `else` and prints `Outside`."
+  },
+  {
+    "cid": 82,
+    "type": "sort",
+    "name": "P1024 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1024 (Multiples of 3 or 5): read an integer n and print \"Yes\" if it is a multiple of 3 or of 5, otherwise \"No\". (OJ: P1024 — Multiples of 3 or 5)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "n = int(input())",
+      "if n % 3 == 0 or n % 5 == 0:",
+      "    print(\"Yes\")",
+      "else:",
+      "    print(\"No\")"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "explanation": "Read `n` and test `n % 3 == 0 or n % 5 == 0`. The `or` is true when either side holds, so multiples of 3, of 5, and of both all print `Yes`; every other value prints `No` in the `else`."
+  },
+  {
+    "cid": 84,
+    "type": "sort",
+    "name": "P1025 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1025 (Triangle Validity and Classification): read three side lengths and print \"NotTriangle\", \"Equilateral\", \"Isosceles\" or \"Scalene\". (OJ: P1025 — Triangle Validity and Classification)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Read side a.",
+      "Read side b.",
+      "Read side c.",
+      "If the sides cannot form a triangle (one side is at least as long as the other two put together):",
+      "Print NotTriangle.",
+      "Otherwise, if all three sides are equal:",
+      "Print Equilateral.",
+      "Otherwise, if any two sides are equal:",
+      "Print Isosceles.",
+      "Otherwise, when all three sides are different:",
+      "Print Scalene."
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "explanation": "Read sides `a`, `b` and `c`, and test in priority order. First the triangle inequality: if any side reaches or exceeds the sum of the other two — `a + b <= c or a + c <= b or b + c <= a` — print `NotTriangle`. This must come first, otherwise impossible triples like 1, 1, 5 would slip into a shape branch. Then all sides equal prints `Equilateral`, any two equal prints `Isosceles`, and the rest print `Scalene`. The `if` / `elif` chain stops at the first match, which is exactly this priority."
+  },
+  {
+    "cid": 88,
+    "type": "sort",
+    "name": "🔢 Ordering: the gesture recognition pipeline",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Drag the five steps of the poster into the correct order.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Input: camera captures",
+      "Detect keypoints",
+      "Analyze gesture",
+      "Recognize gesture",
+      "AI responds"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "explanation": "Correct order:\n1. **Input: camera captures** — the camera supplies raw frames.\n2. **Detect keypoints** — locate the hand points.\n3. **Analyze gesture** — turn keypoints into motion data.\n4. **Recognize gesture** — map the motion to a known gesture.\n5. **AI responds** — the AI finally reacts."
+  },
+  {
+    "cid": 91,
+    "type": "sort",
+    "name": "P1031 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1031 (Greatest Common Divisor): read two positive integers a and b and print gcd(a, b). (OJ: P1031 — Greatest Common Divisor)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "a = int(input())",
+      "b = int(input())",
+      "while b != 0:",
+      "    r = a % b",
+      "    a = b",
+      "    b = r",
+      "print(a)"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "explanation": "Read `a` and `b`, then run Euclid's algorithm: while `b` is not 0, save the remainder `r = a % b`, slide `a = b` and `b = r`. Each round shrinks the pair, and when `b` reaches 0 the gcd sits in `a`, printed after the loop. The three sliding lines are indented inside the `while`; the `print` is outside so it runs once at the end."
+  },
+  {
+    "cid": 95,
+    "type": "sort",
+    "name": "🔢 Ordering: the pose recognition pipeline",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Drag the steps from the poster into the correct order.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Input image",
+      "Detect human",
+      "Find key points",
+      "Build skeleton",
+      "Analyze pose"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "explanation": "Correct order:\n1. **Input image** — the raw photo.\n2. **Detect human** — locate the person first.\n3. **Find key points** — mark joints on the detected body.\n4. **Build skeleton** — connect the points.\n5. **Analyze pose** — interpret the posture from the skeleton."
+  },
+  {
+    "cid": 99,
+    "type": "sort",
+    "name": "P1032 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1032 (Collatz Steps): read a positive integer n and print how many Collatz steps it needs to reach 1. (OJ: P1032 — Collatz Steps)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "n = int(input())",
+      "steps = 0",
+      "while n != 1:",
+      "    if n % 2 == 0:",
+      "        n = n // 2",
+      "    else:",
+      "        n = 3 * n + 1",
+      "    steps = steps + 1",
+      "print(steps)"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "explanation": "Read `n` and start `steps` at 0. While `n` has not reached 1, the inner `if` / `else` picks the rule — even: `n = n // 2`, odd: `n = 3 * n + 1` — and `steps = steps + 1` runs every round (it is indented at the same level as the `if`). When the loop ends, `steps` holds the answer for the `print`."
+  },
+  {
+    "cid": 101,
+    "type": "sort",
+    "name": "P1033 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1033 (Reverse a Number): read a non-negative integer n and print its decimal digits reversed. (OJ: P1033 — Reverse a Number)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Read the non-negative integer n.",
+      "Set the reversed number rev to 0.",
+      "While n is greater than 0, repeat these two steps:",
+      "Take the last digit of n and add it to the end of rev.",
+      "Chop that last digit off n.",
+      "Print rev."
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "explanation": "Read `n` and start `rev` at 0. Each round does two things in this exact order: `rev = rev * 10 + n % 10` lifts the last digit of `n` onto the right end of `rev`, then `n = n // 10` drops that digit from `n`. Repeating until `n` is 0 moves all digits over in reverse; the `print` comes after the loop. Swapping the two loop lines would break the digit order."
+  },
+  {
+    "cid": 105,
+    "type": "sort",
+    "name": "🔢 Ordering: how to use a CV library",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Drag the steps into the correct order to use a CV library in your program.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Install the library with pip",
+      "Import the library in your code",
+      "Call its functions on your images",
+      "See the result"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": "Correct order:\n1. **Install the library with pip** — you cannot import what is not installed.\n2. **Import the library in your code** — bring it into the program.\n3. **Call its functions on your images** — do the actual work.\n4. **See the result** — the output appears only after the functions run."
+  },
+  {
+    "cid": 109,
+    "type": "sort",
+    "name": "P1034 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1034 (Number of Digits): read a positive integer n and print how many decimal digits it has. (OJ: P1034 — Number of Digits)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "n = int(input())",
+      "count = 0",
+      "while n > 0:",
+      "    n = n // 10",
+      "    count = count + 1",
+      "print(count)"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "explanation": "Read `n` and start `count` at 0. Every round, `n = n // 10` chops off the last digit and `count` goes up by one — so one round per digit. When `n` reaches 0, `count` equals the number of digits and is printed after the loop. `n` must be read before the loop first uses it."
+  },
+  {
+    "cid": 111,
+    "type": "sort",
+    "name": "P1035 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1035 (Divisible by k): read two positive integers n and k and print how many times n can be divided by k with no remainder. (OJ: P1035 — Divisible by k)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "n = int(input())",
+      "k = int(input())",
+      "count = 0",
+      "while n % k == 0:",
+      "    n = n // k",
+      "    count = count + 1",
+      "print(count)"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "explanation": "Read `n` and `k`, start `count` at 0. As long as `n % k == 0` — `k` still divides `n` evenly — the loop divides `n = n // k` and counts one more division. It stops at the first value `k` no longer divides, and `count` is how many times `k` went in, printed after the loop."
+  },
+  {
+    "cid": 115,
+    "type": "sort",
+    "name": "🔢 Ordering: the AI video pipeline",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Drag the first five steps of the video poster into the correct order.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "You give a prompt",
+      "AI understands your idea",
+      "AI creates a storyboard",
+      "AI generates the content",
+      "AI adds motion & transitions"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "explanation": "Correct order:\n1. **You give a prompt** — describe the video you want.\n2. **AI understands your idea** — it parses the prompt first.\n3. **AI creates a storyboard** — plan the scenes.\n4. **AI generates the content** — produce the scenes.\n5. **AI adds motion & transitions** — polish comes last."
+  },
+  {
+    "cid": 118,
+    "type": "sort",
+    "name": "P1026 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1026 (Sum from 1 to n): read a positive integer n and print the sum 1+2+...+n. (OJ: P1026 — Sum from 1 to n)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "n = int(input())",
+      "total = 0",
+      "for i in range(1, n + 1):",
+      "    total = total + i",
+      "print(total)"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "explanation": "Read `n` and start `total` at 0. The loop `for i in range(1, n + 1)` runs `i` = 1, 2, …, `n` (`range` stops just before `n + 1`) and adds each `i` to `total`. The `print` stays outside the loop — indented inside, it would print n times."
+  },
+  {
+    "cid": 120,
+    "type": "sort",
+    "name": "P1027 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1027 (Factorial of n): read a non-negative integer n and print n factorial (0! = 1). (OJ: P1027 — Factorial of n)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Read the non-negative integer n.",
+      "Set the running product result to 1.",
+      "For every whole number i from 1 up to n:",
+      "Multiply result by i.",
+      "Print result."
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "explanation": "Read `n` and start `result` at 1 — the empty product, which is also what makes 0! = 1 correct. Each round multiplies `result = result * i`, and the final value is printed after the loop. Starting at 0 instead would make every product 0."
+  },
+  {
+    "cid": 124,
+    "type": "sort",
+    "name": "🔢 Ordering: the AI 3D modelling pipeline",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Drag the steps from the poster into the correct order.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Idea & prompt",
+      "AI understands",
+      "AI generates",
+      "Preview & refine",
+      "Export"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "explanation": "Correct order:\n1. **Idea & prompt** — describe the 3D model you want.\n2. **AI understands** — it parses the idea first.\n3. **AI generates** — build the model.\n4. **Preview & refine** — improve it while previewing.\n5. **Export** — the final deliverable."
+  },
+  {
+    "cid": 128,
+    "type": "sort",
+    "name": "P1028 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1028 (Sum of Squares from 1 to n): read a positive integer n and print the sum of squares 1*1 + 2*2 + ... + n*n. (OJ: P1028 — Sum of Squares from 1 to n)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "n = int(input())",
+      "total = 0",
+      "for i in range(1, n + 1):",
+      "    total = total + i * i",
+      "print(total)"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "explanation": "Read `n`, start `total` at 0, and loop `i` from 1 to `n`. Each round adds the square: `total = total + i * i` computes `i` squared and accumulates it in one line. The `print` comes after the loop so the grand total is shown once."
+  },
+  {
+    "cid": 130,
+    "type": "sort",
+    "name": "P1029 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1029 (Sum of n Numbers): read an integer n and then n integers, and print their sum. (OJ: P1029 — Sum of n Numbers)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "n = int(input())",
+      "total = 0",
+      "for i in range(n):",
+      "    total = total + int(input())",
+      "print(total)"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "explanation": "Read `n` first — the loop needs it to know how many numbers follow. Inside the loop, each `int(input())` reads one value and adds it to `total` immediately, so no list is needed. The `print` runs once, after the loop, showing the sum of all `n` numbers."
+  },
+  {
+    "cid": 132,
+    "type": "sort",
+    "name": "P1030 Code Order",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Arrange the lines below into the correct order to solve P1030 (Maximum of n Numbers): read an integer n and then n integers, and print the maximum among them. (OJ: P1030 — Maximum of n Numbers)",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Read how many numbers n.",
+      "Read the first number and remember it as best.",
+      "For the remaining n − 1 numbers, repeat these three steps:",
+      "Read the next number x.",
+      "If x is greater than best:",
+      "Remember x as the new best.",
+      "Print best."
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "explanation": "Read `n`, then read the first value straight into `best` — that is why the loop runs only `n - 1` more times. Each round reads the next `x` and keeps `best` only if it is already bigger: `if x > best: best = x`. After the loop, `best` is the maximum. Seeding `best` with the first value also handles all-negative inputs, where starting from 0 would fail."
+  },
+  {
+    "cid": 136,
+    "type": "sort",
+    "name": "🔢 Ordering: the AI 2D game pipeline",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "Drag the steps from the 2D game poster into the correct order.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Idea & plan",
+      "AI generates assets",
+      "AI writes code",
+      "Build the game",
+      "Publish & share"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "explanation": "Correct order:\n1. **Idea & plan** — decide what the game is and needs.\n2. **AI generates assets** — sprites, backgrounds, sounds.\n3. **AI writes code** — the game logic.\n4. **Build the game** — assemble assets and code.\n5. **Publish & share** — the last step."
+  },
+  {
+    "cid": 142,
+    "type": "sort",
+    "name": "🔢 Ordering: the quick check before you share",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "The poster ends with a quick check before you share. Drag the questions into the correct order.",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    "options": [
+      "Is it original?",
+      "Is it fair and kind?",
+      "Does it respect privacy?",
+      "Does it have good value?"
+    ],
+    "answer": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "explanation": "Correct order:\n1. **Is it original?** — never share what is not yours.\n2. **Is it fair and kind?** — respect others.\n3. **Does it respect privacy?** — protect personal data.\n4. **Does it have good value?** — worth posting overall."
+  }
+]

@@ -791,6 +791,60 @@ webpack 的 chunk 文件名带内容 hash。我们改了 JS 内容但**没改文
 
 **官方原件**保存在服务器 `backup/surveyking.jar.orig`（`deploy.sh` 会优先用它，而不是容器里那份已打补丁的 jar —— 否则常量找不到，脚本会正确地拒绝部署）。
 
+### 10.9 用 LMS course 5 出试卷（exam 模式）
+
+`scripts/exam-course5/`：从 LMS 题库组卷并推到 SurveyKing。
+
+```bash
+node scripts/exam-course5/dump.mjs          # 导出 course 5 全部题目 → course5-questions.json
+node scripts/exam-course5/build.mjs         # 组卷（30 单选 / 10 多选 / 10 填空，AI:Python = 1:1）→ exam.json
+node scripts/exam-course5/push.mjs --dry    # 校验
+node scripts/exam-course5/push.mjs          # 建卷（走 LMS SSO，不用 SurveyKing 密码）
+node scripts/exam-course5/verify.mjs --id <projectId>       # 逐题比对远端与本地
+node scripts/exam-course5/smoke-answer.mjs --id <projectId>  # 提交"全对"答卷验证判分
+```
+
+**SurveyKing exam schema 的四个坑**（都踩过，判分错了卷子照样能建成功）：
+
+| 坑 | 现象 | 正确做法 |
+|---|---|---|
+| 正确答案标记位置 | 判分永远 0 | `examCorrectAnswer` 放在**每个选项节点**的 attribute（非 null 即正确），不是题目上 |
+| 填空题结构 | 交卷返回 500（NPE） | 每个"空"必须是**子节点**（`type:'Option'`），不能是空 children |
+| 填空题分值 | 填空全 0 分 | 题目节点也要有 `examScore`（`SelectCorrectEvaluator.support()` 检查它非 null），真正求和用子节点的 |
+| 删除接口参数 | 删除返回 500（NPE） | `deleteProject` 用的是 `request.getId()`，传 `{id}` 不是 `{ids: [...]}` |
+
+另外，**提交答案的 value 是对象 Map**（键 = 选项/空的 id），不是字符串数组：
+
+```json
+{ "q001": { "q001_o2": true },              // 单选
+  "q031": { "q031_o1": true, "q031_o3": true },  // 多选
+  "q041": { "q041_b1": "changes" } }             // 填空
+```
+
+题号与分段：单选 1–30（AI 15 + Python 15）、多选 31–40、填空 41–50；分值 2/3/1 → 满分 100。
+
+### 10.10 id_token 私钥：8 个进程必须共用一把（2026-10-27 事故记录）
+
+**症状**：SurveyKing 回调报 `invalid_identity`，而 LMS 单独测 token 端点正常。
+原因：id_token 的 `kid` 与 JWKS 返回的 `kid` 不一致，Nimbus 按 kid 找不到公钥 → 验签失败。
+
+**两个叠加的错**：
+
+1. **密钥没落库**：初始实现用 `onConflictDoNothing` 写 `configs`，而该行早被
+   `DEFAULT_SITE_CONFIG` 播种成空串 → 私钥永远写不进去 → 每次调用都现生成一把。
+2. **进程内缓存锁死了各自的密钥**：生产是 nginx + **8 个 fork 进程**（`pm2 list` 里
+   nuxt_3001…3008）。模块级变量 `_cached` 让每个进程各自持有一把，且永不失效 ——
+   即使后来把正确密钥写进库，已缓存的进程仍用自己的那把，只能全部重启才对齐。
+
+**修法**：
+- `utils/oauthKeys.ts` 改成**每次都从库里读**（不再进程内缓存），生成时用
+  `onConflictDoUpdate` 写库后**重读**，保证并发下所有进程最终用同一把；
+- `defaults.ts` 里去掉 `site:oauth.idPrivateKey` 的空串播种（它正是"写不进去"的原因）。
+
+**运维上记住**：LMS 的 `.output/server/index.mjs` 缺失时，pm2 里的进程显示 online
+但实际靠已加载的内存态在跑；一旦 `pm2 restart` 就会全站 502 ——
+重启前务必确认 `.output/server/index.mjs` 存在。
+
 ---
 
 ## 11. 待确认
