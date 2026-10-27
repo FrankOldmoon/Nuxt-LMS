@@ -657,7 +657,80 @@ git over HTTP 用密码也会一起失效（`ENABLE_BASIC_AUTHENTICATION=false` 
 
 ---
 
-## 10. 待确认
+## 10. 接入 SurveyKing 问卷系统（10.28.1.157）
+
+### 10.1 SurveyKing 的现实约束
+
+SurveyKing 1.13.0（`javahuang/SurveyKing`），Docker 部署，容器内 `java -jar /app/surveyking.jar`，H2 文件库（`/app/db/surveyking.mv.db`），对外 80。
+
+| 事实 | 影响 |
+|---|---|
+| 只内置 **Google / 微信** 两种第三方登录，端点**硬编码**在 `OAuthServiceImpl` 的常量池里 | 没有通用 OIDC 配置项可填 |
+| Google 通道本身就是标准 OIDC：授权码 + **PKCE(S256)** + **nonce**，换 token 后用 `NimbusJwtDecoder` 拿 **JWKS 验 RS256 签名** | LMS 必须补齐这四项能力（比 Gitea 多） |
+| `iss` 硬编码校验 `https://accounts.google.com` | 也要一起替换 |
+| 服务器只有 JRE（无 javac/maven），重新构建不现实 | 走**字节补丁**：改常量池里的字符串 |
+| H2 模式下 `BINARY auth_account = ?`（MySQL 专有）报 BadSqlGrammarException | 顺带修掉这个 H2 兼容坑 |
+
+### 10.2 方案对比：为什么选字节补丁
+
+| 方案 | 成本 | 风险 |
+|---|---|---|
+| **字节补丁（采用）** | 改 4 个常量 + 1 条 SQL 字符串 | 升级 SurveyKing 会丢补丁（有脚本可重打） |
+| 改源码重新构建 | 要 JDK + Maven + 整个依赖树 | 服务器上做不到，构建链不可复现 |
+| DNS + TLS 劫持 google 域名 | 装自签 CA 进 JRE truststore + 改 /etc/hosts + nginx | 4 个脆弱点；而且**授权那一步浏览器走的是公网 DNS**，客户端电脑也得改 hosts，做不到 |
+| forward-auth 包一层 | — | 对 OAuth 授权流无效（浏览器要跳 provider） |
+
+字节补丁的原理：这 4 个 URL 是 `private static final String` 编译期常量，**被内联进各自的调用点**；常量池条目按**索引**引用，所以重写常量池、保留后续字节流即可精确替换（脚本带 round-trip 自检，解析→序列化必须逐字节相同才允许写出）。
+
+### 10.3 LMS 侧补齐（本次新增）
+
+| 文件 | 作用 |
+|---|---|
+| `modules/base/server/utils/oauthKeys.ts` | RSA 密钥管理：env `NUXT_OAUTH_ID_PRIVATE_KEY` → configs 表 `site:oauth.idPrivateKey` → 自动生成并落库；RS256 签名 + JWKS |
+| `modules/base/server/api/oauth/jwks.get.ts` | `GET /api/oauth/jwks`（公钥集合，Nimbus 验签要用） |
+| `oauth/authorize.get.ts` | 把 `nonce` 与 `code_challenge` 存进 `oauth_codes` |
+| `oauth/token.post.ts` | id_token 改 **RS256**、回显 `nonce`、**校验 PKCE**（code_verifier） |
+| `oauth/openid-configuration.get.ts` | 补 `jwks_uri`、`id_token_signing_alg_values_supported: [RS256]`、`code_challenge_methods_supported` |
+| `server/db/migrations/postgresql/0007_oauth_nonce_pkce.sql` | `oauth_codes` 加 `nonce` / `code_challenge` 两列 |
+
+> Gitea 走 goth 只解码不验签，HS256 也能用；SurveyKing 走 Nimbus 必须验签，所以统一改成 RS256。
+> `email_verified` 必须是 `true`（SurveyKing 硬校验），LMS 侧 = 用户有邮箱即为 true（1070 个账号里只有 1 个没邮箱）。
+
+### 10.4 SurveyKing 侧改动
+
+- **jar 补丁**：`scripts/surveyking-oauth/patch_google_to_lms.py`
+  - 4 个常量 → LMS 端点；`BINARY auth_account = {0}` → `auth_account = {0}`（H2 兼容）
+  - 前端文案 7 处：「Google 登录」→「LMS 账号登录」、管理端「Google Client ID」→「LMS Client ID」等
+  - 输出 `surveyking-lms.jar`，原 jar 备份在 `backup/surveyking.jar.orig`
+- **部署**：compose 里 bind mount 补丁 jar（`${SURVEYKING_PATH}/surveyking-lms.jar:/app/surveyking.jar`）
+- **配置**：`T_SYS_INFO.OAUTH_SETTING`（JSON）= `{publicBaseUrl, google:{enabled,clientId,clientSecret}}`
+- **绑定**：`T_ACCOUNT` 插一行 `AUTH_TYPE='GOOGLE'`, `AUTH_ACCOUNT='<LMS users.id>'` → 对应问卷账号
+  - SurveyKing 查绑定用 `auth_type + auth_account` 精确匹配（**不按 email**），所以 `sub` 必须是 LMS `users.id`
+
+### 10.5 实测结果（2026-10-27）
+
+用一份指向本地 dev LMS 的测试 jar 跑了完整链路（生产 LMS 当时还是旧代码）：
+
+| 步骤 | 结果 |
+|---|---|
+| `POST /api/public/oauth/login/google/start` | 返回 `authorizationUrl` 指向 LMS，带 client_id/redirect_uri/scope/**state**/**nonce**/**code_challenge**/code_challenge_method=S256 |
+| 浏览器跳 LMS 授权（LMS 已登录） | 302 → `http://10.28.1.157/api/public/oauth/callback/google?code=...&state=...` |
+| SurveyKing 回调 | 换 token → Nimbus 用 LMS 的 JWKS 验签通过 → 匹配绑定 → **302 `/` + 下发 `sk-token` 会话** |
+| `GET /api/currentUser`（带会话） | 200，返回 Admin 用户 + 管理员权限列表 |
+| `GET /api/currentUser`（无会话） | 401 |
+| LMS 侧 | id_token：RS256 + kid、aud=client_id、nonce 回显、email_verified=true；用 JWKS 公钥验签通过 |
+
+### 10.6 遗留与注意
+
+- **生产 LMS 部署后才真正可用**：现在 151 上跑的还是旧代码（HS256、无 nonce、无 JWKS），点「LMS 账号登录」会失败。部署新代码即恢复。
+- **只有 Frank 绑定了**：问卷系统目前只有 1 个账号（Admin），已绑 LMS `Frank Hu`(#32)。其他老师要用，需要先在问卷系统里有账号，再按上面的方式绑 LMS id。
+- `registerInfo.registerEnabled = false` → 没绑定的 LMS 用户登录会得到 `not_bound`，不会自动建号（要自动建号得开这个开关）。
+- **升级 SurveyKing 镜像会丢补丁**：升级后重跑 `patch_google_to_lms.py` 即可。
+- 补丁只改内容不改前端文件名，避免动 webpack 的 chunk hash 映射；浏览器缓存了旧 JS 的话按钮文案仍是「Google」，强刷（Ctrl+F5）即可。
+
+---
+
+## 11. 待确认
 
 - [ ] 学校是否已有 Workspace / Entra ID，`@minxinnansha.org.cn` 是否在其中
 - [ ] Hydro 1042 个用户与 LMS 用户的 email 匹配率（决定阶段 0 的清洗工作量）

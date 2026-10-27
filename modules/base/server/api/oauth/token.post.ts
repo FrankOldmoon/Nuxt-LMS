@@ -1,5 +1,6 @@
 import { db, schema } from '@nuxthub/db'
 import { and, eq } from 'drizzle-orm'
+import { createHash } from 'node:crypto'
 import { generateToken, verifyPassword } from '../../utils/auth'
 
 /**
@@ -81,6 +82,15 @@ export default defineEventHandler(async (event) => {
   if (redirect_uri && row.redirectUri !== redirect_uri) {
     return oauthError(event, 'invalid_grant')
   }
+  // PKCE：授权时带了 code_challenge，换 token 时必须带匹配的 code_verifier
+  if (row.codeChallenge) {
+    const verifier = String(body.code_verifier || '')
+    if (!verifier) return oauthError(event, 'invalid_grant', 'code_verifier required')
+    const digest = createHash('sha256').update(verifier).digest('base64url')
+    if (digest !== row.codeChallenge) {
+      return oauthError(event, 'invalid_grant', 'code_verifier mismatch')
+    }
+  }
 
   // 3. 标记已用（条件更新，防并发重复兑换同一 code）
   const consumed = await db
@@ -112,22 +122,21 @@ export default defineEventHandler(async (event) => {
 
   const now = Math.floor(Date.now() / 1000)
   const avatar = user.avatarImg || ''
-  const idToken = signIdToken(
-    {
-      iss: oauthIssuer(event),
-      sub: String(user.id),
-      aud: client.clientId,
-      iat: now,
-      exp: now + 3600,
-      name: user.name || user.username,
-      nickname: user.username,
-      preferred_username: user.username,
-      email: user.email || '',
-      email_verified: Boolean(user.email),
-      picture: avatar.startsWith('http') ? avatar : '',
-    },
-    String(clientSecret),
-  )
+  const idToken = await signIdTokenRs256({
+    iss: oauthIssuer(event),
+    sub: String(user.id),
+    aud: client.clientId,
+    iat: now,
+    exp: now + 3600,
+    // nonce 必须原样回显：客户端（OIDC）拿它和授权请求里的比对，防重放
+    ...(row.nonce ? { nonce: row.nonce } : {}),
+    name: user.name || user.username,
+    nickname: user.username,
+    preferred_username: user.username,
+    email: user.email || '',
+    email_verified: Boolean(user.email),
+    picture: avatar.startsWith('http') ? avatar : '',
+  })
 
   return {
     access_token: accessToken,

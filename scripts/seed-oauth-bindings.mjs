@@ -23,6 +23,7 @@
 import { execFileSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
 import postgres from 'postgres'
+import { getProdUrl } from './_prod-url.mjs'
 
 const KEY = process.env.HYDRO_SSH_KEY || '/Users/oldmoon/Documents/github/155/10.28.1.155_id_ed25519'
 const HOST = process.env.HYDRO_SSH_HOST || 'root@10.28.1.155'
@@ -66,13 +67,11 @@ const activeUids = new Set(hydro.activeUids || [])
 
 // ---------- 2. 拉 LMS 用户 ----------
 console.log('→ 读取 LMS 用户…')
-const env = readFileSync(new URL('../.env', import.meta.url), 'utf8')
-const prodLine = env.split('\n').find((l) => /^#\s*POSTGRES_URL=/.test(l))
 if (!prodLine) {
   console.error('找不到生产库连接串：请在 .env 保留一行 #POSTGRES_URL=... 或用 --db 传入')
   process.exit(1)
 }
-const sql = postgres(prodLine.replace(/^#\s*POSTGRES_URL=/, '').trim(), { max: 1, idle_timeout: 5 })
+const sql = postgres(getProdUrl(), { max: 1, idle_timeout: 5 })
 let lmsUsers
 try {
   lmsUsers = await sql`select id, username, email, name from users where deleted_at is null`

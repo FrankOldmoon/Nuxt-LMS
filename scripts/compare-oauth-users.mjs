@@ -16,6 +16,7 @@
 
 import { readFileSync, writeFileSync } from 'node:fs'
 import postgres from 'postgres'
+import { getProdUrl } from './_prod-url.mjs'
 
 function arg(name, fallback = '') {
   const i = process.argv.indexOf(`--${name}`)
@@ -27,13 +28,7 @@ const hydroPath = arg('hydro', '/tmp/hydro-users.json')
 // ---- LMS 连接串：优先 --db，其次 .env 里被注释的生产行 ----
 let dbUrl = arg('db')
 if (!dbUrl) {
-  const env = readFileSync(new URL('../.env', import.meta.url), 'utf8')
-  const line = env.split('\n').find((l) => /^#\s*POSTGRES_URL=/.test(l))
-  if (!line) {
-    console.error('找不到生产库连接串：请在 .env 里保留一行 #POSTGRES_URL=... 或用 --db 传入')
-    process.exit(1)
-  }
-  dbUrl = line.replace(/^#\s*POSTGRES_URL=/, '').trim()
+  dbUrl = getProdUrl()
 }
 
 const hydro = JSON.parse(readFileSync(hydroPath, 'utf8'))

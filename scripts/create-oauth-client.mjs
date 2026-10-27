@@ -16,6 +16,7 @@ import { randomBytes, scrypt } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { promisify } from 'node:util'
 import postgres from 'postgres'
+import { getProdUrl } from './_prod-url.mjs'
 
 const scryptAsync = promisify(scrypt)
 
@@ -79,13 +80,7 @@ console.log(`lms-oauth.secret = ${clientSecret}`)
 console.log('')
 
 if (process.argv.includes('--apply')) {
-  const env = readFileSync(new URL('../.env', import.meta.url), 'utf8')
-  const prod = env.split('\n').find((l) => /^#\s*POSTGRES_URL=/.test(l))
-  if (!prod) {
-    console.error('❌ 找不到生产库连接串（.env 需要一行 #POSTGRES_URL=...）')
-    process.exit(1)
-  }
-  const sql = postgres(prod.replace(/^#\s*POSTGRES_URL=/, '').trim(), { max: 1, idle_timeout: 5 })
+  const sql = postgres(getProdUrl(), { max: 1, idle_timeout: 5 })
   try {
     const rows = await sql`
       insert into oauth_clients (client_id, client_secret, name, redirect_uris)

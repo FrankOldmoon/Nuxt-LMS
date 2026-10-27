@@ -21,6 +21,8 @@ export const DEFAULT_SITE_CONFIG: Record<string, any> = {
   // OAuth2/OIDC 对外基址（issuer）。留空 = 用请求 origin；
   // 反代没透传 Host 导致 origin 变成内网地址时，在这里填 http://10.28.1.151 兜底
   'site:oauth.issuer': '',
+  // id_token 的 RS256 私钥（PKCS8 PEM）。留空 = 首次启动自动生成并写回本表
+  'site:oauth.idPrivateKey': '',
   // 账号安全
   'site:allowRegistration': false,
   'site:allowForgotPassword': true,

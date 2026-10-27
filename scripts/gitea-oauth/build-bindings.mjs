@@ -23,6 +23,7 @@
 
 import { readFileSync, writeFileSync } from 'node:fs'
 import postgres from 'postgres'
+import { getProdUrl } from '../_prod-url.mjs'
 
 function parseArgs(argv) {
   const args = { users: '', sourceId: 0, sql: '', map: [], extra: [] }
@@ -63,13 +64,11 @@ const giteaUsers = readFileSync(args.users, 'utf8')
   })
 
 // ---------- 2. 读 LMS 用户 ----------
-const env = readFileSync(new URL('../../.env', import.meta.url), 'utf8')
-const prodLine = env.split('\n').find((l) => /^#\s*POSTGRES_URL=/.test(l))
 if (!prodLine) {
   console.error('❌ .env 里找不到注释掉的生产库连接串（#POSTGRES_URL=...）')
   process.exit(1)
 }
-const sql = postgres(prodLine.replace(/^#\s*POSTGRES_URL=/, '').trim(), { max: 1, idle_timeout: 5 })
+const sql = postgres(getProdUrl(), { max: 1, idle_timeout: 5 })
 
 let lmsUsers
 try {

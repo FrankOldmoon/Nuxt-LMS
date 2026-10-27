@@ -21,16 +21,16 @@ export default defineEventHandler((event) => {
     authorization_endpoint: `${issuer}/api/oauth/authorize`,
     token_endpoint: `${issuer}/api/oauth/token`,
     userinfo_endpoint: `${issuer}/api/oauth/userinfo`,
+    jwks_uri: `${issuer}/api/oauth/jwks`,
 
     response_types_supported: ['code'],
     grant_types_supported: ['authorization_code'],
     subject_types_supported: ['public'],
-    // 没有 JWKS：id_token 用 HS256 + client_secret 签名。
-    // 目前接入方（Gitea）只校验 iss/aud/exp、不验签；将来接 oauth2-proxy 这类
-    // 强制验签的客户端时，要改成 RS256 并补 /api/oauth/jwks。
-    id_token_signing_alg_values_supported: ['HS256'],
+    // id_token 用 RS256 签名，客户端拿 jwks_uri 里的公钥验签
+    id_token_signing_alg_values_supported: ['RS256'],
     token_endpoint_auth_methods_supported: ['client_secret_post', 'client_secret_basic'],
     scopes_supported: ['openid', 'profile', 'email'],
+    code_challenge_methods_supported: ['S256'],
     claims_supported: [
       'sub',
       'name',
@@ -39,6 +39,7 @@ export default defineEventHandler((event) => {
       'email',
       'email_verified',
       'picture',
+      'nonce',
     ],
   }
 })

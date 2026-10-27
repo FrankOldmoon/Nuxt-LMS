@@ -12,6 +12,7 @@
 
 import { readFileSync } from 'node:fs'
 import postgres from 'postgres'
+import { getProdUrl } from './_prod-url.mjs'
 
 const file = process.argv[2]
 const apply = process.argv.includes('--apply')
@@ -21,13 +22,7 @@ if (!file) {
   process.exit(1)
 }
 
-const env = readFileSync(new URL('../.env', import.meta.url), 'utf8')
-const prod = env.split('\n').find((l) => /^#\s*POSTGRES_URL=/.test(l))
-if (!prod) {
-  console.error('找不到生产库连接串（.env 里需要一行 #POSTGRES_URL=...）')
-  process.exit(1)
-}
-const url = prod.replace(/^#\s*POSTGRES_URL=/, '').trim()
+const url = getProdUrl()
 const sqlText = readFileSync(file, 'utf8')
 
 if (!apply) {

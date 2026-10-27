@@ -13,7 +13,7 @@ import { and, eq, lt } from 'drizzle-orm'
 export default defineEventHandler(async (event) => {
   const url = getRequestURL(event)
   const q = getQuery(event) as Record<string, string>
-  const { client_id, redirect_uri, state = '', response_type } = q
+  const { client_id, redirect_uri, state = '', response_type, nonce = '', code_challenge = '' } = q
 
   // 1. 校验 client 与回调地址（精确匹配，不做前缀匹配）
   const [client] = client_id
@@ -40,12 +40,17 @@ export default defineEventHandler(async (event) => {
   await db.delete(schema.oauthCodes).where(lt(schema.oauthCodes.expiresAt, new Date()))
 
   // 4. 签发一次性 code（60 秒）
+  //    nonce / code_challenge 随 code 一起存，换 token 时再校验：
+  //    - nonce：OIDC 客户端（SurveyKing）会校验 id_token 里的 nonce 与授权请求一致
+  //    - code_challenge：PKCE，客户端在换 token 时带 code_verifier，必须匹配
   const code = generateToken()
   await db.insert(schema.oauthCodes).values({
     code,
     clientId: client_id,
     userId: user.id,
     redirectUri: redirect_uri,
+    nonce: nonce || null,
+    codeChallenge: code_challenge || null,
     expiresAt: new Date(Date.now() + 60_000),
   })
 

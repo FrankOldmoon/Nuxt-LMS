@@ -291,6 +291,10 @@ export const oauthCodes = pgTable(
     clientId: varchar('client_id', { length: 64 }).notNull(),
     userId: integer('user_id').notNull(),
     redirectUri: varchar('redirect_uri', { length: 500 }).notNull(),
+    // OIDC nonce：授权请求带了就存，换 token 时原样放进 id_token 供客户端校验
+    nonce: varchar('nonce', { length: 128 }),
+    // PKCE code_challenge（S256）：换 token 时校验 code_verifier
+    codeChallenge: varchar('code_challenge', { length: 128 }),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     used: boolean('used').default(false).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),

@@ -4,8 +4,6 @@
  * 错误返回遵循 RFC 6749：HTTP 400 + { error, error_description }。
  * 不用 cResp —— 外部系统（Hydro / Gitea / oauth2-proxy）按标准字段解析，不看本站的 { code, msg, data } 包装。
  */
-import { createHmac } from 'node:crypto'
-
 /** 返回标准 OAuth 错误（400） */
 export function oauthError(event: any, error: string, description?: string) {
   setResponseStatus(event, 400)
@@ -64,13 +62,4 @@ export function oauthIssuer(event: any): string {
   const configured = String(getConfigSync('site:oauth.issuer') || '').trim()
   const base = configured || getRequestURL(event).origin
   return base.replace(/\/+$/, '')
-}
-
-/** HS256 签发 id_token（客户端不验签，但签名保证不被第三方伪造） */
-export function signIdToken(payload: Record<string, any>, secret: string): string {
-  const b64 = (obj: any) => Buffer.from(JSON.stringify(obj)).toString('base64url')
-  const head = b64({ alg: 'HS256', typ: 'JWT' })
-  const body = b64(payload)
-  const sig = createHmac('sha256', secret).update(`${head}.${body}`).digest('base64url')
-  return `${head}.${body}.${sig}`
 }
