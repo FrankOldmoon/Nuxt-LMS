@@ -40,6 +40,9 @@
             <div class="flex items-center gap-2">
                 <UIcon name="i-heroicons-check-circle" class="w-5 h-5 text-green-500" />
                 <span class="text-sm text-green-700 dark:text-green-300">{{ t('homework.submitSuccess') }}</span>
+                <span v-if="submittedAtText" class="text-xs text-gray-500 dark:text-gray-400 ml-auto whitespace-nowrap">
+                    {{ t('record.submitTime') }}: {{ submittedAtText }}
+                </span>
             </div>
             <!-- 已提交内容 -->
             <div v-if="submittedContent" class="mt-2">
@@ -71,6 +74,7 @@ import HomeworkFileList from './homework-file-list.vue'
 const {
     t, effectiveCourseId,
     submittedContent, submittedFiles, submitted, submittedFileList,
+    submittedAtText,
     submitting, submitLocked, submitMsg, submitOk,
     deadlinePassed,
     selfScore, selfComment,

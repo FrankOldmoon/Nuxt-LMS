@@ -99,6 +99,9 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
     const submittedContent = ref('')
     const submittedFiles = ref<any[]>([])
     const submitted = ref(false)
+    // 最近一次提交时间（用于「已提交」区域展示）
+    const submittedAt = ref<string | null>(null)
+    const submittedAtText = computed(() => submittedAt.value ? formatTime(submittedAt.value, siteTimeZone.value) : '')
     const submittedFileList = ref<any[]>([])
     const submitting = ref(false)
     const submitMsg = ref('')
@@ -175,6 +178,7 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
                 },
             })
             submitted.value = true
+            submittedAt.value = result?.submittedAt || new Date().toISOString()
             submittedFileList.value = files
             submitOk.value = true
             submitMsg.value = t('homework.submitSuccess')
@@ -208,6 +212,7 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
         submittedContent.value = ''
         submittedFiles.value = []
         submitted.value = false
+        submittedAt.value = null
         submittedFileList.value = []
         submitMsg.value = ''
     }
@@ -233,6 +238,8 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
                 // 有内容或文件则标记为已提交
                 if (data.content || (Array.isArray(data.files) && data.files.length > 0)) {
                     submitted.value = true
+                    // 提交时间：优先 record._submittedAt（重提交会刷新），旧数据回退到行创建时间
+                    submittedAt.value = data.record?._submittedAt || data.createdAt || null
                     // 上报历史完成状态
                     chapterTask?.reportNodeDone('homework', homeworkId.value, true)
                 }
@@ -259,7 +266,7 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
         homework, pending, homeworkId, isTeacher, isLoggedIn,
         editOpen, recordsOpen, refresh,
         deadlinePassed, formatDeadline,
-        submittedContent, submittedFiles, submitted, submittedFileList,
+        submittedContent, submittedFiles, submitted, submittedAt, submittedAtText, submittedFileList,
         submitting, submitLocked, submitMsg, submitOk,
         selfScore, selfComment, featuredList, featuredPending,
         fetchFeatured, strFromComment,

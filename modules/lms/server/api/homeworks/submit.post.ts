@@ -131,5 +131,5 @@ export default withSubmitHandler('提交作业失败', async (event) => {
     gainedCoin,
   })
 
-  return cResp({ gainedExp, gainedCoin })
+  return cResp({ gainedExp, gainedCoin, submittedAt })
 })
