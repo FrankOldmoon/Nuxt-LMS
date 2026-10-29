@@ -1,20 +1,26 @@
 /**
  * Hydro OJ 的 LMS 登录插件（Hydro 5）
  *
- * 作用：在 Hydro 登录页注册一个「校园账号登录」按钮，走 LMS 的 OAuth 授权码流程。
- * 与「用微信登录」同构：Hydro 是 client，LMS 是 provider。
+ * 作用：
+ *   1. 在 Hydro 登录页注册「LMS 账号登录」按钮，走 LMS 的 OAuth 授权码流程
+ *   2. **自动 SSO**：没登录的人访问任何页面，直接 302 到 LMS 授权端点。
+ *      LMS 那边如果浏览器已登录（同一个 10.28.1.151 域下的 auth_token cookie），
+ *      会立刻签发 code 跳回来 —— 用户完全看不到登录页，就是"打开 155 就进去了"。
+ *      LMS 没登录时才会看到 LMS 的登录页，登录完自动回到原页面。
  *
  * 安装（在 155 上）：
  *   mkdir -p ~/.hydro/addon/lms-oauth
- *   cp index.ts package.json ~/.hydro/addon/lms-oauth/
+ *   cp index.ts package.json locales/* ~/.hydro/addon/lms-oauth/  (locales 放 locales/)
  *   hydrooj addon add ~/.hydro/addon/lms-oauth
  *   pm2 restart hydrooj
  *
  * 配置（控制面板 → 系统设置，或 hydrooj cli system set）：
- *   lms-oauth.endpoint   http://10.28.1.151            （不要带末尾斜杠）
- *   lms-oauth.id         <LMS oauth_clients.client_id>
- *   lms-oauth.secret     <LMS oauth_clients 的明文 secret>
- *   lms-oauth.callback   http://10.28.1.155/oauth/lms/callback
+ *   lms-oauth.endpoint          http://10.28.1.151       （不要带末尾斜杠）
+ *   lms-oauth.id                <LMS oauth_clients.client_id>
+ *   lms-oauth.secret            <LMS oauth_clients 的明文 secret>
+ *   lms-oauth.callback          http://10.28.1.155/oauth/lms/callback
+ *   lms-oauth.autologin         true                     （默认 true，关掉就回到手动点按钮）
+ *   lms-oauth.autologin.skip    /oauth/,/static/,/api/,/favicon,/_
  *
  * 注意：不能拿 server.url 拼回调地址 —— 本站 server.url 是 "/"（Caddy 反代、相对路径），
  * 拼出来是相对地址，和 LMS 白名单里的完整 URL 对不上。所以回调地址单独配置。
@@ -25,7 +31,7 @@ import { Context, Handler, SystemModel, TokenModel, superagent } from 'hydrooj'
 
 // cordis 要求：不声明 inject 就访问 ctx.oauth 会抛
 // "cannot get property \"oauth\" without inject"（core 的 handler/user.ts 也是这么写的）
-export const inject = ['oauth']
+export const inject = ['oauth', 'server']
 
 declare module 'hydrooj' {
     interface SystemKeys {
@@ -33,7 +39,33 @@ declare module 'hydrooj' {
         'lms-oauth.id': string
         'lms-oauth.secret': string
         'lms-oauth.callback': string
+        'lms-oauth.autologin': boolean
+        'lms-oauth.autologin.skip': string
     }
+}
+
+/**
+ * 不参与自动跳转的路径前缀
+ *
+ * /oauth/    —— 授权入口与回调本身，拦了就是无限循环
+ * /static/   —— 静态资源
+ * /api/      —— 前端 fetch，302 过去会拿到 HTML 解析失败，应该原样返回 401
+ * /favicon   —— 图标
+ * /_         —— Hydro 的内部路径（_server、_mongo 之类）
+ */
+const DEFAULT_SKIP = '/oauth/,/static/,/api/,/favicon,/_,/gen/'
+
+function shouldSkip(path: string, skipList: string): boolean {
+    return skipList
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .some((prefix) => path.startsWith(prefix))
+}
+
+function truthy(v: any): boolean {
+    if (v === false || v === 'false' || v === 0 || v === '0') return false
+    return true
 }
 
 export async function apply(ctx: Context) {
@@ -51,8 +83,11 @@ export async function apply(ctx: Context) {
                 SystemModel.get('lms-oauth.endpoint'),
                 SystemModel.get('lms-oauth.id'),
                 SystemModel.get('lms-oauth.callback'),
-                TokenModel.add(TokenModel.TYPE_OAUTH, 600, { redirect: this.request.referer || '/' })
-                    .then((r) => r[0]),
+                // 优先用显式传进来的 redirect（自动 SSO 层会把原始 URL 带过来），
+                // 退回到 referer —— 302 跳转时浏览器不一定带 referer，不可靠
+                TokenModel.add(TokenModel.TYPE_OAUTH, 600, {
+                    redirect: this.session.oauthRedirect || this.request.referer || '/',
+                }).then((r) => r[0]),
             ])
             this.response.redirect = `${endpoint}/api/oauth/authorize`
                 + `?response_type=code&client_id=${encodeURIComponent(clientId)}`
@@ -87,5 +122,49 @@ export async function apply(ctx: Context) {
                 avatar: profile.avatar || '',
             }
         },
+    })
+
+    // ---------------------------------------------------------------- 自动 SSO
+    //
+    // 用 serverLayer（在路由之前），不能用手 handlerLayer：
+    // handlerLayers 外面包着 base 图层，它 await next() 之后会检查 ctx.handler，
+    // 发现没有 handler 就 log「No handler found」并把 status 改成 500 —— 302 会被吃掉。
+    // serverLayer 在 router 之前短路，koa 直接按我们设的 status 返回。
+    ctx.server.addServerLayer('lms-sso-auto', async (c: any, next: () => Promise<void>) => {
+        // 只处理浏览器的页面导航：GET + 要 HTML。
+        // 图片/脚本/fetch 一律放行，避免把资源请求也 302 成 HTML。
+        if (c.method !== 'GET') return next()
+        const accept = String(c.request?.headers?.accept || '')
+        if (!accept.includes('text/html')) return next()
+
+        // ------------------------------------------------------------ 判断依据说明
+        // serverLayer 阶段拿不到 Hydro 的 session（实测 c.session === undefined，
+        // 连 c.HydroContext 都没有 —— 那些要等更内层的 userLayer 才建好）。
+        // 所以只能看 cookie：
+        //   sid      Hydro 的会话 cookie，只要有它就说明这个人跟本站打过交道（已登录或游客）
+        //   sso_try  我们自己的短标记，120 秒内有效，用来防重定向死循环
+        const cookieHeader = String(c.request?.headers?.cookie || '')
+        const readCookie = (name: string) => {
+            const m = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`))
+            return m ? m[1] : null
+        }
+
+        // 已经有本站会话 → 不打扰（已登录的人当然放行；游客也放行，别把人锁在登录页外）
+        if (readCookie('sid')) return next()
+
+        // 刚从 SSO 回来但没拿到会话（用户取消、或者 LMS 那边报错）→ 放行这一次，别死循环
+        if (readCookie('sso_try')) return next()
+
+        if (!truthy(await SystemModel.get('lms-oauth.autologin'))) return next()
+
+        const skip = (await SystemModel.get('lms-oauth.autologin.skip')) || DEFAULT_SKIP
+        if (shouldSkip(c.path, skip)) return next()
+
+        // 没会话也没标记 → 送去 LMS。LMS 那边如果已登录会立刻签 code 回来，
+        // 用户看不到任何登录页；没登录才会看到 LMS 的登录页。
+        c.append('Set-Cookie', 'sso_try=1; Path=/; Max-Age=120; SameSite=Lax')
+        c.status = 302
+        c.set('Location', `/oauth/lms/login?redirect=${encodeURIComponent(c.path + (c.search || ''))}`)
+        c.set('Cache-Control', 'no-store')
     })
 }

@@ -947,6 +947,87 @@ WHERE a.auth_type = 'GOOGLE' AND a.is_deleted = 0
 
 ---
 
+### 10.14 Hydro（155）自动 SSO：LMS 已登录就直接进
+
+**效果**：浏览器在 LMS 已登录的状态下打开 `http://10.28.1.155/任意页面`，
+4 次 302、约 1.2 秒之后直接落到目标页面，**完全看不到登录页**。
+
+```
+GET 155/p
+ → 302 155/oauth/lms/login?redirect=/p
+ → 302 151/api/oauth/authorize?...          (浏览器带着 151 的 auth_token)
+ → 302 155/oauth/lms/callback?code=...      (LMS 已登录 → 立即签 code)
+ → 302 155/p                                (Hydro 建会话)
+ → 200 已登录
+```
+
+LMS 没登录时：同一条链，但停在 `151/oauth/login` 让你登录，登录完自动回原页面。
+
+**为什么不需要"判断 151 是否已登录"**
+
+155 不探测 151（跨 IP 的 cookie 拿不到，而且 LMS 是 http，`SameSite=None` 必须配 `Secure`，根本发不出去）。
+做法是把决定权交给 LMS：**只要没会话，就先跳过去**。LMS 有会话就立刻签 code 回来，用户无感；
+没有才显示登录页。这就是标准 SSO，比探测更可靠。
+
+**实现**（`scripts/hydro-addon/lms-oauth/index.ts`）
+
+在 addon 里挂一个 serverLayer，未登录的页面请求 302 到 `/oauth/lms/login`：
+
+```ts
+ctx.server.addServerLayer('lms-sso-auto', async (c, next) => { ... })
+```
+
+判定只看 cookie，因为 serverLayer 阶段拿不到 Hydro 的 session：
+
+| cookie | 含义 | 处理 |
+|---|---|---|
+| `sid` | Hydro 会话（已登录或游客） | 放行，不打扰 |
+| `sso_try` | 我们自己设的 120 秒短标记 | 放行，防重定向死循环 |
+| 都没有 | 没来过本站 | 设 `sso_try`，302 到 LMS |
+
+跳过路径（`lms-oauth.autologin.skip`，默认 `/oauth/,/static/,/api/,/favicon,/_,/gen/`），
+另外只拦 `GET` + `Accept: text/html` —— 资源和 fetch 一律放行，避免把 JS 请求 302 成 HTML。
+
+**踩过的三个坑（都很隐蔽）**
+
+1. **用 handlerLayer 会吃掉 302**
+   `handlerLayers` 外面包着 `base` 图层，它 `await next()` 之后会检查 `ctx.handler`，
+   发现没有 handler 就 log `No handler found` 并把 status 改成 500 —— 302 白设了。
+   必须用 `addServerLayer`（在 `router.routes()` 之前短路）。
+
+2. **不能在 serverLayer 里碰 `c.session`**
+   实测 `c.session` 在这个阶段是 `undefined`（`c.HydroContext` 也没有，那些要等 `userLayer` 才建好）。
+   一开始往 session 里写 `ssoAt` 做冷却，结果是：callback 明明成功、也下发了新 sid，
+   但后续请求读不到 uid —— 表现为**无限重定向**（`ERR_TOO_MANY_REDIRECTS`）。
+   改成纯 cookie 判断后一切正常。
+
+3. **Hydro 的 OAuth 回调有频率限制**
+   `OauthCallbackHandler` 里有 `limitRate('oauth_callback', 60, 5)` ——
+   **每分钟最多 5 次**。所以一旦出现重定向循环，很快就会彻底卡死（429），
+   调试时更难定位。防循环必须在第一版就做对。
+
+**开关**
+
+```bash
+# 关掉自动跳转，回到「手动点按钮登录」
+# 控制面板 → 系统设置，或直接改 mongo:
+#   system 集合 { _id: 'lms-oauth.autologin', value: false }
+```
+
+**验证脚本**
+
+```bash
+node scripts/hydro-sso/e2e.mjs                 # LMS 已登录 → 应自动进
+node scripts/hydro-sso/e2e.mjs --no-lms        # LMS 未登录 → 应停在 LMS 登录页
+node scripts/hydro-sso/e2e.mjs --path /p       # 指定路径
+node scripts/hydro-sso/check-repeat.mjs        # 第 1 次跳、之后不跳
+```
+
+实测（2026-10-29）：第 1 次 5 跳 1.2s 登录成功；第 2、3 次各 1 跳 0.9s 直接 200。
+
+---
+
+
 ## 11. 待确认
 
 - [ ] 学校是否已有 Workspace / Entra ID，`@minxinnansha.org.cn` 是否在其中
