@@ -1,0 +1,365 @@
+{
+  "556": {
+    "sections": [
+      {
+        "title": "🔍 Why you look before you compute",
+        "paras": [
+          "The first thing anyone does with a new dataset is compute a mean. That is usually the wrong first move, because a mean hides shape: in a two-humped set it can land in the gap where no observation sits.",
+          "A plot takes seconds and answers questions no summary number can: are there outliers, is the distribution skewed, is the data secretly two groups, is one column mostly zeros. Skipping the plot means doing careful arithmetic on a picture you never looked at."
+        ]
+      },
+      {
+        "title": "⚙️ The chart follows the data type",
+        "paras": [
+          "Choose the chart from the type of variable, not from taste. Categories take bar charts, numbers take histograms, pairs of numbers take scatter plots, time takes a line."
+        ],
+        "bullets": [
+          "A histogram has its bars touching because the axis is a continuous range; a bar chart keeps them apart because the axis is a list of labels.",
+          "Box plots compare several groups at once but hide whether a group is two-humped.",
+          "Scatter plots reveal the shape of a relationship before any correlation is computed.",
+          "Bar charts sorted by value are read far faster than bars in alphabetical order.",
+          "A y axis that does not start at zero exaggerates differences, and a pie with ten slices is unreadable."
+        ]
+      },
+      {
+        "title": "🧮 Three datasets, three charts",
+        "paras": [
+          "Orders per channel is a categorical variable, so a bar chart sorted from largest to smallest. A pie would be acceptable with four channels and misleading with ten.",
+          "Salaries across five hundred staff is one numeric variable, so a histogram. Expect a long right tail, which is exactly why the median will describe a typical salary better than the mean.",
+          "Daily active users and revenue over twelve months is a time series, so a line chart with time on the horizontal axis. Two measures with different units do not share one axis: either use two panels or label two axes explicitly.",
+          "One more habit: always print the group size on the chart. An average of ten people and an average of ten thousand look identical as a bar."
+        ]
+      }
+    ]
+  },
+  "557": {
+    "sections": [
+      {
+        "title": "🔍 Three answers to the same question",
+        "paras": [
+          "What is a typical value? The mean answers by sharing the total equally. The median answers by standing in the middle of the sorted list. The mode answers by naming the most frequent value.",
+          "All three are legitimate and they disagree whenever the data are skewed. Choosing between them is a decision about what the word typical should mean in that context, not a matter of arithmetic."
+        ]
+      },
+      {
+        "title": "⚙️ What each one survives",
+        "paras": [
+          "The mean uses every value, which makes it informative and fragile. The median uses only position, which makes it sturdy and blind to magnitude. The mode is the only one that works on categories."
+        ],
+        "bullets": [
+          "One extreme value can move a mean arbitrarily far and barely touch a median.",
+          "The median of an even count is the average of the two middle values, so it need not be a value that occurs.",
+          "A mode may not exist, may not be unique, and on continuous data depends on how you bin.",
+          "For a group mean, weight by group size: averaging group means directly is the classic mistake.",
+          "Comparing a mean and a median is a free skew test: mean well above median means a long right tail."
+        ]
+      },
+      {
+        "title": "🧮 Ten salaries and one outlier",
+        "paras": [
+          "Salaries in thousands: 4, 4.5, 5, 5, 5.5, 6, 6, 7, 8, 50. The mean is 10.1 and the median is 5.75. One person's pay moved the mean by seventy-five percent and the median by nothing.",
+          "So a recruitment advert quoting the average salary of 10.1 is technically true and practically misleading: nine of the ten people earn between four and eight.",
+          "The weighting mistake is just as common. Ten people averaging eight thousand and a hundred people averaging four thousand do not average six thousand; the correct figure is (10x8 + 100x4)/110, about 4.36. Ignoring group size is the mechanism behind Simpson's paradox, where every subgroup improves and the overall number falls."
+        ]
+      }
+    ]
+  },
+  "558": {
+    "sections": [
+      {
+        "title": "🔍 Why the centre is not enough",
+        "paras": [
+          "Two funds can both average half a percent a day. One moves between 0.4 and 0.6, the other swings from minus three to plus four. The average is identical and the risk is not, so a summary that reports only the centre is not describing the data.",
+          "Spread is what turns an estimate into a decision: it sets the error bars on every measurement, the tolerance on every process, and the sample size on every study."
+        ]
+      },
+      {
+        "title": "⚙️ Four measures, ordered by how much they break",
+        "paras": [
+          "Range uses two values and is destroyed by one outlier. Interquartile range ignores the outer quarters and therefore survives. Variance and standard deviation use everything and are the most sensitive of the four."
+        ],
+        "bullets": [
+          "Range is the difference between maximum and minimum, useful mainly for detecting data-entry errors.",
+          "Interquartile range covers the middle half and pairs with the median for skewed data.",
+          "Variance averages squared deviations, so it is in squared units and inflates large errors.",
+          "Standard deviation returns to the original units and is what you quote when explaining spread.",
+          "Sample variance divides by n minus one, because deviations from the sample mean are slightly too small.",
+          "Coefficient of variation, standard deviation over mean, compares spread across different units.",
+          "The 1.5 interquartile rule flags values outside the quartiles by that margin, and is where box-plot whiskers come from."
+        ]
+      },
+      {
+        "title": "🧮 Seven numbers, then an eighth",
+        "paras": [
+          "Data: 2, 4, 4, 5, 7, 9, 12. Mean 6.14, median 5, range 10, quartiles 4 and 9 so interquartile range 5, variance about 11.8, standard deviation about 3.44.",
+          "Now append 100. The mean jumps to 17.9, the range to 98, the standard deviation to about 33.9. The median moves to 6 and the interquartile range to about 5.75.",
+          "So one value multiplied the standard deviation by ten and the interquartile range by fifteen percent. With outliers present, describe the body of the data with median and interquartile range, and treat the outlier as its own finding rather than deleting it."
+        ]
+      }
+    ]
+  },
+  "560": {
+    "sections": [
+      {
+        "title": "🔍 Why a sample can speak for a population",
+        "paras": [
+          "You cannot measure everyone, so you measure some and generalise. That leap is only justified if the sample was drawn without favouring any part of the population; a biased sample stays wrong however large it grows.",
+          "Random sampling makes the sample mean unbiased, but a single sample still misses by some amount. The rest of the argument quantifies that miss: the central limit theorem describes how sample means scatter, and the standard error measures how wide that scatter is."
+        ]
+      },
+      {
+        "title": "⚙️ The theorem, in one sentence",
+        "paras": [
+          "Whatever shape the population has, the distribution of the sample mean becomes approximately normal as the sample grows, centred on the population mean with standard deviation sigma over root n. That is why the same interval formula works for data that looks nothing like a bell."
+        ],
+        "bullets": [
+          "Standard error is sigma over root n, roughly a quarter of the population spread at sixteen observations.",
+          "Quadrupling the sample halves the error, so precision is bought at a square-root price.",
+          "Thirty observations is a rule of thumb, not a law: heavy skew needs hundreds.",
+          "Bias cannot be fixed by size. Sampling only daytime residents stays wrong at a million responses.",
+          "The theorem covers means and sums, not medians, maxima or variances."
+        ]
+      },
+      {
+        "title": "🧮 What the standard error actually buys",
+        "paras": [
+          "Scores with a population standard deviation of 15. At twenty-five observations the standard error is 3, so sample means scatter by about three points. At a hundred it is 1.5, at four hundred 0.75.",
+          "To estimate the mean within one point at ninety-five percent confidence you need 1.96 times the standard error below one, which means a standard error of 0.51, which needs 865 observations. That calculation is the first step of any survey, and it is why clinical trials register their sample size in advance.",
+          "A demonstration worth running once: draw thirty values from an exponential distribution, average them, and repeat ten thousand times. The original data are strongly skewed and the ten thousand averages are close to a bell. That is the theorem doing its work."
+        ]
+      }
+    ]
+  },
+  "561": {
+    "sections": [
+      {
+        "title": "🔍 Why one number is not an estimate",
+        "paras": [
+          "The average length of a sample of parts was 10.02 millimetres. Said without a margin, that sentence implies the true value is 10.02, which it almost certainly is not; another sample would have given 10.01.",
+          "A confidence interval reports the estimate together with how far it could plausibly be wrong. Two teams can both report a five percent improvement, one with a range of 4.5 to 5.5 and one with minus 2 to 12. Only the first supports a decision."
+        ]
+      },
+      {
+        "title": "⚙️ The formula and what it means",
+        "paras": [
+          "Estimate plus or minus a critical value times the standard error. Roughly two standard errors for ninety-five percent confidence, and the critical value grows if you demand more confidence.",
+          "The reading is subtle and worth stating exactly: if the whole procedure were repeated many times, about ninety-five percent of the intervals built this way would contain the true value. It is the procedure that has the ninety-five percent property, not any single interval."
+        ],
+        "bullets": [
+          "Three things change the width: confidence level, sample size, and the variability of the data.",
+          "Use the standard error, not the standard deviation. Using the latter gives a prediction interval for one observation, which is far wider.",
+          "For proportions, check that both successes and failures are at least five before trusting the normal approximation.",
+          "An interval for a difference that contains zero is the same statement as a non-significant test.",
+          "A wide interval means the data are insufficient, which is not the same as no effect."
+        ]
+      },
+      {
+        "title": "🧮 A hundred parts, and what a smaller sample would have said",
+        "paras": [
+          "A hundred parts give a mean of 10.02 and a sample standard deviation of 0.1, so the standard error is 0.01 and the interval runs from 10.0004 to 10.0396. Against a specification of 10.00 to 10.05 that is a pass, with almost no room at the bottom.",
+          "Drop to twenty-five parts and the standard error doubles to 0.02, so the interval widens to 9.981 to 10.059 and now crosses the lower limit. The data did not change; only the amount of it did, and the conclusion changed with it.",
+          "The same arithmetic sizes a survey. A proportion within three percentage points at ninety-five percent confidence needs about 1067 respondents, which is why opinion polls of a few hundred people quote much wider margins."
+        ]
+      }
+    ]
+  },
+  "563": {
+    "sections": [
+      {
+        "title": "🔍 What a hypothesis test is really doing",
+        "paras": [
+          "Does the new drug work, is this batch in specification, has the conversion rate changed? Each question is asked with limited data, so the answer is expressed as a statement about how surprising the data would be if nothing were happening.",
+          "That is a proof by contradiction with probabilities instead of certainties. Assume no effect, compute how extreme the observation is under that assumption, and if it is extreme enough, decide the assumption is untenable."
+        ]
+      },
+      {
+        "title": "⚙️ Five steps and two ways to be wrong",
+        "paras": [
+          "Write the hypotheses before looking at the data, because the direction of the test must not be chosen after seeing the answer."
+        ],
+        "bullets": [
+          "The null is the boring claim: no difference, no effect, equals the specification.",
+          "The alternative is two-sided when either direction matters, one-sided only when the other direction is impossible or irrelevant.",
+          "The significance level is the false-alarm rate you are willing to accept, conventionally five percent.",
+          "The test statistic standardises the gap between what you saw and what the null predicts.",
+          "A type one error rejects a true null; a type two error fails to reject a false one. Lowering the first raises the second.",
+          "Power is one minus the type two rate, and only a larger sample improves both at once."
+        ]
+      },
+      {
+        "title": "🧮 Thirty-six bottles of 498 millilitres",
+        "paras": [
+          "A machine is specified to fill 500 millilitres. Thirty-six bottles average 498 with a sample standard deviation of 6, so the standard error is 1 and the statistic is minus two. The two-sided critical value at five percent is 1.96, so the null is rejected and the machine is under-filling.",
+          "Note what has and has not been shown. There is evidence that the mean differs from 500; there is no evidence about why, and no claim that two millilitres matters to a customer. Effect size and practical importance are separate questions, which is why the interval should be reported with the p value.",
+          "A test that does not reject is also not proof of equality. It says the data were insufficient to demonstrate a difference, which is a statement about the study, not about the world."
+        ]
+      }
+    ]
+  },
+  "564": {
+    "sections": [
+      {
+        "title": "🔍 What a p value is, in one sentence",
+        "paras": [
+          "It is the probability of seeing data at least this extreme, assuming the null hypothesis is true. One sentence, and almost every misreading comes from swapping which part is assumed and which is measured.",
+          "So a p value of 0.03 does not mean the null has a three percent chance of being true. It means that if the null were true, data this extreme would appear three percent of the time. The first is a statement about the hypothesis, the second about the data, and only the second is computable without a prior."
+        ]
+      },
+      {
+        "title": "⚙️ Four misuses that show up in real reports",
+        "paras": [
+          "The p value answers one narrow question. It does not answer whether the effect is large, whether the study was well designed, or whether the result will replicate."
+        ],
+        "bullets": [
+          "A p value just above 0.05 is not evidence of no effect; it is weak evidence in an underpowered study.",
+          "A small p value does not imply a large effect. With a big enough sample, a trivial difference becomes significant.",
+          "Testing twenty outcomes and reporting the one that reached 0.04 is a false discovery about sixty-four percent of the time.",
+          "Changing the hypothesis, or stopping when the result looks good, inflates the error rate in ways the p value no longer reflects.",
+          "Failing to reject is not accepting. Absence of evidence is not evidence of absence."
+        ]
+      },
+      {
+        "title": "🧮 The arithmetic behind a false discovery",
+        "paras": [
+          "Twenty independent tests at a five percent level each have a five percent chance of a false positive. The chance that at least one is falsely positive is one minus 0.95 to the twentieth, about sixty-four percent, so a single significant result among twenty is what randomness looks like, not a finding.",
+          "The fix is to decide the primary outcome in advance, or to correct the threshold. Bonferroni divides the level by the number of tests, giving 0.0025 here, which is blunt but safe; Benjamini-Hochberg controls the proportion of false discoveries instead, which is often the better question.",
+          "Power is the other half. A study expecting a two point lift from a ten percent baseline needs about 3900 per arm for eighty percent power. Run it with a thousand and the study has roughly thirty percent power, meaning a real effect will usually be missed and reported as no difference."
+        ]
+      }
+    ]
+  },
+  "565": {
+    "sections": [
+      {
+        "title": "🔍 Why there is more than one test",
+        "paras": [
+          "The framework is always the same: hypothesise, standardise, compare. What changes is which statistic is appropriate, and that follows from the data type and the design.",
+          "Two questions decide it. Are you comparing means or counting categories? And are the observations independent of each other, or paired, or clustered?"
+        ]
+      },
+      {
+        "title": "⚙️ Choosing, and the assumptions that come with each",
+        "paras": [
+          "Each test carries conditions. Ignoring them is not a technicality: a test applied outside its assumptions produces a number that looks fine and means nothing."
+        ],
+        "bullets": [
+          "One sample against a known value uses a one-sample t test; two independent groups use an independent t test, preferably the Welch version that does not assume equal variances.",
+          "Before and after measurements on the same subjects use a paired t test, which is more powerful because each subject acts as their own control.",
+          "Three or more group means use analysis of variance, never repeated t tests, which multiplies the false positive rate.",
+          "Two categorical variables in a table use a chi-square test of independence, and the effect size is reported separately as Cramer's V.",
+          "Expected counts below five in a cell call for Fisher's exact test.",
+          "Badly skewed data or small samples call for rank-based tests: Mann-Whitney, Wilcoxon signed rank, Kruskal-Wallis."
+        ]
+      },
+      {
+        "title": "🧮 Ten students, and a two by two table",
+        "paras": [
+          "Ten students are tested before and after training. The differences are 8, 5, minus 2, 12, 6, 3, 9, 4, 7, 1. Their mean is 5.3 and their standard deviation about 4.06, so the standard error is 1.28 and t is 4.14 against a critical value of 2.26 on nine degrees of freedom. The training helped, and the interval runs from about 2.4 to 8.2 points.",
+          "Had the same numbers been treated as two independent groups, the between-subject variation would have hidden the effect. The design decides the test.",
+          "For the table: a hundred men with forty preferring the product and a hundred women with sixty. Expected counts under independence are fifty in every cell, so chi-square sums four terms of (observed minus expected) squared over expected, giving eight. The five percent critical value on one degree of freedom is 3.84, so the association is real, and Cramer's V of about 0.2 shows it is weak to moderate.",
+          "Independence of observations is the assumption most often broken in practice: students in the same class, or several readings from one patient, need a model that accounts for the grouping."
+        ]
+      }
+    ]
+  },
+  "567": {
+    "sections": [
+      {
+        "title": "🔍 What a correlation coefficient can and cannot see",
+        "paras": [
+          "Correlation measures one specific thing: how closely two variables follow a straight line together. It ranges from minus one through zero to one, and it is completely blind to any relationship that is not linear.",
+          "The parabola y equals x squared over a symmetric range has a correlation of zero and a perfectly determined relationship. That single example is the reason to plot before computing."
+        ]
+      },
+      {
+        "title": "⚙️ Reading r, and the four ways it misleads",
+        "paras": [
+          "The coefficient is a standardised covariance, so it carries no units and can be compared across studies, with care."
+        ],
+        "bullets": [
+          "Squaring it gives the share of variation explained, which is usually a better description than the coefficient itself.",
+          "One outlier can move r from 0.1 to 0.9, so robust versions or a plot are not optional.",
+          "Restricting the range of x always lowers r, even when the underlying relationship is strong.",
+          "Pooling several groups can create a correlation that holds in none of them, the ecological fallacy.",
+          "Two variables that both follow time will correlate without any causal link.",
+          "Spearman's rank correlation replaces the values with ranks and captures monotone relationships that Pearson misses."
+        ]
+      },
+      {
+        "title": "🧮 Five points, then one more",
+        "paras": [
+          "Points (1,2), (2,4), (3,5), (4,8), (5,9). The means are 3 and 5.6, the summed cross products 18, the sums of squares 10 and 33.2, so r is 18 over the root of 332, about 0.988 and r squared 0.976.",
+          "Add the point (10,2). The coefficient collapses to roughly 0.4. The relationship did not change; one distant point did, which is precisely why the plot comes first.",
+          "Now try the parabola (0,0), (1,1), (2,4), (3,9), (4,16). Over this range r is about 0.97 because the curve is nearly straight, but over minus two to two it is zero while the relationship remains exact. The coefficient reports linearity, not association in general."
+        ]
+      }
+    ]
+  },
+  "568": {
+    "sections": [
+      {
+        "title": "🔍 Why regression is not correlation",
+        "paras": [
+          "Correlation is symmetric: the correlation of x with y equals that of y with x. Regression is not, because it answers a directional question: given x, what do we predict for y?",
+          "That asymmetry is deliberate. You predict the hard thing from the easy thing, and the line you fit by predicting y from x is not the same line as the one predicting x from y."
+        ]
+      },
+      {
+        "title": "⚙️ Two coefficients, one number of fit",
+        "paras": [
+          "The slope is the correlation scaled by the ratio of the two standard deviations, and the intercept puts the line through the means. Ordinary least squares chooses the line that minimises the sum of squared vertical distances, which is why the errors are measured vertically."
+        ],
+        "bullets": [
+          "Slope: one unit more of x means this much more of y on average, not exactly.",
+          "Intercept: the prediction at x equals zero, often outside the data and therefore meaningless.",
+          "R squared equals the squared correlation and gives the share of variance explained.",
+          "Residual plots diagnose the model: a curve means the relationship is not linear, a funnel means variance grows with x.",
+          "Extrapolating beyond the observed range assumes the straight line continues and it usually does not.",
+          "A high R squared with a visible pattern in the residuals means the model is wrong in an informative way."
+        ]
+      },
+      {
+        "title": "🧮 Fitting a line by hand",
+        "paras": [
+          "Data (1,3), (2,5), (3,6), (4,9), (5,11). The means are 3 and 6.8, the summed cross products 20, the sum of squares of x is 10, so the slope is 2 and the intercept 0.8. The fitted line is 0.8 plus 2x.",
+          "Predictions are 2.8, 4.8, 6.8, 8.8, 10.8, and the residuals are 0.2, 0.2, minus 0.8, 0.2, 0.2. Their sum of squares is 0.8 against a total of 40.8, so R squared is 0.98.",
+          "Now feed the same routine a U-shaped set. The best straight line is flat, R squared is zero, and the model is not wrong about the arithmetic but about the shape. That is the case for looking at the scatter plot, or for adding a squared term."
+        ]
+      }
+    ]
+  },
+  "569": {
+    "sections": [
+      {
+        "title": "🔍 Why running the code is the easy part",
+        "paras": [
+          "One line gives a p value and three lines fit a regression, so the arithmetic is no longer the bottleneck. What remains is judgement: is the sample representative, are the assumptions met, does the effect size matter, and does the conclusion survive outside this dataset.",
+          "Those questions have no formula. They have an order of operations, and following it is what separates an analysis from a calculation."
+        ]
+      },
+      {
+        "title": "⚙️ Six steps, in this order",
+        "paras": [
+          "The sequence matters because each step can invalidate the next. Skipping the data check is how a project ends up with a precise answer to the wrong question."
+        ],
+        "bullets": [
+          "State the question as a testable claim with a number attached, not as a wish.",
+          "Check the data: sample size, missingness, duplicates, outliers, and how the sample was drawn.",
+          "Look at it: distributions, group comparisons, scatter plots. This is exploration, not significance hunting.",
+          "Choose the method from the design and the data type, not from what is fashionable.",
+          "Run it and check the assumptions, then switch method if they fail.",
+          "Report the effect size, the interval and the p value together, and say what the result cannot establish."
+        ]
+      },
+      {
+        "title": "🧮 An A and B test, from question to conclusion",
+        "paras": [
+          "The question: does a green sign-up button raise conversion from eight percent to ten? Twenty thousand users per arm were randomised, and the observed rates were 8.1 and 9.3 percent.",
+          "The check comes first. Were the two arms balanced on device, region and new versus returning users? In one real case the mobile share differed between arms, which invalidated everything downstream and had to be fixed before analysis.",
+          "The test: the pooled proportion is 0.087, the standard error about 0.00282, so z is 4.26 and the p value is far below 0.05. The interval for the lift runs from 0.65 to 1.85 percentage points.",
+          "The conclusion is written with all three parts: the button lifts conversion by about 1.2 points, the effect is unlikely to be zero, and the lower bound is still worth the change. With two thousand users instead the same difference gives p of 0.34, and the honest conclusion is that the data cannot tell, not that the button does nothing."
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,346 @@
+{
+  "796": {
+    "sections": [
+      {
+        "title": "🔍 Why a single threshold was not enough",
+        "paras": [
+          "The perceptron is the first neural model: multiply inputs by weights, add a bias, and output one if the result exceeds zero. With a learning rule that nudges the weights after each mistake, it can separate two classes whenever they are linearly separable.",
+          "It is worth understanding precisely because of how it fails. The XOR problem, where the correct answer depends on whether the two inputs differ, cannot be expressed by any single threshold, and that failure is what motivated hidden layers."
+        ]
+      },
+      {
+        "title": "⚙️ The computation and the layer that repeats it",
+        "paras": [
+          "A modern neuron computes the weighted sum of its inputs, adds a bias, and applies an activation. The bias shifts the threshold, the weights set the importance of each input, and the activation introduces the non-linearity.",
+          "Neurons are organised in layers. Every neuron in a layer sees the same input vector, and the layer's output vector becomes the next layer's input."
+        ],
+        "bullets": [
+          "A single neuron defines a hyperplane, so it can separate only two linearly separable regions.",
+          "AND and OR are separable with one neuron; XOR is not, at any weight setting.",
+          "The perceptron learning rule converges for separable data and oscillates forever for non-separable data.",
+          "A bias of minus the threshold lets the neuron fire at the right point without changing the weights.",
+          "Stacking two layers converts the XOR problem into something the output neuron can separate.",
+          "Every modern layer is a matrix of these computations evaluated in parallel.",
+          "The historical lesson: the limitation was representational, and the fix was depth, not more neurons in one layer."
+        ]
+      },
+      {
+        "title": "🧮 One neuron solving OR, and two layers solving XOR",
+        "paras": [
+          "OR with two inputs: weights 1 and 1, bias minus 0.5. Input 0,0 gives minus 0.5, which is below the threshold, so output 0. Input 0,1 gives 0.5, output 1. Input 1,1 gives 1.5, output 1. Correct for all four cases.",
+          "XOR cannot be done. The required outputs are 0, 1, 1, 0. A single threshold gives a monotone decision in the weighted sum, and no line separates the two 1s from the two 0s in the plane.",
+          "Two layers fix it. First layer: neuron A computes OR with weights 1, 1 and bias minus 0.5; neuron B computes NAND with weights minus 1, minus 1 and bias 1.5. Second layer: neuron C computes AND of A and B with weights 1, 1 and bias minus 1.5.",
+          "Check input 0,0: A gets minus 0.5, output 0; B gets 1.5, output 1. C gets 0 plus 1, minus 1.5, output 0. Input 1,0: A gets 0.5, output 1; B gets 0.5, output 1; C gets 2 minus 1.5, output 1. Input 1,1: A gets 1.5, output 1; B gets minus 0.5, output 0; C gets 1 minus 1.5, output 0. Correct.",
+          "Parameter count comparison: solving XOR with a single layer would need enough neurons to carve the region directly, at least three hyperplanes and a conjunction, which is impossible in one layer since a conjunction of half-spaces is not itself a half-space. With two layers and three neurons, nine parameters suffice. Depth did what width could not.",
+          "The activation choice matters at the boundary: with a hard step, XOR is exact. With a sigmoid, the same weights give outputs near 0.03 and 0.97 rather than exactly 0 and 1, which is why training with a smooth activation works and pure step functions do not."
+        ]
+      }
+    ]
+  },
+  "797": {
+    "sections": [
+      {
+        "title": "🔍 Why non-linearity is not optional",
+        "paras": [
+          "Compose two linear transforms and the result is another linear transform. A hundred linear layers in a row are exactly equivalent to one, with a weight matrix equal to the product. Without a non-linearity between layers, depth buys nothing at all.",
+          "The activation function is what breaks that collapse. It is the reason the network can represent curved boundaries and hierarchical features."
+        ]
+      },
+      {
+        "title": "⚙️ ReLU, sigmoid, softmax, and where each belongs",
+        "paras": [
+          "ReLU keeps positives and zeroes negatives. It is cheap, and its gradient is exactly 1 for positive inputs, which is why it trains deep networks without the vanishing gradient that plagued sigmoid stacks.",
+          "Sigmoid squashes to the interval from zero to one and is used for binary outputs. Softmax turns a vector into a probability distribution over classes, and it is used at the output of a multi-class classifier.",
+          "Tanh is a symmetric alternative to sigmoid with range minus one to one, which centres the activations and helps optimisation."
+        ],
+        "bullets": [
+          "ReLU is the default for hidden layers: fast, sparse, and gradient-friendly.",
+          "Leaky ReLU gives a small slope for negative inputs, which prevents dead units that never activate again.",
+          "GELU is the standard in transformers, a smoother version of ReLU.",
+          "Sigmoid saturates: for large magnitudes the gradient approaches zero, which stops learning in deep stacks.",
+          "Softmax is applied across classes and interacts with cross-entropy loss to give a clean gradient.",
+          "The output activation must match the loss: softmax with cross-entropy, sigmoid with binary cross-entropy, none with regression.",
+          "Using the wrong output activation is a common silent bug: the network trains, the loss decreases, and the metric stays wrong."
+        ]
+      },
+      {
+        "title": "🧮 Activations by the numbers",
+        "paras": [
+          "ReLU on inputs minus 3, 0, 2, 7 gives 0, 0, 2, 7. Gradient is 0 for the first two and 1 for the last two. That hard zero is why a unit whose inputs are always negative stops learning entirely, the dead-unit problem.",
+          "Sigmoid on the same inputs gives 0.047, 0.5, 0.881, 0.999. The gradients are 0.045, 0.25, 0.105, 0.001. Multiply five such layers and the gradient for the input-side weights is 0.001 to the fifth power, essentially zero. That product is the vanishing gradient in one line.",
+          "With ReLU the same five layers carry a gradient of 1 through every positive unit, so the gradient at the first layer is 1 rather than 10 to the minus 15. That difference is why ReLU made 20-layer networks trainable when sigmoid networks could not exceed about 5 layers.",
+          "Softmax example: logits 2, 1, 0. Exponentiate: 7.389, 2.718, 1.0. Sum 11.107. Probabilities: 0.665, 0.245, 0.090. Note that the largest logit gets two thirds of the mass, not all of it, which is why softmax outputs can be calibrated.",
+          "Cross-entropy with those probabilities against a true class of index 0 is minus log of 0.665, 0.408. If the model instead put 0.9 on the wrong class and 0.05 on the right one, the loss would be minus log of 0.05, 3.0. That is the penalty for confident wrongness, and it is why cross-entropy drives sharper learning than squared error."
+        ]
+      }
+    ]
+  },
+  "798": {
+    "sections": [
+      {
+        "title": "🔍 Why architecture is a sequence of shape decisions",
+        "paras": [
+          "Designing a network is mostly deciding shapes: how many inputs, how many hidden units, how many outputs. The maths follows automatically. Most beginner failures are shape errors, not conceptual ones.",
+          "The rule that keeps it manageable is to fix the input and output shapes from the problem, then choose the hidden part as a compromise between capacity and overfitting."
+        ]
+      },
+      {
+        "title": "⚙️ Choosing sizes and building it",
+        "paras": [
+          "The input size is fixed by the data: 784 for a 28 by 28 image, the number of features for a table, the vocabulary or embedding size for text. The output size is fixed by the task: one for binary classification or regression, one per class for multi-class.",
+          "The hidden layers are free choices. One or two hidden layers of a few hundred units solve most tabular and small-image problems. Larger networks need more data and more regularisation."
+        ],
+        "bullets": [
+          "Start simple: two hidden layers with ReLU and a softmax output is the standard baseline for a classifier.",
+          "Hidden sizes often decrease toward the output, which forms a funnel, though this is convention rather than requirement.",
+          "More parameters means more data needed, roughly in proportion.",
+          "The output layer has no activation for regression, sigmoid for binary, softmax for multi-class.",
+          "Print the shape at every layer boundary when debugging; it catches most errors immediately.",
+          "Total parameters can be computed by hand before writing code, which is a useful sanity check.",
+          "A model that trains but does not learn is usually a data or loss problem, not an architecture problem."
+        ]
+      },
+      {
+        "title": "🧮 Sizing a classifier from scratch",
+        "paras": [
+          "A 28 by 28 image has 784 inputs. Ten classes need 10 outputs. Choose one hidden layer of 128 units: parameters are 784 times 128 plus 128, which is 100,480, plus 128 times 10 plus 10, which is 1,290. Total 101,770.",
+          "Training data of 60,000 images gives 0.6 images per parameter, so overfitting is likely without regularisation. Dropout at 0.2 and weight decay of 0.0001 are reasonable defaults.",
+          "Now add a second hidden layer of 64: 128 times 64 plus 64 is 8,256 more parameters, a small increase that gives real extra capacity. Going to 512 units instead would be 128 times 512 plus 512, 66,048 more, five times the increase for a similar gain. That comparison is the practical reason to prefer depth over width once the first layer is large enough.",
+          "Epoch arithmetic: 60,000 images, batch size 64, so 938 batches per epoch. If each batch takes 8 milliseconds on a GPU, an epoch is 7.5 seconds and 20 epochs is 2.5 minutes. That is the realistic cost of training a small image classifier, and it is why experimentation is feasible.",
+          "Overfitting check with numbers: after 20 epochs, training accuracy 99.2 percent and validation accuracy 97.1. A 2-point gap is fine. A gap of 10 points would mean the capacity is too high for the data, and the fix is more augmentation, more dropout, or a smaller first layer.",
+          "The shape bug worth memorising: a batch of 64 images passes through as 64 by 784, then 64 by 128, then 64 by 10. Passing 784 images as a flat vector without the batch dimension turns a 64 by 784 into 784, and every subsequent layer fails with a dimension mismatch that has nothing to do with the maths."
+        ]
+      }
+    ]
+  },
+  "800": {
+    "sections": [
+      {
+        "title": "🔍 Why the loss is the specification",
+        "paras": [
+          "The loss function is the only place that says what correct means. Choose it badly and the model will optimise exactly what you asked for, which may not be what you wanted.",
+          "This is why the loss deserves more thought than the architecture. Two networks of different shapes trained with the right loss both work; a perfect network trained with the wrong loss fails predictably."
+        ]
+      },
+      {
+        "title": "⚙️ The losses and what each assumes",
+        "paras": [
+          "Mean squared error suits regression: it measures the average squared distance between prediction and target, and its gradient is proportional to the error, which gives stable learning near the optimum.",
+          "Binary cross-entropy suits two-class problems: it measures minus the log of the probability assigned to the true class, which punishes confident wrong answers severely.",
+          "Categorical cross-entropy is the multi-class version, applied after softmax."
+        ],
+        "bullets": [
+          "Cross-entropy needs probabilities, so it must be paired with sigmoid or softmax rather than raw logits in most frameworks.",
+          "Frameworks offer a numerically stable combined softmax plus cross-entropy that takes raw logits, and it should be used.",
+          "MSE on a classification task learns slowly because its gradient vanishes when the sigmoid saturates.",
+          "Huber loss blends squared and absolute error, which limits the influence of outliers in regression.",
+          "Class weighting inside the loss is how imbalance is handled without resampling.",
+          "Contrastive and triplet losses learn representations rather than labels, which is how embedding models are trained.",
+          "The loss reported during training must be the same quantity used to judge the model, or the numbers will not line up."
+        ]
+      },
+      {
+        "title": "🧮 What each loss actually penalises",
+        "paras": [
+          "Correct prediction at probability 0.9: cross-entropy is minus log of 0.9, 0.105. Wrong prediction at 0.1 on the true class: minus log of 0.1, 2.303. Wrong and confident at 0.01: 4.605. The penalty grows without bound as confidence in the wrong answer grows, which is exactly the behaviour wanted.",
+          "MSE for the same case with a true label of 1: at prediction 0.9, the loss is 0.01; at 0.1 it is 0.81; at 0.01 it is 0.98. Notice the ceiling: MSE cannot exceed 1 for a probability, so it stops distinguishing a mildly wrong answer from a catastrophically wrong one. That flatness is why classification with MSE learns poorly.",
+          "Gradient comparison at prediction 0.01 against a true label of 1: cross-entropy gradient magnitude is about 0.99, MSE gradient through a sigmoid is about 0.0098, a hundred times smaller. The network with MSE needs a hundred times more steps at that point, which in practice means it does not learn at all.",
+          "Regression example: targets 10, 20, 30 with predictions 12, 18, 33. Errors are 2, minus 2, 3, squared 4, 4, 9, so MSE is 5.67 and RMSE is 2.38. If one target were 10,000 with a prediction of 9,000, that single error of 1,000 squared contributes a million, which would dominate the loss and pull the model entirely toward that one example. That is the reason Huber loss exists.",
+          "Class imbalance arithmetic: 1,000 negatives and 10 positives. Unweighted cross-entropy is dominated by the negatives, and the model converges to always predicting negative with a loss near 0.01. Weighting the positive class by 100 makes each positive count as much as 100 negatives, and the loss surface now responds to them. This is a loss-level fix that costs nothing at inference time."
+        ]
+      }
+    ]
+  },
+  "801": {
+    "sections": [
+      {
+        "title": "🔍 Why the gradient gives a direction",
+        "paras": [
+          "Training is a search over millions of parameters for the setting with the lowest loss. Exhaustive search is impossible. The gradient is the one cheap piece of information available: it says, for each parameter, whether increasing it raises or lowers the loss, and by roughly how much.",
+          "Gradient descent takes a small step opposite the gradient and repeats. That is the whole algorithm, and every optimiser in deep learning is a refinement of how large the step is and how the direction is smoothed."
+        ]
+      },
+      {
+        "title": "⚙️ Learning rate, batches, and the optimiser family",
+        "paras": [
+          "The learning rate is the step size. Too large and the parameters jump across the valley and diverge. Too small and training takes forever or stalls in a flat region.",
+          "Full-batch gradient descent computes the exact gradient over all data, which is expensive and gives one update per pass. Stochastic gradient descent uses one example or a small batch, which gives many noisy updates per pass. The noise is useful: it helps escape shallow regions and it makes each step cheap."
+        ],
+        "bullets": [
+          "Batch size trades gradient accuracy against the number of updates per epoch.",
+          "Momentum accumulates past gradients to push through flat regions and damp oscillation.",
+          "Adam adapts a separate step size per parameter from running estimates of the gradient's first and second moments, which makes it the default choice.",
+          "Learning rate schedules decay the rate over training, which improves final accuracy.",
+          "Warmup starts with a tiny rate and raises it, which stabilises the first steps of large models.",
+          "The loss should generally decrease; a loss that explodes means the rate is too high or the data is not normalised.",
+          "A plateau in the loss often means the rate is too low rather than that the model is finished."
+        ]
+      },
+      {
+        "title": "🧮 Descent on a one-dimensional example",
+        "paras": [
+          "Minimise a loss equal to w minus 3 squared. The gradient is 2 times w minus 3. Start at w equal to 0 with a learning rate of 0.1. Step one: gradient minus 6, so w becomes 0 plus 0.6, 0.6. Step two: gradient 2 times minus 2.4, minus 4.8, so w becomes 0.6 plus 0.48, 1.08. Step three: 1.08 plus 0.384, 1.464. The sequence approaches 3 geometrically.",
+          "Each step multiplies the distance to the optimum by 1 minus 0.2, so after n steps the distance is 3 times 0.8 to the n. After 10 steps, 3 times 0.107, 0.32. After 20, 0.035. Convergence is fast because the rate is well matched to the curvature.",
+          "Now a rate of 1.0 on the same problem: the distance is multiplied by 1 minus 2, which is minus 1, so w oscillates between 0 and 6 forever. A rate of 1.1 makes the distance grow by 10 percent per step, which diverges. That is the entire failure mode of a too-large learning rate, in two lines.",
+          "The rate that is stable depends on the curvature: for a loss with second derivative k, a rate below 2 divided by k converges. Here k is 2, so the rate must be below 1, which matches.",
+          "Batch size and steps: 60,000 examples with batch 64 gives 938 updates per epoch. With batch 512 it is 117 updates. If each update at batch 64 takes 8 milliseconds and at batch 512 takes 40 milliseconds, the epoch times are 7.5 and 4.7 seconds, so larger batches are more efficient per example, but they give 8 times fewer updates, and in practice small batches often reach the same accuracy in fewer epochs. That tension is why batch size is tuned rather than maximised.",
+          "Adam versus SGD on a typical image task: plain SGD at rate 0.01 reaches 88 percent validation accuracy after 30 epochs; Adam at rate 0.001 reaches 90 percent after 20 epochs but generalises about 1 point worse at 90 epochs. This is a commonly reproduced pattern, and it is why the advice is to use Adam while developing and consider SGD with momentum for the final model."
+        ]
+      }
+    ]
+  },
+  "802": {
+    "sections": [
+      {
+        "title": "🔍 Why the gradient can be computed at all",
+        "paras": [
+          "A network with 10 million parameters has a loss that depends on all of them through a long chain of compositions. Computing each derivative separately would need 10 million forward passes.",
+          "Backpropagation computes all of them in about two passes by reusing intermediate results and applying the chain rule from the output backward. It is the reason training large networks is feasible at all."
+        ]
+      },
+      {
+        "title": "⚙️ The chain rule, the backward pass, and the two failure modes",
+        "paras": [
+          "The forward pass computes and caches each layer's output. The backward pass starts with the derivative of the loss with respect to the output, and moves back layer by layer, multiplying by each layer's local derivative to obtain the gradient for its weights.",
+          "Each layer needs only its own local derivative and the gradient arriving from above. That locality is what makes the algorithm modular and what makes frameworks possible."
+        ],
+        "bullets": [
+          "The gradient for a layer's weights is the incoming gradient times that layer's input.",
+          "Caching activations during the forward pass costs memory, which is why large models need so much GPU memory.",
+          "Vanishing gradients happen when many layers each multiply the gradient by a factor below one.",
+          "Exploding gradients happen when the factors are above one, and are usually fixed with gradient clipping.",
+          "ReLU, residual connections, and normalisation are the standard defences against vanishing gradients.",
+          "Gradient checking against numerical differentiation is the standard way to verify an implementation.",
+          "Printing per-layer gradient norms tells you immediately which failure mode you have."
+        ]
+      },
+      {
+        "title": "🧮 Two layers, by hand",
+        "paras": [
+          "A network with one input x equal to 2, one hidden unit with weight 3 and no bias, ReLU, and an output unit with weight 5. Forward: hidden pre-activation 6, ReLU leaves 6, output 30. With a target of 40, squared error loss is 100 and the derivative with respect to the output is 2 times 30 minus 40, minus 20.",
+          "Backward: gradient with respect to the output weight is minus 20 times 6, minus 120. Gradient reaching the hidden unit is minus 20 times 5, minus 100. Since the hidden pre-activation was positive, the ReLU derivative is 1, so the gradient with respect to the hidden weight is minus 100 times 2, minus 200.",
+          "A step of 0.001 on both weights changes the output weight by 0.12 and the hidden weight by 0.2. The new output is about 30.31, closer to 40. One step, computed by hand, is exactly what the framework does millions of times.",
+          "Vanishing gradient arithmetic: ten sigmoid layers, each with a local derivative around 0.25 at their operating point. The gradient at the first layer is multiplied by 0.25 to the tenth power, which is 9.5 times 10 to the minus 7. Learning there is effectively stopped.",
+          "With ReLU and no saturation, the same ten layers each contribute a factor of 1 for active units, so the gradient survives. That is why deep networks became practical after ReLU rather than before.",
+          "Exploding gradient arithmetic: ten layers each contributing a factor of 1.5 gives 57.7, so a gradient of 1 becomes 58, and twenty layers becomes 3,325. A learning rate of 0.01 then takes a step of 33, which destroys the weights. Clipping the gradient norm to 1.0 bounds every step regardless of this amplification, which is why it appears in every recurrent network recipe.",
+          "The vanishing case has a specific consequence worth stating: because the first layers receive almost no gradient, they stop changing, and the network effectively becomes shallower than its depth suggests. Fine-tuning the early layers of a pretrained model therefore often changes them very little, which is exactly why freezing them works."
+        ]
+      }
+    ]
+  },
+  "804": {
+    "sections": [
+      {
+        "title": "🔍 Why not connect everything to everything",
+        "paras": [
+          "A fully connected layer on a 256 by 256 colour image has 196,608 inputs. A single hidden layer of 1,000 units would need 196 million weights, and there is no reason to believe that a pixel in the top left should have its own independent weight for a feature in the bottom right.",
+          "Images have structure that a convolution exploits: patterns recur at different positions, and nearby pixels are more related than distant ones. Encoding those two assumptions as architecture removes most of the parameters and most of the data requirement."
+        ]
+      },
+      {
+        "title": "⚙️ Sliding filters, weight sharing, and the output size",
+        "paras": [
+          "A convolution slides a small filter over the input, computing a dot product at each position. The filter's weights are shared across all positions, which is the assumption that the same pattern is meaningful anywhere in the image.",
+          "Each filter produces one feature map. A layer with 32 filters produces 32 feature maps, each showing where that filter's pattern was detected."
+        ],
+        "bullets": [
+          "A 3 by 3 filter over a 3-channel input has 27 weights plus a bias, which is tiny compared with a dense layer.",
+          "The output size is the input size minus the filter size plus one, per dimension, with no padding.",
+          "Padding by one keeps the spatial size unchanged for a 3 by 3 filter.",
+          "Stride greater than one downsamples, which is one way to reduce spatial size without pooling.",
+          "Early filters learn edges and colour blobs; deeper filters learn textures, parts, then objects.",
+          "The number of parameters does not depend on the image size, so the same model works on different resolutions.",
+          "Dilation spreads the filter's taps apart, which widens the receptive field without more parameters."
+        ]
+      },
+      {
+        "title": "🧮 Output sizes and parameter counts",
+        "paras": [
+          "A 32 by 32 image convolved with a 3 by 3 filter, no padding, stride 1, gives 30 by 30 per filter. With 16 filters the output is 16 by 30 by 30, which is 14,400 values from 1,024 inputs.",
+          "Parameters: 16 filters times 3 by 3 times 3 channels plus 16 biases is 448. A dense layer mapping 3,072 inputs to 16 outputs would need 49,168 weights. The convolution uses 110 times fewer parameters for a layer that exploits the image structure.",
+          "With padding of one, the 32 by 32 input stays 32 by 32, which is why padding is the default in most architectures: it preserves spatial size as depth grows.",
+          "Stacking three 3 by 3 convolutions on a 32 by 32 input, all with padding one: the output stays 32 by 32, and the effective receptive field of the third layer is 7 by 7. That is why three 3 by 3 layers are preferred to one 7 by 7: 3 times 9 is 27 weights per channel pair against 49, so fewer parameters for the same receptive field, plus an extra non-linearity in between.",
+          "Compute arithmetic: a 32 by 32 by 3 input, 16 filters of 3 by 3. Each output position does 27 multiply-adds, and there are 900 positions per filter, so 24,300 per filter, 388,800 for 16 filters. On a GPU at 10 trillion operations per second that is 0.04 microseconds of arithmetic, which is why the bottleneck in small convolutional networks is memory movement rather than compute.",
+          "The hand-computed example worth verifying once: a 5 by 5 input with a 3 by 3 all-ones filter, stride 1, no padding, produces a 3 by 3 output where each value is the sum of a 3 by 3 patch. That is the simplest possible convolution and checking it by hand once makes the operation concrete."
+        ]
+      }
+    ]
+  },
+  "805": {
+    "sections": [
+      {
+        "title": "🔍 Why throw away resolution on purpose",
+        "paras": [
+          "After a few convolution layers, the feature maps are large: 32 by 32 with 64 channels is 65,536 values for one image. Most of that resolution carries no extra information for a classification decision, since the question is what is in the image, not exactly where every edge is.",
+          "Pooling reduces the spatial size while keeping the strongest responses, which cuts compute in later layers and makes the representation slightly invariant to small shifts."
+        ]
+      },
+      {
+        "title": "⚙️ Max pooling, average pooling, and the trade",
+        "paras": [
+          "Max pooling takes the largest value in each window. It preserves whether a feature was detected anywhere in the window, which is exactly the shift invariance wanted for classification.",
+          "Average pooling takes the mean, which keeps a measure of overall intensity and is used at the end of some architectures to collapse a feature map into a vector.",
+          "Both are applied per channel, independently, and have no learnable parameters."
+        ],
+        "bullets": [
+          "A 2 by 2 max pool with stride 2 halves each spatial dimension, so the area falls by four.",
+          "Pooling has no parameters, so it never overfits and costs almost nothing.",
+          "Global average pooling collapses each channel to one number, which replaces a large dense layer at the output.",
+          "Max pooling loses exact position, which is why segmentation and detection need different designs.",
+          "Strided convolution can replace pooling, and many modern architectures do exactly that.",
+          "Pooling too early loses detail that later layers cannot recover.",
+          "Average pooling is gentler; max pooling keeps the strongest evidence, which usually trains better."
+        ]
+      },
+      {
+        "title": "🧮 Pooling a 4 by 4 map by hand",
+        "paras": [
+          "Take the matrix 1 3 2 4 over 5 6 1 2 over 0 2 8 3 over 4 1 9 7. With 2 by 2 max pooling and stride 2, the four quadrants have maxima 6, 4, 4, 9, so the output is the 2 by 2 matrix 6 4 over 4 9.",
+          "Average pooling on the same quadrants gives 3.75, 2.25, 1.75, 5.25. Note how much information the averages dilute: the 9 disappears into 5.25 while the max keeps it. For a classification decision that depends on the presence of a feature, the max is the better summary.",
+          "Size and parameter arithmetic: a 32 by 32 image through a conv layer with 64 filters stays 32 by 32 by 64, which is 65,536 values. After a 2 by 2 pool it is 16 by 16 by 64, 16,384 values, a quarter. The next convolution layer therefore costs a quarter as much, which is why pooling appears early in every classic architecture.",
+          "Downsampling ratio: three pooling layers reduce 224 by 224 to 28 by 28, a factor of 8 in each dimension and 64 in area. That is how a modern network turns 150,528 input values into a 7 by 7 by 512 representation, 25,088 values, before the final classifier.",
+          "The invariance measurement: shift an image by one pixel, and a max-pooled feature map changes by at most a fraction of its values, while an unpooled map changes fully. That is a genuine gain for classification and a genuine loss for anything that needs the exact location, which is why detection models use pooling carefully and segmentation models often avoid it.",
+          "Global average pooling as a parameter saver: a 7 by 7 by 512 map into 1,000 classes through a dense layer is 25,088 times 1,000, 25 million weights. Global average pooling reduces the map to 512 values, then 512 times 1,000 is 512,000 weights, a 49-fold reduction with almost no accuracy loss. That single change removed tens of millions of parameters from a well-known architecture."
+        ]
+      }
+    ]
+  },
+  "806": {
+    "sections": [
+      {
+        "title": "🔍 Why architectures converged on a pattern",
+        "paras": [
+          "A decade of image architectures produced many names and a single recurring pattern: a stack of blocks that each convolve, activate, and downsample, followed by a small head that produces the prediction.",
+          "Once the pattern is visible, any new architecture becomes readable: locate the blocks, count the channels, find where the downsampling happens, and look at the head."
+        ]
+      },
+      {
+        "title": "⚙️ The pattern and the two ideas that mattered",
+        "paras": [
+          "The classic pattern is a few convolution plus ReLU blocks, a pooling layer, more blocks with more channels, then flatten and one or two dense layers. Channels roughly double as spatial size halves, which keeps the total tensor size per layer in a similar range.",
+          "Two ideas changed what was possible. Batch normalisation stabilised training, which allowed higher learning rates and deeper networks. Residual connections let the gradient bypass a block, which made networks with more than 50 layers trainable."
+        ],
+        "bullets": [
+          "AlexNet established the pattern at 8 layers and showed GPUs were the enabling hardware.",
+          "VGG showed that stacking small 3 by 3 filters beats large filters for the same receptive field.",
+          "ResNet introduced identity shortcuts, so a block learns a residual rather than a full mapping.",
+          "Batch normalisation normalises each channel's activations across the batch, which speeds convergence.",
+          "Depthwise separable convolutions cut the parameter count by roughly a factor of 9 for 3 by 3 kernels.",
+          "Modern designs often replace the dense head with global average pooling and a single linear layer.",
+          "Efficient architectures are judged on accuracy per flop as much as absolute accuracy."
+        ]
+      },
+      {
+        "title": "🧮 Depth, parameters, and what the shortcuts fix",
+        "paras": [
+          "Parameter arithmetic for a VGG-style block: two 3 by 3 convolutions with 256 channels cost 2 times 256 times 256 times 9, 1,179,648 weights. A depthwise separable version does 256 times 9 plus 256 times 256, 67,840 weights, about 17 times fewer for a similar function.",
+          "The depth problem in numbers: a plain 34-layer network trained on a standard image task shows higher training error than an 18-layer network. That is not overfitting, since training error is worse; the optimisation itself fails. With residual connections, the 34-layer network trains and beats the 18-layer one, which is the empirical result that made depth practical.",
+          "Why shortcuts fix it: the gradient of a residual block flows through the identity path with derivative exactly one, so a stack of 50 blocks multiplies the gradient by one 50 times rather than by each block's Jacobian. The vanishing gradient is bypassed rather than reduced.",
+          "Compute arithmetic for a 224 by 224 input through 50 residual blocks: the first block operates on 224 by 224 by 64, which is 3.2 million values, and the last on 7 by 7 by 2,048, which is 100 thousand. Total multiply-adds is around 4 billion for one image, which at 10 trillion operations per second is 0.4 milliseconds of pure arithmetic on a modern GPU.",
+          "Why channels double as resolution halves: doubling channels and halving each spatial dimension keeps the number of values roughly constant per block. So a block at 112 by 112 with 128 channels has 1.6 million values and one at 56 by 56 with 256 channels has 0.8 million. That near-constancy is why the compute per block stays comparable, which is a design guideline rather than a law.",
+          "Reading a new architecture: count the total downsampling factor, which tells you the final spatial size; count the channel widths, which tell you the compute; find the head, which tells you the task. Three questions, and a paper's diagram becomes interpretable."
+        ]
+      }
+    ]
+  }
+}

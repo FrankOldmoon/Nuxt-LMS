@@ -1,0 +1,458 @@
+{
+  "888": {
+    "sections": [
+      {
+        "title": "🔍 Why one model replaced dozens of task-specific ones",
+        "paras": [
+          "Before large language models, a sentiment classifier, a translator, a summariser, and a question answerer were four systems with four datasets and four training runs. Each was good at its task and useless outside it.",
+          "An LLM is one model trained on a single objective across enough text that all those tasks become variations on the same operation. You change the task by changing the prompt, not the weights."
+        ]
+      },
+      {
+        "title": "⚙️ What scale actually provides",
+        "paras": [
+          "An LLM is a transformer with billions of parameters trained to predict the next token. That objective forces the model to represent grammar, factual associations, and some reasoning, because all of them reduce the prediction error.",
+          "The behaviour that surprises people follows from the objective. It produces the most plausible continuation, not the most true one, which is why it hallucinates fluently and why it has no memory beyond its context."
+        ],
+        "bullets": [
+          "Parameters store statistical associations, not a database of facts that can be queried exactly.",
+          "The context window is the only working memory; nothing persists after it scrolls past.",
+          "In-context learning lets a prompt define a task without any weight update.",
+          "The same model serves many tasks, which is why the interface became natural language.",
+          "Capability is uneven: strong at summarising and code, weak at exact arithmetic and counting.",
+          "Training cost is paid once and inference cost is paid forever, which is why model size and serving cost trade off.",
+          "Fluency and correctness are independent, which is the single most important thing to remember when using one."
+        ]
+      },
+      {
+        "title": "🧮 Parameters, tokens, and cost",
+        "paras": [
+          "A 70-billion-parameter model in 16-bit precision needs 140 GB just for the weights, which does not fit on one accelerator. In 4-bit precision it needs 35 GB, which does, and that quantisation is the difference between a data-centre deployment and a workstation one.",
+          "Training compute follows roughly 6 times parameters times tokens. For 70 billion parameters and 2 trillion tokens that is 8.4 times 10 to the 23 floating-point operations. At an effective 400 trillion operations per second that is 2.1 million seconds, 24 days, and at a few dollars per accelerator-hour across thousands of devices it is tens of millions of dollars.",
+          "Inference arithmetic: generating 1,000 tokens requires 1,000 forward passes, each reading all the weights. For 140 GB of weights that is 140 TB of memory traffic per 1,000-token answer, which is why generation is bandwidth-bound and why batching is essential to amortise it.",
+          "Context arithmetic: a 100,000-token context with 8,192-dimensional key-value states at 2 bytes each needs 1.6 GB of cache per sequence. Twenty concurrent long-context users need 32 GB just for caches, which is often more than the weights on a smaller model.",
+          "Cost per million tokens: at a large provider's pricing, a mid-sized model costs a few dollars per million input tokens and several times that per million output tokens, because input can be processed in parallel while output is sequential. A 2,000-token answer costs roughly 10 times a 2,000-token document read.",
+          "The practical scale check: a 10-billion-parameter model is about 20 GB in 16-bit and 5 GB in 4-bit, runs on a single consumer GPU, and reaches perhaps 70 percent of the quality of a frontier model on everyday tasks. That ratio, not the benchmark leaderboard, is why small models are used for most traffic."
+        ]
+      }
+    ]
+  },
+  "889": {
+    "sections": [
+      {
+        "title": "🔍 Why the history is a sequence of removals",
+        "paras": [
+          "Every major step in language modelling removed a hand-built component and replaced it with something learned. N-grams removed grammar rules. Neural models removed the count table. Transformers removed the recurrence.",
+          "Seeing the sequence that way explains why the field converged rather than diverged: the same principle kept winning."
+        ]
+      },
+      {
+        "title": "⚙️ The milestones that mattered",
+        "paras": [
+          "Word embeddings showed that meaning could be a learned vector. Recurrent networks showed that a model could carry state across a sequence. Attention showed that the state did not have to be compressed. The transformer showed that attention alone, without recurrence, was enough.",
+          "BERT then showed that pretraining on unlabelled text transfers to many tasks. GPT showed that a decoder trained to continue text could be turned into an assistant by instruction tuning and preference learning."
+        ],
+        "bullets": [
+          "Embeddings replaced one-hot vectors with dense, learned representations.",
+          "Sequence-to-sequence with attention made translation a single trained system.",
+          "The transformer made training parallel across positions, which is what allowed scale.",
+          "Masked pretraining produced strong general-purpose encoders.",
+          "Causal pretraining produced models that can generate, which is what made chat possible.",
+          "Instruction tuning changed behaviour without changing knowledge.",
+          "Preference optimisation made outputs more useful and less harmful, at the cost of some diversity."
+        ]
+      },
+      {
+        "title": "🧮 Scale growth in numbers",
+        "paras": [
+          "A word-level n-gram model of the 1990s had perhaps 10 million parameters if the count table is counted as parameters. A recurrent language model of 2015 had 10 to 100 million. The first transformer language model in 2018 had 117 million. By 2020 the largest had 175 billion, and by 2023 frontier models were estimated in the hundreds of billions to trillions.",
+          "That is roughly four orders of magnitude in five years, which is faster than Moore's law by a wide margin. The compute used for the largest training runs grew about 10-fold every 18 months over the same period.",
+          "Data growth: early models trained on a billion words, around 1.3 billion tokens. Modern models train on 2 to 15 trillion tokens, three to four orders of magnitude more.",
+          "Cost growth: a 2018 training run cost perhaps tens of thousands of dollars. A frontier run in the 2020s costs tens of millions. The ratio is about 1,000-fold, which is why only a few organisations attempt it.",
+          "Quality growth, measured on a standard reasoning benchmark: models below 10 billion parameters score near chance on multi-step problems, and above that the scores rise steeply. The capability curve is not linear in scale, which is why the field kept scaling past the point where the cost seemed justified.",
+          "The efficiency counter-trend: a model from 2024 at 8 billion parameters matches a model from 2020 at 175 billion on many tasks, a 20-fold parameter reduction in four years. That is the result of better data, better training, and distillation, and it is why small models keep becoming useful."
+        ]
+      }
+    ]
+  },
+  "890": {
+    "sections": [
+      {
+        "title": "🔍 Why three stages with wildly different costs",
+        "paras": [
+          "An LLM is built in three stages: pretraining on unlabelled text, alignment on curated examples and preferences, and inference. The first costs millions and happens once, the second costs thousands, and the third costs money for every request forever.",
+          "Understanding that asymmetry explains most deployment decisions, because the cheapest engineering work is often at the inference stage while the most attention goes to training."
+        ]
+      },
+      {
+        "title": "⚙️ What each stage does",
+        "paras": [
+          "Pretraining teaches the distribution of text by next-token prediction, which installs grammar, style, and a great deal of factual association. Alignment then teaches behaviour: follow the instruction, format the answer, refuse the harmful request.",
+          "Inference generates one token at a time, conditioning on the prompt and on everything already generated. The sequential nature of that loop is the source of the latency that users feel."
+        ],
+        "bullets": [
+          "Pretraining data is filtered, deduplicated, and mixed by domain.",
+          "Alignment uses supervised examples followed by preference comparisons.",
+          "The context window is the interface between the prompt and the model's behaviour.",
+          "Quantisation and distillation happen after training and change only the serving cost.",
+          "Retrieval is bolted on at inference time and changes what the model knows without retraining.",
+          "Evaluation has to happen at each stage, because a model can be good at pretraining and bad at instruction following.",
+          "The cheapest quality gain in production is usually a better prompt, not a bigger model."
+        ]
+      },
+      {
+        "title": "🧮 The cost split by arithmetic",
+        "paras": [
+          "Pretraining a 70-billion-parameter model on 2 trillion tokens is 8.4 times 10 to the 23 operations, about 24 days on a large cluster, tens of millions of dollars.",
+          "Instruction tuning on 100,000 examples for 2 epochs is 200,000 example-passes, a few hours on a small cluster, a few thousand dollars. Preference optimisation on 50,000 comparisons is similar.",
+          "Inference at 1 million requests per day with 1,000 input and 500 output tokens each: 1 billion input tokens and 500 million output tokens daily. At a few dollars per million input tokens and several per million output, that is thousands of dollars per day, which over a year dwarfs the alignment cost and can approach the pretraining cost.",
+          "That arithmetic is why inference optimisation is worth real engineering. Caching the prompt prefix, batching requests, and using a smaller model for easy queries are each worth more than a further round of alignment.",
+          "Latency arithmetic: generating 500 tokens at 50 tokens per second takes 10 seconds. At 100 tokens per second it takes 5. Users find 10 seconds slow and 5 acceptable, so serving throughput per user is a product requirement, not a detail.",
+          "Compute for one request: 500 output tokens times 70 billion parameters times 2 operations is 7 times 10 to the 13 operations, which at 400 trillion per second is 0.17 seconds of pure arithmetic. The measured latency is much higher, which tells you the bottleneck is memory bandwidth and scheduling, not flops."
+        ]
+      }
+    ]
+  },
+  "892": {
+    "sections": [
+      {
+        "title": "🔍 Why the architecture became universal",
+        "paras": [
+          "The same block, repeated, works for text, images, audio, and code. That universality comes from attention being a generic operation over a set of vectors, with no assumption about what those vectors represent.",
+          "It also comes from the engineering property that matters most at scale: the computation parallelises across positions, so more hardware makes training faster rather than merely busier."
+        ]
+      },
+      {
+        "title": "⚙️ The block and its three variants",
+        "paras": [
+          "A transformer block is self-attention followed by a feed-forward network, each wrapped in a residual connection and layer normalisation. The feed-forward part holds most of the parameters, and the attention part does the routing between positions.",
+          "Three variants cover the applications. Encoder-only reads the whole input and suits understanding. Decoder-only generates and suits everything conversational. Encoder-decoder suits transformation, where input and output are different sequences."
+        ],
+        "bullets": [
+          "Residual connections let the gradient bypass each block, which is what makes very deep stacks trainable.",
+          "Pre-normalisation, normalising before each sublayer, is standard because it trains more stably than post-normalisation.",
+          "Rotary position encodings are now the default, because they extrapolate to longer contexts better than learned encodings.",
+          "Causal masking in a decoder prevents a position from attending to the future, which is required for next-token training.",
+          "Multi-head attention lets the model track several relationships at once.",
+          "The feed-forward layer acts as a per-token key-value memory, which is why most parameters live there.",
+          "Mixture-of-experts replaces the feed-forward layer with several alternatives and routes each token to a few, which raises capacity without raising compute."
+        ]
+      },
+      {
+        "title": "🧮 Where the parameters and the compute go",
+        "paras": [
+          "For a model with 12 layers, dimension 768, and 12 heads: each attention layer has four projections of 768 by 768, 2.36 million parameters, and the feed-forward has two matrices of 768 by 3,072, 4.72 million. So 7.1 million per layer, 85 million for 12 layers, plus a 50,000 by 768 embedding table at 38 million. Total about 123 million.",
+          "Two thirds of the parameters are in the feed-forward layers, which is why mixture-of-experts is applied there: routing to 2 of 8 experts multiplies the parameter count by roughly 4 while multiplying the compute by 2.",
+          "Compute split per forward pass at 512 tokens: attention costs 512 squared times 768 times 2 for the scores and the same for the value blend, about 800 million operations. The feed-forward is 512 times 768 times 3,072 times 2, about 2.4 billion. So the feed-forward is three quarters of the arithmetic, which matches the parameter split.",
+          "Depth and width trade: doubling depth doubles the number of layers and the sequential dependency, while doubling width quadruples the attention arithmetic. That asymmetry is why architectures tend to grow in depth first and width second.",
+          "The residual stream view: every block adds to a shared vector, so the model can be read as a sequence of refinements rather than a pipeline of replacements. That view is why ablating a single block in a 12-layer model usually costs only a few percent of quality, while removing the residual connections makes training fail entirely."
+        ]
+      }
+    ]
+  },
+  "893": {
+    "sections": [
+      {
+        "title": "🔍 Why attention is a lookup",
+        "paras": [
+          "Every position must be able to use information from other positions. The question is how to decide which other positions matter, and the answer is to let the model learn the decision.",
+          "Attention does exactly that: each position asks a question, every position advertises what it offers, and the match determines how much of each offer is taken."
+        ]
+      },
+      {
+        "title": "⚙️ Queries, keys, values, and heads",
+        "paras": [
+          "Each position projects its representation into three vectors. The query represents what this position needs, the key represents what each position offers, and the value is the content actually mixed. Scores are query-key dot products, scaled and softmaxed, and the output is the weighted sum of values.",
+          "Multi-head attention repeats this with different projections, so several distinct matching patterns are computed in parallel and concatenated."
+        ],
+        "bullets": [
+          "Scaling by the square root of the head dimension keeps scores in a range where softmax has a usable gradient.",
+          "Causal masking sets future scores to negative infinity before softmax, which makes generation possible.",
+          "The key-value cache stores past keys and values so generation does not recompute them.",
+          "Different heads learn different patterns: previous token, syntactic head, matching bracket, coreference.",
+          "Ablating a head costs much less than ablating a whole layer, which shows the redundancy.",
+          "Attention weights show where a head looked, which is not the same as why the answer changed.",
+          "Grouped-query attention shares key-value heads across query heads, cutting cache size several-fold with little quality loss."
+        ]
+      },
+      {
+        "title": "🧮 Attention cost and the cache arithmetic",
+        "paras": [
+          "At 1,024 tokens, dimension 768, 12 heads of 64: score computation is 1,024 times 1,024 times 64, 67 million multiply-adds per head, and the same again for the value blend, so 134 million per head and 1.6 billion per layer. Twelve layers is 19 billion operations for a forward pass.",
+          "The key-value cache is what makes generation feasible. Without it, generating token number 1,000 would reprocess all 1,000 tokens, so 1,000 tokens would cost the sum of 1 to 1,000 passes, 500 times the cost of one pass. With the cache, each new token costs one query against 1,000 cached keys, which is linear.",
+          "Cache size: 12 layers times 2 tensors times 12 heads times 1,024 positions times 64 dimensions times 2 bytes, 37.7 MB per sequence at 1,024 tokens. At 100,000 tokens it is 3.7 GB, which is why long context is memory-bound rather than compute-bound.",
+          "Grouped-query attention in numbers: with 12 query heads sharing 4 key-value heads, the cache shrinks by 3 times, from 37.7 MB to 12.6 MB per sequence at 1,024 tokens. At 100,000 tokens that is the difference between 1.2 GB and 3.7 GB, which decides how many users fit on one accelerator.",
+          "Why scaling matters: with head dimension 64, dot products of random unit vectors have a standard deviation around 8, so unscaled scores would span plus or minus 30 and the softmax would be almost one-hot with a vanishing gradient. Dividing by 8 brings the spread to about 1, which keeps the softmax responsive.",
+          "One attention step by hand: queries 1,0, 0,1, 1,1 against keys 1,0, 1,0, 0,1. Scores for the first query are 1, 1, 0, which softmax to 0.42, 0.42, 0.16. If the values are 10,0, 20,0, 0,10, the output is 12.7, 1.6, dominated by the two positions whose keys matched, which is the intended behaviour."
+        ]
+      }
+    ]
+  },
+  "894": {
+    "sections": [
+      {
+        "title": "🔍 Why not words, and why not characters",
+        "paras": [
+          "A word-level vocabulary needs an entry for every inflection, name, and typo, which is millions of entries and still produces unknown tokens. A character-level vocabulary is tiny and makes sequences four times longer, which quadruples the attention cost.",
+          "Subword tokenization sits between them: frequent words get one token, rare words split into known pieces, and a fixed vocabulary covers any input."
+        ]
+      },
+      {
+        "title": "⚙️ Byte pair encoding and its consequences",
+        "paras": [
+          "BPE starts from bytes or characters and repeatedly merges the most frequent adjacent pair into a new token, until the vocabulary reaches the target size. The merges are the vocabulary, which is why the table is derived from data rather than written by hand.",
+          "The consequences reach everywhere: sequence length sets the cost, vocabulary size sets the embedding parameters, and the token boundaries set what the model can see as a single unit."
+        ],
+        "bullets": [
+          "A 50,000-token vocabulary is typical, with 32,000 and 128,000 both in use.",
+          "English averages about 1.3 tokens per word; Chinese and other languages can need 2 or more.",
+          "Numbers split into pieces, which is why arithmetic on long numbers is unreliable.",
+          "Rare words split into several tokens, so the model sees parts rather than a unit.",
+          "Whitespace and capitalisation are encoded in the token itself in some tokenizers and as separate tokens in others.",
+          "Different models use different tokenizers, so token counts are not comparable across them.",
+          "A tokenizer mismatch produces fluent nonsense rather than an error, which makes it dangerous."
+        ]
+      },
+      {
+        "title": "🧮 Token counts and their cost",
+        "paras": [
+          "A 1,000-word English article is about 1,300 tokens with a typical BPE vocabulary. A 1,000-character Chinese text is often 1,000 to 1,500 tokens, because each character is frequently its own token or part of a two-character token. That ratio is why context budgets feel different across languages.",
+          "Vocabulary arithmetic: a 50,000 by 4,096 embedding table is 205 million parameters, which for a 7-billion-parameter model is 3 percent of the total. For a 1-billion-parameter model it would be 20 percent, which is why small models use smaller vocabularies or tied embeddings.",
+          "Sequence length and cost: doubling the token count quadruples the attention cost. A document that is 1,300 tokens in one tokenizer and 2,600 in another costs four times as much in attention for identical text.",
+          "The number-splitting problem in numbers: a 10-digit number may become 4 or 5 tokens, so the model never sees the digits as a unit and cannot learn place value reliably. That is why arithmetic tools and code execution are used for anything beyond small integers.",
+          "The compression effect: a good BPE vocabulary achieves about 4 characters per token on English text. A vocabulary twice as large reaches 4.4, a 10 percent saving in sequence length for twice the embedding size, which is usually not worth it.",
+          "The mismatch consequence: feeding tokens from tokenizer A into a model trained with tokenizer B produces embeddings for wrong ids. The output is grammatical-looking text that is unrelated to the prompt, and no error is raised, which is why the tokenizer is saved alongside the model weights as a single artefact."
+        ]
+      }
+    ]
+  },
+  "896": {
+    "sections": [
+      {
+        "title": "🔍 Why next-token prediction is enough",
+        "paras": [
+          "Predicting the next token sounds trivial and is not, because doing it well requires grammar, factual association, style, and a model of what the text is about. Every one of those reduces the prediction error, so they are all learned as a side effect.",
+          "The objective also has a practical advantage: any text is training data, with the label being the text itself. That removes the labelling bottleneck entirely."
+        ]
+      },
+      {
+        "title": "⚙️ The variants and what each affords",
+        "paras": [
+          "Causal next-token prediction trains a model that can continue text, which is what generation requires. Masked prediction trains a model that fills blanks from both directions, which gives strong representations but no generation.",
+          "Other objectives exist for specific purposes: span corruption for encoder-decoder models, denoising for diffusion language models, and preference objectives for alignment."
+        ],
+        "bullets": [
+          "Causal models can generate; masked models cannot, because they were never trained to continue.",
+          "Masked models see both directions, which helps understanding tasks.",
+          "The objective determines the affordances, which is why the same architecture serves different purposes with different training.",
+          "Teacher forcing trains on true prefixes, which makes training parallel but creates a train-inference mismatch.",
+          "The loss is average cross-entropy per token, which is exactly what perplexity exponentiates.",
+          "Data quality matters more than objective choice once the objective is reasonable.",
+          "The objective explains hallucination: the model optimises plausibility, not truth."
+        ]
+      },
+      {
+        "title": "🧮 Loss arithmetic for next-token prediction",
+        "paras": [
+          "A sequence of 5 tokens with assigned probabilities 0.5, 0.25, 0.5, 0.125, 0.4. Negative logs are 0.693, 1.386, 0.693, 2.079, 0.916, summing to 5.767. Over 5 tokens the average is 1.153 nats, so the perplexity is e to the 1.153, 3.17.",
+          "A model at 1.0 nats per token has perplexity 2.72, which means it is as uncertain as a uniform choice among fewer than three options. Frontier models on natural text reach 0.6 to 0.8 nats on held-out data from their own distribution, which is a small number and represents a large amount of learned structure.",
+          "Training signal arithmetic: a 2-trillion-token training run provides 2 trillion prediction tasks, each with a 50,000-way softmax. That is 10 to the 17 softmax computations, which is the dominant reason pretraining is expensive.",
+          "Why teacher forcing is efficient: all positions in a sequence are predicted in parallel from the true prefix, so a 2,048-token sequence provides 2,048 training signals from one forward pass. Sequential generation at inference provides one signal per forward pass, a factor of 2,048 difference in efficiency between training and inference.",
+          "The exposure bias consequence in numbers: at inference, an error at position 10 becomes part of the prefix for position 11. If the per-token error rate is 2 percent, the chance that a 100-token answer contains at least one error is 1 minus 0.98 to the 100, 87 percent. That is why long generations drift.",
+          "Masked pretraining arithmetic for contrast: with 15 percent of tokens masked, a 512-token sequence provides 77 prediction tasks per pass instead of 512, so causal prediction extracts more signal per token of text. That efficiency, not quality, is one reason generation models are trained causally."
+        ]
+      }
+    ]
+  },
+  "897": {
+    "sections": [
+      {
+        "title": "🔍 Why data work is most of the work",
+        "paras": [
+          "The objective is a single line of maths. The engineering is in deciding which tokens to train on, in what proportion, and in what order. Studies of pretraining repeatedly find that data mixture and filtering change results as much as a change of model size.",
+          "That is why an organisation with 10,000 GPUs and no data pipeline gets a worse model than one with 1,000 GPUs and an excellent pipeline."
+        ]
+      },
+      {
+        "title": "⚙️ Curation, mixture, and compute",
+        "paras": [
+          "Curation removes duplicates, boilerplate, machine-generated text, and low-quality pages, and it filters for language and safety. Deduplication is not cosmetic: repeated text makes a model memorise rather than generalise, and it inflates the apparent size of the corpus.",
+          "The mixture sets the proportions of code, web text, books, and reference material. Code improves reasoning and structured output; books improve long-form coherence; web text provides breadth."
+        ],
+        "bullets": [
+          "Deduplication at document and paragraph level removes a significant fraction of raw web text.",
+          "Quality filters use classifiers trained on curated text, which is cheaper than manual review.",
+          "The mixture is tuned by ablating on smaller models, because full runs are too expensive to iterate.",
+          "Data ordering matters: curriculum effects are real, though the details are poorly understood.",
+          "Contamination of evaluation sets is common and must be checked by n-gram overlap.",
+          "Licensing and consent are constraints on what can be used, not only ethical preferences.",
+          "Synthetic data is increasingly part of the mixture, with the risk of model collapse if overused."
+        ]
+      },
+      {
+        "title": "🧮 Tokens, deduplication, and cost per token",
+        "paras": [
+          "A raw web crawl of 100 billion pages averaging 4,000 tokens each is 4 times 10 to the 14 tokens, 400 trillion. Deduplication and quality filtering typically remove 80 to 95 percent, leaving 20 to 80 trillion tokens, of which a training run uses a few trillion.",
+          "Curated datasets used in practice: a 2-trillion-token mixture might be 60 percent filtered web text, 15 percent code, 10 percent books and papers, 5 percent reference material, and 10 percent multilingual content. Those proportions are tuned, not natural.",
+          "Compute arithmetic for a training run: 6 times 70 billion parameters times 2 trillion tokens is 8.4 times 10 to the 23 operations. At 400 trillion operations per second per accelerator and 2,000 accelerators, the run takes 1.05 million seconds, 12 days, assuming perfect utilisation, which is why real runs take longer.",
+          "Cost per token: at a few dollars per accelerator-hour and 2,000 accelerators, a 12-day run costs about 1.7 million in hardware time, and the total project cost including failed runs, data work, and evaluation is several times that.",
+          "Deduplication impact in numbers: on a corpus with 30 percent near-duplicate content, deduplicating improves validation loss by an amount equivalent to a 10 to 20 percent increase in model size. That is a cheaper gain than doubling the cluster.",
+          "Contamination arithmetic: if 0.1 percent of a 2-trillion-token corpus overlaps with a 10,000-example test set, that is 2 billion tokens of potential overlap, and specific test items may appear dozens of times. Detecting this requires n-gram matching against the test set, which is cheap and often skipped.",
+          "Scaling the pipeline rather than the model: doubling data quality through better filtering, which costs a few engineer-months, has repeatedly matched doubling model size, which costs millions. That comparison is why data work is now a first-class research area."
+        ]
+      }
+    ]
+  },
+  "898": {
+    "sections": [
+      {
+        "title": "🔍 Why loss is predictable",
+        "paras": [
+          "Scaling laws are empirical regularities: loss falls as a power law in parameters, data, and compute, over many orders of magnitude. That predictability is unusual in complex systems and is the reason large training runs can be planned rather than gambled.",
+          "They do not say which capabilities appear, only how the average prediction error improves. That distinction is why evaluation remains necessary."
+        ]
+      },
+      {
+        "title": "⚙️ The three factors and the optimal balance",
+        "paras": [
+          "For a fixed compute budget, loss depends on how the budget is split between parameters and tokens. Early work scaled parameters with a modest data increase; later work found that parameters and tokens should grow together, at roughly 20 tokens per parameter.",
+          "Beyond that, scaling continues to help but with diminishing returns, and the cost grows faster than the benefit in loss."
+        ],
+        "bullets": [
+          "Loss follows a power law: multiplying compute by 10 reduces loss by a roughly constant fraction.",
+          "There is an irreducible loss floor set by the entropy of natural language.",
+          "Chinchilla-style scaling trains smaller models on more data than the earlier practice.",
+          "Over-training a small model on far more tokens is often right for deployment, because inference is cheaper.",
+          "Scaling laws are measured on training and validation loss, not on task accuracy.",
+          "Emergent capability claims are contested, because metrics can be discontinuous while loss is smooth.",
+          "Data quality shifts the whole curve, which is why two models of the same size can differ substantially."
+        ]
+      },
+      {
+        "title": "🧮 Fitting a scaling law by arithmetic",
+        "paras": [
+          "A simplified form: loss equals a constant plus a coefficient times parameters to the power minus alpha plus another coefficient times tokens to the power minus beta. Published exponents for parameters are around 0.07 to 0.1 and for data around 0.1, which means multiplying parameters by 10 reduces the parameter term by about 20 percent.",
+          "Concretely, if the parameter term contributes 0.5 nats at 1 billion parameters, at 10 billion it contributes about 0.4, and at 100 billion about 0.32. Each tenfold increase buys 0.08 to 0.1 nats, which sounds small and compounds.",
+          "Compute-optimal allocation: with a budget of 10 to the 22 operations, the recommendation is about 2 billion parameters and 40 billion tokens. With 10 to the 23, about 6 billion parameters and 120 billion tokens. The ratio stays near 20 tokens per parameter.",
+          "The over-training trade in numbers: training a 1-billion-parameter model on 200 billion tokens instead of the compute-optimal 20 billion costs 10 times the training compute and produces a loss about 0.03 nats worse than the optimal model of that budget, but the resulting model is 6 times smaller at inference. If inference volume is high, that is the correct trade.",
+          "Inference cost dominance: for a model serving 1 billion requests per month, inference cost can exceed training cost within weeks. That is why the field moved from compute-optimal training to inference-aware training, and why small models trained on enormous data are now common.",
+          "The diminishing returns in product terms: reducing loss from 2.0 to 1.5 might move a benchmark from 40 to 65 percent, while reducing from 1.5 to 1.4 might move it from 65 to 67. The relationship between loss and capability is not linear, which is why scaling curves are not a substitute for evaluation."
+        ]
+      }
+    ]
+  },
+  "900": {
+    "sections": [
+      {
+        "title": "🔍 Why wording changes results so much",
+        "paras": [
+          "The model was trained to continue text, so any prompt is a context to be continued. A slightly different context suggests a slightly different continuation, and the difference can be large.",
+          "That sensitivity is not a bug to be fixed but a property to be managed. Prompt design is the practice of specifying the task well enough that the plausible continuation is the useful one."
+        ]
+      },
+      {
+        "title": "⚙️ The elements of a working prompt",
+        "paras": [
+          "A good prompt states the role, the task, the constraints, the output format, and any relevant context. It separates instructions from data, and it says what to do when the input does not fit.",
+          "Chat models add a system message, which sets behaviour for the whole conversation, and user messages, which carry the requests."
+        ],
+        "bullets": [
+          "State the format explicitly, because the default format is whatever the training data used most.",
+          "Give the reason behind a constraint; models follow instructions better when the purpose is visible.",
+          "Put the instruction before a long document, and repeat it after, because attention over long inputs is uneven.",
+          "Provide one or two examples when the format is unusual.",
+          "Ask for the answer before the reasoning when you need to grade it, or after it when you need accuracy on hard problems.",
+          "Use delimiters around user data so it cannot be mistaken for instructions.",
+          "Test prompts on a fixed sample and record the score, or improvements are guesses."
+        ]
+      },
+      {
+        "title": "🧮 Prompt length, cost, and sensitivity",
+        "paras": [
+          "A system prompt of 500 tokens sent with every request costs 500 input tokens each time. At 1 million requests per day that is 500 million tokens daily, which is a real cost. Providers offer prefix caching precisely because system prompts repeat.",
+          "Prompt length and accuracy: on a retrieval-style task, accuracy with the key passage first is often 5 to 10 points higher than with it buried in the middle of a long context. The position effect is measurable, which is why instructions are repeated at the end.",
+          "Example count: zero-shot to one-shot often gains 5 to 15 points on format compliance, and one-shot to five-shot gains another few. Beyond about eight examples, gains flatten while cost grows linearly, so five is a common stopping point.",
+          "Temperature arithmetic: at temperature 0 the model is deterministic and tends to produce the most likely phrasing, which is stable and sometimes bland. At temperature 1 sampling is broad, which increases diversity and the chance of drift. For extraction tasks temperature 0 is correct; for brainstorming it is wrong.",
+          "Variance measurement: running the same prompt five times at temperature 0.7 can produce answers differing by 10 percent on a grading rubric. Reporting a single run as the system's accuracy overstates precision, which is why evaluation runs average over several samples with a stated temperature.",
+          "Instruction-following degradation with length: models comply with an instruction near the start of a 100,000-token context noticeably less often than when it is also restated at the end. That is not a training failure so much as an attention limitation, and restating costs a few tokens."
+        ]
+      }
+    ]
+  },
+  "901": {
+    "sections": [
+      {
+        "title": "🔍 Why examples work without training",
+        "paras": [
+          "Few-shot prompting puts a handful of input-output pairs in the context and expects the model to follow the pattern. No weights change, yet behaviour adapts.",
+          "The mechanism is that the examples make a particular continuation overwhelmingly likely. The model is not learning a new skill; it is being steered toward one of the behaviours it already has."
+        ]
+      },
+      {
+        "title": "⚙️ What makes examples effective",
+        "paras": [
+          "The examples define the format, the label space, and the difficulty. Their order matters, their labels matter, and even labels that are wrong in a consistent way get followed.",
+          "Zero-shot is cheaper and often good enough for common tasks; few-shot is worth the tokens when the format is unusual or the labels are domain specific."
+        ],
+        "bullets": [
+          "Use examples that cover the range of inputs, including an edge case.",
+          "Keep the format identical across examples, because inconsistency is followed as inconsistency.",
+          "Balance the classes, or the model will over-predict the majority class in the examples.",
+          "Order matters: the last example has disproportionate influence.",
+          "Labels that are systematically wrong get learned, which is why example labels must be verified.",
+          "In-context learning is bounded by the model's existing abilities; it cannot teach a new skill.",
+          "Fine-tuning beats few-shot when you have hundreds of examples and a stable task."
+        ]
+      },
+      {
+        "title": "🧮 Token cost and accuracy trade-offs",
+        "paras": [
+          "Five examples of 100 tokens each plus a 20-token instruction is 520 tokens per request. At 10 million requests per day that is 5.2 billion input tokens daily, which at a few dollars per million is thousands of dollars per day.",
+          "Accuracy comparison on a classification task with 8 classes: zero-shot 72 percent, five-shot 85, twenty-shot 87, fine-tuned on 500 examples 91. Most of the gain comes in the first five examples, and the last step needs weight updates.",
+          "Order sensitivity in numbers: shuffling five examples changes accuracy by 3 to 8 points on the same test set, because the last example anchors the output format. Running three shuffles and averaging gives a more stable estimate, which is rarely done.",
+          "Label correctness: replacing 20 percent of example labels with wrong ones drops accuracy by roughly 10 to 20 points, depending on the task. The model follows the pattern, including the pattern of errors.",
+          "Cost crossover: five-shot at 520 tokens per request versus a fine-tuned small model at 200 tokens per request. If the small model is 3 points less accurate but 2.6 times cheaper per request, the decision depends on the value of those 3 points, which is a business question.",
+          "Long-context few-shot: putting 50 examples in the prompt can match fine-tuning on some tasks, but at 5,000 tokens per request the cost is 10 times the five-shot version and latency rises with input length. That is why fine-tuning remains relevant for high-volume tasks."
+        ]
+      }
+    ]
+  },
+  "902": {
+    "sections": [
+      {
+        "title": "🔍 Why writing the steps helps",
+        "paras": [
+          "On a multi-step arithmetic problem, a model answering immediately must produce the final number in one token, which requires the whole computation to happen in one forward pass. Asking for intermediate steps spreads the computation over many tokens, and each token gets its own forward pass.",
+          "That is the mechanical reason chain-of-thought helps: it converts one hard prediction into many easier ones, and the intermediate results become part of the context for the next step."
+        ]
+      },
+      {
+        "title": "⚙️ Variants and the honesty caveat",
+        "paras": [
+          "Chain-of-thought prompting asks for reasoning before the answer. Self-consistency samples several chains and takes the majority answer, which improves accuracy at several times the cost. Least-to-most decomposes the problem into subproblems. ReAct interleaves reasoning with tool calls.",
+          "The written chain is output, not introspection. It can be correct while the reasoning was different, or plausible while the answer is wrong, which is why chains are not evidence of how the model computed."
+        ],
+        "bullets": [
+          "CoT helps on multi-step arithmetic, logic, and planning, and barely helps on retrieval or classification.",
+          "It costs several times the output tokens, which matters at scale.",
+          "Self-consistency with 5 samples typically adds 3 to 8 points on reasoning benchmarks.",
+          "Chains can be systematically wrong in a convincing way, which is worse than an obviously wrong answer.",
+          "Asking for the answer first and the reasoning after is a different task and often less accurate.",
+          "Reasoning models trained with reinforcement learning internalise the chain, at much higher inference cost.",
+          "The chain is useful for auditing even when it is not faithful, because it exposes assumptions to check."
+        ]
+      },
+      {
+        "title": "🧮 Accuracy gain versus cost",
+        "paras": [
+          "A word problem benchmark: direct answering reaches 35 percent, chain-of-thought reaches 55, and self-consistency with 5 samples reaches 62. The accuracy more than doubles, and the token cost is roughly 6 to 10 times, since each chain is several hundred tokens.",
+          "Cost arithmetic: an answer of 20 tokens becomes 300 tokens with a chain and 1,500 with five chains. At a few dollars per million output tokens, 1,000 requests cost a fraction of a cent with direct answers and a few cents with self-consistency. At 10 million requests per day that difference is hundreds of dollars daily.",
+          "Where it does not help: on a classification task with a single token output, adding a chain changes accuracy by less than 2 points and triples the cost. The gain is task-dependent, and applying the technique everywhere is a common waste.",
+          "The failure arithmetic: if a chain has a 5 percent per-step error rate and needs 8 steps, the chance that at least one step is wrong is 1 minus 0.95 to the 8, 34 percent. Longer chains are not automatically better, which is why decomposition should keep chains short.",
+          "Self-consistency in numbers: with 5 samples where 3 give the correct answer, the majority is right. The probability that a sample is correct is p, so with p equal to 0.55 the majority of 5 is correct about 59 percent of the time, a gain of 4 points. With p equal to 0.9 the majority is correct 99 percent of the time, and the technique is unnecessary.",
+          "The faithfulness problem, concretely: models asked to explain a biased decision produce a plausible reason that is not the actual cause. Studies comparing stated reasoning against counterfactual inputs find that the stated chain changes when irrelevant features change, which means the chain is partly post-hoc. Auditing should rely on behaviour, not on the explanation."
+        ]
+      }
+    ]
+  }
+}

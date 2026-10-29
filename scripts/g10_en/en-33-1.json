@@ -1,0 +1,458 @@
+{
+  "856": {
+    "sections": [
+      {
+        "title": "🔍 Why seeing is not a lookup problem",
+        "paras": [
+          "A photograph of a chair can be taken from any angle, under any light, with any background, and partially occluded. The pixels differ enormously while the concept is identical. No rule that compares pixel values can handle that, because the same object never produces the same numbers twice.",
+          "Computer vision is the attempt to extract the invariants that survive those changes: shape, texture, context, and the relationships between parts."
+        ]
+      },
+      {
+        "title": "⚙️ Pixels, projection, and the levels of the problem",
+        "paras": [
+          "An image is a grid of measurements of light intensity. Everything a vision system knows is in those numbers, and the mapping from the world to the numbers is a projection that discards depth.",
+          "The tasks form a ladder. Classification says what is present. Detection says where. Segmentation says which pixels. Each level requires more output structure and more annotation."
+        ],
+        "bullets": [
+          "The projection loses depth, so many different scenes produce nearly identical pixels, which makes the problem ill-posed.",
+          "Scale, pose, lighting, and occlusion are the four variations that any method must tolerate.",
+          "Early methods engineered invariants by hand: edges, corners, histograms.",
+          "Deep methods learn invariants from data, which is why they need many examples.",
+          "Classification, detection, segmentation, and generation are the four output formats.",
+          "Video adds motion, which is both extra information and extra computation.",
+          "Almost every failure in vision is a mismatch between the training distribution and the deployment one."
+        ]
+      },
+      {
+        "title": "🧮 Why the pixel space is hopeless without structure",
+        "paras": [
+          "A 224 by 224 colour image has 150,528 numbers. Two photographs of the same chair, shifted by 10 pixels, differ in almost every one of them while representing the same object. The Euclidean distance between them is large, and the distance to a different object can easily be smaller.",
+          "The number of distinct 224 by 224 images is 256 to the power of 150,528, which is beyond any meaningful comparison. A classifier must therefore compress that space into a much smaller representation that preserves the distinctions that matter, which is exactly what the layers of a convolutional network do.",
+          "The storage arithmetic alone explains why vision is compute-heavy: one image at 224 by 224 by 3 in 8-bit precision is 150 KB. A training set of 1.2 million images is 180 GB uncompressed, and decoding them during training at 200 images per second needs 30 MB per second of decode throughput.",
+          "An example of the ill-posedness in numbers: a 3-metre tall pole photographed from 10 metres and a 30-centimetre pole photographed from 1 metre can produce the same image size in pixels. Without context, no algorithm can tell them apart, which is why relative size against known objects matters so much.",
+          "The annotation cost: labelling 1.2 million images with a class takes perhaps 10 seconds each, 3,300 hours. Labelling boxes takes 60 seconds each, 20,000 hours. Labelling every pixel takes minutes, which is why segmentation datasets have thousands of images rather than millions, and why the task ladder exists."
+        ]
+      }
+    ]
+  },
+  "857": {
+    "sections": [
+      {
+        "title": "🔍 Why shape and range cause most bugs",
+        "paras": [
+          "Vision code fails in two silent ways: the array is the wrong shape, or the values are in the wrong range. Neither raises an error, and both produce plausible-looking wrong predictions.",
+          "Almost every debugging session in vision starts with printing the shape and the minimum and maximum of the tensor."
+        ]
+      },
+      {
+        "title": "⚙️ Resolution, channels, and layout",
+        "paras": [
+          "An image is a grid of pixels, and each pixel holds one value per channel. A greyscale image is height by width, a colour image is height by width by 3 with values usually 0 to 255.",
+          "Deep learning frameworks want a batch dimension first and channels before spatial dimensions, so an image becomes 1 by 3 by height by width. OpenCV and most image libraries use height by width by channels, which is why every pipeline has a transpose somewhere."
+        ],
+        "bullets": [
+          "Resolution is width times height, and doubling each dimension quadruples the pixel count.",
+          "8-bit channels give 256 levels, which is enough for display and often not enough for computation such as summing many frames.",
+          "Normalising to 0 to 1 improves numerical stability; standardising with dataset mean and standard deviation usually helps more.",
+          "RGB and BGR are different orders, and mixing them swaps red and blue, which is the most common colour bug.",
+          "The channel order expected by a pretrained model must match the order the image loader produces.",
+          "Resizing changes aspect ratio unless it is done carefully, and that distortion changes predictions.",
+          "A batch of images must all have the same size, which is why resizing happens before batching."
+        ]
+      },
+      {
+        "title": "🧮 Sizes and memory by arithmetic",
+        "paras": [
+          "A 1920 by 1080 colour image has 2,073,600 pixels, so 6,220,800 bytes, about 6 MB as 8-bit. The same image as 32-bit floats is 24 MB, and a batch of 32 is 796 MB, which is why float conversion and image size dominate memory.",
+          "Doubling resolution to 3840 by 2160 gives 8,294,400 pixels, exactly four times, so 24 MB in 8-bit and 99 MB in float. That factor of four is why 4K video processing needs several times the hardware of 1080p.",
+          "Normalisation effect: raw pixel values 0 to 255 enter a network with weights around 0.01, giving activations in the tens, which can saturate activations and produce large gradients. Dividing by 255 keeps activations in a reasonable range and usually speeds convergence noticeably. Subtracting the dataset mean and dividing by the standard deviation, typically 0.485, 0.456, 0.406 for RGB on a common benchmark, is what pretrained models expect and what their weights were fitted with.",
+          "Channel-order arithmetic in practice: an image read as BGR and passed to a model expecting RGB has its first and third channels swapped. The picture still looks almost plausible, and top-1 accuracy typically drops by 5 to 15 points. Nothing in the code flags it.",
+          "Storage arithmetic for a dataset: 50,000 images at 32 by 32 by 3 in 8-bit is 154 MB, which fits in memory. 1.2 million images at 224 by 224 by 3 is 180 GB, which does not, so training reads from disk in batches and the data loader becomes the throughput limit."
+        ]
+      }
+    ]
+  },
+  "858": {
+    "sections": [
+      {
+        "title": "🔍 Why the output format decides the cost",
+        "paras": [
+          "Saying there is a person in this image is a cheap problem. Saying where every person is, and which pixels belong to each, is expensive in annotation, compute, and evaluation.",
+          "Choosing a more structured output than the downstream system needs is one of the most common ways to waste a project's budget."
+        ]
+      },
+      {
+        "title": "⚙️ The task families",
+        "paras": [
+          "Recognition tasks identify content: classification, face recognition, optical character recognition, action recognition. Localisation tasks find extent: detection with boxes, segmentation with masks, pose estimation with keypoints. Generation tasks produce images: synthesis, style transfer, super-resolution, inpainting.",
+          "Each family has its own data, metric, and latency profile."
+        ],
+        "bullets": [
+          "Classification needs one label per image and is evaluated with accuracy or F1.",
+          "Detection needs boxes and labels and is evaluated with mean average precision at an overlap threshold.",
+          "Segmentation needs masks and is evaluated with intersection over union per class.",
+          "Face recognition is a metric learning problem: it compares embeddings rather than classifying identities directly.",
+          "OCR combines text detection with character recognition and is evaluated with character error rate.",
+          "Quality control and medical screening care about recall far more than precision.",
+          "Autonomous systems care about latency and about the cost of each specific error, not about average accuracy."
+        ]
+      },
+      {
+        "title": "🧮 Cost per task, in numbers",
+        "paras": [
+          "Classification on a standard 1,000-class benchmark costs about 4 billion multiply-adds per image for a mid-sized model, roughly 5 milliseconds on a mid-range GPU. Annotation is 10 seconds per image.",
+          "Detection costs 5 to 10 times more compute because the model predicts many candidate boxes per image, and annotation is 60 seconds per image with perhaps 5 objects. Evaluation needs intersection over union against every ground-truth box, which is negligible next to inference.",
+          "Segmentation costs another 3 to 10 times more, because the output is a mask at or near input resolution: a 1,024 by 1,024 input produces a million predictions. Annotation is minutes per image, which is why public segmentation datasets have a few thousand images rather than a million.",
+          "The practical rule with numbers: if a downstream system only needs to know whether a defect exists, classification at 5 milliseconds is enough. If it needs to know where to cut, detection at 30 milliseconds is required. If it needs to know the exact outline, segmentation at 200 milliseconds is required. Paying for segmentation when a box would do is a 40-fold increase in inference cost and a 100-fold increase in annotation cost.",
+          "Face recognition arithmetic: a 512-dimensional embedding per face. Comparing one face against 10,000 enrolled faces is 10,000 dot products of 512 numbers, 5 million operations, under a millisecond. Comparing against 10 million faces needs an approximate nearest-neighbour index, and that index is the engineering problem, not the model.",
+          "The error cost asymmetry in a real deployment: a defect detector at 99 percent recall and 50 percent precision flags 2 percent of good parts for review, which is 20,000 parts per million. If manual review costs 1 per part and a shipped defect costs 500, then 20,000 in review cost against avoiding perhaps 100 defects at 500, 50,000. The low-precision operating point is correct, and reporting only accuracy would hide the reasoning."
+        ]
+      }
+    ]
+  },
+  "860": {
+    "sections": [
+      {
+        "title": "🔍 Why RGB is not always the right space",
+        "paras": [
+          "In RGB, a shadow changes all three channels together, so a red object in shadow and a darker red object are hard to distinguish from a colour threshold. The representation confounds colour with brightness.",
+          "Other colour spaces separate those quantities, which makes simple rules work where RGB fails."
+        ]
+      },
+      {
+        "title": "⚙️ Pixel values and the useful spaces",
+        "paras": [
+          "An 8-bit channel has 256 levels from 0 to 255. Colour is three such channels, and the space defines what they mean.",
+          "HSV separates hue, which is the colour identity, from saturation, which is its purity, and value, which is brightness. A red object stays the same hue in shadow, so a hue range selects it regardless of lighting.",
+          "LAB separates lightness from two colour-opponent axes, and it is designed so that equal numeric distances correspond roughly to equal perceived differences."
+        ],
+        "bullets": [
+          "Hue is an angle from 0 to 179 in OpenCV's 8-bit representation, so red wraps around and needs two ranges.",
+          "Saturation is 0 for grey and 255 for a fully saturated colour, which is how to exclude washed-out pixels.",
+          "Thresholding a hue range is the standard way to isolate a coloured object.",
+          "RGB to greyscale uses weighted channels, because the eye is more sensitive to green than to blue.",
+          "LAB is used for colour difference measurement and for colour transfer between images.",
+          "Colour is affected by white balance and by the camera, so thresholds tuned on one device fail on another.",
+          "For deep learning, RGB is the default because the model learns its own colour handling."
+        ]
+      },
+      {
+        "title": "🧮 Conversions and thresholding by number",
+        "paras": [
+          "Greyscale from RGB: 0.299 times red plus 0.587 times green plus 0.114 times blue. A pixel of 255, 0, 0 becomes 76, not 85, which is what a naive average would give. That weighting is why a saturated red looks darker in greyscale than a saturated green.",
+          "HSV example: pure red is hue 0, saturation 255, value 255. Half-brightness red is hue 0, saturation 255, value 128. Both fall in a hue range of 0 to 10, so a single threshold selects both, which is the point. In RGB the two pixels are 255,0,0 and 128,0,0, which require two separate ranges.",
+          "The wrap-around trap in numbers: red near the end of the hue circle is around 175 to 179 while red near the start is 0 to 10. A threshold of 0 to 10 misses half the red pixels, which is why the standard expression is two ranges combined with a logical or.",
+          "The lighting sensitivity measurement: the same red object photographed under daylight and tungsten shifts hue by 10 to 20 units in 8-bit terms and value by 40. A hue window of plus or minus 10 therefore fails under a lighting change, which is why adaptive thresholds or a small model are used in practice.",
+          "Colour histogram arithmetic: a 3D histogram of 8 bins per channel is 512 cells, which is small and fast. With 32 bins per channel it is 32,768 cells, and a 1-megapixel image fills maybe 5,000 of them, so the histogram is sparse. That sparsity is why histograms work as image descriptors for retrieval.",
+          "Perceived difference: in LAB, a difference of about 2.3 units is roughly the smallest visible change, so a colour-matching tolerance of 2 is strict and 5 is loose. Quoting an RGB distance of 30 is meaningless because RGB distance does not correspond to perception."
+        ]
+      }
+    ]
+  },
+  "861": {
+    "sections": [
+      {
+        "title": "🔍 Why a filter is the simplest useful operation",
+        "paras": [
+          "A filter recomputes each pixel from its neighbours. That single idea covers blurring, sharpening, denoising, and edge detection, differing only in the numbers in the small matrix.",
+          "Understanding the arithmetic of one convolution makes the whole classical pipeline, and the convolutional layer that replaced it, concrete."
+        ]
+      },
+      {
+        "title": "⚙️ Kernels, smoothing, and edge operators",
+        "paras": [
+          "A kernel is a small matrix, typically 3 by 3 or 5 by 5. It is placed over each pixel, each neighbour is multiplied by the corresponding kernel value, and the results are summed into the output pixel.",
+          "Averaging kernels blur, because each output becomes the mean of its neighbourhood. The Sobel operator computes a derivative, so it responds strongly where intensity changes, which is an edge. Canny adds smoothing, non-maximum suppression, and hysteresis to produce thin, connected edges."
+        ],
+        "bullets": [
+          "The kernel must be flipped for a true convolution; most libraries implement correlation, which is identical for symmetric kernels.",
+          "Border handling matters: pad with zeros, replicate the edge, or reflect, and each gives different edge pixels.",
+          "Gaussian blur is the correct pre-step for edge detection because it removes noise that would create false edges.",
+          "Sobel gives two responses, horizontal and vertical, whose combination gives gradient magnitude and direction.",
+          "Canny's two thresholds keep strong edges and only those weak edges connected to strong ones, which reduces fragmentation.",
+          "A separable kernel runs in two passes, which reduces a 5 by 5 kernel from 25 to 10 multiplications per pixel.",
+          "Convolutional layers do the same arithmetic with learned kernels, which is why the classical pipeline resembles a hand-designed network."
+        ]
+      },
+      {
+        "title": "🧮 Convolving a small patch by hand",
+        "paras": [
+          "Take a 3 by 3 patch with values 10, 20, 30 in the first row, 40, 50, 60 in the second, 70, 80, 90 in the third. Apply a 3 by 3 averaging kernel of one ninth each.",
+          "The sum of all nine values is 450, so the output centre pixel is 450 divided by 9, 50. The blur leaves a linear ramp unchanged at its centre, which is the expected behaviour of an averaging filter on a smooth region.",
+          "Now apply a Sobel vertical kernel with first row minus 1, 0, 1, second row minus 2, 0, 2, third row minus 1, 0, 1. The response is minus 10 plus 30, minus 80 plus 120, minus 70 plus 90, which is 20 plus 40 plus 20, 80. A large response, because the patch has a strong horizontal gradient.",
+          "Apply a Laplacian kernel with 0, 1, 0, 1, minus 4, 1, 0, 1, 0. The response is 20 plus 40 plus 60 plus 80 minus 4 times 50, 200 minus 200, zero. That is correct: on a linear ramp the second derivative vanishes, so a Laplacian detects only where the gradient changes.",
+          "Cost arithmetic: a 1920 by 1080 image has 2.07 million pixels, so a 3 by 3 filter needs 18.7 million multiplications. At 1 billion operations per second that is 19 milliseconds per filter. A 5 by 5 filter needs 52 million, 52 milliseconds. That is why separable kernels and larger strides matter in real pipelines.",
+          "Gaussian blur cost with separability: a 5 by 5 Gaussian is 25 multiplications per pixel as a single kernel and 10 as two 1-D passes, a 2.5-fold saving, which on the same image is 21 milliseconds instead of 52.",
+          "Canny's effect in numbers: on a noisy image, edge detection without smoothing produces 3 to 5 times more edge pixels than a smoothed version, most of them noise. The blur step is not optional, and its parameters change the edge count substantially."
+        ]
+      }
+    ]
+  },
+  "862": {
+    "sections": [
+      {
+        "title": "🔍 Why geometry operations are everywhere",
+        "paras": [
+          "Networks need a fixed input size, training needs variation, and stereo matching needs alignment. Every one of those requirements is met by transforming the image geometry.",
+          "The operations look trivial and they are where coordinates get silently scrambled, which corrupts labels and evaluation."
+        ]
+      },
+      {
+        "title": "⚙️ Resize, crop, rotate, flip, warp",
+        "paras": [
+          "Resizing changes the sampling grid, which requires interpolation. Nearest neighbour is fast and blocky. Bilinear averages four neighbours. Bicubic averages sixteen and is sharper. The choice affects both appearance and the statistics the model sees.",
+          "Cropping selects a region, and its most common use in training is random cropping, which is a form of augmentation. Rotation and flipping change orientation. Warping applies a general transformation matrix and is how perspective correction and alignment are done."
+        ],
+        "bullets": [
+          "Downsampling without antialiasing creates aliasing, which is why resize usually filters first.",
+          "Cropping changes the field of view, which can remove the object entirely if done carelessly.",
+          "Horizontal flipping doubles the effective data for many classes and is invalid for text and asymmetric objects.",
+          "Rotation requires deciding how to fill the corners, usually with black or by cropping the largest inscribed rectangle.",
+          "Augmentation must be applied to training data only; applying it at validation corrupts the measurement.",
+          "Coordinates of boxes and keypoints must be transformed with exactly the same matrix as the pixels.",
+          "Letterboxing preserves aspect ratio by padding, which is why detectors see black bars at the edges."
+        ]
+      },
+      {
+        "title": "🧮 Coordinates and the interpolation cost",
+        "paras": [
+          "Resize a 1920 by 1080 image to 640 by 360: the scale factors are 640 divided by 1920, 0.333, in both dimensions because the aspect ratio is preserved. A box at x from 960 to 1200 becomes 320 to 400. Get the factor wrong and every box shifts.",
+          "Resize 1920 by 1080 to 224 by 224 without preserving aspect ratio: horizontal scale 0.1167, vertical 0.2074. The image is squashed vertically by a factor of 1.8 relative to horizontal, which distorts every object and typically costs 3 to 8 points of accuracy on a classifier trained on undistorted images.",
+          "Letterbox arithmetic: scale by 224 divided by 1920, 0.1167, giving 224 by 126, then pad 98 pixels vertically, 49 top and 49 bottom. The aspect ratio is preserved and the model sees the whole image, at the cost of 44 percent of the pixels being padding.",
+          "Interpolation cost: bilinear resampling touches 4 source pixels per output pixel. At 224 by 224 output that is 200,704 reads. Bicubic touches 16, 802,816 reads. For a training pipeline at 200 images per second, that is 40 million reads per second for bilinear and 160 million for bicubic, which is why resizing is a real part of the data loader's cost.",
+          "Augmentation arithmetic: random crop of 0.6 to 1.0 of the area, random horizontal flip, and a small colour jitter gives 2 times 3 times a few colour variants, effectively 10 to 20 distinct views per image per epoch. On 5,000 images that is like having 50,000 to 100,000 views, which is the standard trick when data is short.",
+          "The coordinate bug in numbers: rotate an image by 10 degrees around its centre and forget to rotate the box coordinates. A box at the image edge moves by up to 20 percent of the width, so the box no longer contains the object and the training signal becomes wrong. The loss still decreases, because the model learns to predict wrong boxes consistently."
+        ]
+      }
+    ]
+  },
+  "864": {
+    "sections": [
+      {
+        "title": "🔍 Why corners are easier to find again",
+        "paras": [
+          "A patch of a flat wall is identical everywhere, so matching it to another image is ambiguous. A patch on a straight edge is ambiguous along the edge. A patch at a corner is unambiguous in both directions, which is why corners make good keypoints.",
+          "That argument is the basis of the Harris response, and it explains why keypoint detection works without any learning."
+        ]
+      },
+      {
+        "title": "⚙️ Detectors and invariance",
+        "paras": [
+          "A detector finds locations that are stable under small changes. Harris measures how much the intensity varies in two independent directions and keeps locations where both are large. FAST compares a circle of pixels around a candidate and keeps the ones that differ strongly from their neighbours.",
+          "Scale invariance requires detecting features at several scales and selecting the ones that persist, which is what SIFT does with a scale-space pyramid."
+        ],
+        "bullets": [
+          "Harris is rotation invariant and not scale invariant, which is why it fails when the object size changes.",
+          "SIFT finds keypoints at multiple scales and assigns an orientation, giving rotation and scale invariance.",
+          "ORB is a fast binary alternative to SIFT, suitable for real-time and embedded use.",
+          "Binary descriptors compare hundreds of pairs of pixels and pack the results into a bit string, which is very cheap to match.",
+          "A typical image yields hundreds to a few thousand keypoints, depending on texture.",
+          "Flat regions and repetitive textures produce either no keypoints or many ambiguous ones.",
+          "Classical keypoints still win where there is no room for a learned model, or where geometric accuracy must be exact."
+        ]
+      },
+      {
+        "title": "🧮 Response values and keypoint counts",
+        "paras": [
+          "Harris response on a flat patch: gradients are near zero in both directions, so the response is near zero. On an edge, one gradient is large and the other is near zero, and the response is small because the product of the two is small. At a corner both gradients are large, so the response is large, which is exactly why the product is used.",
+          "A concrete case: a patch with gradients 100 in x and 0 in y gives a response near zero. A patch with gradients 100 and 100 gives a large response, roughly proportional to their product. That comparison is the entire method.",
+          "Keypoint counts on real images: a textured building facade at 1920 by 1080 yields 2,000 to 5,000 SIFT keypoints and 5,000 to 15,000 ORB keypoints. A blurred sky region yields almost none. For a panorama from 20 overlapping images, that is 40,000 to 100,000 keypoints, and the matching problem becomes the bottleneck.",
+          "Scale-space cost: SIFT builds about 15 blurred images across 4 octaves. Each blur is a convolution, and the total work is roughly 1.5 times the cost of blurring the original once per octave, so several times the base image cost. That is why SIFT runs at a few frames per second on a CPU and ORB is used when speed matters.",
+          "Descriptor size comparison: SIFT is 128 floats, 512 bytes. ORB is 32 bytes. Matching 5,000 against 5,000 descriptors by brute force is 25 million comparisons: for SIFT that is 12.8 billion floating-point operations, for ORB it is 800 million bit operations, typically 10 to 30 times faster in practice. That ratio is why ORB exists.",
+          "Repeatability measurement: under a 30-degree viewpoint change, SIFT keypoints are detected in the same physical location 60 to 70 percent of the time, Harris around 40 percent. That repeatability is what the matching then depends on."
+        ]
+      }
+    ]
+  },
+  "865": {
+    "sections": [
+      {
+        "title": "🔍 Why a boundary is a useful abstraction",
+        "paras": [
+          "An object's outline is often enough to identify it, measure it, and count it, without any learning. For industrial inspection, counting, and measuring, contours solve the problem directly.",
+          "Edges are the primitive and contours are what you build from them: connected curves that follow object boundaries."
+        ]
+      },
+      {
+        "title": "⚙️ From edges to contours to measurements",
+        "paras": [
+          "An edge map marks pixels where intensity changes sharply. A contour traces connected edge pixels into a curve, discarding fragments too short to be objects.",
+          "Once a contour exists, its geometry is available: area, perimeter, bounding box, centroid, and shape descriptors such as circularity."
+        ],
+        "bullets": [
+          "Contours are usually found on a binarised image, so the threshold matters more than the edge detector.",
+          "Hierarchy distinguishes outer boundaries from holes, which changes an object count.",
+          "Approximation reduces a contour to a polygon with fewer vertices, which makes shape comparison cheap.",
+          "Circularity is 4 pi times area divided by perimeter squared, equal to 1 for a perfect circle.",
+          "Two objects touching produce one contour, which is why watershed or distance transforms are used to split them.",
+          "Contour area in pixels converts to physical area only with a calibration factor.",
+          "A contour is a hypothesis about an object boundary, not a fact, and lighting changes move it."
+        ]
+      },
+      {
+        "title": "🧮 Measuring shapes from a contour",
+        "paras": [
+          "A circle of radius 50 pixels has area 7,854 and perimeter 314. Circularity is 4 times pi times 7,854 divided by 314 squared, 98,696 divided by 98,596, 1.001, which is 1 within rounding.",
+          "A square of side 89 pixels has area 7,921 and perimeter 356, so circularity is 4 times pi times 7,921 divided by 126,736, 99,536 divided by 126,736, 0.785. That value, pi over 4, is the circularity of any square, so the metric distinguishes shapes reliably.",
+          "Counting arithmetic: a field of 500 objects on a 4000 by 3000 image. Filtering contours by area, keeping those between 200 and 20,000 pixels, typically removes 60 to 80 percent of spurious contours from noise and text. Without the filter, the count is wrong by a factor of 2 to 4.",
+          "The touching-object problem in numbers: 500 objects where 15 percent touch a neighbour gives 75 merged contours, each containing 2 objects, so the raw count is 425 plus 75, 500 contours but 575 objects. The count is short by 75, a 15 percent error, which is why watershed splitting exists.",
+          "Perimeter accuracy: a digitised circle's perimeter is overestimated because the pixel boundary is jagged. For a radius of 50 pixels, the measured perimeter is typically 5 to 8 percent higher than the ideal, which biases circularity downward by 10 to 15 percent. Calibrating against a known object is the standard fix.",
+          "Calibration arithmetic: if a 20 mm reference circle measures 100 pixels across, the scale is 0.2 mm per pixel. An object of 250 by 400 pixels is 50 by 80 mm, area 4,000 square millimetres. Without calibration the measurement is in pixels, which is fine for relative comparison and useless for quality control."
+        ]
+      }
+    ]
+  },
+  "866": {
+    "sections": [
+      {
+        "title": "🔍 Why a keypoint needs a description",
+        "paras": [
+          "Knowing that a corner exists at position 412, 233 in one image says nothing on its own: the other image has a different coordinate system and no way to relate the two.",
+          "A descriptor summarises the appearance around the keypoint as a vector, so two keypoints can be compared numerically and matched across images with different viewpoint, scale, and lighting."
+        ]
+      },
+      {
+        "title": "⚙️ Descriptors, matching, and geometric verification",
+        "paras": [
+          "SIFT builds a descriptor from gradient histograms in a 4 by 4 grid of cells, with 8 orientation bins per cell, giving 128 numbers, normalised so that brightness changes cancel out.",
+          "Matching compares every descriptor in one image with every descriptor in the other, keeping the best. Because many matches will be wrong, a ratio test keeps a match only if the best is clearly better than the second best, and a geometric check then removes matches that are inconsistent with a single transformation."
+        ],
+        "bullets": [
+          "The ratio test at about 0.75 removes most ambiguous matches, which are the ones in repetitive texture.",
+          "RANSAC fits a homography or fundamental matrix and discards outliers, which is why it catches geometrically impossible matches.",
+          "Brute-force matching is quadratic in the number of keypoints, which is why approximate indexes such as FLANN exist.",
+          "Binary descriptors are matched with Hamming distance, which is a single instruction per comparison on modern hardware.",
+          "Cross-checking, requiring each descriptor to be the best match in both directions, removes another class of errors.",
+          "A homography needs at least 4 point correspondences; a fundamental matrix needs 7 or 8.",
+          "The number of inliers after RANSAC is the practical measure of whether the match succeeded."
+        ]
+      },
+      {
+        "title": "🧮 Matching cost and inlier arithmetic",
+        "paras": [
+          "Two images with 2,000 SIFT keypoints each. Brute-force matching is 2,000 times 2,000, 4 million comparisons, each a 128-dimensional distance, so 512 million operations. At 1 billion per second that is half a second, which is too slow for real time.",
+          "With ORB at 32-byte descriptors and 5,000 keypoints each, the comparison count is 25 million, each a Hamming distance over 256 bits, which packs into 4 machine words. That is 100 million word operations, well under 100 milliseconds, and with a vectorised implementation much faster.",
+          "The ratio test in numbers: without it, a typical pair of images gives 2,000 matches of which perhaps 200 are correct, 10 percent. With a ratio of 0.75, matches drop to 300 and correct ones to 180, so precision rises from 10 to 60 percent at the cost of 10 percent of the good matches. That trade is almost always worth taking.",
+          "RANSAC arithmetic: with 300 matches of which 60 percent are inliers, 180 good and 120 bad. The probability that a random sample of 4 matches is all inliers is 0.6 to the fourth, 0.13. After 100 iterations the probability of never drawing a clean sample is 0.87 to the 100, which is 10 to the minus 6. So 100 iterations finds the true transformation almost surely, at a cost of 100 times 4 correspondences, which is negligible next to the matching itself.",
+          "Panorama arithmetic: stitching 20 images requires matching each to its neighbour, so 19 pairs. If each pair yields 180 good matches and needs 50 inliers to be accepted, several pairs will fail on low-texture scenes and the chain breaks. That is why panorama software falls back to manual alignment for problematic images.",
+          "The failure mode worth naming: in a repetitive facade with identical windows, every window looks like every other, the ratio test rejects almost everything because the second-best match is as good as the best, and the system reports too few matches. No amount of RANSAC helps, because the ambiguity is real."
+        ]
+      }
+    ]
+  },
+  "868": {
+    "sections": [
+      {
+        "title": "🔍 Why hand-crafted features hit a ceiling",
+        "paras": [
+          "A colour histogram describes the palette, not the shape. An edge histogram describes the texture, not the arrangement. Each hand-designed feature captures one property and is blind to the rest.",
+          "On a clean benchmark with centred objects, such features reach perhaps 70 percent. When pose, lighting, and background vary, they fall far behind what a learned representation achieves."
+        ]
+      },
+      {
+        "title": "⚙️ The classical pipeline and its replacement",
+        "paras": [
+          "The classical approach extracts features such as colour histograms, histogram of oriented gradients, or local binary patterns, then trains a classifier such as a support vector machine on them.",
+          "Deep learning replaces the extractor with learned filters. The classifier at the end is often simpler than an SVM, because the representation has already done the work."
+        ],
+        "bullets": [
+          "Histogram of oriented gradients describes shape through edge direction distributions and worked well for pedestrian detection.",
+          "Classical features are interpretable and need little data, which is why they persist in embedded and industrial settings.",
+          "Benchmark datasets such as MNIST and CIFAR-10 standardised comparison and drove progress.",
+          "A classical pipeline is fast at inference and slow to design, while a deep model is the reverse.",
+          "Data augmentation helps both, but deep models benefit far more.",
+          "With fewer than about 10,000 images, transfer learning beats training a deep model from scratch.",
+          "The gap between hand-crafted and learned features grows with the variability of the data."
+        ]
+      },
+      {
+        "title": "🧮 The accuracy gap in numbers",
+        "paras": [
+          "On a 1,000-class image benchmark, a classical pipeline with hand-crafted features reached about 74 percent top-1 accuracy in 2010 after years of tuning. The first deep model reached 85 percent in 2012, and later architectures exceed 90.",
+          "On a small custom dataset of 2,000 images across 10 classes, a color histogram plus SVM typically reaches 65 to 75 percent. A pretrained model with frozen features and a new head reaches 88 to 93 percent on the same data, in minutes rather than days.",
+          "Feature dimension arithmetic: a 3D colour histogram with 8 bins per channel is 512 dimensions. A histogram of oriented gradients over a 64 by 128 window with 8 orientation bins and 8 by 8 cells is 3,780 dimensions. A pretrained network's penultimate layer is 512 or 2,048 dimensions, learned rather than designed.",
+          "Data efficiency comparison: with 500 images per class, a classical pipeline reaches 75 percent and a from-scratch CNN reaches 70, so the classical method wins. With 5,000 per class, the CNN reaches 88 and the classical method stays at 78. The crossover is the practical answer to which to use.",
+          "Inference cost: a colour-histogram plus SVM pipeline classifies 10,000 images per second on one CPU core. A mid-sized CNN does 200 per second on a GPU, and 20 per second on a CPU. For a batch of 1 million archived images, that is 100 seconds against 14 hours, which is why classical methods still appear in archival and edge deployments.",
+          "The interpretability difference in numbers: a histogram feature can be inspected and a decision explained in terms of colour distribution. A deep model's 2,048-dimensional representation cannot be read, which matters in regulated domains and is why both approaches still appear in production."
+        ]
+      }
+    ]
+  },
+  "869": {
+    "sections": [
+      {
+        "title": "🔍 Why face detection was solved before face recognition",
+        "paras": [
+          "Detecting a face asks whether a pattern of light and dark regions is present, and human faces have a very consistent structure: darker eyes above a lighter nose above a darker mouth. That structure can be captured by simple rectangular comparisons.",
+          "Recognising whose face it is requires distinguishing between thousands of similar patterns, which needed learned embeddings. That is why detection worked in 2001 and recognition became reliable much later."
+        ]
+      },
+      {
+        "title": "⚙️ The cascade and its modern replacements",
+        "paras": [
+          "Viola-Jones computes Haar-like features, which are differences between sums of adjacent rectangles. A few hundred of these, combined in a cascade, reject most windows almost instantly and only spend computation on plausible regions.",
+          "The cascade is the key idea: each stage is a weak classifier that can reject a window, and a window must pass every stage to be reported. Most windows are rejected in the first stage, which is why the method ran in real time on 2001 hardware."
+        ],
+        "bullets": [
+          "Integral images make each Haar feature a constant-time computation regardless of rectangle size.",
+          "A cascade of 20 stages can reject 90 percent of non-faces in the first few stages.",
+          "Modern detectors use convolutional networks and handle pose, occlusion, and small faces far better.",
+          "Detection differs from recognition: detection answers whether there is a face, recognition answers whose.",
+          "Recognition compares embeddings and needs a threshold tuned for the acceptable false match rate.",
+          "Bias is a real issue: detectors historically performed worse on darker skin tones and non-frontal poses.",
+          "Regulation matters: face recognition on people in public spaces is restricted or banned in several jurisdictions."
+        ]
+      },
+      {
+        "title": "🧮 Scanning cost and the cascade's saving",
+        "paras": [
+          "A 640 by 480 image with a 24 by 24 detection window and a stride of 1 has 617 by 457, 281,969 positions. Evaluating a 200-feature classifier at every position would be 56 million feature evaluations, which is far too slow.",
+          "With a stride of 2, positions fall to 141,000. With a cascade where the first stage uses 2 features and rejects 50 percent of windows, the cost is 282,000 evaluations for stage one, then 141,000 more positions for stage two, then progressively fewer. A 20-stage cascade averages perhaps 10 to 30 feature evaluations per position, so 1.4 to 4.2 million in total, a 15-fold reduction from the naive 56 million.",
+          "Multi-scale adds a factor: detecting faces from 24 to 240 pixels needs about 8 scale steps if each step is 1.25 times the previous, so 8 times the cost. Even so, the total is around 30 million operations, which is milliseconds on 2001 hardware and trivial today.",
+          "Face recognition threshold arithmetic: an embedding comparison gives a similarity score. If the threshold is set so the false match rate is 0.001, then comparing against 10,000 enrolled people produces 10 false matches per query. For an access-control system with 1,000 queries per day, that is 10,000 false acceptances per day, which is unusable. The threshold must be tightened as the gallery grows, which is why large-scale recognition is much harder than small-scale.",
+          "Detection accuracy in numbers: on a standard benchmark, Viola-Jones reaches about 90 percent recall with a few hundred false positives per million windows. A modern detector reaches 99 percent recall with a fraction of the false positives, and handles faces rotated by 45 degrees where the cascade fails entirely.",
+          "Latency for a 1080p frame: a cascade detector takes 20 to 40 milliseconds on a CPU. A small CNN detector takes 10 to 15 milliseconds on a GPU and 100 on a CPU. Both are fast enough for real time, which is why the choice is now about robustness rather than speed."
+        ]
+      }
+    ]
+  },
+  "870": {
+    "sections": [
+      {
+        "title": "🔍 Why OCR is a pipeline rather than a model",
+        "paras": [
+          "Reading a page involves finding the text regions, separating lines and words, and recognising characters. Each step has its own failure modes, and the overall accuracy is the product of the steps.",
+          "Modern systems fuse the steps into one model, but the pipeline structure still explains where the errors come from."
+        ]
+      },
+      {
+        "title": "⚙️ Detection, segmentation, recognition",
+        "paras": [
+          "Text detection finds bounding boxes or polygons around text regions, which handles rotation and perspective. Recognition converts a cropped text image into characters, usually with a convolutional encoder and a sequence decoder.",
+          "Tesseract is the standard open-source engine and works well on scanned documents with moderate quality. Cloud services handle handwriting, complex layouts, and low-quality photographs."
+        ],
+        "bullets": [
+          "Deskewing and binarisation often improve accuracy more than a better recogniser.",
+          "Character error rate is the metric: substitutions plus insertions plus deletions divided by the number of reference characters.",
+          "Word-level accuracy is stricter and is what downstream systems usually care about.",
+          "Handwriting and printed text are different problems with different accuracy.",
+          "Language models over the output fix many character-level errors by choosing the more likely word.",
+          "Table and layout extraction is a separate problem from character recognition.",
+          "Unusual fonts, low contrast, and background patterns are the common failure cases."
+        ]
+      },
+      {
+        "title": "🧮 Error rates and the pipeline's arithmetic",
+        "paras": [
+          "A page with 2,000 characters. A character error rate of 2 percent means 40 errors, which spread over about 350 words so that maybe 30 words are wrong. A word-level accuracy of 91 percent on the same page is consistent with that number, because one wrong character usually corrupts a whole word.",
+          "The compounding effect of pipeline steps: if detection misses 3 percent of lines, segmentation splits 2 percent of words incorrectly, and recognition is 98 percent accurate per character, the end-to-end character error rate is roughly 3 percent from missed lines plus 2 percent from bad splits plus 2 percent from recognition, about 7 percent, not 2.",
+          "Preprocessing gain in numbers: on a photographed document with a 10-degree skew, raw recognition gives a 15 percent character error rate. Deskewing and adaptive binarisation reduce it to 4 percent, a 4-fold improvement with no change of model. That is why the standard advice for OCR failures is to look at the image first.",
+          "Resolution arithmetic: text needs roughly 300 dots per inch to be read reliably. A 300 dpi A4 page is 2480 by 3508 pixels, 8.7 megapixels. At 150 dpi the character strokes are half as wide and the error rate typically doubles or triples. Upscaling afterwards does not recover the lost detail.",
+          "Cost arithmetic: Tesseract processes a page in 0.5 to 2 seconds on a CPU. A cloud OCR API costs a fraction of a cent per page but adds 300 to 800 milliseconds of network latency. For 1 million pages, Tesseract is 140 to 550 hours of CPU, which is a few hundred dollars of compute, against perhaps thousands for an API. The choice depends on accuracy requirements rather than cost alone.",
+          "Layout complexity in numbers: a single-column clean scan is read at 98 to 99 percent character accuracy by Tesseract. A two-column magazine with images drops to 85 percent because reading order breaks, and a handwritten form drops to 60 to 80 percent. Stating one accuracy number for OCR without describing the input is meaningless."
+        ]
+      }
+    ]
+  }
+}

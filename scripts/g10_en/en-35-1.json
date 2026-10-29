@@ -1,0 +1,459 @@
+{
+  "920": {
+    "sections": [
+      {
+        "title": "🔍 Why speech is the hardest convenient interface",
+        "paras": [
+          "Typing is precise and slow. Speaking is fast and ambiguous. A person produces about 150 words per minute in speech and about 40 in typing, which is why voice is attractive wherever hands or eyes are busy.",
+          "The difficulty is that speech arrives as a continuous pressure wave with no spaces, no punctuation, and enormous variation across speakers, accents, and recording conditions. Everything in this course is a way of turning that wave into something structured."
+        ]
+      },
+      {
+        "title": "⚙️ The three directions and the shared pipeline",
+        "paras": [
+          "Speech processing runs in three directions: audio to text, which is recognition; text to audio, which is synthesis; and audio to identity or attribute, which covers speaker, language, and emotion.",
+          "All three share the same front end: convert the wave into a time-frequency representation, then model it. That shared front end is why the chapters on sampling and spectrograms come before any model."
+        ],
+        "bullets": [
+          "Recognition maps a waveform to a sequence of words.",
+          "Synthesis maps text to a waveform, and needs both acoustics and a vocoder.",
+          "Speaker recognition maps a voice to an identity, which is a comparison problem rather than a classification one.",
+          "The front end is nearly always a spectrogram or a mel spectrogram.",
+          "The output of every task is a sequence, which is why sequence models dominate.",
+          "Degradation is graceful in recognition and catastrophic in synthesis, which is why the two are engineered differently.",
+          "Almost every production system is a pipeline of a front end, a model, and a decoder."
+        ]
+      },
+      {
+        "title": "🧮 Data rates from microphone to model",
+        "paras": [
+          "A 16 kHz sample rate with 16-bit samples is 32,000 bytes per second, 115 MB per hour. That is why speech datasets are distributed compressed, and why pipelines decode on the fly rather than storing waveforms.",
+          "A 20-millisecond analysis window with a 10-millisecond hop on 16 kHz audio gives 320 samples per window and 100 frames per second. One minute of audio becomes 6,000 frames, and each frame becomes perhaps 80 mel bins, so 480,000 numbers per minute of speech.",
+          "Speech rate: 150 words per minute is 2.5 words per second. At 100 frames per second that is 40 frames per word, which is roughly 4 frames per phoneme for a typical word. That ratio is why models operate on frames and then collapse them to characters.",
+          "Data volume for training: 1,000 hours of speech at 115 MB per hour uncompressed is 115 GB. A modern recogniser trains on 10,000 to 100,000 hours, which is terabytes, and that is why only large organisations train from scratch.",
+          "Latency budget for a voice assistant: 300 milliseconds is the threshold at which a pause feels natural. Recognition in 150, intent classification in 50, and synthesis start in 100 leaves almost nothing for network overhead, which is why on-device models exist.",
+          "The cost of an error: word error rate of 5 percent on a 10-word command means one command in two is wrong if the errors are independent, since 1 minus 0.95 to the 10 is 0.40. That arithmetic is why command recognition targets near-zero error while dictation tolerates more."
+        ]
+      }
+    ]
+  },
+  "921": {
+    "sections": [
+      {
+        "title": "🔍 Why the direction of the task decides the design",
+        "paras": [
+          "Audio to text, text to audio, and audio to identity have different data, different metrics, and different latency constraints. Starting from the application rather than from a model is what keeps a project tractable.",
+          "The three families also differ in what a failure looks like: a recognition error is visible in the transcript, a synthesis error is audible as unnatural prosody, and an identity error is a security event."
+        ]
+      },
+      {
+        "title": "⚙️ The application families",
+        "paras": [
+          "Assistants combine recognition, intent understanding, and synthesis in a loop. Dictation and transcription are recognition alone, with punctuation and formatting added. Accessibility uses both directions to substitute for sight and touch.",
+          "Other uses include meeting summarisation, call centre analytics, subtitle generation, and voice biometrics."
+        ],
+        "bullets": [
+          "Command recognition needs high precision on a small vocabulary; dictation needs broad vocabulary and formatting.",
+          "Transcription quality is judged by word error rate, and 5 percent is good for clean read speech.",
+          "Meeting transcription needs speaker diarisation, which is a separate model.",
+          "Subtitles need timing alignment, which is another output the recogniser must provide.",
+          "Call analytics needs emotion and intent on top of the transcript.",
+          "Voice biometrics are a security system, so the metric is false accept and false reject rates, not accuracy.",
+          "Each family has a different tolerance for latency: streaming subtitles cannot wait for the sentence to end."
+        ]
+      },
+      {
+        "title": "🧮 What each application costs",
+        "paras": [
+          "Transcribing 10,000 hours of audio with a model running at 20 times real time on one GPU core takes 500 hours, which on 8 cores is 62 hours. That is the realistic cost of an archive project, and it is why throughput per GPU is the number that matters.",
+          "A command recogniser on a small vocabulary can run in 30 milliseconds on a phone, because the model is small and the search space is tiny. A general dictation model needs a language model with hundreds of thousands of words, which multiplies the search cost.",
+          "Synthesis latency: generating one second of audio at 24 kHz means 24,000 samples. A neural vocoder producing 256 samples per step needs 94 steps, at 1 millisecond each, which is under real time. Streaming synthesis starts output after 100 to 200 milliseconds, which is what makes a conversation feel natural.",
+          "Voice biometrics arithmetic: a 0.1 percent false accept rate with 1 million authentication attempts per day is 1,000 unauthorised accesses. To reach 10, the rate must be 0.001 percent, which typically pushes the false reject rate to several percent and locks out thousands of legitimate users. That exchange rate is a policy decision.",
+          "Meeting summarisation cost: a 1-hour meeting is 9,000 words, about 55 minutes of audio. Transcription at 20 times real time takes 3 minutes, and summarisation adds seconds. The dominant cost is the live transcription during the meeting, which must keep up with real time.",
+          "Dictation arithmetic: 150 words per minute at 5 percent word error rate means 7.5 wrong words per minute. For a 30-minute document that is 225 corrections, which is why personal vocabulary adaptation matters more than a small gain in average error rate."
+        ]
+      }
+    ]
+  },
+  "922": {
+    "sections": [
+      {
+        "title": "🔍 Why speech is a narrow domain",
+        "paras": [
+          "A general audio model must handle music, traffic, birdsong, and machinery. A speech model can assume a vocal tract, a limited pitch range, and a linguistic structure.",
+          "Those assumptions are what make speech recognition accurate. They are also why a speech model fails badly on singing, which has pitch and phonemes but not the same structure."
+        ]
+      },
+      {
+        "title": "⚙️ What makes speech structured",
+        "paras": [
+          "Speech is produced by a source, the vocal folds, filtered by a tract, the mouth and throat. That source-filter structure means the same phoneme has a characteristic spectral envelope regardless of pitch, which is why spectral features work.",
+          "Speech also has linguistic structure: phonemes combine into syllables, syllables into words, and words into sentences constrained by grammar. Models exploit all three levels."
+        ],
+        "bullets": [
+          "Phonemes are the smallest sound units that distinguish words, and English has about 44.",
+          "Vowels are voiced and continuous; consonants include noisy and silent events.",
+          "The vocal tract filter shapes the spectrum into formants, which characterise vowels.",
+          "Speech occupies roughly 85 Hz to 8 kHz, with most intelligibility below 4 kHz.",
+          "General audio covers 20 Hz to 20 kHz and has no linguistic constraints.",
+          "A speech model can use a language model; a general audio model cannot.",
+          "Domain mismatch is severe: speech models degrade sharply on music with vocals, and audio models degrade on quiet speech."
+        ]
+      },
+      {
+        "title": "🧮 Bandwidth and information arithmetic",
+        "paras": [
+          "Telephone speech is band-limited to 300 to 3,400 Hz, which is why 8 kHz sampling suffices by the Nyquist rule. That band contains enough for intelligibility but loses the fricative energy above 4 kHz, which is why phone speech is harder to recognise than wideband.",
+          "Wideband speech at 16 kHz captures up to 8 kHz and improves recognition accuracy measurably, often by 10 to 20 percent relative on word error rate compared with narrowband.",
+          "Information rate: speech carries roughly 40 to 60 bits per second of linguistic information, while the audio at 16 kHz and 16 bits is 256,000 bits per second. The compression ratio is about 5,000 to 1, which is why a good acoustic model plus a language model can be so effective: most of the signal is redundant.",
+          "Text rate comparison: 150 words per minute with an average of 5 characters is 750 characters per minute, 12.5 per second. At perhaps 1 byte of information per character, that is 100 bits per second, consistent with the estimate above.",
+          "Formant ranges in numbers: the first formant for vowels spans about 300 to 850 Hz, the second 850 to 2,250 Hz. The pair is enough to distinguish most vowels, which is why a compact spectral representation carries the linguistic content.",
+          "The mismatch cost: a recogniser trained on 16 kHz clean speech and applied to 8 kHz telephone audio typically doubles its word error rate. Resampling to a common rate and training on both conditions is the standard fix, and it recovers most of the loss."
+        ]
+      }
+    ]
+  },
+  "924": {
+    "sections": [
+      {
+        "title": "🔍 Why sound needs two numbers",
+        "paras": [
+          "A pure tone is described by how fast the pressure oscillates and how far it swings. Those two numbers, frequency and amplitude, correspond to the two perceptual dimensions of pitch and loudness.",
+          "Speech is not a pure tone, but every analysis begins by decomposing it into frequencies with amplitudes, which is exactly what a spectrogram shows."
+        ]
+      },
+      {
+        "title": "⚙️ Frequency, amplitude, and how speech is produced",
+        "paras": [
+          "Frequency is cycles per second. A male voice has a fundamental around 85 to 180 Hz and a female voice around 165 to 255 Hz, which is the rate at which the vocal folds open and close.",
+          "Amplitude is the size of the pressure variation. Because hearing is logarithmic, amplitude is measured in decibels, which are ten times the logarithm base ten of a power ratio.",
+          "Voiced sounds come from vocal fold vibration filtered by the mouth. Unvoiced sounds come from turbulent airflow, as in s and f, with no periodic vibration."
+        ],
+        "bullets": [
+          "The fundamental frequency is the pitch; harmonics are integer multiples of it.",
+          "Formants are resonances of the vocal tract, and their positions identify vowels.",
+          "Voiced speech is quasi-periodic; unvoiced speech is noise-like.",
+          "Plosives are brief silences followed by a burst.",
+          "The decibel scale compresses a huge amplitude range into a usable one.",
+          "Speech level varies by 30 to 40 dB between a whisper and a shout.",
+          "Acoustics explains why the same vowel sounds different in different vocal tracts."
+        ]
+      },
+      {
+        "title": "🧮 Decibels and frequency by number",
+        "paras": [
+          "Doubling the amplitude of a wave increases power by a factor of four, which is six decibels. That is why 6 dB sounds like roughly twice as loud to many listeners, while doubling perceived loudness more strictly needs about 10 dB.",
+          "A whisper at 30 dB and a shout at 90 dB differ by 60 dB, which is a power ratio of 10 to the 6, a million times. Linear amplitude differs by 1,000 times, because amplitude squared gives power.",
+          "Fundamental frequency arithmetic: a 120 Hz voice has harmonics at 240, 360, 480 Hz and so on. To represent the first ten harmonics faithfully, the sample rate must exceed twice 1,200 Hz, which is easily met at 16 kHz.",
+          "Formant example: the vowel in beat has a first formant near 270 Hz and a second near 2,290 Hz; the vowel in bat has them near 660 and 1,720 Hz. Those four numbers distinguish the two vowels, which is why spectral envelope features work.",
+          "Resolution arithmetic: at 16 kHz the Nyquist limit is 8 kHz, so frequencies above 8 kHz are lost. A child's voice with energy up to 10 kHz loses harmonics, which is why child speech is harder for models trained on adults.",
+          "Pitch range and search: a pitch tracker searching 60 to 400 Hz needs to test each candidate lag. At 16 kHz the lag range is 40 to 267 samples, 227 candidates per frame, which at 100 frames per second is 22,700 correlations per second, trivially cheap with an autocorrelation computed by FFT."
+        ]
+      }
+    ]
+  },
+  "925": {
+    "sections": [
+      {
+        "title": "🔍 Why the waveform alone is hard to model",
+        "paras": [
+          "A waveform at 16 kHz has 16,000 numbers per second. The linguistic content changes far more slowly, so most of those numbers are redundant detail about phase and exact cycle shape.",
+          "Looking at the waveform still tells you a lot: voiced segments are visibly periodic, unvoiced segments look like noise, and silences are flat. That is why the first step of every pipeline is to summarise the waveform over short windows."
+        ]
+      },
+      {
+        "title": "⚙️ Voiced, unvoiced, and the shape of the signal",
+        "paras": [
+          "A voiced segment repeats with a period equal to the inverse of the fundamental frequency. At 120 Hz the period is 8.3 milliseconds, which at 16 kHz is 133 samples.",
+          "An unvoiced segment has no periodicity and looks like random noise with a characteristic spectral shape. Plosives appear as a short silence followed by a burst."
+        ],
+        "bullets": [
+          "Periodicity is what distinguishes voiced from unvoiced, and it is measured by autocorrelation.",
+          "Zero-crossing rate is a cheap unvoiced detector, since noisy signals cross zero much more often.",
+          "Speech energy varies over 40 dB within a sentence, which is why normalisation matters.",
+          "16 kHz sampling is standard for speech: it covers the intelligibility band and keeps data manageable.",
+          "8 kHz is used for telephony, 44.1 kHz for music, and the choice is about bandwidth, not quality preference.",
+          "The waveform is not normalised across recordings, so loudness differences must be removed before modelling.",
+          "Endpoints, where speech starts and stops, must be detected before transcription to avoid wasting compute on silence."
+        ]
+      },
+      {
+        "title": "🧮 Periodicity and energy by number",
+        "paras": [
+          "At 16 kHz, a 25-millisecond window contains 400 samples. A 120 Hz voiced sound has about 3 periods in that window, which is enough to measure the period but not enough to resolve pitch finely. A 40-millisecond window has 5 periods, which is the usual trade.",
+          "Zero-crossing rate for a 1 kHz tone is 2,000 crossings per second, so 50 crossings in a 25-millisecond window. For white noise the rate is much higher and irregular, which is why the measure separates the two cases.",
+          "Energy arithmetic: a signal at 60 dB sound pressure level corresponds to a digital level well above the noise floor of 16-bit audio, which is about 96 dB below full scale. That headroom is why 16-bit is standard and 8-bit is not.",
+          "Silence detection: in a 10-minute recording of a meeting, 40 percent may be silence or noise. Removing it before recognition saves 40 percent of compute, which on 10,000 hours is 4,000 hours of processing.",
+          "Framing arithmetic: one hour at 16 kHz is 57.6 million samples. With 25-millisecond windows and a 10-millisecond hop, that is 360,000 frames, each summarised by 40 to 80 features, so 14 to 29 million numbers per hour instead of 57.6 million samples.",
+          "Why 16 kHz: the speech band extends to about 8 kHz, and Nyquist requires sampling at twice the highest frequency, so 16 kHz is exactly the minimum for full-band speech. Going to 44.1 kHz triples the data for content the speech signal does not contain."
+        ]
+      }
+    ]
+  },
+  "926": {
+    "sections": [
+      {
+        "title": "🔍 Why continuous sound must be discretised",
+        "paras": [
+          "A microphone produces a continuous voltage. A computer stores numbers. The conversion requires deciding how often to measure and how precisely to record each measurement.",
+          "Those two choices are independent, and each has a specific consequence: the rate determines the highest frequency that can be represented, and the precision determines the noise floor."
+        ]
+      },
+      {
+        "title": "⚙️ The Nyquist rule and quantisation",
+        "paras": [
+          "Sampling measures the signal at fixed intervals. The Nyquist rule states that to represent frequencies up to f, the sample rate must exceed 2f. Sampling below that causes aliasing, where high frequencies appear as false low frequencies.",
+          "Quantisation rounds each sample to a limited set of levels. More bits mean more levels and a lower noise floor, at 6 dB per bit."
+        ],
+        "bullets": [
+          "Telephony uses 8 kHz, which captures up to 4 kHz and matches the phone band.",
+          "Speech models use 16 kHz, which captures up to 8 kHz.",
+          "Music uses 44.1 kHz, which captures up to 22.05 kHz, above the limit of hearing.",
+          "Anti-aliasing filters must be applied before downsampling, or the artefacts are irreversible.",
+          "16-bit quantisation gives 65,536 levels and a theoretical 96 dB of dynamic range.",
+          "Dithering adds low-level noise before quantisation to avoid correlated distortion at low levels.",
+          "Upsampling does not recover information lost by undersampling; it only interpolates."
+        ]
+      },
+      {
+        "title": "🧮 Rate, bits, and storage arithmetic",
+        "paras": [
+          "At 16 kHz and 16 bits, one second is 32,000 bytes. One minute is 1.92 MB, one hour is 115 MB. At 8 kHz it is half that, which is why telephony chose it.",
+          "Nyquist examples: 8 kHz sampling captures up to 4 kHz. A signal at 5 kHz sampled at 8 kHz aliases to 3 kHz, which is audible as a false tone and cannot be removed afterwards.",
+          "Bit depth arithmetic: 16 bits gives 96 dB of dynamic range, 24 bits gives 144 dB, and 8 bits gives only 48 dB, which is audible hiss on quiet passages. That is why 16-bit is the standard floor.",
+          "Data reduction by feature extraction: one hour of 16 kHz 16-bit audio is 115 MB. The same hour as 80-dimensional mel frames at 100 frames per second is 28.8 million floats, 115 MB in 32-bit, and 57 MB in 16-bit. So features are not automatically smaller, which is why pipelines extract them on the fly rather than storing them.",
+          "Compression arithmetic: speech codecs at 12.2 kbit per second produce 5.5 MB per hour, a 20-fold reduction from 16-bit PCM with minimal loss for recognition. That is why call recordings are stored compressed and decoded for processing.",
+          "Resampling cost: converting 44.1 kHz to 16 kHz means a rational resample by 160 over 441, which needs a filter of a few hundred taps. At 1 million samples per second of input, that is hundreds of millions of operations per second, which is why resampling is done once offline rather than per training batch."
+        ]
+      }
+    ]
+  },
+  "928": {
+    "sections": [
+      {
+        "title": "🔍 Why time and frequency at once",
+        "paras": [
+          "A waveform shows how loudness changes over time and hides which frequencies are present. A spectrum shows which frequencies are present and hides when they occur.",
+          "Speech needs both, because the identity of a sound is in its frequencies and the sequence of sounds is in time. A spectrogram shows both by computing a spectrum for each short window."
+        ]
+      },
+      {
+        "title": "⚙️ Windows, the Fourier transform, and the trade-off",
+        "paras": [
+          "The signal is cut into overlapping windows, each window is multiplied by a tapering function to reduce edge artefacts, and a Fourier transform converts it into magnitudes per frequency bin. The magnitudes are stacked over time.",
+          "The window length sets the resolution trade: a short window localises time well and frequency poorly, a long window the reverse. That is a mathematical constraint, not an engineering shortcoming."
+        ],
+        "bullets": [
+          "A 25-millisecond window with a 10-millisecond hop gives 100 frames per second and 400 samples per window at 16 kHz.",
+          "Frequency resolution is the sample rate divided by the window length, so 16,000 divided by 400 is 40 Hz.",
+          "Time resolution is the hop, 10 milliseconds, which is why rapid consonant transitions blur.",
+          "A Hann window reduces spectral leakage at the edges of each frame.",
+          "A log-magnitude scale compresses the dynamic range, which is why decibels are used for display.",
+          "The mel scale warps the frequency axis to match perception, which is the basis of mel spectrograms.",
+          "Symmetry means only the first half of the FFT output is needed, so a 512-point FFT gives 257 usable bins."
+        ]
+      },
+      {
+        "title": "🧮 Resolution and size by arithmetic",
+        "paras": [
+          "At 16 kHz with a 400-sample window, the frequency resolution is 16,000 divided by 400, 40 Hz. Adjacent harmonics of a 120 Hz voice are 120 Hz apart and therefore resolvable, but the fine structure of a formant is not.",
+          "At a 512-sample window, resolution is 31.25 Hz and the hop can stay 160 samples, 10 milliseconds. At a 1,024-sample window, resolution is 15.6 Hz, but the window is 64 milliseconds, which smears a 30-millisecond plosive burst across two frames.",
+          "Size arithmetic: one hour of audio at 100 frames per second is 360,000 frames. With 257 frequency bins that is 92.5 million values, 370 MB in 32-bit. Reducing to 80 mel bins gives 28.8 million values, 115 MB, a 3.2-fold reduction, which is why mel spectrograms replaced linear ones for storage and modelling.",
+          "FFT cost: a 512-point FFT takes about 512 times 9, 4,600 operations, since the complexity is n log2 n. At 100 frames per second that is 460,000 operations per second of audio, which is negligible next to any model.",
+          "The trade-off in numbers: a 10-millisecond window gives excellent time resolution but a 1,600 Hz frequency resolution, which cannot separate harmonics of a 120 Hz voice. A 100-millisecond window resolves 160 Hz, mixing adjacent harmonics of a low voice. Speech analysis therefore uses 20 to 40 milliseconds, which is the compromise the physics forces.",
+          "Why log magnitude: a spectrogram spans 80 to 100 dB. Displayed linearly, only the loudest components are visible. On a log scale, the quiet consonants become visible, which is exactly what recognition needs."
+        ]
+      }
+    ]
+  },
+  "929": {
+    "sections": [
+      {
+        "title": "🔍 Why warp the frequency axis",
+        "paras": [
+          "Human hearing does not resolve frequency linearly. We distinguish 100 Hz from 200 Hz easily and 10,000 Hz from 10,100 Hz hardly at all. A linear spectrogram therefore spends most of its bins on regions where hearing is insensitive.",
+          "The mel scale warps frequency so that equal distances correspond roughly to equal perceptual differences, which is why mel features dominate speech processing."
+        ]
+      },
+      {
+        "title": "⚙️ The mel filterbank and the cepstrum",
+        "paras": [
+          "A mel spectrogram applies a bank of triangular filters spaced evenly on the mel scale, summing the linear spectrum into 40 to 80 bands. That compresses the representation and discards fine structure that hearing ignores.",
+          "MFCCs go one step further: take the logarithm of the mel energies and apply a discrete cosine transform. That decorrelates the bands and compresses the spectral envelope into a few coefficients, typically 13, with deltas added for dynamics."
+        ],
+        "bullets": [
+          "The mel formula is 2595 times log base ten of one plus frequency divided by 700.",
+          "40 mel bands are typical for speech, 80 for modern neural models.",
+          "The first 13 cepstral coefficients capture the vocal tract shape; higher ones capture pitch detail.",
+          "Deltas and delta-deltas add velocity and acceleration, tripling the feature dimension.",
+          "MFCCs assume the spectrum is smooth, which is a good model of the vocal tract.",
+          "Modern neural models often use raw mel spectrograms, because the network can learn the transform.",
+          "Cepstral mean normalisation removes channel effects, which is a cheap and large gain."
+        ]
+      },
+      {
+        "title": "🧮 Mel values and feature dimensions",
+        "paras": [
+          "The mel formula at three points: 0 Hz maps to 0 mel. 700 Hz gives 2595 times log base ten of 2, which is 2595 times 0.301, 781 mel. 1,000 Hz gives 2595 times log base ten of 2.4286, 2595 times 0.3853, 1,000 mel.",
+          "That last point is the definition: 1,000 Hz is exactly 1,000 mel by construction. Above it the scale compresses, which is the whole intent.",
+          "Feature dimension arithmetic: 13 MFCCs plus 13 deltas plus 13 delta-deltas is 39 dimensions per frame. At 100 frames per second, one minute is 234,000 numbers, versus 480,000 for 80 mel bins, so MFCCs halve the data.",
+          "Filterbank arithmetic: 40 triangular filters over 257 FFT bins means each filter spans about 6 bins, with overlap. The sum is a matrix multiply of 40 by 257, so 10,280 multiply-adds per frame, 1 million per second of audio, which is trivial.",
+          "Why the log matters: mel energies span several orders of magnitude. Without the log, the loud low-frequency bands dominate the distance computation and the quiet high-frequency consonants are invisible. With it, each band contributes comparably, which typically improves recognition by several percent.",
+          "DCT compression: 40 log-mel values reduced to 13 coefficients retains about 90 percent of the variance in the envelope, because the envelope is smooth and the higher cepstral coefficients carry the fine harmonic detail. Discarding them also discards pitch, which is why MFCCs are less useful when pitch matters."
+        ]
+      }
+    ]
+  },
+  "930": {
+    "sections": [
+      {
+        "title": "🔍 Why pitch and rhythm carry meaning",
+        "paras": [
+          "The same words spoken with rising or falling pitch mean different things: a statement, a question, or sarcasm. Pitch also identifies the speaker, and rhythm marks word boundaries.",
+          "None of that is in the phoneme sequence, so a system that only transcribes words loses information that listeners rely on constantly."
+        ]
+      },
+      {
+        "title": "⚙️ Fundamental frequency, intonation, stress",
+        "paras": [
+          "Fundamental frequency is the rate of vocal fold vibration. Pitch is its perceptual correlate, and it is measured in Hz or in semitones relative to a reference.",
+          "Intonation is the pattern of pitch over an utterance. Stress is the prominence of a syllable, marked by pitch, duration, and loudness together. Rhythm is the timing pattern of stressed and unstressed syllables."
+        ],
+        "bullets": [
+          "Typical male speech spans 85 to 180 Hz; female speech 165 to 255 Hz.",
+          "Pitch in speech moves within a range of about one octave around the speaker's average.",
+          "Tone languages such as Mandarin use pitch to distinguish words, so pitch is lexical, not only prosodic.",
+          "Pitch tracking is hard in the first 30 milliseconds of a voiced sound and unreliable in noise.",
+          "Energy and duration contribute to stress alongside pitch, so pitch alone is not enough.",
+          "Prosody must be modelled in synthesis, or the output sounds robotic even with perfect phonemes.",
+          "Emotion is carried largely by prosody, which is why emotion recognition uses pitch and energy features."
+        ]
+      },
+      {
+        "title": "🧮 Pitch and octave arithmetic",
+        "paras": [
+          "A ratio of 2 in frequency is one octave, which is 12 semitones. A semitone is a ratio of the twelfth root of 2, about 1.0595. Going from 120 Hz to 180 Hz is a ratio of 1.5, which is 7.02 semitones, close to a perfect fifth.",
+          "Pitch movement arithmetic: a speaker with a 120 Hz average and a range of plus or minus 30 percent moves between 84 and 156 Hz, 0.58 octaves, about 7 semitones. A question rising by 4 semitones at the end moves the final syllable from 120 to 151 Hz.",
+          "Tracking cost: autocorrelation at 16 kHz over lags of 40 to 267 samples for 100 frames per second is 227 times 400 operations per frame, 90,800, so 9 million per second of audio. An FFT-based approach reduces that to a few FFTs per frame, which is why it is the standard implementation.",
+          "Octave errors: pitch trackers commonly produce values that are exactly double or half the true pitch. On a benchmark, octave errors account for 30 to 60 percent of gross pitch errors, which is why smoothing over 5 to 10 frames is standard.",
+          "Prosody in synthesis: a monotone synthesiser places every syllable at the same pitch, which listeners describe as robotic within one sentence. Adding a simple declination of about 2 semitones over an utterance improves naturalness ratings substantially, which is a large gain for a small model.",
+          "Emotion features in numbers: anger raises average pitch by 20 to 40 percent and increases energy variance; sadness lowers pitch and flattens the contour. Those two numbers separate several emotions better than any lexical feature, which is why prosody matters for recognition of affect."
+        ]
+      }
+    ]
+  },
+  "932": {
+    "sections": [
+      {
+        "title": "🔍 Why recognition is not segmentation plus classification",
+        "paras": [
+          "The intuitive design is to cut the audio into phonemes and classify each one. That fails because phoneme boundaries are not visible, coarticulation smears each sound into its neighbours, and the same acoustic signal can correspond to several phoneme sequences.",
+          "Recognition is therefore framed as finding the most likely word sequence given the acoustics, which is a search problem over sequences rather than a classification problem over segments."
+        ]
+      },
+      {
+        "title": "⚙️ The components of an ASR system",
+        "paras": [
+          "A classical system has an acoustic model that maps frames to phoneme probabilities, a pronunciation lexicon that maps words to phoneme sequences, and a language model that scores word sequences. A decoder searches the three together.",
+          "An end-to-end system replaces all three with one network that maps audio to characters or subwords directly."
+        ],
+        "bullets": [
+          "Word error rate is the metric: substitutions plus insertions plus deletions divided by reference words.",
+          "Substitutions come from acoustically similar words; insertions from noise and hesitation; deletions from fast or quiet speech.",
+          "A lexicon is needed for classical systems and is a maintenance burden for new words and names.",
+          "The language model resolves ambiguity, which is why context improves accuracy substantially.",
+          "Beam search over a large vocabulary is the expensive part of decoding.",
+          "Streaming recognition must commit to words before the sentence ends, which costs accuracy.",
+          "Adaptation to a speaker or domain typically gives a few percent relative improvement."
+        ]
+      },
+      {
+        "title": "🧮 WER by arithmetic",
+        "paras": [
+          "A reference of 100 words with 4 substitutions, 1 insertion, and 1 deletion gives 6 errors, so word error rate is 6 percent. Note that the count is over errors, not over words, which is why the rate can exceed 100 percent on a badly failing system.",
+          "Error composition: on clean read speech the errors are mostly substitutions on similar-sounding words. On noisy conversational speech, insertions from noise become a large share, which is why noise robustness is a separate research problem.",
+          "Benchmark ranges: a strong system reaches 3 to 5 percent on clean read audiobooks, 5 to 10 on broadcast news, 10 to 20 on telephone conversations, and 20 to 40 on accented noisy meetings. Quoting a single number without the condition is misleading.",
+          "Search arithmetic: a vocabulary of 100,000 words with a beam of 16 hypotheses and 100 frames per second means 16 times 100, 1,600 hypotheses expanded per second, each considering 100,000 possible next words in the worst case. Pruning by the language model is what makes it tractable, and it is why decoding cost dominates for large vocabularies.",
+          "Domain adaptation in numbers: a general model at 12 percent WER on medical dictation can improve to 7 percent by biasing the language model toward a domain vocabulary of 5,000 terms. That five-point gain is usually larger than any architectural improvement available.",
+          "Latency: an offline system can wait for the whole utterance and reach the best accuracy. A streaming system commits after 200 to 500 milliseconds and typically loses 1 to 3 points of accuracy, which is the price of interactivity."
+        ]
+      }
+    ]
+  },
+  "933": {
+    "sections": [
+      {
+        "title": "🔍 Why two models instead of one",
+        "paras": [
+          "Acoustics alone cannot resolve ambiguity. The sounds of there, their, and they are close, and only context decides. The acoustic model provides evidence; the language model provides prior probability.",
+          "Combining them is Bayesian: the best word sequence is the one maximising the product of acoustic likelihood and language probability."
+        ]
+      },
+      {
+        "title": "⚙️ Acoustic models and language models",
+        "paras": [
+          "The acoustic model maps a window of frames to a distribution over phonemes or subword units. Modern versions use neural networks over mel features and context windows.",
+          "The language model assigns a probability to word sequences, from an n-gram count model to a neural model. Its perplexity determines how much it helps."
+        ],
+        "bullets": [
+          "The acoustic model resolves what was said; the language model resolves which word it probably was.",
+          "An n-gram language model is cheap and effective; a neural one is better and slower.",
+          "The lexicon connects phonemes to words and must cover every word the language model can emit.",
+          "The relative weight of the two models is a tunable parameter, and the optimum depends on the noise level.",
+          "A stronger language model helps most on noisy or accented speech, where acoustics are weak.",
+          "Language models introduce their own errors: a strong model can override clear acoustics and substitute a more likely word.",
+          "End-to-end models learn an implicit language model from the training text, which is why they need paired audio and text."
+        ]
+      },
+      {
+        "title": "🧮 Combining scores by number",
+        "paras": [
+          "Suppose the acoustic model gives there a likelihood of 0.4, their 0.35, and they are 0.25. The language model gives there a probability of 0.01, their 0.02, and they are 0.05.",
+          "The products are 0.004, 0.007, and 0.0125, so the ranking inverts and they are wins, purely on language prior. That inversion is the mechanism and also the risk: acoustics said there, the language model overrode it.",
+          "The weighting parameter, often around 10 to 15 in log space for a classical system, controls how much the language model is allowed to override. Too low and the output is acoustically faithful and ungrammatical; too high and clear speech is misrecognised as a common phrase.",
+          "Perplexity arithmetic: an n-gram language model with perplexity 120 versus a neural model with perplexity 40. The lower perplexity typically gives 5 to 15 percent relative WER improvement, which is why neural language models were adopted before neural acoustic models.",
+          "Vocabulary arithmetic: a 100,000-word vocabulary covers about 95 percent of word occurrences in news text; 1 million covers 99 percent. The remaining 1 percent is names and rare terms, which is why subword modelling and custom vocabularies matter.",
+          "The bias problem in numbers: a language model trained on formal text will convert a speaker's informal phrasing into formal words. Insertion and substitution errors from this effect can account for 20 to 30 percent of errors on conversational speech, which is why domain-matched text is essential."
+        ]
+      }
+    ]
+  },
+  "934": {
+    "sections": [
+      {
+        "title": "🔍 Why remove the pipeline",
+        "paras": [
+          "A classical system has separately trained acoustic, lexicon, and language components, each with its own errors and tuning. The interfaces between them lose information and require maintenance.",
+          "An end-to-end model takes audio and produces text with one objective, which removes the interfaces and lets the whole system be optimised together."
+        ]
+      },
+      {
+        "title": "⚙️ CTC, attention, and transducer",
+        "paras": [
+          "Connectionist temporal classification handles the alignment problem by allowing the network to output a blank symbol and to repeat labels, then collapsing the output to remove blanks and duplicates. That lets a network train without frame-level labels.",
+          "Attention-based encoder-decoder models predict each output token while attending to the encoder states. Transducers combine both ideas and are naturally streaming."
+        ],
+        "bullets": [
+          "CTC needs no alignment labels, which is why it made end-to-end training practical.",
+          "CTC assumes outputs are independent given the input, which is why it is usually paired with an external language model.",
+          "Attention decoders model output dependencies but are less suited to streaming.",
+          "Transducers handle streaming well because they emit as input arrives.",
+          "Subword output units reduce sequence length and handle rare words better than characters.",
+          "Data requirement is high: 1,000 hours is a reasonable minimum, and 10,000 or more is typical.",
+          "The gap to classical systems closed around 2019, and end-to-end now dominates."
+        ]
+      },
+      {
+        "title": "🧮 Alignment and size arithmetic",
+        "paras": [
+          "The alignment problem in numbers: 1 second of audio is 100 frames, and the sentence spoken might have 15 characters. CTC must map 100 frames to 15 outputs, which it does by emitting blanks and repeats over the extra frames.",
+          "CTC output size: with 100 frames and a 30-symbol alphabet plus blank, the network produces 100 times 31, 3,100 logits per second, and the collapse step reduces them to the actual output. The blank probability typically absorbs 60 to 80 percent of frames, which is why the collapse works.",
+          "Model size: a modern end-to-end recogniser has 100 to 300 million parameters. At 100 frames per second and a 40-millisecond receptive field, inference runs at 20 to 50 times real time on a GPU and 2 to 5 times real time on a phone.",
+          "Training data arithmetic: 10,000 hours at 100 frames per second is 3.6 billion frames. A single pass over that with a 200-million-parameter model is 6 times 200 million times 3.6 billion, 4.3 times 10 to the 18 operations, which is a few days on a small cluster.",
+          "Accuracy comparison on a standard benchmark: a strong classical system reaches 6.5 percent WER and a strong end-to-end system reaches 5.5, with the end-to-end system using far less hand engineering. That one-point gap, plus the maintenance saving, is why the transition happened.",
+          "Streaming penalty: a bidirectional encoder that sees the whole utterance is 1 to 3 points better than a causal streaming encoder on the same data. That is the exact cost of low latency, and it is why assistants use streaming models and transcription services do not."
+        ]
+      }
+    ]
+  }
+}

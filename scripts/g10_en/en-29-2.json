@@ -1,0 +1,449 @@
+{
+  "744": {
+    "sections": [
+      {
+        "title": "🔍 Why the web needed a protocol rather than a file format",
+        "paras": [
+          "A hypertext document on one machine is a curiosity. Hypertext that can link to a document on any machine in the world is the web, and it needs two things: a global naming scheme and an agreement about how to ask for a document and how to describe what comes back.",
+          "HTTP is that agreement. It is deliberately small: a request names a method and a resource, a response carries a status and a body. Everything else, including the web's entire commercial structure, rests on those two messages."
+        ]
+      },
+      {
+        "title": "⚙️ Methods, status codes, and statelessness",
+        "paras": [
+          "A request has a method, a path, headers, and optionally a body. The common methods are GET to read, POST to create, PUT to replace, PATCH to modify, and DELETE to remove. A response has a status code, headers, and a body.",
+          "HTTP is stateless: each request is independent and the server keeps no memory of the previous one. That is not a limitation but the property that lets any server in a pool handle any request, which is what makes horizontal scaling possible. State, where needed, lives in a cookie, a token, or a shared store."
+        ],
+        "bullets": [
+          "2xx means success; 3xx means the resource moved; 4xx means the client's request was wrong; 5xx means the server failed.",
+          "A GET should be safe and repeatable; a POST may create something, so repeating it may create twice.",
+          "Headers carry content type, length, caching directives, cookies, and authentication.",
+          "HTTPS is HTTP carried inside a TLS connection, which encrypts and authenticates the whole exchange.",
+          "Caching is negotiated through headers, so a repeat request can be answered from the browser or a proxy.",
+          "HTTP/2 multiplexes many requests over one connection, which removes the need for many parallel connections.",
+          "HTTP/3 runs over QUIC and removes TCP head-of-line blocking, which matters most on lossy mobile links."
+        ]
+      },
+      {
+        "title": "🧮 Round trips and what caching saves",
+        "paras": [
+          "Load a simple page with one HTML file, one CSS file, one script, and 20 images. Over HTTP/1.1 with no keep-alive that is 23 connections, each costing a TCP handshake of 1 round trip and a TLS handshake of 2 more, so 3 round trips each. At 50 milliseconds of round-trip time that is 150 milliseconds of setup per connection, 3.45 seconds before any content arrives. This arithmetic is precisely why keep-alive and then HTTP/2 were introduced.",
+          "With HTTP/2 over one connection, the 3 setup round trips happen once, 150 milliseconds, and then 23 requests are multiplexed. Total setup cost falls by 23 times.",
+          "Caching: if 19 of the 23 resources are cached and validated with a conditional request, the validation still costs one round trip but transfers no body. A 200 KB image over a 10 Mbit per second link costs 160 milliseconds of transfer; a 304 Not Modified costs 50 milliseconds of round trip and nothing else. Saving 110 milliseconds per image, 19 images save 2.1 seconds.",
+          "Compression: a 200 KB JavaScript bundle gzips to about 60 KB, so transfer time falls from 160 to 48 milliseconds. On a page with 300 KB of text assets, compression saves around 0.5 seconds at 10 Mbit per second, and much more on a slow mobile link.",
+          "The larger lesson from these numbers is that most web performance work is round-trip reduction and bytes on the wire, not server CPU. A server that answers in 1 millisecond behind a 100 millisecond round trip is still dominated by the network, which is why CDNs exist."
+        ]
+      }
+    ]
+  },
+  "745": {
+    "sections": [
+      {
+        "title": "🔍 Why names exist when addresses already work",
+        "paras": [
+          "People remember names and computers need numbers. More importantly, addresses change: a service moves between data centres, a CDN assigns different addresses by region, and a business changes hosting provider without wanting to change its public identity.",
+          "DNS is the layer that decouples the two. A name is stable and human, an address is numeric and disposable, and the mapping is queried on demand."
+        ]
+      },
+      {
+        "title": "⚙️ The hierarchy and how a lookup actually resolves",
+        "paras": [
+          "DNS is a distributed database with a tree structure. At the top are the root servers, below them the top-level domains such as com and org, below those the domain's own authoritative servers. Nobody holds the whole thing, which is why it can scale.",
+          "A lookup starts at a resolver, usually provided by the ISP or a public service. If the answer is cached, it is returned immediately. Otherwise the resolver walks the tree: ask a root server who handles com, ask that server who handles example.com, ask that server for the address of www, then cache the answer for the duration of its time to live."
+        ],
+        "bullets": [
+          "A record types: A for IPv4, AAAA for IPv6, CNAME for an alias, MX for mail, TXT for arbitrary text such as verification tokens.",
+          "The resolver caches, the operating system caches, and the browser caches, so three layers each have a TTL.",
+          "A CNAME points one name at another and is how a service lets a customer use their own domain.",
+          "TTL is the trade: a long TTL reduces lookups and slows changes; a short TTL speeds changes and multiplies queries.",
+          "Authoritative servers are the source of truth; recursive resolvers are caches that do the walking.",
+          "DNSSEC signs records so a forged answer can be detected, but it does not encrypt the query.",
+          "DNS over HTTPS encrypts the query itself, which hides which names a client is looking up."
+        ]
+      },
+      {
+        "title": "🧮 Lookup cost and the pain of a TTL",
+        "paras": [
+          "An uncached lookup from a cold resolver is 4 round trips: client to resolver, resolver to root, resolver to the top-level domain, resolver to the authoritative server, then the answer back. At 40 milliseconds for a distant round trip, that is about 160 milliseconds before the browser can even open a TCP connection to the web server.",
+          "With a 90 percent cache hit rate at the resolver, 9 of 10 lookups cost 1 round trip, so the average is 0.9 x 40 + 0.1 x 160 = 52 milliseconds. That is why caching dominates DNS performance, and why public resolvers with large caches answer faster than a cold local one.",
+          "TTL arithmetic for a migration. If the record has a TTL of 86,400 seconds and you change the address, some clients keep the old address for up to 24 hours. Standard practice is to lower the TTL to 300 seconds a day or two before the change, wait for the old 24-hour TTL to expire everywhere, then change the record, then raise the TTL again after a couple of days. Total disruption approaches zero, but the process takes three days, which is the real cost of a long TTL.",
+          "Query volume: a site with 10 million daily visits, each involving 5 distinct names, is 50 million lookups per day, about 580 per second. With a 10 percent miss rate at one resolver, that resolver issues 58 upstream queries per second, which is nothing. But if every client used a different resolver with no cache, the authoritative server would see 50 million queries per day, about 580 per second sustained and far more at peak, which is why authoritatives are built for that and why aggressive caching is essential.",
+          "A practical failure to know: a site whose name resolves but whose address has just changed exhibits the classic symptom of some users reaching the new server and others the old one, for exactly the TTL duration. Nothing is broken; the caches have not expired."
+        ]
+      }
+    ]
+  },
+  "746": {
+    "sections": [
+      {
+        "title": "🔍 Why email is a different problem from the web",
+        "paras": [
+          "On the web the client talks to the server and gets an answer immediately. Email must deliver a message to a person who may be offline, on a machine the sender cannot reach, through servers that may be temporarily down. Store-and-forward is the design that follows: accept the message, take responsibility for it, and retry.",
+          "That single decision explains the protocol family: SMTP to hand the message on, a mailbox store to hold it, and IMAP or POP to fetch it."
+        ]
+      },
+      {
+        "title": "⚙️ The mail path and the other protocols worth knowing",
+        "paras": [
+          "SMTP sends mail between servers. The sending server looks up the recipient domain's MX record, connects, and offers the message; the receiving server accepts and queues it. IMAP and POP are how a client reads a mailbox: IMAP keeps the mailbox on the server and synchronises state, POP downloads and often deletes.",
+          "Around email, several older protocols still run the internet. FTP transfers files with separate control and data connections. SFTP and SCP carry files inside SSH. Telnet gives a raw text session and is now replaced by SSH everywhere it matters."
+        ],
+        "bullets": [
+          "SMTP uses ports 25 and 587, submission is 587, IMAP is 143 or 993, POP3 is 110 or 995.",
+          "A message has an envelope, used by SMTP, and headers, used by clients; they are not the same thing, which is why bcc works.",
+          "Mail was designed with no authentication, so SPF, DKIM, and DMARC were added decades later to prove a sender is genuine.",
+          "Retries are built in: a temporary failure returns a 4xx and the sender tries again for days.",
+          "Attachments are base64 encoded inside the message, which inflates them by about 33 percent.",
+          "FTP sends credentials and data in clear text, so it survives only in legacy systems.",
+          "SSH is the standard for remote shells and tunnelling, and it is the transport under SFTP."
+        ]
+      },
+      {
+        "title": "🧮 Delivery time and the cost of attachments",
+        "paras": [
+          "A message handed to a server that greyslists new senders is deferred for 5 minutes and then accepted. If the recipient's server is down for an hour, the sending server retries at intervals, typically 5, 10, 20, 40 minutes and onward, so delivery happens within the hour after the server returns. The sender sees nothing, which is the point of store-and-forward.",
+          "Attachment arithmetic: a 10 MB photo base64 encoded becomes 13.3 MB on the wire. Send it to 20 recipients whose mailboxes are on the same server and the server stores 20 copies, 266 MB, unless it deduplicates by content. This is why mail systems use links to shared storage for large files.",
+          "Header overhead is trivial by comparison: a typical message has 2 KB of headers, so a 500-byte message body is 80 percent overhead, which matters only for automated notifications sent in bulk.",
+          "The spam problem in numbers: a mail server receiving 100,000 messages per day of which 90,000 are unwanted spends most of its resources on filtering. If each message costs 1 millisecond of CPU for checks and a DNS lookup for SPF, that is 100 seconds of work per day, small; but the network transfer of 90,000 messages at 50 KB each is 4.5 GB per day, which is not. This is why rejections happen at the connection stage, before the body is transferred.",
+          "Authentication adoption: without SPF and DKIM, anyone can claim any sender, so a forged message from a bank's domain is indistinguishable from the real one. With DKIM signing and a DMARC policy of reject, the forgery fails validation and is dropped. The cost is one DNS record and one signing step per message, which is why adoption went from near zero to the majority of legitimate mail in about a decade."
+        ]
+      }
+    ]
+  },
+  "748": {
+    "sections": [
+      {
+        "title": "🔍 Why radio instead of cable",
+        "paras": [
+          "A cable constrains where a device can be. Laptops, phones, and sensors move, and in a warehouse or a classroom, running cable to every seat is impractical. Radio removes the constraint.",
+          "The price is that the medium is shared and unshielded. Anyone in range can hear the signal, walls attenuate it unpredictably, and every device competes for the same spectrum. Every wireless design decision follows from those three facts."
+        ]
+      },
+      {
+        "title": "⚙️ Access points, association, and a shared medium",
+        "paras": [
+          "Wi-Fi, defined by the 802.11 family, connects devices to an access point. The access point bridges the wireless side to the wired network, so from the network's point of view the wireless devices are on the same LAN.",
+          "A device scans for networks, authenticates, associates with an access point, and then obtains an IP address through DHCP. From then on every frame goes through the access point, even between two devices on the same wireless network, because they cannot hear each other reliably."
+        ],
+        "bullets": [
+          "The medium is half duplex: a device cannot transmit and receive on the same channel at the same time.",
+          "Carrier sense with collision avoidance replaces collision detection, because a radio cannot hear while transmitting.",
+          "Channels overlap in 2.4 GHz, with only 1, 6, and 11 non-overlapping, which is why dense deployments use 5 GHz.",
+          "Beacons advertise the network every 100 milliseconds, which is why idle devices still consume power.",
+          "A hidden node problem: two devices that cannot hear each other both transmit to the access point and collide.",
+          "Roaming between access points is a client decision, and a bad client can cling to a distant access point.",
+          "Each security generation changed the encryption: WEP, then WPA, then WPA2 with AES, then WPA3."
+        ]
+      },
+      {
+        "title": "🧮 Sharing, throughput, and coverage",
+        "paras": [
+          "An access point advertising 1,200 Mbit per second shares that among all associated devices. With 20 devices active, each gets at most 60 Mbit per second, and because the medium is half duplex with protocol overhead, real throughput is typically 40 to 50 percent of the advertised rate, so about 25 to 30 Mbit per second per device.",
+          "One heavy user changes the picture: a single device streaming at 200 Mbit per second consumes a sixth of the airtime, but because every transmission blocks everyone else, all 20 devices see their share fall. This is why one laptop downloading a large file visibly degrades a classroom.",
+          "Range arithmetic: signal strength falls with the square of distance, so doubling the distance quarters the power, which is 6 dB of loss. A typical access point gives usable throughput out to about 30 metres indoors on 5 GHz and 50 metres on 2.4 GHz, but walls matter more than distance: one brick wall costs about 10 dB, which is a factor of 10 in power.",
+          "Channel capacity in practice: a 20 MHz channel in 5 GHz supports about 100 Mbit per second in good conditions, and 80 MHz about 400. Four access points on non-overlapping 80 MHz channels fit in the 5 GHz band, which is why dense venues use many small cells rather than a few powerful ones. Coverage is not the goal; capacity per area is.",
+          "Power over Ethernet arithmetic worth knowing: an access point drawing 12 watts from a switch port needs a PoE budget of 12 watts per port. A 24-port switch with a 370-watt budget supports 24 such access points at 15 watts each, which is fine, but 24 access points at 30 watts for the newest standards would exceed it, so the switch must be sized for the newest hardware rather than the oldest."
+        ]
+      }
+    ]
+  },
+  "749": {
+    "sections": [
+      {
+        "title": "🔍 Why cellular is organised into cells",
+        "paras": [
+          "Radio spectrum is scarce and licensed. A single high-power transmitter could cover a city, but it could serve only one conversation per frequency, which is useless. Splitting the area into small cells lets the same frequency be reused many times, as long as neighbouring cells use different channels.",
+          "That is the whole idea of cellular: frequency reuse through spatial separation, plus handoff so a moving device keeps its session."
+        ]
+      },
+      {
+        "title": "⚙️ Generations, handoff, and what 5G changes",
+        "paras": [
+          "1G was analogue voice. 2G added digital voice and SMS. 3G brought data fast enough for the mobile web. 4G made everything packet-switched and data-first. 5G adds higher bandwidth, lower latency, and support for very high device density.",
+          "Handoff is the mechanism that makes mobility work. As a phone moves toward a new base station, the network measures signal quality on both, and when the new one is better the session is transferred. A hard handoff breaks the old link first; a soft handoff keeps both briefly."
+        ],
+        "bullets": [
+          "Cells are sized by density: macro cells for coverage, small cells for capacity in busy areas.",
+          "Frequency reuse requires a reuse factor, typically 1 in 4G and 5G because interference coordination is better.",
+          "The core network authenticates the subscriber through the SIM and tracks location so calls can be routed.",
+          "Handoff must preserve the IP session, which is why mobile networks keep a tunnel to a stable anchor point.",
+          "5G millimetre wave gives huge bandwidth over short distances and is easily blocked by walls and rain.",
+          "Network slicing partitions one physical network into virtual networks with different guarantees.",
+          "Roaming is the same mechanism across operators, with billing settled afterwards."
+        ]
+      },
+      {
+        "title": "🧮 Reuse, capacity, and handoff timing",
+        "paras": [
+          "Suppose a city of 100 square kilometres is covered by cells of 1 square kilometre. With a reuse factor of 4, each frequency is used in 25 cells at once, so the capacity is 25 times that of one cell. Shrink the cells to a quarter of the area and there are 400 of them, 100 per frequency, so capacity quadruples again. This is why capacity grows by adding cells, not by increasing power.",
+          "Handoff timing: a car at 60 km per hour covers 16.7 metres per second. If cells are 500 metres across, the car crosses one in 30 seconds, so a handoff every 30 seconds. A handoff takes on average 100 to 300 milliseconds, and during it packets may be delayed. For a voice call that is imperceptible; for a car with 20 passengers all streaming, the aggregate disruption at a cell boundary is noticeable, which is why route-based prediction is used on highways.",
+          "Latency budget for 5G: the air interface target is 1 millisecond, but the end-to-end path includes the core network and the internet. A realistic round trip to a nearby server is 10 to 20 milliseconds, against 30 to 50 for 4G. That is enough for remote control and not enough for truly haptic feedback, which needs under 10 milliseconds end to end.",
+          "Device density: a 4G cell supports on the order of 1,000 connected devices per square kilometre, while 5G targets a million. At a stadium with 60,000 seats in a square kilometre, 4G is over capacity by 60 times, which is why stadiums deploy hundreds of small cells and Wi-Fi rather than relying on the macro network.",
+          "Handoff failure has a real cost: if the transfer fails, the connection drops and the application must reconnect, which for a video call means a multi-second freeze. The probability per handoff is small, but a train passenger with 30 handoffs per hour will see failures regularly, which is why cellular links strive for make-before-break."
+        ]
+      }
+    ]
+  },
+  "750": {
+    "sections": [
+      {
+        "title": "🔍 Why a wireless network is public by default",
+        "paras": [
+          "A cable carries a signal inside insulation. A radio signal passes through walls, floors, and windows, so anyone within range with an antenna can receive it. There is no physical boundary to defend, which means confidentiality must come from encryption rather than from the medium.",
+          "The history of Wi-Fi security is a sequence of ciphers broken by better attacks, each replaced by a stronger one. Knowing that progression explains why old standards are still visible in configuration menus and why they must not be used."
+        ]
+      },
+      {
+        "title": "⚙️ The standards and what each actually protects",
+        "paras": [
+          "WEP used a short key with a flawed initialisation, and it can be broken in minutes with ordinary hardware. WPA replaced it with a temporary key hierarchy. WPA2 introduced AES with CCMP and is still the minimum acceptable standard. WPA3 adds a handshake that resists offline guessing of the password and forward secrecy.",
+          "The personal mode derives a key from a shared passphrase; the enterprise mode authenticates each user through a RADIUS server with certificates, so no shared secret exists to leak."
+        ],
+        "bullets": [
+          "WEP must never be used; the attack needs only captured traffic.",
+          "WPA with TKIP is deprecated because the cipher has known weaknesses.",
+          "WPA2 with AES is the baseline; disable TKIP-only modes on any modern access point.",
+          "WPA3 personal uses SAE, which prevents capturing a handshake and cracking it offline.",
+          "Enterprise mode gives per-user credentials and can revoke one user without changing anything for others.",
+          "An open network encrypts nothing, so any password sent over it is readable by anyone in range.",
+          "A captive portal authenticates access but does not encrypt traffic; it is a billing mechanism, not a security one."
+        ]
+      },
+      {
+        "title": "🧮 Cracking times and why the numbers matter",
+        "paras": [
+          "WEP: with enough captured packets, key recovery takes minutes on a laptop. The number of packets needed is on the order of tens of thousands, which on a busy network is a few minutes of capture. That is why WEP is equivalent to no encryption.",
+          "WPA2 personal with a 12-character random password from a 62-character alphabet has about 62 to the power of 12, roughly 3 times 10 to the 21, possibilities. A handshake capture allows offline testing at perhaps 100,000 guesses per second on a GPU, which is 10 to the 16 seconds, effectively impossible.",
+          "The same standard with a common word plus a digit, such as a dictionary word and a 4-digit suffix of 10,000 options, gives maybe 10 to the 6 possibilities, tested in seconds. The cipher is not the weak point; the passphrase is.",
+          "Open network exposure: a 2 MB session cookie travelling unencrypted on a coffee shop network is captured by anyone with a laptop in range. If the site uses HTTPS, that cookie travels inside TLS and is unreadable, which is why the advice to use a VPN on public Wi-Fi is less urgent than it once was, and why it still matters for non-HTTPS traffic and for metadata.",
+          "WPA3 against offline guessing: SAE makes each password guess require an interaction with the access point, so the attacker cannot test 100,000 candidates per second offline. The rate is limited to interactions per second, which makes even a weak passphrase far more expensive to attack.",
+          "Enterprise mode numbers: 500 users each with a certificate means 500 revocable credentials. When one laptop is stolen, one certificate is revoked, and nobody else is affected. With a shared passphrase, the same theft requires changing the passphrase on every device, which in a school with 500 managed laptops is a day of work."
+        ]
+      }
+    ]
+  },
+  "752": {
+    "sections": [
+      {
+        "title": "🔍 Why a boundary beats trusting every device",
+        "paras": [
+          "Every service that listens on a port is a door. A database exposed to the internet is attacked within hours by automated scanners, not because anyone chose it but because the port was reachable. A firewall is the decision to make most doors unreachable.",
+          "The principle that makes it work is deny by default: enumerate what must be reachable, allow exactly that, and drop everything else. The inverse, allow everything and block known bad things, fails because the list of bad things is unbounded."
+        ]
+      },
+      {
+        "title": "⚙️ Packet filters, stateful inspection, and default policy",
+        "paras": [
+          "A stateless packet filter examines each packet in isolation against rules of address, port, and protocol. It is fast and it cannot tell an outbound request from an unsolicited inbound packet, so it must allow return traffic broadly.",
+          "A stateful firewall remembers connections. When an internal host opens a connection outward, the return traffic is recognised as part of that connection and allowed, so no rule needs to open inbound ports. That single idea made firewalls practical.",
+          "A next-generation firewall adds application awareness, so it can allow HTTP while blocking a specific application tunnelled over the same port."
+        ],
+        "bullets": [
+          "Rules are evaluated in order and the first match wins, so order is part of the meaning.",
+          "A default deny policy is what makes the rule set the complete specification of what is reachable.",
+          "Allow rules should name both directions and both ports explicitly; one-sided rules are a frequent source of confusion.",
+          "Egress filtering prevents a compromised host from calling out to a command server, which is why it matters more than it looks.",
+          "The network address translation table is a de facto inbound filter, since unsolicited packets have nowhere to go.",
+          "A firewall cannot inspect encrypted traffic without terminating TLS, which then requires its own certificate management.",
+          "The firewall log is the primary evidence in an incident, which is why retaining it is not optional."
+        ]
+      },
+      {
+        "title": "🧮 Rules, exposure, and the cost of over-permission",
+        "paras": [
+          "A server with 200 open ports has 200 potential entry points. Hardened, it exposes 2: 443 for HTTPS and 22 for SSH restricted to an administrative range. The audit surface falls by 100 times, and more importantly the two remaining ones can each be examined thoroughly.",
+          "Rule count arithmetic: a data centre with 40 services and 6 internal segments needs roughly 40 x 6 = 240 allow rules if written naively, and each rule is a chance to write a wildcard that is too broad. Grouping services into tiers, such as web, application, and database, reduces that to about 20 rules between tiers, which is manageable and reviewable.",
+          "Stateful inspection versus stateless load: a stateless filter must inspect every packet against the whole rule list. With 240 rules and a linear scan, a packet at 10 Gbit per second line rate with 1,500-byte frames arrives every 1.2 microseconds, so the filter has about 1,200 nanoseconds for 240 comparisons, which is tight. Real firewalls use hash tables or ternary content-addressable memory to keep it to a few lookups, which is why rule count matters for hardware sizing.",
+          "The over-permission trap in numbers: an application breaks because a firewall blocks one port, so someone adds an allow-any rule for the whole subnet to fix it. The application works, and the firewall now permits 65,534 ports that were closed. The protection lost is invisible, which is exactly why audits and default-deny policy exist.",
+          "Availability of the firewall itself: a single firewall is a single point of failure, so production designs use a pair with a shared state table. If the pair costs 30,000 and the outage cost of a failed firewall is, say, 5,000 per hour, and a hardware failure happens once every two years with a 4-hour repair, the expected annual loss is 10,000, which justifies the pair."
+        ]
+      }
+    ]
+  },
+  "753": {
+    "sections": [
+      {
+        "title": "🔍 Why a tunnel over the public internet",
+        "paras": [
+          "An office network is private because the cabling is private. A laptop in a hotel is on a network owned by someone else, where the traffic can be observed and modified. Rebuilding a private cable to every employee's location is not possible.",
+          "A VPN creates the effect of a private link by wrapping every packet in encryption from the device to a trusted gateway. The internet in between sees only encrypted blobs addressed to the gateway."
+        ]
+      },
+      {
+        "title": "⚙️ The tunnel, the two ends, and what it does not protect",
+        "paras": [
+          "The client authenticates to the VPN server, they agree on keys, and then every IP packet from the device is encrypted and encapsulated inside a new packet to the server. The server decrypts it and forwards it as if it had come from the office.",
+          "The crucial limitation is that a VPN moves the trust boundary, it does not remove it. The network you are on can no longer read your traffic, but the VPN provider now can, and the destination server always could."
+        ],
+        "bullets": [
+          "Site-to-site VPNs join two offices; remote-access VPNs connect one device to a network.",
+          "IPsec operates at the network layer and encrypts all traffic; TLS-based VPNs often run in user space and are simpler to deploy.",
+          "Split tunnelling sends some traffic through the tunnel and some directly, which saves bandwidth and reduces protection.",
+          "A full tunnel protects everything, including traffic that was never meant to reach the corporate network.",
+          "A VPN does not make you anonymous: the provider sees your source address and every destination.",
+          "A VPN does not replace HTTPS, because the destination still needs to authenticate itself to you.",
+          "Kill switch behaviour, blocking traffic when the tunnel drops, is what prevents accidental leakage."
+        ]
+      },
+      {
+        "title": "🧮 Throughput and what encryption costs",
+        "paras": [
+          "AES-GCM with hardware acceleration runs at several gigabits per second per core, so encryption itself is not the bottleneck on modern hardware. On a device without acceleration it can drop to a few hundred megabits per second, which is why a cheap router used as a VPN endpoint often caps at 50 to 100 Mbit per second.",
+          "Overhead arithmetic: a 1,460-byte payload gains an outer IP header of 20 bytes, a UDP header of 8, a VPN header of 8, and an authentication tag of 16, so 52 bytes, 3.6 percent. That is negligible for throughput and noticeable only for very small packets.",
+          "Latency: the tunnel adds one extra hop to the VPN server. If the server is 30 milliseconds away and your destination is 20 milliseconds further, the round trip goes from 40 to 100 milliseconds, because traffic goes device to server to destination and back. Adding 60 milliseconds to every request is why a distant VPN makes browsing feel sluggish even with plenty of bandwidth.",
+          "A concrete comparison in a school. Without a VPN, a teacher on home broadband reaches the school server directly if it is published, at 25 milliseconds. With a full tunnel through a VPN gateway in the school, the round trip becomes 30 milliseconds to the gateway plus the internal hop, so around 35 milliseconds. Slightly worse but the traffic is authenticated and encrypted. With a VPN provider two countries away, it becomes 150 milliseconds, which is why enterprises host their own gateway rather than routing through a commercial one.",
+          "Split tunnel arithmetic: if 90 percent of a laptop's traffic is video calls to the public internet and 10 percent is internal, a full tunnel routes 10 times more traffic through the office gateway than necessary. For 50 employees each using 2 Mbit per second, full tunnel needs 100 Mbit per second of gateway capacity while split tunnel needs 10. That is the difference between a small appliance and a data-centre-grade concentrator."
+        ]
+      }
+    ]
+  },
+  "754": {
+    "sections": [
+      {
+        "title": "🔍 Why availability is the easiest thing to attack",
+        "paras": [
+          "Confidentiality and integrity attacks need a flaw: a weak password, an unpatched service, a misissued certificate. Availability needs nothing but volume. If an attacker can send more traffic than a service can process, the service is down, and no amount of code review prevents it.",
+          "That asymmetry is why denial of service remains common. It is the cheapest attack with a reliable effect, and the defences are economic rather than technical."
+        ]
+      },
+      {
+        "title": "⚙️ The attack families and the matching defences",
+        "paras": [
+          "Volume attacks flood the link with traffic until it saturates. Protocol attacks exhaust a state table, such as half-open TCP connections. Application attacks send requests that are individually cheap to send and expensive to serve, such as a search query that scans a large table.",
+          "The man-in-the-middle attack is different: the attacker positions between two parties, relays their traffic, and reads or alters it. Encryption with authentication of the endpoints is the direct counter."
+        ],
+        "bullets": [
+          "A SYN flood opens many connections and never completes the handshake, filling the server's pending connection table.",
+          "A reflection attack sends requests with a forged source address so the replies hit the victim, amplifying the volume.",
+          "A DNS amplification uses a small query to trigger a large response, with amplification factors historically up to 50 times.",
+          "TLS interception works only if the client accepts a forged certificate, which is why certificate pinning and validation matter.",
+          "ARP spoofing and DNS spoofing redirect traffic on a local network, which encryption detects but does not prevent.",
+          "Defences combine rate limiting, connection table tuning, upstream scrubbing, and anycast distribution.",
+          "Detection is by baseline deviation: a link at 40 times its usual volume is visible, a slow application attack is not."
+        ]
+      },
+      {
+        "title": "🧮 Amplification and the cost of defence",
+        "paras": [
+          "A DNS query of 60 bytes can produce a response of 3,000 bytes, an amplification factor of 50. With 1,000 compromised hosts each sending 100 queries per second, that is 100,000 queries per second, which becomes 300 MB per second of traffic aimed at the victim. At 60 bytes per query the attacker sends 6 MB per second. That ratio is why reflection is the dominant technique.",
+          "A SYN flood arithmetic: each half-open connection occupies a table entry for the retransmission timeout, perhaps 60 seconds. If the server table holds 100,000 entries and the attacker sends 2,000 SYNs per second, the table fills in 50 seconds and legitimate connections are refused. SYN cookies eliminate the table entirely by encoding the state in the sequence number, which is why they are the standard mitigation.",
+          "Application-layer attack: a search endpoint that takes 200 milliseconds of database time per request, hit 500 times per second, needs 100 CPU-seconds per second of database capacity, which no single server has. The requests are 1 KB each, so 500 KB per second is trivial to send, which is why this attack needs no bandwidth at all.",
+          "Defence cost arithmetic: scrubbing capacity is priced in gigabits per second. A 100 Gbit per second attack requires upstream scrubbing, because no single server's uplink can absorb it. Protecting a service therefore means paying for capacity that is idle most of the time, which is why DDoS protection is usually bought as a service rather than built.",
+          "Anycast helps in numbers: advertising one address from 20 locations spreads the attack across 20 edges, so each edge sees a twentieth of the volume and the service stays up. This works because the attacker cannot choose which edge receives their packets; routing does.",
+          "The man-in-the-middle cost: without certificate validation, an attacker on the same Wi-Fi can proxy a session and read a password. With validation against a trusted root, the forged certificate is rejected and the browser shows a warning. Detecting the attack is therefore free, which is why the residual risks are misconfigured clients and malicious roots rather than the technique itself."
+        ]
+      }
+    ]
+  },
+  "756": {
+    "sections": [
+      {
+        "title": "🔍 Why a network needs to be watched",
+        "paras": [
+          "A network fails slowly and quietly. A link degrades from 1 Gbit per second to 400 Mbit, a switch port starts dropping 0.5 percent of frames, a router's CPU creeps up. None of these produce an outage, and all of them combined produce complaints that are impossible to diagnose after the fact.",
+          "Management is the practice of measuring before the complaints, and of knowing what a healthy network looks like so an unhealthy one is recognisable."
+        ]
+      },
+      {
+        "title": "⚙️ Monitoring, protocols, and the four areas",
+        "paras": [
+          "Monitoring collects three kinds of data: availability, whether a device answers; performance, how much traffic and how much latency; and configuration, what the device is set to do.",
+          "SNMP is the classic protocol for this. A management station queries a device for values in a structured tree, and the device can send unsolicited traps when something changes. Modern practice adds streaming telemetry, which pushes data continuously instead of polling."
+        ],
+        "bullets": [
+          "Ping measures reachability and round-trip time; traceroute reveals the path and where delay accumulates.",
+          "Interface counters give bytes, packets, errors, and drops per port, which is the primary evidence for a faulty link.",
+          "SNMP exposes a management information base, and each object has an identifier in a global tree.",
+          "A trap is an alert from the device; a poll is a query from the manager.",
+          "Configuration management keeps a record of intended state so drift is detectable.",
+          "NetFlow or IPFIX records who talked to whom and how much, which is how traffic composition is understood.",
+          "Alerting on a baseline deviation beats alerting on a fixed threshold someone guessed."
+        ]
+      },
+      {
+        "title": "🧮 Polling load, baselines, and what to alert on",
+        "paras": [
+          "Poll 200 devices every 60 seconds for 40 counters each. That is 200 divided by 60, about 3.3 requests per second, 200 KB per second of traffic, which is nothing. Tighten to every 10 seconds and it is 20 requests per second, still nothing; the constraint is the device's CPU, since an older switch may take 30 milliseconds to answer a 40-object query, and 200 devices polling at that rate is 6 seconds of CPU per cycle.",
+          "Retention arithmetic: 200 devices, 40 counters, one sample per minute kept for a year. That is 200 x 40 x 525,600 minutes, 4.2 billion data points. At 8 bytes each, 33 GB, which is why real systems downsample: keep raw data for a week, 1-minute data for a month, and hourly averages for years.",
+          "Baseline arithmetic for alerting: if a link's normal utilisation is 30 percent with a standard deviation of 5 percent, a threshold at 90 percent will fire rarely and be useless. A threshold at 45 percent, three standard deviations above the mean, catches the real change and produces a handful of alerts per week instead of thousands. That single decision is the difference between alerting that is read and alerting that is muted.",
+          "Latency baseline similarly: a path that normally has 12 milliseconds of round-trip time with 1 millisecond of jitter, measured every minute, shows a fault when it reaches 25 milliseconds. A fixed threshold of 100 milliseconds would miss a doubling of latency that users feel immediately.",
+          "Cost of blind spots in numbers: a link dropping 0.1 percent of frames at 1 Gbit per second is 125,000 lost frames per second at full rate, or 125 per second at 1 percent utilisation. No single user notices, but a backup that would take 20 minutes takes 24, and nobody knows why. That is what interface error counters exist to reveal."
+        ]
+      }
+    ]
+  },
+  "757": {
+    "sections": [
+      {
+        "title": "🔍 Why separate the decision from the forwarding",
+        "paras": [
+          "In a traditional router, the software that computes routes and the hardware that forwards packets live in the same box and are configured one device at a time. Changing a policy across 500 devices means 500 configurations, each an opportunity for a typo.",
+          "Software-defined networking splits the two: a controller decides, and the devices forward according to rules the controller installs. The network becomes programmable as a whole, and its behaviour becomes a program that can be tested and versioned."
+        ]
+      },
+      {
+        "title": "⚙️ Control plane, data plane, and virtual networks",
+        "paras": [
+          "The control plane decides where traffic should go. The data plane moves it. In SDN the control plane is centralised in a controller with a global view, and the data plane is simple switches that match and act on rules.",
+          "Cloud networking is the most common encounter with this. A virtual network, virtual switch, and virtual firewall are created by an API call, and they run over shared physical hardware with isolation between tenants."
+        ],
+        "bullets": [
+          "A flow rule is a match on header fields plus an action, such as forward, drop, or rewrite.",
+          "Central control gives a consistent policy, because the same intent is applied everywhere.",
+          "The controller is a single point of failure, so production deployments run a cluster.",
+          "Overlay networks encapsulate tenant traffic in tunnels, which decouples the virtual topology from the physical one.",
+          "Virtual networks isolate tenants logically, which is cheaper than separate hardware and needs careful configuration to be real isolation.",
+          "Infrastructure as code lets the network definition be reviewed like software, which is the main operational gain.",
+          "The data plane still has to be fast, so hardware forwarding remains; only the decisions moved."
+        ]
+      },
+      {
+        "title": "🧮 Provisioning time and overlay overhead",
+        "paras": [
+          "A traditional change across 200 switches: each needs a configuration edit, a review, and a verification window of perhaps 20 minutes, so 200 x 20 minutes is 67 hours of work, spread over weeks. An SDN controller applying one policy to 200 switches does it in a single operation that completes in seconds. The gain is not the seconds, it is that the change is atomic and identical everywhere.",
+          "Overlay overhead arithmetic: encapsulating a 1,460-byte payload adds an outer IP header of 20 bytes, a UDP header of 8, a tunnel header of 8, and an authentication tag, so about 50 bytes, 3.4 percent. The physical link therefore carries 1.034 times the tenant traffic. On a 10 Gbit per second link that reduces usable tenant bandwidth to 9.67 Gbit per second.",
+          "Controller sizing: a controller must handle a flow setup for every new connection. At 50,000 new connections per second and 2 milliseconds of controller work per setup, one controller needs 100 CPU-seconds per second, so at least 100 cores, or a distributed controller with several instances. This is why flow setup rate, not forwarding rate, is the hard capacity limit of an SDN design.",
+          "Virtual firewall comparison: a hardware firewall handling 20 Gbit per second costs tens of thousands and takes weeks to procure. A virtual one costs per hour and starts in a minute, but its throughput depends on the host's CPU and is often 2 to 5 Gbit per second per instance. That number is why cloud designs scale horizontally, running many small firewalls instead of one large one.",
+          "The centralisation trade in numbers: a controller cluster of 3 nodes tolerates one failure and continues. A single controller does not, and when it fails the data plane keeps forwarding with the last installed rules while no policy changes can be made, which is a degraded but not an outage state. That is the correct failure mode, and it is why the split matters in practice."
+        ]
+      }
+    ]
+  },
+  "758": {
+    "sections": [
+      {
+        "title": "🔍 Why the network's centre of gravity is moving",
+        "paras": [
+          "For decades the pattern was clear: thin clients, fat data centres. Put the compute where power and staff are cheap, and send the data there. That works while the data is human-scale and the latency budget is generous.",
+          "Two things broke it. Billions of sensors generate data faster than links can carry, and interactive applications have latency budgets that no wide-area path can meet. Both push computation toward the devices."
+        ]
+      },
+      {
+        "title": "⚙️ IoT, edge computing, and the constraints they bring",
+        "paras": [
+          "IoT connects sensors, cameras, and appliances. The devices are cheap, low power, and often physically accessible, which changes the security model completely: an attacker can hold the device in their hand.",
+          "Edge computing places compute near the data source, in a gateway, a base station, or a small data centre in the same city. The motivation is latency, bandwidth cost, and sometimes data residency."
+        ],
+        "bullets": [
+          "An IoT device may have 256 KB of RAM and no operating system, so protocols must be minimal, which is why MQTT and CoAP exist.",
+          "MQTT is a publish-subscribe protocol with a broker, which suits many devices reporting to one place.",
+          "Edge nodes are constrained in power and cooling, so workloads must be small and predictable.",
+          "Data reduction at the edge is often the main gain: send a summary rather than a video stream.",
+          "Physical access makes firmware signing and secure boot essential, since anyone can attach a debugger.",
+          "Long device lifetimes mean a ten-year-old device must still receive security patches.",
+          "5G and Wi-Fi 6 both target high device density, which is the enabling infrastructure for IoT at scale."
+        ]
+      },
+      {
+        "title": "🧮 Bandwidth, latency, and where to compute",
+        "paras": [
+          "A camera producing 1080p video at 4 Mbit per second generates 1.8 GB per hour. A site with 100 cameras is 180 GB per hour, 4.3 TB per day, which no reasonable uplink carries. Analysing on the edge and sending only events reduces that to perhaps 100 MB per day, a 40,000-fold reduction. That single calculation is why edge video analytics exists.",
+          "Latency budget for industrial control: a robot arm needing a correction every 2 milliseconds cannot be controlled from a data centre 20 milliseconds away, because the feedback loop would be slower than the motion. The controller must be local. A 5G edge node 5 milliseconds away is viable; a cloud region 40 milliseconds away is not.",
+          "Compute cost comparison: sending 1 TB per month to a cloud region costs about 90 in egress, plus storage and compute. A 200 edge gateway that aggregates locally costs less in year one and avoids the recurring transfer. The trade is that the edge device needs management and patching, which is a real operational cost that often exceeds the bandwidth savings at small scale.",
+          "Device count arithmetic: a building with 5,000 sensors, each sending 100 bytes every minute, produces 500 KB per minute, 8 KB per second. Trivial for any link. The same sensors sending every second produce 500 KB per second, 4 Mbit per second, which is now a provisioning decision. Reporting interval, not device count, drives the network requirement.",
+          "IoT security in numbers: a botnet of 100,000 compromised cameras, each with a 10 Mbit per second uplink, can produce 1 Tbit per second of traffic in aggregate. Individual devices are weak; the population is the threat. This is why default passwords on connected devices are treated as a systemic risk rather than a per-device mistake."
+        ]
+      }
+    ]
+  }
+}

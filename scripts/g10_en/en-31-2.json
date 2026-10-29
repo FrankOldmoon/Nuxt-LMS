@@ -1,0 +1,459 @@
+{
+  "808": {
+    "sections": [
+      {
+        "title": "🔍 Why order matters",
+        "paras": [
+          "For an image, position is spatial and a filter sliding over it captures locality. For a sentence, position is sequence, and the meaning of a word depends on what came before it. A bag of words cannot distinguish the dog bit the man from the man bit the dog.",
+          "A recurrent network handles this by processing one element at a time and carrying a state forward. The state is a compressed summary of everything seen so far, and the output at each step depends on both the current input and that summary."
+        ]
+      },
+      {
+        "title": "⚙️ The hidden state and what it can hold",
+        "paras": [
+          "At each step the network combines the current input with the previous hidden state to produce a new hidden state. The same weights are used at every step, which is weight sharing along time: the network learns one transition function and applies it repeatedly.",
+          "The hidden state is a fixed-size vector, which is the fundamental constraint. Everything the network remembers about the past must be compressed into that many numbers."
+        ],
+        "bullets": [
+          "Weights are shared across time steps, so the parameter count does not grow with sequence length.",
+          "The hidden state is the only memory, so its size limits how much past information is retained.",
+          "Backpropagation through time unrolls the sequence and applies the chain rule across steps.",
+          "Unrolling a 100-step sequence is equivalent to a 100-layer network, which is why gradients vanish or explode.",
+          "Training requires processing steps in order, which prevents parallelisation over the sequence.",
+          "A bidirectional RNN runs one pass forward and one backward, which helps when the whole sequence is available.",
+          "The final hidden state is often used as a fixed-size summary of the entire sequence."
+        ]
+      },
+      {
+        "title": "🧮 State size and sequence length",
+        "paras": [
+          "A hidden state of 256 floats and an input of 100 dimensions: the transition matrix is 356 by 256, 91,136 weights. That is the entire model, regardless of whether the sequence is 10 steps or 10,000.",
+          "Memory of the input: 256 floats, 1 KB, must summarise everything read so far. The first 50 tokens of a 1,000-token document and the last 50 both compete for the same 256 numbers, and the later ones win because they are multiplied in more recently.",
+          "Sequence-length cost: 100 steps with a 256-unit state means 100 matrix-vector products of 91,136 operations, 9.1 million operations per sequence. A transformer on the same sequence of 100 tokens with 256 hidden units does attention over 100 times 100 pairs, 10,000 attention scores, each a dot product of 256 numbers, 2.56 million operations, plus the projections. Comparable at 100 tokens.",
+          "At 10,000 tokens the comparison reverses sharply. The RNN does 10,000 times 91,136, 911 million operations, which is linear and fine, but it must run sequentially, so 10,000 steps cannot be parallelised. The transformer's attention is 10,000 squared, 100 million pairs, 25.6 billion operations for the scores alone, which is 28 times more arithmetic but fully parallel across the whole sequence. That is the exact trade that decided the field: transformers pay quadratic compute to gain parallelism.",
+          "Vanishing gradient over time: with a per-step Jacobian norm around 0.9, a dependency 50 steps back is multiplied by 0.9 to the 50, which is 0.005. Beyond about 20 to 30 steps a plain RNN effectively cannot learn the dependency, which is why it fails at tasks that need long-range memory."
+        ]
+      }
+    ]
+  },
+  "809": {
+    "sections": [
+      {
+        "title": "🔍 Why a plain recurrent network forgets",
+        "paras": [
+          "The hidden state is overwritten at every step by a matrix multiplication. If that multiplication tends to shrink the state, information decays geometrically and is gone within tens of steps. If it tends to grow, the gradient explodes instead.",
+          "An LSTM adds a second state that is updated additively rather than by multiplication, plus gates that decide what to write, what to keep, and what to expose. The additive path is what lets information survive hundreds of steps."
+        ]
+      },
+      {
+        "title": "⚙️ The gate structure",
+        "paras": [
+          "An LSTM cell has a forget gate that decides what to drop from the cell state, an input gate that decides what new information to write, a candidate value that is the new content, and an output gate that decides what part of the cell state becomes the hidden state.",
+          "Each gate is a sigmoid applied to a linear function of the input and the previous hidden state, so its output is between zero and one and acts as a continuous switch."
+        ],
+        "bullets": [
+          "The cell state is updated by multiplying by the forget gate and adding the gated candidate, which is additive and therefore gradient-friendly.",
+          "The forget gate initialised near one means the network starts by remembering everything, which trains better.",
+          "A GRU merges the input and forget gates into an update gate and has two gates instead of three.",
+          "GRUs usually match LSTMs on most tasks with about 25 percent fewer parameters.",
+          "The gates are learned, so the network decides its own memory policy rather than being given one.",
+          "Peephole connections let the gates see the cell state directly, which helps on some tasks and is usually omitted.",
+          "Neither LSTM nor GRU removes sequential processing, so both remain slow to train on long sequences."
+        ]
+      },
+      {
+        "title": "🧮 Why the additive path survives",
+        "paras": [
+          "The cell state update is c new equals f times c old plus i times candidate, where f and i are between zero and one. The gradient of c new with respect to c old is f, not a matrix product. If the forget gate sits near 0.95, a dependency 100 steps back has a factor of 0.95 to the 100, which is 0.006, still small but 100 times better than a typical plain-RNN factor of 0.9 to the 100, which is 0.000026.",
+          "The important case is a forget gate near 1, which the network learns for information that should persist. With f equal to 0.99, 100 steps give 0.37, and 1,000 steps give 0.00004. That is the difference between remembering a subject across a clause and forgetting it.",
+          "Parameter arithmetic: an LSTM cell with input size 100 and hidden size 256 has four weight matrices of 356 by 256, 364,544 weights. A GRU has three, 273,408 weights, which is the 25 percent saving usually quoted.",
+          "A concrete comparison on a task requiring memory of 100 steps: a plain RNN plateaus near 50 percent accuracy, effectively guessing; an LSTM reaches 95 percent. On a task requiring memory of 10 steps, both reach 95 percent. The gap appears exactly where the vanishing gradient predicts, which is why the empirical result matches the theory.",
+          "Compute cost: an LSTM step is four matrix-vector products against a plain RNN's one, so it is about 4 times more expensive per step. With a GRU's three, it is 3 times. That cost is worth paying whenever the task needs long-range memory and is wasted when it does not, which is why the advice is to start simple and measure."
+        ]
+      }
+    ]
+  },
+  "810": {
+    "sections": [
+      {
+        "title": "🔍 Why sequence tasks share one shape",
+        "paras": [
+          "Predict the next word, translate a sentence, transcribe speech, summarise a document. The inputs and outputs differ, but the structure is the same: read a sequence, build a representation, produce a sequence or a label.",
+          "Recognising that shape is what lets one architecture family cover translation, summarisation, and dialogue, and it is why the encoder-decoder pattern was such a large step."
+        ]
+      },
+      {
+        "title": "⚙️ Language modelling and encoder-decoder",
+        "paras": [
+          "A language model assigns a probability to the next token given the previous ones. Trained on enough text, it becomes useful for completion, and its internal representation becomes useful for everything else.",
+          "An encoder-decoder model reads the input with an encoder, produces a context representation, and generates the output one token at a time with a decoder. Translation is the canonical example: the encoder reads the source sentence, the decoder writes the target sentence."
+        ],
+        "bullets": [
+          "A language model is trained by predicting the next token, which needs no labels beyond the text itself.",
+          "The encoder's final state must compress the whole input, which is a bottleneck for long inputs.",
+          "Attention over the encoder's states removes that bottleneck, and it is what made long-sentence translation work.",
+          "Teacher forcing trains the decoder on the true previous token, which stabilises learning but creates a train-test mismatch.",
+          "Greedy decoding picks the most likely token at each step; beam search keeps several candidates and usually produces better sequences.",
+          "Sequence labelling, such as part-of-speech tagging, uses a bidirectional encoder and a per-token output.",
+          "Evaluation of generation needs a metric such as BLEU or ROUGE, and none of them measures meaning well."
+        ]
+      },
+      {
+        "title": "🧮 Length, vocabulary, and decoding cost",
+        "paras": [
+          "A vocabulary of 50,000 tokens with a 512-dimensional embedding is a 25.6 million parameter table, which dwarfs a small encoder. That is why embedding size and vocabulary size are chosen together.",
+          "Encoder-decoder cost for translating a 30-token sentence: the encoder processes 30 steps, then the decoder 30 steps, each step involving matrix products of maybe a million operations, so 60 million operations. Fast. The cost that matters is the sequential dependency: 30 decoding steps cannot be parallelised, so latency scales with output length.",
+          "Beam search arithmetic: beam width 5 means 5 partial hypotheses maintained, each step expanding 5 candidates into 5 times 50,000 vocabulary scores, 250,000 operations per step, kept to 5. Over 30 steps that is 7.5 million operations, 5 times the greedy cost, for a typical 1 to 3 BLEU improvement.",
+          "The bottleneck quantified: an encoder state of 512 floats must summarise a 50-token sentence. At 50 tokens that is 10 floats per token, which is tight. Attention solves it by letting the decoder look at all 50 encoder states, 50 times 512, 25,600 numbers, instead of one 512-vector. The 50-fold increase in available information is why translation quality improved sharply once attention was introduced.",
+          "Exposure bias in numbers: trained with teacher forcing, the model has never seen its own mistakes. At inference, an early wrong token becomes the input for the next step, and the error compounds. On a 30-token output, a 2 percent per-step error rate compounds to about 45 percent of sequences containing at least one error, which is why scheduled sampling and reinforcement-based fine-tuning are used.",
+          "The metric caveat: BLEU compares n-gram overlap with reference translations, so a fluent but differently worded translation scores low and a disfluent copy scores high. A 2-point BLEU difference is often noise, which is why human evaluation remains necessary for translation quality claims."
+        ]
+      }
+    ]
+  },
+  "812": {
+    "sections": [
+      {
+        "title": "🔍 Why remove the recurrence",
+        "paras": [
+          "An RNN must process step 30 before step 31, so a 1,000-token sequence is 1,000 sequential operations. GPUs are built for parallel work, and a sequential loop leaves them mostly idle.",
+          "The transformer removes the loop entirely: every token attends to every other token at once. The computation becomes a matrix multiplication over the whole sequence, which is exactly what hardware does well."
+        ]
+      },
+      {
+        "title": "⚙️ Self-attention and position encoding",
+        "paras": [
+          "Self-attention lets each token look at all the others and compute a weighted average of their representations, where the weights reflect relevance. Every token is updated simultaneously, so the layer is one parallel operation.",
+          "Because attention is permutation invariant, the model has no idea about order unless order is supplied. Position encodings are added to the token representations to restore it."
+        ],
+        "bullets": [
+          "A transformer block is self-attention followed by a feed-forward network, each wrapped with a residual connection and normalisation.",
+          "Multi-head attention runs several attention computations in parallel with different projections, then concatenates.",
+          "Position encodings are either fixed sinusoids or learned embeddings, and rotary encodings are now common.",
+          "Layer normalisation is applied per token, which suits variable-length sequences better than batch normalisation.",
+          "The feed-forward sublayer holds most of the parameters, often two thirds of the block.",
+          "Causal masking in a decoder prevents a token from attending to future tokens.",
+          "The architecture is modality-agnostic: patchify an image or frame an audio spectrogram and the same block applies."
+        ]
+      },
+      {
+        "title": "🧮 Quadratic cost, in numbers",
+        "paras": [
+          "Self-attention builds a matrix of scores between every pair of tokens, so n tokens produce n squared scores. At 512 tokens that is 262,144 scores; at 8,192 tokens it is 67 million, a 256-fold increase for a 16-fold increase in length.",
+          "Each score is a dot product of dimension d, so the arithmetic is n squared times d. With n equal to 512 and d equal to 768, that is 201 million operations per attention head, times 12 heads, 2.4 billion operations per layer, times 12 layers, 29 billion operations for one forward pass of one 512-token sequence. That arithmetic is why training runs cost millions of dollars.",
+          "Parameter arithmetic: a 12-layer model with d equal to 768 has 7 million parameters per layer in the attention projections and 4.7 million in the feed-forward, so about 12 million per layer, 144 million total, plus a 50,000 by 768 embedding table, 38 million. This matches the published figure for a base-sized model.",
+          "Why RNNs could not scale the same way: an RNN over 512 tokens does 512 sequential steps regardless of parallel hardware. A transformer does one matrix multiplication of size 512 by 512, which a GPU executes in microseconds. At 512 tokens the wall-clock difference is roughly a factor of 50 on the same hardware, and that ratio is what made training on billions of tokens feasible.",
+          "The context length trade: doubling context quadruples the attention cost. A 128,000-token context costs about 62,500 times more attention arithmetic than a 512-token one, which is why long-context models need sparse attention, sliding windows, or specialised kernels. Every efficiency technique in modern language models is a response to this quadratic.",
+          "Position encoding arithmetic: without it, shuffling the input tokens would leave the output unchanged, up to permutation. That is easy to verify and is the standard sanity check that a positional signal is present and working."
+        ]
+      }
+    ]
+  },
+  "813": {
+    "sections": [
+      {
+        "title": "🔍 Why a learned weighting instead of a fixed summary",
+        "paras": [
+          "A fixed summary compresses the whole input into one vector. Attention instead keeps every position's representation and computes a weighted average, with weights that depend on what is being asked.",
+          "The consequence is that the model can focus. When translating a pronoun, it can put most of its weight on the noun it refers to, and the weights are computed per query rather than learned once."
+        ]
+      },
+      {
+        "title": "⚙️ Query, key, value, and softmax",
+        "paras": [
+          "Each position produces three vectors by linear projection. The query says what this position is looking for, the key says what each position offers, and the value is the content that gets mixed.",
+          "Attention scores are the dot products of the query with every key, scaled by the square root of the dimension, and normalised with softmax. The output is the weighted sum of the values."
+        ],
+        "bullets": [
+          "Scaling by the square root of the dimension keeps the dot products from growing with dimension, which would saturate the softmax.",
+          "Softmax makes the weights positive and sum to one, so the output is a convex combination of values.",
+          "Multi-head attention learns several different relevance patterns at once, such as syntactic and semantic links.",
+          "Cross-attention uses queries from one sequence and keys and values from another, which is how a decoder reads an encoder.",
+          "Self-attention with a causal mask is what makes a decoder-only language model possible.",
+          "Attention weights are interpretable in a limited sense: they show where the model looked, not why.",
+          "Attention has no notion of distance, so relative position must be added explicitly if it matters."
+        ]
+      },
+      {
+        "title": "🧮 One attention computation by hand",
+        "paras": [
+          "Three tokens with dimension 2. Queries: 1,0 and 0,1 and 1,1. Keys: 1,0 and 1,0 and 0,1. Values: 10,0 and 20,0 and 0,10.",
+          "Scores for the first query against the three keys: 1, 1, 0. Scaling by the square root of 2 does not change the ordering. Softmax over 1, 1, 0 gives e, e, 1 divided by 2e plus 1, so 0.422, 0.422, 0.155.",
+          "The output is 0.422 times 10,0 plus 0.422 times 20,0 plus 0.155 times 0,10, which is 12.66, 1.55. The first token's output is dominated by the values of the two tokens whose keys matched its query, which is exactly the intended behaviour.",
+          "Scale arithmetic: with dimension 64, dot products of random unit vectors have a standard deviation around 8. Scaled by the square root of 64, 8, the standard deviation becomes 1, which keeps softmax in a responsive range. Without scaling, scores around plus or minus 30 would produce a softmax that is essentially one-hot, and the gradient would vanish.",
+          "Cost per head: 512 tokens, dimension 64. The score matrix is 512 by 512, 262,144 entries, computed from 512 by 64 times 64 by 512, 16.8 million multiply-adds. Then the same again to multiply scores by values. So 33.5 million operations per head, times 8 heads, 268 million per attention layer. That is the repeated cost behind every efficiency technique for long context.",
+          "Why multiple heads help, in numbers: one head can produce one relevance pattern. With 8 heads of dimension 64 the total width stays the same as one head of dimension 512, but the model can represent 8 distinct patterns at once, such as attending to the previous token, the subject, and the matching punctuation. Empirically, 8 heads beat 1 head of the same total width by several points on language tasks, at equal arithmetic cost."
+        ]
+      }
+    ]
+  },
+  "814": {
+    "sections": [
+      {
+        "title": "🔍 Why generating is harder than classifying",
+        "paras": [
+          "A classifier maps an input to a label. A generative model must produce data that looks like it came from the same distribution, which means representing the whole distribution, not just a boundary through it.",
+          "That is a much harder requirement, and it is why generation was considered impractical for years before adversarial training and later diffusion made it work."
+        ]
+      },
+      {
+        "title": "⚙️ The adversarial game and its successors",
+        "paras": [
+          "A GAN has two networks. The generator takes random noise and produces a sample. The discriminator takes a sample, real or generated, and predicts whether it is real. The generator is trained to fool the discriminator, and the discriminator is trained to catch it.",
+          "The competition is the training signal. There is no per-pixel target, only a judgement, which is what allows generated samples to be sharp rather than blurry averages."
+        ],
+        "bullets": [
+          "The generator never sees real data directly; it learns only from the discriminator's judgement.",
+          "Mode collapse is the characteristic failure: the generator produces a few convincing samples and ignores the rest of the distribution.",
+          "Training is unstable because the two networks can oscillate instead of converging.",
+          "Diffusion models instead learn to reverse a gradual noising process, which trains stably and now dominates image generation.",
+          "Variational autoencoders optimise a likelihood bound, which is stable and produces slightly blurrier results.",
+          "Evaluation of generated images uses Fréchet inception distance, which compares feature statistics of real and generated sets.",
+          "Conditional generation, such as text to image, feeds the condition into both networks."
+        ]
+      },
+      {
+        "title": "🧮 What the metrics and failures look like",
+        "paras": [
+          "Fréchet inception distance measures how far the feature distribution of generated images is from the real one, using a pretrained classifier as the feature extractor. Lower is better, and on standard benchmarks a good model reaches the low single digits while a blurry model sits in the tens. The number is sensitive to sample size, which is why comparisons must fix it.",
+          "Mode collapse in numbers: if the true data has 10 classes and the generator produces convincing samples of only 3, the per-sample quality metrics look excellent because those 3 are perfect. Only a coverage measure, or a classifier run over generated samples, reveals that 7 classes are missing. That is why single-number evaluation of a generative model is untrustworthy.",
+          "Training cost: a diffusion model generating a 512 by 512 image may take 50 to 100 denoising steps, each a full forward pass of the network. At 50 milliseconds per step that is 2.5 to 5 seconds per image, against a GAN's 30 milliseconds for one forward pass. That factor of 100 is why diffusion needs distillation or few-step samplers for real-time use.",
+          "Data efficiency: a GAN can reach reasonable quality with 100,000 images; diffusion models typically want millions. With a small custom dataset, a fine-tuned pretrained model beats training either from scratch.",
+          "The adversarial idea in one number: the discriminator provides one bit of feedback per sample, real or fake. That is a very low-information signal compared with a pixel-wise target, which is both why GANs can produce sharp outputs and why they need so many samples to train stably.",
+          "Responsible use: a generator that produces photorealistic faces from noise also produces images of people who do not exist, which is why provenance marking and synthetic-content disclosure are now part of the deployment question rather than an afterthought."
+        ]
+      }
+    ]
+  },
+  "816": {
+    "sections": [
+      {
+        "title": "🔍 Why frameworks exist at all",
+        "paras": [
+          "Writing a neural network by hand means writing the forward pass, the backward pass, and an optimiser, for every architecture. The backward pass is mechanical but error-prone, and a single derivative mistake produces a model that trains slowly rather than an error message.",
+          "A framework provides layers as reusable components, computes gradients automatically, and runs the arithmetic on GPUs. It removes the two kinds of work that are pure overhead."
+        ]
+      },
+      {
+        "title": "⚙️ Tensors and automatic differentiation",
+        "paras": [
+          "A tensor is a multi-dimensional array. A batch of images is four-dimensional: batch, channel, height, width. Every operation in deep learning is an operation on tensors.",
+          "Automatic differentiation records the operations performed on tensors and computes gradients by walking the recorded graph backward. Defining a model is defining a function, and the gradient comes for free."
+        ],
+        "bullets": [
+          "PyTorch builds the graph dynamically, so ordinary Python control flow works inside a model.",
+          "TensorFlow originally used a static graph, which was faster to deploy and harder to debug; its eager mode closed that gap.",
+          "Both provide the same building blocks: layers, losses, optimisers, and data loaders.",
+          "A dataset abstraction and a batched loader are as important as the model, because data pipelines are the usual bottleneck.",
+          "Moving tensors between CPU and GPU is a syscall-like cost, so batches should be moved once, not per item.",
+          "Mixed precision halves memory and roughly doubles throughput on modern accelerators.",
+          "The framework is scaffolding: layers, losses, and gradients transfer between PyTorch and TensorFlow without conceptual change."
+        ]
+      },
+      {
+        "title": "🧮 Where the time actually goes",
+        "paras": [
+          "A training step for an image model on a GPU: a forward pass moving 64 images through 10 million parameters, a backward pass at roughly twice that cost, and an optimiser update. If the forward pass takes 20 milliseconds, the step is about 60 milliseconds, so 16 steps per second.",
+          "Data loading can dominate. Decoding and augmenting 64 JPEG images on a CPU takes perhaps 40 milliseconds with one worker. With one loader process and a 60-millisecond step, loading fits. With heavier augmentation taking 120 milliseconds, the GPU waits half the time and the effective throughput halves. Adding four loader workers restores it, which is why the loader worker count is the first thing to tune.",
+          "Memory arithmetic: activations for 64 images at 224 by 224 with 64 channels in the first layer are 64 times 64 times 112 times 112, about 51 million floats, 205 MB, just for one layer's output. A 50-layer network keeps every activation for the backward pass, so several gigabytes, which is why batch size is limited by memory rather than by compute.",
+          "Mixed precision arithmetic: storing activations in 16-bit halves the memory, which allows roughly double the batch size. On tensor-core hardware the matrix multiplies also run about twice as fast, so the combined effect is often 2 to 3 times the throughput for a small accuracy cost that loss scaling manages.",
+          "Framework overhead: a small model with tiny tensors can be dominated by Python interpretion and kernel launch rather than arithmetic. A layer that takes 5 microseconds of GPU work but 20 microseconds of Python to dispatch runs at 20 percent efficiency. That is why small models are often faster in a batched or compiled mode, and why profiling, not intuition, decides the optimisation."
+        ]
+      }
+    ]
+  },
+  "817": {
+    "sections": [
+      {
+        "title": "🔍 Why train from scratch when someone already did",
+        "paras": [
+          "Training an image model from scratch needs hundreds of thousands of labelled examples and days of GPU time, and it learns edge detectors in the first layer that look the same in every image model ever trained.",
+          "Transfer learning reuses a model trained on a large general dataset and adapts it to a specific task. The early layers that detect edges and textures are already there, so only the later, task-specific layers need to change."
+        ]
+      },
+      {
+        "title": "⚙️ Freezing, fine-tuning, and how much to unfreeze",
+        "paras": [
+          "The simplest form freezes the pretrained backbone and trains a new head. This needs very little data, trains in seconds, and works when the new task is similar to the original.",
+          "The next form unfreezes the last few blocks and trains them at a low learning rate. This adapts the features somewhat and needs more data.",
+          "Full fine-tuning trains everything at a very low learning rate. It works best when the new domain differs substantially, and it risks destroying the pretrained features if the rate is too high."
+        ],
+        "bullets": [
+          "A frozen backbone means no gradients flow into it, so training is fast and memory use is low.",
+          "Layer-wise learning rates let early layers change slowly and later layers change quickly.",
+          "The head must match the new task: a single output for binary, one per class for multi-class.",
+          "Data augmentation still matters, because the head sees few examples.",
+          "Batch normalisation statistics should usually be kept in inference mode when the backbone is frozen.",
+          "Domain gap decides the strategy: a medical image model may need most layers retrained.",
+          "In language, pretrained encoders such as BERT and pretrained generators such as GPT are the default starting points."
+        ]
+      },
+      {
+        "title": "🧮 The arithmetic of starting from a pretrained model",
+        "paras": [
+          "Training from scratch on 5,000 images: a small convolutional network with 5 million parameters needs perhaps 50 epochs to converge, each epoch 79 batches, at 30 milliseconds per batch, so 2 minutes per epoch and 100 minutes total. Accuracy reaches about 78 percent.",
+          "Frozen backbone plus a new head on the same 5,000 images: the head has 20,000 parameters, one epoch is 79 batches at 10 milliseconds, 0.8 seconds. Thirty epochs take 24 seconds. Accuracy reaches 91 percent.",
+          "That is 250 times less compute for 13 points more accuracy, and it is not a special case. Whenever a pretrained model matches the modality, transfer learning wins on both axes.",
+          "Fine-tuning arithmetic: unfreezing the last 5 of 50 blocks increases the trainable parameter count to maybe 2 million, so each step is 5 times slower than the frozen case. Fifty epochs might take 2 minutes, still negligible, with accuracy often reaching 93 percent.",
+          "The overfitting risk of full fine-tuning: 25 million trainable parameters on 5,000 images is 5,000 parameters per image. Without a low learning rate and heavy augmentation, validation accuracy falls below the frozen baseline. That is why the standard recipe increases the unfrozen fraction only as data grows.",
+          "Data threshold rules of thumb from practice: under 1,000 images per class, freeze and train a head; 1,000 to 10,000, fine-tune the last block; above 10,000, consider full fine-tuning. These are starting points, not laws, but they are close enough to be useful on the first attempt."
+        ]
+      }
+    ]
+  },
+  "818": {
+    "sections": [
+      {
+        "title": "🔍 Why the learning rate comes first",
+        "paras": [
+          "Of all the hyperparameters, the learning rate has the largest effect and the least intuitive default. Too high and the loss diverges within a few steps; too low and the model appears not to learn at all, which people often misdiagnose as a data problem.",
+          "Most training failures fall into a short list: wrong learning rate, wrong loss, or a bug in the data pipeline. Checking them in that order resolves the majority of stalled projects."
+        ]
+      },
+      {
+        "title": "⚙️ Regularisation, monitoring, and the sanity checks",
+        "paras": [
+          "Regularisation controls the gap between training and validation performance. Weight decay penalises large weights, dropout randomly zeroes activations during training, and early stopping halts when validation loss rises.",
+          "Monitoring means plotting both losses on the same axes and reading the relationship, not watching a single number."
+        ],
+        "bullets": [
+          "Try learning rates on a logarithmic grid: 0.1, 0.01, 0.001, 0.0001, and pick the largest that does not diverge.",
+          "Learning rate finders sweep upward until the loss explodes and choose a rate an order of magnitude below that point.",
+          "Augmentation is the strongest regulariser for images, because it adds real variability rather than constraining capacity.",
+          "Dropout of 0.1 to 0.5, applied after large layers and disabled at inference, is the standard default.",
+          "A tiny subset of data should reach near-zero loss; if it does not, the model or the loss is wrong.",
+          "Overfit one batch deliberately as a test that gradients flow and the loss can decrease.",
+          "Normalise inputs to zero mean and unit variance, and check that the data pipeline produces the expected shapes and ranges."
+        ]
+      },
+      {
+        "title": "🧮 Reading the loss curves",
+        "paras": [
+          "Healthy training: training loss falls from 2.3 to 0.3 and validation loss from 2.4 to 0.45 over 20 epochs, with a gap of 0.15. That is a model that generalises.",
+          "Overfitting: training loss 0.02 and validation 0.9. The gap is 45 times the training loss. Fixes are augmentation, dropout, weight decay, or less capacity.",
+          "Underfitting: training loss 1.2 and validation 1.25, both high and both flat. The model is too small or the learning rate is too low, and no amount of regularisation helps.",
+          "Divergence: training loss 2.3, then 4.1, then 12.7, then not a number. The learning rate is too high for the loss surface, and the fix is to divide it by 10.",
+          "A particular pattern worth recognising: training loss falls smoothly but validation loss is erratic and worse than at epoch 1. That usually means the validation set is being processed differently from training, such as augmentation applied at validation time or normalisation using the wrong statistics.",
+          "Learning rate schedule arithmetic: a cosine decay from 0.001 to near zero over 100 epochs reaches a lower final loss than a constant 0.001 by roughly 1 to 2 percent of accuracy on image tasks. The schedule costs nothing to implement, which makes it the cheapest available gain.",
+          "Warmup arithmetic: for a large model, the first steps have enormous gradient noise, so a rate that is fine later can destroy the weights immediately. Warming up over 1 to 5 percent of total steps and then decaying is standard, and linear warmup over 2,000 steps on a 100,000-step run is typical.",
+          "Batch size and learning rate interact: doubling the batch halves the gradient noise, so the rate can often be doubled while keeping training stable. That is why large-batch recipes quote rates of 0.1 where single-GPU recipes quote 0.001, and why copying a rate without copying the batch size is a common mistake."
+        ]
+      }
+    ]
+  },
+  "820": {
+    "sections": [
+      {
+        "title": "🔍 Why images were the first deep learning success",
+        "paras": [
+          "Images have the properties convolutional networks exploit: local patterns, translation invariance, and a natural hierarchy from edges to objects. They also had a benchmark, a large labelled dataset, and a metric everyone agreed on.",
+          "That combination made classification the first task to fall, and the same features then supported detection, segmentation, and generation."
+        ]
+      },
+      {
+        "title": "⚙️ The task ladder and what each adds",
+        "paras": [
+          "Classification assigns one label to the whole image. Detection assigns a label and a bounding box to each object. Segmentation assigns a label to every pixel, either as an instance mask per object or a class mask per region.",
+          "Each step adds a different output structure, and the architectures differ mainly in the head rather than the backbone."
+        ],
+        "bullets": [
+          "Detection heads predict boxes and class scores, then a post-processing step removes overlapping candidates.",
+          "Intersection over union measures how well a predicted box matches the true one, and a threshold decides whether it counts.",
+          "Segmentation replaces downsampling with upsampling paths so spatial detail is recovered.",
+          "Many segmentation models reuse a classification backbone as the encoder.",
+          "Pose estimation and depth estimation are further heads on the same backbone.",
+          "Video adds a temporal dimension, which is handled by 3D convolutions or per-frame models plus tracking.",
+          "Edge deployment needs quantised or pruned variants, and accuracy usually drops a few points."
+        ]
+      },
+      {
+        "title": "🧮 Accuracy, cost, and the numbers that decide deployment",
+        "paras": [
+          "Classification on a 1,000-class benchmark: a small model reaches about 70 percent top-1 at 1 billion multiply-adds per image; a large one reaches 85 percent at 30 billion. Fifteen points of accuracy for 30 times the compute, which is the central trade of the field.",
+          "Detection at 300 by 300 input: a real-time detector on a mid-range accelerator processes 40 frames per second, which is the threshold for smooth video. Halving the input resolution to 150 by 150 roughly quadruples the speed and costs 5 to 8 points of mean average precision, which is often acceptable for a security camera and never acceptable for a medical scan.",
+          "Intersection over union arithmetic: a predicted box of 100 by 100 at position 0,0 and a true box of 100 by 100 at 20,0 overlap in an 80 by 100 region, 8,000 pixels. Union is 10,000 plus 10,000 minus 8,000, 12,000. So IoU is 0.667, which passes a 0.5 threshold and fails a 0.7 one. The threshold choice decides how strict the evaluation is, and reporting one number without stating it is meaningless.",
+          "Segmentation cost: a 1,024 by 1,024 image through a network at full resolution is a million predictions per image, and the decoder must produce each one. That is why segmentation models are 5 to 10 times more expensive than classifiers at the same backbone size.",
+          "The accuracy ceiling worth knowing: human agreement on ImageNet-like labelling is around 95 percent, and models have passed it on top-1. When a model reports 92 percent, the remaining 8 percent is partly label noise rather than model error, which is why further accuracy gains at that point need better labels, not bigger models.",
+          "Deployment arithmetic: a 100-million-parameter model in 16-bit precision is 200 MB. A camera with 256 MB of RAM cannot hold it, so the model must be quantised to 8-bit, 100 MB, and pruned, which typically costs 1 to 3 points of accuracy. Those three numbers, memory, throughput, and accuracy, are the whole embedded vision design problem."
+        ]
+      }
+    ]
+  },
+  "821": {
+    "sections": [
+      {
+        "title": "🔍 Why language and speech fell to the same ideas",
+        "paras": [
+          "Text and audio are both sequences with long-range dependencies and no meaningful per-position meaning. The same architecture family that reads a sentence can read a spectrogram, because both need the model to learn which parts of the input relate to each other.",
+          "What differs is the tokenisation: text splits into subword units, speech splits into frames of about 20 milliseconds."
+        ]
+      },
+      {
+        "title": "⚙️ The tasks and their common shape",
+        "paras": [
+          "Language tasks include classification, extraction, translation, summarisation, and generation. Speech tasks include recognition, translation, synthesis, and speaker identification.",
+          "Most are the same underlying operation: encode a sequence, then either pool it for a label or decode it into another sequence."
+        ],
+        "bullets": [
+          "Subword tokenisation balances vocabulary size against sequence length, with roughly 32,000 to 50,000 units typical.",
+          "Speech recognition converts audio frames to text, often with an encoder that compresses frames before decoding.",
+          "Text to speech is the reverse and needs a vocoder to turn predicted acoustic features into a waveform.",
+          "Word error rate is the standard recognition metric: substitutions plus insertions plus deletions divided by the reference word count.",
+          "Machine translation quality is measured with BLEU, summarisation with ROUGE, and neither captures meaning well.",
+          "Multilingual models share one tokenizer and one parameter set across languages.",
+          "Streaming recognition must emit text before the utterance ends, which constrains the architecture to causal ones."
+        ]
+      },
+      {
+        "title": "🧮 Token counts, error rates, and latency",
+        "paras": [
+          "Tokenisation arithmetic: a 1,000-word English document is about 1,300 tokens with a typical subword tokenizer, because common words are one token and rare or technical words split into two or three. A model with a 100,000-token context window therefore holds roughly 75,000 words, about 150 pages.",
+          "Recognition error arithmetic: 100 words spoken, with 4 substitutions, 1 insertion, and 1 deletion, gives 6 errors, so a word error rate of 6 percent. A human transcribing clean speech reaches 4 to 5 percent, and a good model reaches 3 to 5 percent on read speech but 15 to 25 percent on accented, noisy conversation. Quoting one number without the condition is misleading.",
+          "Latency arithmetic for streaming: a model that needs 2 seconds of audio before emitting anything has 2 seconds of latency no matter how fast it computes. Chunked models reduce that to 300 milliseconds by processing 300-millisecond blocks, which costs a few points of error rate because less context is available.",
+          "Speech data arithmetic: audio at 16 kHz stored as 16-bit samples is 32 KB per second, 115 MB per hour. A 1,000-hour corpus is 115 GB, which is why speech datasets are usually distributed compressed and why training pipelines must decode on the fly.",
+          "Text to speech cost: generating 10 seconds of audio at 24 kHz means 240,000 samples. A vocoder producing them in blocks of 256 takes 938 sequential steps, which at 1 millisecond each is about a second, so generation is roughly 10 times faster than real time and that ratio is what makes interactive speech feasible.",
+          "The shared lesson: in both modalities, quality is now good enough that the remaining problems are latency, domain shift, and evaluation rather than raw accuracy. A recognition system at 5 percent average error can be at 30 percent on one accent, and the average hides it."
+        ]
+      }
+    ]
+  },
+  "822": {
+    "sections": [
+      {
+        "title": "🔍 Why the trend line points at scale and multimodality",
+        "paras": [
+          "Two observable trends dominate. Models keep getting larger and trained on more data, and they increasingly handle several modalities with one architecture rather than one model per modality.",
+          "Both are consequences of the same observation: a transformer's capacity scales predictably with parameters and data, so the cheapest path to better performance has been to add both."
+        ]
+      },
+      {
+        "title": "⚙️ The directions worth knowing",
+        "paras": [
+          "Efficiency work attacks the quadratic cost of attention and the memory cost of large models, through sparsity, quantisation, distillation, and better hardware utilisation. Multimodality joins text, images, and audio into one token space. Agents wrap a model with tools and a loop so it can act rather than only answer.",
+          "Alongside these, the practical focus has shifted from training to serving: latency, cost per query, and reliability now decide whether a model is usable."
+        ],
+        "bullets": [
+          "Scaling laws predict loss from parameter count and data, with diminishing returns that are nevertheless reliable.",
+          "Data quality now matters more than data quantity, since most available text has already been used.",
+          "Quantisation to 8 or 4 bits cuts memory several-fold with small accuracy loss, which is what makes local inference possible.",
+          "Distillation trains a small model on a large model's outputs, keeping much of the quality at a fraction of the cost.",
+          "Retrieval augmentation connects a model to external documents instead of relying only on memorised parameters.",
+          "Multimodal models share one transformer across tokenised text, image patches, and audio frames.",
+          "Agentic systems add planning, tool calls, and memory around the model, and their reliability depends on the loop rather than on the model alone."
+        ]
+      },
+      {
+        "title": "🧮 What scale actually buys",
+        "paras": [
+          "Empirical scaling behaviour: loss falls roughly as a power law in parameter count, so a 10-fold increase in parameters reduces loss by a fixed fraction, historically around 0.1 to 0.2 in the exponent. Diminishing but monotone, which is why the largest models are worth training at all.",
+          "Cost arithmetic for training: a 100-billion-parameter model on 2 trillion tokens needs about 6 times the parameters times the tokens in floating-point operations, 1.2 times 10 to the 24. At an effective 400 trillion operations per second on a large cluster, that is 3 million seconds, 35 days, and at a few dollars per GPU-hour across thousands of GPUs, tens of millions of dollars.",
+          "Inference cost arithmetic: a 100-billion-parameter model in 16-bit precision needs 200 GB of memory, which does not fit on one accelerator. In 4-bit precision it needs 50 GB, which does. That single quantisation is the difference between a data-centre deployment and a workstation one.",
+          "Latency budget: generating 200 tokens at 50 tokens per second takes 4 seconds. At 20 tokens per second it is 10 seconds, which users perceive as slow. Throughput per GPU and perceived speed per user are different problems, which is why batching helps cost and does not help a single user's latency.",
+          "The scaling limit worth noting: high-quality public text is estimated at a few trillion tokens, and the largest models have consumed a substantial fraction of it. That is why synthetic data, multimodal data, and better data selection are now the active levers rather than more scraping.",
+          "Compute-optimal training arithmetic: given a fixed compute budget, the loss is minimised by scaling parameters and data together, historically in a ratio near 1 to 20 tokens per parameter. A 10-billion-parameter model therefore wants about 200 billion tokens, and training it on 2 trillion is over-training that trades more compute for a smaller model at inference, which is often the right trade for a deployed service.",
+          "The honest summary in one number: across the last decade, the compute used for the largest training runs grew by roughly a factor of 10 every 18 months, far faster than Moore's law, and the gains in capability followed. Whether that continues is a question about data and money, not about algorithms."
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,459 @@
+{
+  "936": {
+    "sections": [
+      {
+        "title": "🔍 Why synthesis is the reverse problem",
+        "paras": [
+          "Recognition removes information to reach a small output. Synthesis must invent information: a word like read has two pronunciations, a sentence has many possible intonation contours, and the same text spoken by two people sounds nothing alike.",
+          "The text is a specification of the words, not of the sound. Synthesis has to supply pitch, timing, and voice quality, which is why it is the harder half to make sound natural."
+        ]
+      },
+      {
+        "title": "⚙️ The pipeline and where quality comes from",
+        "paras": [
+          "Classical TTS has text analysis, which normalises numbers and abbreviations and predicts pronunciation and prosody, then a synthesis stage that produces a waveform. Modern systems split into an acoustic model that predicts a mel spectrogram and a vocoder that converts it to samples.",
+          "Intelligibility was solved decades ago. Naturalness is the remaining problem, and it is dominated by prosody: where the pauses go, how pitch moves, and whether emphasis lands on the right word."
+        ],
+        "bullets": [
+          "Text normalisation handles numbers, dates, currency, and abbreviations.",
+          "Pronunciation is ambiguous for homographs and for names, which needs a lexicon plus a model.",
+          "Prosody prediction covers phrasing, stress, and intonation, and it is where naturalness lives.",
+          "The acoustic model produces a time-frequency representation, not samples.",
+          "The vocoder turns that representation into a waveform, and its quality sets the ceiling.",
+          "Latency matters for interactive use: streaming synthesis must start before the sentence is complete.",
+          "Evaluation needs both objective metrics and listening tests, because intelligibility and naturalness are different."
+        ]
+      },
+      {
+        "title": "🧮 Sample rates, latency, and the size of the problem",
+        "paras": [
+          "One second of speech at 24 kHz is 24,000 samples. A 10-word sentence at 150 words per minute takes 4 seconds, so 96,000 samples. Generating those from a 60-character input is a 1,600-fold expansion, which is why the acoustic model predicts frames rather than samples.",
+          "Frame arithmetic: a mel spectrogram at 100 frames per second for 4 seconds is 400 frames of 80 values, 32,000 numbers. The vocoder expands those to 96,000 samples while adding phase information that the mel spectrogram does not contain.",
+          "Latency arithmetic: producing 4 seconds of audio at 30 times real time takes 133 milliseconds, which is the compute time. Adding text analysis and model startup, a responsive system starts streaming within 200 to 300 milliseconds.",
+          "Data requirement: a high-quality single-speaker neural voice needs 5 to 20 hours of studio recordings. A multi-speaker model needs hundreds of hours across many speakers, which is why most custom voices are fine-tuned from a pretrained multi-speaker model.",
+          "Quality measurement: mean opinion scores run from 1 to 5, where 4.0 to 4.2 is typical for a good neural system, 4.5 approaches the level where listeners stop noticing, and human recordings score about 4.5. Those small differences at the top of the scale are what the last decade of work bought.",
+          "Intelligibility measurement: word error rate from a recogniser run over the synthesised speech. A good system gives under 5 percent, and the recogniser's own error is a floor that no synthesis improvement can go below."
+        ]
+      }
+    ]
+  },
+  "937": {
+    "sections": [
+      {
+        "title": "🔍 Why stitching recordings worked",
+        "paras": [
+          "A recorded human voice is by definition natural. If every part of an utterance came from a real recording, the result contains no synthesis artefacts at all.",
+          "The idea of concatenative synthesis is exactly that: store a large database of recorded pieces and select the pieces that best fit the target sentence, then join them."
+        ]
+      },
+      {
+        "title": "⚙️ Unit selection and the joining problem",
+        "paras": [
+          "Units are usually diphones, the transition between two phonemes, because transitions are where coarticulation happens and where naive concatenation sounds wrong. A database might hold 100,000 units per voice.",
+          "Selection is a search: for each position in the target sentence, choose a unit that matches the required phoneme and whose join with the neighbouring unit is smooth. The cost function combines target cost, how well the unit matches, and join cost, how smoothly it connects."
+        ],
+        "bullets": [
+          "Diphone units capture transitions and avoid many clicks and discontinuities.",
+          "The search is a dynamic program over the whole sentence, not a per-slot choice.",
+          "Coverage is the limit: a unit that never appears in the database cannot be produced.",
+          "A large database gives better coverage and slower search, so unit selection scales badly.",
+          "Prosody is limited to what the recording contains; you cannot easily ask for a different emotion.",
+          "Joining units with mismatched pitch or spectrum produces audible clicks.",
+          "The approach was the standard through the 2000s and is now mostly replaced."
+        ]
+      },
+      {
+        "title": "🧮 Database size and the coverage arithmetic",
+        "paras": [
+          "English has about 44 phonemes, so there are roughly 44 squared, 1,936 possible diphones, of which about 1,500 occur in practice. To have several candidates per diphone with pitch and duration variation, a database needs 10,000 to 100,000 units, which is 5 to 50 hours of speech.",
+          "Storage arithmetic: 50 hours at 16-bit, 48 kHz is 17 GB of audio. Keeping it as a searchable index of units requires boundary annotations and pitch marks, which is a labour-intensive process.",
+          "Search cost: a sentence of 40 phonemes with 20 candidates per position and join costs between adjacent candidates is a lattice of 40 levels with 20 nodes each, so 800 states and 8,000 transitions. A dynamic program over that is trivial; the cost is in the database build, not the search.",
+          "Quality measurement: concatenative systems reached mean opinion scores of 3.5 to 4.0, which was excellent for their time. Neural systems reach 4.3 to 4.6, and the gap is audible as flat prosody and occasional joins rather than as unintelligibility.",
+          "Why it lost: changing the voice required recording a new database, 5 to 50 hours of studio time. A neural model can learn a new voice from a few minutes, which is a difference of two orders of magnitude in cost.",
+          "The lasting lesson: the ceiling was data coverage. Any unit not recorded cannot be generated, which is the same limitation that n-gram language models had, and it was solved the same way, by replacing tables with learned functions."
+        ]
+      }
+    ]
+  },
+  "938": {
+    "sections": [
+      {
+        "title": "🔍 Why one network replaced the database",
+        "paras": [
+          "A concatenative system is a lookup. A neural system is a function: text in, acoustic features out. The function generalises to combinations never seen in training, which removes the coverage limit entirely.",
+          "That generalisation is why a single 20-minute voice dataset can produce a system that reads arbitrary sentences, including ones no one has ever spoken."
+        ]
+      },
+      {
+        "title": "⚙️ Acoustic model plus vocoder",
+        "paras": [
+          "The acoustic model maps a text sequence to a mel spectrogram, frame by frame. Sequence-to-sequence models with attention handle the alignment between characters and frames, which is the hard part because the durations are not given.",
+          "The vocoder maps a mel spectrogram to samples. Neural vocoders are autoregressive or diffusion-based, and their quality determines whether the output sounds clean or buzzy."
+        ],
+        "bullets": [
+          "The acoustic model handles pronunciation and prosody; the vocoder handles waveform detail.",
+          "Attention alignment can fail on long or repetitive sentences, which is why monotonic alignment variants exist.",
+          "Speaker embeddings condition the model on a voice identity, which is how one model holds many voices.",
+          "Style and emotion are added as conditioning inputs or as reference audio.",
+          "Autoregressive vocoders are high quality and slow; diffusion vocoders are high quality and parallel.",
+          "The two-stage split is practical because each can be evaluated and improved separately.",
+          "A wave produced directly from text is possible and trades quality against simplicity."
+        ]
+      },
+      {
+        "title": "🧮 Frames, samples, and the two-stage cost",
+        "paras": [
+          "A 4-second sentence at 100 frames per second is 400 frames of 80 mel values. The acoustic model produces 32,000 numbers from about 60 characters, an expansion of 533 to 1.",
+          "The vocoder then expands 400 frames to 4 seconds at 24 kHz, 96,000 samples. If it produces 256 samples per step, that is 375 sequential steps. At 1 millisecond per step it takes 375 milliseconds, which is about 10 times faster than real time.",
+          "A diffusion vocoder doing 20 denoising steps over the whole waveform is 20 passes rather than 375 steps, which parallelises better on a GPU and can reach 50 times real time, at the cost of more memory.",
+          "Training data arithmetic: 20 hours of speech at 100 frames per second is 7.2 million frames. A model with 30 million parameters training for 200 epochs over that is 6 times 30 million times 7.2 million times 200, 2.6 times 10 to the 17 operations, a day or two on a single GPU.",
+          "Quality comparison: an autoregressive neural vocoder reaches mean opinion score 4.4 against 4.5 for real recordings, which is within the noise of listening tests. That is the result that made concatenative systems obsolete.",
+          "The failure mode worth knowing: attention-based acoustic models sometimes skip or repeat words on inputs much longer than the training data. Constraining alignment to be monotonic removes most of that, at a small cost in naturalness."
+        ]
+      }
+    ]
+  },
+  "940": {
+    "sections": [
+      {
+        "title": "🔍 Why voice is a usable identifier",
+        "paras": [
+          "The vocal tract has a fixed physical shape, so its resonances are characteristic of a person and largely independent of what they are saying. That is why a familiar voice is recognisable across languages and content.",
+          "The task has two forms. Verification checks a claimed identity against a voice, one comparison. Identification searches a gallery for a match, which is a different problem with different error behaviour."
+        ]
+      },
+      {
+        "title": "⚙️ Embeddings and the two decisions",
+        "paras": [
+          "Modern systems convert an utterance into a fixed-length embedding, typically 192 to 512 numbers, trained so that same-speaker pairs are close and different-speaker pairs are far. Comparison is then a cosine similarity and a threshold.",
+          "Text-dependent systems use a fixed passphrase, which constrains the acoustics and raises accuracy. Text-independent systems accept any speech, which is more convenient and harder."
+        ],
+        "bullets": [
+          "Verification is a one-to-one decision with a threshold, evaluated by false accept and false reject rates.",
+          "Identification is one-to-many and its error grows with the gallery size.",
+          "Enrolment quality matters more than model size once the model is reasonable.",
+          "Channel mismatch between enrolment and test, such as phone against microphone, is the main accuracy killer.",
+          "Anti-spoofing detects replay, synthesis, and conversion, and it is a separate model.",
+          "Short utterances carry less evidence, so accuracy falls steeply below 3 seconds.",
+          "Voice is not a secret, which is why it is a weak second factor rather than a password."
+        ]
+      },
+      {
+        "title": "🧮 Thresholds and gallery arithmetic",
+        "paras": [
+          "A threshold with a 1 percent false accept rate and a 1 percent false reject rate gives equal error rate of 1 percent, which sounds strong. On 10,000 verification attempts per day that is 100 false accepts and 100 false rejects daily, and 100 unauthorised accesses is not acceptable for anything sensitive.",
+          "Tightening to a 0.01 percent false accept rate typically pushes the false reject rate to 5 to 10 percent, which locks out 500 to 1,000 legitimate users per day. That exchange rate is why voice alone is rarely used for high-value access.",
+          "Gallery arithmetic: identification with 1,000 enrolled speakers and a 0.1 percent false accept rate per comparison produces 1 false match per query on average, since 1,000 times 0.001 is 1. With 10,000 speakers it is 10 per query, which is why identification accuracy degrades as the population grows and why two-stage retrieval plus verification is used.",
+          "Embedding comparison cost: a 512-dimensional cosine similarity is 1,024 operations. Against 10,000 enrolled voices that is 10 million operations, under 10 milliseconds. Against 10 million it needs an approximate index, which is the same problem as any large-scale similarity search.",
+          "Channel mismatch in numbers: a system at 1 percent equal error rate on matched microphone conditions rises to 5 to 10 percent when enrolment is a studio recording and the test is a phone call. That degradation is the single largest practical issue in deployed systems.",
+          "Utterance length: accuracy expressed as equal error rate drops from about 1 percent at 10 seconds of test speech to 5 to 10 percent at 2 seconds. That curve is why text-dependent systems require a passphrase of at least a few seconds."
+        ]
+      }
+    ]
+  },
+  "941": {
+    "sections": [
+      {
+        "title": "🔍 Why a system needs to know the language first",
+        "paras": [
+          "A recogniser is trained per language or per language group. Applying the wrong model produces fluent nonsense, because the acoustics are mapped onto the wrong phoneme inventory.",
+          "Language identification is the routing decision that has to happen before recognition, and it is also useful on its own for content sorting and compliance."
+        ]
+      },
+      {
+        "title": "⚙️ Acoustic and text cues",
+        "paras": [
+          "Acoustic systems classify spectrogram features into a language, exploiting phoneme inventories and rhythm. Text systems classify characters or words, which is easier when a transcript exists.",
+          "Some languages are separated by rhythm alone: stress-timed languages such as English have irregular syllable durations, while syllable-timed languages such as Spanish and Mandarin do not."
+        ],
+        "bullets": [
+          "Acoustic LID works on short clips and needs no transcript, which is why it is used in routing.",
+          "Text LID is far more accurate for anything longer than a sentence.",
+          "Closely related languages are the hard case: Spanish and Portuguese, or Mandarin and Cantonese.",
+          "Code-switching, mixing languages within one utterance, defeats single-label systems.",
+          "Short clips carry too little evidence, which is the dominant error source.",
+          "Confidence scores matter, because a wrong route is worse than asking the user.",
+          "A two-stage approach, acoustic for routing and text for confirmation, is common."
+        ]
+      },
+      {
+        "title": "🧮 Accuracy versus duration",
+        "paras": [
+          "A reasonable acoustic system reaches accuracy of 60 to 70 percent on 3-second clips across 10 languages, 80 to 90 percent at 10 seconds, and above 95 percent at 30 seconds. The relationship with duration is the single strongest effect.",
+          "Why 3 seconds is hard: at 150 words per minute, 3 seconds is 7 to 8 words, which is perhaps 20 phonemes. In 20 phonemes many languages look alike, so the evidence is genuinely thin.",
+          "Confusion pairs in numbers: Spanish and Portuguese are confused at rates of 15 to 25 percent even with 10 seconds of audio, while English and Mandarin are confused under 2 percent. The error is concentrated exactly where intuitions say it should be.",
+          "With 100 languages in the label set, a 95 percent top-1 accuracy at 30 seconds still misroutes 5 in 100. At 1 million clips per day, that is 50,000 wrong routes, which is why confidence thresholds and a fallback are required.",
+          "Text LID arithmetic: a 200-word document is enough to reach 99 percent accuracy across major languages, because word frequency patterns are distinctive. That is why transcript-based detection is preferred when available.",
+          "Code-switching in numbers: in bilingual communities, 10 to 30 percent of utterances mix languages. A single-label system assigns the dominant language, which is wrong for the mixed portion and confusing downstream, so segment-level detection is used instead."
+        ]
+      }
+    ]
+  },
+  "942": {
+    "sections": [
+      {
+        "title": "🔍 Why emotion is in the voice and not only in the words",
+        "paras": [
+          "The same sentence can be sincere, sarcastic, or threatening, and the words do not change. Pitch, tempo, loudness, and voice quality carry the difference.",
+          "That makes emotion recognition a prosody problem first and a language problem second, which is why acoustic features carry most of the signal."
+        ]
+      },
+      {
+        "title": "⚙️ The cues and the evaluation problem",
+        "paras": [
+          "Arousal, how activated the speaker is, and valence, how positive, are the two dimensions that organise most emotion labels. Anger and joy are both high arousal and differ in valence.",
+          "Acoustic correlates are consistent: anger raises pitch and energy and increases variability, sadness lowers pitch and slows speech, fear raises pitch with a tense voice."
+        ],
+        "bullets": [
+          "Pitch statistics, energy, speaking rate, and spectral measures are the standard features.",
+          "Arousal is easier to predict than valence, because it maps directly onto energy and pitch.",
+          "Acted corpora are clean and unrealistic; natural corpora are noisy and ambiguous.",
+          "Annotator agreement on emotion labels is often only moderate, which caps achievable accuracy.",
+          "Culture changes the mapping between prosody and emotion, so cross-cultural models degrade.",
+          "Self-reported emotion and observed emotion differ, and neither is the ground truth.",
+          "Emotion recognition is used for agent empathy, call analytics, and accessibility, and is regulated in employment contexts."
+        ]
+      },
+      {
+        "title": "🧮 Agreement, accuracy, and what the cues give",
+        "paras": [
+          "On a widely used acted corpus with 4 classes, human agreement is about 80 percent and the best models reach 70 to 80 percent, so the model is close to the ceiling set by the labels. On natural conversational data, agreement drops to 60 to 70 percent and models reach 55 to 65.",
+          "That comparison is the honest way to read the numbers. A 65 percent result on natural data is not a failure; it is near the limit of what the labels can express.",
+          "Cue contributions: energy and pitch features alone reach about 60 percent on 4-class acted data, spectral features add 5 to 8 points, and lexical features add another 3 to 5. Most of the signal is acoustic.",
+          "Cross-corpus generalisation: a model trained on acted data and tested on real calls typically loses 20 to 30 points, which is why the failure is about the data rather than the architecture.",
+          "Class imbalance: in real call data, neutral is often 70 percent of utterances. Predicting neutral always gives 70 percent accuracy and finds nothing, so per-class F1 is the metric that matters.",
+          "Arousal versus valence in numbers: arousal regression typically achieves a correlation of 0.7 to 0.8 with human ratings, while valence achieves 0.3 to 0.5. Valence is genuinely harder, which is why products report arousal-like measures and avoid claiming to detect sentiment from voice alone."
+        ]
+      }
+    ]
+  },
+  "943": {
+    "sections": [
+      {
+        "title": "🔍 Why an assistant is a chain of models",
+        "paras": [
+          "An assistant must detect its wake word, transcribe, understand intent, act, and speak. Those are five separate models in a latency budget of a few hundred milliseconds.",
+          "Each stage is accurate individually, and the product's accuracy is the product of the five. That arithmetic is the defining constraint of voice assistant engineering."
+        ]
+      },
+      {
+        "title": "⚙️ The pipeline and its weak points",
+        "paras": [
+          "A wake word detector runs continuously on a small model to save power. Recognition then transcribes the command, intent classification maps it to an action, the action executes, and synthesis produces the reply.",
+          "The weak points are far-field audio, where reverberation and noise degrade recognition, and the intent stage, where an unusual phrasing maps to the wrong action."
+        ],
+        "bullets": [
+          "Wake word detection must run on a low-power chip and have a very low false activation rate.",
+          "Far-field recognition is 2 to 4 times worse in word error rate than close-talk.",
+          "Intent classification usually needs only a small set of intents, which makes it the most reliable stage.",
+          "Dialogue state tracks what was already asked, which is the difference between a command and a conversation.",
+          "Confirmation is required for irreversible actions, because recognition errors are inevitable.",
+          "Synthesis latency matters as much as recognition latency for perceived responsiveness.",
+          "Privacy design is part of the product: always-listening devices need clear indicators and local processing options."
+        ]
+      },
+      {
+        "title": "🧮 The chain multiplication",
+        "paras": [
+          "Five stages at 95 percent each: 0.95 to the fifth is 0.774, so about 77 percent of interactions succeed end to end. Five stages at 98 percent gives 0.904, and at 99 percent gives 0.951.",
+          "That single calculation explains why assistant quality improved slowly despite each component improving quickly. Moving every stage from 95 to 98 lifts the product from 77 to 90 percent, and moving only one stage gains 2 to 3 points.",
+          "The weakest stage dominates: at 95, 95, 95, 95, and 80 percent, end-to-end is 65 percent, and improving any 95 to 98 leaves it at 67 while improving the 80 to 90 takes it to 73. Effort should follow the product, not the average.",
+          "Latency arithmetic: wake detection 50 milliseconds, recognition 300 for a 3-second utterance, intent 50, action 200, synthesis start 200, so 800 milliseconds before audio begins. Users perceive under 1 second as responsive, which leaves no slack.",
+          "False activation arithmetic: a wake word detector with a 1 in 10,000 per hour false activation rate, on 10 million devices, produces 1,000 spurious activations per hour, 24,000 per day. That is why the threshold is set very conservatively even at the cost of missed activations.",
+          "Word error rate in the field: a recogniser at 8 percent on close-talk clean audio reaches 20 to 30 percent in a noisy room 3 metres from the microphone. Since the intent stage then sees a corrupted transcript, the compounding is much worse than the WER suggests."
+        ]
+      }
+    ]
+  },
+  "944": {
+    "sections": [
+      {
+        "title": "🔍 Why speech translation is harder than either half",
+        "paras": [
+          "Recognition has to resolve ambiguous acoustics, translation has to resolve ambiguous meaning, and speech translation must do both without an intermediate text to inspect.",
+          "The cascade is the obvious design, and it is also the design that loses prosody, adds latency twice, and propagates errors from one stage into the other."
+        ]
+      },
+      {
+        "title": "⚙️ Cascade versus end-to-end",
+        "paras": [
+          "A cascade runs recognition, then machine translation, then optionally synthesis. Each component can be trained, evaluated, and replaced separately, which is why most production systems are cascades.",
+          "An end-to-end model maps audio in one language to text or audio in another. It avoids the text bottleneck and preserves prosodic cues, at the cost of needing paired audio-translation data, which is scarce."
+        ],
+        "bullets": [
+          "Cascades are modular and debuggable, and their errors are attributable to a stage.",
+          "End-to-end models are smoother and lower latency, and they are opaque when they fail.",
+          "Paired speech-translation data is rare, so end-to-end models are trained with synthetic pairs.",
+          "Simultaneous translation must decide when to start speaking, which is a policy problem.",
+          "Prosody carries meaning that a text intermediate discards, such as emphasis and hesitation.",
+          "Speaker identity can be preserved in speech-to-speech translation and is lost in text.",
+          "Evaluation needs both translation quality and latency, and they trade directly."
+        ]
+      },
+      {
+        "title": "🧮 Latency and error compounding",
+        "paras": [
+          "A cascade for a 10-second utterance: recognition takes 1 second offline, translation 0.5, synthesis 0.5, so 2 seconds plus network. That is acceptable for a recording and unacceptable for a conversation.",
+          "Simultaneous interpretation requires starting within 2 to 3 seconds and keeping up. A cascade waiting for a full sentence cannot do that, so streaming recognition with partial hypotheses plus incremental translation is used, and each stage loses accuracy under streaming constraints.",
+          "Error compounding arithmetic: recognition at 10 percent word error rate and translation that is 90 percent adequate gives roughly 0.9 times 0.9, 81 percent end-to-end adequacy. End-to-end models at the same data reach 85 percent, because they do not force the model to commit to a wrong transcript.",
+          "BLEU comparison: a cascade on a standard speech translation benchmark reaches 24 BLEU and an end-to-end model on the same data reaches 26, a modest gain. The larger gain is in latency and in preserving prosodic information that text discards.",
+          "Data arithmetic: a cascade needs a recogniser trained on thousands of hours and a translation model trained on millions of sentence pairs, both available. An end-to-end model needs paired audio and translation, which might be hundreds of hours, so it is usually initialised from the cascade components.",
+          "The cost of a wrong number: numbers and names are the highest-risk content, and recognition errors on them are not recoverable by translation. That is why systems handle digits with explicit normalisation rather than relying on the acoustic model."
+        ]
+      }
+    ]
+  },
+  "945": {
+    "sections": [
+      {
+        "title": "🔍 Why a few seconds of audio is enough",
+        "paras": [
+          "A speaker embedding compresses the vocal tract characteristics that make a voice identifiable. Given a pretrained model, a few seconds of target audio is enough to condition a synthesiser on that voice.",
+          "That capability has legitimate uses in accessibility and media, and it is also the basis of fraud, which is why the technical and social responses have to develop together."
+        ]
+      },
+      {
+        "title": "⚙️ Cloning, detection, and authentication",
+        "paras": [
+          "Cloning conditions a multi-speaker synthesiser on a reference embedding. Zero-shot cloning needs seconds of audio; high-fidelity cloning needs minutes to hours and fine-tuning.",
+          "Detection tries to distinguish synthetic from real audio by looking for artefacts, phase inconsistencies, and vocoder signatures. Anti-spoofing for authentication uses the same idea plus liveness challenges."
+        ],
+        "bullets": [
+          "Zero-shot cloning from 3 to 10 seconds is now widely available and produces recognisable imitations.",
+          "High-fidelity cloning that fools close listeners needs tens of minutes of clean audio.",
+          "Detection generalises poorly: a detector trained on one generator drops sharply on a new one.",
+          "Watermarking and provenance metadata are more reliable than detection, because they are inserted at generation time.",
+          "Voice authentication must add liveness checks, because a clone defeats voice alone.",
+          "Consent and disclosure are legal requirements in a growing number of jurisdictions.",
+          "The realistic posture is that any audio can be synthetic, so verification shifts to trusted channels."
+        ]
+      },
+      {
+        "title": "🧮 Detection rates and the fraud economics",
+        "paras": [
+          "Detection classifiers reach 95 to 99 percent accuracy on the generator they were trained on and often 60 to 80 percent on a new one. That gap is the single most important number in this area, because an attacker uses whatever generator is newest.",
+          "Authentication arithmetic: a voice authentication system at a 1 percent false accept rate, attacked with 1,000 cloned attempts, admits 10. Adding a liveness challenge typically reduces cloned accepts to near zero while adding 1 to 3 seconds and a few percent of false rejects.",
+          "Fraud economics: a successful voice-clone fraud on an executive authorisation can transfer a large sum in one call. If the expected loss per call is 50,000 and the attack cost is minutes of synthesis, the incentive is enormous, which is why process controls such as callbacks matter more than detection.",
+          "Watermark robustness: an embedded watermark survives compression and light noise but is typically removed by re-recording through a speaker, which takes seconds. That is why provenance metadata and signed recordings are used alongside watermarks rather than instead of them.",
+          "Data requirement for cloning: 30 minutes of clean speech is enough for a convincing clone with fine-tuning, and 3 seconds is enough for a recognisable zero-shot imitation. Public speeches and podcasts provide both in abundance, which is why public figures are the primary targets.",
+          "The residual risk in numbers: even with detection at 90 percent accuracy on the current generator and process controls, an organisation making 100 authorisation calls per day receives about 10 suspicious recordings worth review. Manual review of those 10 is affordable, which is why a human process is part of the technical answer."
+        ]
+      }
+    ]
+  },
+  "947": {
+    "sections": [
+      {
+        "title": "🔍 Why the libraries matter less than the pipeline",
+        "paras": [
+          "Reading audio, resampling, extracting features, and running a model are each a few lines with modern libraries. The difficulty is that audio has hidden state: sample rates, channel layouts, and normalisation conventions that must match between training and inference.",
+          "A pipeline that gets those right is worth more than a better model, because a mismatch silently halves accuracy."
+        ]
+      },
+      {
+        "title": "⚙️ The common tools",
+        "paras": [
+          "Libraries handle I/O and resampling, feature libraries compute mel spectrograms and MFCCs, and model libraries provide pretrained recognisers and synthesisers. The standard workflow is to load with one, feature-extract with another, and infer with a third.",
+          "Pretrained pipelines make transcription a single call, which is why most practical work starts there and only drops to lower-level code when something needs to change."
+        ],
+        "bullets": [
+          "Always check the sample rate on load; resampling silently is better than silently mismatching.",
+          "Mono versus stereo matters: a model trained on mono sees two channels as a doubled signal.",
+          "Normalisation convention differs between libraries, and it must match the model's training.",
+          "Feature extraction parameters, such as window and hop, are part of the model definition.",
+          "Pretrained pipelines handle punctuation and timestamps, which are extra models in a custom stack.",
+          "Batch inference is much faster than per-file inference and is the easiest speedup.",
+          "Version pinning matters, because model behaviour and defaults change between releases."
+        ]
+      },
+      {
+        "title": "🧮 Setup choices and their cost",
+        "paras": [
+          "A 44.1 kHz stereo file is 176,400 samples per second, so one hour is 635 million samples, 2.5 GB at 16-bit. Resampling to 16 kHz mono gives 57.6 million samples per hour, 115 MB, a 22-fold reduction before any processing.",
+          "Feature extraction cost: computing 80 mel bins at 100 frames per second for one hour is 360,000 frames, each a 512-point FFT plus a filterbank multiply, about 500,000 operations per frame, so 180 billion operations, which at 1 billion per second is 3 minutes. That is why features are computed once and cached.",
+          "Model inference cost: a mid-sized recogniser at 20 times real time processes one hour in 3 minutes on a GPU. Adding 3 minutes of feature extraction makes preprocessing half the total time, which is why it is usually parallelised across CPU cores while the GPU works.",
+          "Memory arithmetic: an hour of float32 mel features at 80 bins and 100 frames per second is 115 MB. Batching 32 such utterances is 3.7 GB, which exceeds most GPUs, so batching is done by duration rather than by count.",
+          "The mismatch cost in numbers: feeding a model 8 kHz audio when it expects 16 kHz without resampling makes speech sound half speed and roughly doubles the word error rate. Feeding stereo as two channels instead of one average typically costs a few points, and skipping normalisation costs several percent.",
+          "Throughput planning: to transcribe 10,000 hours in a week, with 168 hours available, the system must process 60 hours per hour, which at 20 times real time means 3 GPUs. That arithmetic determines the cluster size before any code is written."
+        ]
+      }
+    ]
+  },
+  "948": {
+    "sections": [
+      {
+        "title": "🔍 Why a speech pipeline is mostly not the model",
+        "paras": [
+          "A production pipeline handles silence, overlapping speakers, long files, chunking, punctuation, and errors. The recogniser is one component, and it is usually the most reliable one.",
+          "The engineering that matters is the handling of edges: a 2-hour recording must be chunked without cutting words, and a failure in one chunk must not lose the whole transcript."
+        ]
+      },
+      {
+        "title": "⚙️ The stages and the operational concerns",
+        "paras": [
+          "A practical pipeline is ingest, decode, resample, voice activity detection, chunk with overlap, diarisation, recognition, punctuation and formatting, then merging and output.",
+          "Each stage needs a policy for failure, a metric, and a cost. That structure is what separates a script from a service."
+        ],
+        "bullets": [
+          "Voice activity detection removes silence and prevents the model from hallucinating text on noise.",
+          "Chunking with 0.5 to 1 second of overlap avoids cutting words at boundaries, at the cost of duplicate output to merge.",
+          "Diarisation assigns speakers, which requires its own model and works best on clean separated speech.",
+          "Streaming and batch are different deployments with different latency and accuracy.",
+          "Retries and idempotency are required, because long jobs fail partway.",
+          "Storing timestamps enables subtitles, search, and audit.",
+          "Monitoring should track per-stage failure rates, not just end-to-end output."
+        ]
+      },
+      {
+        "title": "🧮 Chunking and throughput arithmetic",
+        "paras": [
+          "A 2-hour recording is 7,200 seconds. Chunking into 30-second segments with 1 second of overlap gives 240 chunks, of which the overlap adds 240 seconds of duplicate audio, 3 percent extra compute.",
+          "Without overlap, roughly one chunk boundary in 20 cuts a word, so 12 corrupted words in the recording. With overlap and merging, that falls to 1 or 2, which is why the 3 percent cost is worth paying.",
+          "Voice activity detection savings: in a 1-hour meeting, 35 percent may be silence. Removing it cuts 21 minutes of audio and 35 percent of recognition compute, which for 10,000 hours of meetings is 3,500 hours saved.",
+          "Discarding segments where VAD finds no speech also prevents a well-known failure: recognisers hallucinate words from noise. In a test of 100 silent segments, an unguarded system produces text in 20 to 60 of them, which corrupts the transcript.",
+          "Diarisation cost: clustering speaker embeddings over a 1-hour meeting with 4 speakers is cheap in compute but needs a good segmentation. Word error rate is unaffected, but speaker error rate is typically 10 to 20 percent on overlapping speech.",
+          "End-to-end throughput: 10,000 hours with recognition at 20 times real time, VAD removing 30 percent, chunking overhead 3 percent, so effective audio is 10,000 times 0.7 times 1.03, 7,210 hours, which at 20 times real time is 361 hours of GPU time, about 1.5 days on 10 GPUs.",
+          "Cost accounting per hour of audio: recognition GPU time 0.05 hours at a few dollars per hour is a fraction of a dollar, plus storage and downstream processing. That number, not the benchmark WER, decides whether a transcription product is viable."
+        ]
+      }
+    ]
+  },
+  "949": {
+    "sections": [
+      {
+        "title": "🔍 Why voice data is unusually sensitive",
+        "paras": [
+          "A voice recording identifies a person biometrically, reveals their emotional state, and can be used to clone them. It is also captured in the most private settings, which makes consent and retention genuine issues rather than formalities.",
+          "Those properties make speech applications subject to stricter treatment than text applications, and the technical choices have to reflect that."
+        ]
+      },
+      {
+        "title": "⚙️ The failure families",
+        "paras": [
+          "Performance bias is the technical risk: recognition error rates differ systematically across accents, dialects, gender, and age. Privacy is the data risk. Security is the synthetic-voice risk. Representation is the design risk: a system that only works well for one variety of a language excludes its other speakers.",
+          "Each has a mitigation, and none is automatic."
+        ],
+        "bullets": [
+          "Report word error rate per accent group, not only overall, because averages hide large gaps.",
+          "Collect or adapt to underrepresented varieties rather than assuming the model generalises.",
+          "Store audio only as long as needed, and prefer features or transcripts where possible.",
+          "Disclose when a synthetic voice is used, and mark generated audio.",
+          "Emotion inference is regulated in employment and education contexts in several jurisdictions.",
+          "On-device processing reduces exposure, at the cost of model size.",
+          "Human review is required where a transcription error has legal consequences."
+        ]
+      },
+      {
+        "title": "🧮 Measuring the gaps",
+        "paras": [
+          "Overall word error rate 8 percent, broken down as 6 percent for one accent group and 22 percent for another that is 15 percent of the data. The average hides a nearly fourfold difference, and the group with the worse rate is exactly the one likely to abandon the product.",
+          "The reason the average hides it: with 85 percent of the data at 6 percent and 15 percent at 22 percent, the weighted average is 0.85 times 6 plus 0.15 times 22, 8.4 percent. That is correct arithmetic and a misleading summary, which is why subgroup reporting is a technical requirement.",
+          "Data representation in numbers: a corpus of 10,000 hours where 90 percent is one variety gives 9,000 hours of that variety and 1,000 across everything else. A model trained on it performs as its data distribution dictates, and no architecture change fixes that.",
+          "Privacy arithmetic: a call centre recording 1 million calls per month at 3 minutes each stores 50,000 hours of audio, 5.8 TB. Retaining it for a year is 70 TB of the most sensitive data the organisation holds, which is why retention limits are a cost measure as well as a compliance one.",
+          "Synthetic voice detection in numbers: detectors reach 95 to 99 percent on a known generator and 60 to 80 percent on a new one. Because that gap is large and persistent, the reliable controls are procedural: verify through a separate channel for high-value instructions.",
+          "The cost of a transcription error: in a medical dictation setting, a 3 percent word error rate on a 2,000-word note is 60 errors. If 1 in 100 changes clinical meaning, that is 0.6 per note, which means most notes contain a consequential error once corrected counts are considered. That arithmetic is why human sign-off is required rather than optional."
+        ]
+      }
+    ]
+  }
+}

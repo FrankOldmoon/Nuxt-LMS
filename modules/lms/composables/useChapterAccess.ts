@@ -19,7 +19,7 @@ export function useChapterAccess(props: ChapterAccessProps) {
   const { t } = useI18n()
   const toast = useToast()
   const { hasRole } = useAuth()
-  const { isCourseTeacher } = useAuthLms()
+  const { isCourseTeacher, isCourseEditor } = useAuthLms()
   const { classes, loadClasses } = useClasses()
   // 开放状态变更后刷新侧边导航（accessible 缓存），使该班级用户立即可见对应章节
   const { notifyCourseNavUpdate } = useLayoutState()
@@ -27,6 +27,12 @@ export function useChapterAccess(props: ChapterAccessProps) {
   const canEdit = computed(() => {
     if (hasRole('admin')) return true
     return props.courseId ? isCourseTeacher(props.courseId) : false
+  })
+
+  // “对所有人开放”开关仅管理员与课程编辑者可见（教师不可见）
+  const canManageOpen = computed(() => {
+    if (hasRole('admin')) return true
+    return props.courseId ? isCourseEditor(props.courseId) : false
   })
 
   const isOpen = ref(false)
@@ -129,6 +135,7 @@ export function useChapterAccess(props: ChapterAccessProps) {
 
   return {
     canEdit,
+    canManageOpen,
     isOpen,
     savingOpen,
     selectedClassIds,

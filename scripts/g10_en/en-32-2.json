@@ -1,0 +1,458 @@
+{
+  "840": {
+    "sections": [
+      {
+        "title": "🔍 Why estimate probabilities instead of rules",
+        "paras": [
+          "A grammar can say whether a sentence is legal, but it cannot say whether it is likely. Almost every sentence a person produces is one that has never been produced before, so a grammar that accepts only observed sentences accepts nothing useful.",
+          "A language model assigns a probability to every sequence, which lets it rank alternatives, complete a prefix, and score a translation. The first working versions used counts."
+        ]
+      },
+      {
+        "title": "⚙️ The Markov assumption and smoothing",
+        "paras": [
+          "An n-gram model estimates the probability of a word from the previous n minus 1 words, using counts observed in a corpus. That is the Markov assumption: only the recent window matters.",
+          "Because most possible sequences never appear, raw counts assign zero probability to them, which is fatal when scores are multiplied. Smoothing gives unseen sequences a small non-zero probability, and it is the single most important engineering detail in count-based models."
+        ],
+        "bullets": [
+          "A bigram model conditions on one previous word, a trigram on two, and the count tables grow exponentially with n.",
+          "Probabilities multiply, so a single zero anywhere in a sentence zeroes the whole sequence.",
+          "Add-one smoothing adds a pseudo-count to every possible sequence, which is far too much mass for large vocabularies.",
+          "Backoff falls back to a shorter context when the longer one was never observed.",
+          "Interpolation mixes estimates from several orders with learned weights.",
+          "Kneser-Ney smoothing accounts for how many distinct contexts a word appears in, and it is the strongest count-based method.",
+          "The Markov assumption is why these models cannot capture a dependency longer than n minus 1 words."
+        ]
+      },
+      {
+        "title": "🧮 Trigram probabilities by hand",
+        "paras": [
+          "A tiny corpus of 10,000 words. The bigram cat sat appears 40 times, and the word cat appears 200 times, so the bigram probability of sat given cat is 40 divided by 200, 0.2.",
+          "A trigram the cat sat appears 12 times, and the bigram the cat appears 60 times, so the trigram probability is 12 divided by 60, 0.2.",
+          "Now consider the sentence the cat sat on the dog. Multiplying four trigram probabilities of, say, 0.2, 0.15, 0.1, and 0.02 gives 0.00006. Log probabilities avoid the underflow that appears with 30-word sentences, where a product of 29 small numbers can drop below the smallest representable float.",
+          "Zero-count arithmetic: a trigram never seen has probability zero, so a 20-word sentence containing one such trigram has probability zero. With a 30,000-word vocabulary and a 10-million-token corpus, an estimated 30 to 50 percent of trigrams in new text were never observed, so most new sentences would score zero without smoothing.",
+          "Add-one cost: the number of possible trigrams is 2.7 times 10 to the 13 for a 30,000-word vocabulary. Adding one to each gives a total count increase of that size, while the observed counts sum to 10 million. The unseen mass swamps the data by six orders of magnitude, and every observed probability collapses to about 10 to the minus 7. That number is the reason add-one smoothing is taught and then abandoned.",
+          "Good-Turing and Kneser-Ney in numbers: if 60 percent of the distinct trigrams in a corpus occurred exactly once, Good-Turing says the total probability mass for unseen trigrams should equal the mass of those singletons, which is 60 percent of the tokens. That is a plausible amount of mass, and it is why these methods work where add-one fails.",
+          "Perplexity of a trigram model on typical English text is around 100 to 200, against a vocabulary of tens of thousands. A modern neural model reaches 20 to 40 on the same data, which is why count models were displaced."
+        ]
+      }
+    ]
+  },
+  "841": {
+    "sections": [
+      {
+        "title": "🔍 Why counts stop generalising",
+        "paras": [
+          "A count model can only speak about sequences it has seen. If the phrase the cat sat on the mat appears and the cat sat on the sofa does not, a trigram model has no way to transfer what it learned, even though the difference is one word.",
+          "A neural model replaces the count with a learned function of the context. Because that function takes continuous representations, similar contexts produce similar predictions, which is exactly the generalisation counts cannot provide."
+        ]
+      },
+      {
+        "title": "⚙️ Embeddings, hidden state, and the output layer",
+        "paras": [
+          "The usual design embeds each context word into a dense vector, combines them with a recurrent or attention layer, and predicts a distribution over the vocabulary. The word embeddings are learned jointly with the rest of the model.",
+          "Because the prediction depends on vectors rather than on exact token identities, the model smooths automatically: a context never seen before still produces a sensible distribution if it resembles contexts that were seen."
+        ],
+        "bullets": [
+          "The output layer is a softmax over the vocabulary, which is why vocabulary size drives parameter count.",
+          "Tied input and output embeddings halve the embedding parameters and usually improve quality.",
+          "Softmax over 50,000 words at every position is the dominant training cost for small models.",
+          "The context window is fixed by architecture rather than by an n-gram count, and it can be hundreds or thousands of tokens.",
+          "Teacher forcing trains the model to predict the next token given the true prefix, which makes training parallel.",
+          "Perplexity in the 20 to 40 range is achievable, against 100 to 200 for trigram models.",
+          "Storing every intermediate state for backpropagation through a long sequence is the memory bottleneck."
+        ]
+      },
+      {
+        "title": "🧮 Counting parameters and training cost",
+        "paras": [
+          "A small model: vocabulary 30,000, embedding dimension 300, one hidden layer of 512, and an output layer over the vocabulary. Embeddings are 9 million parameters. Hidden layer from the context representation to 512 is modest. The output projection from 512 to 30,000 is 15.4 million, plus a 30,000 bias vector. Total about 25 million.",
+          "Training arithmetic: 1 million tokens per epoch, batch size 64, sequence length 32. That is 500 batches per epoch. Each batch forward and backward is roughly 3 times the forward cost, so at 25 million parameters and 64 times 32 positions, about 1.5 billion operations per batch. Two thousand batches is 3 trillion operations, a minute or two on a GPU.",
+          "The generalisation gain in numbers: a trigram model on a 10-million-token corpus assigns zero probability to about 40 percent of trigrams in new text and needs backoff to say anything. A neural model trained on the same data assigns a finite probability to everything and reaches a perplexity of 60 against the trigram's 140. That halving of perplexity is the standard measurement of the gain.",
+          "Vocabulary cost arithmetic: doubling the vocabulary from 30,000 to 60,000 doubles both the embedding table and the output projection, adding about 24 million parameters to a 25-million-parameter model. That is why larger vocabularies are paired with larger embedding dimensions and why subword vocabularies became the standard compromise.",
+          "Long-range dependency measurement: on a task where the correct next word depends on a word 40 positions back, a 5-gram model is at chance because its window is 4 words, while a recurrent model on the same data reaches 70 percent accuracy. The gap is the whole reason for the architecture change."
+        ]
+      }
+    ]
+  },
+  "842": {
+    "sections": [
+      {
+        "title": "🔍 Why likelihood needs one number",
+        "paras": [
+          "A language model assigns a probability to every sequence, so comparing two models means comparing millions of probabilities. That is not something a person can read.",
+          "Perplexity compresses the model's average surprise per word into one number, which is comparable across models that share a tokenizer and meaningless across models that do not."
+        ]
+      },
+      {
+        "title": "⚙️ Perplexity and the metrics around it",
+        "paras": [
+          "Perplexity is the exponential of the average negative log likelihood per token. A perplexity of 40 means the model is, on average, as uncertain as if it were choosing uniformly among 40 options at each step.",
+          "Lower is better, and the value is always relative to a tokenizer and a test set. A model with perplexity 20 is not twice as good at any task; it is simply less surprised by that particular text."
+        ],
+        "bullets": [
+          "Perplexity is exponentiated cross-entropy, so reducing cross-entropy by 0.69 halves the perplexity.",
+          "It cannot compare across tokenizers, because different tokenizations change the number of steps.",
+          "It is only meaningful on held-out text from the same distribution as training.",
+          "Word error rate, BLEU, and exact match measure what the model does on a task, which is what actually matters.",
+          "Human evaluation remains necessary for fluency, coherence, and usefulness.",
+          "A model can have excellent perplexity and produce repetitive text, because perplexity measures one step at a time.",
+          "Reporting the test set, the tokenizer, and the preprocessing is required for a perplexity comparison to mean anything."
+        ]
+      },
+      {
+        "title": "🧮 Computing perplexity by hand",
+        "paras": [
+          "A model assigns probabilities 0.5, 0.25, 0.5, 0.125 to four successive tokens. The negative log probabilities base e are 0.693, 1.386, 0.693, 2.079, summing to 4.851. The average is 1.213, and the perplexity is e to the 1.213, about 3.36.",
+          "That number is interpretable: the model is as uncertain as a uniform choice among about 3.4 options per step, which is reasonable for a four-token sequence with a small effective vocabulary.",
+          "A published example: a trigram model at perplexity 140 and a neural model at perplexity 60 on the same test set with the same tokenizer. The neural model is less surprised by a factor of 2.3, which corresponds to a cross-entropy reduction of log 2.3, 0.83 nats per token.",
+          "The exponential removes the intuitiveness of small differences: reducing cross-entropy from 3.0 to 2.0 reduces perplexity from 20.1 to 7.4, a factor of 2.7, while reducing from 8.0 to 7.0 goes from 2,981 to 1,097, a factor of 2.7 as well. Perplexity differences look large at high values and small at low ones, even when the improvement per token is identical.",
+          "Task metric comparison: improving perplexity by 20 percent on a translation task typically improves BLEU by 1 to 2 points, not 20 percent. The relationship is weak, which is why perplexity is a development signal rather than a product metric.",
+          "The evaluation pitfall in numbers: a model reporting perplexity 12 on a dataset that appears in its training data has not measured generalisation. Reporting the split, the deduplication method, and the tokenizer is the minimum standard, and its absence makes the number unverifiable."
+        ]
+      }
+    ]
+  },
+  "844": {
+    "sections": [
+      {
+        "title": "🔍 Why per-token labelling is a different problem",
+        "paras": [
+          "Classification produces one label per document. Tagging produces one label per token, and the labels constrain each other: an adjective rarely follows a determiner directly without a noun between them, and an organisation name rarely starts in the middle of a person name.",
+          "That constraint structure makes tagging a structured prediction problem rather than a set of independent classifications, and it is why sequence models appear here first."
+        ]
+      },
+      {
+        "title": "⚙️ Parts of speech, entities, and the BIO scheme",
+        "paras": [
+          "Part-of-speech tagging labels each token as noun, verb, adjective, and so on. It is a solved problem at around 97 percent accuracy on edited text, and it matters because downstream tasks such as lemmatisation and parsing depend on it.",
+          "Named entity recognition labels spans rather than tokens: a person name may be two tokens. The standard encoding is BIO, with B marking the beginning of an entity, I marking a continuation, and O marking outside any entity."
+        ],
+        "bullets": [
+          "BIO encoding makes span boundaries explicit and is learnable by a token classifier.",
+          "A conditional random field layer enforces valid label transitions, such as never starting with I.",
+          "Entity types are domain specific: medical text needs drugs and dosages that general models do not know.",
+          "Nested entities, such as a hospital name inside an address, break the flat BIO scheme.",
+          "Tagging speed is high: a spaCy pipeline processes tens of thousands of tokens per second on one core.",
+          "Evaluation is span-level, not token-level, so a span with the wrong boundary counts as fully wrong.",
+          "Subword tokenization complicates tagging, because one word becomes several tokens and the labels must be aligned back."
+        ]
+      },
+      {
+        "title": "🧮 Span F1 and alignment arithmetic",
+        "paras": [
+          "A document with 4 true entities. The model finds 3 spans, of which 1 matches a true entity exactly, 2 are spurious, and 3 true entities are missed.",
+          "Precision is 1 divided by 3, 0.333. Recall is 1 divided by 4, 0.25. F1 is 2 times 0.333 times 0.25 divided by 0.583, about 0.286.",
+          "Notice how harsh this is: one correct span out of four produces F1 of 0.29. Token-level accuracy on the same document would be much higher, because most tokens are O and are correctly labelled. A document of 100 tokens with 6 entity tokens gives token accuracy of about 94 percent while span F1 is 0.29, which is why token accuracy is a misleading metric for extraction.",
+          "The boundary sensitivity in numbers: if the model finds the correct entity but includes one extra token, the span does not match exactly and counts as both a false positive and a false negative. With 2 extra tokens at the boundary of each of 1,000 entities, exact-match F1 can fall from 0.90 to 0.60 while every entity was found. That is why partial-match and boundary-aware metrics exist alongside exact match.",
+          "POS accuracy in context: 97 percent token accuracy sounds excellent, but a 100-word sentence has a 95 percent chance of containing at least one error, since 0.97 to the 100 is 0.048. On 1 million words that is 30,000 errors, and they concentrate on ambiguous words, which is why downstream parsing is more robust than the per-token number suggests.",
+          "Cost per annotation: labelling 10,000 sentences for NER at 20 seconds per sentence is 55 hours. That is the real constraint on a domain-specific tagger, and it is why pretrained models plus a few hundred examples usually beat training from scratch."
+        ]
+      }
+    ]
+  },
+  "845": {
+    "sections": [
+      {
+        "title": "🔍 Why translation is the hardest sequence task",
+        "paras": [
+          "Translation is not substitution. Word order differs, one word may map to several, idioms have no literal equivalent, and the correct output depends on context the sentence does not contain.",
+          "It is also the task where the encoder-decoder architecture proved itself, and where the limits of automatic metrics became obvious."
+        ]
+      },
+      {
+        "title": "⚙️ Encoder, decoder, and what changed over time",
+        "paras": [
+          "The encoder reads the source sentence and produces a representation. The decoder generates the target sentence one token at a time, conditioned on that representation and on what it has already produced.",
+          "Statistical systems before 2015 aligned phrases and reordered them with hand-built features. Neural systems replaced the whole pipeline with two networks trained end to end, and quality jumped immediately."
+        ],
+        "bullets": [
+          "Attention over the encoder's states removed the bottleneck of compressing a whole sentence into one vector.",
+          "Beam search explores several candidate translations and usually improves quality over greedy decoding.",
+          "Subword tokenization handles rare words and morphology, which matters for languages with rich inflection.",
+          "Back-translation, using synthetic source sentences from monolingual target data, is one of the strongest data augmentation methods.",
+          "Low-resource language pairs still rely on transfer from a related high-resource language.",
+          "Document-level context matters for pronouns and terminology consistency, and most systems translate sentence by sentence.",
+          "BLEU compares n-gram overlap with references, and it does not measure adequacy or fluency well."
+        ]
+      },
+      {
+        "title": "🧮 BLEU and the cost of translation",
+        "paras": [
+          "BLEU is computed from modified n-gram precision for n from 1 to 4, combined as a geometric mean, multiplied by a brevity penalty. A candidate matching 30 of 40 unigrams and 10 of 30 bigrams gives a 1-gram precision of 0.75 and a 2-gram precision of 0.33. The geometric mean of these alone is 0.5.",
+          "The brevity penalty punishes short output: a candidate of 8 words where the reference has 12 gets a penalty of e to the 1 minus 12/8, about 0.61, which multiplies the score. Without it, a system could output two correct words and score perfectly.",
+          "Score ranges in practice: a system at BLEU 20 is understandable and often wrong in detail, 35 is usable with review, 45 is good, and human reference translations against each other score around 60 to 70 depending on the pair. Quoting BLEU without the language pair and test set is uninformative.",
+          "Latency and cost: a 30-word sentence translated by a small model takes about 60 milliseconds on a GPU, mostly the 30 sequential decoding steps. Batching 32 sentences together costs about 200 milliseconds total, 6 milliseconds per sentence, which is why translation services batch aggressively.",
+          "The metric failure in numbers: a fluent paraphrase that changes the word order scores lower than a literal, disfluent copy of the reference, because BLEU counts n-gram matches. Differences of 1 to 2 BLEU between systems are usually within noise on a 2,000-sentence test set, which is why significance testing is standard practice.",
+          "Human parity claims: on a news domain from English to Chinese, a strong system was reported at parity with professional translators by human raters, while the same system on informal conversation scored 10 to 15 points below. Domain, not language pair alone, decides whether the claim holds."
+        ]
+      }
+    ]
+  },
+  "846": {
+    "sections": [
+      {
+        "title": "🔍 Why answering needs retrieval",
+        "paras": [
+          "A model that memorises facts can answer questions about them until the facts change. A question about your own documents cannot be answered from pretrained knowledge at all, because the model never saw them.",
+          "Question answering over a document collection combines retrieval, which finds the relevant passage, with reading, which extracts or generates the answer."
+        ]
+      },
+      {
+        "title": "⚙️ Extractive versus generative",
+        "paras": [
+          "Extractive QA selects a span of the given passage as the answer. It cannot invent text, so it cannot hallucinate, and it fails when the answer requires synthesis across sentences.",
+          "Generative QA writes an answer, which allows synthesis and abstraction, at the cost of being able to state things that are not supported by the passage."
+        ],
+        "bullets": [
+          "The retriever narrows 100,000 documents to the top 5 or 10, and the reader only sees those.",
+          "Recall at k measures whether the right passage was retrieved at all, and it caps the whole system.",
+          "Sparse retrieval such as BM25 is fast and strong; dense retrieval handles paraphrase better.",
+          "Hybrid retrieval combines both, which is the usual production choice.",
+          "Span answers are evaluated with exact match and token-level F1.",
+          "Unanswerable questions must be handled explicitly, or the model will always produce a span.",
+          "Chunking strategy determines whether the answer sits inside one retrieved chunk."
+        ]
+      },
+      {
+        "title": "🧮 Recall, chunks, and the end-to-end arithmetic",
+        "paras": [
+          "A corpus of 50,000 documents averaging 400 words. Split into chunks of 200 words with 50-word overlap, each document gives 3 chunks, so 150,000 chunks. Retrieving the top 5 touches 5 chunks out of 150,000, a 0.003 percent sample, so the retriever is doing almost all the work.",
+          "Recall at 5 of 0.85 means the correct chunk is retrieved for 85 percent of questions. The reader's accuracy on those is 0.80. End-to-end accuracy is 0.85 times 0.80, 0.68. Improving the reader to 0.90 raises the result to 0.765, but improving recall to 0.95 raises it to 0.76. Both matter equally, which is why effort should go where the lower factor is.",
+          "Chunk size trade: 100-word chunks give 300,000 chunks and higher retrieval precision but more chances that the answer spans a boundary. 400-word chunks give 75,000 chunks, fewer boundary problems, and each retrieved chunk costs 4 times the reader's input tokens. At 200 words with overlap, the boundary failure rate is typically 5 to 10 percent, which is often the largest single loss in the pipeline.",
+          "Cost arithmetic: a reader model processing 5 chunks of 200 words, about 1,300 tokens total, at 10 milliseconds per 1,000 tokens of input plus generation, is maybe 150 milliseconds. Retrieval over 150,000 chunks with a sparse index is 20 milliseconds. So the reader dominates latency, and reducing chunks from 5 to 3 saves 40 percent.",
+          "Evaluation of extractive answers: with exact match, an answer of thirty two when the reference is 32 scores zero. Token F1 gives 0.5 for that case, which is why both are reported. On standard benchmarks the gap between exact match and F1 is typically 8 to 12 points, and it is almost entirely formatting and articles.",
+          "Why hybrid retrieval helps in numbers: BM25 misses paraphrases, with recall around 0.70 on a semantic question set, and a dense retriever misses exact identifier matches, also around 0.75. Combining them reaches 0.88, which is better than either, and the cost is one extra index lookup."
+        ]
+      }
+    ]
+  },
+  "848": {
+    "sections": [
+      {
+        "title": "🔍 Why attention replaced recurrence in NLP",
+        "paras": [
+          "An RNN processes a sentence one token at a time, so a 500-token document is 500 sequential steps and the state at the end must hold everything. Both the speed and the memory are limited by the architecture.",
+          "The transformer processes all tokens at once with attention, which makes training parallel and gives every token direct access to every other token. That single change is why models could grow from millions to billions of parameters."
+        ]
+      },
+      {
+        "title": "⚙️ Self-attention, position, and encoder versus decoder",
+        "paras": [
+          "Self-attention computes, for each token, a weighted combination of all other tokens' representations, with weights based on query-key similarity. Long-range dependencies cost the same as short ones, which is a qualitative improvement over recurrence.",
+          "Because attention ignores order, position encodings are added. Because generation must not see the future, decoders use causal masking."
+        ],
+        "bullets": [
+          "An encoder-only model reads the whole sequence and suits classification, tagging, and extractive QA.",
+          "A decoder-only model predicts the next token and suits generation, which is the shape of modern large models.",
+          "An encoder-decoder model suits translation and summarisation, where input and output are different sequences.",
+          "Multi-head attention lets different heads track different relationships simultaneously.",
+          "Layer normalisation and residual connections make deep stacks trainable.",
+          "The feed-forward block holds most parameters and acts as a per-token memory.",
+          "Fine-tuning a pretrained transformer beats training from scratch with a fraction of the data."
+        ]
+      },
+      {
+        "title": "🧮 Attention cost and the architecture comparison",
+        "paras": [
+          "Self-attention over 512 tokens with 12 heads and dimension 768: the score matrices total 12 times 512 times 512, 3.1 million entries, computed from 512 by 64 projections, 16.8 million multiply-adds per head, 201 million per layer. Twelve layers is 2.4 billion operations for one forward pass.",
+          "An RNN over the same 512 tokens with a 768-unit state: each step is 768 times 768 plus 768 times 768, about 1.2 million multiply-adds, times 512 steps, 604 million. The RNN does 4 times less arithmetic and is far slower in practice because the 512 steps are sequential.",
+          "Wall-clock comparison on the same hardware: the transformer forward pass takes about 10 milliseconds; the RNN takes 150 milliseconds, because each of the 512 steps has kernel launch overhead and no parallelism. That 15-fold ratio at 512 tokens grows with length, and it is the practical reason the transformer won.",
+          "Fine-tuning data requirement: BERT-style models reach 90 percent of their ceiling with about 1,000 labelled examples per class, against 50,000 or more for training a comparable model from scratch. The pretraining absorbed the language, and the fine-tune only teaches the task.",
+          "Parameter split in a base-sized model: 12 layers, each with about 7 million attention parameters and 4.7 million feed-forward, 140 million total, plus a 30,000 by 768 embedding table, 23 million. The embedding table is a seventh of the total, which is why sharing it with the output layer saves real memory.",
+          "Inference cost per document: classification of a 300-token document takes about 30 milliseconds on a GPU and 400 milliseconds on a CPU. At 1 million documents per day, the GPU needs 8.3 hours of compute and the CPU needs 111, which is the number that decides whether a GPU is worth renting."
+        ]
+      }
+    ]
+  },
+  "849": {
+    "sections": [
+      {
+        "title": "🔍 Why pretraining changed the economics",
+        "paras": [
+          "Before pretraining, every NLP task needed its own labelled dataset and its own model trained from scratch. Labels are expensive, and most tasks had thousands of examples at best.",
+          "Pretraining trains one large model on unlabelled text, which is abundant, and then adapts it to each task with a small labelled set. The expensive part is paid once and reused everywhere."
+        ]
+      },
+      {
+        "title": "⚙️ Masked language modelling and fine-tuning",
+        "paras": [
+          "BERT is pretrained by hiding a fraction of the tokens and asking the model to predict them from both directions. To predict a masked word, the model must use the syntax and semantics of the whole sentence, which is why the resulting representations are generally useful.",
+          "Fine-tuning adds a small task-specific head and trains everything on a labelled dataset. The pretrained weights give a good starting point, so a few epochs on a few thousand examples is enough."
+        ],
+        "bullets": [
+          "Masking about 15 percent of tokens is the standard pretraining objective.",
+          "Next-sentence prediction was used in the original BERT and later found to add little.",
+          "Bidirectional context is what distinguishes BERT from a decoder-only model.",
+          "Because it was trained to fill blanks, BERT cannot generate coherent text on its own.",
+          "Fine-tuning typically uses a small learning rate, because large steps destroy pretrained features.",
+          "Sentence-level tasks use the pooled representation of the special classification token.",
+          "RoBERTa, DeBERTa, and DistilBERT are refinements that trade size, speed, and accuracy."
+        ]
+      },
+      {
+        "title": "🧮 Pretraining and fine-tuning in numbers",
+        "paras": [
+          "A base-sized model with 110 million parameters, trained on 3.3 billion words for about 40 epochs on 16 accelerators over 4 days. That is roughly 1,500 accelerator-days, which at a few dollars per hour is tens of thousands of dollars.",
+          "Fine-tuning the same model on 10,000 labelled examples for 3 epochs: 3,000 steps at batch 32, each step perhaps 30 milliseconds on one GPU, so 90 seconds. That is four orders of magnitude cheaper than pretraining, which is the whole economic argument.",
+          "The masking arithmetic: 15 percent of tokens masked out of 3.3 billion words is 500 million prediction tasks, each with a 30,000-way softmax, so 15 trillion softmax computations during pretraining. That figure is why pretraining needs specialised hardware and days of time.",
+          "Fine-tuning data curve: accuracy rises steeply to about 1,000 examples per class and then flattens, reaching 92 percent at 1,000 and 94 percent at 10,000. Training from scratch needs 50 times more data to reach 90, which is why pretraining is worth its cost even for a single task.",
+          "Distillation arithmetic: a 110-million-parameter model can be distilled into a 6-layer, 66-million-parameter model that keeps about 97 percent of the fine-tuned accuracy at 1.7 times the speed. For 10 million requests per day, the saving in compute is usually worth more than the 3 percent accuracy.",
+          "The masked-token limitation in numbers: to generate text, a model must predict the next token given a prefix. BERT was never trained on that task, so its zero-shot generation quality is near random even though its representations are excellent. That mismatch is why generation moved to decoder-only models."
+        ]
+      }
+    ]
+  },
+  "850": {
+    "sections": [
+      {
+        "title": "🔍 Why scale produced a qualitative change",
+        "paras": [
+          "A model trained to predict the next token learns grammar, facts, and some reasoning as a side effect, because all of those help prediction. Below a certain scale, the knowledge is too diffuse to be usable. Above it, abilities appear that were not explicitly trained.",
+          "That threshold behaviour, more than any single architectural idea, is why large language models became a general-purpose interface rather than a collection of task-specific models."
+        ]
+      },
+      {
+        "title": "⚙️ Pretraining, alignment, and in-context learning",
+        "paras": [
+          "Pretraining on trillions of tokens teaches next-token prediction. Instruction tuning then trains the model on examples of following instructions, and preference optimisation shapes it toward answers people actually prefer.",
+          "In-context learning lets a prompt supply a few examples or an instruction and have the model adapt within the context window, with no weight updates at all. It is an ability that emerged from scale rather than being designed."
+        ],
+        "bullets": [
+          "Decoder-only architecture with causal masking is the standard shape.",
+          "Instruction tuning is supervised fine-tuning on input-output pairs written as dialogue.",
+          "Preference optimisation uses human comparisons to push the model toward preferred responses.",
+          "Context windows grew from hundreds of tokens to hundreds of thousands, which changed retrieval design.",
+          "Hallucination is a consequence of optimising for plausible continuations rather than for truth.",
+          "The knowledge cutoff is a hard limit: the model cannot know about events after training.",
+          "Tool use, including retrieval and code execution, is how the cutoff and hallucination are mitigated."
+        ]
+      },
+      {
+        "title": "🧮 Scale, cost, and the capability curve",
+        "paras": [
+          "Training compute arithmetic: a 70-billion-parameter model on 2 trillion tokens needs about 6 times 70 billion times 2 trillion, 8.4 times 10 to the 23 floating-point operations. At an effective 400 trillion operations per second, that is 2.1 million seconds, 24 days, and at a few dollars per accelerator-hour across thousands of devices, tens of millions of dollars.",
+          "Inference cost per 1,000 tokens: a 70-billion-parameter model in 16-bit precision reads 140 GB of weights per forward pass, so generating 1,000 tokens means reading those weights 1,000 times unless batching amortises it. That is why per-token cost is dominated by memory bandwidth, and why quantisation to 4 bits gives roughly a 4-fold cost reduction with a 1 to 2 percent quality loss.",
+          "Context length cost: attention is quadratic, so a 100,000-token context costs about 38,000 times more attention arithmetic than a 512-token one. Serving long contexts therefore needs sparse attention or cached key-value states, and the cache itself is large: 100,000 tokens times 8,192 dimensions times 2 bytes is 1.6 GB per sequence.",
+          "Emergence in numbers: on standard benchmarks, models below about 10 billion parameters score near zero on multi-step arithmetic and chain-of-thought tasks, and above that the scores rise steeply. The exact thresholds are contested, but the shape is reproducible, and it is why capability is often described as a function of scale.",
+          "Hallucination rates: on open-domain factual questions, strong models produce unsupported statements in a few percent of answers, and on questions about niche entities the rate rises sharply. Retrieval augmentation reduces it substantially because the answer is grounded in a retrieved passage rather than recalled from parameters.",
+          "In-context learning data cost: a prompt with 5 examples of 200 tokens each adds 1,000 tokens per request. At 10 million requests per day that is 10 billion extra input tokens, which is a real cost, which is why fine-tuning a smaller model is often cheaper than few-shot prompting a larger one at scale."
+        ]
+      }
+    ]
+  },
+  "852": {
+    "sections": [
+      {
+        "title": "🔍 Why two libraries and not one",
+        "paras": [
+          "NLTK is a teaching toolkit: it exposes every classical algorithm individually, which makes it ideal for learning what a parser or a stemmer does. spaCy is an engineering library: it hides the algorithms behind fast pipelines with pretrained models, which makes it ideal for shipping.",
+          "Knowing which one you need prevents the common mistake of building a production system out of teaching primitives, or trying to learn the concepts from an API that only exposes results."
+        ]
+      },
+      {
+        "title": "⚙️ What each provides",
+        "paras": [
+          "NLTK provides tokenizers, stemmers, lemmatizers, taggers, parsers, and dozens of corpora, each as a separate callable component. Assembling a pipeline means choosing and chaining them yourself.",
+          "spaCy provides a pipeline object that applies tokenization, tagging, parsing, and entity recognition in one pass, with pretrained models per language and a stable data structure for the results."
+        ],
+        "bullets": [
+          "spaCy's Doc object holds tokens with attributes such as lemma, part of speech, and dependency head, which makes downstream code simple.",
+          "NLTK is stronger for teaching and for unusual languages or corpora.",
+          "spaCy is roughly 10 to 100 times faster than assembling NLTK components by hand.",
+          "Both offer rule-based matchers for patterns such as dates or product codes.",
+          "Pretrained spaCy models are per language and per size, and the largest is not always needed.",
+          "Neither handles tokenization the same way as a transformer's tokenizer, which matters when mixing pipelines.",
+          "Version pinning matters, because model behaviour changes between releases."
+        ]
+      },
+      {
+        "title": "🧮 Speed, memory, and where they differ",
+        "paras": [
+          "Throughput: a spaCy pipeline with a small English model processes about 10,000 to 20,000 tokens per second on one core, including tagging and parsing. NLTK components assembled by hand run at a few thousand tokens per second, mostly because each component is called separately in Python.",
+          "For 10 million documents of 300 words, about 390 million tokens, spaCy needs 5 to 11 hours on one core and NLTK 30 to 50 hours. That difference decides the choice for a batch job as much as any quality consideration.",
+          "Memory: a small spaCy model is about 12 MB, a medium one 40 MB, and a large one 500 MB with word vectors. Loading the large model to use only the tokenizer wastes 500 MB per process, which matters when 8 worker processes each load it.",
+          "Accuracy on standard tasks: both reach about 97 percent on part-of-speech tagging for English, and about 85 to 90 F1 on named entity recognition. The transformer-based spaCy pipelines reach 90 to 93 F1 at 10 to 20 times the cost, which is the same trade seen everywhere.",
+          "Tokenizer mismatch in numbers: spaCy splits don't into do and n't, while a subword tokenizer may produce three or four pieces. Passing spaCy tokens into a transformer trained on subwords produces a silent mismatch that degrades accuracy by several points and raises no error, which is why tokenizer alignment is a required pipeline test.",
+          "Startup cost: importing spaCy and loading a model takes about 1 second. In a serverless function invoked per request, that second is the entire latency budget, which is why model loading is hoisted out of the request path."
+        ]
+      }
+    ]
+  },
+  "853": {
+    "sections": [
+      {
+        "title": "🔍 Why the pipeline is the product",
+        "paras": [
+          "A model is one function. A product is a pipeline: load text, validate encoding, tokenize, extract features, run the model, post-process, and return something a user can act on. Each step can break, and the failure looks the same from outside.",
+          "Most production NLP bugs are not model bugs. They are preprocessing mismatches, where training and serving apply different steps and the model receives input it has never seen."
+        ]
+      },
+      {
+        "title": "⚙️ The steps and the deployment surface",
+        "paras": [
+          "A pipeline is a sequence of transformations with a contract at each boundary: a character encoding, a tokenization scheme, a feature schema, and an output schema. The contract must be identical in training and serving, which is why the preprocessing code should be shared rather than duplicated.",
+          "Deployment wraps the pipeline in a service with an API, a version, and monitoring. Batch scoring is simpler and is the right default when predictions can wait."
+        ],
+        "bullets": [
+          "Serialize the fitted preprocessing with the model, not beside it, so they cannot drift apart.",
+          "Validate input length, encoding, and language before the model sees it.",
+          "Cache the model in memory; loading per request is the most common latency mistake.",
+          "Record the model version on every prediction, or nothing can be reproduced later.",
+          "Monitor input distribution and prediction distribution, not just error rates.",
+          "Batch requests when possible, because per-request overhead dominates for small texts.",
+          "Provide a fallback for model failures so the product degrades rather than stops."
+        ]
+      },
+      {
+        "title": "🧮 Latency and drift, with numbers",
+        "paras": [
+          "Latency budget for a 200-word text: preprocessing 2 milliseconds, tokenization 1, model inference 20, post-processing 1. Total 24 milliseconds, which fits a 50-millisecond target with room for network. On a CPU-only server the inference becomes 200 milliseconds, which breaks the target, and that is why text services usually need a GPU or a smaller model.",
+          "Throughput arithmetic: 20 milliseconds per request per GPU means 50 requests per second. Batched at 32, the same GPU handles about 400 per second, because the matrix operations are underutilised at batch 1. That 8-fold gain is why batching is the first optimisation to consider.",
+          "Preprocessing mismatch cost in numbers: if training lowercased the text and serving does not, then 30 percent of tokens that were vocabulary entries during training arrive as unseen forms at serving time. Accuracy can fall by 10 to 15 points with no error message, which is why a single shared preprocessing function is worth more than any model tuning.",
+          "Drift detection: if the historical average text length was 180 words with a standard deviation of 40, and production reaches 400, that is a 5-standard-deviation shift and almost certainly a different input source. Monitoring that statistic catches a broken upstream integration before any accuracy measurement does.",
+          "Cost arithmetic for a batch job: 20 million documents at 20 milliseconds each is 111 GPU-hours, about a few hundred dollars. Doing the same at 200 milliseconds on CPU is 1,111 CPU-hours, which costs less but takes 46 days on one machine. Parallelism across 64 cores brings it to 17 hours, which is usually acceptable and much cheaper, so the choice is a deadline question rather than an engineering one.",
+          "Versioning payoff: when accuracy drops, the first question is what changed. With model version, preprocessing version, and input statistics logged per prediction, the answer is a query. Without them, it is an investigation that can take days."
+        ]
+      }
+    ]
+  },
+  "854": {
+    "sections": [
+      {
+        "title": "🔍 Why NLP carries unusual risks",
+        "paras": [
+          "Language models are trained on human text, which contains human bias. They produce fluent output, which makes errors hard to spot. And they are deployed on people, in decisions about hiring, credit, moderation, and healthcare.",
+          "Those three properties together mean the failure modes of an NLP system are social as well as technical, and a good benchmark score says nothing about whether the system is acceptable."
+        ]
+      },
+      {
+        "title": "⚙️ The failure families",
+        "paras": [
+          "Representation failure: the training data does not include a dialect, a language, or a domain, so the model performs poorly for those users without saying so. Bias failure: the model reproduces associations in the data, such as associating certain names with certain professions.",
+          "Robustness failure: a small change in input, such as a typo or an unusual phrasing, changes the output drastically. Evaluation failure: the benchmark measures a narrow slice and the reported number does not transfer."
+        ],
+        "bullets": [
+          "Report performance per subgroup, not only overall, because an average hides the group that fails.",
+          "Test on naturally occurring text from the deployment domain, not only on curated benchmarks.",
+          "Check for spurious correlations, such as a label that correlates with document length or source.",
+          "Red-teaming, deliberately probing for harmful outputs, finds failure modes that aggregate metrics miss.",
+          "Provenance and consent matter for training data, especially for personal and copyrighted text.",
+          "Human review is required wherever an error has legal or safety consequences.",
+          "Document limitations explicitly, because users assume more capability than a system has."
+        ]
+      },
+      {
+        "title": "🧮 Measuring fairness and robustness",
+        "paras": [
+          "Overall accuracy 92 percent. Broken down: group A 95 percent, group B 78 percent, and group B is 12 percent of the data. The average is dominated by group A, and the model is unusable for one in eight users. Subgroup analysis is cheap and reveals this in an afternoon.",
+          "Robustness in numbers: a sentiment model at 90 percent on clean reviews drops to 78 percent when 5 percent of characters are randomly swapped, and to 70 percent on text with dialect spelling. If the deployment population writes that way, the real accuracy is 70 percent and the benchmark never said so.",
+          "Bias measurement: if a profession classifier assigns engineer to male pronouns 85 percent of the time when the data is 60 percent male, the model has amplified the imbalance by 25 points. Measuring the amplification, not just the raw rate, separates a model that reflects the data from one that exaggerates it.",
+          "Label noise arithmetic: if 5 percent of labels are wrong, a model can reach at best about 95 percent accuracy, and reported differences of 1 to 2 points between models are within the noise floor. Annotator agreement, measured as Cohen's kappa, is often only 0.6 to 0.8, which means the ceiling is lower than most papers assume.",
+          "Coverage in numbers: a system supporting 20 languages, where 4 have more than 1 million training examples and 16 have fewer than 50,000. Performance on the 16 is typically 15 to 30 points worse, and those are most of the world's speakers. Stating that distribution is part of honest reporting.",
+          "The cost of an undetected failure: a moderation system with a 10 percent false negative rate on one dialect allows abuse to persist for that community while reporting 95 percent overall accuracy. The aggregate number is true and the harm is concentrated, which is exactly the pattern subgroup analysis exists to expose."
+        ]
+      }
+    ]
+  }
+}

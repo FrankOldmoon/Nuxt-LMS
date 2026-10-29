@@ -1,0 +1,454 @@
+{
+  "760": {
+    "sections": [
+      {
+        "title": "🔍 Why write rules when examples exist",
+        "paras": [
+          "Recognising a handwritten digit in a 20 by 20 pixel image means deciding based on 400 numbers. Nobody can write the rule. Spam filtering, credit scoring, and speech recognition have the same shape: the rule exists in principle and is far too complicated to state.",
+          "Machine learning inverts the problem. Instead of writing the rule, you supply examples of input and answer, and an algorithm searches for a rule that fits them. The output is still a rule, just one that was fitted rather than typed."
+        ]
+      },
+      {
+        "title": "⚙️ Rules versus fitted mappings",
+        "paras": [
+          "Traditional software is a function from input to output written by a person. Machine learning is a search over a family of functions, driven by data, that picks the member which best reproduces the observed answers. The family is the model; the search is training; the fit is measured by a loss.",
+          "This changes what a bug looks like. A traditional bug is a wrong line of code. A machine learning bug is usually a wrong dataset, a leaked feature, or a model that memorised instead of generalised, and none of those are visible in the source."
+        ],
+        "bullets": [
+          "Features are the inputs the model sees; the label is the answer it should produce.",
+          "Training adjusts parameters to reduce the loss on the training data.",
+          "Generalisation, not training accuracy, is the goal: the model must work on data it never saw.",
+          "The rule is learned, so the same algorithm can solve unrelated problems by changing the data.",
+          "The rule is statistical, so it can be confidently wrong, which no amount of code review prevents.",
+          "Machine learning only works when the past resembles the future; a distribution shift breaks it silently.",
+          "Three ingredients made it practical: more data, more compute, and better algorithms in that order."
+        ]
+      },
+      {
+        "title": "🧮 Why 400 pixels defeat a hand-written rule",
+        "paras": [
+          "A 20 by 20 greyscale image has 400 values, each 0 to 255. The number of distinct inputs is 256 to the power of 400, which is about 10 to the 963. A rule must classify all of them, and no table can hold that.",
+          "What makes it tractable is that real digit images occupy a tiny subspace: they are smooth, centred, and drawn with a few strokes. A learning algorithm does not need to see all inputs, only enough examples to locate that subspace. With 60,000 labelled digits, the model sees 60,000 points and interpolates between them. That works because nearby points in pixel space usually have the same label.",
+          "Compare the amount of human effort. Writing a digit recogniser by hand in the 1980s took a team months and reached about 95 percent accuracy on clean digits. A small convolutional network trained on 60,000 examples reaches above 99 percent in minutes on a modern GPU. The 4-point gap is the difference between a demo and a postal sorting machine.",
+          "The cost side is worth stating: the trained model has tens of thousands of parameters with no human-readable meaning. When it is wrong, you cannot read the rule to find out why, which is why the chapters on evaluation and ethics exist."
+        ]
+      }
+    ]
+  },
+  "761": {
+    "sections": [
+      {
+        "title": "🔍 Why the type of feedback decides everything",
+        "paras": [
+          "The first question about any machine learning problem is not which algorithm but what feedback is available. If every example has a correct answer, that is one kind of problem. If there are no answers at all, it is another. If the only feedback comes after a sequence of actions, it is a third.",
+          "Choosing the paradigm before the algorithm saves months, because a supervised approach applied to unlabelled data produces nothing usable and no error message explains why."
+        ]
+      },
+      {
+        "title": "⚙️ The three paradigms and what each needs",
+        "paras": [
+          "Supervised learning has labelled pairs of input and answer. It learns to predict the answer, either as a number, which is regression, or as a category, which is classification. It needs labels, and labels cost money.",
+          "Unsupervised learning has inputs only. It looks for structure: groups, low-dimensional representations, anomalies. It cannot tell you whether the structure is meaningful, because there is no answer to compare against.",
+          "Reinforcement learning has an agent, actions, and a reward signal that arrives later. It learns a policy, which is a mapping from situation to action, by trial, and it is the only paradigm that handles sequential decisions where today's action changes tomorrow's options."
+        ],
+        "bullets": [
+          "Supervised regression predicts a quantity: price, temperature, time to failure.",
+          "Supervised classification predicts a category: spam or not, which digit, which disease.",
+          "Unsupervised clustering groups similar items; dimensionality reduction compresses while preserving structure.",
+          "Reinforcement learning needs an environment to interact with, which is often expensive or unsafe to build.",
+          "Semi-supervised learning uses many unlabelled and few labelled examples, which is common in practice.",
+          "Self-supervised learning creates labels from the data itself, such as predicting the next word, and it is how large language models are trained.",
+          "The choice is dictated by the data you can obtain, not by which paradigm is more interesting."
+        ]
+      },
+      {
+        "title": "🧮 What labels cost and how much data is needed",
+        "paras": [
+          "Labelling arithmetic: a medical imaging dataset where a radiologist takes 3 minutes per image costs 50 minutes per 1,000 images, plus review. For 50,000 images that is 2,500 hours, over a person-year of expert time, which is why so many projects use unlabelled data or weak labels.",
+          "How much labelled data is needed depends on the problem. A simple classifier with 10 features and a clear boundary can work with a few hundred examples. A model with a million parameters typically needs thousands to tens of thousands per class to generalise. Empirical learning curves show accuracy rising steeply to a few thousand examples and then flattening, which is why the marginal value of the next 10,000 labels is often low.",
+          "Reinforcement learning sample cost: an agent learning a control task may need millions of environment steps. At 1,000 steps per second in simulation that is under an hour; on a real robot at 1 step per second it is weeks. That factor of 3,600 is why RL is done in simulation and transferred, and why transfer is hard.",
+          "Unsupervised cost: no labels, so the constraint is compute. Clustering 1 million points with k-means for 20 iterations and 20 clusters is 400 million distance computations, seconds on a modern CPU. Dimensionality reduction on the same data with PCA is a single matrix factorisation, also seconds. The expensive part of unsupervised work is not the algorithm, it is deciding whether the result means anything.",
+          "The practical rule that emerges: if labels are available and cheap, supervise. If they are available but expensive, use self-supervision or active learning, which asks for labels only on the examples the model is least sure about, often cutting label needs by 5 to 10 times."
+        ]
+      }
+    ]
+  },
+  "762": {
+    "sections": [
+      {
+        "title": "🔍 Why the workflow is a loop and not a line",
+        "paras": [
+          "The textbook sequence is collect, clean, split, train, evaluate, deploy. Followed once, it ends with a model that does not work, because evaluation almost always reveals a problem that lives earlier in the sequence.",
+          "The useful mental model is a loop where the evaluation result tells you which earlier step to revisit. Knowing which box you are in is what turns a vague sense of being stuck into a specific next action."
+        ]
+      },
+      {
+        "title": "⚙️ The steps and what each one decides",
+        "paras": [
+          "Framing decides what the model predicts and how success is measured, and it is the step most often skipped. Cleaning and exploration find the missing values, duplicates, and impossible entries. Splitting creates the held-out data that makes evaluation honest. Feature work decides what the model can see. Training fits parameters. Evaluation produces a number and, more importantly, an error analysis.",
+          "Deployment is a step of its own, because a model in a notebook and a model serving requests are different engineering problems."
+        ],
+        "bullets": [
+          "Define the metric before training, because the metric decides which model wins.",
+          "Establish a trivial baseline, such as predicting the majority class, so the model has something to beat.",
+          "Split before exploring too hard, so your own knowledge cannot leak into the features.",
+          "Look at the actual errors, not just the aggregate score; fifty wrong examples teach more than one number.",
+          "Freeze the test set until the very end, and use a validation set for tuning.",
+          "Deployment needs input validation, versioning, and monitoring, none of which appear in a notebook.",
+          "Plan for retraining, because data drifts and a model that was good in March is not automatically good in September."
+        ]
+      },
+      {
+        "title": "🧮 Where the time actually goes",
+        "paras": [
+          "For a tabular project with 100,000 rows and 40 features, the realistic split is: framing and data understanding 10 percent, cleaning and exploration 40 percent, feature work 20 percent, modelling and tuning 20 percent, evaluation and error analysis 10 percent. Modelling, the part beginners focus on, is a fifth of the work.",
+          "Cleaning arithmetic: with 100,000 rows, if 3 percent of rows have a missing value in at least one of 40 columns and 1 percent are duplicates, that is 3,000 incomplete rows and 1,000 duplicates. Deleting both loses 4 percent of the data, which may be acceptable; imputing the 3,000 requires deciding whether the missingness is random, which is a five-minute question with a large effect on the result.",
+          "Iteration count: a typical first project goes through 5 to 10 loops. If each loop costs half a day of compute and analysis, that is a week, and the final model's score is usually determined by one of the early loops, specifically the one that fixed the label definition rather than the one that tuned hyperparameters.",
+          "Baseline arithmetic to keep honest: with a binary target where 8 percent are positive, predicting all negative gives 92 percent accuracy. Any model below 92 percent is worse than doing nothing. Reporting 93 percent without that context is technically true and practically misleading, which is why the baseline is the second thing built after the split.",
+          "Time-to-production arithmetic: a model takes a week to build and three months to deploy, if the deployment includes an API, monitoring, a fallback for when the model is unavailable, and a retraining schedule. Projects that budget only for the week are the ones that never ship."
+        ]
+      }
+    ]
+  },
+  "764": {
+    "sections": [
+      {
+        "title": "🔍 Why representation decides what is learnable",
+        "paras": [
+          "A model sees numbers. Everything else, text, dates, categories, images, must be turned into numbers before training, and the choice of encoding determines what relationships the model can discover. A date stored as a timestamp can support seasonality only if the model can extract it; a date stored as a string supports nothing.",
+          "This is why representation errors cannot be fixed later by a better algorithm. The information is either in the table or it is gone."
+        ]
+      },
+      {
+        "title": "⚙️ Rows, columns, labels, and the four data types",
+        "paras": [
+          "Tabular data is the most common shape: rows are examples, columns are features, and one column is the label. The same structure covers most business problems.",
+          "Features come in four types, and each needs a different treatment. Numeric features are ordered and can be averaged. Categorical features are unordered labels. Ordinal features are ordered but not evenly spaced. Text and images are unstructured and need their own encoders."
+        ],
+        "bullets": [
+          "A numeric feature can be used directly, but scaling matters for distance-based and gradient-based models.",
+          "A categorical feature must be encoded, because assigning 1, 2, 3 implies a false ordering.",
+          "A high-cardinality categorical feature, such as a postcode, needs target encoding or hashing rather than one-hot.",
+          "An ordinal feature such as a satisfaction rating can keep its integers but should not be treated as equally spaced without thought.",
+          "Dates should be split into components, such as month, weekday, and holiday flag, because raw timestamps hide the pattern.",
+          "Identifiers should be dropped as features; they carry no generalisable signal and invite leakage.",
+          "The label must be defined precisely: a churn label of has not logged in for 30 days is a decision, not a fact."
+        ]
+      },
+      {
+        "title": "🧮 How much a representation costs",
+        "paras": [
+          "One-hot encoding a colour column with 6 values adds 6 columns. Fine. One-hot encoding a postcode column with 2,000 values adds 2,000 columns to 100,000 rows, which is 200 million cells, most of them zero. Memory goes from a few megabytes to hundreds, and every tree split must consider 2,000 mostly-empty candidates.",
+          "Target encoding replaces those 2,000 columns with one numeric column, so 100,000 cells. The effectiveness is nearly identical for tree models and the cost is 2,000 times lower. The risk is leakage, which is why it must be computed inside cross-validation folds.",
+          "Scaling arithmetic: a salary of 60,000 and an age of 40 differ by a factor of 1,500. In a distance-based model the distance is dominated entirely by salary, so age contributes nothing. Standardising both to mean zero and unit variance makes them comparable and typically changes k-nearest-neighbour accuracy by tens of percentage points on such data.",
+          "Missing values in numbers: with 100,000 rows and 20 percent missing in a column, deleting those rows leaves 80,000 and may bias the sample if the missingness is not random. Imputing the mean keeps 100,000 rows and shrinks the variance. Imputing the mean plus an indicator column keeps the row and tells the model the value was missing, which is usually the best of the three.",
+          "Text arithmetic: a review of 150 words becomes 150 tokens. One-hot over a 50,000-word vocabulary is 50,000 columns, unusable. A bag-of-words with the top 5,000 terms is 5,000 columns and mostly zeros. An embedding reduces each token to 300 dense numbers, so a 150-token review becomes a 150 by 300 matrix, which preserves order and meaning. That is why embeddings replaced bag-of-words for anything beyond simple classification."
+        ]
+      }
+    ]
+  },
+  "765": {
+    "sections": [
+      {
+        "title": "🔍 Why raw data is not model-ready",
+        "paras": [
+          "Real data has different units, missing entries, text where numbers belong, and categories with free-form spellings. A model trained on that directly either fails or learns the artefact: it may discover that rows with a blank field were all from one source and use that as a shortcut.",
+          "Preprocessing is the step that makes the data consistent enough for the model to learn the real relationship. It is also where silent bugs live, because wrong preprocessing still produces a plausible-looking score."
+        ]
+      },
+      {
+        "title": "⚙️ Scaling, imputation, and encoding",
+        "paras": [
+          "Scaling brings features onto comparable ranges. Normalisation maps to a fixed interval, usually 0 to 1. Standardisation subtracts the mean and divides by the standard deviation, giving mean zero and unit variance. Which one to use depends on the model: distance-based and gradient-based methods need one of them, tree-based methods do not care.",
+          "Imputation fills missing values. The mean is the simplest and it shrinks variance. The median is robust to outliers. A model-based imputation predicts the missing value from other columns, which is more accurate and much more expensive.",
+          "Categorical encoding turns labels into numbers. One-hot creates a column per category. Ordinal encoding keeps a single column but asserts an order, which is only valid if the order is real."
+        ],
+        "bullets": [
+          "Fit the scaler on the training data only and apply it to test data, or the scaling itself leaks information.",
+          "Standardisation is safer than min-max when outliers exist, because one extreme value compresses everything else into a narrow band.",
+          "Tree models do not need scaling, which is one reason they are a good default on tabular data.",
+          "Imputation should be decided per column: a 2 percent missing rate is different from 40 percent.",
+          "An indicator column for was-missing often improves the model more than a better imputation value.",
+          "Log-transform a skewed positive feature such as income or page views, because the model sees a much more linear relationship.",
+          "Clip outliers rather than deleting them when there are few and they are clearly data errors."
+        ]
+      },
+      {
+        "title": "🧮 The numbers behind each choice",
+        "paras": [
+          "Scaling effect: a salary in the range 30,000 to 200,000 and an age in the range 20 to 60. Without scaling, the squared distance between two people differing by 10,000 in salary and 5 years of age is 100,000,000 plus 25, so the age contributes 0.000025 percent. After standardising, both contribute comparably. On a k-nearest-neighbour model this can move accuracy from 60 to 85 percent.",
+          "Missing-value arithmetic: 100,000 rows and a column with 5 percent missing. Deleting loses 5,000 rows. If the model's target rate is 8 percent positive, losing 5,000 rows randomly loses 400 positives, which is a real loss of signal. Imputing the median keeps all rows but biases that column toward the centre, and adding the indicator lets the model learn a separate effect for missing rows, which is often the strongest single predictor.",
+          "Encoding arithmetic: 12 categories with one-hot is 12 columns on 100,000 rows, 1.2 million cells, 4.8 MB as floats. Negligible. With 500 categories it is 50 million cells, 200 MB, and training time rises accordingly. That is the point at which target encoding or a tree-native categorical handling becomes necessary.",
+          "Log transform arithmetic: page views per user with a median of 3 and a maximum of 400,000. The raw distribution is so skewed that the mean is 60, which describes no actual user. log(1 + x) compresses the range to 0 to 12.9, and the mean of the transformed variable is meaningful. Models fit the log relationship far more easily, which is why the transform is standard.",
+          "The leakage arithmetic that matters: if you standardise using the whole dataset, the test set's mean influences the training features. The effect is small on 100,000 rows, perhaps 0.1 percent of accuracy, and enormous on 200 rows, where it can be several points. It is the same bug at both scales, so fix it once by using a pipeline."
+        ]
+      }
+    ]
+  },
+  "766": {
+    "sections": [
+      {
+        "title": "🔍 Why a model cannot be judged on what it studied",
+        "paras": [
+          "A model scored on its training data can always look good: the most extreme form memorises every example and reports perfect accuracy while being useless. The number is not a measurement of anything.",
+          "The only honest question is how the model behaves on data it has never seen, which means deliberately withholding some and never letting the model, or the person tuning it, look at it."
+        ]
+      },
+      {
+        "title": "⚙️ The split, leakage, and cross-validation",
+        "paras": [
+          "The standard split is training, validation, and test. Training fits the parameters. Validation drives the choices: which model, which hyperparameters, which features. Test is used once, at the end, and its only job is to estimate the final performance.",
+          "Leakage is any path by which information from the test set reaches training. It is the single most common reason a model looks excellent in development and fails in production."
+        ],
+        "bullets": [
+          "A typical split is 60/20/20, or 80/20 with cross-validation inside the training part.",
+          "For time series, split by time, never randomly, because the future cannot be used to predict the past.",
+          "For grouped data, such as multiple records per patient, split by group, not by row.",
+          "Scaling, imputation, and encoding must be fitted on training data only.",
+          "Duplicate rows across the split are leakage, and it happens whenever data was collected with repetition.",
+          "K-fold cross-validation trains k times, each with a different fold held out, and averages, which reduces the variance of the estimate.",
+          "Stratified folds preserve the class balance in each fold, which matters when the positive rate is low."
+        ]
+      },
+      {
+        "title": "🧮 How big the test set should be",
+        "paras": [
+          "The estimate's precision depends on the number of test examples. For a model at 90 percent accuracy, the standard error is the square root of p times 1 minus p divided by n. With n equal to 100, that is 3 percent, so the true accuracy is plausibly 87 to 93. With n equal to 10,000, it is 0.3 percent. This is why a test set of a few hundred examples cannot distinguish two models that differ by 2 percent.",
+          "Rule of thumb from that formula: to resolve a 1 percent difference at 90 percent accuracy, you need about 3,600 test examples. Most projects with 500 test rows are arguing about noise.",
+          "Cross-validation arithmetic: with 1,000 rows and 5 folds, each fold has 200 rows, so each score has a standard error near 2 percent. The average of 5 scores has a smaller error, roughly 1 percent, which is why cross-validation is more reliable than a single split of the same data. But 1,000 rows is still 1,000 rows; no amount of folding creates new information.",
+          "Leakage impact in numbers: a dataset of 10,000 rows where 500 are exact duplicates. A random split puts about 50 duplicates in the test set, each with its twin in training. If those 50 are memorised perfectly while the rest are at 70 percent accuracy, the reported score rises by 0.5 percent. Harmless. But if the duplicates are 30 percent of the data, as happens with scraped images, the reported score can jump from 70 to 95 percent and collapse in production.",
+          "Time series split arithmetic: predicting daily sales with a random split puts future days in training and past days in test. Because sales trend upwards, the model effectively sees the answer. Reported error can look 40 percent better than reality. Splitting by date, training on the first 80 percent of days, gives the honest number."
+        ]
+      }
+    ]
+  },
+  "768": {
+    "sections": [
+      {
+        "title": "🔍 Why start with a straight line",
+        "paras": [
+          "A straight line is the simplest relationship between an input and an output, and it has two properties that matter more than accuracy: every coefficient has a meaning, and it is the baseline every other model must beat.",
+          "If a fancy model cannot beat linear regression on a tabular problem, the extra complexity is buying nothing, which happens more often than the literature suggests."
+        ]
+      },
+      {
+        "title": "⚙️ The model, least squares, and interpretation",
+        "paras": [
+          "The model is a prediction equal to an intercept plus a weighted sum of features. Each weight is the change in the prediction for a one-unit increase in that feature, holding the others fixed.",
+          "Fitting chooses weights that minimise the sum of squared errors, which is why the method is called least squares. The solution has a closed form, so training is a single matrix computation rather than an iterative search.",
+          "The interpretation is the reason to use it. A coefficient of 2.5 on study hours means each additional hour is associated with 2.5 more points, which is a sentence a domain expert can argue with."
+        ],
+        "bullets": [
+          "Squared error punishes large mistakes more than small ones, which is why outliers dominate the fit.",
+          "The intercept is the prediction when all features are zero, which may be meaningless if zero is outside the data range.",
+          "Correlated features make individual coefficients unstable even when predictions are fine.",
+          "The model assumes the relationship is linear and the errors are independent with constant variance.",
+          "Extrapolating beyond the observed feature range is unsupported, even though the line continues.",
+          "A categorical feature enters as one-hot columns, one coefficient per category except a reference.",
+          "Adding an interaction term turns the model into a plane with a slope that depends on another feature."
+        ]
+      },
+      {
+        "title": "🧮 Fitting a line by hand",
+        "paras": [
+          "Take four points: hours 1, 2, 3, 4 with scores 3, 5, 7, 9. The mean of hours is 2.5, the mean of scores is 6. The slope is the sum of (x minus mean x) times (y minus mean y) divided by the sum of (x minus mean x) squared. The numerator is (-1.5)(-3) + (-0.5)(-1) + (0.5)(1) + (1.5)(3) = 4.5 + 0.5 + 0.5 + 4.5 = 10. The denominator is 2.25 + 0.25 + 0.25 + 2.25 = 5. So the slope is 2 and the intercept is 6 - 2(2.5) = 1.",
+          "The fitted line is score = 1 + 2 x hours. Predictions are 3, 5, 7, 9, exactly the data, so the residual sum of squares is zero. A perfect fit on four points proves nothing about new data.",
+          "Now a real-ish case: hours 1, 2, 3, 4 with scores 4, 5, 7, 8. Mean x 2.5, mean y 6. Numerator: (-1.5)(-2) + (-0.5)(-1) + (0.5)(1) + (1.5)(2) = 3 + 0.5 + 0.5 + 3 = 7. Slope 7/5 = 1.4, intercept 6 - 3.5 = 2.5. Predictions 3.9, 5.3, 6.7, 8.1. Residuals 0.1, -0.3, 0.3, -0.1, squared 0.01 + 0.09 + 0.09 + 0.01 = 0.2. Mean squared error 0.05, root mean squared error 0.22 points.",
+          "Interpretation check: the slope of 1.4 means each extra hour is worth 1.4 points on average. If a teacher claims an hour is worth 5 points, this data disagrees, and that is the kind of statement a linear model can settle.",
+          "Outlier sensitivity: change the score at 4 hours from 8 to 40. The mean of the scores jumps from 6 to 14, and the slope becomes 11 instead of 1.4, because that single point contributes 39 of the 55 in the numerator. One bad row changed the conclusion by a factor of nearly 8, which is why outliers must be inspected before fitting."
+        ]
+      }
+    ]
+  },
+  "769": {
+    "sections": [
+      {
+        "title": "🔍 Why one error number is not enough",
+        "paras": [
+          "A regression predicts numbers, so every prediction is wrong by some amount. Reporting the average error hides whether the errors are small and frequent or large and rare, and those two cases need different fixes.",
+          "Three metrics answer three different questions, and using the wrong one leads to optimising for the wrong thing."
+        ]
+      },
+      {
+        "title": "⚙️ MSE, RMSE, MAE, and R squared",
+        "paras": [
+          "Mean squared error averages the squared differences. It punishes large errors heavily, which is desirable when a big mistake is much worse than several small ones.",
+          "Root mean squared error takes the square root, which brings the number back to the target's units. An RMSE of 3 points on an exam score is directly interpretable; an MSE of 9 is not.",
+          "Mean absolute error averages the absolute differences. It is less sensitive to outliers and easier to explain, and its downside is that it does not distinguish one large error from several small ones.",
+          "R squared is one minus the sum of squared errors divided by the total sum of squares. It answers how much better than always predicting the mean, so 0 means no better and 1 means perfect."
+        ],
+        "bullets": [
+          "RMSE is always at least as large as MAE, and the gap grows with the variance of the errors.",
+          "R squared can be negative when the model is worse than predicting the mean, which happens on held-out data.",
+          "R squared is scale-free, so it is comparable across datasets; RMSE is not.",
+          "Optimising MAE versus MSE changes which model you pick when errors are unevenly distributed.",
+          "Report the metric in the units a human cares about, then the R squared as context.",
+          "A model with R squared of 0.3 can still be useful if the errors are small enough for the decision at hand.",
+          "Always compare against the baseline of predicting the mean, which is what R squared of 0 means."
+        ]
+      },
+      {
+        "title": "🧮 Computing all three on the same data",
+        "paras": [
+          "Take true values 3, 5, 7, 9, which have a mean of 6 and a total sum of squares of 9 + 1 + 1 + 9 = 20.",
+          "Model A predicts 3.2, 5.1, 6.8, 8.9. Errors are 0.2, -0.1, -0.2, 0.1. Squared errors are 0.04, 0.01, 0.04, 0.01, so the sum is 0.10 and the MSE is 0.025. RMSE is 0.158. MAE is 0.15. R squared is 1 - 0.10/20 = 0.995.",
+          "Model B predicts 4.5, 4.5, 7.5, 7.5. Errors are -1.5, 0.5, -0.5, 1.5. Squared errors are 2.25, 0.25, 0.25, 2.25, sum 5, MSE 1.25. RMSE 1.118. MAE 1.0. R squared is 1 - 5/20 = 0.75.",
+          "Now Model C: 6, 6, 6, 6, which is predicting the mean. Errors are 3, 1, -1, -3, squared 9 + 1 + 1 + 9 = 20, MSE 5, RMSE 2.236, R squared exactly 0. That is the reference point.",
+          "A case where the metrics disagree: Model D predicts three points perfectly and misses the fourth by 4. Errors 0, 0, 0, 4. MSE is 4, RMSE 2, MAE 1. Model B, which was consistently off by about 1, has RMSE 1.118 and scores better on RMSE even though it never predicts a single point exactly. Which is better depends on whether one large error matters more than several small ones, and that is a business question.",
+          "The R squared trap: R squared always increases when features are added, even useless ones. On the same data, adding 10 random columns will raise R squared by a small amount while making the model worse on new data. The fix is adjusted R squared, which penalises the number of parameters."
+        ]
+      }
+    ]
+  },
+  "770": {
+    "sections": [
+      {
+        "title": "🔍 Why a good fit can be a bad model",
+        "paras": [
+          "With enough features, a regression can fit the training data almost exactly by using large coefficients that compensate for each other. Two correlated features get coefficients of plus 500 and minus 500, and their sum is small on the training data but wildly sensitive to noise.",
+          "Regularisation adds a penalty for large coefficients, which forces the model to prefer small, stable effects unless the data strongly demands otherwise."
+        ]
+      },
+      {
+        "title": "⚙️ Ridge, Lasso, and the alpha dial",
+        "paras": [
+          "Ridge adds the sum of squared coefficients to the loss. It shrinks all coefficients toward zero smoothly, and it handles correlated features by distributing weight between them.",
+          "Lasso adds the sum of absolute values. It can drive some coefficients to exactly zero, which performs feature selection automatically.",
+          "Elastic net mixes the two, which helps when there are many correlated features and you still want sparsity."
+        ],
+        "bullets": [
+          "Alpha controls the strength: zero is ordinary regression, large values shrink everything toward the intercept.",
+          "Ridge keeps every feature, Lasso removes some, and the choice is often about interpretability as much as accuracy.",
+          "Features must be on comparable scales before regularising, or the penalty falls unevenly.",
+          "The intercept is normally not penalised, since shrinking it would bias the predictions.",
+          "Regularisation always increases training error and should decrease test error; if it does not, alpha is too large.",
+          "Lasso is unstable when features are highly correlated, arbitrarily keeping one and dropping the other.",
+          "Cross-validate alpha over a logarithmic grid rather than guessing."
+        ]
+      },
+      {
+        "title": "🧮 The shrinkage in numbers",
+        "paras": [
+          "Consider one feature with an unregularised coefficient of 10. Under Ridge with alpha 1 and a feature whose values have squared sum 100, the coefficient becomes 10 divided by 1 plus alpha, so 5. The prediction differences halve. With alpha 100 it becomes 0.099, so the feature is effectively gone.",
+          "Feature count arithmetic: a regression with 40 features and 500 rows is at risk, because 40 coefficients from 500 observations begins to fit noise. Ridge on such a model typically reduces test error by 5 to 15 percent while raising training error, which is exactly the intended trade.",
+          "Lasso sparsity in numbers: with 200 features where 20 are real, Lasso at a well-chosen alpha often leaves 15 to 25 non-zero coefficients, so it recovers most of the signal and discards 175 useless columns. Ridge would keep all 200 with small values, which predicts similarly but tells you nothing about which features matter.",
+          "The stability difference: with two features correlated at 0.95, ordinary regression gives coefficients of plus 800 and minus 790; Ridge gives plus 40 and plus 38; Lasso gives plus 60 and zero. All three predict almost identically on the training data. Ridge's answer is the most reproducible across samples, which is why it is preferred when interpretation of individual effects matters less than stability.",
+          "The alpha selection in numbers: testing alpha over 1, 0.1, 0.01, 0.001 with 5-fold cross-validation is 20 fits. If each fit takes 0.05 seconds, that is one second, so there is no excuse for guessing. The chosen alpha is the one with the lowest cross-validated error, and the curve is usually flat near the optimum, which means precision in alpha does not matter much."
+        ]
+      }
+    ]
+  },
+  "772": {
+    "sections": [
+      {
+        "title": "🔍 Why a probability rather than a category",
+        "paras": [
+          "A classifier that outputs only a label throws away the information needed to make a decision. In medicine, knowing that a patient has a 0.4 probability of a condition is very different from knowing 0.9, even if both fall below a 0.5 threshold and both are labelled negative.",
+          "Logistic regression predicts that probability. It is linear in the features but passes the result through a function that squashes any number into the interval from zero to one, which is what makes it a probability rather than a score."
+        ]
+      },
+      {
+        "title": "⚙️ The linear score, the sigmoid, and the boundary",
+        "paras": [
+          "The model computes a linear combination of the features, called the log-odds or logit, and then applies the logistic function to convert it to a probability. A logit of zero gives probability 0.5, positive logits give probabilities above 0.5, and large negative logits approach zero.",
+          "Training minimises cross-entropy loss rather than squared error, because cross-entropy punishes confident wrong predictions much more severely, which is the right behaviour for probabilities."
+        ],
+        "bullets": [
+          "The decision boundary is the set of points where the probability equals the threshold, and for logistic regression it is a straight line or plane.",
+          "The threshold does not have to be 0.5; it should be chosen from the relative cost of false positives and false negatives.",
+          "Coefficients are interpretable as changes in log-odds, and exponentiating one gives an odds ratio.",
+          "The model cannot represent an XOR pattern, because the boundary is linear; adding interaction terms fixes it.",
+          "Class imbalance makes the default threshold wrong, and class weights or threshold adjustment correct it.",
+          "Regularisation applies here exactly as in linear regression, and it is on by default in scikit-learn.",
+          "The output is a calibrated probability only if the model is well specified; otherwise it is a score that ranks correctly."
+        ]
+      },
+      {
+        "title": "🧮 One prediction from start to finish",
+        "paras": [
+          "Take a student with 80 percent attendance and 2 hours of study, and a fitted model with logit equal to minus 6 plus 0.05 times attendance plus 0.8 times hours. The logit is minus 6 plus 4 plus 1.6, so minus 0.4.",
+          "The probability is 1 divided by 1 plus e to the 0.4. e to the 0.4 is about 1.4918, so the probability is 1 divided by 2.4918, about 0.401. Predicting with a 0.5 threshold gives class 0, but the probability of 0.4 is high enough that a decision rule aimed at catching at-risk students might use a 0.3 threshold and classify this student as at risk.",
+          "Now attendance 95 and 3 hours: logit minus 6 plus 4.75 plus 2.4 equals 1.15. e to the minus 1.15 is 0.3166, so the probability is 1 divided by 1.3166, about 0.759. Above 0.5, so class 1.",
+          "Interpretation of a coefficient: 0.8 on study hours means each extra hour adds 0.8 to the logit, multiplying the odds by e to the 0.8, about 2.23. So an extra hour more than doubles the odds of the positive class, holding attendance fixed.",
+          "Threshold economics in numbers: suppose a false negative costs 10 and a false positive costs 1. The expected cost of predicting negative at probability p is p times 10, and of predicting positive is 1 minus p. Predicting positive is cheaper when p times 10 exceeds 1 minus p, which is p above 1 divided by 11, about 0.09. So the optimal threshold is 0.09, not 0.5, and using 0.5 costs money on every borderline case.",
+          "Logit scale sanity check: a logit of 5 corresponds to a probability of 0.993, and a logit of minus 5 to 0.007. The logistic function saturates, so differences in logit beyond plus or minus 5 are numerically invisible in probability, which is why log-loss on confident wrong predictions grows without bound."
+        ]
+      }
+    ]
+  },
+  "773": {
+    "sections": [
+      {
+        "title": "🔍 Why a model you can draw is worth having",
+        "paras": [
+          "A decision tree asks a sequence of yes-or-no questions and returns an answer at the end. That is the same form as human diagnostic reasoning, which is why it can be explained to a domain expert in a minute and argued with.",
+          "It is the only mainstream model that can be drawn on a whiteboard and defended line by line, which makes it the best tool for learning what a model actually does."
+        ]
+      },
+      {
+        "title": "⚙️ Structure, impurity, and the pruning problem",
+        "paras": [
+          "Each internal node tests one feature against a threshold. Each branch is an outcome. Each leaf holds a prediction, which is the majority class for classification or the mean for regression.",
+          "Learning chooses, at each node, the split that best separates the classes, measured by the drop in impurity. Gini impurity and entropy are the two standard measures, and they usually produce similar trees."
+        ],
+        "bullets": [
+          "Gini impurity for a node is one minus the sum of squared class proportions, so a pure node has impurity zero.",
+          "A split is chosen to maximise the weighted impurity decrease, not the accuracy, because impurity is smoother to optimise.",
+          "Fully grown trees fit the training data perfectly, which is overfitting unless constrained.",
+          "Constraints include maximum depth, minimum samples per leaf, and minimum impurity decrease.",
+          "Pruning removes branches that do not improve validation performance, which is more effective than growing shallow trees.",
+          "Trees handle mixed feature types and require no scaling, which makes them convenient.",
+          "A single tree is unstable: changing a few rows can produce a different tree, which is why forests exist."
+        ]
+      },
+      {
+        "title": "🧮 Splitting by hand",
+        "paras": [
+          "Take six examples with a binary label: three positive and three negative. The node impurity by Gini is 1 minus (0.5 squared plus 0.5 squared), which is 0.5.",
+          "Consider a split into a left group of three positives and a right group of three negatives. Both children are pure, impurity zero, so the weighted decrease is 0.5, the maximum possible. The tree is solved in one question.",
+          "Now a weaker split: left group has two positives and one negative, right has one positive and two negatives. Left impurity is 1 minus (4/9 plus 1/9) = 0.444. Right is the same. Weighted impurity is 0.444, so the decrease is 0.056. That split is nearly useless, and the numbers show it before any cross-validation is run.",
+          "Depth arithmetic: a tree of depth 3 with binary splits has at most 8 leaves and can represent 8 regions. A dataset with 100,000 rows and 40 features has far more structure, so a depth-3 tree underfits badly. Depth 10 allows 1,024 leaves, which can memorise a lot; on 100,000 rows that is about 100 rows per leaf, which is often reasonable. The gap between depth 3 and depth 10 is the entire bias-variance trade in one parameter.",
+          "Overfitting arithmetic: an unconstrained tree on 1,000 rows with 20 features typically reaches 100 percent training accuracy and 65 to 75 percent test accuracy. Constraining to a minimum of 20 samples per leaf costs a few points of training accuracy and gains 5 to 10 points on test. The number 20 is not magic; it is roughly the point where a leaf has enough rows for a class proportion to be meaningful.",
+          "Instability arithmetic: a single tree on 1,000 rows, with 10 percent of rows resampled, changes about 20 percent of its splits. Averaging 500 such trees, as a random forest does, removes that variance, which is the subject of a later chapter."
+        ]
+      }
+    ]
+  },
+  "774": {
+    "sections": [
+      {
+        "title": "🔍 Why the simplest possible idea works",
+        "paras": [
+          "To classify a new point, find the training points closest to it and take a vote. There is no training phase, no parameters to fit, and no functional form to assume.",
+          "That simplicity is instructive: it shows that a model can be useful without learning anything in the usual sense, and it shows how much the notion of distance is doing the work."
+        ]
+      },
+      {
+        "title": "⚙️ Distance, k, and the curse of dimensionality",
+        "paras": [
+          "Closeness is measured by a distance, usually Euclidean but sometimes Manhattan or cosine. Because the distance depends on the units of the features, scaling is mandatory: without it, a feature measured in thousands dominates every other.",
+          "The value of k controls the bias-variance trade. A small k follows the data closely and is noisy. A large k smooths the boundary and can wash out real structure."
+        ],
+        "bullets": [
+          "k equal to 1 gives zero training error and a jagged boundary that overfits.",
+          "Odd values of k avoid ties in binary classification.",
+          "Distance-weighted voting lets nearer neighbours count more, which usually helps.",
+          "Prediction cost is proportional to the number of training points times the number of features, so it is slow on large data.",
+          "A k-d tree or ball tree speeds up exact search in low dimensions but degrades as dimensions grow.",
+          "In high dimensions, the nearest and farthest points become almost equidistant, which is why KNN fails there.",
+          "The choice of k should be cross-validated; typical useful values are 3 to 15 for moderate datasets."
+        ]
+      },
+      {
+        "title": "🧮 Distances, votes, and the dimension problem",
+        "paras": [
+          "Two points in two dimensions: from (1, 2) to (4, 6) the distance is the square root of 9 plus 16, which is 5. Two points in ten dimensions that differ by 1 in every coordinate have distance equal to the square root of 10, about 3.16, so adding dimensions makes points farther apart even when the per-coordinate differences are tiny.",
+          "Training error for k equal to 1: every training point is its own nearest neighbour at distance zero, so the training accuracy is 100 percent by construction. A test accuracy of 70 percent alongside that is a clear sign of overfitting, and it is invisible if only training error is reported.",
+          "The curse of dimensionality in numbers: consider 1,000 points spread uniformly in a unit cube. In 1 dimension, the nearest neighbour is at about 0.001 of the range. In 10 dimensions, the expected nearest-neighbour distance is about 0.5, and in 100 dimensions it is about 0.95. The nearest neighbour is essentially as far as the farthest point, so the vote is meaningless. This is why KNN works on 5 features and fails on 500.",
+          "Computing cost: 1 million training points with 100 features means 100 million multiplications per query, about 0.1 seconds in a naive loop. For 1,000 queries per second that is impossible, which is why production nearest-neighbour search uses approximate indexes. That is also the problem vector databases were built to solve.",
+          "Choosing k by cross-validation, concretely: with 5,000 training rows, test k equal to 1, 3, 5, 9, 15. Typical results are 71, 76, 79, 78, 74 percent. The curve peaks around 5, and the difference between 5 and 15 is 5 points, which is large enough to matter and small enough that guessing would probably land within 2 points. Cross-validating is cheap because training is free; only prediction costs, so the whole sweep is one pass over the candidates."
+        ]
+      }
+    ]
+  }
+}

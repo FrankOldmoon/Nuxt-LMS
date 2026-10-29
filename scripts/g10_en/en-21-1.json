@@ -1,0 +1,389 @@
+{
+  "540": {
+    "sections": [
+      {
+        "title": "🔍 Why a guess needs a number",
+        "paras": [
+          "Should you take an umbrella? Should the factory accept this batch? Questions like these have no certain answer, and words like probably or unlikely cannot be compared, added or checked. Probability replaces the words with a number between 0 and 1, and that number can be argued with.",
+          "The important shift is what the number describes. A coin does not contain 0.5 the way it contains metal. The number describes either how often a result appears when you repeat the experiment, or how strongly you believe a claim before seeing more evidence. Both readings obey the same arithmetic, which is why one set of rules serves insurance, medicine and gambling alike."
+        ]
+      },
+      {
+        "title": "⚙️ Three readings, one arithmetic",
+        "paras": [
+          "The classical reading counts equally likely outcomes: with six faces, a three has probability 1/6. The frequency reading repeats the experiment and watches the proportion settle. The subjective reading starts from a belief and updates it when data arrives. Pick whichever fits the situation, then use the same rules."
+        ],
+        "bullets": [
+          "Every probability lies in [0, 1], and the whole sample space has probability 1.",
+          "Two outcomes does not mean two equal halves: a lottery ticket is either a winner or not, and it is not 50-50.",
+          "Equal likelihood has to be argued, not assumed. A loaded die still has six faces.",
+          "Rare events become common in bulk: something with probability one in a million happens about 63 times in a hundred million tries."
+        ]
+      },
+      {
+        "title": "🧮 A number that beats intuition",
+        "paras": [
+          "Twenty-three people share a room. What is the chance that two of them have the same birthday? Most people answer a few percent. The right answer is about 50.7 percent, and at fifty people it is 97 percent.",
+          "The mistake is answering a different question. The chance that somebody shares your birthday is small, roughly 23/365. The question is whether any pair matches, and 23 people make 253 pairs. Each pair has a 1/365 chance, so the chance that at least one pair matches is 1 - (364/365)^253, which is close to one half.",
+          "This is the habit the rest of the chapter trains: before computing, write down what the sample space actually is. Most wrong answers in probability come from a sample space that was never listed."
+        ]
+      }
+    ]
+  },
+  "541": {
+    "sections": [
+      {
+        "title": "🔍 Why the list comes before the arithmetic",
+        "paras": [
+          "Probability is a ratio, and a ratio needs a denominator. Before any formula you have to know what all the possible results are, and whether they are equally likely. An event is then just a subset of that list, so questions about probability become questions about sets.",
+          "This is not bookkeeping. Two people can compute the same fraction and get different answers because they listed different sample spaces, and only one of those lists matches the experiment."
+        ]
+      },
+      {
+        "title": "⚙️ Events as sets, and the one trap that catches everyone",
+        "paras": [
+          "With two dice the sample space is the set of ordered pairs, thirty-six of them. If you write unordered pairs instead you get twenty-one results, and they are not equally likely: (3,3) happens one way while (2,4) happens two ways. Every count downstream is then wrong."
+        ],
+        "bullets": [
+          "Union means at least one event happens, intersection means both happen, complement means it does not happen.",
+          "Mutually exclusive means the intersection is empty, so their probabilities add directly.",
+          "Complement is often the fastest route: at least one six is 1 minus no six.",
+          "Ordered and equally likely is the safe default. Switch to unordered only when the outcomes really are symmetric."
+        ]
+      },
+      {
+        "title": "🧮 Sum of seven against sum of six",
+        "paras": [
+          "Seven beats six, which surprises people. Seven has six ordered pairs: (1,6), (2,5), (3,4) and their mirror images. Six has only five, because (3,3) has no mirror. So P(seven) is 6/36 and P(six) is 5/36.",
+          "Now ask for at least one six. Adding 1/6 and 1/6 gives 1/3, which is wrong: it counts double six twice. Counting directly gives eleven outcomes out of thirty-six, so the answer is 11/36, and the missing 1/36 is exactly the double six. That correction is the addition rule of the next section."
+        ]
+      }
+    ]
+  },
+  "542": {
+    "sections": [
+      {
+        "title": "🔍 Why you count before you divide",
+        "paras": [
+          "With equally likely outcomes, probability is a ratio of counts. The denominator is usually enormous, so the work is done by formula rather than by listing: five cards from fifty-two give 2,598,960 hands.",
+          "Almost every counting error is a formula error, not an arithmetic error. The answer comes out wrong by a factor of two or six because the same set of objects was counted once as ordered and once as unordered."
+        ]
+      },
+      {
+        "title": "⚙️ Three principles and two formulas",
+        "paras": [
+          "Ask three questions about any counting problem: does order matter, can items repeat, and is the task one step or several? The answers pick the formula for you."
+        ],
+        "bullets": [
+          "Several steps, every step required: multiply the choices. n steps with 3 choices each give 3^n.",
+          "One choice among disjoint cases: add the counts.",
+          "Count the opposite when the question says at least or at most.",
+          "Order matters, no repeats: n!/(n-k)!. Order does not matter: n!/(k!(n-k)!).",
+          "Repeats allowed with order: n^k. Repeats allowed without order: C(n+k-1, k).",
+          "Divide by k! when k identical groups are formed, because the groups themselves have no order."
+        ]
+      },
+      {
+        "title": "🧮 Five cards, exactly three hearts",
+        "paras": [
+          "Total hands: C(52,5) = 2,598,960. Favourable hands: choose three of the thirteen hearts and two of the thirty-nine others, C(13,3) x C(39,2) = 286 x 741 = 211,926. The probability is 211,926 / 2,598,960, about 0.0815.",
+          "The trap is the phrase at least. Asking for at least one heart invites you to count one, two, three, four and five hearts separately and to miss one case. Count the complement instead: C(39,5) / C(52,5) is about 0.2215, so at least one heart is about 0.7785.",
+          "A second trap: choosing two women and then filling the rest freely counts the same hand several times. Split into cases that cannot overlap, then add."
+        ]
+      }
+    ]
+  },
+  "544": {
+    "sections": [
+      {
+        "title": "🔍 Why rules instead of a definition",
+        "paras": [
+          "Counting favourable outcomes works for dice and cards, because both are finite and symmetric. It fails for a coin tossed until the first head, for a needle landing on a floor, and for tomorrow's weather. In each case there is no list of equally likely outcomes to divide.",
+          "So modern probability does not define what probability is. It states the rules any probability must obey, and derives everything from them. A function that satisfies the rules is a probability, whether it came from counting, from a long run of trials, or from an expert's belief."
+        ]
+      },
+      {
+        "title": "⚙️ Three axioms and what follows",
+        "paras": [
+          "Non-negativity, a total of one, and additivity over disjoint events. Everything else is a consequence."
+        ],
+        "bullets": [
+          "The empty event has probability zero, and any event has probability at most one.",
+          "P(not A) = 1 - P(A), which turns at least one into none at all.",
+          "If A is contained in B then P(A) is at most P(B).",
+          "P(A or B) = P(A) + P(B) - P(A and B), the version that survives overlap.",
+          "Zero probability does not mean impossible. A continuous variable hits any single exact value with probability zero, yet it hits some value."
+        ]
+      },
+      {
+        "title": "🧮 Three problems that only the complement can solve",
+        "paras": [
+          "Four throws of a die, at least one six: one minus (5/6)^4 is 0.5177. Six throws give 0.665, not the near-certainty people expect.",
+          "Thirty people, at least one shared birthday: one minus the product 365 x 364 x ... x 336 over 365^30, about 0.706.",
+          "A hundred components with a failure rate of 0.1 percent each: the chance that at least one fails is 1 - 0.999^100, about 9.5 percent. Each part looks reliable and the system does not.",
+          "All three assume independence. When failures are correlated, as they are for parts from the same batch, the real probability is higher than the formula suggests."
+        ]
+      }
+    ]
+  },
+  "545": {
+    "sections": [
+      {
+        "title": "🔍 Why or cannot simply add",
+        "paras": [
+          "Draw one card. The chance it is a heart is 13/52 and the chance it is an ace is 4/52. Add them and you get 17/52, but the ace of hearts was counted twice, so the true answer is 16/52.",
+          "Adding works only when the two events cannot both happen. The general rule subtracts the overlap, and that single correction is the whole content of this section."
+        ]
+      },
+      {
+        "title": "⚙️ Two versions of one rule",
+        "paras": [
+          "Decide first whether the events are disjoint. If they are, add. If they are not, add and subtract the intersection."
+        ],
+        "bullets": [
+          "Disjoint: P(A or B) = P(A) + P(B). Mutually exclusive is the technical word, and it means the intersection is empty.",
+          "General: P(A or B) = P(A) + P(B) - P(A and B).",
+          "Three events: add the singles, subtract the three pairwise overlaps, add back the triple overlap.",
+          "A probability above 1 is the signature of a forgotten subtraction.",
+          "Many problems are easier as one minus the probability that none of the events happen."
+        ]
+      },
+      {
+        "title": "🧮 A card and a classroom",
+        "paras": [
+          "Heart or ace: 13/52 + 4/52 - 1/52 = 16/52, about 0.308.",
+          "In a class of forty, twenty-five study Python and twenty study Java, with ten doing both. At least one language: 25/40 + 20/40 - 10/40 = 35/40, so five students study neither. Filling the regions of a Venn diagram agrees: twenty only Python, ten only Java, ten both.",
+          "Two dice, sum of seven or eleven: the events cannot both happen, so the probabilities add, 6/36 + 2/36 = 8/36."
+        ]
+      }
+    ]
+  },
+  "546": {
+    "sections": [
+      {
+        "title": "🔍 Why information moves the probability",
+        "paras": [
+          "A card is drawn face down. The chance it is an ace is 4/52. Then you are told it is a heart, and the chance becomes 1/13. Nothing about the card changed, but the space of possibilities shrank from fifty-two cards to thirteen.",
+          "Conditional probability is that shrinking written down: P(A given B) = P(A and B) / P(B). The division by P(B) is what renormalises the smaller world so that it again sums to one."
+        ]
+      },
+      {
+        "title": "⚙️ Multiplication, independence, and the direction of a condition",
+        "paras": [
+          "Rearranged, the definition gives the multiplication rule, which is how you compute the probability of two things happening in sequence."
+        ],
+        "bullets": [
+          "P(A and B) = P(B) x P(A given B), and the order can be swapped.",
+          "Independent means P(A given B) = P(A), equivalently P(A and B) = P(A) x P(B).",
+          "Disjoint and independent are not the same thing. If two events are disjoint and both have positive probability, they are strongly dependent.",
+          "Total probability: split on cases and add, P(A) = P(A given B)P(B) + P(A given not B)P(not B).",
+          "Bayes flips the condition: P(B given A) = P(A given B)P(B) / P(A). The two directions are not interchangeable."
+        ]
+      },
+      {
+        "title": "🧮 When a 99 percent test is only 17 percent right",
+        "paras": [
+          "A disease affects one person in a hundred. A test catches 99 percent of cases and falsely flags 5 percent of healthy people. You test positive. What is the chance you are ill?",
+          "Take ten thousand people. About a hundred are ill, and 99 of them test positive. Of the nine thousand nine hundred healthy people, 495 test positive. So 594 positives contain 99 true cases: 99/594 is about 16.7 percent.",
+          "The test is accurate and the answer is still low, because the healthy group is so much larger that its false positives outnumber the true ones. This is why screening programmes re-test, and why the same test performs far better in a high-risk group.",
+          "The same arithmetic explains the prosecutor's fallacy: the probability of the evidence given innocence is not the probability of innocence given the evidence."
+        ]
+      }
+    ]
+  },
+  "548": {
+    "sections": [
+      {
+        "title": "🔍 Why outcomes have to become numbers",
+        "paras": [
+          "Heads and tails cannot be averaged. Probabilities can. A random variable is the bridge: a function that assigns a real number to every outcome, so that sums, differences and averages make sense.",
+          "Two dice give a good example. The outcomes are ordered pairs, but the thing you care about is their sum, and the sum is a random variable built on top of them."
+        ]
+      },
+      {
+        "title": "⚙️ A distribution and the two checks it must pass",
+        "paras": [
+          "For a discrete variable the whole story is a list of values with their probabilities. Two conditions hold for any legal list: no probability is negative, and the list adds to one. If your table fails either check, the counting behind it is wrong.",
+          "The cumulative distribution answers range questions: P(X at most 3) is the sum of the probabilities up to three. Ranges are sums, never single entries."
+        ],
+        "bullets": [
+          "A value that is not in the list has probability zero, even if it is close to one that is.",
+          "P(X at least 1) = 1 - P(X = 0), the most used identity in the chapter.",
+          "A function of a random variable is another random variable: if Y = 2X + 3, each value moves and the probabilities travel with it.",
+          "Common families to recognise: Bernoulli, binomial, Poisson, geometric, hypergeometric."
+        ]
+      },
+      {
+        "title": "🧮 The sum of two dice, and a variable built from it",
+        "paras": [
+          "Values run from 2 to 12 with counts 1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1 over thirty-six. The list adds to thirty-six, so it is legal. The shape is a triangle with its peak at seven, and it is symmetric, which is a free check on any calculation.",
+          "P(sum at least 10) = 3/36 + 2/36 + 1/36 = 6/36. P(sum at most 4) is also 6/36, because the distribution mirrors around seven.",
+          "Now define Y as the distance from seven. Y takes 0 to 5, and P(Y = 0) is 6/36 while P(Y = 1) is 5/36 + 5/36, because six and eight both sit one step away. Summing the new list still gives one, as it must."
+        ]
+      }
+    ]
+  },
+  "549": {
+    "sections": [
+      {
+        "title": "🔍 Why a single exact value has probability zero",
+        "paras": [
+          "A spinner stops at some angle. There are infinitely many angles, and if each had the same positive probability the total would exceed one, so each must have probability zero. Yet some angle certainly happens.",
+          "This is the break with discrete variables. Probability now lives on intervals, and the tool is a density: the probability of an interval is the area under the curve above it."
+        ]
+      },
+      {
+        "title": "⚙️ Density is a height, probability is an area",
+        "paras": [
+          "A density is not a probability. It can be larger than one, because it is probability per unit of x. Only the area is a probability, and the area is always between zero and one.",
+          "Any legal density is non-negative and encloses exactly one unit of area. The cumulative distribution is the running area, which starts at zero, never decreases, and ends at one."
+        ],
+        "bullets": [
+          "P(a to b) = F(b) - F(a): subtract two areas rather than integrating by hand.",
+          "Endpoints do not matter: P(X > a) equals P(X at least a).",
+          "Uniform on an interval: the density is flat, and probability is just length divided by total length.",
+          "Exponential waiting time is memoryless: having waited five minutes tells you nothing about the next five.",
+          "Normal is the bell, but its cumulative value has no simple formula, so tables or software are used."
+        ]
+      },
+      {
+        "title": "🧮 Three intervals, three habits",
+        "paras": [
+          "X uniform on 0 to 10 has density 0.1, so P(2 to 7) is 5 x 0.1 = 0.5 and P(X = 5) is zero.",
+          "Heights are normal with mean 170 and standard deviation 10. Standardise: 190 becomes z = 2, and the area beyond is about 2.3 percent. The band from 160 to 180 is one standard deviation either side, about 68 percent.",
+          "Service times are exponential with rate 0.5 per minute. P(longer than 3) = e^-1.5, about 0.223. Given that two minutes have already passed, the chance of three more is still 0.223, which is the memoryless property and the reason queues can be analysed at all."
+        ]
+      }
+    ]
+  },
+  "550": {
+    "sections": [
+      {
+        "title": "🔍 The expected value is an average, not a prediction",
+        "paras": [
+          "The expected value of a die is 3.5, a number no throw ever produces. It is the long-run average of many throws, and geometrically it is the balance point of the distribution.",
+          "That distinction matters. An expected value tells you where results cluster, not what will happen next, and for a skewed distribution it can sit where almost no data lies."
+        ]
+      },
+      {
+        "title": "⚙️ Linearity is free, variance is not",
+        "paras": [
+          "Expectation is linear, and this needs no independence at all. Variance behaves differently: adding constants does nothing, multiplying scales by the square, and only independent variables have additive variances."
+        ],
+        "bullets": [
+          "E(aX + b) = aE(X) + b, and E(X + Y) = E(X) + E(Y) always.",
+          "Var(X) = E(X squared) - (E(X)) squared, usually the quickest route.",
+          "Var(aX + b) = a squared times Var(X): shifting a distribution changes nothing about its spread.",
+          "Var(X + Y) = Var(X) + Var(Y) only under independence.",
+          "Standard deviation returns to the original units, so quote it rather than the variance when explaining spread.",
+          "Chebyshev bounds the tail for any distribution: being more than k standard deviations out has probability at most 1/k squared."
+        ]
+      },
+      {
+        "title": "🧮 A die, a lottery ticket, and a surprising one",
+        "paras": [
+          "One die: E(X) = 21/6 = 3.5. And E(X squared) = 91/6, about 15.17, so the variance is 15.17 - 12.25 = 2.92 and the standard deviation is 1.71.",
+          "A two-yuan ticket with a one in a million chance of a million pays an expected 1. Subtract the price and the expected gain is minus one: the house keeps half of everything staked. Buying more does not change the odds, it only makes the outcome closer to that average.",
+          "A permutation of n people is placed at random. How many end up in their own seat? Let each person contribute a 1 or a 0, so the count is a sum of n indicators, each with expectation 1/n. Linearity then gives an expectation of exactly 1, whatever n is, and the proof took one line because no independence was needed."
+        ]
+      }
+    ]
+  },
+  "552": {
+    "sections": [
+      {
+        "title": "🔍 What has to be true before you may use it",
+        "paras": [
+          "The binomial counts successes in a fixed number of identical trials. Four conditions define it: the number of trials is fixed, each trial has two outcomes, the success probability stays the same, and the trials are independent.",
+          "The condition that quietly fails most often is independence. Drawing without replacement changes the probability after each draw, which is the hypergeometric model, not the binomial. Repeated actions by the same person are also correlated: someone who clicked once is likelier to click again."
+        ]
+      },
+      {
+        "title": "⚙️ The formula, read in three parts",
+        "paras": [
+          "C(n,k) chooses which trials succeed, p^k gives the probability of those successes, and (1-p)^(n-k) covers the rest. Nothing is left unexplained in the formula."
+        ],
+        "bullets": [
+          "Mean is np and variance is np(1-p), so the spread is widest when p is one half.",
+          "At least one success is 1 - (1-p)^n, the fastest form to remember.",
+          "For large n and small p the Poisson with mean np is a good approximation.",
+          "For large n with p away from the extremes the normal approximation works, with a continuity correction.",
+          "If the observed spread is larger than np(1-p) the data are overdispersed and the binomial is the wrong model."
+        ]
+      },
+      {
+        "title": "🧮 Guessing a ten-question quiz",
+        "paras": [
+          "Four options, ten questions, pure guessing: n is 10 and p is 0.25. Getting at least six right means adding the terms from six to ten. The largest is six, about 0.0162, and the rest shrink fast, so the total is roughly 0.0197, under two percent.",
+          "The mean is 2.5 and the standard deviation is about 1.37, so four correct is ordinary and six is more than two standard deviations out. That is why six correct out of ten is worth a second look while four is not.",
+          "A quality check: a two percent defect rate, fifty items sampled, gives a 63.6 percent chance of finding at least one defect. To be 95 percent sure of catching a defect you need 149 items, because the probability of seeing none falls as (0.98)^n."
+        ]
+      }
+    ]
+  },
+  "553": {
+    "sections": [
+      {
+        "title": "🔍 Why the bell turns up everywhere",
+        "paras": [
+          "Height, measurement error and the average of many small influences all look like a bell. They look alike because of the central limit theorem, not because the world was designed that way: add up many small independent effects and the total approaches a normal distribution whatever the pieces look like.",
+          "The caution is that near-normal is not normal. Daily stock returns and personal income have fatter tails than a bell predicts, so extreme events happen far more often than a normal model suggests. Assuming normality where it does not hold is how risk gets underestimated."
+        ]
+      },
+      {
+        "title": "⚙️ Two numbers, one curve, and the z score",
+        "paras": [
+          "A normal distribution is fixed entirely by its mean and standard deviation: one says where it sits, the other how wide it is. Standardising turns any of them into the same standard curve, z = (x - mean) / standard deviation, so one table serves every problem."
+        ],
+        "bullets": [
+          "About 68 percent of values lie within one standard deviation, 95 within two, 99.7 within three.",
+          "A z score is a position measured in standard deviations, so it compares quantities with different units.",
+          "Linear combinations of independent normals are still normal, which is why sums and averages stay tractable.",
+          "The mean and standard deviation of a sum add in a specific way: means add, variances add.",
+          "Three standard deviations out is rare enough to be treated as a signal in quality control."
+        ]
+      },
+      {
+        "title": "🧮 Three questions about one exam",
+        "paras": [
+          "Scores are normal with mean 70 and standard deviation 10. A score of 85 standardises to 1.5, and the area below is about 0.933, so that student is above 93 percent of the class.",
+          "The top ten percent cut-off needs the z with 0.90 below it, about 1.28, so the score is 70 + 12.8, roughly 82.8.",
+          "Between 60 and 80 is z of minus one to plus one, about 68.3 percent of the class.",
+          "Comparing classes uses the same tool. Scoring 83 in a class with mean 75 and spread 8 is a z of 1.0, the same relative position as 80 in a class with mean 68 and spread 12, although the raw scores differ."
+        ]
+      }
+    ]
+  },
+  "554": {
+    "sections": [
+      {
+        "title": "🔍 Counting events in an interval, with no number of trials",
+        "paras": [
+          "Calls arriving in an hour, flaws in a sheet of glass, errors in a page of text. There is no fixed number of attempts here, only a rate, so the binomial does not apply.",
+          "The Poisson model asks only for that rate, called lambda, and returns the probability of seeing k events in one interval. It is also the limit of the binomial when the number of trials is large and the probability of each is tiny, which is exactly the rare-event situation."
+        ]
+      },
+      {
+        "title": "⚙️ One parameter, and what it implies",
+        "paras": [
+          "The mean and the variance both equal lambda. That equality is a test as well as a fact: if the observed variance is much larger than the mean, the events are clustered and the model is wrong."
+        ],
+        "bullets": [
+          "Probability of k events is e to the minus lambda, times lambda to the k, over k factorial.",
+          "Zero events has probability e to the minus lambda, so at least one is one minus that.",
+          "Independent Poisson counts add: two intervals with rates a and b combine into rate a plus b.",
+          "Lambda must be scaled with the interval: a rate of three per minute is 180 per hour.",
+          "Overdispersion is common in real counts and calls for the negative binomial instead."
+        ]
+      },
+      {
+        "title": "🧮 Sizing a service at three requests a minute",
+        "paras": [
+          "With lambda equal to 3, no requests at all has probability e^-3, about 0.0498. Exactly five has 0.1008. Summing up to six gives 0.9664, so more than six requests happens about 3.4 percent of the time.",
+          "That number is a capacity decision. If the service can handle six per minute it will be overloaded for about two minutes in an hour; to keep overload below one percent the limit must rise to eight, where the cumulative probability is 0.996.",
+          "Over a whole hour the rate becomes 180, and a normal approximation with mean 180 and standard deviation about 13.4 answers the same kind of question quickly: more than 200 requests is a z of 1.49, around 6.8 percent."
+        ]
+      }
+    ]
+  }
+}

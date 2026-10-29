@@ -1,0 +1,429 @@
+{
+  "681": {
+    "sections": [
+      {
+        "title": "🔍 Why a small fast memory beats a big slow one",
+        "paras": [
+          "A modern core can execute an instruction every 0.3 nanoseconds, but a read from main memory takes 60 to 100 nanoseconds. If every load waited for memory the processor would spend more than 99 percent of its life idle, which is exactly what happened to machines before caches became standard.",
+          "You cannot simply build all memory out of fast cells, because fast cells are physically larger: an SRAM cell needs six transistors, a DRAM cell needs one transistor and a capacitor. The cheap option is also the slow one, necessarily. The cache is the compromise: a small amount of the expensive kind, placed where the processor can reach it quickly, holding copies of whatever is being used."
+        ]
+      },
+      {
+        "title": "⚙️ Hits, misses, and why locality makes it work",
+        "paras": [
+          "Every access is first checked against the cache. If the block is there it is a hit and the access costs a few nanoseconds. If not it is a miss: the block is fetched from the next level, the line is installed, and the access is retried.",
+          "Caches are only possible because real programs are not random. Temporal locality means a value used once is likely to be used again soon. Spatial locality means a value is likely to be near the one just used, which is why a cache line holds 64 consecutive bytes rather than one word."
+        ],
+        "bullets": [
+          "A hit costs the cache latency; a miss costs the cache latency plus the next level's latency.",
+          "The line size is a bet on spatial locality: 64 bytes captures array reads and instruction streams well.",
+          "Direct-mapped caches are cheap but suffer conflicts when two hot addresses map to the same slot.",
+          "Fully associative caches avoid conflicts but need a comparator per entry, so they stay small; real designs are set-associative, typically 4 or 8 ways.",
+          "Write-through sends every store to the next level; write-back defers until the line is evicted, which cuts traffic but adds a dirty bit.",
+          "Levels trade size for speed: L1 is 32 to 64 KiB per core, L2 a few hundred KiB, L3 several MiB shared."
+        ]
+      },
+      {
+        "title": "🧮 Why a 95 percent hit rate is not good enough",
+        "paras": [
+          "Take an L1 latency of 4 cycles and a miss penalty of 200 cycles to main memory. With a 95 percent hit rate, the average access time is 0.95 x 4 + 0.05 x 200 = 3.8 + 10 = 13.8 cycles. The misses take 72 percent of the total time while being only 5 percent of the accesses.",
+          "Push the hit rate to 99 percent and the average falls to 3.96 + 2 = 5.96 cycles. Seven percent fewer accesses hit, but the time more than halves. This non-linearity is why cache behaviour dominates optimisation work.",
+          "Now compute the effect of a matrix traversal. A 1000 by 1000 matrix of 8-byte doubles is 8 MB, far larger than an L2 of 512 KiB. Walking it row by row uses every byte of a 64-byte line before moving on: 8 elements per line, so one miss per 8 doubles. Walking it column by column touches a new 64-byte line on every access, so almost every access misses. Same arithmetic, same number of operations, and the column walk can be five to ten times slower.",
+          "The fix in practice is blocking: process the matrix in 32 by 32 tiles so the tile stays in L2 while it is reused. No algorithm changed, only the order of the loops."
+        ]
+      }
+    ]
+  },
+  "682": {
+    "sections": [
+      {
+        "title": "🔍 Why main memory is both essential and the bottleneck",
+        "paras": [
+          "Registers are part of the processor and there are only a few dozen. Main memory is where a program actually lives: gigabytes of it, addressed by number, and large enough to hold the operating system, your application, and its data at once.",
+          "It is also the slowest thing in the core's world. The gap between a CPU cycle and a DRAM access has widened from perhaps 10 times in 1985 to more than 300 times today. Every technique in the previous chapters exists because of that gap."
+        ]
+      },
+      {
+        "title": "⚙️ DRAM versus SRAM, and how an address becomes a value",
+        "paras": [
+          "SRAM stores a bit in a bistable loop of six transistors: it holds its value as long as power is applied, needs no refresh, and is fast, but each cell costs a lot of area. DRAM stores a bit as charge on a capacitor behind one transistor: tiny, dense, cheap, but the charge leaks away in milliseconds and must be refreshed thousands of times per second, and reading destroys the value so it must be written back.",
+          "To read, the CPU puts an address on the address bus, asserts a read signal, and the memory returns the word after a delay. Row and column decoders have already narrowed the array to one location."
+        ],
+        "bullets": [
+          "DRAM is used for main memory; SRAM is used for caches and register files.",
+          "Both are volatile: power off and the contents are gone, which is why storage exists as a separate tier.",
+          "A word is the natural transfer unit, typically 64 bits today, which is why a 64-bit load is one access and a 128-bit value is two.",
+          "Latency and bandwidth are different: DRAM latency is around 60 nanoseconds, but a modern channel can stream tens of gigabytes per second once a burst starts.",
+          "Row buffer locality matters: accessing the same DRAM row repeatedly is much faster than jumping between rows, which is why sequential access beats random access even at the same byte count.",
+          "Memory is organised in channels and banks so that several requests can be in flight at once."
+        ]
+      },
+      {
+        "title": "🧮 Latency, refresh, and the bandwidth ceiling",
+        "paras": [
+          "Suppose DRAM latency is 70 nanoseconds and the CPU runs at 3 GHz, so one cycle is 0.33 nanoseconds. A single miss costs 210 cycles. A program with 10 million memory accesses and a 3 percent miss rate on the last-level cache spends 10 million x 0.03 x 210 = 63 million cycles on misses alone, which is 21 milliseconds of pure waiting.",
+          "Refresh: a DRAM chip with 8192 rows may need a refresh every 64 milliseconds, one row at a time. That is 8192 refresh operations per 64 milliseconds, about 128,000 per second. Each blocks the array briefly, so a few percent of time is unavailable for data. At very high temperatures the refresh rate must be doubled, which is why some servers throttle memory when they run hot.",
+          "Bandwidth: a channel with a 64-bit bus at 3200 million transfers per second moves 8 bytes x 3.2 billion = 25.6 GB per second. A core needing 2 bytes per instruction at 3 GHz wants 6 GB per second, so one channel is enough for one core and not for sixteen. That is why server chips have eight or twelve channels.",
+          "A concrete failure: a 1 GB array of 4-byte integers is 268 million elements. Each cache line of 64 bytes holds 16 of them. Sequential access needs 16.8 million line fetches; random access can need up to 268 million. Same data, sixteen times the traffic."
+        ]
+      }
+    ]
+  },
+  "683": {
+    "sections": [
+      {
+        "title": "🔍 Why a hierarchy instead of one perfect memory",
+        "paras": [
+          "There is a three-way trade between speed, capacity, and cost per byte, and no single technology wins all three. Fast memory is expensive and small; cheap memory is large and slow. A computer that had to pick one would either be unaffordable or unusably slow.",
+          "The hierarchy is the way out: build several tiers, keep the hot data in the fast expensive tier, and rely on the fact that most accesses are to a small fraction of the data. The result is a machine that behaves almost as if it had the speed of the top tier and the capacity of the bottom."
+        ]
+      },
+      {
+        "title": "⚙️ The levels and what moves between them",
+        "paras": [
+          "At the top are registers, measured in hundreds of bytes and reachable in a single cycle. Below them L1 and L2 caches, then a shared L3, then main memory in gigabytes, then SSDs, then hard disks, then network or tape storage. Each step down is roughly ten times slower and much larger.",
+          "Data moves between adjacent levels on demand. A cache miss pulls a line from memory; a page fault pulls a page from disk; a cold archive has to be fetched over the network. Nothing skips a level, which is why the whole system's behaviour is governed by the slowest tier that actually has the data."
+        ],
+        "bullets": [
+          "A register access is about 0.3 nanoseconds; an L1 hit about 1; an L2 hit about 4; an L3 hit about 15; DRAM about 70; an SSD about 100,000 (0.1 ms); a hard disk about 10,000,000 (10 ms).",
+          "Capacity goes the other way, roughly 1 KiB of registers, tens of KiB per L1, megabytes of L3, gigabytes of RAM, terabytes of disk.",
+          "Promotion happens because a miss brings a block up a level, hoping it will be reused.",
+          "Eviction chooses a victim, and the replacement policy decides how much useful data survives; least-recently-used is the usual approximation.",
+          "Each level's block size is larger than the one above, because the penalty for a miss is larger.",
+          "Because a lower tier is orders of magnitude slower, a single badly placed hot page can dominate the runtime of a whole program."
+        ]
+      },
+      {
+        "title": "🧮 Comparing two programs that do the same work",
+        "paras": [
+          "Program A runs 100 million instructions at an average of 1.2 cycles per instruction on a 3 GHz core, with a 97 percent L1 hit rate and a 70-nanosecond memory latency. Its compute time is 120 million cycles, about 40 milliseconds. Its misses are 3 million x 210 cycles = 630 million cycles, about 210 milliseconds. The memory dominates by five to one.",
+          "Cut the miss rate to 1 percent by reorganising the data layout and the miss time falls to 70 milliseconds, so total time goes from 250 to 110 milliseconds: a 2.3 times speedup with zero change to the instruction count.",
+          "Now consider a sort of 10 GB on a machine with 16 GB of RAM. Everything stays in memory and the sort is limited by comparisons. Sort 100 GB on the same machine and the data no longer fits, so it spills to an SSD. Each random 4 KiB read from the SSD costs 0.1 milliseconds instead of 70 nanoseconds, a factor of about 1400. A merge sort designed for disk does sequential streaming passes and finishes in minutes; a quicksort designed for memory thrashes and takes hours, because its access pattern is the worst case for the tier it now sits on.",
+          "The hierarchy is why algorithmic analysis alone mispredicts real speed, and why the constant factors people quote are really statements about memory behaviour."
+        ]
+      }
+    ]
+  },
+  "685": {
+    "sections": [
+      {
+        "title": "🔍 Why the CPU cannot talk to a device directly",
+        "paras": [
+          "A keyboard produces a few bytes per second. A disk rotates at 7200 revolutions per minute on one edge and streams gigabytes per second at the other. Neither speaks the processor's bus protocol, and neither runs at the processor's clock. Something has to sit in the middle and translate.",
+          "That something is the device controller: it owns the device-specific timing, buffers bytes, and exposes a small set of registers that the CPU can read and write. Every I/O technique is a different answer to one question: while the device takes its time, what is the CPU doing?"
+        ]
+      },
+      {
+        "title": "⚙️ Polling, interrupts, and DMA",
+        "paras": [
+          "Polling has the CPU repeatedly read a status register until a bit says the device is ready. It is trivially simple and perfectly fine for a device that is always ready, but for a slow device it burns the processor on a busy-wait loop.",
+          "Interrupts invert the control: the CPU starts the transfer and continues with other work, and the controller raises an interrupt line when it is done. The processor saves its context, jumps to a handler, and resumes.",
+          "DMA removes the CPU from the data path entirely. The controller is given a memory address and a length, and it writes the bytes into memory itself, raising one interrupt when the whole block is done."
+        ],
+        "bullets": [
+          "Polling costs CPU time proportional to how long the device takes, which can be microseconds for a disk seek.",
+          "An interrupt costs the context save and the handler, perhaps hundreds of cycles, but only once per event.",
+          "Interrupts have priority levels, so a disk completion can preempt a keyboard handler but not the reverse.",
+          "DMA needs the memory bus for itself, so it competes with the CPU for bandwidth even though it does not compete for cycles.",
+          "Memory-mapped I/O makes controller registers look like addresses, so ordinary load and store instructions work on them.",
+          "Programmed I/O is the general name for transfers driven by the CPU through those registers, one word at a time."
+        ]
+      },
+      {
+        "title": "🧮 Costing out the three approaches",
+        "paras": [
+          "Read 4 KiB from a device that takes 1 millisecond to deliver it, on a 3 GHz core. Under polling with a status check that costs 50 cycles and repeats until ready, and assuming the status is checked 20,000 times in that millisecond, the CPU spends 1 million cycles, about 0.33 milliseconds of processor time, to move 4 KiB.",
+          "With interrupts, the CPU does 1 millisecond of real work and then pays maybe 500 cycles for the handler. The saving is roughly 1 million cycles, essentially the entire polling cost.",
+          "With DMA, the CPU writes a descriptor and continues; the transfer proceeds without it. The CPU cost is a few hundred cycles for the whole 4 KiB block, and the interrupt fires once at the end. For a device delivering 4 KiB per millisecond, that is 4 MB per second with almost no processor involvement, which is why DMA is mandatory for disks and network cards.",
+          "The trade is bandwidth: a DMA engine moving 4 MB per second occupies the memory bus for 4 MB of traffic, and on a small embedded system that can starve the CPU's own instruction fetches. This is why DMA is scheduled and why on-chip buses have arbitration."
+        ]
+      }
+    ]
+  },
+  "686": {
+    "sections": [
+      {
+        "title": "🔍 Why a shared set of wires",
+        "paras": [
+          "Wires are expensive. Connecting every component to every other component directly costs a number of links that grows with the square of the component count, and most of them would be idle most of the time. A bus replaces that mesh with one shared set of wires and a protocol for taking turns.",
+          "The cost of sharing is contention: only one transfer can use the bus at a time. That single fact explains the entire history of bus design, from the front-side bus of the 1990s to the point-to-point links used today."
+        ]
+      },
+      {
+        "title": "⚙️ Address, data, control, and the width trade",
+        "paras": [
+          "A classic bus carries three kinds of signal. The address bus says where, and its width caps the addressable space. The data bus carries the bytes, and its width sets how much moves in one transfer. The control bus carries the protocol: read or write, interrupt requests, clock, arbitration grants.",
+          "Width trades cost against throughput. Doubling the data bus doubles the wires and the pins, so the trade has to pay for itself in bandwidth."
+        ],
+        "bullets": [
+          "A 32-bit address bus addresses 4 GiB; 64 bits is far more than any machine today needs, which is why real chips often use only 40 to 48 of those lines.",
+          "A 64-bit data bus at 400 MHz transfers 3.2 GB per second.",
+          "A single master bus is simple, but every pair of devices competes for it.",
+          "An arbiter decides who gets the bus next, using fixed priority, round-robin, or a request-grant protocol.",
+          "Burst transfers amortise the address phase: one address, then several data beats, which is how a cache line is filled efficiently.",
+          "Modern designs replace the shared bus with switched point-to-point links, so several transfers happen at once, exactly as a network switch differs from a hub."
+        ]
+      },
+      {
+        "title": "🧮 Two buses compared",
+        "paras": [
+          "Bus A: 32-bit data, 100 MHz. Each transfer moves 4 bytes in one cycle, so 4 x 100 million = 400 MB per second. Address phases are shared, so in practice closer to 350 MB per second.",
+          "Bus B: 64-bit data, 400 MHz. Each transfer moves 8 bytes, so 3.2 GB per second, eight times Bus A for twice the width and four times the frequency. This is why raising the frequency and widening the bus are the two levers, and why frequency won in practice: fewer pins, more bandwidth.",
+          "Now suppose four devices each need 500 MB per second on Bus A. Total demand is 2 GB per second against 400 MB per second of supply, so the bus must serialise and every device sees about a fifth of the bandwidth it wanted. On Bus B, 2 GB per second fits in 3.2 GB per second, so arbitration is nearly invisible. Contention, not raw speed, is the reason shared buses were abandoned for anything performance-sensitive.",
+          "A burst calculation: a cache line of 64 bytes on Bus A needs 16 transfers. With one address phase and 16 data beats, the address overhead is about 6 percent. On a 32-byte bus it would be 2 transfers and the overhead would be 33 percent. That is why wider buses matter most for small transfers."
+        ]
+      }
+    ]
+  },
+  "687": {
+    "sections": [
+      {
+        "title": "🔍 Why the CPU should not wait",
+        "paras": [
+          "A spinning disk needs a few milliseconds to find data. A network packet arrives when the remote machine decides to send it. During that time the processor has useful work to do on other programs, and polling means it does not do it.",
+          "An interrupt is the mechanism that lets the device say I am done instead of the CPU asking again and again. The idea looks simple and changes the whole shape of an operating system: control flow is no longer just a program calling functions, it is also hardware jumping into the kernel whenever it likes."
+        ]
+      },
+      {
+        "title": "⚙️ Interrupts, DMA, and the split of responsibility",
+        "paras": [
+          "An interrupt is a signal on a line. The processor finishes the current instruction, saves the program counter and status, looks up the handler address in a vector table, and jumps there. The handler acknowledges the device, does the work, and returns with an instruction that restores the saved state.",
+          "DMA is not an alternative to interrupts but a complement. Interrupts decide who waits; DMA decides who moves the bytes. Together they let a multi-megabyte transfer happen with almost no processor time."
+        ],
+        "bullets": [
+          "A maskable interrupt can be disabled during a critical section; a non-maskable one cannot, and is used for catastrophic conditions.",
+          "The vector table maps interrupt numbers to handler addresses, so the hardware does not search for the handler.",
+          "An interrupt handler must be fast: it runs with the world paused, so work is usually deferred to a bottom half that runs later.",
+          "An interrupt can arrive during an interrupt, which is why priority levels and nesting depth limits exist.",
+          "A DMA descriptor holds source, destination, length, and direction; the engine walks it and interrupts at the end, or after each chunk when the transfer is very large.",
+          "Cache coherence becomes a question when DMA writes memory without telling the CPU, so some systems must invalidate cache lines after a DMA read."
+        ]
+      },
+      {
+        "title": "🧮 Interrupt overhead versus DMA overhead",
+        "paras": [
+          "Move 1 MB from a disk at 200 MB per second. The transfer itself takes 5 milliseconds, independent of the CPU.",
+          "Byte-by-byte programmed I/O with an interrupt per byte: 1,048,576 interrupts, each costing about 1,000 cycles to enter, handle, and return. That is about 1 billion cycles, which at 3 GHz is 0.35 seconds. The CPU is the bottleneck by a factor of 70 and the disk sits idle most of the time.",
+          "Interrupt per 4 KiB block: 256 interrupts x 1,000 cycles = 256,000 cycles, about 0.085 milliseconds. Now the transfer time of 5 milliseconds dominates, as it should.",
+          "DMA with one interrupt for the whole 1 MB: about 1,000 cycles plus descriptor setup, roughly 0.001 milliseconds of CPU time. The CPU is free for 5 milliseconds of other work.",
+          "The threshold is worth computing: if a device produces data at rate R bytes per second and an interrupt costs C cycles, the interrupt approach consumes R/block x C cycles per second. With R equal to 10 MB per second, a 4 KiB block, and C equal to 1,000, that is 2.5 million cycles per second, under 0.1 percent of a 3 GHz core. With byte-sized blocks it is 10 million interrupts per second, which no processor can survive. Block size, not the choice of mechanism, is what decides.",
+          "Latency is the other number: an interrupt can be delayed by masked sections and by higher-priority handlers, so worst-case response time is a sum along a chain. A real-time system has to bound that sum, which is why they often avoid interrupts in the critical loop."
+        ]
+      }
+    ]
+  },
+  "689": {
+    "sections": [
+      {
+        "title": "🔍 Why instructions have a shape",
+        "paras": [
+          "An instruction is a number, and a number is just bits. To be decoded, the bits must be divided into fields with agreed meanings: which operation, which operands, and possibly a constant. That division is the instruction format, and it is the part of the ISA that a compiler must know exactly.",
+          "The format is a compromise between three desires that pull in different directions: encoding many operations, naming many registers, and keeping the instruction short so programs stay small."
+        ]
+      },
+      {
+        "title": "⚙️ Fields, lengths, and the fix for each layout",
+        "paras": [
+          "Every instruction has an opcode and zero or more operands. Operands may be registers, immediate constants, or memory addresses. How many bits each field gets determines what can be expressed, and the sum is the instruction length.",
+          "Fixed-length formats keep decoding simple and make the fetch stage predictable. Variable-length formats pack more into each byte, at the cost of a serial decoding step."
+        ],
+        "bullets": [
+          "Three-operand format: opcode, two source registers, one destination, which is what makes a = b + c a single instruction.",
+          "Two-operand format overwrites one source, which is why classic x86 arithmetic destroys an operand.",
+          "An immediate field is limited by its width; a 12-bit immediate holds minus 2048 to 2047, so larger constants need a load-then-use sequence.",
+          "A 32-bit format split into a 6-bit opcode and three 5-bit registers uses 21 bits, leaving 11 for an immediate or a shift amount.",
+          "x86 instructions range from 1 to 15 bytes, so the decoder must determine length before it can find the next instruction; ARM and RISC-V are fixed at 4 bytes.",
+          "Compressed instruction sets add a 2-byte form for the most common operations to cut code size without losing the fixed-length case."
+        ]
+      },
+      {
+        "title": "🧮 Fitting constants into a field",
+        "paras": [
+          "With a 6-bit opcode and three 5-bit register fields, 16 bits of a 32-bit word are already used, leaving 16 bits. A signed 16-bit immediate covers minus 32,768 to 32,767. Storing 1,000,000 therefore needs the constant in a register loaded by a separate instruction, which costs one extra instruction and one extra register.",
+          "Now count instructions for a small expression: c = a + b, with all three in memory. A load-store ISA needs four instructions (load a, load b, add, store c), each 4 bytes, so 16 bytes. An x86-style instruction can add memory to a register in one instruction, so two are enough, but they are 6 and 7 bytes, so 13 bytes. The RISC version has more instructions and more bytes here, and this is precisely the trade RISC accepted: more, simpler instructions in exchange for a decoder that can handle several per cycle.",
+          "Field budget check for a real ISA: RISC-V uses 7 bits of opcode, 5 bits per register, and 3 bits of function code, which is why it can address 32 registers and around 100 distinct operations. Adding a 64th register would force a wider format, which is exactly why 32 stayed the number.",
+          "Code size matters at scale: a program with 10 million instructions is 40 MB in fixed 4-byte encoding. If the compressed form covers 60 percent of them at 2 bytes, the size drops to about 28 MB, a 30 percent saving that translates directly into fewer instruction cache misses."
+        ]
+      }
+    ]
+  },
+  "690": {
+    "sections": [
+      {
+        "title": "🔍 Why one instruction needs several ways to find its data",
+        "paras": [
+          "A constant lives inside the instruction. A local variable lives in a register. An array element lives at a computed offset. A pointer target lives at an address stored in memory. If the only way to name an operand were an absolute address, every one of those cases would need several instructions to compute the address first.",
+          "Addressing modes exist to fold that computation into the instruction. They are the hardware's answer to the patterns compilers generate, and learning them is largely learning how C expressions compile."
+        ]
+      },
+      {
+        "title": "⚙️ The modes worth knowing",
+        "paras": [
+          "An addressing mode is a rule for computing the effective address, which is the address the operand is finally read from or written to.",
+          "The names vary between architectures but the ideas repeat."
+        ],
+        "bullets": [
+          "Immediate: the operand is the field itself, no memory access; used for constants.",
+          "Register (direct): the operand is in a register; the fastest mode and the one compilers use most.",
+          "Direct: the field is the address of the operand; simple, but the address range is limited by the field width.",
+          "Indirect: a register holds the address of the operand, which is how pointers work.",
+          "Base plus displacement: add a constant to a register, which is how a struct field or a stack slot is reached.",
+          "Indexed (base plus index): add two registers, which is how an array element is reached; scale factors of 2, 4, or 8 fold the element size in.",
+          "Stack modes (push and pop) are implicit base-plus-offset on the stack pointer, and they are why function calls are cheap."
+        ]
+      },
+      {
+        "title": "🧮 Effective addresses computed by hand",
+        "paras": [
+          "Take an int array at base 0x1000 with 4-byte elements. The element a[7] is at base plus 7 times 4 = 0x1000 + 28 = 0x101C. With a scale factor in the instruction, the hardware computes this in one step from the index register; without one, the compiler emits a shift and an add first.",
+          "A struct with fields at offsets 0, 4, 8, and 16: reaching the third field from a pointer in R1 is base plus 8. One instruction, one cycle for the address computation, and the load follows.",
+          "A linked list walk: each node holds a value and a next pointer at offset 8. Reading the next node is a load of the pointer at base plus 8, then a dereference: two dependent memory accesses. If each cache miss costs 70 nanoseconds, a list of 100,000 nodes in random memory costs 100,000 x 2 x 70 nanoseconds, about 14 milliseconds per traversal, whereas an array of the same size costs a fraction of that because the accesses are sequential and prefetched.",
+          "Nested loops show why the scale factor matters: for i in range(n), a[i] compiles to base plus i times 4 where the 4 is encoded in the instruction. Without that, the inner loop would contain an extra shift, one more instruction per iteration. At 100 million iterations, that is 100 million extra cycles, about 33 milliseconds, for a feature that costs a few gates."
+        ]
+      }
+    ]
+  },
+  "691": {
+    "sections": [
+      {
+        "title": "🔍 Two answers to the same question",
+        "paras": [
+          "In the 1970s memory was expensive and compilers were weak, so instruction sets grew rich: one instruction should do as much work as possible because every instruction costs precious bytes. That is CISC.",
+          "By the 1980s the measurements told a different story. Compilers barely used most of those powerful instructions, and the complex ones made the decoder so irregular that pipelining was nearly impossible. That is RISC: keep the instructions simple and uniform, let the compiler sequence them, and spend the transistors on making the simple path fast."
+        ]
+      },
+      {
+        "title": "⚙️ What each side actually trades",
+        "paras": [
+          "CISC optimises for instruction count and code density. A single instruction can load, compute, and store, and memory operands are allowed directly. The cost is variable-length encoding, multi-cycle execution, and a decoder that is hard to pipeline.",
+          "RISC optimises for cycle time and pipeline simplicity. Every instruction is the same length, arithmetic works only on registers, and memory is touched only by explicit load and store. The cost is more instructions and larger code."
+        ],
+        "bullets": [
+          "Fixed length means the next instruction's address is known immediately, so fetch can run ahead.",
+          "Load-store separation means the execute stage never needs the memory unit, which removes a structural hazard.",
+          "A large uniform register file is affordable because encodings are regular.",
+          "RISC depends on a good compiler; the hardware does not schedule, the compiler does.",
+          "CISC wins on code size, which still matters in embedded flash and in instruction cache pressure.",
+          "Modern x86 chips translate complex instructions into RISC-like micro-operations at decode, so the internal engine is RISC while the visible ISA stays CISC."
+        ]
+      },
+      {
+        "title": "🧮 Counting the same statement on both designs",
+        "paras": [
+          "Compute c = a + b where a is a memory operand. On a CISC machine, one instruction add [a], ebx does the load, the add, but the store still needs a second instruction, so about two instructions and maybe 6 bytes.",
+          "On a RISC machine, load a into a register, load b, add, store: four instructions, 16 bytes. The CISC version is half the bytes and half the instructions.",
+          "Speed tells the other side. On a five-stage pipeline at 1 instruction per cycle and 4 GHz, the four RISC instructions retire in about 4 cycles, so 1 nanosecond, and the last result is available 5 cycles after issue. On a CISC core, the two instructions decode into three or four micro-operations that take a similar number of cycles, so the timing is close, but the decode hardware is far larger.",
+          "Now a loop of 1 million iterations containing that statement. RISC executes 4 million instructions, CISC about 2 million. If IPC is 4 on the RISC core and 3 on the CISC core, RISC needs 1 million cycles and CISC needs 0.67 million, so CISC wins that comparison. If IPC is 5 versus 2.5, RISC wins. This is why the debate never ended on principle: it is decided by the microarchitecture and the compiler, not the instruction set category, which is why both camps converged on wide out-of-order execution.",
+          "One number that settled the argument: a variable-length decoder must find instruction boundaries serially, which historically capped the fetch width at 4 to 5 instructions per cycle, while a fixed-length decoder can find 6 to 8 boundaries at once. Since performance after 2005 came from issuing more instructions per cycle, fixed length had a structural advantage that x86 has to buy back with elaborate decode caches."
+        ]
+      }
+    ]
+  },
+  "693": {
+    "sections": [
+      {
+        "title": "🔍 Why GHz alone is a misleading number",
+        "paras": [
+          "Clock speed is the most advertised figure and one of the least informative. A 4 GHz core that stalls on every third instruction finishes less work than a 3 GHz core that stalls on every tenth. Comparing processors by frequency only works when the microarchitectures are identical, which they never are across vendors.",
+          "What actually matters is execution time, and it decomposes into three factors that can be measured and attacked separately."
+        ]
+      },
+      {
+        "title": "⚙️ The three factors and what moves each",
+        "paras": [
+          "Time equals instruction count times cycles per instruction divided by clock frequency. That identity is the whole of performance analysis; every optimisation improves one of the three and often worsens another.",
+          "Instruction count is set by the algorithm and the compiler: fewer instructions usually means a better algorithm, not better hardware. CPI is set by the pipeline, the caches, and the program's dependency structure. Clock frequency is set by the critical path in the slowest stage."
+        ],
+        "bullets": [
+          "A better algorithm reduces instruction count by factors, which is why it beats hardware tuning.",
+          "Deeper pipelines raise frequency but also raise the mispredict penalty, so CPI can get worse.",
+          "Wider issue reduces CPI by starting several instructions per cycle, provided the program has independent work.",
+          "Cache misses inflate CPI, and their contribution grows as the memory gap widens.",
+          "A benchmark must be representative: a micro-benchmark that fits in L1 measures a machine nobody runs.",
+          "Report the metric you optimised, because speedup on one benchmark often reverses on another."
+        ]
+      },
+      {
+        "title": "🧮 Comparing two processors on real numbers",
+        "paras": [
+          "Processor A: 4 GHz, CPI 2.0, 1 billion instructions. Time = 1e9 x 2.0 / 4e9 = 0.5 seconds.",
+          "Processor B: 3 GHz, CPI 1.2, same 1 billion instructions. Time = 1e9 x 1.2 / 3e9 = 0.4 seconds. B is 25 percent faster despite a 25 percent lower clock, which is the entire point of the identity.",
+          "Now improve A by deepening the pipeline to reach 5 GHz. Frequency rises 25 percent, but every mispredicted branch and every load-use stall costs more cycles in the deeper pipe. If CPI rises from 2.0 to 2.6, time becomes 1e9 x 2.6 / 5e9 = 0.52 seconds, which is worse than the 0.50 it started at. The 25 percent frequency gain was consumed by a 30 percent CPI loss. This is why the megahertz race ended around 2005: further pipelining was net negative at that point.",
+          "A cache experiment: if 2 percent of instructions miss the last-level cache and each miss costs 200 cycles, the miss contribution is 0.02 x 200 = 4 cycles per instruction, which dwarfs a base CPI of 1. Explain that to a student who wonders why a program with perfect arithmetic runs at an effective CPI of 5.",
+          "Speedup arithmetic needs care: if A runs in 0.5 seconds and B in 0.4, the speedup is 1.25, not 1.2. And a claim of 40 percent faster is 1.4 times, not 0.4 times. Getting the direction and the base right avoids most of the confusion in published comparisons."
+        ]
+      }
+    ]
+  },
+  "694": {
+    "sections": [
+      {
+        "title": "🔍 Why frequency stopped being enough",
+        "paras": [
+          "Around 2005 the clock stopped rising. Power dissipation scales with frequency and with the square of voltage, and pushing past about 4 GHz made a chip that could not be cooled. The transistors were still getting cheaper, so the industry put more of them on the die instead of making one faster.",
+          "The result is that a modern processor is several processors. That helps only if the program has independent work to split, which is a software problem and often a hard one."
+        ]
+      },
+      {
+        "title": "⚙️ Levels of parallelism and the law that limits them",
+        "paras": [
+          "Parallelism appears at several levels. Within one instruction, several independent operations can issue in the same cycle: instruction-level parallelism, extracted by the hardware. Across the whole program, separate threads run on separate cores. Between machines, a cluster divides the work further.",
+          "Amdahl's law quantifies the ceiling. If a fraction s of the work must be done serially, the best possible speedup with any number of processors is 1 divided by s. Two cores give at most 2, and infinity cores give 1/s."
+        ],
+        "bullets": [
+          "A multicore chip duplicates the cores but shares the last-level cache and the memory controllers, so cores compete for bandwidth.",
+          "A thread that holds a lock serialises everyone waiting on it, which is a serial section even when the code looks parallel.",
+          "SIMD units process several data elements per instruction and are a different axis from multiple cores.",
+          "Symmetric multiprocessing needs cache coherence, so that a write by one core is visible to the others.",
+          "False sharing, where two cores write different variables in the same cache line, causes coherence traffic that can erase the gain.",
+          "Gustafson's law is the optimistic counterpart: with a fixed time budget, larger problems scale better than Amdahl suggests."
+        ]
+      },
+      {
+        "title": "🧮 Amdahl by hand, then with real overhead",
+        "paras": [
+          "Suppose 80 percent of a program can be parallelised and 20 percent cannot. With 4 cores, the time is 0.2 + 0.8/4 = 0.4, so the speedup is 2.5. With 16 cores it is 0.2 + 0.05 = 0.25, so 4.0. With 100 cores it is 0.208, so 4.81. The ceiling is 5, and 16 cores are already within 20 percent of it.",
+          "This is why a 5 percent serial section caps the speedup at 20 times no matter how many cores you buy, and why profiling for the serial part is the first step in any parallelisation project.",
+          "Now add overhead. Take one iteration of 10 milliseconds, of which 2 are serial and 8 are parallel, so the paper ceiling is 5 times. With a barrier that costs 10 microseconds: on 8 cores the iteration is 2 + 1 + 0.01 = 3.01 milliseconds, a 3.3 times speedup rather than 4. On 64 cores it is 2 + 0.125 + 0.01 = 2.135 milliseconds, a 4.68 times speedup. The barrier looks negligible at 10 microseconds, yet it consumes 5 percent of the 64-core run because the part it waits on shrank to an eighth of a millisecond.",
+          "Change the shape and the picture reverses. If an iteration is 1 millisecond of work with the same 10 microsecond barrier, the 64-core run is 0.2 + 0.0125 + 0.01 = 0.2225 milliseconds against 1 millisecond serial, only 4.5 times, and the barrier alone is 45 percent of the parallel time. Small iterations do not parallelise, no matter how many cores exist.",
+          "The practical lesson is that the number of cores worth using is limited by the serial fraction and by per-iteration synchronisation. Both are usually higher than the first estimate, which is why measuring scaling on 2, 4, 8, and 16 cores and extrapolating is a better method than deriving it on paper."
+        ]
+      }
+    ]
+  },
+  "695": {
+    "sections": [
+      {
+        "title": "🔍 Why chips stopped looking alike",
+        "paras": [
+          "A single general-purpose core optimised for the average of all programs wastes energy on the ones that need no speed and wastes time on the ones that need a different shape. Video decoding is thousands of identical operations on a stream; a database query is branchy and memory-bound; a phone idle screen needs almost nothing.",
+          "Modern designs accept that these are different problems and put different hardware on the same die. The interesting question stops being how fast the core is and becomes how well the scheduler matches each workload to the unit that suits it."
+        ]
+      },
+      {
+        "title": "⚙️ Heterogeneous cores, accelerators, and the new bottlenecks",
+        "paras": [
+          "The big.LITTLE pattern pairs high-performance cores with high-efficiency ones. The fast cores handle bursts and foreground work; the slow cores handle background tasks at a fraction of the power. A scheduler moves threads between them, and the hard part is predicting what a thread will need before it runs.",
+          "Beyond cores, specialised units take over whole classes of computation: GPU shaders for graphics, matrix engines for neural networks, media blocks for video codecs, cryptographic units for encryption, and DMA engines for bulk movement."
+        ],
+        "bullets": [
+          "Chiplets split one design across several small dies, which improves yield and lets different process nodes be mixed.",
+          "Heterogeneous cores need a scheduler that understands performance and energy, not just load balancing.",
+          "Accelerators are only worth it when the data transfer cost is smaller than the computation saved.",
+          "Memory bandwidth has become the binding constraint for many workloads, so caches and on-package memory matter more than raw flops.",
+          "Dark silicon is the rule that a chip cannot power all its transistors at once, which makes specialisation a necessity rather than a luxury.",
+          "Security features such as encrypted memory and isolated enclaves now sit in the architecture and cost real performance."
+        ]
+      },
+      {
+        "title": "🧮 Whether an accelerator pays for itself",
+        "paras": [
+          "Suppose a neural network layer takes 10 milliseconds on a CPU core and 0.5 milliseconds on a matrix engine. The transfer of its inputs and outputs is 8 MB, and the link moves 25 GB per second, so the round trip is 16 MB divided by 25 GB per second, about 0.64 milliseconds.",
+          "Total on the accelerator is 0.5 + 0.64 = 1.14 milliseconds, so the speedup is 8.8 times rather than 20. If the layer were 10 times smaller, at 1 millisecond, the accelerator time would be 0.5 + 0.64 = 1.14 and there would be no gain at all. The crossover is exactly where compute time equals transfer time, which is why real accelerators are designed with wide memory paths and why fusing small operations into one kernel is the main optimisation.",
+          "Now consider the energy side. If a performance core draws 3 watts and an efficiency core draws 0.4 watts at a third of the speed, moving a background task to the small core cuts power by 87 percent for a 3 times slowdown in a task nobody is watching. On a phone with a 15-watt-hour battery, that difference is hours of standby time, which is why heterogeneous scheduling exists at all.",
+          "The scheduling problem in numbers: with 4 fast and 4 slow cores, placing a bursty foreground thread on a slow core costs latency, and placing a background sync on a fast core costs battery. A heuristic that only looks at utilisation gets this wrong roughly half the time, which is why vendors ship tables of known workloads alongside the scheduler."
+        ]
+      }
+    ]
+  }
+}

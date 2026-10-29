@@ -1,0 +1,459 @@
+{
+  "904": {
+    "sections": [
+      {
+        "title": "🔍 Why change weights when a prompt might do",
+        "paras": [
+          "A prompt can specify a task, but it cannot reliably change style, format, or the model's default behaviour across thousands of requests. Every prompt costs tokens, and instructions are followed imperfectly at length.",
+          "Fine-tuning teaches the behaviour directly, so the prompt can be short and the output consistent. The trade is that weights are now tied to a task, and updating the data means another training run."
+        ]
+      },
+      {
+        "title": "⚙️ Full fine-tuning versus parameter-efficient methods",
+        "paras": [
+          "Full fine-tuning updates every weight, which needs optimiser memory for the whole model and risks destroying pretrained capability if the learning rate is too high.",
+          "Parameter-efficient methods freeze the original weights and train a small number of extra parameters. LoRA adds low-rank matrices to selected projections, so the number of trainable parameters is a fraction of a percent of the model."
+        ],
+        "bullets": [
+          "LoRA with rank 8 to 64 typically trains 0.1 to 1 percent of the parameters.",
+          "Adapters insert small bottleneck layers, which add inference latency unless merged.",
+          "Prefix tuning learns a small set of virtual tokens prepended to the input.",
+          "QLoRA combines 4-bit quantisation of the base model with LoRA, which fits large models on a single device.",
+          "The learning rate for fine-tuning is typically 100 to 1,000 times smaller than for pretraining.",
+          "Catastrophic forgetting is the main risk: the model gets better at the task and worse at everything else.",
+          "Fine-tuning changes how the model responds, not what it knows, which is why retrieval exists."
+        ]
+      },
+      {
+        "title": "🧮 Parameter counts and memory",
+        "paras": [
+          "A 7-billion-parameter model in 16-bit precision is 14 GB of weights. Full fine-tuning also needs gradients, 14 GB, and Adam's two moment buffers, 56 GB in 32-bit, so 84 GB plus activations. That is several high-end GPUs.",
+          "LoRA with rank 16 on all attention projections of a 7-billion-parameter model trains about 4 million parameters, which is 0.06 percent. Their optimiser state is tens of megabytes, so the base model fits in 14 GB and the training runs on one device with modest memory.",
+          "Since the gradient of a LoRA fine-tune is sparse in the sense that only those 4 million parameters receive updates, the compute per step is dominated by the forward and backward pass through the frozen base, which is the same as inference plus roughly the backward cost. That is why the speedup is in memory, not in arithmetic.",
+          "Merging arithmetic: after training, the low-rank matrices can be added into the original weights, so inference cost is identical to the base model. Keeping them separate allows switching between tasks by swapping a file of a few hundred megabytes rather than a 14 GB model.",
+          "Data requirement: LoRA fine-tuning on 1,000 to 10,000 examples is typical and often sufficient, at 3 epochs, which on one device takes 1 to 10 hours depending on model size.",
+          "Evaluation arithmetic after fine-tuning: a task-specific score rises from 72 to 88 percent, while a general benchmark drops from 65 to 60. That five-point regression on unrelated tasks is the measure of catastrophic forgetting, and it is why mixing general data into the fine-tuning set is standard."
+        ]
+      }
+    ]
+  },
+  "905": {
+    "sections": [
+      {
+        "title": "🔍 Why a pretrained model is a poor assistant",
+        "paras": [
+          "A base model continues text. Ask it a question and the most plausible continuation may be another question, a list of related questions, or a paragraph from a website that answers something similar.",
+          "The knowledge is there. The behaviour is wrong. Instruction tuning changes the behaviour with a relatively small amount of data."
+        ]
+      },
+      {
+        "title": "⚙️ The data and the change it produces",
+        "paras": [
+          "An instruction dataset is a set of triples: an instruction, an optional input, and a desired response. Training on tens of thousands of these teaches the model that after an instruction, the appropriate continuation is a helpful answer.",
+          "The format matters as much as the content. If the training data formats answers with a heading and a list, the tuned model will do that even where prose would be better."
+        ],
+        "bullets": [
+          "Instruction diversity matters more than volume: broad task coverage beats thousands of examples of one task.",
+          "Response quality sets a ceiling, because the model imitates the style and accuracy of the demonstrations.",
+          "A small, carefully written dataset of 10,000 examples can outperform a large noisy one.",
+          "Multi-turn data teaches conversational behaviour, which single-turn data does not.",
+          "Refusal examples are part of the dataset, not an afterthought.",
+          "Instruction tuning does not add knowledge, which is why factual errors persist after it.",
+          "The result is sometimes called a chat or instruct model, as distinct from the base model."
+        ]
+      },
+      {
+        "title": "🧮 Dataset size and behaviour shift",
+        "paras": [
+          "A base model given an instruction and no examples answers it directly about 20 to 30 percent of the time; the rest of the outputs complete the text in some other way. After tuning on 50,000 instruction-response pairs for 2 to 3 epochs, compliance on held-out instructions reaches 85 to 95 percent.",
+          "Training cost: 50,000 examples averaging 500 tokens is 25 million tokens, about 4 passes per parameter for a 7-billion-parameter model, tens of billions of operations, hours on a small cluster. That is three orders of magnitude cheaper than pretraining, which is why instruction tuning is accessible.",
+          "The mixture effect: a dataset with 30 percent code, 30 percent open question answering, 20 percent summarisation, and 20 percent structured extraction produces a model that is helpful on all four and noticeably weaker on tasks absent from the mixture. Whatever is not in the data is not taught.",
+          "Style transfer in numbers: a dataset where 90 percent of responses are formatted as bullet lists produces a model that uses bullet lists in about 85 percent of answers, even for questions where prose is better. Format in the data becomes default behaviour in the model.",
+          "Knowledge does not change: a base model that answers a factual question correctly 60 percent of the time answers it correctly 60 percent of the time after instruction tuning, with better formatting. If the tuned model appears to know more, it is because the tuned format elicits knowledge the base model had and did not display.",
+          "Overfitting to format: tuning for 10 epochs instead of 3 raises compliance on the training distribution and lowers it on held-out instructions, because the model memorises phrasings. One to three epochs is the standard range and more is rarely better."
+        ]
+      }
+    ]
+  },
+  "906": {
+    "sections": [
+      {
+        "title": "🔍 Why imitation is not enough",
+        "paras": [
+          "Instruction tuning teaches the model to imitate demonstrations, which is limited by the quality of those demonstrations and says nothing about which of two acceptable answers is better.",
+          "Preference learning supplies that signal: humans compare two responses and indicate which they prefer, and the model is trained to produce more of the preferred kind."
+        ]
+      },
+      {
+        "title": "⚙️ The three steps of RLHF",
+        "paras": [
+          "First, collect comparisons: given a prompt and two responses, annotators choose the better one. Second, train a reward model to predict that preference from a response. Third, optimise the language model against the reward model with reinforcement learning, with a penalty for drifting too far from the original model.",
+          "The penalty, a KL divergence term, is what stops the model from exploiting the reward model's flaws, which it otherwise does quickly and thoroughly."
+        ],
+        "bullets": [
+          "The reward model is a proxy for human judgement, and any proxy can be gamed.",
+          "The KL penalty keeps the tuned model close to the reference, which preserves fluency and diversity.",
+          "Direct preference optimisation skips the reinforcement step and fits preferences with a simpler objective.",
+          "Alignment covers helpfulness, honesty, and harmlessness, which can conflict with each other.",
+          "Over-optimisation produces confident, verbose, sycophantic answers that score well and satisfy nobody.",
+          "Reward hacking is the general failure: the model finds what the reward model likes rather than what people like.",
+          "Evaluation of alignment needs human raters, because automatic metrics cannot measure helpfulness."
+        ]
+      },
+      {
+        "title": "🧮 Preferences, rewards, and the cost of alignment",
+        "paras": [
+          "Comparison counts: a typical pipeline uses 50,000 to 500,000 pairwise comparisons. At 2 minutes each, 100,000 comparisons is 3,300 hours of annotation, which is why this stage is expensive and is usually done by a specialised vendor.",
+          "Reward model accuracy: a reward model predicting human preference reaches 65 to 75 percent agreement with held-out human labels. That sounds modest and is enough, because the reinforcement step only needs a gradient direction, not a perfect judge.",
+          "KL penalty arithmetic: the objective is reward minus a coefficient times KL divergence from the reference model. With a coefficient too small, the model drifts and produces degenerate text that maximises reward; too large and it barely changes. Typical values keep the average KL to a few nats per token, which corresponds to a modest but real behavioural shift.",
+          "Over-optimisation measured: reward model score keeps rising while human preference peaks and then declines. The gap typically appears after a few thousand optimisation steps, which is why training is stopped early by human evaluation rather than by reward.",
+          "Cost comparison: RLHF for a 7-billion-parameter model needs a policy model, a reference model, a reward model, and a value model, so roughly four copies, 56 GB in 16-bit, plus activations. Running this on a single device is impractical, which is one reason DPO became popular: it needs only the policy and a reference, halving the memory.",
+          "Sycophancy in numbers: models optimised for human preference measurably increase agreement with stated user opinions, even when the user is wrong. Studies find agreement rates rising by 10 to 20 points on opinion questions after preference tuning, which is the mechanism behind a well-known failure mode."
+        ]
+      }
+    ]
+  },
+  "908": {
+    "sections": [
+      {
+        "title": "🔍 Why the most likely token is often wrong",
+        "paras": [
+          "At each step the model produces a probability over the vocabulary. Taking the single most likely token every time produces deterministic, repetitive, and often lifeless text, because the most likely continuation of any fluent passage is the most predictable one.",
+          "Sampling from the distribution produces variety at the cost of occasionally choosing a bad token, and the whole craft of decoding is controlling that trade."
+        ]
+      },
+      {
+        "title": "⚙️ Temperature, top-k, top-p, and penalties",
+        "paras": [
+          "Temperature divides the logits before softmax. A temperature below 1 sharpens the distribution toward the most likely tokens; above 1 flattens it toward uniform.",
+          "Top-k keeps the k most likely tokens and renormalises. Top-p keeps the smallest set whose cumulative probability exceeds p, which adapts to how confident the model is."
+        ],
+        "bullets": [
+          "Temperature 0 is greedy and deterministic, suitable for extraction and classification.",
+          "Temperature 0.7 to 1.0 is typical for conversation, and higher values increase creativity and error rate together.",
+          "Top-p of 0.9 to 0.95 is more adaptive than a fixed top-k, because it narrows when the model is confident.",
+          "Repetition penalties reduce tokens already used, at the risk of avoiding necessary repeated words.",
+          "Beam search maximises sequence likelihood and tends to produce bland, repetitive output for open-ended generation.",
+          "Stopping criteria matter: a model will happily continue past the answer unless told where to stop.",
+          "Seed control gives reproducibility only within the same hardware and software version."
+        ]
+      },
+      {
+        "title": "🧮 Sampling by arithmetic",
+        "paras": [
+          "Logits of 3, 2, 1, 0 over four tokens. At temperature 1 the exponents are 20.09, 7.39, 2.72, 1.0, summing to 31.2, so probabilities are 0.644, 0.237, 0.087, 0.032.",
+          "At temperature 0.5 the logits are divided by 0.5, giving 6, 4, 2, 0, and the exponents 403, 54.6, 7.39, 1.0, sum 466, so probabilities are 0.865, 0.117, 0.016, 0.002. Sharper, as intended.",
+          "With top-p 0.9 at temperature 1, the first two tokens already sum to 0.881, and adding the third reaches 0.968, so the third is included and the fourth is dropped. The remaining three are renormalised.",
+          "Diversity arithmetic: greedy decoding over 100 generations of the same prompt gives 1 distinct output. Temperature 0.7 gives perhaps 40 to 60 distinct outputs, and temperature 1.2 gives nearly 100 but with a noticeable rate of incoherence.",
+          "Loss of quality with temperature: on a reasoning benchmark, accuracy at temperature 0 is 62 percent, at 0.7 it is 58, at 1.2 it is 45. Creativity and correctness trade directly, which is why the parameter should follow the task.",
+          "Latency arithmetic: generating 500 tokens at 50 tokens per second is 10 seconds. Beam search with 4 beams is roughly 4 times the compute and produces 10 to 20 percent better likelihood on constrained tasks, which is a bad trade for interactive use and a good one for offline translation.",
+          "Format control: an output that must be valid JSON benefits from temperature 0 plus a grammar constraint, which masks any token that would break the syntax. That combination eliminates the retry loop that otherwise consumes 5 to 20 percent of requests."
+        ]
+      }
+    ]
+  },
+  "909": {
+    "sections": [
+      {
+        "title": "🔍 Why a chatbot is a loop, not a model",
+        "paras": [
+          "The model is stateless: it takes a sequence and returns a continuation. A chatbot appears to have memory because the application resends the whole conversation every time.",
+          "That single fact explains most chatbot behaviour and most of its cost, because the history grows and is paid for on every turn."
+        ]
+      },
+      {
+        "title": "⚙️ History, roles, and context management",
+        "paras": [
+          "A conversation is a list of messages, each with a role: system, user, or assistant. On each turn the application appends the new user message, sends the list, receives a reply, and appends it.",
+          "As the conversation grows, the list must be managed: truncated, summarised, or reduced to the most relevant turns, because the window is finite and the cost is linear in its length."
+        ],
+        "bullets": [
+          "The system message sets behaviour for the whole conversation and is resent every turn.",
+          "Conversation history is the only memory; nothing persists after it leaves the window.",
+          "Summarising old turns is the standard way to keep a long conversation coherent within a budget.",
+          "Retrieval over past turns is how assistants implement long-term memory.",
+          "Streaming improves perceived latency without reducing actual generation time.",
+          "Tool output must be inserted as messages, which is why tool-using assistants see their own results.",
+          "Every turn costs roughly the whole history in input tokens, so cost grows quadratically with conversation length."
+        ]
+      },
+      {
+        "title": "🧮 Cost growth over a conversation",
+        "paras": [
+          "A conversation where each user message is 50 tokens and each reply 200 tokens. Turn 1 sends 50 tokens; turn 2 sends 300; turn 3 sends 550; turn n sends 50 plus 250 times n minus 1, roughly.",
+          "Over 20 turns the total input is the sum of an arithmetic series, about 20 times 50 plus 250 times 190, 48,500 tokens. Over 100 turns it is 1.24 million input tokens, a 25-fold increase for five times the turns, because the growth is quadratic.",
+          "A 100-turn conversation at a few dollars per million input tokens costs several dollars, mostly re-reading history. Truncating to the last 10 turns keeps it near 12,000 tokens per turn, at the cost of forgetting earlier context.",
+          "Summary arithmetic: replacing the first 50 turns with a 300-token summary saves maybe 20,000 tokens per subsequent turn and loses detail. That trade is the central design decision in a chat product.",
+          "Prefix caching changes the arithmetic substantially: if the provider caches the unchanged prefix, the repeated history is billed at a lower rate and computed faster. Cost can fall by 50 to 90 percent for long conversations, which is why stable prefixes are documented as best practice.",
+          "Latency: a 20,000-token input takes longer to process than a 2,000-token one. Time to first token often grows by 300 to 800 milliseconds, which users notice, so history management is a latency feature as much as a cost feature."
+        ]
+      }
+    ]
+  },
+  "910": {
+    "sections": [
+      {
+        "title": "🔍 Why code is a favourable case for language models",
+        "paras": [
+          "Code has strict syntax, immediate feedback from execution, and enormous quantities of public training data. It also has a property most domains lack: correctness can be checked automatically.",
+          "That combination is why coding assistants became the first widely trusted LLM application, and why their evaluation is more meaningful than most."
+        ]
+      },
+      {
+        "title": "⚙️ Generation, completion, and the feedback loop",
+        "paras": [
+          "Code models are trained on code and often on the surrounding context: the repository, the imports, and the function signatures. Fill-in-the-middle training teaches a model to complete between a prefix and a suffix, which is what an editor needs.",
+          "The useful loop is generate, run, and iterate on the error message. A model that can see test failures converges in a few rounds where a single-shot attempt often fails."
+        ],
+        "bullets": [
+          "Function-level generation with tests is the standard benchmark shape, measured with pass at k.",
+          "Fill-in-the-middle training makes editor completion useful rather than awkward.",
+          "Repository context improves accuracy substantially, which is why assistant tools index the codebase.",
+          "Generated code can be syntactically correct and semantically wrong, and tests catch the second kind.",
+          "Security vulnerabilities are common in generated code, so review and scanning are required.",
+          "Licensing of training data is an unresolved legal question in several jurisdictions.",
+          "The cost of reviewing generated code is real; measuring only generation speed overstates the benefit."
+        ]
+      },
+      {
+        "title": "🧮 Pass at k and the real gain",
+        "paras": [
+          "Pass at k is the probability that at least one of k samples passes the tests. If a single sample passes with probability p equal to 0.3, then pass at 10 is 1 minus 0.7 to the 10, 1 minus 0.028, 97.2 percent.",
+          "That number is misleading in practice, because generating 10 candidates and testing them costs 10 times the compute and requires the tests to be trustworthy. Pass at 1 is the number that matters for an assistant that suggests one answer.",
+          "Measured ranges on a standard function-level benchmark: capable models reach 60 to 90 percent pass at 1 on easy problems and 5 to 25 percent on competition-level problems. The gap between easy and hard is the most informative thing about the number.",
+          "Developer productivity: controlled studies of completion tools report 20 to 55 percent faster task completion on well-scoped tasks, with smaller or no gains on unfamiliar codebases. The variation is large enough that a single headline number should be treated with suspicion.",
+          "Review cost arithmetic: if generation takes 10 seconds and review takes 5 minutes, and 30 percent of suggestions are unusable, the assistant saves time only when the task would have taken longer than the review. That is roughly tasks above 10 minutes, which is the empirical reason assistants help on new functions and hinder on small edits.",
+          "Test-generation value: writing tests is mechanical and verifiable, so generated tests that pass and cover the code are directly useful. That makes test generation one of the highest-value applications, because the output is checked rather than trusted."
+        ]
+      }
+    ]
+  },
+  "912": {
+    "sections": [
+      {
+        "title": "🔍 Why retrieval beats memorisation",
+        "paras": [
+          "A model cannot know about documents it never saw, and its parameters go stale the moment training ends. Fine-tuning on your documents is expensive, must be repeated when they change, and does not reliably cite sources.",
+          "Retrieval-augmented generation puts the relevant text in the prompt at query time. The knowledge lives in an index that can be updated instantly, and the answer can point at the passage it used."
+        ]
+      },
+      {
+        "title": "⚙️ Index, retrieve, generate",
+        "paras": [
+          "Documents are split into chunks, each chunk is embedded into a vector, and the vectors are stored in an index. At query time the question is embedded, the nearest chunks are retrieved, and those chunks plus the question are sent to the model.",
+          "Hybrid retrieval combines vector search with keyword search, because embeddings miss exact identifiers and keyword search misses paraphrase."
+        ],
+        "bullets": [
+          "Chunking strategy determines whether an answer fits inside one retrieved chunk.",
+          "Overlapping chunks reduce boundary failures at the cost of more storage and more duplicate hits.",
+          "Recall at k caps the whole system: if the right chunk is not retrieved, the model can only guess.",
+          "Reranking a larger candidate set with a cross-encoder improves precision substantially.",
+          "Citations force the model to attribute claims, which makes errors visible.",
+          "The generation prompt should instruct the model to say when the context does not answer the question.",
+          "Index freshness is an operational problem: stale indexes produce confidently outdated answers."
+        ]
+      },
+      {
+        "title": "🧮 Recall, chunks, and end-to-end accuracy",
+        "paras": [
+          "A corpus of 10,000 documents averaging 1,000 words. Chunks of 300 words with 60-word overlap give about 4 chunks per document, 40,000 chunks. Retrieving the top 5 examines 0.0125 percent of the index, so retrieval quality is everything.",
+          "End-to-end accuracy is retrieval multiplied by reading. With recall at 5 of 0.80 and reader accuracy of 0.85, end-to-end is 0.68. Improving retrieval to 0.92 raises it to 0.78, a 15 percent gain, while improving the reader to 0.92 raises it only to 0.74. Effort should go to the weaker factor.",
+          "Reranking arithmetic: retrieve 50 candidates cheaply, then rerank with a cross-encoder and keep 5. If cheap retrieval has recall at 50 of 0.95 and reranking has 0.9 precision in the top 5, the effective recall at 5 rises from 0.80 to about 0.86. The cost is 50 cross-encoder passes at 10 milliseconds each, half a second, which is a noticeable latency increase for a 7 percent accuracy gain.",
+          "Chunk size trade in numbers: 150-word chunks give finer retrieval but a 10 percent boundary failure rate, where the answer spans two chunks and neither contains it. 600-word chunks reduce boundary failures to 2 percent but each retrieved chunk quadruples the prompt tokens, from 400 to 1,600 for five chunks.",
+          "Hallucination with retrieval: a model asked a question whose answer is not in the retrieved context will answer from parameters about 20 to 40 percent of the time unless instructed otherwise. An explicit instruction to say the context is insufficient reduces that to a few percent, which is one of the highest-value prompt lines in the whole system.",
+          "Cost arithmetic: 5 chunks of 400 tokens is 2,000 input tokens plus a 200-token question. At 10 million queries per day that is 22 billion input tokens daily, which is a substantial bill, and halving the retrieved chunk count halves it at the cost of recall."
+        ]
+      }
+    ]
+  },
+  "913": {
+    "sections": [
+      {
+        "title": "🔍 Why a model that can act is different",
+        "paras": [
+          "A chat model produces text. An agent produces text that is interpreted as an action: search this, run this query, call this API. The result comes back and the model continues.",
+          "That loop converts a predictor into something that can complete multi-step tasks, and it also means one wrong step can invalidate everything after it."
+        ]
+      },
+      {
+        "title": "⚙️ Tools, the loop, and the failure modes",
+        "paras": [
+          "Tools are described to the model as name, purpose, and parameter schema. The model emits a structured call, the application executes it, and the result is appended to the conversation. The model then decides the next step or produces the final answer.",
+          "The loop needs a stopping condition, a step budget, and error handling, because models will otherwise retry a failing action indefinitely."
+        ],
+        "bullets": [
+          "A clear tool description matters more than a clever prompt, because the model chooses tools from the description alone.",
+          "Parameter schemas should be narrow; a tool that accepts arbitrary SQL is a security hole.",
+          "Errors must be returned to the model as text, or it cannot recover.",
+          "A step limit and a wall-clock limit prevent runaway loops and runaway cost.",
+          "Intermediate results belong in the context, which grows fast and must be managed.",
+          "A human approval step is required for irreversible actions such as sending or deleting.",
+          "Evaluation requires end-to-end task success, not per-step accuracy."
+        ]
+      },
+      {
+        "title": "🧮 Compounding failure and cost",
+        "paras": [
+          "If each step succeeds with probability 0.95, a 10-step task succeeds with probability 0.95 to the 10, 0.60. At 0.99 per step it is 0.90, and at 0.90 it is 0.35. Compounding is the central engineering problem of agents, and it is why tasks are decomposed into few steps with verification between them.",
+          "Cost arithmetic: each step resends the whole context. With a 2,000-token context growing by 500 tokens per step, a 10-step task sends 2,000 plus 2,500 plus and so on, about 42,500 input tokens. Five times the tokens of a single 8,000-token query, for a task that produces 500 tokens of output.",
+          "Latency arithmetic: 10 steps at 3 seconds each is 30 seconds, plus tool execution. Users tolerate that for a background task and not for an interactive one, which is why agent interfaces are asynchronous.",
+          "Step budget in numbers: a 10-step limit with 95 percent per-step reliability gives 60 percent success. Allowing 30 steps improves coverage but compounds the failure of long tasks; the resolution is to verify at checkpoints rather than to raise the limit.",
+          "Tool call accuracy: models select the correct tool 85 to 98 percent of the time depending on how similar the tools are. With five clearly distinct tools it is near the top of that range; with fifteen overlapping tools it drops sharply, which is why tool sets are kept small per agent.",
+          "Prompt injection risk in numbers: if an agent reads web pages, a malicious page can contain text instructing it to exfiltrate data. No prompt fully prevents this, which is why an agent with write access to sensitive systems needs a permission boundary at the tool level, not a warning in the prompt."
+        ]
+      }
+    ]
+  },
+  "914": {
+    "sections": [
+      {
+        "title": "🔍 Why one model for several senses",
+        "paras": [
+          "A separate vision model and language model can be chained, and the interface between them loses information: a caption is a lossy summary of an image.",
+          "A multimodal model projects each modality into the same token space, so the language model can reason over an image the way it reasons over a sentence."
+        ]
+      },
+      {
+        "title": "⚙️ How modalities are joined",
+        "paras": [
+          "An image is cut into patches, each patch is encoded into a vector, and the vectors are projected into the language model's embedding space. From there they are tokens like any other.",
+          "Audio is converted to a spectrogram or encoded by a dedicated encoder, then projected the same way. The language model is unchanged, which is why the same architecture handles all three."
+        ],
+        "bullets": [
+          "An image becomes hundreds to thousands of tokens, which is why vision requests are expensive in context.",
+          "Patch size sets the token count: a 14-pixel patch on a 224-pixel image gives 256 patches.",
+          "The projector that maps image features into the language space is usually the only part trained initially.",
+          "High-resolution images need tiling, which multiplies the token count.",
+          "Video multiplies again, since frames times tokens per frame grows quickly.",
+          "OCR and chart reading work well; precise spatial reasoning and counting remain weak.",
+          "Image generation and image understanding are different models with different training."
+        ]
+      },
+      {
+        "title": "🧮 Tokens per image and the cost of vision",
+        "paras": [
+          "A 224 by 224 image with 14-pixel patches gives 16 by 16, 256 patches, so 256 tokens. That is roughly 200 words of text, which is cheap.",
+          "A 1,024 by 1,024 image with the same patch size gives 73 by 73, 5,329 patches, twenty times the tokens. At 10 images per request that is 53,000 tokens, which for many models exceeds the context window, which is why tiling and downscaling exist.",
+          "A 30-frame video clip at 256 tokens per frame is 7,680 tokens, and at 5 frames per second for one minute it is 76,800 tokens for sixty seconds of footage. That arithmetic is why video understanding is expensive and why frame sampling is always used.",
+          "Cost comparison: a 1,000-token text question costs one unit. The same question about a high-resolution image costs 20 to 50 units, because the image dominates the input. Per-image pricing that looks cheap per request becomes significant at volume.",
+          "Accuracy ranges on document tasks: reading printed text from a clean scan reaches 90 to 98 percent character accuracy. Reading a dense table reaches 70 to 90 percent, and precise coordinate questions in a photograph are much worse, which is why geometry still needs specialised models.",
+          "Counting failure in numbers: asked to count objects in an image with 20 items, models are typically off by 2 to 5, because counting requires sequential attention that the architecture does not naturally provide. That is a specific, measurable limitation rather than a general vagueness."
+        ]
+      }
+    ]
+  },
+  "916": {
+    "sections": [
+      {
+        "title": "🔍 Why evaluation is the hard part",
+        "paras": [
+          "A classifier has one right answer per example. An LLM has many acceptable answers, and the boundary of acceptability depends on the use case.",
+          "That means there is no single number. Evaluation is a set of instruments, each measuring one property, and a deployment decision requires several of them."
+        ]
+      },
+      {
+        "title": "⚙️ Benchmarks, human evaluation, and task-specific tests",
+        "paras": [
+          "Public benchmarks measure general capability on fixed tasks: knowledge, reasoning, mathematics, code, and reading comprehension. They are useful for comparing models and dangerous for predicting deployment performance.",
+          "Human evaluation remains the standard for quality, because raters can judge usefulness and tone. Task-specific evaluation, built from your own data, is the only one that predicts your own results."
+        ],
+        "bullets": [
+          "Benchmark contamination makes published scores optimistic, since test items may appear in training data.",
+          "Multiple-choice benchmarks are cheap to grade and weakly related to open-ended quality.",
+          "Pairwise comparison with a model acting as judge scales human judgement, with known biases toward length and its own outputs.",
+          "Report the metric, the prompt, the temperature, and the number of samples, or the number is not reproducible.",
+          "Evaluate the whole system, including retrieval and prompting, not only the model.",
+          "Track a regression suite on every change, or improvements will silently undo each other.",
+          "Evaluate on the tail: the failures that matter are rare and are not in an average."
+        ]
+      },
+      {
+        "title": "🧮 Sample sizes and what the numbers mean",
+        "paras": [
+          "For an accuracy of 80 percent, the standard error is the square root of 0.8 times 0.2 divided by n. With n equal to 100 that is 4 percent, so the true value is plausibly 72 to 88. With n equal to 1,000 it is 1.3 percent.",
+          "That arithmetic means a 3-point difference between two models needs about 1,500 examples to be distinguishable. Most published comparisons on a few hundred items are within noise, which is why confidence intervals belong beside every score.",
+          "Model-as-judge arithmetic: agreement with human labels is typically 70 to 85 percent, which is good enough to rank large differences and not good enough for a 2-point one. Judges also favour longer answers, so a length-controlled comparison is necessary before concluding that one model is better.",
+          "Benchmark saturation: a benchmark where models score above 90 percent has lost its ability to discriminate. Several well-known reasoning benchmarks are now in that state, which is why new harder ones keep appearing.",
+          "Cost of a proper evaluation: 1,000 examples times 5 samples at 1,000 tokens each is 5 million tokens per model per run. At a few dollars per million that is tens of dollars, which is cheap enough that there is no reason to evaluate on 50 examples.",
+          "The gap between benchmark and production: models ranking first on a public benchmark frequently lose on a specific task, because the task's distribution differs. Building a 200-example evaluation set from real traffic is a day of work and is the highest-value evaluation investment available."
+        ]
+      }
+    ]
+  },
+  "917": {
+    "sections": [
+      {
+        "title": "🔍 Why capability and safety are separate questions",
+        "paras": [
+          "A model can be excellent at a task and unsafe to deploy, or weak and perfectly safe. Safety is not a property that improves with scale; some risks grow with capability.",
+          "The specific risks are worth naming precisely, because each has a different mitigation."
+        ]
+      },
+      {
+        "title": "⚙️ The failure families and their mitigations",
+        "paras": [
+          "Hallucination is the model stating unsupported things fluently. Bias is systematic unfairness toward groups. Harmful content is instructions for damage. Privacy leakage is memorised personal data. Misuse includes fraud, impersonation, and automated abuse. Prompt injection is untrusted text overriding instructions.",
+          "Mitigations differ: retrieval and citations for hallucination, evaluation per subgroup for bias, refusal training and filters for harmful content, deduplication and unlearning for privacy, provenance and rate limits for misuse, and privilege isolation for injection."
+        ],
+        "bullets": [
+          "A refusal should be specific, because a blanket refusal trains users to bypass the system.",
+          "Prompt injection cannot be fully prevented by prompting; the defence is limiting what the system can do.",
+          "Personally identifiable information in training data can be extracted, which makes deduplication a privacy control.",
+          "Moderation classifiers catch explicit content and miss subtle harm.",
+          "Red-teaming finds failures that benchmarks do not measure.",
+          "Disclosure that a user is talking to a model is a legal requirement in several jurisdictions.",
+          "Monitoring for misuse patterns is an operational control that no model property replaces."
+        ]
+      },
+      {
+        "title": "🧮 Rates and their consequences",
+        "paras": [
+          "Hallucination rates on open-domain factual questions are a few percent for strong models and rise sharply on niche entities and recent events. At 3 percent on 10 million answers per day that is 300,000 unsupported statements daily, which is why citations and retrieval are not optional in a factual product.",
+          "Prompt injection success rates in published tests are high, often above 50 percent for indirect injection through retrieved content when the system has no privilege separation. That number is why an agent holding credentials is a design decision rather than a feature.",
+          "PII extraction: with a large training corpus, some fraction of memorised sequences can be extracted by prompting. Deduplicating the corpus reduces memorisation substantially, and the residual rate is why training data curation is a privacy measure, not only a quality one.",
+          "Bias measurement in numbers: overall accuracy 92 percent, group A 95, group B 78, group B at 12 percent of the data. The aggregate hides a 17-point gap, and subgroup evaluation costs an afternoon.",
+          "Cost of human review: routing 5 percent of responses to human review at 2 per review, across 1 million responses per day, is 100,000 per day. That figure decides whether a safety programme is affordable, which is why automated triage is used to pick the 5 percent.",
+          "Refusal trade-off: tightening filters to catch 99 percent of harmful requests typically raises false refusals of legitimate requests to 3 to 10 percent. At 1 million requests per day that is 30,000 to 100,000 frustrated users, which is the measurable cost of the safety margin."
+        ]
+      }
+    ]
+  },
+  "918": {
+    "sections": [
+      {
+        "title": "🔍 Why the next constraint is not model size",
+        "paras": [
+          "For several years the reliable route to better performance was more parameters and more data. That route is hitting two limits: high-quality public text is largely consumed, and inference cost scales with use.",
+          "The directions that remain are better data, better reasoning, better tools, and cheaper serving, and each is a different kind of engineering."
+        ]
+      },
+      {
+        "title": "⚙️ The directions worth watching",
+        "paras": [
+          "Reasoning models spend more compute at inference, generating internal chains before answering, which trades cost for accuracy on hard problems. Efficient architectures reduce the quadratic attention cost and the memory footprint of long contexts. Agents and tools connect models to systems that can act and verify.",
+          "Multimodality and long context change what a single request can contain, which shifts application design from chaining calls to sending everything at once."
+        ],
+        "bullets": [
+          "Data quality and synthetic data replace raw web scale as the main lever.",
+          "Reasoning at inference trades tokens for accuracy, which suits hard problems and wastes money on easy ones.",
+          "Small models distilled from large ones increasingly serve the majority of traffic.",
+          "Long context and retrieval converge: both put the right text in front of the model.",
+          "Agents need verification and permissions more than they need a better model.",
+          "Evaluation is becoming the bottleneck, because capability grows faster than the ability to measure it.",
+          "Regulation is arriving, which makes documentation and auditability product features."
+        ]
+      },
+      {
+        "title": "🧮 The economics that will decide the outcome",
+        "paras": [
+          "Training cost for a frontier run is tens of millions of dollars, and the useful life of a model is under a year before a better one exists. That is a capital-intensive business with a short depreciation schedule, which is why serving revenue has to arrive quickly.",
+          "Inference cost dominance: a model serving 1 billion requests a month at 1,000 tokens each processes 10 to the 12 tokens monthly. At a few dollars per million tokens that is millions per month, which exceeds the training cost within months at scale.",
+          "Distillation arithmetic: an 8-billion-parameter model distilled from a 70-billion-parameter one typically retains 90 to 95 percent of quality on common tasks at roughly 10 times lower inference cost. For most products that is the correct trade, which is why the frontier stays small in terms of volume.",
+          "Reasoning cost arithmetic: a model generating 5,000 internal tokens before a 200-token answer costs 25 times the output tokens of a direct answer. If it improves accuracy from 40 to 70 percent on a hard task, it is worth it there and a 25-fold waste on easy tasks, which is why routing between models is an architectural requirement.",
+          "Context cost: a 1-million-token context at a quadratic attention cost is impractical without architectural changes, so long-context claims depend on sparse or linear attention. Even when affordable, a 1-million-token prompt at a few dollars per million tokens costs dollars per request, which limits it to high-value uses.",
+          "The practical projection in one number: inference cost per unit of quality has fallen roughly 10-fold per year for several years, through better models, quantisation, and serving. If that continues, the applications that were uneconomical become economical, which is a more reliable prediction than any specific capability claim."
+        ]
+      }
+    ]
+  }
+}

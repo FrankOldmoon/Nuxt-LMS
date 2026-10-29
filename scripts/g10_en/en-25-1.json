@@ -1,0 +1,382 @@
+{
+  "505": {
+    "sections": [
+      {
+        "title": "🔍 Why how you store data matters as much as what you do with it",
+        "paras": [
+          "Finding a duplicate phone number among a hundred thousand records can take a few milliseconds or a few seconds, depending on one decision: whether the records sit in a list you scan or in a structure you can look up. The steps of the algorithm barely change; the container changes everything.",
+          "That is the split the subject is built on. A data structure decides how values are arranged in memory, which fixes what can be done quickly. An algorithm decides the sequence of steps. Choosing one constrains the other, so the real decision is always made as a pair."
+        ]
+      },
+      {
+        "title": "⚙️ Interfaces first, implementations second",
+        "paras": [
+          "A stack, a queue, a map and a set are abstract data types: they specify what operations exist and what they mean, without saying how they are built. The same interface can be implemented over an array or a linked list, with very different cost."
+        ],
+        "bullets": [
+          "Choose the implementation from the operation used most often, not from the average case.",
+          "A list supports indexing, a stack supports only the top, a queue only the ends, a set only membership.",
+          "Every fast structure pays for itself somewhere: hashing spends memory, sorted arrays spend insertion time.",
+          "The language built-ins are already tuned, so hand-writing is justified only by a specific requirement.",
+          "Clarity first: a slow correct program can be profiled, a fast wrong one cannot be debugged."
+        ]
+      },
+      {
+        "title": "🧮 The same task, two containers",
+        "paras": [
+          "Task: decide whether a list contains a repeated value.",
+          "With a list as the container, each element is compared against everything seen before, which is about n squared over two comparisons. At a hundred thousand elements that is five billion comparisons.",
+          "With a set as the container, each element is looked up once and inserted once, which is about n operations, because membership testing is constant time on average. At the same size that is a hundred thousand operations.",
+          "The algorithm did not change: still one pass, still checking membership. The container changed, and the cost changed from hours to milliseconds. The set achieves this by computing a bucket from the value, which is why the elements must be hashable and why the structure spends extra memory.",
+          "A closing judgement worth keeping: at ten elements both versions finish in microseconds, so choose on the basis of size and of how often the code runs, never on principle."
+        ]
+      }
+    ]
+  },
+  "509": {
+    "sections": [
+      {
+        "title": "🔍 Why seconds are the wrong unit",
+        "paras": [
+          "A sort that takes 0.3 seconds on one machine takes 0.9 on a slower one and 0.03 after rewriting in C. The number measures the machine as much as the algorithm, so it cannot be used to compare algorithms.",
+          "Big O measures something machine-independent: how the operation count grows with input size. Constants and small terms are discarded because, once n is large enough, growth dominates. A quadratic algorithm at a million elements needs about a trillion operations, and no constant factor saves that."
+        ]
+      },
+      {
+        "title": "⚙️ The definition, the simplifications, the ladder",
+        "paras": [
+          "Formally, f is big O of g when there is a constant c and a threshold beyond which f never exceeds c times g. It is an upper bound on growth, nothing more."
+        ],
+        "bullets": [
+          "Drop constant factors, keep the highest-order term, take the largest when adding.",
+          "The ladder from fast to slow: constant, logarithmic, square root, linear, n log n, quadratic, cubic, exponential, factorial.",
+          "Constant: indexing an array, pushing a stack, average hashing.",
+          "Logarithmic: binary search and balanced trees, which is why a billion sorted items takes about thirty steps.",
+          "Linear: one pass, counting, linear search.",
+          "n log n: merge sort, heap sort, and the lower bound for any comparison sort.",
+          "Quadratic and worse: nested loops over the data, plus exponential recursion without memoisation.",
+          "Space counts too, and recursion depth is space: a depth of n is linear space."
+        ]
+      },
+      {
+        "title": "🧮 What the differences look like at scale",
+        "paras": [
+          "Assume a hundred million simple operations per second.",
+          "At a thousand elements, linear takes ten microseconds, n log n takes about a hundred microseconds, and quadratic takes ten milliseconds. All three feel instant, which is why small tests prove nothing.",
+          "At a million elements, linear is ten milliseconds, n log n about two hundred milliseconds, and quadratic needs a trillion operations, which is nearly three hours.",
+          "At a billion elements, linear is ten seconds, n log n about a minute, and quadratic would take thirty thousand years. Only the growth rate matters at that point.",
+          "One caution about counting loops: two nested loops are not automatically quadratic. If the inner loop halves each time, the total is n log n, so count total executions rather than counting brackets."
+        ]
+      }
+    ]
+  },
+  "512": {
+    "sections": [
+      {
+        "title": "🔍 Why an array can jump to any position instantly",
+        "paras": [
+          "Picture a row of identical lockers. Knowing where locker three starts tells you where locker five starts, because each is the same width: the address is the base plus the index times the slot size. That arithmetic is the whole reason array access is constant time.",
+          "Linked structures cannot do this, since their nodes sit wherever memory had room, so reaching the tenth element means following nine links. The trade is exact: contiguous storage buys random access and gives up cheap insertion."
+        ]
+      },
+      {
+        "title": "⚙️ Real costs, and why appending is amortised constant",
+        "paras": [
+          "The costs below are for a dynamic array, the structure behind lists in most languages. It keeps a contiguous block and a length, and grows the block by a factor when it fills."
+        ],
+        "bullets": [
+          "Read or write by index: constant, the one operation arrays win outright.",
+          "Append at the end: constant on average, because the occasional resize copies n items but the growth factor makes the copies rare.",
+          "Insert or delete at the front or in the middle: linear, because every later element shifts.",
+          "Search for a value: linear, since there is no ordering to exploit.",
+          "Slicing copies: a slice of length k costs k, and it is a new array rather than a view.",
+          "Sorting: n log n in place, or n log n with an extra linear array if a new one is returned."
+        ]
+      },
+      {
+        "title": "🧮 Why string concatenation in a loop is a trap",
+        "paras": [
+          "Strings are immutable, so adding a character does not extend the old one; it allocates a new string and copies everything into it. Concatenating ten thousand times copies one character, then two, then three, and the total is about fifty million character copies.",
+          "The same task with a list and a final join is linear: join computes the total length once, allocates once, then copies each piece. Ten thousand characters, ten thousand copies.",
+          "Immutability is not an oversight. It lets strings be shared safely, hashed once and used as dictionary keys, and it makes slicing cheap to reason about. The price is paid only when code treats a string as a buffer, which is what bytearray or a list of characters is for.",
+          "A rule of thumb that follows: build in a list, join once at the end, and never concatenate inside a loop over unknown length."
+        ]
+      }
+    ]
+  },
+  "514": {
+    "sections": [
+      {
+        "title": "🔍 Why anyone would give up random access",
+        "paras": [
+          "An array requires one contiguous block, and a large block is not always available. It also requires shifting everything after an insertion, which at a million elements is a million moves. When a program inserts and deletes constantly, that cost dominates.",
+          "A linked list trades contiguity for pointers. Each node holds a value and the address of the next node, so insertion rewrites two links and moves nothing. The loss is that finding the hundredth node means following ninety-nine links."
+        ]
+      },
+      {
+        "title": "⚙️ Costs, variants, and the detail that decides correctness",
+        "paras": [
+          "The single most common bug is the order of assignments during an insertion: connect the new node to the rest before redirecting the old link, or the remainder of the list is lost."
+        ],
+        "bullets": [
+          "Reaching the k-th node is linear; there is no arithmetic shortcut.",
+          "Inserting after a known node is constant, and deleting a node with a known predecessor is constant.",
+          "Head insertion and head deletion are constant, which is why a dummy head node is used to remove the empty-list special case.",
+          "A doubly linked list adds a previous pointer, enabling deletion without the predecessor, at the cost of doubled pointer bookkeeping.",
+          "Linked lists cannot support binary search, because reaching the middle requires walking to it.",
+          "Cache behaviour often matters more than the complexity: scattered nodes defeat prefetching, so a linked list can be several times slower than an array even when its complexity looks better."
+        ]
+      },
+      {
+        "title": "🧮 Insert, delete, reverse",
+        "paras": [
+          "Start from 1 then 2 then 3. To insert 9 after node 2, point the new node at what node 2 points to, namely 3, then point node 2 at the new node. The list becomes 1, 2, 9, 3.",
+          "Deleting 9 given that its predecessor is 2 means pointing 2 at whatever 9 points to, which is 3, and releasing 9. One assignment, and no other node is touched.",
+          "Reversing needs three pointers. Begin with previous empty, current at 1. Save the next node (2), point current backwards at previous (empty), advance previous to 1 and current to 2. Repeat: 2 now points at 1, then 3 points at 2, and when current becomes empty the answer is previous, which is 3. The list is 3, 2, 1.",
+          "That three-pointer loop is the template for reversing the first k nodes, reversing a range, and swapping pairs, so it is worth writing until it needs no thought."
+        ]
+      }
+    ]
+  },
+  "515": {
+    "sections": [
+      {
+        "title": "🔍 Why last in, first out keeps appearing",
+        "paras": [
+          "The browser back button returns you to the most recent page, not the first one. A function call returns to the most recent caller. Nested brackets close in reverse order of opening. The pattern is always the same: whatever arrived most recently must finish first.",
+          "A stack enforces exactly that and nothing else: push on top, pop from the top, look at the top. Because the interface is so restricted, the implementation is trivial and the behaviour is impossible to get wrong."
+        ]
+      },
+      {
+        "title": "⚙️ Three operations, two implementations, many uses",
+        "paras": [
+          "Push, pop and peek, all constant time. The restriction is the feature, because anything that fits into nesting fits into a stack."
+        ],
+        "bullets": [
+          "Built on an array: push is append and pop is removal from the end, both constant on average.",
+          "Built on a linked list: operate at the head, since removing the tail of a singly linked list requires a full traversal.",
+          "Bracket matching, expression evaluation and conversion between infix, prefix and postfix forms all rely on a stack.",
+          "The call stack is a stack: each call pushes a frame, and returning pops it, which is why runaway recursion overflows.",
+          "Undo and redo are two stacks facing opposite directions.",
+          "Depth-first search is a stack-driven traversal, which is why replacing recursion with an explicit stack is mechanical."
+        ]
+      },
+      {
+        "title": "🧮 Matching brackets, and one failure that must not be skipped",
+        "paras": [
+          "Input: curly, then square, then round, then close round, close square, close curly. Each opening pushes; the round close matches the round on top and pops; the square close matches; the curly close matches; the stack ends empty, so the input is well formed.",
+          "Input: round, then square, then close round. The close round meets a square on top, which does not match, so the input is rejected immediately. If that mismatch were skipped, the string would be accepted at the end, which is why the check cannot be deferred.",
+          "Input: two openings and nothing else. The characters run out with the stack non-empty, so it is rejected. That final check that the stack is empty is as necessary as the matching rule.",
+          "Cost: one pass over the characters and one push or pop each, so linear time and linear space in the worst case. The same routine, with different token tables, is what a parser and a JSON validator use."
+        ]
+      }
+    ]
+  },
+  "516": {
+    "sections": [
+      {
+        "title": "🔍 Why fairness needs a different structure",
+        "paras": [
+          "Ten documents are sent to one printer. Whatever order they are printed in, the only order that everyone considers fair is the order they arrived, so the structure must release the oldest item first.",
+          "A queue does that: enqueue at the back, dequeue from the front. Stacks model nesting, queues model waiting, and both are about time, just in opposite directions."
+        ]
+      },
+      {
+        "title": "⚙️ The trap in the obvious array implementation",
+        "paras": [
+          "The naive implementation removes from the front of an array, which shifts every remaining element and turns a constant operation into a linear one. The correct array implementation is a circular buffer with a head index and a tail index that wrap around, so nothing moves."
+        ],
+        "bullets": [
+          "Circular buffer: both ends are constant, and full versus empty must be distinguished either by an extra counter or by leaving one slot unused.",
+          "A deque allows insertion and removal at both ends in constant time and serves as either a stack or a queue.",
+          "A priority queue is not first in first out; the largest or smallest priority leaves first, and is built on a heap.",
+          "Queues drive breadth-first search, which is why the first arrival at a node is the shortest route.",
+          "Blocking queues are the standard handoff between a producer thread and a consumer thread.",
+          "Prefer the language deque over a list with front removal, which is linear and usually unnoticed until the workload grows."
+        ]
+      },
+      {
+        "title": "🧮 A queue built from two stacks",
+        "paras": [
+          "Given only push and pop, build first-in first-out. Use two stacks: an inbox for arrivals and an outbox for departures.",
+          "Enqueue 1, 2 and 3 into the inbox. To dequeue, the outbox is empty, so pour the inbox into it: three pops and pushes reverse the order, leaving 1 on top. Popping the outbox gives 1, the earliest arrival.",
+          "Dequeue again: the outbox is not empty, so pop directly and get 2. Then enqueue 4 into the inbox, and dequeue: the outbox still holds 3, so 3 leaves first, then the outbox empties and the inbox is poured, giving 4. The order is 1, 2, 3, 4.",
+          "The cost of a single dequeue can be linear, when a pour is needed, but each element is poured at most once and popped at most once, so n operations cost n in total. That is amortised constant time per operation, and the same style of argument justifies the doubling strategy in dynamic arrays."
+        ]
+      }
+    ]
+  },
+  "518": {
+    "sections": [
+      {
+        "title": "🔍 How a function knows where to return to",
+        "paras": [
+          "When a function calls itself, something has to remember what the caller was in the middle of. The runtime keeps a call stack: each invocation pushes a frame holding its arguments, its locals and the return address, and returning pops that frame.",
+          "So recursion is not a different kind of loop. It is a way of letting the runtime store the unfinished work for you, which is why the code can be short while the state is extensive."
+        ]
+      },
+      {
+        "title": "⚙️ Two obligations, and the order that matters",
+        "paras": [
+          "Every recursive function needs a base case that returns without recursing, and a step that strictly shrinks the problem. Missing either produces infinite recursion, which ends in a stack overflow rather than a wrong answer."
+        ],
+        "bullets": [
+          "Linear recursion calls itself once per level, as in factorial or list traversal, giving stack depth equal to n.",
+          "Tree recursion calls itself several times per level, as in Fibonacci or tree traversal, and the number of calls can grow exponentially.",
+          "Code before the recursive call runs on the way down; code after it runs on the way back up, in reverse order.",
+          "Any recursion can be rewritten iteratively with an explicit stack; the recursive version usually reads better and the iterative one uses less memory.",
+          "Depth is limited by the runtime, typically around a thousand frames in Python, so recursion is unsuitable for very long lists.",
+          "When debugging, printing the level with indentation turns the call sequence into a tree that can be read visually."
+        ]
+      },
+      {
+        "title": "🧮 Three discs, seven moves",
+        "paras": [
+          "The rules: move all discs from the source peg to the destination peg, one at a time, never placing a larger disc on a smaller one.",
+          "The recursive insight is to trust the smaller problem. To move n discs, first move the top n minus 1 to the spare peg, then move the largest disc directly, then move the n minus 1 from the spare onto it.",
+          "For three discs the calls produce seven moves: disc one from source to destination, disc two from source to spare, disc one back onto disc two, disc three to the destination, disc one to the source, disc two onto disc three, disc one onto disc two.",
+          "Seven is two cubed minus one, matching the recurrence of twice the previous count plus one. Sixty-four discs would need about eighteen quintillion moves.",
+          "The lesson is the part that feels wrong at first: the recursive solution never works out those moves. It assumes the smaller calls are correct and only decides the three steps at its own level."
+        ]
+      }
+    ]
+  },
+  "519": {
+    "sections": [
+      {
+        "title": "🔍 Why some recursion is fast and some is hopeless",
+        "paras": [
+          "Walking a linked list recursively visits each node once. Computing Fibonacci recursively by definition recomputes the same values again and again, and at forty terms it makes hundreds of millions of calls.",
+          "The difference is not recursion but repeated work. When the recursion tree contains the same subproblem several times, the straightforward version is exponential in the number of distinct subproblems."
+        ]
+      },
+      {
+        "title": "⚙️ Three fixes, three constraints",
+        "paras": [
+          "The cures are well known, and each has a cost."
+        ],
+        "bullets": [
+          "Memoisation: cache results by argument, so each subproblem is solved once. Effective exactly when subproblems overlap.",
+          "Bottom-up iteration: start from the base cases and fill a table upward, which removes the call overhead and can often drop the space to a few variables.",
+          "Tail recursion: put the recursive call last so a compiler could reuse the frame, but Python deliberately does not optimise it, so it does not help there.",
+          "Depth is the hard limit: a hundred thousand recursive steps will crash Python whatever the algorithm, so long structures need iteration.",
+          "Memoisation on a problem with no shared subproblems, such as merge sort, only wastes memory.",
+          "The diagnostic question: will the same argument be reached twice? If yes, cache; if no, do not."
+        ]
+      },
+      {
+        "title": "🧮 Counting the calls for six terms",
+        "paras": [
+          "Naive Fibonacci for n equal to six makes twenty-five calls including repeats, while only seven distinct arguments exist, from zero to six. Eighteen of the twenty-five are duplicated work.",
+          "The ratio worsens quickly: the number of calls grows like the golden ratio to the n, so at forty terms it is about three hundred million calls against forty-one distinct values.",
+          "With memoisation the count drops to seven calls and the complexity from exponential to linear. Iteratively, two variables and a loop of n steps do the same job in constant space.",
+          "A control experiment: merge sort also recurses, and caching does nothing, because the two halves never overlap. Recognising which situation you are in is more useful than remembering the technique."
+        ]
+      }
+    ]
+  },
+  "520": {
+    "sections": [
+      {
+        "title": "🔍 Why splitting does not by itself make anything faster",
+        "paras": [
+          "Sorting a million items by splitting into two halves still processes a million items in total, so the split alone buys nothing. The gain comes entirely from the merge being cheaper than the alternative, which is comparing everything with everything.",
+          "So the precondition for divide and conquer is a cheap combination step. If combining two half-solutions costs as much as solving the whole problem directly, the recursion is pure overhead."
+        ]
+      },
+      {
+        "title": "⚙️ Three steps and where the cost lives",
+        "paras": [
+          "Divide the problem into smaller instances of the same kind, solve them recursively, then combine. The running time is captured by a recurrence, and its solution tells you which step dominates."
+        ],
+        "bullets": [
+          "If each level does constant work and there are log n levels, the total is log n, as in binary search.",
+          "If each level does linear work, the total is n log n, as in merge sort and quicksort.",
+          "If the combination is quadratic and there is only one subproblem, the total is quadratic, as in quickselect in the worst case.",
+          "Many subproblems of nearly full size give worse than quadratic, which is why dividing into eight halves of n over two is a mistake.",
+          "The approach parallelises naturally, since the subproblems are independent.",
+          "The cost is recursion overhead, extra memory for combining, and poorer cache behaviour when the halves are far apart in memory."
+        ]
+      },
+      {
+        "title": "🧮 Merging two sorted halves",
+        "paras": [
+          "Left half 2, 5, 8 and right half 1, 6, 7. Two pointers, one per half, and always take the smaller front element.",
+          "Compare 2 with 1: take 1. Compare 2 with 6: take 2. Compare 5 with 6: take 5. Compare 8 with 6: take 6, then 7, then the left half runs out and the remaining 8 is appended. Result 1, 2, 5, 6, 7, 8 in six comparisons.",
+          "Six comparisons for six elements, because sortedness means each comparison eliminates one element rather than one pair. That linear cost per level, over log n levels, is where n log n comes from.",
+          "If merging required comparing every element of one half with every element of the other, each level would cost n squared, and the total would be worse than sorting directly. Divide and conquer is only as good as its merge step."
+        ]
+      }
+    ]
+  },
+  "522": {
+    "sections": [
+      {
+        "title": "🔍 Why three quadratic sorts are still worth knowing",
+        "paras": [
+          "Better algorithms exist, so the three simple sorts are taught for three reasons. They show three distinct strategies: exchange neighbours, insert into place, select the smallest. They are faster than the sophisticated ones on very small inputs, which is why real libraries switch to insertion sort below about thirty elements. And insertion sort is optimal on nearly sorted data.",
+          "All three share the same weakness: finding the right position costs linear time and is done n times, so the total is quadratic. Breaking through requires making the search cheaper, which leads to divide and conquer."
+        ]
+      },
+      {
+        "title": "⚙️ Three mechanisms and what they trade",
+        "paras": [
+          "The differences are not cosmetic, and they show up in stability, in write count and in behaviour on ordered input."
+        ],
+        "bullets": [
+          "Selection sort finds the minimum of the unsorted part and swaps it into place, so comparisons are always n squared over two while swaps are at most n minus one, which suits expensive writes.",
+          "Bubble sort swaps adjacent inversions, so it can stop early once a pass makes no swaps, giving linear time on sorted input.",
+          "Insertion sort shifts a new element left until it fits, and its total movement equals the number of inversions, which is why nearly sorted data is almost free.",
+          "Insertion and bubble sorts are stable; selection sort is not, because a long-distance swap can reorder equal elements.",
+          "All three are in place, using constant extra space.",
+          "Inversions are the right measure of disorder: an array with few of them is nearly sorted, and insertion sort exploits exactly that."
+        ]
+      },
+      {
+        "title": "🧮 Insertion sort on four numbers",
+        "paras": [
+          "Data 5, 2, 4, 1. Treat 5 as the sorted part.",
+          "Take 2: it is smaller than 5, so 5 shifts right and 2 goes first, giving 2, 5.",
+          "Take 4: compare with 5, shift; compare with 2, stop; insert between them, giving 2, 4, 5.",
+          "Take 1: shift 5, shift 4, shift 2, insert at the front, giving 1, 2, 4, 5.",
+          "Total shifts: one plus one plus three, which is five, and the array has exactly five inversions: (5,2), (5,4), (5,1), (2,1) and (4,1). Each shift removes one inversion, which is why the count matches exactly.",
+          "Now the same data with selection sort. The minimum is 1, so swap it with the first element and the array becomes 1, 2, 4, 5 in one swap, yet the algorithm still examines the rest of the array to confirm minima. Fewer writes, no fewer comparisons, and no early exit on already sorted data."
+        ]
+      }
+    ]
+  },
+  "523": {
+    "sections": [
+      {
+        "title": "🔍 Two divide-and-conquer sorts that split the work differently",
+        "paras": [
+          "Merge sort splits the array blindly in the middle and works hard when combining. Quicksort works hard when splitting, choosing a pivot and partitioning, and then does nothing when combining, because the array is already in order.",
+          "That inversion explains everything else about them. Merge sort is predictable and needs extra memory; quicksort is in place, faster in practice, and can degrade badly on unlucky pivots."
+        ]
+      },
+      {
+        "title": "⚙️ Costs, stability, and the worst case",
+        "paras": [
+          "Merge sort is n log n in every case, stable, and requires linear extra space. Quicksort averages n log n, is unstable, uses logarithmic stack space, and degrades to quadratic when partitions are lopsided."
+        ],
+        "bullets": [
+          "Merge sort stability comes from taking from the left half when the two front elements are equal.",
+          "Quicksort degrades when the pivot is always the smallest or largest, which happens on sorted input if the first element is chosen.",
+          "Random pivots or median of three make the bad case vanishingly unlikely rather than impossible.",
+          "Quicksort has smaller constants, so it usually wins in practice: no allocation, and accesses stay close together.",
+          "Merge sort suits linked lists, where merging is pointer work with no extra array, and suits external sorting of files.",
+          "Both are comparison sorts, so neither can beat n log n, which is a proven lower bound for this family."
+        ]
+      },
+      {
+        "title": "🧮 One merge and one partition",
+        "paras": [
+          "Merging left 1, 4, 7 with right 2, 3, 9: take 1, then 2, then 3, then 4, then 7, then 9, with six comparisons, one fewer than the number of elements.",
+          "Partitioning 3, 7, 2, 8, 1 around the pivot 3. Walk from both ends: 7 is greater than 3 and 1 is smaller, so swap them, giving 3, 1, 2, 8, 7. Continue: 8 is greater than 3 and 2 is smaller, but the pointers have crossed, so the partition is finished.",
+          "Place the pivot where the right pointer stopped, swapping 3 with 2, giving 2, 1, 3, 8, 7. Everything left of the 3 is smaller and everything right is larger, and the pivot will never move again.",
+          "Recurse on 2, 1 and on 8, 7, and the array is sorted with no combining step at all. The work was done on the way down, which is the structural difference from merge sort."
+        ]
+      }
+    ]
+  }
+}

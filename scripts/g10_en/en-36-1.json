@@ -1,0 +1,459 @@
+{
+  "952": {
+    "sections": [
+      {
+        "title": "🔍 Why sensing, deciding, and acting must all be present",
+        "paras": [
+          "A washing machine senses water level and acts by opening a valve, and nobody calls it a robot. What is missing is the coupling: it does not decide anything from an open-ended model of its situation.",
+          "A robot closes a loop between a measurement of the world, a decision based on that measurement, and a physical effect. Remove any of the three and the machine becomes an automated tool."
+        ]
+      },
+      {
+        "title": "⚙️ The loop and its three budgets",
+        "paras": [
+          "Sensors measure, the controller decides, actuators move. The loop repeats at a fixed rate, and that rate is a design parameter: a balancing robot needs hundreds of iterations per second, a warehouse trolley needs a few.",
+          "Each part has a budget: sensors have range, resolution, and latency; the controller has compute and power; actuators have torque and speed. The robot's capability is set by the weakest of those budgets."
+        ],
+        "bullets": [
+          "Sensing provides the state estimate, which is always uncertain.",
+          "Deciding maps state to action, from a lookup table to a planner to a learned policy.",
+          "Acting converts commands into force or motion, with its own dynamics and delays.",
+          "The loop rate must be several times faster than the fastest thing the robot must react to.",
+          "Latency anywhere in the loop becomes instability, not just slowness.",
+          "Physical embodiment means mistakes have consequences, unlike a simulation.",
+          "The three-part decomposition is why the subject splits into perception, planning, and control."
+        ]
+      },
+      {
+        "title": "🧮 Loop rate and reaction arithmetic",
+        "paras": [
+          "A robot moving at 1 metre per second that must stop before an obstacle 0.3 metres away has 0.3 seconds. If perception takes 100 milliseconds and actuation 100 milliseconds, control has 100 milliseconds, which means at least 10 iterations per second. At 2 metres per second the budget halves and the loop rate must double.",
+          "A balancing robot is the extreme case. An inverted pendulum with a 0.3-metre length has a natural time constant of about 0.17 seconds, so the controller must act several times within that window, which is why balancing robots run at 200 to 1,000 Hz.",
+          "Compute arithmetic: a control loop reading 8 sensors over I2C and driving 12 servos takes perhaps 2 milliseconds on a microcontroller running at 100 MHz. At 200 Hz the period is 5 milliseconds, so the loop uses 40 percent of the available time, which is comfortable. Adding a camera at 30 frames per second drops the loop to 33 milliseconds, which is why vision runs in a separate process.",
+          "Power arithmetic: 12 servos drawing 0.5 amperes each at 6 volts is 36 watts at full load, which on a 5,000 milliampere-hour battery at 7.4 volts, 37 watt-hours, gives about an hour at full load and three hours at a third. That single calculation often decides the robot's design more than any control algorithm.",
+          "Failure arithmetic: a robot with three independent safety functions each at 99 percent reliability has 97 percent overall, since 0.99 cubed is 0.970. Redundancy is not about average reliability but about the probability that all layers fail together, which is why emergency stops are hardwired rather than software.",
+          "The cost of a missed deadline: if the loop overruns by 5 milliseconds on a robot moving at 1 metre per second, the position error is 5 millimetres. On a welding robot that is a defect; on a balancing robot it is a fall, because the pendulum has moved 5 milliseconds further into instability."
+        ]
+      }
+    ]
+  },
+  "953": {
+    "sections": [
+      {
+        "title": "🔍 Why classification predicts the hard problem",
+        "paras": [
+          "Robot categories are not just vocabulary. Each structure has a characteristic difficulty: a wheeled robot struggles with terrain, a legged robot struggles with balance, an arm struggles with reach and singularities, a drone struggles with endurance.",
+          "Knowing the category tells you in advance which engineering problem will dominate the project."
+        ]
+      },
+      {
+        "title": "⚙️ Structure and autonomy",
+        "paras": [
+          "By structure, robots are manipulators, fixed in place with an arm; mobile robots, on wheels or tracks; legged robots, walking; aerial robots, flying; and humanoids, combining legs and arms. By autonomy, they range from teleoperated, where a human controls every motion, to supervised, where a human gives goals, to fully autonomous.",
+          "Most deployed robots are teleoperated or supervised, because full autonomy in unstructured environments remains hard."
+        ],
+        "bullets": [
+          "Cartesian and SCARA arms are simple and fast, and they dominate assembly.",
+          "Six-axis articulated arms have the reach and dexterity for welding and painting.",
+          "Differential-drive wheels are simple and cannot move sideways without special wheels.",
+          "Legged robots handle stairs and rubble at the cost of complex balance control.",
+          "Quadrotors are mechanically simple and need continuous active stabilisation.",
+          "Humanoids are the hardest category because they combine balance, manipulation, and energy limits.",
+          "Teleoperation moves the hard problem to the human, which is why it appears first in new domains."
+        ]
+      },
+      {
+        "title": "🧮 Cost and capability by category",
+        "paras": [
+          "An industrial six-axis arm with 1,700 millimetres of reach and 20 kilograms of payload costs tens of thousands and repeats to 0.05 millimetres. A collaborative arm with the same reach and 5 kilograms of payload costs similar and is safe to work beside people, at lower speed.",
+          "A differential-drive research robot costs a few thousand and carries a few kilograms. A quadruped costs tens of thousands and climbs stairs. A humanoid costs hundreds of thousands and does less useful work per hour than either, which is the candid summary of the category.",
+          "Payload and endurance arithmetic for a quadrotor: a 2-kilogram airframe with 30 minutes of hover time gains 1 kilogram of payload and loses roughly 30 percent of the endurance, because thrust scales with mass while battery capacity does not. That trade is why delivery drones carry small packages over short distances.",
+          "Repeatability versus accuracy: an industrial arm may be accurate to 0.1 millimetres and repeatable to 0.02, while a low-cost arm is accurate to 5 millimetres and repeatable to 1. Repeatability is what matters for a programmed task, which is why cheap arms work in fixed pick-and-place.",
+          "Autonomy levels and intervention rates: a teleoperated system needs a human for every motion, a supervised one needs intervention perhaps once per hour, and a fully autonomous one needs none, which in unstructured settings is still rare. The intervention rate, not the marketing label, is the honest measure.",
+          "Cost per task completion: an industrial arm doing 1,000 welds per shift at 50,000 capital cost amortised over 5 years is a few cents per weld, which is why automation was adopted there first. A humanoid doing 100 tasks per shift at 300,000 is dollars per task, which is the arithmetic the category has to beat."
+        ]
+      }
+    ]
+  },
+  "954": {
+    "sections": [
+      {
+        "title": "🔍 Why the application sets the acceptable failure rate",
+        "paras": [
+          "A warehouse trolley that stops unexpectedly costs minutes. A surgical robot that stops unexpectedly mid-incision costs a patient. The same engineering question, how reliable is it, has completely different answers.",
+          "That asymmetry is why robot applications are organised by consequence rather than by technology."
+        ]
+      },
+      {
+        "title": "⚙️ The four application families",
+        "paras": [
+          "Industrial robots weld, assemble, paint, and handle parts in structured environments with high repetition. Service robots work among people: vacuuming, delivering, cleaning. Medical robots assist surgery and rehabilitation. Exploration robots go where people cannot: space, deep water, disaster sites.",
+          "Each family has different requirements for precision, safety, cost, and certification."
+        ],
+        "bullets": [
+          "Industrial robots work in cells with physical separation from people, which simplifies safety.",
+          "Collaborative robots are designed to work beside people, which constrains speed and force.",
+          "Service robots operate in unstructured space, so perception dominates the engineering.",
+          "Surgical robots combine teleoperation with motion scaling and tremor filtering.",
+          "Exoskeletons must infer intent from the wearer, which is a sensing and control problem.",
+          "Exploration robots accept high cost and low reliability because the alternative is no data.",
+          "Certification and liability often determine the timeline more than the technical work."
+        ]
+      },
+      {
+        "title": "🧮 Failure rates and value per hour",
+        "paras": [
+          "A welding robot with a 99.9 percent success rate at 1,000 welds per shift makes 1 bad weld per shift. At 50 per repair that is a manageable cost. A surgical robot needs a failure rate closer to one in a million, which is why every motion is supervised and mechanically limited.",
+          "A warehouse robot at 99 percent task success moving 500 items per hour fails 5 times, each needing a human for perhaps 1 minute, so 5 minutes of intervention per hour. That is a 8 percent overhead on labour, which is the number that decides whether the deployment pays.",
+          "Value arithmetic for a vacuum robot: 2 hours of cleaning per week valued at 15 per hour is 30 per week, 1,560 per year. A 400 robot pays back in under 4 months if it works unattended, which is why consumer robotics focused there first.",
+          "Surgical robotics economics: a system costing 2 million plus 100,000 per year in maintenance needs to enable enough additional procedures to justify it. At 500 procedures per year that is 400 per procedure plus maintenance, which must be recovered in better outcomes or shorter stays.",
+          "Industrial payback: an arm at 50,000 replacing one shift of labour at 40,000 per year pays back in about 15 months including integration, which is why integration cost, often equal to the hardware, is the real decision.",
+          "Uptime arithmetic: a robot available 95 percent of the time in a 16-hour operating day loses 48 minutes daily. At 500 items per hour that is 400 items of lost throughput, which is why predictive maintenance is worth investing in before adding capability."
+        ]
+      }
+    ]
+  },
+  "956": {
+    "sections": [
+      {
+        "title": "🔍 Why the actuator choice determines the robot",
+        "paras": [
+          "Sensors can be upgraded later. The actuator set is fixed by the mechanics, and it determines speed, payload, precision, and power consumption at once.",
+          "Choosing between a DC motor, a stepper, and a servo is therefore a decision about what the robot can do, not a component preference."
+        ]
+      },
+      {
+        "title": "⚙️ The motor families",
+        "paras": [
+          "A DC motor spins continuously and needs external feedback to control position. A stepper moves in fixed increments and holds position without feedback, at the cost of torque at speed and possible missed steps. A servo integrates a motor, a gearbox, a position sensor, and a controller in one package and accepts an angle command.",
+          "Gearing trades speed for torque. A gearbox with ratio n multiplies torque by roughly n and divides speed by n, minus losses."
+        ],
+        "bullets": [
+          "Brushed DC motors are cheap and wear out; brushless motors last longer and need electronic commutation.",
+          "Steppers are open loop and can miss steps when overloaded, which is a silent failure.",
+          "Hobby servos accept a pulse width and hold an angle, which makes them trivial to use and limited in torque.",
+          "Torque is measured in kilogram-centimetres or newton-metres, and holding torque is not the same as moving torque.",
+          "Backlash in a gearbox limits repeatability even when the motor is precise.",
+          "Motor current is proportional to torque, which is why current sensing is a cheap force estimate.",
+          "Thermal limits usually bind before mechanical ones in a small actuator."
+        ]
+      },
+      {
+        "title": "🧮 Torque and gearing by arithmetic",
+        "paras": [
+          "A hobby servo rated at 10 kilogram-centimetres can hold 10 kilograms at 1 centimetre, or 1 kilogram at 10 centimetres. A 0.3-metre arm holding 0.5 kilograms needs 0.15 kilogram-metres, 15 kilogram-centimetres, so the servo is undersized even before acceleration.",
+          "Adding acceleration: to move that load at 1 metre per second squared requires force equal to mass times acceleration plus the gravity term, which in torque terms adds roughly 0.15 kilogram-metres again. So the requirement doubles, which is why real designs use 2 to 3 times the static torque.",
+          "Gearbox arithmetic: a motor with 0.1 newton-metre of torque and 3,000 revolutions per minute behind a 50 to 1 gearbox gives 5 newton-metres and 60 revolutions per minute, minus about 20 percent loss, so 4 newton-metres and 48 revolutions per minute. That is a usable arm joint, and it is the reason gearboxes exist.",
+          "Speed arithmetic: a wheel of 0.1 metre diameter has a circumference of 0.314 metres. At 60 revolutions per minute it moves 18.8 metres per minute, 0.31 metres per second. To reach 1 metre per second the wheel must turn at 191 revolutions per minute, which fixes the gear ratio given the motor speed.",
+          "Backlash in numbers: a gearbox with 1 degree of backlash at a 0.3-metre arm gives 5 millimetres of free play at the tip. That alone limits positioning to 5 millimetres regardless of encoder resolution, which is why precision mechanisms use low-backlash gears or direct drive.",
+          "Power and heat: a servo drawing 2 amperes at 6 volts dissipates 12 watts, of which maybe 3 watts is heat in the motor windings. With a thermal resistance of 5 degrees per watt, the winding rises 15 degrees above ambient, which is fine, but at 5 amperes the rise is near 100 degrees and the motor will fail, which is why stall current is a short-term rating only."
+        ]
+      }
+    ]
+  },
+  "957": {
+    "sections": [
+      {
+        "title": "🔍 Why no single sensor is enough",
+        "paras": [
+          "A camera gives rich information and fails in the dark and against a plain wall. A LiDAR gives precise range and fails on glass and in rain. An IMU is fast and drifts slowly. Wheel encoders are accurate on carpet and useless when slipping.",
+          "Each sensor fails in a specific condition, so the design question is which combination covers the conditions the robot will meet."
+        ]
+      },
+      {
+        "title": "⚙️ Proprioception and exteroception",
+        "paras": [
+          "Proprioceptive sensors measure the robot's own state: joint encoders, wheel odometry, inertial measurement. Exteroceptive sensors measure the world: cameras, LiDAR, ultrasonic, tactile.",
+          "Fusion combines them because their failure modes are uncorrelated. That is the entire argument, and it is why fusing two mediocre sensors beats one excellent one."
+        ],
+        "bullets": [
+          "Encoders measure joint angle or wheel rotation with high resolution and no knowledge of the world.",
+          "IMUs measure acceleration and rotation rate, fast and drifting.",
+          "Cameras give dense appearance but no direct depth.",
+          "LiDAR gives precise range and sparse appearance.",
+          "Ultrasonic is cheap, short range, and unreliable on soft surfaces.",
+          "Force and tactile sensing is what makes grasping reliable and is often omitted to save cost.",
+          "Sensor latency differs by type, and fusing without accounting for it produces inconsistency."
+        ]
+      },
+      {
+        "title": "🧮 Resolution and drift by number",
+        "paras": [
+          "An encoder with 1,000 counts per revolution on a wheel of 0.1 metre diameter gives 0.314 millimetres per count, which is plenty for odometry and irrelevant if the wheel slips.",
+          "Odometry drift is typically 1 to 5 percent of distance travelled. Over 100 metres that is 1 to 5 metres, which makes odometry alone useless for anything beyond a short corridor, and it is why external references are required.",
+          "IMU drift: a consumer accelerometer with a 0.01 metre per second squared bias, integrated twice over 10 seconds, produces a position error of half times 0.01 times 100, 0.5 metres. That is why inertial navigation alone is unusable beyond seconds and why it is fused with something absolute.",
+          "LiDAR arithmetic: a 16-beam sensor at 10 Hz with 2,000 points per ring gives 320,000 points per second. At 0.1 metre range accuracy that is a dense cloud, and the data rate is several megabytes per second, which is why on-board processing is necessary.",
+          "Camera depth by triangulation: a stereo pair with a 0.1-metre baseline and 1-pixel disparity resolution at a 500-pixel focal length gives depth error of 0.1 times the square of depth divided by 500. At 2 metres that is 0.8 millimetres; at 20 metres it is 80 millimetres, which is why stereo is precise close and useless far.",
+          "Fusion in numbers: an odometry estimate drifting 2 percent and a landmark observation accurate to 5 centimetres. Over 10 metres, odometry's error is 20 centimetres, four times worse than the landmark, so a weighted fusion trusts the landmark and the fused error is about 5 centimetres. That improvement is what makes long navigation possible."
+        ]
+      }
+    ]
+  },
+  "958": {
+    "sections": [
+      {
+        "title": "🔍 Why the controller is a scheduling problem",
+        "paras": [
+          "The controller must read sensors, compute, and command actuators within a fixed period, every period, without exception. Missing a deadline is worse than computing slowly, because physical systems do not wait.",
+          "That makes the controller's design about timing and power as much as about algorithms."
+        ]
+      },
+      {
+        "title": "⚙️ Microcontroller versus single-board computer",
+        "paras": [
+          "A microcontroller has no operating system, deterministic timing, and microsecond-level interrupt response. A single-board computer runs Linux, has far more compute, and cannot guarantee timing because the scheduler and caches introduce jitter.",
+          "Serious robots use both: a microcontroller for the control loop and a computer for perception and planning."
+        ],
+        "bullets": [
+          "Deterministic timing matters more than raw speed for control.",
+          "A real-time operating system gives bounded latency on a computer, at the cost of complexity.",
+          "Motor drivers isolate the controller from inductive spikes that would destroy it.",
+          "Power budgeting must include peak current, not average, because actuators stall.",
+          "Battery voltage sag under load can brown out the controller, which is why separate regulators are used.",
+          "Watchdog timers reset the controller if the loop hangs, which is a safety requirement.",
+          "Communication buses have their own latency and error rates, which count against the loop budget."
+        ]
+      },
+      {
+        "title": "🧮 Loop timing and power budget",
+        "paras": [
+          "A loop at 200 Hz has a 5 millisecond period. Reading 8 I2C sensors at 0.3 milliseconds each is 2.4 milliseconds, control computation 0.5, and writing 12 servos 1.2, giving 4.1 milliseconds, 82 percent utilisation. That leaves no margin, which is why the sensors would be moved to a faster bus or read at a lower rate.",
+          "Jitter arithmetic: Linux on a single-board computer can introduce 1 to 10 milliseconds of scheduling jitter under load. On a 5-millisecond control loop that is a 200 percent overrun, which is why the loop belongs on a microcontroller.",
+          "Power budget: 12 servos at 0.5 amperes average and 2 amperes peak is 6 amperes average and 24 amperes peak. A battery pack rated for 10 amperes continuous will sag or shut down when all servos move at once, which is why the pack is specified on peak current and why capacitors are placed across the supply.",
+          "Runtime arithmetic: a 5,000 milliampere-hour pack at 7.4 volts is 37 watt-hours. At 6 amperes of 7.4 volts, 44 watts, the runtime is 0.84 hours, about 50 minutes. Reducing average current by using lighter servos or better gearing doubles it, which is usually cheaper than a bigger battery.",
+          "Regulator heat: dropping 7.4 volts to 5 volts at 3 amperes dissipates 7.2 watts in a linear regulator, which needs a heatsink. A switching regulator at 90 percent efficiency dissipates 1.5 watts, which is why anything above an ampere uses switching.",
+          "Communication arithmetic: an I2C bus at 400 kilohertz transfers about 40 kilobytes per second. Twelve servos with 8 bytes each at 200 Hz is 19.2 kilobytes per second, half the bus, which is why servo buses such as serial protocols exist at higher rates."
+        ]
+      }
+    ]
+  },
+  "960": {
+    "sections": [
+      {
+        "title": "🔍 Why six is the magic number",
+        "paras": [
+          "A rigid body in space has six independent ways to move: three translations and three rotations. To place an object at an arbitrary position and orientation, a mechanism needs at least six independently controllable degrees of freedom.",
+          "Fewer than six means some poses are unreachable. More than six means some configurations are redundant, which is useful for avoiding obstacles but makes control ambiguous."
+        ]
+      },
+      {
+        "title": "⚙️ Joints, arms, and redundancy",
+        "paras": [
+          "A revolute joint rotates and contributes one degree of freedom. A prismatic joint slides and also contributes one. A spherical joint contributes three.",
+          "A six-axis arm is the standard industrial configuration because it can reach any pose in its workspace. A seven-axis arm adds redundancy, which lets it choose among many poses for the same end position."
+        ],
+        "bullets": [
+          "Six degrees of freedom give full pose control inside the workspace, not everywhere in space.",
+          "A four-axis SCARA arm cannot tilt, which is fine for planar assembly.",
+          "Redundancy lets a seven-axis arm avoid joint limits and obstacles while holding a pose.",
+          "Joint limits mean the reachable set is smaller than the geometric workspace.",
+          "A mobile base adds three more degrees of freedom, which complicates coordination.",
+          "Legged robots need at least three degrees of freedom per leg for useful walking.",
+          "Counting degrees of freedom is a necessary check before designing a controller, not an academic exercise."
+        ]
+      },
+      {
+        "title": "🧮 Counting and reach arithmetic",
+        "paras": [
+          "A two-link planar arm has two revolute joints and therefore two degrees of freedom. It can reach any point in an annulus between the difference and the sum of its link lengths, but it cannot control orientation independently, which is why a third joint is needed for that.",
+          "Reach of a two-link arm with links of 0.3 and 0.25 metres: the maximum reach is 0.55 metres, the minimum is 0.05. The workspace is an annulus, not a disc, which surprises people who assume the centre is reachable.",
+          "A six-axis arm with a 1.5-metre reach does not cover a sphere of radius 1.5, because joint limits and self-collision remove large portions. Real usable workspace is typically 60 to 80 percent of the geometric ideal.",
+          "Degree-of-freedom counting for a humanoid: two legs with six each, two arms with seven each, and a torso with three gives 29, which is why humanoid control is hard. Each degree of freedom halves the state-space search, so 29 is 5 times 10 to the 8 more configurations than 1.",
+          "Redundancy arithmetic: a seven-axis arm has a one-dimensional family of solutions for each end pose, which is a continuous set rather than a single answer. That freedom is what allows obstacle avoidance, and it is also why a naive solver returns arbitrary configurations.",
+          "Workspace volume comparison: a six-axis arm with 1.5-metre links sweeps roughly 14 cubic metres of ideal sphere, of which perhaps 9 is usable. A SCARA with a 0.6-metre reach works in a 1.1 cubic metre cylindrical shell at one height, which is enough for its task and nowhere near enough for welding a car body."
+        ]
+      }
+    ]
+  },
+  "961": {
+    "sections": [
+      {
+        "title": "🔍 Why the easy direction is the useful one",
+        "paras": [
+          "Given joint angles, computing the end-effector position is trigonometry with a unique answer. That is forward kinematics, and it is always solvable in closed form for a serial chain.",
+          "The practical value is that the controller always knows where the hand is, which is needed for every motion, every collision check, and every calibration."
+        ]
+      },
+      {
+        "title": "⚙️ Chaining transforms",
+        "paras": [
+          "Each joint contributes a transform: a rotation about its axis and a translation along the link to the next joint. Multiplying the transforms from base to tip gives the end-effector pose.",
+          "For a planar two-link arm the result simplifies to two equations, which is why it is the standard teaching example."
+        ],
+        "bullets": [
+          "The product of transforms is a single 4 by 4 matrix encoding position and orientation.",
+          "Joint angles are the inputs; the end pose is the output, and the map is unique.",
+          "Every additional joint multiplies the chain and adds a term to each coordinate.",
+          "Denavit-Hartenberg parameters are the standard bookkeeping for the transforms.",
+          "Forward kinematics is exact and cheap, which is why it runs inside every control loop.",
+          "Numerical error accumulates over many multiplications but is negligible in double precision.",
+          "The same chain applies to legged robots, where the foot is the end effector."
+        ]
+      },
+      {
+        "title": "🧮 Forward kinematics by hand",
+        "paras": [
+          "A two-link planar arm with L1 equal to 0.3 metres and L2 equal to 0.25 metres, at angles 30 degrees and 45 degrees measured from the first link. The end position is x equal to L1 cos of theta1 plus L2 cos of theta1 plus theta2, and y equal to L1 sin of theta1 plus L2 sin of theta1 plus theta2.",
+          "Theta1 plus theta2 is 75 degrees. cos 30 is 0.866, sin 30 is 0.5, cos 75 is 0.259, sin 75 is 0.966. So x is 0.3 times 0.866 plus 0.25 times 0.259, 0.260 plus 0.065, 0.325 metres. And y is 0.3 times 0.5 plus 0.25 times 0.966, 0.150 plus 0.242, 0.392 metres.",
+          "Check the distance from the base: the square root of 0.325 squared plus 0.392 squared is the square root of 0.1056 plus 0.1537, 0.509 metres, which is within the 0.55-metre maximum reach. Consistent.",
+          "A second configuration: both angles zero gives x equal to 0.55 and y equal to 0, the maximum reach. Both angles 180 degrees gives x equal to minus 0.55, the opposite extreme. A 90-degree first joint and zero second gives x equal to 0 and y equal to 0.55.",
+          "Adding a third link of 0.2 metres at the same orientation as the second gives an extra contribution of 0.2 times cos 75 and 0.2 times sin 75, 0.052 and 0.193, so the tip moves to 0.377 and 0.585. The distance from the base becomes 0.696, which exceeds the two-link maximum, as expected.",
+          "Transform matrix arithmetic: the full pose for the two-link arm is a 4 by 4 matrix whose rotation part is the rotation by 75 degrees and whose translation column is 0.325 and 0.392. Multiplying matrices along a six-joint chain is 6 matrix products of 4 by 4, about 400 multiply-adds, which at 200 Hz is 80,000 operations per second, entirely negligible."
+        ]
+      }
+    ]
+  },
+  "962": {
+    "sections": [
+      {
+        "title": "🔍 Why the reverse direction is hard",
+        "paras": [
+          "Forward kinematics maps angles to a position and is unique. The inverse maps a position to angles, and it is not unique: a two-link arm reaching a point usually has two solutions, elbow up and elbow down, and a six-axis arm can have up to eight.",
+          "That is why inverse kinematics is an engineering problem rather than a formula. Every additional wrist joint multiplies the solution count."
+        ]
+      },
+      {
+        "title": "⚙️ Solutions, singularities, and numerical methods",
+        "paras": [
+          "Closed-form solutions exist for arms with a spherical wrist, which is why industrial arms are designed that way. For general geometry, numerical iteration solves the problem by linearising and stepping toward the target.",
+          "A singularity is a configuration where the end effector loses a degree of freedom, such as a fully extended arm. Near it, small position changes require enormous joint velocity, which is why trajectories avoid singularities."
+        ],
+        "bullets": [
+          "Multiple solutions mean the controller must choose, usually by staying close to the current configuration.",
+          "No solution means the target is outside the workspace or blocked by a joint limit.",
+          "Singularities cause joint velocity to diverge, which trips limits or damages hardware.",
+          "Numerical solvers need an initial guess and may converge to a distant configuration.",
+          "The Jacobian relates joint velocity to end-effector velocity and is the key object in both solving and singularity analysis.",
+          "Redundant arms have infinitely many solutions, which is an opportunity for obstacle avoidance.",
+          "Collision checking must be done on the chosen solution, not on the target point."
+        ]
+      },
+      {
+        "title": "🧮 Inverse kinematics by law of cosines",
+        "paras": [
+          "For a two-link planar arm, the distance from base to target is r equal to the square root of x squared plus y squared. The second joint angle follows from the law of cosines: cos theta2 equals r squared minus L1 squared minus L2 squared, divided by 2 L1 L2.",
+          "Target 0.325, 0.392 with links 0.3 and 0.25: r squared is 0.259, so cos theta2 is 0.259 minus 0.09 minus 0.0625, divided by 0.15, which is 0.1065 divided by 0.15, 0.71. So theta2 is plus or minus 44.8 degrees.",
+          "The two signs are the elbow-up and elbow-down solutions, both valid, and the controller picks one. The first joint angle follows from the direction of the target minus a correction from the triangle.",
+          "Workspace check: the maximum r is 0.55, so a target at r equal to 0.6 returns cos theta2 greater than 1, which has no solution. The solver must report that rather than produce a complex angle.",
+          "Minimum reach check: the minimum r is 0.05, so a target at 0.02, inside the inner hole, also has no solution. That is the annulus effect and it is a common source of confusion in robot competitions.",
+          "Singularity arithmetic: at a fully extended arm, theta2 is 0 and the Jacobian determinant is zero. A target move of 1 millimetre in the direction of the arm requires no joint motion, but 1 millimetre perpendicular requires a large theta1 change, which grows without bound as the extension approaches the limit. That divergence is why trajectories are planned to keep the arm bent.",
+          "Numerical iteration in numbers: a Jacobian pseudo-inverse step moves 95 percent of the remaining error per iteration for well-conditioned targets, so 10 iterations reduce a 10-centimetre error to under a millimetre. Near a singularity the step must be damped, or joint velocities exceed limits, which is the standard fix."
+        ]
+      }
+    ]
+  },
+  "964": {
+    "sections": [
+      {
+        "title": "🔍 Why a camera alone cannot grasp",
+        "paras": [
+          "A camera returns pixels. A grasp requires a position in the robot's own coordinate frame, which means knowing where the camera is relative to the arm and how pixels map to directions.",
+          "That mapping is calibration, and without it a perfect detector produces a grasp that misses by the calibration error."
+        ]
+      },
+      {
+        "title": "⚙️ Detection, pose, and the transform chain",
+        "paras": [
+          "Robot vision runs detection to find objects, pose estimation to establish their orientation, and calibration to convert camera coordinates into robot coordinates.",
+          "The transform chain is the load-bearing part: camera to robot base, base to end effector, end effector to grasped object."
+        ],
+        "bullets": [
+          "Intrinsic calibration estimates focal length and distortion; extrinsic calibration estimates the camera's pose.",
+          "Hand-eye calibration is required when the camera is mounted on the arm and moves with it.",
+          "Depth comes from stereo, structured light, or time of flight, and each has a working range.",
+          "Motion blur from a moving robot degrades recognition, which is why exposure time is a design parameter.",
+          "Lighting is the most common failure: a change in illumination breaks colour thresholds and confuses models.",
+          "Pose estimation of textureless objects remains hard without depth.",
+          "Vision latency must be accounted for, because a moving target is elsewhere by the time the grasp executes."
+        ]
+      },
+      {
+        "title": "🧮 Calibration and latency by arithmetic",
+        "paras": [
+          "A camera with a 60-degree horizontal field of view and 1,920 pixels has 31.25 pixels per degree. At a 1-metre distance, one pixel spans 0.55 millimetres, so a 2-pixel detection error is 1.1 millimetres, which is fine for a 5-millimetre tolerance and not for a 1-millimetre one.",
+          "Calibration error propagation: a half-degree extrinsic error over a 1-metre distance displaces the computed target by 8.7 millimetres. That is why hand-eye calibration is done to 0.1 degrees, which reduces the displacement to 1.7 millimetres.",
+          "Latency arithmetic: a camera at 30 frames per second has 33 milliseconds between frames, plus 20 milliseconds of processing, so the image the robot acts on is 53 milliseconds old. A conveyor moving at 0.5 metres per second has moved 26 millimetres, which is why the target is predicted forward rather than taken as seen.",
+          "Depth error: a structured light sensor accurate to 1 percent of distance gives 10 millimetres at 1 metre and 30 millimetres at 3 metres. That scaling explains why close-range bin picking is reliable and long-range grasping is not.",
+          "Field of view arithmetic: at 1 metre with a 60-degree field of view the view is 1.15 metres wide and, with a 16 to 9 aspect ratio, 0.65 metres tall. A 0.2-metre object occupies about 17 percent of the width, roughly 330 pixels, which is plenty for classification.",
+          "The lighting failure in numbers: a detector trained under one illuminance and deployed under another loses 10 to 30 points of accuracy. Adding illumination control costs a light and removes the entire category of failure, which is why industrial cells are lit deliberately."
+        ]
+      }
+    ]
+  },
+  "965": {
+    "sections": [
+      {
+        "title": "🔍 Why light is a good ruler",
+        "paras": [
+          "Light travels 299,792,458 metres per second, which is 29.98 centimetres per nanosecond. Measuring a return time to a nanosecond therefore gives distance to about 15 centimetres, and modern timers do far better.",
+          "That precision, combined with a narrow beam, makes LiDAR the most accurate range sensor available for a mobile robot."
+        ]
+      },
+      {
+        "title": "⚙️ Time of flight and the alternatives",
+        "paras": [
+          "LiDAR pulses a laser and measures the return time, or in continuous-wave versions measures the phase shift of a modulated beam. Spinning or solid-state optics scan the beam to cover a field of view.",
+          "Depth cameras use stereo triangulation or structured light, both of which degrade with distance and with textureless surfaces. Ultrasonic uses sound, which is slow but works on transparent surfaces."
+        ],
+        "bullets": [
+          "A spinning LiDAR with 16 to 128 beams covers 360 degrees at 10 to 20 Hz.",
+          "Point clouds are sparse in elevation, which matters for detecting thin obstacles.",
+          "Glass and dark matte surfaces absorb or transmit the beam, producing missing returns.",
+          "Rain and dust cause false returns and reduce range.",
+          "Solid-state LiDAR removes moving parts and lowers cost, at a narrower field of view.",
+          "Stereo depth error grows with the square of distance, which limits range.",
+          "Ultrasonic is cheap and slow, with a cone that cannot distinguish a wall from a leg."
+        ]
+      },
+      {
+        "title": "🧮 Range resolution and point rates",
+        "paras": [
+          "Time-of-flight resolution: 1 nanosecond of timing resolution gives 15 centimetres of range resolution, because distance is half the round trip. A 100-picosecond timer gives 1.5 centimetres, which is the order modern sensors achieve.",
+          "Range equation insight: returned power falls with the square of distance, so a target at 100 metres returns 10,000 times less light than at 1 metre. That is why maximum range depends so strongly on surface reflectivity and ambient light.",
+          "Point rate arithmetic: 16 beams at 10 Hz with 1,800 azimuth samples gives 16 times 1,800 times 10, 288,000 points per second. At 4 bytes per coordinate and 3 coordinates, that is 3.5 MB per second raw.",
+          "Angular resolution: 360 degrees divided by 1,800 samples is 0.2 degrees. At 20 metres, 0.2 degrees is 7 centimetres of spacing between adjacent points, so a 5-centimetre pole may be missed entirely between beams.",
+          "Stereo depth arithmetic: with a 0.12-metre baseline and a 500-pixel focal length, depth error for a 1-pixel disparity error is baseline times depth squared divided by focal length times disparity, which at 5 metres gives 6 centimetres and at 15 metres gives 54 centimetres. That is why stereo is not used for long-range navigation.",
+          "Glass and rain in numbers: a glass door returns almost nothing, so the robot sees free space where there is a wall. Rain returns spurious points at a few metres, which a filter removes by requiring temporal consistency. Both are why no single sensor is trusted."
+        ]
+      }
+    ]
+  },
+  "966": {
+    "sections": [
+      {
+        "title": "🔍 Why dead reckoning always fails eventually",
+        "paras": [
+          "Odometry integrates motion, and every integration accumulates error. A small bias in wheel radius or a small slip becomes a growing position error, because there is nothing in the measurement that knows the true answer.",
+          "Localisation is the problem of bounding that error using something external, whether a map, a landmark, or a satellite."
+        ]
+      },
+      {
+        "title": "⚙️ Odometry, fusion, and the map",
+        "paras": [
+          "Odometry gives a smooth, high-rate estimate that drifts. An absolute reference, such as a known landmark or GPS, is accurate but intermittent. Fusion combines them so the estimate is smooth and bounded.",
+          "The standard tool is a Kalman filter, which weights each source by its uncertainty and produces an estimate whose error stays bounded as long as absolute measurements arrive."
+        ],
+        "bullets": [
+          "Wheel odometry drifts because of slip, uneven ground, and wheel wear.",
+          "Visual odometry drifts more slowly but fails in low texture and in the dark.",
+          "An IMU provides high-rate motion but drifts in seconds when integrated twice.",
+          "GPS is absolute, accurate to metres, and unavailable indoors.",
+          "Landmark observations are accurate and sparse, which is exactly what a filter needs.",
+          "The filter's uncertainty must be honest, or it will ignore good measurements or trust bad ones.",
+          "Localisation failure is often silent: the estimate is confidently wrong, which is worse than being lost."
+        ]
+      },
+      {
+        "title": "🧮 Drift and fusion arithmetic",
+        "paras": [
+          "Odometry with 2 percent distance error over a 50-metre corridor gives a 1-metre position error at the end, which is enough to put the robot inside a wall. Over 500 metres it is 10 metres, which is why pure odometry is never used for long runs.",
+          "Angle error compounds worse: a 1-degree heading error, integrated over 50 metres, gives a lateral offset of 50 times sin 1 degree, 0.87 metres. Heading errors are the dominant cause of odometry failure, which is why a gyroscope is usually added.",
+          "Kalman fusion in one dimension: odometry predicts position with a standard deviation of 0.2 metres, and a landmark measures it with a standard deviation of 0.05 metres. The fused estimate has a standard deviation of 1 divided by the square root of 25 plus 4, which is 0.046 metres, better than either source alone.",
+          "That formula is the whole point: fusing two independent estimates is always at least as good as the better one, and much better when they are comparable.",
+          "GPS arithmetic: 5-metre accuracy is useless for a delivery robot's final approach, but combined with odometry it corrects the drift every second, which keeps the short-term estimate good. That is the standard architecture.",
+          "Failure in numbers: a robot with an odometry-only estimate that is confidently 10 metres off will drive into an obstacle it believes is behind it. Detecting that condition requires monitoring the innovation, the difference between predicted and measured landmark positions, which is why filters report it."
+        ]
+      }
+    ]
+  }
+}

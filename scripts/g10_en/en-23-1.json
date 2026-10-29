@@ -1,0 +1,398 @@
+{
+  "571": {
+    "sections": [
+      {
+        "title": "🔍 Why a list of numbers deserves a name",
+        "paras": [
+          "A house has a size, an age and a distance to the station. Write those three numbers in a fixed order and you have something you can add to another house, or scale to compare a neighbourhood. The moment you agree on the order, the list stops being a filing convention and becomes an object you can calculate with.",
+          "That object is a vector. It carries two readings at once, and the whole subject depends on keeping both: an arrow in space with a length and a direction, and a record of measurements in which each slot means something specific. Geometry gives you the intuition, data gives you the applications, and the arithmetic is identical."
+        ]
+      },
+      {
+        "title": "⚙️ Two operations, and everything else follows",
+        "paras": [
+          "Vectors support exactly two operations: add two of them, and multiply one by a number. Everything later, from dot products to eigenvectors, is built from these two, which is why the rules they obey get written down so carefully."
+        ],
+        "bullets": [
+          "Addition is component by component, and the order does not matter.",
+          "Scaling multiplies every component by the same number, which stretches or flips the arrow.",
+          "A linear combination, some of the first plus some of the second, is the only recipe you ever get to use.",
+          "The zero vector is the do-nothing element, and every vector has an opposite.",
+          "Length and direction are separate ideas: two vectors can share a direction and differ in length by any factor."
+        ]
+      },
+      {
+        "title": "🧮 One vector, two readings",
+        "paras": [
+          "Take v as the list (3, 4). Read as an arrow it points right three and up four, and its length is 5 by the Pythagorean theorem. Read as a data record, say height above and distance along, it is a single observation in a two-dimensional feature space, and its length is how unusual that observation is.",
+          "Now add (1, minus 2). The result (4, 2) is the diagonal of the parallelogram spanned by the two arrows, and in data terms it is the sum of two observations. Both statements describe the same arithmetic, and neither is the 'real' meaning.",
+          "Scale by minus one and you get (minus 3, minus 4): the same line, opposite direction. Scale by two and the arrow doubles. Those three vectors are one-dimensional among themselves, a phrase that becomes precise two sections later."
+        ]
+      }
+    ]
+  },
+  "572": {
+    "sections": [
+      {
+        "title": "🔍 Why addition is component by component",
+        "paras": [
+          "It looks like an arbitrary rule, and it is not. If the first slot is size and the second is age, then adding sizes to sizes and ages to ages is the only version that keeps each slot meaningful. Adding across slots would produce a number with no interpretation.",
+          "The same logic holds for arrows. Placing the tail of one at the head of the other and closing the triangle gives exactly the same component sums, so the algebra and the picture agree by construction rather than by coincidence."
+        ]
+      },
+      {
+        "title": "⚙️ The rules you are allowed to use",
+        "paras": [
+          "Because every later proof is a sequence of these moves, it helps to have them listed once. None of them is surprising; all of them are used constantly."
+        ],
+        "bullets": [
+          "Addition commutes and associates, so a sum of many vectors can be regrouped freely.",
+          "Scaling distributes over vector addition and over scalar addition.",
+          "Scaling by one changes nothing, and scaling by zero gives the zero vector.",
+          "Subtraction is addition of the opposite, never a separate operation.",
+          "A linear combination is a sum of scaled vectors, and the set of all such combinations is called the span."
+        ]
+      },
+      {
+        "title": "🧮 Computing a combination",
+        "paras": [
+          "Let u be (1, 2) and v be (3, minus 1). Then 2u is (2, 4) and 3v is (9, minus 3), so 2u minus 3v is (2 minus 9, 4 plus 3) which is (minus 7, 7).",
+          "Check the geometric claim: 2u points twice as far up and right, 3v points right and down, and their difference lands in the upper left. Sketch it once and the formula stops being a rule to memorise.",
+          "Now ask which vectors can be written as a combination of u and v. Since the two are not parallel, any target can be reached, and the coefficients are unique. Had v been (2, 4), a multiple of u, the reachable set would collapse to a single line and most targets would be impossible."
+        ]
+      }
+    ]
+  },
+  "573": {
+    "sections": [
+      {
+        "title": "🔍 Why multiply two vectors at all",
+        "paras": [
+          "Adding vectors gives a vector, which is fine but limited. A single number that summarises how two vectors relate turns out to be far more useful: it measures alignment, it gives length, it computes work, and it decides whether two arrows are perpendicular.",
+          "The dot product is that number. Multiply matching components and add: it is the simplest rule imaginable, and it carries the geometry."
+        ]
+      },
+      {
+        "title": "⚙️ Three things the dot product tells you",
+        "paras": [
+          "The definition is u dot v equals the sum of the products of matching components. Three consequences do all the work."
+        ],
+        "bullets": [
+          "Length: a vector dotted with itself is the square of its length, so the norm is the square root of that.",
+          "Angle: the dot product equals the product of the lengths times the cosine of the angle between them, so dividing gives the cosine directly.",
+          "Perpendicularity: a zero dot product means a right angle, because the cosine is zero. This test is used constantly.",
+          "Sign tells the story: positive means the angle is under ninety degrees, negative means over.",
+          "Unit vectors have length one, and dividing by the length normalises any vector to one."
+        ]
+      },
+      {
+        "title": "🧮 A three-four-five triangle",
+        "paras": [
+          "Take u as (3, 4) and v as (4, 3). The dot product is 12 plus 12, which is 24. The lengths are both 5, so the cosine of the angle is 24 over 25, about 0.96, and the angle is roughly 16 degrees.",
+          "Now take w as (minus 4, 3). Its dot with u is minus 12 plus 12, exactly zero, so u and w are perpendicular. That is the test doing real work: no drawing required, and it scales to a thousand dimensions where drawing is impossible.",
+          "Normalise u by dividing by 5 to get (0.6, 0.8), a unit vector. Its dot with any other unit vector is exactly the cosine of the angle between them, which is why cosine similarity in text search is just a normalised dot product."
+        ]
+      }
+    ]
+  },
+  "575": {
+    "sections": [
+      {
+        "title": "🔍 Why a grid of numbers is a function",
+        "paras": [
+          "A matrix is usually introduced as a table, which invites the question of why anyone would care. The useful reading is different: a matrix is a rule that takes a vector in and gives a vector out, written down in rows and columns so that applying it costs one multiplication per entry.",
+          "Every linear rule from one space to another can be written this way, and every matrix describes such a rule. That equivalence is the reason matrices sit at the centre of the subject."
+        ]
+      },
+      {
+        "title": "⚙️ Shapes, and three pieces of vocabulary",
+        "paras": [
+          "The shape of a matrix is part of its meaning: m rows and n columns maps n inputs to m outputs. Getting the shape wrong is the most common error in hand computation, so write it down before multiplying."
+        ],
+        "bullets": [
+          "An entry is named by row then column, so a 3,2 sits in the third row and second column.",
+          "A square matrix has the same number of rows and columns, and only square matrices have determinants and inverses.",
+          "The identity matrix has ones on the diagonal and zeros elsewhere; it maps every vector to itself.",
+          "The transpose swaps rows and columns, turning an m by n matrix into an n by m one.",
+          "A vector is a matrix with one column, which is why the same multiplication rule covers both."
+        ]
+      },
+      {
+        "title": "🧮 Applying a matrix, two ways to read it",
+        "paras": [
+          "Take A as the two by two grid with rows (1, 2) and (3, 4), and apply it to x equal to (5, 6).",
+          "Row reading: each output is a row dotted with the input, so the first is 1x5 plus 2x6, which is 17, and the second is 3x5 plus 4x6, which is 39. The result is (17, 39).",
+          "Column reading: the output is 5 times the first column plus 6 times the second, that is 5(1,3) plus 6(2,4), which gives (5 plus 12, 15 plus 24) and again (17, 39).",
+          "The column reading is the one that explains why matrix multiplication is defined the way it is: the output is always a combination of the columns, so the reachable vectors form the span of those columns. That single sentence contains the ideas of rank, column space and solvability."
+        ]
+      }
+    ]
+  },
+  "576": {
+    "sections": [
+      {
+        "title": "🔍 Which operations make sense on a grid",
+        "paras": [
+          "A matrix is a function, so the operations worth defining are the ones that behave like operations on functions: add two of them, scale one, compose them. Multiplying entries one by one is easy to write and nearly useless, because it does not correspond to composing the two rules.",
+          "Because matrices have entries, the operations also come with a shape condition, and forgetting the condition is where most errors start."
+        ]
+      },
+      {
+        "title": "⚙️ Four operations and their shape rules",
+        "paras": [
+          "Addition and scaling are entry by entry and require identical shapes. Multiplication is different in kind and is treated in the next section."
+        ],
+        "bullets": [
+          "Adding matrices of the same shape is entry by entry, and it corresponds to applying both rules and adding the results.",
+          "Scaling multiplies every entry, which is the same as scaling the output of the rule.",
+          "The transpose of a sum is the sum of the transposes, and the transpose of a product reverses the order.",
+          "A symmetric matrix equals its own transpose; covariance and correlation matrices always are.",
+          "The trace, the sum of the diagonal, equals the sum of the eigenvalues, which makes it a free check."
+        ]
+      },
+      {
+        "title": "🧮 A sum, a scale and a transpose",
+        "paras": [
+          "With A as rows (1, 2) and (3, 4), and B as rows (0, 1) and (5, 2), the sum is (1, 3) and (8, 6). Scaling by three gives rows (3, 6) and (9, 12).",
+          "The transpose of A is rows (1, 3) and (2, 4): the diagonal stayed put and the off-diagonal entries swapped. A is not symmetric, because the 2 and the 3 are different.",
+          "Now take a covariance matrix with rows (4, 2) and (2, 9). It is symmetric, and its trace is 13, so its two eigenvalues add to 13 whatever else happens. That is a check worth remembering, since any eigen-decomposition that does not add up to the trace is wrong."
+        ]
+      }
+    ]
+  },
+  "577": {
+    "sections": [
+      {
+        "title": "🔍 Why the rule is rows times columns",
+        "paras": [
+          "The definition looks strange until you see what it is doing. Multiplying A by B means applying B first and then A. For that composition to be expressible as a single matrix, the entry in row i and column j of the product must be row i of A dotted with column j of B.",
+          "So the rule is not invented to be awkward; it is forced by the meaning. And the shape condition follows: the number of columns of A must equal the number of rows of B, because the output of B has to fit into the input of A."
+        ]
+      },
+      {
+        "title": "⚙️ What changes when you multiply",
+        "paras": [
+          "Three properties surprise people, and all three follow from composition."
+        ],
+        "bullets": [
+          "Order matters: A times B is usually not B times A, because applying one rule then the other is not the same as the reverse.",
+          "Association holds: three matrices can be grouped either way, which is what makes long chains computable.",
+          "The identity acts as one on both sides, and the zero matrix absorbs everything.",
+          "Powers mean repeated application, so A squared is the rule applied twice, not the entries squared.",
+          "Cost is cubic in the size: multiplying two n by n matrices takes about n cubed multiplications, which is why large-scale work uses blocked and parallel algorithms."
+        ]
+      },
+      {
+        "title": "🧮 Two products, in both orders",
+        "paras": [
+          "Let A be rows (1, 2) and (3, 4), and B be rows (0, 1) and (1, 0), the swap matrix.",
+          "A times B: first row (1, 2) dotted with columns (0, 1) and (1, 0) gives 2 and 1; second row (3, 4) gives 4 and 3. So the product has rows (2, 1) and (4, 3), which is A with its columns swapped.",
+          "B times A: first row (0, 1) gives 3 and 4; second row (1, 0) gives 1 and 2. The product has rows (3, 4) and (1, 2), which is A with its rows swapped.",
+          "The two results differ, and that difference is the point: swapping rows and swapping columns are different operations. A rotation followed by a stretch is not a stretch followed by a rotation, and the non-commutativity of matrices is the algebra saying so."
+        ]
+      }
+    ]
+  },
+  "579": {
+    "sections": [
+      {
+        "title": "🔍 Where all these equations come from",
+        "paras": [
+          "A budget is a linear equation: three of one item plus two of another costs this much. A circuit is a system of them, as is a chemical balance, a traffic flow and a fitted line. Whenever quantities combine additively under fixed coefficients, the equations arrive in a block.",
+          "Writing the block as A x equals b is not shorthand for its own sake. It turns a tangle of equations into a single geometric question: is the target b reachable by combining the columns of A, and if so, how."
+        ]
+      },
+      {
+        "title": "⚙️ Three outcomes, and the picture behind each",
+        "paras": [
+          "A linear system has exactly one of three fates, and no fourth exists. Recognising which one you are in is the real content of solving."
+        ],
+        "bullets": [
+          "Exactly one solution: the columns are independent and the target lies in their span. Two lines cross at a single point.",
+          "No solution: the target lies outside the span. Two lines are parallel and distinct.",
+          "Infinitely many: the columns are dependent, so the target either misses the span entirely or is hit by a whole family of coefficient vectors.",
+          "In two variables the three cases are: lines crossing, lines parallel, and the same line written twice.",
+          "The number of solutions is a property of the matrix; the target only decides between zero and infinitely many in the dependent case."
+        ]
+      },
+      {
+        "title": "🧮 One system that works, one that cannot",
+        "paras": [
+          "Take 3x plus y equals 9 and 2x plus y equals 7. Subtract the second from the first to get x equals 2, then y equals 3. Substituting back confirms both equations, and the two lines cross at (2, 3).",
+          "Now change the right side: 3x plus y equals 9 and 6x plus 2y equals 20. The second is twice the left side of the first but not twice the right, so the two lines are parallel and the system has no solution. In matrix form the columns are (3, 6) and (1, 2), which are dependent, and the target (9, 20) does not sit on the line they span.",
+          "Change it again to 6x plus 2y equals 18 and the two equations become the same line: every point on it solves the system, so there are infinitely many answers. The algebra reports all three cases honestly, and geometry explains why there is nothing in between."
+        ]
+      }
+    ]
+  },
+  "580": {
+    "sections": [
+      {
+        "title": "🔍 Why a mechanical procedure beats cleverness",
+        "paras": [
+          "Solving two equations by substitution is fine. Solving thirty by substitution is not: the bookkeeping explodes and one arithmetic slip ruins the answer with no indication that it happened.",
+          "Gaussian elimination replaces cleverness with a routine. It always works, it tells you which of the three outcomes you are in, and it can be executed by a machine without judgement."
+        ]
+      },
+      {
+        "title": "⚙️ Row operations, and why they are safe",
+        "paras": [
+          "Three operations are allowed, and each preserves the solution set exactly, so anything you conclude at the end is true of the original system."
+        ],
+        "bullets": [
+          "Swap two rows, which only changes the order you read them in.",
+          "Multiply a row by a non-zero constant, which scales one equation without changing where it vanishes.",
+          "Add a multiple of one row to another, which replaces one equation by a combination and leaves the common solutions untouched.",
+          "Eliminate downward to reach row echelon form, then substitute upward, or continue to reduced form and read the answer directly.",
+          "A row of zeros with a non-zero right side means no solution; a row of zeros with zero on the right means a free variable."
+        ]
+      },
+      {
+        "title": "🧮 A three by three, step by step",
+        "paras": [
+          "Solve x plus 2y plus z equals 4, 2x plus 5y plus 2z equals 9, and 3x plus 8y plus 4z equals 15.",
+          "Eliminate x: row two becomes row two minus twice row one, giving y equals 1. Row three becomes row three minus three times row one, giving 2y plus z equals 3.",
+          "Eliminate y from the new row three: subtract twice the new row two, leaving z equals 1.",
+          "Substitute upward: y is 1 from the second row, then x plus 2 plus 1 equals 4 gives x equals 1. The solution is (1, 1, 1), and substituting into the third original equation confirms 3 plus 8 plus 4 equals 15.",
+          "If instead the third row had reduced to zeros on the left and a non-zero on the right, the system would have no solution, and the elimination would have told you so before any substitution."
+        ]
+      }
+    ]
+  },
+  "581": {
+    "sections": [
+      {
+        "title": "🔍 Why there is no division for matrices",
+        "paras": [
+          "With numbers, 3x equals 12 is solved by dividing by 3. Matrices have addition, subtraction and multiplication, and no division operator, so the equation A x equals b cannot be solved by moving A to the other side.",
+          "The workaround is the same idea as a reciprocal. Division by 3 is multiplication by the number that turns 3 into 1. For a matrix, find the matrix that turns A into the identity; that matrix is the inverse, and it plays the role of a reciprocal."
+        ]
+      },
+      {
+        "title": "⚙️ When an inverse exists, and what it costs",
+        "paras": [
+          "An inverse exists exactly when the matrix does not destroy information. If two different inputs produce the same output, no rule can recover which input was used, so nothing can undo it."
+        ],
+        "bullets": [
+          "Only square matrices have inverses, since the input and output spaces must match to reverse the rule.",
+          "A two by two inverse divides by the determinant and swaps the diagonal while negating the off-diagonal.",
+          "A zero determinant means the matrix flattens the plane, so there is no inverse.",
+          "The inverse of a product reverses the order: invert B first, then A, like taking off shoes before socks.",
+          "Computing an inverse costs about the same as elimination, and is numerically less stable than solving directly, so software solves instead of inverting."
+        ]
+      },
+      {
+        "title": "🧮 A two by two, checked both ways",
+        "paras": [
+          "Take A with rows (3, 1) and (2, 1). The determinant is 3 minus 2, which is 1, so A is invertible and the inverse is (1, minus 1) over (minus 2, 3) divided by one.",
+          "Multiply to check: the first row of A against the first column of the inverse gives 3 minus 2, which is 1; against the second column gives minus 3 plus 3, which is zero. The other row behaves the same way, so the product is the identity.",
+          "Now solve 3x plus y equals 9 and 2x plus y equals 7 by applying the inverse to (9, 7): the first component is 9 minus 7, which is 2, and the second is minus 18 plus 21, which is 3. The answer (2, 3) matches the elimination result, as it must.",
+          "Change A to rows (3, 2) and (6, 4). The determinant is 12 minus 12, which is zero. The second row is twice the first, so the matrix maps the whole plane onto a single line and the information about the other direction is gone. Any system with this matrix either has no solution or infinitely many, and the inverse does not exist."
+        ]
+      }
+    ]
+  },
+  "583": {
+    "sections": [
+      {
+        "title": "🔍 Why we use properties instead of the definition",
+        "paras": [
+          "The definition of a determinant expands into n factorial terms: six terms for a three by three, twenty-four for a four by four, and about two and a half quintillion for a twenty by twenty. Nobody computes that way.",
+          "Three structural properties turn the computation into elimination, which costs about n cubed operations. They also explain what a determinant is: a signed volume scale factor, which is why row swaps flip its sign and a collapsed volume gives zero."
+        ]
+      },
+      {
+        "title": "⚙️ Three properties and their consequences",
+        "paras": [
+          "Read each row as the edge of a box; the determinant is the signed volume of that box."
+        ],
+        "bullets": [
+          "Swapping two rows changes the sign, because the volume keeps its size and flips its orientation.",
+          "Multiplying one row by k multiplies the determinant by k, because one edge is stretched.",
+          "Adding a multiple of one row to another changes nothing, because the box is only sheared.",
+          "A triangular matrix has determinant equal to the product of its diagonal, since elimination never changed the determinant.",
+          "The determinant of a product is the product of the determinants, so scaling composes multiplicatively.",
+          "Equal or proportional rows give zero, and so does any zero row.",
+          "The determinant of the transpose equals the determinant of the matrix, so rows and columns are interchangeable."
+        ]
+      },
+      {
+        "title": "🧮 A three by three by row operations",
+        "paras": [
+          "Take rows (1, 2, 3), (0, 4, 5) and (1, 0, 6). Subtract the first row from the third to get (0, minus 2, 3); the determinant is unchanged.",
+          "Add half the second row to the third to get (0, 0, 5.5); still unchanged. The matrix is now triangular, so the determinant is 1 times 4 times 5.5, which is 22.",
+          "Check by cofactor expansion along the first row: 1 times (24 minus 0) minus 2 times (0 minus 5) plus 3 times (0 minus 4) gives 24 plus 10 minus 12, which is 22. Two routes, one answer, and the row route took a fraction of the effort.",
+          "A property that saves even more time: if two rows are proportional the determinant is zero, so a matrix with rows (1, 2, 3), (2, 4, 6) and (7, 8, 9) needs no work at all. The box is flat, the matrix is not invertible, and the system it defines cannot have a unique solution."
+        ]
+      }
+    ]
+  },
+  "585": {
+    "sections": [
+      {
+        "title": "🔍 Why the idea gets generalised",
+        "paras": [
+          "Arrows are not the only things that can be added and scaled. Polynomials can, functions can, matrices can, and all of them obey the same eight rules. Proving a theorem about arrows and then proving it again for polynomials is wasted effort.",
+          "A vector space is the abstraction that removes the repetition: any set with an addition and a scaling that obey the eight rules qualifies, so one proof covers every example at once."
+        ]
+      },
+      {
+        "title": "⚙️ The eight rules, and the three you actually check",
+        "paras": [
+          "The eight rules say addition is commutative and associative with a zero and with opposites, and that scaling behaves sensibly with respect to both kinds of addition. They are the rules you have used since primary school.",
+          "In practice nobody checks eight. Most spaces of interest sit inside a larger one, so the rules are inherited and only two things can fail: whether the subset contains the zero vector, and whether it stays closed."
+        ],
+        "bullets": [
+          "Contains zero: without it, there is no 'do nothing' element and the structure collapses.",
+          "Closed under addition: the sum of two members must still be a member.",
+          "Closed under scaling: any multiple of a member must still be a member.",
+          "The first quadrant fails the third test, because multiplying by a negative number leaves it. It is a cone, not a subspace.",
+          "A line or plane through the origin is a subspace; shift it away from the origin and it stops being one, because the zero vector is left behind."
+        ]
+      },
+      {
+        "title": "🧮 Three sets, one test",
+        "paras": [
+          "The set of all (x, y) with x plus y equal to zero is the line y equals minus x. Zero satisfies it, adding two solutions gives another, and scaling keeps it, so this is a one-dimensional subspace.",
+          "The set with x plus y equal to one is a parallel line that misses the origin: zero fails immediately, so it is not a subspace. It is an affine set, a subspace that has been translated.",
+          "The set of all (x, y, z) with x plus y plus z equal to zero is a plane through the origin. Two free variables remain once the equation is imposed, so the dimension is two, and a basis is (minus 1, 1, 0) and (minus 1, 0, 1).",
+          "General rule worth carrying forward: the solution set of a homogeneous linear system is always a subspace, and the solution set of a non-homogeneous one never is."
+        ]
+      }
+    ]
+  },
+  "586": {
+    "sections": [
+      {
+        "title": "🔍 Why redundancy is worth detecting",
+        "paras": [
+          "Describing a position with east and north is efficient; adding a north-east component is not, because it can already be built from the other two. Redundant information does not add reach, it adds noise, and in modelling it adds instability.",
+          "Linear independence is that observation made precise: a set of vectors is independent when none of them can be built from the others, and dependent when at least one is a combination of the rest."
+        ]
+      },
+      {
+        "title": "⚙️ The zero-combination test",
+        "paras": [
+          "The definition is short: the vectors are independent if the only way to combine them into zero is with all coefficients zero. If some non-trivial combination gives zero, the set is dependent.",
+          "The reason this works is algebra: from a combination c1 v1 plus c2 v2 equal to zero with c1 non-zero, you can solve for v1 and see that it was never needed."
+        ],
+        "bullets": [
+          "Any set containing the zero vector is dependent, because a non-zero coefficient on it costs nothing.",
+          "A single non-zero vector is independent; two vectors are dependent exactly when they are parallel.",
+          "In three dimensions, three vectors are dependent exactly when their determinant is zero, which means they are coplanar.",
+          "More vectors than dimensions guarantees dependence, since they cannot all point in new directions.",
+          "For a square matrix, independence of the columns is equivalent to invertibility and to a non-zero determinant."
+        ]
+      },
+      {
+        "title": "🧮 Three sets, three verdicts",
+        "paras": [
+          "The vectors (1, 2, 3) and (2, 4, 6): the second is twice the first, so 2 v1 minus v2 is zero with coefficients not all zero. Dependent, and geometrically they lie on one line.",
+          "The vectors (1, 0), (0, 1) and (1, 1): the third equals the first plus the second, so the combination v1 plus v2 minus v3 vanishes. Dependent, even though any two of them are independent. Three vectors in a two-dimensional space cannot all be new directions.",
+          "The vectors (1, 2) and (2, 5): suppose c1 and c2 combine to zero. Then c1 plus 2c2 is zero and 2c1 plus 5c2 is zero. The first gives c1 equals minus 2c2, and substituting gives c2 equals zero and therefore c1 equals zero. Independent.",
+          "The determinant check agrees: the matrix with rows (1, 2) and (2, 5) has determinant 5 minus 4, which is 1, not zero. Two ways to reach the same verdict, and the determinant is the faster one."
+        ]
+      }
+    ]
+  }
+}

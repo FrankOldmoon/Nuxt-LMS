@@ -1,0 +1,113 @@
+{
+  "792": {
+    "sections": [
+      {
+        "title": "🔍 Why stack layers instead of widening one",
+        "paras": [
+          "A single layer of neurons can represent only simple boundaries. Widen it and it can carve more regions, but it is still one level of composition, and it needs a number of neurons that grows explosively with the complexity of the boundary.",
+          "Stacking layers changes the representable functions qualitatively rather than quantitatively. The second layer operates on features built by the first, so the network represents compositions of simple functions. Depth, not width, buys expressive power of that kind."
+        ]
+      },
+      {
+        "title": "⚙️ Layers, losses, and gradient descent",
+        "paras": [
+          "A deep network has an input layer matching the data, a stack of hidden layers, and an output layer matching the task. Each layer applies a linear transform followed by a non-linear activation, and the whole stack is differentiable, which is what makes training possible.",
+          "Every model in this course is those three ingredients arranged differently: layers define what can be represented, a loss defines what correct means, and gradient descent defines how the parameters are found."
+        ],
+        "bullets": [
+          "Depth lets early layers learn simple patterns and later layers compose them into complex ones.",
+          "Non-linearity is essential: without it, any stack of layers collapses into a single linear map.",
+          "A loss turns the task into a number that can be decreased.",
+          "Backpropagation computes the gradient of that number with respect to every parameter.",
+          "Deep models need much more data than classical models, because they have far more parameters.",
+          "The hierarchy of features is learned, not designed, which is the main difference from classical pipelines.",
+          "Compute, not algorithm, was the historical blocker: the same ideas date from the 1980s and only became practical with GPUs."
+        ]
+      },
+      {
+        "title": "🧮 Why depth saves the parameter count",
+        "paras": [
+          "Suppose a pattern requires detecting 10 primitive features and then combining them pairwise into 45 combinations, then 10 of those combinations into a final decision. One flat layer needs enough neurons to represent all 10 times 45 combinations at once, roughly hundreds or thousands.",
+          "Two layers need 10 units for the primitives and 45 for the combinations, so 55 units. Depth represents the recurrence of the same primitives in many combinations by sharing them, which a single layer cannot do efficiently.",
+          "Parameter arithmetic for a fully connected network: an input of 784 pixels (a 28 by 28 image) into 128 hidden units is 784 times 128 weights, 100,352. Adding a second 128-unit layer is 128 times 128, 16,384. So the second layer costs a sixth of the first while adding real expressive power. That ratio is why deep stacks are affordable.",
+          "The image recognition example that made the argument famous: on ImageNet with 1.2 million training images and 1,000 classes, a classical pipeline with hand-designed features reached about 74 percent accuracy around 2010, and the 8-layer AlexNet reached 85 percent in 2012 with roughly 60 million parameters. The jump came from learned hierarchical features, not from a better classifier at the last stage.",
+          "Data arithmetic for the trade: 60 million parameters against 1.2 million images is 50 parameters per image, which is already in the regime where overfitting is a risk. That is why augmentation, dropout, and weight decay are not optional extras in deep learning; they compensate for the parameter-to-data ratio."
+        ]
+      }
+    ]
+  },
+  "793": {
+    "sections": [
+      {
+        "title": "🔍 Why the neuron is the unit",
+        "paras": [
+          "A neuron takes several numbers in, multiplies each by a weight, adds them, adds a bias, and passes the result through a non-linear function. That is all it does, and the entire network is that operation repeated with a different set of numbers.",
+          "Understanding this one computation at a time is what makes the rest of deep learning mechanical rather than mysterious."
+        ]
+      },
+      {
+        "title": "⚙️ Weights, biases, layers, and the forward pass",
+        "paras": [
+          "Weights say how much each input matters, biases shift the threshold, and the activation decides the response. Training changes the weights and biases and nothing else.",
+          "A layer is a matrix of weights plus a vector of biases, applied to a batch of vectors at once. The forward pass is the sequential application of these transforms from input to output, and the final value is the prediction."
+        ],
+        "bullets": [
+          "The weighted sum of a layer over a batch is a single matrix multiplication, which is why GPUs help so much.",
+          "Every layer's output shape must match the next layer's expected input shape; mismatches are the most common bug.",
+          "A batch of 32 images of 784 pixels is a 32 by 784 matrix, and a 784 by 128 weight matrix turns it into 32 by 128.",
+          "Bias is needed because without it every hyperplane would pass through the origin, which is a real restriction.",
+          "The forward pass caches intermediate values, because backpropagation needs them.",
+          "Initialisation matters: zero weights break symmetry and the network never learns.",
+          "A network with random weights still runs, so shape bugs are invisible until you inspect the predictions."
+        ]
+      },
+      {
+        "title": "🧮 Forward pass by arithmetic",
+        "paras": [
+          "One neuron with weights 2 and minus 1, bias 1, inputs 3 and 4. The sum is 2 times 3 plus minus 1 times 4 plus 1, which is 6 minus 4 plus 1, 3. With ReLU the output is 3; with sigmoid it is about 0.95.",
+          "A layer with three inputs and two neurons: weights as two rows, 1, 2, 3 and 0, minus 1, 1, biases 0 and 2. For input 1, 1, 1: neuron one is 1 plus 2 plus 3, 6; neuron two is 0 minus 1 plus 1 plus 2, 2. Output vector 6, 2.",
+          "Parameter count for a real network: 784 inputs to 256 units is 200,704 weights plus 256 biases. 256 to 128 is 32,768 plus 128. 128 to 10 classes is 1,280 plus 10. Total about 235,000 parameters, and that is a tiny network.",
+          "Compute arithmetic: one forward pass of that network on one image is about 235,000 multiply-adds. For 60,000 training images per epoch it is 14 billion multiply-adds. A CPU at 10 billion operations per second takes 1.4 seconds per epoch; a GPU at 10 trillion takes 1.4 milliseconds. That factor of 1,000 is the entire reason deep learning became practical.",
+          "Batch arithmetic: processing a batch of 64 images at once multiplies the memory for activations but lets the matrix multiplication run at full width. On a GPU a batch of 64 often takes only 1.2 times as long as a batch of 1, so throughput improves by more than 50 times. That is why batch size is a throughput parameter, not an accuracy parameter."
+        ]
+      }
+    ]
+  },
+  "794": {
+    "sections": [
+      {
+        "title": "🔍 Why hand-designed features stopped scaling",
+        "paras": [
+          "Classical machine learning on images required someone to design descriptors: edges, corners, texture histograms. Each descriptor encoded an assumption about what matters, and each new domain needed new assumptions.",
+          "Deep learning replaces that design step with learning. The early layers of a convolutional network discover edge detectors on their own, and the later layers compose them. The assumptions move from the engineer to the data."
+        ]
+      },
+      {
+        "title": "⚙️ The trade-offs that decide which to use",
+        "paras": [
+          "Deep learning needs data, compute, and tuning. Classical methods need neither. On a table with 500 rows and 12 columns, a gradient-boosted model will match or beat a neural network and take minutes instead of hours.",
+          "The dividing line is usually the structure of the data. Tables have named, meaningful columns that a human can reason about. Images, audio, and text have raw values with no per-column meaning, and that is exactly where learned features win."
+        ],
+        "bullets": [
+          "Classical models train in seconds, are interpretable, and work with small data.",
+          "Deep models need thousands of examples per class, GPUs, and careful tuning.",
+          "Features must be engineered for tables and are learned for images.",
+          "Deep models are harder to explain, which matters in regulated domains.",
+          "Transfer learning removes much of the data requirement for images and text.",
+          "A deep model trained on 10,000 rows of tabular data usually loses to gradient boosting.",
+          "The honest rule: start with the simplest model that could work, and escalate only with evidence."
+        ]
+      },
+      {
+        "title": "🧮 Where the crossover sits",
+        "paras": [
+          "On a tabular binary classification task with 20 features, typical accuracy by training set size: at 1,000 rows, logistic regression 78 percent, gradient boosting 80, a small neural network 72. At 100,000 rows, logistic regression 80, gradient boosting 86, the network 86. The network only catches up at 100 times the data.",
+          "On images, the crossover is much lower because the structure is exploited. Hand-crafted features plus a linear classifier reach about 74 percent on a 1,000-class image task; a convolutional network reaches 85 percent with the same data. There is no crossover at all here; the learned features win immediately.",
+          "Compute cost arithmetic: training gradient boosting on 100,000 rows with 20 features takes perhaps 30 seconds on a CPU. Training a small neural network on the same data takes 5 minutes on a GPU if one is available, and much longer on a CPU. That ratio is why the default advice for tabular data is to try the tree model first.",
+          "Transfer learning changes the image case dramatically. Training a convolutional network from scratch on 5,000 images takes an hour and reaches 78 percent. Taking a pretrained backbone, freezing it, and training a new head on the same 5,000 images takes 30 seconds and reaches 91 percent. When a pretrained model exists, the data requirement for deep learning drops to hundreds of examples, which erases most of the classical advantage.",
+          "The engineering cost that does not show in benchmarks: a notebook with a tree model is a day of work, and a deployed deep model needs GPU infrastructure, model versioning, and a serving stack. If the accuracy gain is 2 points, the engineering cost decides the answer, and it usually says no."
+        ]
+      }
+    ]
+  }
+}

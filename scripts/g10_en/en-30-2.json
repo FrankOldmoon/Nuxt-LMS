@@ -1,0 +1,454 @@
+{
+  "776": {
+    "sections": [
+      {
+        "title": "🔍 Why one accuracy number can lie",
+        "paras": [
+          "Accuracy is the fraction of predictions that are correct, and it treats a missed disease and a false alarm as equally wrong. In most real problems they are not, and in imbalanced problems accuracy can be high while the model is useless.",
+          "The confusion matrix is the fix: it counts the four possible outcomes separately, so the two kinds of error become visible before any metric is computed."
+        ]
+      },
+      {
+        "title": "⚙️ The four cells and what accuracy hides",
+        "paras": [
+          "For a binary problem the matrix has four cells: true positives, the model said positive and was right; true negatives, said negative and was right; false positives, said positive and was wrong; false negatives, said negative and was wrong.",
+          "Accuracy is the sum of the two correct cells divided by the total. Every other metric is a ratio built from these four numbers, which is why the matrix is the primary object and the metrics are derived."
+        ],
+        "bullets": [
+          "A false positive is an alarm that was not needed; a false negative is a problem that was missed.",
+          "Accuracy is a good summary only when the classes are roughly balanced.",
+          "Balanced accuracy averages the true positive rate and the true negative rate, so it weights both classes equally.",
+          "The matrix should be printed for every model, before any headline number is quoted.",
+          "Multi-class problems have a matrix of size k by k, and the diagonal is the correct predictions.",
+          "The matrix also reveals label problems: a row of all zeros means that class is missing from the data.",
+          "Threshold choice moves predictions between the two error columns, so the matrix is a function of the threshold."
+        ]
+      },
+      {
+        "title": "🧮 Why 99 percent can be worthless",
+        "paras": [
+          "A disease affects 1 percent of a population of 10,000. A model predicts no disease for everyone. The matrix is 0 true positives, 9,900 true negatives, 0 false positives, 100 false negatives. Accuracy is 9,900 divided by 10,000, 99 percent.",
+          "The model has found nothing and missed every single case. Reporting 99 percent is technically accurate and completely misleading, which is why the confusion matrix, not accuracy, is the first thing to look at.",
+          "Now a real model on the same population: 80 true positives, 60 false positives, 9,840 true negatives, 20 false negatives. Accuracy is 9,920 divided by 10,000, 99.2 percent. Barely better than the useless model by accuracy, yet it catches 80 percent of disease cases. The difference between the two models is invisible in the headline number and obvious in the matrix.",
+          "The prevalence effect on precision, which the next chapter quantifies: with 100 positives out of 10,000, even a model with a 5 percent false positive rate produces 495 false positives, so a positive prediction is right only about 14 percent of the time. That number, not accuracy, is what a screening programme has to live with.",
+          "Cost arithmetic: if a missed case costs 10,000 and a false alarm costs 200, the useless model's expected cost is 100 times 10,000, one million. The real model's cost is 20 times 10,000 plus 60 times 200, 212,000. So the second model is five times cheaper even though both show 99 percent accuracy, which is the entire argument for reporting the matrix."
+        ]
+      }
+    ]
+  },
+  "777": {
+    "sections": [
+      {
+        "title": "🔍 Why two different errors need two different numbers",
+        "paras": [
+          "A spam filter that quarantines a genuine invoice costs a person an hour of recovery. A spam filter that lets one spam through costs a second of annoyance. The two errors are not comparable, so a single accuracy figure cannot express what the system should optimise.",
+          "Precision and recall separate them: precision describes how often a positive prediction is right, and recall describes how many real positives were found."
+        ]
+      },
+      {
+        "title": "⚙️ Precision, recall, F1, and the threshold",
+        "paras": [
+          "Precision is true positives divided by the sum of true and false positives. It answers how trustworthy a positive prediction is. Recall is true positives divided by the sum of true positives and false negatives. It answers how much of the real signal was captured.",
+          "Raising the threshold makes the model more conservative: fewer positive predictions, so precision rises and recall falls. Lowering it does the opposite. There is no threshold that maximises both, which is why the trade-off must be chosen deliberately.",
+          "F1 is the harmonic mean of the two, which balances them and is dominated by the smaller value."
+        ],
+        "bullets": [
+          "F1 is high only when both precision and recall are high, which is why it is preferred on imbalanced data.",
+          "The F-beta score weights recall beta times more than precision, so beta of 2 favours catching cases.",
+          "Precision-recall curves and average precision summarise performance across all thresholds.",
+          "The ROC curve plots the true positive rate against the false positive rate and is insensitive to class balance in a way that can be misleading.",
+          "For rare positives, precision-recall curves are more informative than ROC curves.",
+          "The threshold should be chosen from the relative cost of the two errors, and recorded as part of the model definition.",
+          "Recall is the right primary metric when a missed positive is the expensive error."
+        ]
+      },
+      {
+        "title": "🧮 The trade-off as arithmetic",
+        "paras": [
+          "Take 1,000 cases with 100 real positives. At a low threshold the model predicts 300 positives: 90 true, 210 false. Precision is 90/300 = 0.30, recall is 90/100 = 0.90, F1 is 2 times 0.30 times 0.90 divided by 1.20, about 0.45.",
+          "Raise the threshold so it predicts 120 positives: 78 true, 42 false. Precision is 78/120 = 0.65, recall is 78/100 = 0.78, F1 is 2 times 0.65 times 0.78 divided by 1.43, about 0.71. Both precision and recall improved here because the threshold moved toward the better operating point, but push further and the trade appears.",
+          "Push the threshold so it predicts 80 positives: 70 true, 10 false. Precision 0.875, recall 0.70, F1 about 0.78. Precision rose, recall fell, F1 improved slightly. Push again to 40 positives: 38 true, 2 false. Precision 0.95, recall 0.38, F1 about 0.54. Precision looks excellent and the model now misses 62 percent of cases.",
+          "This sequence is the reason precision alone is a trap. A model that predicts positive only for the single most obvious case achieves 100 percent precision and negligible recall.",
+          "Cost-based threshold selection: with a false negative costing 100 and a false positive costing 5, the expected cost at each operating point is 100 times misses plus 5 times false alarms. At the first threshold: 10 misses and 210 false alarms, so 1,000 plus 1,050, 2,050. At the third: 30 misses and 10 false alarms, 3,000 plus 50, 3,050. So the first, low threshold is actually cheaper despite the terrible precision, because the missed case is 20 times more expensive than the false alarm.",
+          "The harmonic mean arithmetic deserves one check: precision 0.65 and recall 0.78 give F1 of 0.71, while the arithmetic mean is 0.715. The harmonic mean is lower, and it drops sharply when either term is near zero, which is exactly the behaviour wanted."
+        ]
+      }
+    ]
+  },
+  "778": {
+    "sections": [
+      {
+        "title": "🔍 Why a model can be too good on its own data",
+        "paras": [
+          "A flexible model will fit noise as readily as signal. It memorises the specific training examples, including their random errors, and reproduces them perfectly while failing on anything new. That is overfitting, and its signature is a large gap between training and validation performance.",
+          "The opposite failure is a model too simple to capture the pattern, which does badly on both. The two failures look identical if you only measure training error and completely different once you measure both."
+        ]
+      },
+      {
+        "title": "⚙️ Detecting the failure mode and holding data back",
+        "paras": [
+          "Diagnosis is a comparison of two numbers. High training and high validation error means underfitting, and the fix is more capacity, better features, or less regularisation. Low training and high validation error means overfitting, and the fix is less capacity, more data, or more regularisation.",
+          "The validation set exists to make that comparison during development, so the test set can stay untouched until the end."
+        ],
+        "bullets": [
+          "Underfitting: add features, use a more flexible model, reduce regularisation, train longer.",
+          "Overfitting: add data, simplify the model, increase regularisation, use early stopping.",
+          "Early stopping halts training when validation error starts rising, which is the cheapest regulariser available.",
+          "More data is the most reliable fix for variance, and the least available in practice.",
+          "A learning curve plots error against training set size and shows whether more data would help.",
+          "Cross-validation gives a more stable estimate than one split, at k times the compute.",
+          "Never tune on the test set; every look at it spends some of its honesty."
+        ]
+      },
+      {
+        "title": "🧮 Reading the two numbers",
+        "paras": [
+          "A model with 99 percent training accuracy and 62 percent validation accuracy is overfitting severely. The 37-point gap is noise being fitted. Cutting depth or adding regularisation typically moves training to 94 and validation to 71, which is a better model despite the lower training score.",
+          "A model with 65 percent training and 64 percent validation is underfitting. There is no gap, so more data will not help; the model cannot represent the pattern. Adding interaction features or switching to a gradient-boosted model is the right move.",
+          "The learning curve turns this into a prediction. Plot validation error for training set sizes 1,000, 5,000, 20,000, 80,000. If the error is still falling at 80,000, more data helps. If it has flattened, more data is wasted effort and the fix must be a better model or better features.",
+          "Variance arithmetic: with 200 training rows and a model with 50 parameters, the model has one parameter per 4 data points, which virtually guarantees overfitting. With 10,000 rows the same model has 200 points per parameter, which is comfortable. The ratio, not the absolute count, is what matters.",
+          "Cross-validation arithmetic: 5-fold on 1,000 rows means each fold trains on 800 and tests on 200. Each individual score has a standard error of about 2.5 percent at 75 percent accuracy, so the five scores might read 72, 77, 74, 76, 75. The mean is 74.8 with a standard error near 1 percent, which is a much better estimate than any single split. This is why reporting a single 80 percent from one lucky split is misleading.",
+          "Early stopping in numbers: a model trained for 200 epochs reaches training loss 0.01 and validation loss 0.42, and the validation loss was lowest at epoch 60 with 0.31. Training for 200 epochs cost 3 times the compute and produced a worse model. Early stopping would have kept the epoch-60 weights, which is a free 26 percent reduction in validation loss."
+        ]
+      }
+    ]
+  },
+  "780": {
+    "sections": [
+      {
+        "title": "🔍 Why group first and name later",
+        "paras": [
+          "Classification needs labels, and labels need someone to assign them. Much of the data an organisation holds has never been labelled, but it does have structure: customers who behave similarly, documents about the same topic, machines failing in the same way.",
+          "Clustering finds that structure without labels. What it cannot do is name the groups, because the names live outside the data."
+        ]
+      },
+      {
+        "title": "⚙️ Similarity, distance, and what clustering cannot tell you",
+        "paras": [
+          "Clustering groups items so that items within a group are more similar to each other than to items in other groups. Similarity is defined by a distance, and the choice of distance is a modelling decision that changes the result more than the algorithm does.",
+          "The output is a partition, plus for some algorithms a probability of membership. There is no ground truth to compare against, which is why evaluating a clustering is genuinely difficult."
+        ],
+        "bullets": [
+          "Euclidean distance suits continuous, comparable features; cosine similarity suits text and high-dimensional sparse data.",
+          "Scaling is mandatory, because a feature measured in thousands otherwise dominates.",
+          "The number of clusters must be chosen, and there is no objectively correct answer.",
+          "Clusters can be spherical, elongated, nested, or density-based, and no single algorithm finds all shapes.",
+          "Validation is by inspection: do the groups make sense to a domain expert, and are they stable across runs.",
+          "Clustering is often used for exploration before labelling, to decide which items are worth labelling.",
+          "Anomaly detection is clustering with the assumption that outliers form tiny groups far from everything."
+        ]
+      },
+      {
+        "title": "🧮 Sizing a clustering problem",
+        "paras": [
+          "With 10,000 customers and 8 features, k-means with 10 clusters and 20 iterations computes 10,000 times 10 times 20, two million distance calculations. Each is 8 subtractions and 8 squarings, so about 32 million operations, milliseconds.",
+          "Scale that to 10 million customers and 100 features: two billion distance calculations per iteration, 200 billion operations for 20 iterations, which is minutes to hours. This is why large-scale clustering uses approximate methods or a sample.",
+          "What a cluster means in numbers: after clustering 10,000 customers into 5 groups, group sizes might be 4,200, 2,900, 1,600, 900, 400. If one group has 30 percent churn against a 6 percent baseline, it is worth investigating, and that single comparison is the deliverable. The cluster label itself is arbitrary; the difference in an outcome variable is the finding.",
+          "The stability check: run the algorithm 10 times with different seeds and count how often each pair of customers lands in the same cluster. A pair that is together in 9 of 10 runs is a real grouping; a pair together in 5 of 10 is noise. Without this check, a clustering result can be entirely an artefact of the initialisation.",
+          "The scaling trap in numbers: age ranges 18 to 80, income ranges 20,000 to 200,000. The Euclidean distance is dominated by income, whose range is 10,000 times larger, so the clusters will simply be income bands. After standardising both, the clusters become genuinely multivariate, and they often look completely different. Nothing about the algorithm changed."
+        ]
+      }
+    ]
+  },
+  "781": {
+    "sections": [
+      {
+        "title": "🔍 Why centroids are enough",
+        "paras": [
+          "Most clustering algorithms need a notion of density or connectivity. K-means needs only a centre per cluster, which makes it extremely cheap and extremely fast.",
+          "The trade is that it assumes clusters are roughly spherical and similar in size, and it will happily split one elongated cluster in two while merging two nearby compact ones."
+        ]
+      },
+      {
+        "title": "⚙️ The iteration and how k is chosen",
+        "paras": [
+          "The algorithm initialises k centres, assigns each point to the nearest centre, recomputes each centre as the mean of its points, and repeats until assignments stop changing. Each step provably reduces the within-cluster sum of squares, so the process converges, though not necessarily to the global optimum.",
+          "Because the result depends on the initialisation, k-means is run several times with different seeds and the run with the lowest total distance is kept."
+        ],
+        "bullets": [
+          "K-means plus plus chooses initial centres spread apart, which improves convergence markedly.",
+          "The elbow method plots total within-cluster distance against k and looks for the point where extra clusters stop helping.",
+          "The silhouette score measures how much closer points are to their own cluster than the next one, ranging from minus one to one.",
+          "Every point is assigned, so outliers are forced into a cluster and distort its centre.",
+          "The algorithm assumes convex, isotropic clusters, and it fails on rings or crescents.",
+          "Results vary between runs, so always fix a seed and check stability.",
+          "K-medoids uses real points as centres, which is more robust to outliers but slower."
+        ]
+      },
+      {
+        "title": "🧮 One iteration worked through",
+        "paras": [
+          "Six points in one dimension: 1, 2, 3, 10, 11, 12. Two centres start at 1 and 12. Assign by nearest: 1, 2, 3 go to centre 1; 10, 11, 12 go to centre 12. New centres are the means 2 and 11.",
+          "Reassign: 1, 2, 3 are nearest 2, and 10, 11, 12 are nearest 11. Unchanged, so the algorithm stops. Total within-cluster distance is 1 plus 1 (for 1 and 3 around 2) plus 1 plus 1, which is 4.",
+          "Had the centres started at 2 and 3, the assignments would initially be different, and the algorithm could converge on a worse solution. That sensitivity is why 10 restarts is standard.",
+          "Elbow arithmetic: for the same six points, k equal to 1 gives a total distance of about 30, k equal to 2 gives 4, k equal to 3 gives about 2, k equal to 6 gives 0. There is no elbow because the data genuinely has two groups, and the drop from 30 to 4 is the signal. With real data the curve usually falls steeply then flattens, and the bend is the choice.",
+          "Complexity in numbers: n points, d dimensions, k clusters, i iterations. Each iteration costs n times k times d distance computations. For 100,000 points, 20 dimensions, 10 clusters, and 50 iterations, that is one billion operations, a second or two in a compiled implementation and much slower in pure Python.",
+          "The scaling trap again: cluster points (1, 1,000) and (2, 2,000). In raw coordinates the distance is 1,000, dominated entirely by the second feature. After scaling, the two points differ in both features and the cluster structure changes. K-means results without scaling are usually meaningless, and there is no error message."
+        ]
+      }
+    ]
+  },
+  "782": {
+    "sections": [
+      {
+        "title": "🔍 Why fewer dimensions can be better",
+        "paras": [
+          "A dataset with 500 features is slow to train, hard to plot, and full of redundancy: many features are correlated combinations of a few underlying factors. Reducing dimensions removes the redundancy while keeping most of the variation.",
+          "It is not free. Compressed features are combinations of the originals, so they lose their meaning, which is often the thing the project actually needed."
+        ]
+      },
+      {
+        "title": "⚙️ Principal components and what they preserve",
+        "paras": [
+          "PCA finds the directions in which the data varies most. The first principal component is the direction of maximum variance, the second is the direction of maximum variance orthogonal to the first, and so on. Projecting onto the first few components keeps the most variation with the fewest dimensions.",
+          "The components are linear combinations of the original features, ordered by how much variance each explains."
+        ],
+        "bullets": [
+          "Components are orthogonal, so the projected features are uncorrelated by construction.",
+          "The explained variance ratio tells you how much information each component retains.",
+          "Choosing a number of components is usually done at 90 or 95 percent cumulative variance.",
+          "PCA must be fitted on training data and applied to test data, or it leaks.",
+          "Scaling before PCA is essential, otherwise a large-range feature becomes the first component.",
+          "PCA works for compression and visualisation, and it is not a feature selection method since every component uses all features.",
+          "t-SNE and UMAP are non-linear alternatives for visualisation, and they do not preserve global distances."
+        ]
+      },
+      {
+        "title": "🧮 Variance, components, and the cost of compressing",
+        "paras": [
+          "Two features with variances 9 and 1 and no correlation. The total variance is 10. PCA returns the two axes unchanged, and the first component explains 90 percent. Keeping one component retains 90 percent of the variance, and the reconstruction error is the discarded 10 percent.",
+          "With 100 features where the first 10 explain 92 percent of the variance, keeping 10 components reduces the feature count by 90 percent while retaining almost all the information. Training time falls roughly in proportion, and for a distance-based model accuracy often improves, because the discarded dimensions were mostly noise.",
+          "The memory arithmetic: a dataset of 100,000 rows and 1,000 features stored as 8-byte floats is 800 MB. Reduced to 50 components it is 40 MB, a 20-fold reduction. That is the difference between fitting in memory and requiring out-of-core processing.",
+          "The information loss in a concrete case: images of 28 by 28 pixels have 784 features. PCA with 50 components typically explains about 85 percent of the variance and supports classification at nearly the accuracy of the full set, while a k-nearest-neighbour classifier runs 15 times faster because distance computation is over 50 rather than 784 dimensions.",
+          "The interpretability cost: the first component of a face-image dataset might be a combination of lighting and jaw width, which cannot be named. If the project needs to explain why a decision was made, PCA has removed the explanation. This is why tabular business models often skip PCA and use feature selection instead, keeping original columns and dropping the weak ones.",
+          "A numerical caution with real consequences: if two features are measured in metres and millimetres without scaling, the variance of the millimetre column is a million times larger, and the first component becomes almost exactly that column. The projection then looks like a success, explains 99 percent of the variance, and has merely reproduced one feature."
+        ]
+      }
+    ]
+  },
+  "784": {
+    "sections": [
+      {
+        "title": "🔍 Why many mediocre models beat one good one",
+        "paras": [
+          "A single decision tree is unstable: change a few training rows and its structure changes, and its errors are large and idiosyncratic. But those errors are not shared with a differently grown tree.",
+          "Average many trees grown on different samples and the shared signal survives while the individual noise cancels. That is the entire argument for ensembles, and it is why they dominate tabular machine learning."
+        ]
+      },
+      {
+        "title": "⚙️ Bagging, feature randomness, and out-of-bag error",
+        "paras": [
+          "A random forest grows many trees, each on a bootstrap sample of the rows, and at each split considers only a random subset of the features. The first source of randomness decorrelates the trees by giving them different data; the second decorrelates them by preventing all trees from choosing the same dominant feature.",
+          "The prediction is the majority vote for classification or the average for regression. Averaging reduces variance, which is exactly the failure mode of a single tree."
+        ],
+        "bullets": [
+          "Bootstrapping samples rows with replacement, so each tree sees about 63 percent of the distinct rows.",
+          "The rows left out of a tree form its out-of-bag sample, which gives a free validation estimate.",
+          "Considering only the square root of the feature count at each split is the standard default for classification.",
+          "More trees never hurt accuracy, they only cost time; several hundred is typical.",
+          "Depth is usually left unrestricted, since averaging handles the variance that a single deep tree would suffer.",
+          "Feature importance from a forest is biased toward high-cardinality features, so use permutation importance for decisions.",
+          "Random forests are hard to overfit but easy to underfit if the trees are too shallow or too few."
+        ]
+      },
+      {
+        "title": "🧮 Variance reduction by arithmetic",
+        "paras": [
+          "A single tree has an error with variance 1. Averaging n independent predictors with the same variance reduces the variance to 1 divided by n. So 100 trees reduce variance a hundredfold, if they were independent.",
+          "They are not independent, because they all see the same data. If the correlation between trees is rho, the variance of the average is rho plus (1 minus rho) divided by n. With rho equal to 0.5 and n equal to 100, that is 0.5 plus 0.005, 0.505, so the reduction is only a factor of 2 rather than 100.",
+          "That formula explains the design. Row sampling reduces correlation somewhat, feature sampling reduces it more. Without feature sampling, rho might be 0.8 and 100 trees reduce variance by a factor of 1.25, which is nearly pointless. With it, rho around 0.3 is common and the factor is about 3.",
+          "Out-of-bag error as a validation estimate: each tree leaves out about 37 percent of rows, so each row is out-of-bag for roughly 37 of 100 trees. Voting among those trees gives a prediction for that row without ever training on it, which is a genuine held-out estimate for free. On typical data the out-of-bag error is within half a percentage point of cross-validated error, at essentially zero extra cost.",
+          "Cost arithmetic: 500 trees on 100,000 rows with 40 features. Each tree on a bootstrap sample of 100,000 rows grows to depth 30 or so, with maybe 5,000 nodes, each requiring a scan over 6 candidate features and a sort, so rough estimates put one tree at 0.1 to 0.5 seconds. Five hundred trees is 50 to 250 seconds single-threaded, or under a minute on 8 cores. That is acceptable for a training job and unacceptable for a per-request prediction, which is why forests are trained offline and served as a saved model."
+        ]
+      }
+    ]
+  },
+  "785": {
+    "sections": [
+      {
+        "title": "🔍 Why fit the errors instead of the data",
+        "paras": [
+          "Bagging builds many models in parallel on different samples and averages them. Boosting builds models in sequence, each one trained to correct the mistakes the ensemble has made so far.",
+          "The difference in intent matters: bagging reduces variance, and boosting reduces bias. That is why boosting can take a set of weak models, barely better than guessing, and combine them into a strong one."
+        ]
+      },
+      {
+        "title": "⚙️ Residual fitting, learning rate, and the overfitting risk",
+        "paras": [
+          "Gradient boosting starts with a simple prediction, computes the residual for every example, fits a small tree to those residuals, and adds it to the ensemble scaled by a learning rate. Repeat. Each tree is deliberately shallow, often depth 3 to 6, because it only needs to improve on the current errors.",
+          "The learning rate controls how much of each tree is added. Smaller values need more trees and generalise better. This is why the two parameters are tuned together."
+        ],
+        "bullets": [
+          "Shallow trees plus many rounds beats deep trees plus few rounds in almost every case.",
+          "Subsampling rows and columns per round adds randomness and improves generalisation.",
+          "Early stopping on a validation set decides how many rounds are needed.",
+          "Boosting is sensitive to noisy labels, because it keeps fitting the noise that remains in the residuals.",
+          "XGBoost and LightGBM add regularisation on leaf values, which controls the classic boosting failure.",
+          "LightGBM grows leaves rather than levels, which is faster and needs fewer rounds but can overfit small data.",
+          "Categorical features are handled natively by some implementations, avoiding one-hot expansion."
+        ]
+      },
+      {
+        "title": "🧮 Boosting rounds as arithmetic",
+        "paras": [
+          "Start with a constant prediction equal to the mean. For four examples with targets 10, 20, 30, 40, the mean is 25, so the residuals are minus 15, minus 5, 5, 15.",
+          "Fit a small tree to those residuals. Suppose it splits into two groups predicting minus 10 and plus 10. With a learning rate of 0.3, the ensemble prediction becomes 25 minus 3 and 25 plus 3, so 22 and 28. The residuals shrink to minus 12, minus 2, 2, 12.",
+          "After 10 rounds at learning rate 0.3, the remaining residual is roughly 0.7 to the 10, about 0.028 of the original, so a residual of 15 becomes 0.42. That geometric decay is why the number of rounds behaves like a smoothing parameter.",
+          "Learning rate versus rounds: a rate of 0.1 typically needs 1,000 to 3,000 rounds to converge, while 0.3 needs 300 to 800. Total compute is similar, but the small rate usually generalises a point or two better. That is why practical work fixes a small rate and tunes the round count by early stopping.",
+          "The overfitting signature: training error keeps falling while validation error bottoms out and then rises. With boosting on a noisy dataset of 10,000 rows, validation error may bottom at round 400 and rise steadily after, reaching 8 percent worse by round 2,000. Early stopping at 400 is not a convenience, it is the model.",
+          "Comparison on tabular data, typical of published benchmarks: logistic regression at 78 percent, single tree at 76, random forest at 83, gradient boosting at 86. The 3-point gap between forest and boosting is real but costs far more tuning effort, which is the practical reason to try the forest first.",
+          "Class imbalance arithmetic: with 1 percent positives, scale the positive class weight by 100 so the loss treats each positive as 100 negatives. Without it, boosting fits the negative class almost exclusively and recall stays near zero."
+        ]
+      }
+    ]
+  },
+  "786": {
+    "sections": [
+      {
+        "title": "🔍 Two kinds of being wrong",
+        "paras": [
+          "A model can be wrong because it is too rigid to represent the pattern, or because it is so flexible that it follows the noise. The first is bias and shows up as error on both training and test data. The second is variance and shows up as a gap between them.",
+          "Every model sits somewhere on that spectrum, and the total error is the sum of the two plus irreducible noise. You cannot remove both, only balance them."
+        ]
+      },
+      {
+        "title": "⚙️ The trade-off and the ethical layer on top",
+        "paras": [
+          "Increasing complexity lowers bias and raises variance. There is a sweet spot, and it depends on how much data is available: more data tolerates more complexity, which is why the same model that overfits on 1,000 rows works on 1,000,000.",
+          "Ethics is a separate axis entirely. A model can be technically excellent, with a perfect bias-variance balance, and still be harmful because it encodes a historical injustice, because it was never tested on a subgroup, or because its errors fall on people who cannot contest them."
+        ],
+        "bullets": [
+          "Bias causes underfitting: the model misses real structure and every subgroup suffers.",
+          "Variance causes overfitting: the model is unstable and small data changes alter its decisions.",
+          "Irreducible error sets a floor that no model can beat, and knowing it prevents wasted effort.",
+          "Historical bias enters through the labels: a hiring model trained on past decisions learns past discrimination.",
+          "Representation bias enters through the data: a subgroup with 1 percent of the rows gets a model that barely fits it.",
+          "Measurement bias enters through the features: a proxy variable such as postcode can encode ethnicity.",
+          "Deployment bias enters through use: a model built for one population applied to another degrades quietly."
+        ]
+      },
+      {
+        "title": "🧮 Total error as a sum, and a fairness check",
+        "paras": [
+          "Suppose irreducible noise contributes an error of 2 units. A simple model has bias 6 and variance 1, so total error is 2 plus 6 plus 1, 9. A complex model has bias 1 and variance 8, so total 11. The simple model is better, and the reasoning is entirely in the two components.",
+          "With ten times more data, variance falls by roughly the square root of the data ratio, so the complex model's variance drops from 8 to about 2.5, and its total error becomes 5.5, now beating the simple model's 9. This is why the right complexity is not a property of the algorithm but of the dataset.",
+          "A fairness check in numbers: an overall accuracy of 92 percent. Broken down by group, group A is at 95 percent and group B at 78 percent. Group B is 12 percent of the data, which is why it barely moves the average. The model is excellent on average and poor for one in eight people, and the aggregate number hid it completely.",
+          "The same check for a positive rate: if the model flags 20 percent of group A and 45 percent of group B with the same underlying risk, the difference is either a real difference in the data or a bias in the features, and the only way to know is to look. Subgroup analysis is cheap and should be routine.",
+          "Threshold fairness has a mathematical conflict: equal false positive rates, equal false negative rates, and equal positive rates across groups cannot all hold at once unless the base rates are equal. This is a theorem, not a policy debate, so a system designer must choose which fairness definition the application requires and state it. Deciding it after deployment means the choice is made by whichever group complains first.",
+          "The cost of not auditing, in expectations: a model with a 5 percent error rate on a group of 100,000 people produces 5,000 wrong decisions. If each costs 200 to resolve and 1 in 100 is escalated, the annual cost exceeds a million. Auditing costs a few analyst-weeks. That arithmetic, more than principle, is why organisations audit now."
+        ]
+      }
+    ]
+  },
+  "788": {
+    "sections": [
+      {
+        "title": "🔍 Why one library dominates practical ML",
+        "paras": [
+          "There are dozens of machine learning libraries, each with its own interface. scikit-learn won the tabular space by making every model look the same: fit to learn, predict to produce outputs, transform to convert data.",
+          "That uniformity means learning one model teaches you all of them, and swapping algorithms becomes a one-line change. It is the single most useful API in practical machine learning."
+        ]
+      },
+      {
+        "title": "⚙️ The estimator API and why pipelines matter",
+        "paras": [
+          "An estimator has fit and predict. A transformer has fit and transform. A pipeline chains transformers into a final estimator, so the whole sequence is fitted and applied as one object.",
+          "The pipeline is not a convenience. It is the mechanism that prevents leakage, because cross-validation refits the whole pipeline on each fold, so the scaler never sees the validation data."
+        ],
+        "bullets": [
+          "fit learns from data, predict produces outputs, score returns a default metric.",
+          "fit_transform is fit followed by transform, used for the training set only.",
+          "A pipeline of scaler, encoder, and model behaves like a single estimator, including inside cross-validation.",
+          "ColumnTransformer applies different preprocessing to different columns, which almost every real dataset needs.",
+          "Train-test split with stratify preserves class proportions in both parts.",
+          "GridSearchCV and RandomizedSearchCV tune hyperparameters with cross-validation built in.",
+          "joblib saves a fitted model to disk, and the saved object includes the fitted preprocessing."
+        ]
+      },
+      {
+        "title": "🧮 What the pipeline saves you",
+        "paras": [
+          "Without a pipeline, scaling the whole dataset before splitting leaks the test mean into training. On 10,000 rows the effect is small, perhaps 0.1 percent of accuracy. On 200 rows it can be 3 to 5 points, and on a dataset with a time trend it can be enormous, because the scaler learns the future distribution.",
+          "With a pipeline, that class of bug cannot be written, which is worth more than the few points because it removes an entire category of silent error.",
+          "Cost of cross-validated tuning: a grid of 3 values for one parameter and 4 for another is 12 combinations, times 5 folds, so 60 fits. If a fit takes 0.2 seconds that is 12 seconds. Extend to 4 parameters with 5 values each, 625 combinations, and it is 625 fits, 125 seconds per fold set, 10 minutes total. That arithmetic is why RandomizedSearchCV exists: sampling 60 random combinations from a 625-point space usually finds a configuration within 1 percent of the best.",
+          "Model comparison arithmetic: five models on 5-fold cross-validation is 25 fits, which at 0.2 seconds each is 5 seconds. There is no reason to compare models on a single split when cross-validation is that cheap, and single-split comparisons regularly reverse when the fold changes.",
+          "The realistic pipeline for a tabular problem has 6 steps: read, split, column-specific preprocessing, model, cross-validated search, refit on all training data. Each is one line with scikit-learn, and the total script is about 30 lines. That is the main practical lesson: the library's value is not the algorithms, it is that the correct thing is also the short thing."
+        ]
+      }
+    ]
+  },
+  "789": {
+    "sections": [
+      {
+        "title": "🔍 Why features beat algorithms",
+        "paras": [
+          "Two models of the same family, one with raw columns and one with well-designed features, can differ by 10 accuracy points. Two models of different families on identical features rarely differ by more than three. The features are doing most of the work.",
+          "Feature engineering is where domain knowledge enters the model. It is also the part that cannot be automated away, because it requires knowing what the numbers mean."
+        ]
+      },
+      {
+        "title": "⚙️ The standard transformations and how importance guides them",
+        "paras": [
+          "Ratios combine two quantities into one that is often more informative than either: price per square metre says more than price and area separately. Differences capture change: days since last purchase. Aggregations summarise history: average order value over 90 days. Calendar features expose cycles that a raw timestamp hides.",
+          "Feature importance tells you which of these actually helped, which is how the loop closes."
+        ],
+        "bullets": [
+          "Ratios and differences often outperform the raw columns they are built from.",
+          "Time-based features such as day of week, month, and days since an event capture seasonality and recency.",
+          "Counts and frequencies of categorical values, such as how many times a customer appears, are powerful and cheap.",
+          "Interaction terms let a linear model represent a relationship that depends on another feature.",
+          "Binning a continuous variable can help tree models when the relationship is not monotonic, though trees usually find splits themselves.",
+          "Permutation importance is more trustworthy than the default tree importance, which favours high-cardinality features.",
+          "Dropping features that importance shows to be irrelevant often improves accuracy by reducing noise."
+        ]
+      },
+      {
+        "title": "🧮 A feature that changes the answer",
+        "paras": [
+          "Predicting loan default from income and loan amount. Income alone has a weak relationship, because a large loan is fine for a high earner and fatal for a low earner. The ratio of loan to income is a single feature with a much stronger relationship, and on typical data it can move accuracy from 68 to 78 percent with no change of algorithm.",
+          "Recency arithmetic: days since last purchase, from 0 to 900. Raw, the model must discover that the relationship decays. A transform such as whether the last purchase was within 30 days turns it into a binary feature that a shallow tree can use immediately, and recency buckets of 7, 30, 90, and 365 days often outperform the raw number.",
+          "Aggregation arithmetic: per-customer history of 50 transactions. Raw features might be five summary statistics, so 5 per customer. Adding count in the last 30 days, mean value in the last 90, and the trend between two windows turns 5 features into 12, and on churn problems those extra 7 frequently appear at the top of the importance list.",
+          "Feature importance as a cleanup tool: with 200 features, permutation importance often shows 150 with importance indistinguishable from zero. Dropping them reduces training time by 60 percent, reduces the risk of overfitting, and usually improves test accuracy by 1 to 2 points. The model gets better by seeing less.",
+          "The leakage caution in numbers: including a feature such as account closed date when predicting churn gives 99 percent accuracy in training because it is recorded only after the customer leaves. In production the feature is always missing at prediction time, and accuracy collapses. Any feature that is only available after the outcome is a leak, and importance analysis will rank it first, which is exactly the signal to investigate it."
+        ]
+      }
+    ]
+  },
+  "790": {
+    "sections": [
+      {
+        "title": "🔍 Why deployment is a different problem",
+        "paras": [
+          "In a notebook the data is already clean, the model is already trained, and the answer can wait. In production, input arrives malformed, the model must answer in milliseconds, and the data distribution drifts away from what was trained.",
+          "Deployment is the engineering of those three differences, and it is where most machine learning projects fail after succeeding in development."
+        ]
+      },
+      {
+        "title": "⚙️ Serving, versioning, monitoring",
+        "paras": [
+          "Batch scoring runs the model over a table on a schedule and writes predictions somewhere. Real-time serving wraps the model in a service that answers per request. The choice depends on how fresh the prediction must be and how expensive the features are to compute.",
+          "A model must be versioned as an artefact together with its preprocessing, its training data reference, and its evaluation results. Without that, a rollback is impossible and a regression cannot be explained."
+        ],
+        "bullets": [
+          "Batch is simpler and cheaper; real time is needed when the input only exists at request time.",
+          "The serving container must include the exact preprocessing, or the model receives differently shaped input than it was trained on.",
+          "Input validation catches schema changes before they become wrong predictions.",
+          "A fallback path, such as a rule or the previous model, keeps the product working when the model fails.",
+          "Monitoring covers latency, error rate, input distribution, and prediction distribution, in that order of urgency.",
+          "Data drift is a change in inputs; concept drift is a change in the input-output relationship, and only the second needs retraining urgently.",
+          "Shadow deployment runs the new model alongside the old one without affecting users, which is the safest way to compare."
+        ]
+      },
+      {
+        "title": "🧮 Latency, drift, and the cost of a stale model",
+        "paras": [
+          "Latency budget: a model with a 20-millisecond inference time plus 5 milliseconds of feature fetching fits a 50-millisecond budget with room for network. A gradient-boosted model with 500 trees may take 2 to 5 milliseconds, a large neural network on CPU 30 to 100, which is why real-time systems prefer small models or batch precomputation.",
+          "Throughput arithmetic: one model instance at 20 milliseconds per request serves 50 requests per second per core. For 2,000 requests per second you need 40 cores, or batching, or a smaller model. This number, not accuracy, often decides which model ships.",
+          "Drift detection in numbers: if the training data had a feature mean of 100 with a standard deviation of 10, and the live mean reaches 115, that is 1.5 standard deviations of shift, which is large enough to matter. A simple monitor alerts when the population stability index of a feature exceeds 0.2, a threshold that roughly corresponds to a meaningful distribution change.",
+          "Stale model cost: a churn model trained in January with 78 percent accuracy, applied in September after a pricing change, may fall to 71 percent. If each correctly identified churner is worth 50 in retained revenue and there are 10,000 customers with a 5 percent churn rate, the 7-point accuracy drop affects about 35 decisions, costing 1,750. Small, until you notice that the drop is concentrated in the segment that matters most.",
+          "Retraining cadence arithmetic: if drift is slow, quarterly retraining is enough; if it is fast, weekly. The decision comes from monitoring the gap between predicted and observed outcomes, not from a schedule someone chose by feel. Recording the outcome of every prediction is what makes that measurement possible, and it is the single most valuable instrumentation a deployed model can have."
+        ]
+      }
+    ]
+  }
+}

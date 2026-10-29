@@ -72,7 +72,7 @@ describe('chapter/accessBar.vue', () => {
     expect(wrapper.find('.uswitch').exists()).toBe(false)
   })
 
-  it('教师（teacherCourseIds 含 courseId）canEdit=true', async () => {
+  it('教师（teacherCourseIds 含 courseId）canEdit=true 但不显示开放开关', async () => {
     setMockAuthUser(
       { id: 3, name: 'teacher', username: 'teacher' },
       [{ code: 'teacher' }],
@@ -82,6 +82,23 @@ describe('chapter/accessBar.vue', () => {
     const { default: AccessBar } = await import('../../../components/chapter/accessBar.vue')
     const wrapper = mount(AccessBar, {
       props: { chapterId: 10, courseId: 1, chapterData: { isOpen: false } },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    expect(wrapper.find('.uselect').exists()).toBe(true)
+    expect(wrapper.find('.uswitch').exists()).toBe(false)
+  })
+
+  it('课程编辑者（editorCourseIds 含 courseId）显示开放开关', async () => {
+    setMockAuthUser(
+      { id: 4, name: 'editor', username: 'editor' },
+      [{ code: 'teacher' }],
+      [],
+      { editorCourseIds: [1] },
+    )
+    const { default: AccessBar } = await import('../../../components/chapter/accessBar.vue')
+    const wrapper = mount(AccessBar, {
+      props: { chapterId: 10, courseId: 1, chapterData: { isOpen: true } },
       global: _globalConfig,
     })
     await flushPromises()

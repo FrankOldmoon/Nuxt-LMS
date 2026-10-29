@@ -1,0 +1,435 @@
+{
+  "697": {
+    "sections": [
+      {
+        "title": "🔍 Why a spreadsheet stops being enough",
+        "paras": [
+          "A file of rows works until two things happen at once: the data outgrows one screen, and more than one person touches it. The moment two people open the same sheet, the last save wins and one set of edits disappears. Nothing in the file format prevents it, because a file has no notion of a transaction.",
+          "The other failure is subtler. In a spreadsheet the same fact gets written many times, so the file can hold two different answers to the same question. A database exists to make that state impossible, not merely unlikely."
+        ]
+      },
+      {
+        "title": "⚙️ Structure, relationships, and queries",
+        "paras": [
+          "A database is an organised collection of data designed for efficient access and update. Three ideas do most of the work.",
+          "Structure: data lives in tables with declared columns and types, so every row has the same shape and the system knows what a value means. Relationships: tables reference each other through keys, so a fact is stored once and pointed at. Queries: a declarative language retrieves exactly what is needed without the application walking the data itself."
+        ],
+        "bullets": [
+          "A table is a set of rows with a fixed set of typed columns; a row is one entity.",
+          "A key identifies a row uniquely, which is what makes updating one record safe.",
+          "A foreign key guarantees that a reference points at a row that exists.",
+          "A query describes the result, not the procedure, so the engine is free to choose an efficient plan.",
+          "Concurrent access is managed by the database, not by the application, which is the main reason to move off files.",
+          "Constraint enforcement lives in one place, so a bug in one program cannot corrupt the data for every other program."
+        ]
+      },
+      {
+        "title": "🧮 The numbers that force the decision",
+        "paras": [
+          "A school with 1,200 students, 60 courses, and 8,000 enrolments. In a flat file, each enrolment row repeats the student name, class, course title, and teacher name: about 120 bytes of which only 20 are the enrolment itself. The file is about 1 MB, which is nothing.",
+          "Now change a teacher's name. In the flat file that is 8,000 divided by 60, roughly 133 rows to edit, and any row missed leaves the data inconsistent. In a normalised design it is one row in the teacher table. The saving is not storage, it is the number of places a fact can be wrong.",
+          "Concurrency is where the file truly fails. If 30 teachers each save the mark sheet during one exam week and each edit takes 2 seconds of read-modify-write, two edits overlapping within that window lose data. With 30 people over an hour the probability of at least one collision is high enough that it happens most terms. A database serialises conflicting writes, so the answer is always one of the two edits, never a corrupted mixture.",
+          "Size still matters eventually: 8,000 rows is trivial, but a school district with 1.2 million enrolments and a 120-byte row is 150 MB per year of history, and a query like how many students took both physics and chemistry needs an index to answer in milliseconds rather than minutes."
+        ]
+      }
+    ]
+  },
+  "698": {
+    "sections": [
+      {
+        "title": "🔍 Why software sits between the data and the application",
+        "paras": [
+          "Anyone can write bytes to a file. Doing it safely is hard: you must decide where the bytes go, keep a map of what is where, handle two writers at once, survive a power cut in the middle of a write, and refuse to let a buggy program store a negative age.",
+          "A database management system does all of that once, for every application. The application talks to the DBMS and inherits the guarantees, which is why the value of a DBMS is not storage but the promises it keeps about that storage."
+        ]
+      },
+      {
+        "title": "⚙️ What the DBMS actually provides",
+        "paras": [
+          "A DBMS is several subsystems wearing one name, and knowing them explains most of its behaviour under load.",
+          "The catalog stores the schema itself: which tables exist, their columns, types, constraints, and indexes. The query processor parses SQL, rewrites it, plans it, and executes the plan. The storage engine manages pages on disk and the buffer pool in memory. The transaction manager provides atomicity, isolation, and durability. The security layer authenticates users and checks privileges."
+        ],
+        "bullets": [
+          "The catalog is itself tables, which is why you can query the list of tables.",
+          "The optimiser chooses among access paths, and that choice is where most performance comes from.",
+          "The buffer pool keeps hot pages in RAM, so the same caching argument as CPU caches applies at the page level.",
+          "Write-ahead logging records changes before applying them, which is how recovery after a crash works.",
+          "Access control is per object and per operation: SELECT on a table, UPDATE on a column, EXECUTE on a procedure.",
+          "Examples worth naming: PostgreSQL, MySQL, SQLite for relational; MongoDB for documents; Redis for key-value.",
+          "SQL is the standard interface, so many applications can be ported between engines with modest changes."
+        ]
+      },
+      {
+        "title": "🧮 What the guarantees cost",
+        "paras": [
+          "Suppose an application writes 2,000 rows per second on average. Without a DBMS, each write is a file append plus an in-memory index update, and a crash during a batch loses whatever was not flushed. Estimating that loss is impossible because it depends on the crash timing, which is exactly the problem.",
+          "With a DBMS and write-ahead logging, each transaction costs an extra log record and, with the default durable setting, an fsync. An fsync on an SSD costs about 0.1 milliseconds, so 2,000 transactions per second consumes 0.2 seconds of every second, 20 percent of the disk's sequential capability, to buy the guarantee that a committed transaction survives the crash. Batching ten rows per transaction cuts that to 2 percent.",
+          "Now concurrency. If each transaction holds locks for 1 millisecond and the system handles 200 at once, expected contention is manageable; at 2,000 at once, the probability of two transactions touching the same row in the same millisecond rises sharply and throughput falls as transactions wait. This is why the DBMS exposes isolation levels: turning down the guarantee turns up the throughput, and the choice has to be made deliberately.",
+          "Security: a single missing check in an application leaks data once; a privilege system in the DBMS covers every program that connects. For a system with 50 tables and 4 roles, that is 200 decisions made once in the catalog instead of 200 checks scattered across code."
+        ]
+      }
+    ]
+  },
+  "699": {
+    "sections": [
+      {
+        "title": "🔍 Why one model is not enough",
+        "paras": [
+          "A model is a decision about how data is shaped, and the shape decides what is cheap. Relational tables make joins and constraints cheap and nested documents expensive. Document stores make one aggregate cheap and cross-document consistency expensive. Neither is better; they answer different questions.",
+          "Choosing badly shows up years later as a rewrite, because the model is the hardest thing to change once data exists."
+        ]
+      },
+      {
+        "title": "⚙️ The models and what each optimises",
+        "paras": [
+          "The relational model stores data in tables of rows and columns, with keys linking them, and it assumes the schema is known in advance. Its strength is that any question can be asked with a query, including ones nobody anticipated when the schema was designed.",
+          "The document model stores a nested object as one unit, so reading a whole order with its items is a single fetch. Key-value stores expose only get and put on a key, which is enough for caches and sessions. Graph stores make traversal along edges the primitive operation. Columnar stores group values by column, which suits aggregation over huge tables."
+        ],
+        "bullets": [
+          "Relational: strong schema, joins, transactions, ad hoc queries; the default for business data.",
+          "Document: flexible schema, one round trip per aggregate, weaker cross-document constraints.",
+          "Key-value: constant-time lookup, no query language, no relationships.",
+          "Graph: efficient multi-hop traversal, awkward for bulk aggregation.",
+          "Columnar: excellent compression and scan speed for analytics, poor for single-row updates.",
+          "The trade is almost always between write-time structure (schema, normalisation) and read-time work (joins, application logic)."
+        ]
+      },
+      {
+        "title": "🧮 Sizing the same data in two models",
+        "paras": [
+          "Take an order with 12 line items. Relational: one row in orders, 12 rows in order_items, so 13 rows across two tables. Reading the order needs one join, and the total data is about 13 x 60 bytes = 780 bytes plus key overhead.",
+          "Document: one document containing the order and an array of 12 items, about 900 bytes, and reading it is one lookup by id. For the read pattern show me this order, the document is faster because there is no join.",
+          "Now the query nobody planned: total revenue by product across all orders. Relational answers it with one indexed aggregate over order_items. Document stores must scan every document and unwind every array: 100,000 orders means 100,000 document reads and 1.2 million array elements in memory. That is minutes of work for what a relational engine does in milliseconds.",
+          "The storage arithmetic also favours documents only slightly: 900 versus 780 bytes is 15 percent. The real difference is access pattern, not size. A rule of thumb that follows: if the whole aggregate is always read together and never queried across, a document is fine; if you will ask unexpected questions, the relational model pays for itself the first time someone writes an ad hoc query."
+        ]
+      }
+    ]
+  },
+  "701": {
+    "sections": [
+      {
+        "title": "🔍 Why declare the shape before storing data",
+        "paras": [
+          "A schema is a promise made in advance. Declaring that age is an integer means the engine can reject a value of abc and can store 25 in four bytes instead of a string. It also means a query can compute an average with no parsing at all.",
+          "The alternative, letting every row have its own shape, is flexible at write time and expensive at read time: every query must check what it found, and no index can help because the types vary."
+        ]
+      },
+      {
+        "title": "⚙️ Columns, types, and the meaning of NULL",
+        "paras": [
+          "A row is one entity, a column is one attribute of every entity, and each column has a type that constrains what may be stored. A table therefore holds only entities that share the same attributes, which is what makes a single scan meaningful.",
+          "NULL is the part that surprises everyone. It does not mean zero or empty string; it means unknown or absent. Because it is unknown, any arithmetic involving NULL yields NULL, and any comparison against NULL yields NULL rather than true or false."
+        ],
+        "bullets": [
+          "Common types: integer, numeric or decimal for exact money, text, date and timestamp, boolean, JSON for semi-structured data.",
+          "Use numeric rather than floating point for currency, because 0.1 is not exactly representable in binary.",
+          "A column can be declared NOT NULL, which turns a whole class of bugs into a write error.",
+          "The correct test for absence is IS NULL; writing age = NULL never matches anything.",
+          "A row is accepted or rejected as a whole, so a constraint never leaves half a row stored.",
+          "Wide tables with mostly NULL columns are a sign the design needs splitting, not more columns.",
+          "Declaring a default value means an insert that omits the column still produces a complete row."
+        ]
+      },
+      {
+        "title": "🧮 What the types cost and how NULL behaves",
+        "paras": [
+          "Storage: an integer column takes 4 bytes, a boolean 1, a timestamp 8, a text column only the actual length plus a small header. A table of 1 million rows with id (4), name (average 20), age (4), and active (1) costs about 29 bytes per row, so 29 MB. Declaring age as text would push it to about 32 bytes and would break every numeric comparison.",
+          "NULL arithmetic, concretely: for 10 rows where 3 have a NULL score, SUM ignores the NULLs and returns the total of 7 values. AVG divides by 7, not 10, so the average is higher than dividing by the row count. COUNT(*) returns 10, COUNT(score) returns 7. Choosing the wrong one silently misreports results, which is one of the most common reporting bugs in practice.",
+          "Comparisons: WHERE score = 100 returns only exact matches and excludes NULLs, and WHERE score <> 100 also excludes NULLs, because the comparison with NULL is unknown rather than true. To include unknown values you must write WHERE score IS NULL OR score <> 100, which is verbose enough that people forget it.",
+          "Sizing a NULL-heavy table: a table with 40 columns where only 5 are usually filled still allocates a slot per row for all 40 in most engines. Splitting the optional 35 into a second table linked by id turns a 400-byte row into a 60-byte row plus a second table touched only when needed, which is a real gain when the hot query reads only the first five columns."
+        ]
+      }
+    ]
+  },
+  "702": {
+    "sections": [
+      {
+        "title": "🔍 Why identity has to be enforced by the database",
+        "paras": [
+          "An application can check for duplicates before inserting, and it will be correct as long as only one thing ever inserts. With two programs and a few hundred concurrent requests, the check and the insert are separate steps and another writer can slip between them. Only the database can make the pair atomic.",
+          "That is the general shape of every constraint: it is a rule the engine enforces at write time, so no application can violate it and no future program can forget it."
+        ]
+      },
+      {
+        "title": "⚙️ Keys and the constraint family",
+        "paras": [
+          "A primary key is a column or set of columns that uniquely identifies each row, and it cannot be NULL. A candidate key is any column set with that property; the primary key is the one you choose. A foreign key is a column whose values must appear in another table's key, which is how references are kept honest.",
+          "The remaining constraints cover the rest of the invariant surface."
+        ],
+        "bullets": [
+          "UNIQUE allows many rows but forbids duplicates, and most engines permit several NULLs since NULL is unknown.",
+          "NOT NULL declares that absence is not allowed, which is the single most valuable constraint in practice.",
+          "CHECK restricts values, for example that a mark is between 0 and 100.",
+          "DEFAULT supplies a value when the insert omits the column.",
+          "A composite key spans several columns, which is how a junction table is keyed.",
+          "A surrogate key is a generated number with no meaning; a natural key is real data such as an email address.",
+          "ON DELETE CASCADE, RESTRICT, or SET NULL decides what happens to children when a parent disappears."
+        ]
+      },
+      {
+        "title": "🧮 Natural versus surrogate, by the numbers",
+        "paras": [
+          "Suppose you key students by email address. An email is 24 bytes on average, and every one of 8,000 enrolment rows storing a foreign key copies those 24 bytes: 192 KB. An integer surrogate key is 4 bytes: 32 KB. The storage difference is real but not decisive.",
+          "The decisive difference appears when a student changes email. With a natural key you must update the student row and every referencing row, which touches 8,000 index entries and risks breaking external systems that stored the old address. With a surrogate key you update one row and nothing else changes.",
+          "Now the constraint cost. Enforcing a foreign key on insert requires an index lookup in the parent table: about 4 B-tree page reads at 3 levels, roughly 0.05 milliseconds on SSD. At 500 inserts per second that is 25 milliseconds per second of index work, negligible. The same 500 inserts into a table with 5 indexes cost 5 index updates each, so 2,500 B-tree modifications per second, which is where write amplification starts to hurt.",
+          "A check constraint on a range costs a comparison, essentially free. A UNIQUE constraint costs an index lookup, which is the same cost as the foreign key. That ranking is why the advice is to add NOT NULL and CHECK freely, UNIQUE when the invariant matters, and to think hard before adding a sixth index to a write-heavy table.",
+          "The classic failure the constraints prevent: 12 enrolment rows pointing at student 999 after that student was deleted. Without a foreign key the rows remain and every join silently drops them, so the enrolment count is wrong and nothing reports an error. With RESTRICT the delete fails, which is the correct outcome."
+        ]
+      }
+    ]
+  },
+  "703": {
+    "sections": [
+      {
+        "title": "🔍 Why duplication is the enemy",
+        "paras": [
+          "If the teacher name were written into every enrolment row, the data would still look right most of the time. The problem appears at update: two rows can disagree, and once they do there is no way for the system to know which is correct. Redundancy does not only waste space, it destroys the ability to answer a question definitively.",
+          "Relationships solve it by storing each fact once and referring to it. The cost is that reading a combined answer now needs a join, which is a small price compared with ambiguity."
+        ]
+      },
+      {
+        "title": "⚙️ The three cardinalities and where the key goes",
+        "paras": [
+          "A relationship's cardinality says how many rows on each side may participate, and it determines where the foreign key lives.",
+          "One-to-many: one teacher, many students. The foreign key goes on the many side, because each student belongs to exactly one teacher. One-to-one: a user and a profile. The key goes on either side but usually on the dependent table, and a UNIQUE constraint keeps it at one. Many-to-many: students and courses. Neither side can hold the key, because each student has many courses and each course has many students, so a third table is required."
+        ],
+        "bullets": [
+          "A junction table holds two foreign keys and usually makes the pair its primary key.",
+          "An optional relationship means the foreign key may be NULL, which is why NOT NULL appears on the mandatory side.",
+          "A self-referencing relationship uses a foreign key to the same table, which is how an employee points at a manager.",
+          "Cascade rules belong to the relationship, not to the application, so the behaviour is consistent everywhere.",
+          "A many-to-many with extra attributes, such as the enrolment date, puts those attributes on the junction table.",
+          "Storing a comma-separated list of ids in one column is the anti-pattern that this design exists to prevent."
+        ]
+      },
+      {
+        "title": "🧮 Counting rows in a many-to-many",
+        "paras": [
+          "Take 300 students and 40 courses, where the average student takes 6 courses. The junction table has 300 x 6 = 1,800 rows. The courses table stores each course once, so if a course title changes it is one update instead of 45 rows.",
+          "Compare with the comma-separated shortcut: each student row holds a string like 3,7,12,19,22,40, about 20 characters. Finding who takes course 12 becomes a substring search with no index possible, so a full scan of 300 rows. That is fine at 300 and hopeless at 3 million, which is exactly the point at which people ask for a redesign under pressure.",
+          "Now the query cost with a proper junction table. Who takes course 12 becomes an index lookup on the course_id column returning 45 rows, then 45 primary key lookups for the names: about 46 page accesses, well under a millisecond. The same question on the string column is 300 scans now and 3 million later.",
+          "A join count worth remembering: with 1,800 junction rows and 40 courses, joining to count enrolments per course means each course row matches about 45 junction rows. The engine can either scan the junction table once and group, or probe an index 40 times. Both are cheap here; the indexed probe becomes the only viable plan at a few million rows."
+        ]
+      }
+    ]
+  },
+  "705": {
+    "sections": [
+      {
+        "title": "🔍 Why SQL describes the answer, not the steps",
+        "paras": [
+          "In a normal program you write a loop, and the loop is the plan. In SQL you write what the result should look like, and the engine decides which index to use, in what order to join, and whether to sort. That separation is what allows the same query to run fast after a schema change or an index addition without editing the code.",
+          "It also means you cannot reason about SQL performance from the text alone. The text says what; the plan says how; and the plan is what you must read when something is slow."
+        ]
+      },
+      {
+        "title": "⚙️ Projection, aliases, and the order things happen",
+        "paras": [
+          "SELECT lists the columns to return, which is called projection. Choosing columns rather than star matters for three reasons: fewer bytes travel from disk through the buffer pool to the client, an index that covers only the needed columns can avoid touching the table at all, and the result is stable when the schema grows.",
+          "The written order of a query is not the order of evaluation. Almost every engine conceptually evaluates FROM first, then WHERE, then GROUP BY, then HAVING, then SELECT, then ORDER BY, then LIMIT. That is why a column alias defined in SELECT cannot be used in WHERE in standard SQL."
+        ],
+        "bullets": [
+          "SELECT * returns every column, including ones added later, which silently breaks code that indexes by position.",
+          "AS gives a column a new name in the result, which matters when results are consumed by name.",
+          "DISTINCT removes duplicate result rows but costs a sort or hash, so it is not a cheap filter.",
+          "Expressions are allowed in the select list, but they cannot use an index unless a matching expression index exists.",
+          "LIMIT without ORDER BY returns an arbitrary subset, which is a bug waiting to be reported.",
+          "Queries are composable: a result can feed another query, which is the basis of subqueries and views."
+        ]
+      },
+      {
+        "title": "🧮 Why column choice changes the cost",
+        "paras": [
+          "A table of 1 million orders with 20 columns, averaging 300 bytes per row, is about 300 MB. SELECT * over it moves 300 MB from disk to client. Selecting only id and amount, at 12 bytes each, is 12 MB: 25 times less traffic for the same row count.",
+          "Add an index on (customer_id, amount). A query asking for those two columns for one customer can be answered from the index alone, a covering index scan of maybe 20 entries, 4 page reads. The same query written with SELECT * must follow each index entry to the table to fetch the other 18 columns, so 20 random page reads instead of 4. Five times the work for information nobody uses.",
+          "Sorting is another hidden cost. ORDER BY on an unindexed column of 1 million rows needs a sort, and if the rows do not fit in the working memory allowance (often a few tens of megabytes) the engine spills to disk. Sorting 300 MB is seconds; the same query with an index on the sort column is a sequential walk, milliseconds.",
+          "A practical rule with numbers: if a query returns 3 columns out of 20 and runs 1,000 times per second, the difference between 300 MB and 12 MB per full scan is not academic, because 1,000 full scans of 300 MB is 300 GB of I/O per second, which no disk can do. At that point the fix is an index and a narrow projection, not a faster machine."
+        ]
+      }
+    ]
+  },
+  "706": {
+    "sections": [
+      {
+        "title": "🔍 Why filtering is the highest-leverage clause",
+        "paras": [
+          "A query that returns 1,000 of 1 million rows and filters after reading them has already paid for the million. Filtering early is the difference between an index seek of 4 page reads and a full scan of 40,000 page reads.",
+          "Sorting has the same shape: if the required order can be produced by an index, no sort happens at all; if not, the engine materialises and sorts, which costs memory and possibly disk."
+        ]
+      },
+      {
+        "title": "⚙️ Conditions, precedence, and the NULL trap",
+        "paras": [
+          "WHERE keeps only rows for which the condition is true. The comparison operators are the usual ones plus BETWEEN, IN, LIKE, and IS NULL. AND binds tighter than OR, which is why mixing them without parentheses produces results people do not expect.",
+          "ORDER BY sorts the result, ascending by default, with NULLs placed either first or last depending on the engine. LIMIT truncates the result and is only meaningful together with an order."
+        ],
+        "bullets": [
+          "WHERE mark > 60 AND grade = A OR late = true does not mean what it looks like; add parentheses.",
+          "LIKE abc% can use an index; LIKE %abc cannot, because the missing prefix gives the index nothing to seek on.",
+          "IN (1,2,3) is equivalent to a chain of ORs and is usually optimised into one index probe.",
+          "BETWEEN is inclusive at both ends, which is a frequent source of off-by-one errors on dates.",
+          "Comparing a column to NULL never matches; use IS NULL.",
+          "Comparing a text column to a number, or a date to a string, can prevent index use because the types must be converted.",
+          "ORDER BY with LIMIT is the standard top-N idiom, and an index on the sort column makes it nearly free."
+        ]
+      },
+      {
+        "title": "🧮 Selectivity arithmetic",
+        "paras": [
+          "Selectivity is the fraction of rows a condition keeps. A primary key equality has selectivity 1 in 1,000,000. A status column with 3 values has 1 in 3. An index is only worth using when the selectivity is low enough that the seek plus the row fetches beats a sequential scan; the crossover on a 1-million-row table is usually around 5 to 10 percent.",
+          "Concretely, on a table of 1 million rows in 40,000 pages of 8 KB: a full scan reads 40,000 pages sequentially, which at 0.1 milliseconds per page is 4 seconds of I/O, though disk readahead makes it faster. An index seek returns 1,000 rows: 4 index pages plus up to 1,000 table page reads. If those are random and each costs 0.1 milliseconds, that is 100 seconds, far worse than the scan. This is why an index on a low-selectivity column can be ignored by the planner and should be.",
+          "Change the condition to a unique id: 4 index pages plus 1 table page, about 0.5 milliseconds against 4 seconds. Five thousand times faster, and the arithmetic is the whole argument for indexes.",
+          "Sorting arithmetic: 1 million rows of 100 bytes is 100 MB. Sorting needs roughly two to three times the data size in memory for a comparison sort, so 200 to 300 MB, which exceeds a typical 64 MB work memory and spills to disk in two passes. The cost jumps from milliseconds to seconds. Selecting the same rows in index order avoids the sort entirely, which is why ORDER BY on an indexed column with LIMIT 20 can be instant even on a huge table."
+        ]
+      }
+    ]
+  },
+  "707": {
+    "sections": [
+      {
+        "title": "🔍 Why asking one row is not the same as asking a summary",
+        "paras": [
+          "Most real questions are not about individual rows: what is the average mark, how many enrolments per course, which class has the most absences. Answering those by fetching every row and summing in the application moves megabytes over the network to compute a single number.",
+          "Aggregation moves the computation to where the data lives, and grouping lets one query answer many of those questions at once."
+        ]
+      },
+      {
+        "title": "⚙️ Aggregates, groups, and the clause that filters after",
+        "paras": [
+          "An aggregate collapses many rows into one value: COUNT, SUM, AVG, MIN, MAX. Without GROUP BY, the whole table is one group, which is why SELECT AVG(mark) FROM results returns a single row.",
+          "GROUP BY partitions the rows by the listed columns and computes the aggregates once per partition, producing one output row per distinct combination. HAVING then filters those groups, because WHERE has already run and cannot see aggregates."
+        ],
+        "bullets": [
+          "Every column in the select list must either be aggregated or appear in GROUP BY, which is what makes the result well defined.",
+          "COUNT(*) counts rows; COUNT(column) counts non-NULL values in that column, so they differ whenever NULLs exist.",
+          "SUM and AVG ignore NULLs, which changes the denominator of AVG.",
+          "COUNT(DISTINCT column) counts distinct non-NULL values and is more expensive because it needs deduplication.",
+          "WHERE filters rows before grouping, HAVING filters groups after; putting an aggregate in WHERE is an error.",
+          "GROUP BY on an indexed column can avoid a sort, since the index already provides the order.",
+          "Aggregates without GROUP BY over an empty table return one row for COUNT and NULL for SUM and AVG."
+        ]
+      },
+      {
+        "title": "🧮 Averages, grouping, and the cost of sorting groups",
+        "paras": [
+          "A marks table with 1,000 rows where 100 students have a NULL mark. SELECT AVG(mark) divides the total by 900, not 1,000, so an average of 72.5 over those 900 differs from 65.25 which is what dividing by 1,000 would give. That 7-point gap is the classic NULL-in-average bug.",
+          "Grouping arithmetic: 1,000 rows across 20 classes means 50 rows per group. The engine hashes each row on the class column into one of 20 buckets and accumulates four aggregates. That is 1,000 hash operations and 20 output rows, essentially one pass. The same numbers with 900,000 distinct classes would need 900,000 groups in memory and would spill, which is why high-cardinality GROUP BY is expensive.",
+          "Sorting versus hashing: an unindexed GROUP BY typically sorts the table first, 1,000 rows is trivial but 10 million rows is 1 GB sorted, seconds of work. With an index on the grouping column the engine walks the index in order and emits each group as it finishes, with no sort and no buffer. That is the single largest optimisation available for reporting queries.",
+          "One more: counting distinct users per day over a year. With 1 million events per day, COUNT(DISTINCT user_id) per day requires remembering the distinct users for that day only, so 365 passes of 1 million rows. Doing it in one grouped pass means grouping by (day, user_id) first, which is 365 million groups in the worst case and far slower. Batching by day, or pre-aggregating into a summary table, is what makes the report finish."
+        ]
+      }
+    ]
+  },
+  "709": {
+    "sections": [
+      {
+        "title": "🔍 Why data is split across tables in the first place",
+        "paras": [
+          "Normalisation puts each fact in one place, which means a question spanning two facts now spans two tables. A join is how they are recombined: it matches rows from two tables on a related column, so the answer is assembled at query time from data stored once.",
+          "The alternative, storing everything together, avoids the join and reintroduces every update anomaly. A join is the price of normalisation, and it is a price worth paying because the engine can do the matching far faster than the storage can be kept consistent by hand."
+        ]
+      },
+      {
+        "title": "⚙️ The join types and the clause that does the matching",
+        "paras": [
+          "INNER JOIN keeps only pairs where the condition holds on both sides. LEFT JOIN keeps every row of the left table and fills NULLs where the right side has no match, which is how you find things that are missing. RIGHT JOIN is the mirror image, FULL OUTER JOIN keeps unmatched rows from both sides, and CROSS JOIN produces every combination.",
+          "The ON clause states the matching condition; putting a filter in WHERE instead of ON changes the result for outer joins, because WHERE runs after the NULLs have been introduced."
+        ],
+        "bullets": [
+          "A join without ON is a cross join, and its row count is the product of the two tables.",
+          "Duplicates on the join column multiply: 1 row matching 3 rows produces 3 rows.",
+          "LEFT JOIN with WHERE right.id IS NULL is the standard way to find parents without children.",
+          "A condition on the right table belongs in ON for a LEFT JOIN if unmatched left rows must survive.",
+          "Joining n tables is n minus 1 joins; each one can multiply or reduce the row count.",
+          "An index on the join column turns a nested loop into an index seek per outer row, which is usually the difference between seconds and minutes.",
+          "Hash joins build a table in memory from the smaller side and probe it with the larger, which helps when no index exists."
+        ]
+      },
+      {
+        "title": "🧮 Row counts for the sample data",
+        "paras": [
+          "users has 3 rows: id 1 alice, 2 bob, 3 carol. orders has 3 rows: order 10 for user 1 amount 100, order 11 for user 1 amount 200, order 12 for user 2 amount 50.",
+          "INNER JOIN users to orders on users.id = orders.user_id produces 3 rows: alice twice and bob once. Carol disappears because she has no orders.",
+          "LEFT JOIN users to orders produces 4 rows: alice twice, bob once, and carol once with NULL order fields. Counting rows tells you carol exists but has never ordered; counting only order ids tells you 3 orders exist.",
+          "A tempting mistake: counting users with SELECT COUNT(*) after the LEFT JOIN returns 4, not 3, because alice appears twice. The correct count of users is COUNT(DISTINCT users.id) which is 3, or a subquery counting users separately.",
+          "Now a cross join for scale: 3 users x 3 orders = 9 rows, which is why a forgotten ON clause on two tables of 100,000 rows produces 10 billion rows and a query that never finishes. It is the single most common accidental catastrophe in SQL.",
+          "Cost without an index: joining 3 users to 3 orders by nested loops is 9 comparisons, trivial. With 1 million users and 5 million orders, a nested loop is 5 trillion comparisons, impossible; with an index on orders.user_id it is 1 million seeks of about 4 pages, a few seconds. Same query, and the index is the entire difference."
+        ]
+      }
+    ]
+  },
+  "710": {
+    "sections": [
+      {
+        "title": "🔍 Why nest one query inside another",
+        "paras": [
+          "Some questions are naturally two steps: find the top score, then find who has it. You could run the first query and paste the number into the second, but that breaks the moment the data changes and cannot be parameterised.",
+          "A subquery expresses the two steps as one statement, so the database sees the whole problem and can optimise it as a unit."
+        ]
+      },
+      {
+        "title": "⚙️ Where subqueries may appear and what correlated means",
+        "paras": [
+          "A subquery in WHERE supplies a value or a set to compare against. In FROM it acts as a derived table, which is how you aggregate an aggregate. In SELECT it produces a per-row scalar, which is convenient and easy to make slow.",
+          "A correlated subquery references a column of the outer query, so it cannot be evaluated once; it runs per outer row. That is a per-row cost multiplied by the table size, which is exactly the pattern that turns a fast query into a slow one."
+        ],
+        "bullets": [
+          "A scalar subquery must return exactly one row and one column, or the query fails.",
+          "IN with a subquery compares against a set and is often rewritten into a semi-join by the planner.",
+          "EXISTS stops at the first matching row, so it is often faster than IN when the set is large.",
+          "NOT EXISTS and NOT IN differ in the presence of NULLs; NOT IN can return nothing at all if the subquery yields a NULL.",
+          "A derived table in FROM must be aliased in most engines.",
+          "A correlated subquery in SELECT runs once per output row, which is the hidden quadratic.",
+          "Common table expressions give a subquery a name, which improves readability without changing the plan in most engines."
+        ]
+      },
+      {
+        "title": "🧮 Correlated cost versus a join",
+        "paras": [
+          "Find each student's best mark with a correlated subquery: SELECT name, (SELECT MAX(mark) FROM results r WHERE r.student_id = s.id) FROM students s. With 1,000 students and 100,000 result rows, the subquery runs 1,000 times and each run scans or seeks. With an index on student_id each run is about 4 page reads, so 4,000 reads, which is fine.",
+          "Remove the index and each run becomes a scan of 100,000 rows, so 100 million row comparisons. At roughly 10 million rows per second that is 10 seconds for a query that should be instant. Nothing about the SQL text changed; only the index did.",
+          "The join equivalent groups results once: one pass over 100,000 rows, a hash or sort into 1,000 groups, then 1,000 lookups into students. That is 101,000 operations against 100 million. The known pattern is that per-row subqueries scale as rows times subquery cost, while a join scales as the sum of the tables.",
+          "IN versus EXISTS with a large set: WHERE id IN (SELECT ...) returning 500,000 ids builds that set, sorts it, and probes. EXISTS with an index on the correlation column tests one row and stops. For a set of 500,000 against 1,000 outer rows, IN costs 500,000 to build plus 1,000 probes, while EXISTS costs 1,000 probes if there are matches. Both are linear, but one has a large constant.",
+          "The NULL trap in numbers: if a NOT IN subquery returns any NULL, the whole predicate evaluates to unknown for every row and the query returns zero rows, not an error. A query that suddenly returns nothing after a data quality issue is almost always this."
+        ]
+      }
+    ]
+  },
+  "711": {
+    "sections": [
+      {
+        "title": "🔍 Two abstractions that solve different problems",
+        "paras": [
+          "A view answers how do I avoid repeating this complicated query, and how do I let someone see part of a table without seeing the rest. An index answers how do I find these rows without reading everything.",
+          "They are often mentioned together because both are saved objects that change nothing about the stored data, but one is about expression and the other about access speed."
+        ]
+      },
+      {
+        "title": "⚙️ Saved queries and B-trees",
+        "paras": [
+          "A view is a named query. Querying the view runs the underlying query, so a view costs nothing extra except the chance to be inlined or optimised together with the outer query. A materialised view stores the result physically, which makes reads fast and requires a refresh policy.",
+          "An index is a separate structure, usually a B-tree, mapping column values to row locations. The B-tree stays shallow because each node holds hundreds of keys: three or four levels cover millions of rows, so a lookup is a handful of page reads instead of a full scan."
+        ],
+        "bullets": [
+          "A view hides complexity and can restrict columns, but it does not by itself restrict rows unless it includes a filter.",
+          "A view does not speed up a query; it reorganises how the query is written.",
+          "A materialised view speeds up reads and makes every write to the base table potentially more expensive.",
+          "A B-tree supports equality, range, and prefix queries plus ordered retrieval.",
+          "A hash index supports equality only, which is why it is not the default.",
+          "A composite index on (a, b) serves queries filtering on a, or on a and b, but not on b alone.",
+          "Every index adds work to every insert, update, and delete that touches its columns."
+        ]
+      },
+      {
+        "title": "🧮 Depth, write amplification, and when an index pays",
+        "paras": [
+          "B-tree depth: a page is 8 KB and holds roughly 200 keys with pointers. One level indexes 200 rows, two levels 40,000, three levels 8 million, four levels 1.6 billion. So a lookup in a 1-million-row table is 3 page reads from root to leaf, plus one to fetch the row. Against a scan of 12,500 pages, that is about 3,000 times less I/O.",
+          "Write amplification: a table with 6 indexes. Each insert writes the row plus 6 index entries, each of which may split a page. If a page split happens once per 200 inserts per index, that is 6 splits per 200 inserts, plus the log records for all of it. Measured in page writes, an insert costs about 7 pages instead of 1, so the write throughput is roughly one seventh of an unindexed table.",
+          "The crossover for read benefit: if a query runs 100 times per second and drops from 4 seconds to 1 millisecond with the index, it saves 400 seconds of work per second, which is absurd, so the index is obviously right. If instead it runs once a day and the table receives 5,000 inserts per second, the index costs 5,000 extra page writes per second to save one slow query per day, and the answer is a materialised summary or a nightly report instead.",
+          "Covering indexes close the gap: an index on (customer_id, amount) answers a query selecting exactly those columns without touching the table, so 3 page reads total instead of 3 plus 20 row fetches. That is the cheapest large win available in most schemas.",
+          "Order in a composite index matters numerically: an index on (a, b) answers WHERE a = 1 AND b = 2 with one descent to the leaf, while the reverse index on (b, a) answers the same predicate just as well. But WHERE a = 1 alone uses the first index efficiently and the second not at all, which is why column order is chosen by the most selective common prefix of real queries."
+        ]
+      }
+    ]
+  }
+}

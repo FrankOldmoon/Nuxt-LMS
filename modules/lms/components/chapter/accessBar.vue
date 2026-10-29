@@ -1,13 +1,15 @@
 <template>
   <div v-if="canEdit" class="flex items-center gap-3 mb-4 p-3 bg-muted/30 rounded-lg flex-wrap">
-    <!-- 章节开放开关 -->
-    <div class="flex items-center gap-2">
-      <UIcon name="i-lucide-unlock" class="size-4 text-muted" />
-      <span class="text-sm font-medium">{{ $t('chapter.openToAll') }}</span>
-      <USwitch v-model="isOpen" :loading="savingOpen" @update:model-value="updateOpen" />
-    </div>
+    <!-- 章节开放开关（仅管理员/课程编辑者可见） -->
+    <template v-if="canManageOpen">
+      <div class="flex items-center gap-2">
+        <UIcon name="i-lucide-unlock" class="size-4 text-muted" />
+        <span class="text-sm font-medium">{{ $t('chapter.openToAll') }}</span>
+        <USwitch v-model="isOpen" :loading="savingOpen" @update:model-value="updateOpen" />
+      </div>
 
-    <USeparator orientation="vertical" class="h-6" />
+      <USeparator orientation="vertical" class="h-6" />
+    </template>
 
     <!-- 班级多选 -->
     <div class="flex items-center gap-2 min-w-[200px] max-w-[480px]">
@@ -49,6 +51,7 @@ const props = defineProps<ChapterAccessProps>()
 
 const {
   canEdit,
+  canManageOpen,
   isOpen,
   savingOpen,
   selectedClassIds,

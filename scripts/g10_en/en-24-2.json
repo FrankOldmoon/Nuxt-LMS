@@ -1,0 +1,418 @@
+{
+  "618": {
+    "sections": [
+      {
+        "title": "🔍 Why the first question is addition or multiplication",
+        "paras": [
+          "Three trains and two flights to Shanghai give five ways to get there, and that is addition, because picking one option finishes the job. Five trains to Shanghai and four onwards to Hangzhou give twenty itineraries, and that is multiplication, because both legs must be chosen.",
+          "Almost every counting mistake is this distinction applied the wrong way round. The test is one sentence: do I choose one case, or do I have to complete every step? Choose one, add; complete all, multiply."
+        ]
+      },
+      {
+        "title": "⚙️ Two principles and three rescue tools",
+        "paras": [
+          "The two principles are enough for clean problems. Real problems need the three tools that handle overlap, negation and dependence."
+        ],
+        "bullets": [
+          "Sum rule: split into cases that do not overlap and add their counts.",
+          "Product rule: multiply the number of choices at each independent step.",
+          "Inclusion and exclusion: when the cases overlap, add and subtract the overlap, as with numbers divisible by three or by five.",
+          "Complement: count what you do not want and subtract, which is the fastest route for at least one.",
+          "Cases must be disjoint and complete; a missed case or an overlap both give a wrong total with no warning.",
+          "If the number of choices at a later step depends on what was chosen earlier, split by the earlier choice instead of multiplying blindly."
+        ]
+      },
+      {
+        "title": "🧮 Four-digit plates and a divisibility count",
+        "paras": [
+          "Four digits, repeats allowed: ten choices each time, so ten to the fourth, which is ten thousand.",
+          "Four distinct digits: ten, then nine, then eight, then seven, giving five thousand and forty. The multiplication is still valid because the count at each step does not depend on which digit was chosen, only on how many have been used.",
+          "Four distinct digits with no leading zero: handle the restricted position first. Nine choices for the first digit, then nine remaining digits including zero, then eight, then seven, which gives four thousand five hundred and thirty-six.",
+          "Numbers from one to a hundred divisible by three or by five: thirty-three plus twenty minus six shared multiples of fifteen, giving forty-seven. The subtraction is the double counting of 15, 30, 45 and so on.",
+          "Noticing the pattern: restricted positions are handled first, overlaps are subtracted, and at least one is almost always easier as one minus none."
+        ]
+      }
+    ]
+  },
+  "619": {
+    "sections": [
+      {
+        "title": "🔍 How a fact about counting proves existence",
+        "paras": [
+          "Thirteen people must contain two born in the same month. You do not need to know anyone in the room, and no search is required, because the conclusion follows from the count alone.",
+          "The pigeonhole principle is that observation: if there are more objects than containers, some container holds at least two. The argument is one line, because if every container held at most one, the total would be at most the number of containers."
+        ]
+      },
+      {
+        "title": "⚙️ Basic form, general form, and the real skill",
+        "paras": [
+          "The basic form gives at least two in some container. The general form gives at least the ceiling of n over k, which is a much stronger statement and the one used in problems that ask how many must share something.",
+          "The skill is not the principle but the choice of containers. Most of the work in a pigeonhole problem is inventing the right partition."
+        ],
+        "bullets": [
+          "Two numbers with the same remainder modulo n differ by a multiple of n, so boxes of remainders answer questions about divisibility.",
+          "Pairs of consecutive integers are coprime, so boxes of adjacent pairs answer questions about shared factors.",
+          "The general form is often tight: to show that nine is the best bound, construct a distribution with no box above nine.",
+          "The principle applies to finite collections with a complete partition; an incomplete partition or an infinite set breaks the conclusion.",
+          "It proves existence and says nothing about which container, which is why it never produces an algorithm."
+        ]
+      },
+      {
+        "title": "🧮 Three standard designs",
+        "paras": [
+          "367 people and 366 possible birthdays force a repeat. With 366 people it is possible to have exactly one per day, so the bound is sharp.",
+          "Any five integers contain two whose difference is divisible by four. Use four boxes labelled by remainder; two of the five share a box, and equal remainders mean a difference divisible by four. The boxes are not the numbers, they are the remainders, and inventing that mapping is the whole idea.",
+          "From one to 2n choose n plus one numbers: box them as (1,2), (3,4) and so on. Two land in the same box, and consecutive integers are coprime.",
+          "A hundred people and twelve months give at least nine sharing a month, since the ceiling of one hundred over twelve is nine, and 8, 8, 8, 8, 9, 9, 9, 9, 8, 8, 8, 8 shows nine cannot be improved."
+        ]
+      }
+    ]
+  },
+  "620": {
+    "sections": [
+      {
+        "title": "🔍 Why order decides whether you divide",
+        "paras": [
+          "Choosing three people to hold three different posts and choosing three people for a committee both start with ten candidates and three places, and the answers differ by a factor of six.",
+          "The factor is the number of ways to arrange the three chosen people. If rearranging them produces a different outcome, count arrangements; if it does not, divide them out. One question settles it every time: does swapping two of the chosen items give a different result?"
+        ]
+      },
+      {
+        "title": "⚙️ Two formulas and the situations they cover",
+        "paras": [
+          "Permutations count ordered selections, combinations count unordered ones, and the second is the first divided by k factorial."
+        ],
+        "bullets": [
+          "Ordered without replacement: n factorial over (n minus k) factorial.",
+          "Unordered without replacement: n factorial over k factorial times (n minus k) factorial.",
+          "Ordered with replacement: n to the k.",
+          "Unordered with replacement: combinations of n plus k minus 1 choose k, the stars and bars count.",
+          "Circular arrangements: fix one item to kill the rotations, giving (n minus 1) factorial.",
+          "Repeated items: divide by the factorial of each group of identical items.",
+          "At least or at most: subtract the complement, which is usually a single term."
+        ]
+      },
+      {
+        "title": "🧮 Ten people, two questions, one trap",
+        "paras": [
+          "Ten candidates for three distinct posts: ten times nine times eight, which is seven hundred and twenty.",
+          "Ten candidates for a committee of three: the same seven hundred and twenty divided by six, giving a hundred and twenty.",
+          "Ten people, five men and five women, choose three with at least one woman: total one hundred and twenty minus ten all-male committees, giving a hundred and ten. The direct count agrees: fifty with exactly one woman, fifty with two, ten with three.",
+          "The trap: first choose two women, then choose anyone for the third place. That counts each hand several times, because the third choice may also be a woman already counted. Split into cases by how many women, never by a sequence of partial choices."
+        ]
+      }
+    ]
+  },
+  "622": {
+    "sections": [
+      {
+        "title": "🔍 Why primes are the atoms of multiplication",
+        "paras": [
+          "Every integer above one can be broken into smaller factors until nothing breaks further. The pieces are primes, and the fundamental theorem of arithmetic says the decomposition is unique up to order.",
+          "Uniqueness is the part that matters. If a number had two genuinely different prime factorisations, divisibility, greatest common divisors and modular inverses would all become ambiguous, and public key cryptography along with them."
+        ]
+      },
+      {
+        "title": "⚙️ Divisibility, primality, and why square roots appear",
+        "paras": [
+          "Divisibility is defined without division: a divides b when there is an integer k with b equal to a times k. Keeping it in that form avoids leaving the integers."
+        ],
+        "bullets": [
+          "To test whether n is prime, trial division only needs to reach the square root of n, because any factorisation has a factor at most that large.",
+          "One is not prime, otherwise unique factorisation fails, since any number of ones could be inserted.",
+          "Two is the only even prime, which settles many problems in one line.",
+          "There are infinitely many primes: multiply the first n of them and add one, and the result has a prime factor outside the list.",
+          "Divisibility is transitive, and combinations inherit it: if a divides b and a divides c then a divides any combination of them.",
+          "The standard form collects repeated primes with exponents, and comparisons of divisors read off the exponents."
+        ]
+      },
+      {
+        "title": "🧮 Factorising and testing",
+        "paras": [
+          "Eighty-four: divide by two twice to get twenty-one, then by three to get seven, so the factorisation is two squared times three times seven. Multiply back to check.",
+          "Three hundred and sixty: thirty-six times ten, which is two squared times three squared times two times five, giving two cubed times three squared times five.",
+          "Ninety-seven: the square root is just under ten, so test two, three, five and seven. It is odd, its digits sum to sixteen, it does not end in zero or five, and seven times thirteen is ninety-one with remainder six. No divisor, so it is prime.",
+          "Ninety-one looks similar and fails immediately: seven times thirteen. Most composites reveal themselves early, which is why trial division is faster in practice than the worst case suggests.",
+          "A caution on patterns: two to the p minus one is prime for some primes and not others, since eleven gives twenty forty-seven, which is twenty-three times eighty-nine. Primality does not follow from a formula."
+        ]
+      }
+    ]
+  },
+  "623": {
+    "sections": [
+      {
+        "title": "🔍 Why you cannot factor your way to a gcd",
+        "paras": [
+          "Comparing prime factorisations is the textbook method for the greatest common divisor, and it fails completely on the numbers that matter. Multiplying two five-hundred-digit primes takes a microsecond; factoring the product back takes longer than the age of the universe.",
+          "The Euclidean algorithm avoids factoring entirely. It uses only division with remainder, and the number of steps grows like the logarithm of the inputs, so it stays fast at any size."
+        ]
+      },
+      {
+        "title": "⚙️ One identity, and everything that follows",
+        "paras": [
+          "The whole algorithm rests on one equation: the gcd of a and b equals the gcd of b and the remainder of a divided by b. The reason is that any common divisor of a and b divides their difference, and conversely, so the two pairs share exactly the same set of common divisors."
+        ],
+        "bullets": [
+          "Repeat until the remainder is zero; the answer is the last non-zero remainder.",
+          "The remainders strictly decrease, so the process always terminates.",
+          "The worst case is consecutive Fibonacci numbers, which gives the slowest possible run and about 1.44 times the number of decimal digits in steps.",
+          "Extended Euclid also returns integers x and y with a x plus b y equal to the gcd, which is the Bezout identity.",
+          "When the gcd is one, that x is the modular inverse, which is how modular division is implemented.",
+          "The least common multiple is the product over the gcd, computed this way to avoid overflow."
+        ]
+      },
+      {
+        "title": "🧮 Running it, then using it for an inverse",
+        "paras": [
+          "Greatest common divisor of one thousand and seventy-one and four hundred and sixty-two. Divide: one thousand and seventy-one is two times four hundred and sixty-two plus one hundred and forty-seven. Then four hundred and sixty-two is three times one hundred and forty-seven plus twenty-one. Then one hundred and forty-seven is seven times twenty-one plus zero. The answer is twenty-one.",
+          "Factorising would have given the same answer and taken longer: one thousand and seventy-one is nine times seven times seventeen, and four hundred and sixty-two is two times three times seven times eleven, so the shared part is twenty-one.",
+          "Now find the inverse of seven modulo twenty-six. Euclid: twenty-six is three times seven plus five, seven is one times five plus two, five is two times two plus one, and two is two times one plus zero, so the gcd is one and an inverse exists.",
+          "Substitute back: one equals five minus two times two; two equals seven minus five, so one equals three times five minus two times seven; five equals twenty-six minus three times seven, so one equals three times twenty-six minus eleven times seven. Therefore minus eleven times seven is one modulo twenty-six, and the inverse is fifteen. Check: seven times fifteen is one hundred and five, which is four times twenty-six plus one."
+        ]
+      }
+    ]
+  },
+  "624": {
+    "sections": [
+      {
+        "title": "🔍 Why clock arithmetic is real mathematics",
+        "paras": [
+          "Nine o'clock plus five hours is two o'clock, and nobody finds that strange. The same wraparound appears in fixed-width integers that overflow, hash tables that fold a key into a bucket, checksums on a card number and every key exchange on the internet.",
+          "The reason it can be trusted is that congruence is an equivalence relation compatible with addition, subtraction and multiplication. That compatibility means you may reduce at any point in a calculation and still get the same answer, which is what makes large-number arithmetic feasible."
+        ]
+      },
+      {
+        "title": "⚙️ Congruence, compatibility, and where division stops working",
+        "paras": [
+          "Two integers are congruent modulo n when their difference is a multiple of n. Congruence is a statement about a relation, while the remainder is a particular number, and conflating the two causes errors."
+        ],
+        "bullets": [
+          "Addition, subtraction and multiplication all pass through the reduction, so reduce early and often.",
+          "Division does not: cancelling a common factor is only valid when that factor is coprime to the modulus.",
+          "An element has an inverse modulo n exactly when it is coprime to n, and the inverse comes from extended Euclid.",
+          "Fermat's little theorem gives a fast inverse for a prime modulus: raise to the power p minus two.",
+          "Euler's theorem generalises it to any modulus using the count of coprime residues, and is the reason RSA works.",
+          "Fast exponentiation by repeated squaring makes a computation with a huge exponent take a logarithmic number of multiplications.",
+          "Negative operands behave differently across languages, so normalise to the range zero to n minus one when porting code."
+        ]
+      },
+      {
+        "title": "🧮 Three computations",
+        "paras": [
+          "Three to the hundred modulo seven. By Fermat, three to the sixth is one modulo seven. Writing one hundred as sixteen sixes plus four, the whole first part collapses to one, leaving three to the fourth, which is eighty-one, and eighty-one modulo seven is four.",
+          "Solving five x congruent to three modulo eleven. The gcd of five and eleven is one, and the inverse of five is nine, since forty-five is four times eleven plus one. Multiplying both sides by nine gives x congruent to twenty-seven, which reduces to five. Check: five times five is twenty-five, which is two times eleven plus three.",
+          "A calendar example: which date is day one hundred of a leap year. January takes thirty-one, February twenty-nine, March thirty-one, and the running total reaches ninety-one at the end of March, leaving nine, so the date is 9 April. Each step is a subtraction with borrowing, which is modular arithmetic in disguise.",
+          "One habit to drop: inequalities do not survive reduction. Five and twelve are congruent modulo seven, and speaking of one being smaller has no meaning in that world."
+        ]
+      }
+    ]
+  },
+  "626": {
+    "sections": [
+      {
+        "title": "🔍 Why so many problems become the same problem",
+        "paras": [
+          "Friendships, road networks, web links, task dependencies, molecule structures and course prerequisites have nothing in common except that each is a set of things with pairwise connections. That is a graph, and once a problem is phrased as one, a century of algorithms becomes available.",
+          "The abstraction is deliberately thin: it discards geometry, distance and meaning, keeping only which pairs are connected. That loss is what allows one shortest path routine to serve navigation, network routing and social recommendation at once."
+        ]
+      },
+      {
+        "title": "⚙️ Vocabulary, and the two ways to store it",
+        "paras": [
+          "Vertices and edges, directed or undirected, weighted or not. Degree counts incident edges, and in a directed graph it splits into in-degree and out-degree.",
+          "The handshake lemma states that degrees sum to twice the number of edges, because each edge contributes to two endpoints. It is trivial to prove and immediately useful as a filter."
+        ],
+        "bullets": [
+          "A consequence of the lemma: the number of odd-degree vertices is always even.",
+          "A path has no repeated vertices, a cycle returns to its start, and a connected graph has a path between any two vertices.",
+          "An adjacency matrix answers is-there-an-edge in constant time and costs quadratic space.",
+          "An adjacency list costs space proportional to edges and is the default for the sparse graphs that reality supplies.",
+          "A complete graph on n vertices has n times (n minus 1) over two edges, which is the maximum possible.",
+          "A bipartite graph splits into two sides with edges only across, and is exactly a graph with no odd cycle."
+        ]
+      },
+      {
+        "title": "🧮 A small graph from both sides",
+        "paras": [
+          "Four vertices A to D, with edges AB, AC, BC and CD. Degrees are 2, 2, 3 and 1. Their sum is 8, which is twice four edges. The odd-degree vertices are C and D, an even count.",
+          "The adjacency matrix in order A to D has rows (0,1,1,0), (1,0,1,0), (1,1,0,1) and (0,0,1,0). It is symmetric, which is the fastest check that an undirected graph was entered correctly, and the row sums reproduce the degrees.",
+          "The graph is connected, since A reaches C directly and C reaches D. It contains the triangle ABC, so it is not a tree: a tree on four vertices would have three edges and this one has four, the extra edge being exactly the cycle.",
+          "Completeness in one number: six people all shaking hands gives fifteen edges, while each shaking exactly three gives nine, which is realisable as the skeleton of an octahedron."
+        ]
+      }
+    ]
+  },
+  "627": {
+    "sections": [
+      {
+        "title": "🔍 Why a tree is the cheapest connected structure",
+        "paras": [
+          "Connecting n vertices needs at least n minus 1 edges, and using exactly that many with no cycles gives a tree. It is the minimum that works, which is why file systems, syntax trees, decision trees and routing hierarchies all take this shape.",
+          "The property that makes trees useful in practice is uniqueness: between any two vertices there is exactly one path. Nothing has to choose a route, and nothing can loop."
+        ]
+      },
+      {
+        "title": "⚙️ Equivalent characterisations, and the counts that follow",
+        "paras": [
+          "Several statements about a graph with n vertices are equivalent, and any one can be taken as the definition: connected and acyclic, connected with n minus 1 edges, acyclic with n minus 1 edges, exactly one path between every pair, or minimally connected in the sense that deleting any edge disconnects it."
+        ],
+        "bullets": [
+          "Adding any edge to a tree creates exactly one cycle; removing any edge splits it into two components.",
+          "Every tree with at least two vertices has at least two leaves.",
+          "A full binary tree, where every internal node has two children, satisfies leaves equals internal nodes plus one.",
+          "A binary tree of height h holds at most 2 to the (h plus 1) minus 1 nodes, and level i holds at most 2 to the i.",
+          "A spanning tree of a connected graph keeps every vertex and just enough edges; the minimum-weight one is found by Kruskal or Prim.",
+          "The number of distinct binary tree shapes on n labelled nodes is the n-th Catalan number."
+        ]
+      },
+      {
+        "title": "🧮 Counting leaves in a tree",
+        "paras": [
+          "A tree has five vertices of degree one, three of degree four, and the rest of degree two. Let x be the number of degree-two vertices. The vertex count is 8 plus x, so the edge count is 7 plus x, and the degree sum is 5 plus 12 plus 2x. Doubling the edge count gives 14 plus 2x.",
+          "Equating gives 17 plus 2x equal to 14 plus 2x, which is impossible. The stated degrees cannot belong to a tree; the numbers are inconsistent, and noticing that is the intended answer.",
+          "A consistent version: a full binary tree with fifteen nodes. Since leaves equal internal nodes plus one and the two together are fifteen, there are eight leaves and seven internal nodes, which is exactly the complete tree of height three.",
+          "For a general check, a connected graph on ten vertices with nine edges must be a tree, with eight edges it cannot be connected, and with ten it must contain a cycle. Edge count alone settles all three."
+        ]
+      }
+    ]
+  },
+  "628": {
+    "sections": [
+      {
+        "title": "🔍 Why there are only two ways to explore",
+        "paras": [
+          "Given a graph and a starting vertex, there are exactly two sensible strategies: go as deep as possible and back up when stuck, or clear the immediate neighbourhood before moving outward. Everything else is a variation.",
+          "The two differ in what they remember. Depth-first keeps a single path and a stack of return points, which is cheap. Breadth-first keeps the whole frontier, which is expensive but guarantees that the first arrival at a vertex is a shortest route."
+        ]
+      },
+      {
+        "title": "⚙️ Mechanics, cost, and the mistakes that bite",
+        "paras": [
+          "Breadth-first uses a queue and marks a vertex when it enqueues it. Depth-first uses a stack, explicitly or through recursion, and marks when it first visits."
+        ],
+        "bullets": [
+          "Both cost time proportional to vertices plus edges on an adjacency list, and quadratic time on a matrix.",
+          "Mark on discovery, not on removal, or the same vertex enters the queue several times and the cost degrades.",
+          "Breadth-first gives shortest paths only when every edge has the same weight; weighted graphs need Dijkstra.",
+          "Depth-first time stamps detect cycles in directed graphs, which breadth-first cannot do directly.",
+          "Space: breadth-first peaks at the widest layer, depth-first at the longest path, and both can be linear.",
+          "A graph that is not connected needs an outer loop; the number of restarts is the number of components."
+        ]
+      },
+      {
+        "title": "🧮 The same graph, two orders",
+        "paras": [
+          "Six vertices, undirected edges 1-2, 1-3, 2-4, 3-4, 4-5 and 5-6, starting at 1.",
+          "Breadth-first: visit 1, enqueue 2 and 3 at distance one. Then 2 offers 4 at distance two, 3 offers nothing new, 4 offers 5 at distance three, and 5 offers 6 at distance four. The order is 1, 2, 3, 4, 5, 6 and the distances are correct minima.",
+          "Depth-first: from 1 go to 2, then to 4, then to 3, which is already adjacent to the visited set, so back up to 4 and take 5, then 6. The order is 1, 2, 4, 3, 5, 6.",
+          "The contrast that matters: depth-first reached 3 in three steps while its true distance is one. Depth-first finds a path, breadth-first finds the shortest one, and choosing the wrong one produces a correct-looking wrong answer.",
+          "Conversely, asking whether any path exists is faster with depth-first, since it can stop as soon as it arrives instead of expanding whole layers."
+        ]
+      }
+    ]
+  },
+  "630": {
+    "sections": [
+      {
+        "title": "🔍 Why logic can be treated as algebra",
+        "paras": [
+          "Truth tables decide whether two expressions agree, one case at a time. That is fine for four rows and hopeless for a circuit with fifty inputs. What is needed is the ability to simplify symbolically, the way x plus x becomes 2x.",
+          "Boolean algebra provides exactly that. And and or distribute over each other, absorb redundant terms and obey De Morgan, so a condition written by a programmer or a gate array designed by an engineer can be reduced mechanically."
+        ]
+      },
+      {
+        "title": "⚙️ The laws, and the two tools that do the work",
+        "paras": [
+          "The laws mirror propositional logic exactly, because they are the same laws. Two of them account for most simplifications in practice."
+        ],
+        "bullets": [
+          "De Morgan: negate a conjunction and it becomes a disjunction of negations, and the reverse.",
+          "Duality: swap and with or and swap zero with one, and a true statement stays true, so only half the laws need memorising.",
+          "Absorption: A or (A and B) is A, which deletes redundant conditions wholesale.",
+          "Exclusive or has a useful property: applying it twice cancels, which is why it swaps values without a temporary variable.",
+          "Every function has a sum-of-products form and a product-of-sums form; the first is easy to read, the second is what solvers consume.",
+          "NAND alone is functionally complete, which is why a chip can be built from one kind of gate."
+        ]
+      },
+      {
+        "title": "🧮 Three simplifications with consequences",
+        "paras": [
+          "Factor A out of (A and B) or (A and not B): the bracket becomes B or not B, which is one, so the whole expression is A.",
+          "Now simplify not of (not A and B) or B. De Morgan turns the first part into A or not B, so the expression is A or not B or B, and the last two terms are one, so the whole thing is one. The condition is always true, which means the if statement containing it does nothing.",
+          "A third, using absorption: A and (A or B) is A, and A or (A and B) is A. Both patterns appear in real code as conditions that were assembled defensively and never reduced.",
+          "For a larger case, combine factoring with the identity that B or not B is one: (A or B) and (A or not B) becomes A or (B and not B), which is A. Three lines instead of an eight-row table."
+        ]
+      }
+    ]
+  },
+  "631": {
+    "sections": [
+      {
+        "title": "🔍 Why a recursive algorithm has no obvious running time",
+        "paras": [
+          "Merge sort is three lines: split, sort each half, merge. Its running time cannot be counted directly, because the time depends on the time taken by the calls it makes.",
+          "That circularity is written as a recurrence: a formula expressing the cost at size n in terms of the cost at smaller sizes. Solving it removes the self-reference and produces an ordinary expression, which is the only way to know whether an algorithm will survive a larger input."
+        ]
+      },
+      {
+        "title": "⚙️ Three solving methods",
+        "paras": [
+          "Choose the method from the shape of the recurrence."
+        ],
+        "bullets": [
+          "Expansion: substitute repeatedly until the base case appears, then sum the resulting series. Works well for a single recursive call.",
+          "Characteristic equation: for linear recurrences with constant coefficients, solve the polynomial and write the answer as a combination of powers, using initial values to fix the constants.",
+          "Master theorem: for divide-and-conquer forms, compare the work outside the recursion with n to the power log base b of a.",
+          "Common results: halving with linear merge gives n log n, halving with constant work gives log n, two calls on n minus one gives exponential growth.",
+          "A recurrence of the form T of n equals T of n minus one plus n expands to a sum and gives quadratic time.",
+          "Fibonacci by naive recursion is exponential in the golden ratio, which is why memoisation changes everything."
+        ]
+      },
+      {
+        "title": "🧮 Three recurrences solved",
+        "paras": [
+          "T of n equals 2 T of n minus 1 plus 1 with T of 1 equal to 1. Expand: four T of n minus 2 plus 2 plus 1, then eight T of n minus 3 plus 4 plus 2 plus 1. After k steps the pattern is 2 to the k times T of n minus k plus the sum of powers of two below it. Taking k equal to n minus 1 gives 2 to the n minus 1 plus 2 to the n minus 1 minus 1, which is 2 to the n minus 1. That is the Towers of Hanoi count.",
+          "T of n equals 2 T of n over 2 plus n. Each level contributes n of work and there are log n levels, so the total is n log n. This is merge sort, and the reason it beats the quadratic sorts is that merging is linear rather than quadratic.",
+          "T of n equals T of n over 2 plus 1. One call, constant work, halving each time, so the depth is log n and the total is log n. This is binary search.",
+          "The contrast worth holding on to: what makes merge sort expensive is the number of calls, not the halving. One call halving with linear work is only linear overall, because the work halves along with the size."
+        ]
+      }
+    ]
+  },
+  "632": {
+    "sections": [
+      {
+        "title": "🔍 Why testing cannot establish correctness",
+        "paras": [
+          "A sorting routine that passes ten thousand cases may still fail on the ten thousand and first. For code that runs a compiler, a payment system or a flight controller, passing tests is evidence and not proof.",
+          "Correctness means two things at once: for every legal input the output meets the specification, and the program terminates. Both halves are needed, since a program that never returns produces no wrong answer and is still useless."
+        ]
+      },
+      {
+        "title": "⚙️ Loop invariants, in three steps",
+        "paras": [
+          "The main tool for iterative code is a loop invariant: a statement about the state that holds before and after every iteration. Proving it takes three steps named consistently in the literature."
+        ],
+        "bullets": [
+          "Initialisation: the invariant is true before the loop starts, which corresponds to the base case of an induction.",
+          "Maintenance: if it is true at the start of an iteration and the loop condition holds, it is true at the end of that iteration.",
+          "Termination: when the loop exits, the invariant combined with the failed condition gives the result you wanted.",
+          "The invariant must be strong enough to imply the conclusion and weak enough to be true in the middle of the loop.",
+          "Termination is proved separately, usually by exhibiting a quantity that strictly decreases and cannot go below a bound.",
+          "Recursive algorithms use structural induction instead: assume the recursive calls are correct and prove the current case."
+        ]
+      },
+      {
+        "title": "🧮 Binary search, proved",
+        "paras": [
+          "Search a sorted array for a key, keeping a half-open interval from lo up to hi. Take as invariant: if the key is present then its index lies in that interval, and everything outside has been excluded because it is either too small or too large.",
+          "Initialisation: the interval is the whole array, so the key is certainly inside if it exists, and both excluded ranges are empty.",
+          "Maintenance: compare the middle element with the key. If it is smaller, sortedness means every index at or below the middle is too small, so moving lo past the middle keeps the key inside the new interval if it was inside the old one. The other branch is symmetric.",
+          "Termination: the loop ends when lo equals hi and the interval is empty, so by the invariant the key cannot be present, and the returned position is the correct insertion point.",
+          "The width of the interval strictly shrinks each iteration, so the loop terminates after a logarithmic number of steps.",
+          "The practical value of stating the invariant first is that the boundary conditions stop being guesses: once the interval semantics are fixed, whether to add one or not follows from the invariant rather than from trial and error."
+        ]
+      }
+    ]
+  }
+}

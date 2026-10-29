@@ -1,0 +1,389 @@
+{
+  "524": {
+    "sections": [
+      {
+        "title": "🔍 Why there is no single best sort",
+        "paras": [
+          "Asking which sort is best gets a follow-up question every time: on a linked list or an array, in memory or on disk, with duplicate keys or without, one pass or a thousand passes. Change one of those and the answer changes.",
+          "Five dimensions decide it: time in the average and the worst case, space, stability, the shape of the data, and whether results are needed as input arrives. Any of them can override the others, which is why production libraries combine several algorithms."
+        ]
+      },
+      {
+        "title": "⚙️ The five dimensions, filled in",
+        "paras": [
+          "Stability means equal keys keep their relative order, which matters when sorting by several keys in sequence: sort by price, then by sales, and a stable second pass keeps equal sales in price order. In place means constant extra space."
+        ],
+        "bullets": [
+          "Insertion sort: quadratic, stable, in place, linear on nearly sorted data, best for tiny inputs.",
+          "Merge sort: n log n guaranteed, stable, linear extra space, the choice for linked lists and for data larger than memory.",
+          "Quicksort: n log n average, quadratic worst, unstable, in place, fastest in practice on arrays.",
+          "Heap sort: n log n guaranteed, unstable, in place, worst cache behaviour, chosen when memory is the binding constraint.",
+          "Counting and radix sorts: linear time, stable, extra space, but only for integer or fixed-length keys and small ranges.",
+          "The library sort in Python and Java is Timsort, a merge and insertion hybrid that detects existing runs, giving linear time on partly sorted data and n log n in the worst case."
+        ]
+      },
+      {
+        "title": "🧮 Four situations, four answers",
+        "paras": [
+          "A million records sorted by registration date, memory plentiful, stability required: the built-in sort, which is Timsort. It is stable, and it exploits the fact that data exported from a database is often already in near date order.",
+          "A thousand integers on a device with tens of kilobytes of memory: heap sort. It is in place and guaranteed n log n, so there is no risk of a quadratic blow-up or of allocating a large auxiliary array.",
+          "Ten gigabytes of log file, two gigabytes of memory: external merge sort. Sort each chunk that fits, write it back, then merge the chunks in one pass with a small buffer per chunk.",
+          "A million integers in the range zero to one thousand: counting sort. Open a thousand and one counters, tally in one pass, then emit; the time is linear in the data, faster than any comparison sort, and the cost is the assumption about the key range.",
+          "The theoretical footnote: any comparison sort needs at least n log n comparisons in the worst case, because n items have n factorial orderings and each comparison can only halve the possibilities. Beating that bound requires abandoning comparisons, not a smarter loop."
+        ]
+      }
+    ]
+  },
+  "526": {
+    "sections": [
+      {
+        "title": "🔍 Why the slow search is still everywhere",
+        "paras": [
+          "Binary search needs sorted data and random access. Sorting costs n log n, so if a collection is searched once, sorting it first is slower than scanning it. Linked lists cannot be binary searched at all, and streaming data has no positions to jump to.",
+          "So the rule is not which search is faster but which is cheaper overall: one lookup on unordered data, scan; many lookups, sort once or build an index; no random access, scan."
+        ]
+      },
+      {
+        "title": "⚙️ Implementation details that change the constant",
+        "paras": [
+          "Linear search is simple enough that people stop optimising it, and there are two cheap wins."
+        ],
+        "bullets": [
+          "Sentinel: place a copy of the target at the end, then the loop only compares values and never checks bounds, which shortens the inner loop.",
+          "Built-ins first: membership tests and index lookups in the standard library run in compiled code and beat a hand-written loop by a large factor.",
+          "Return as soon as the value is found, so the average case is half the array rather than all of it.",
+          "For repeated lookups on the same array, build a dictionary once and turn every later query into constant time.",
+          "Complexity is linear in the worst case and constant in the best, and the average is n over two, which is still linear.",
+          "Linear search needs no extra space and no preprocessing, which is exactly why it survives in stream processing and embedded work."
+        ]
+      },
+      {
+        "title": "🧮 Counting comparisons both ways",
+        "paras": [
+          "Search 23 in 4, 8, 15, 16, 23, 42. Compare 4, 8, 15, 16, then 23: five comparisons to hit it.",
+          "Search 42 and it takes six. Search 100, which is absent, and it takes six as well, because absence can only be established after the whole array has been read. That is linear search at its worst and it happens every time the answer is no.",
+          "Binary search on the same array for 23: middle is index 3 holding 16, which is smaller, so move the lower bound to 4; middle is index 5 holding 42, which is larger, so move the upper bound to 5; middle is index 4 holding 23. Three comparisons.",
+          "With six elements the difference is small; with a million it is about twenty comparisons against half a million. The price of that is sortedness, which must be paid once and maintained as data changes.",
+          "A decision worth stating explicitly: sorting a million items costs about twenty million operations, so building an index only pays if there will be more than a few hundred lookups."
+        ]
+      }
+    ]
+  },
+  "527": {
+    "sections": [
+      {
+        "title": "🔍 Where the halving comes from",
+        "paras": [
+          "Binary search excludes half the remaining data with one comparison, which sounds like magic until the precondition is stated: the data must be ordered, or more generally there must be a test that is monotone, so that knowing the answer at one position settles every position on one side.",
+          "Without that, excluding half is a guess. Applied to unordered data the algorithm still runs, still returns a position, and is simply wrong, which makes it more dangerous than an error.",
+          "The generalisation is worth remembering: any problem where a predicate is false up to some point and true after it can be solved by halving, which is how the technique reaches beyond searching."
+        ]
+      },
+      {
+        "title": "⚙️ Interval semantics, and the three classic bugs",
+        "paras": [
+          "Write down what the bounds mean before writing the loop. Half-open is the safer convention: the answer lies in the interval from low up to but excluding high, high starts at the length, and the loop runs while low is below high."
+        ],
+        "bullets": [
+          "Undershoot and overshoot: if the interval is one long and the update leaves it unchanged, the loop never ends.",
+          "Overflow: adding the two bounds can overflow fixed-width integers, so compute low plus half the difference instead.",
+          "Duplicates: the basic version finds some matching index; first and last occurrences need the variant that keeps searching after a match.",
+          "Lower bound returns the first position not less than the target, which doubles as the insertion point.",
+          "Complexity is logarithmic, so a billion sorted items take about thirty comparisons.",
+          "Check the precondition in the code that calls the search, because the search itself cannot detect that it was lied to."
+        ]
+      },
+      {
+        "title": "🧮 Two traces, one of them for a missing value",
+        "paras": [
+          "Search 9 in 1, 3, 5, 7, 9, 11 with low zero and high six. Middle three holds 7, which is smaller, so low becomes four. Middle five holds 11, which is larger, so high becomes five. Middle four holds 9, found, in three steps.",
+          "Now search 6, which is absent. Middle three holds 7, too large, so high becomes three. Middle one holds 3, too small, so low becomes two. Middle two holds 5, too small, so low becomes three, which equals high, and the loop stops.",
+          "The returned index 3 is the insertion point, between 5 and 7, which is the correct answer to a different and more useful question than presence. Presence still needs one final comparison against the element at that position, because the algorithm only promises a position, not equality.",
+          "Against linear search on six elements: three comparisons against five, and the gap widens exponentially with size."
+        ]
+      }
+    ]
+  },
+  "529": {
+    "sections": [
+      {
+        "title": "🔍 Why linear structures stop being enough",
+        "paras": [
+          "An array gives each element one predecessor and one successor. Directories have many children, HTML has nesting, an arithmetic expression has a root operator and two subexpressions. These are one-to-many relationships, and forcing them into a list throws away the structure that makes them easy to process.",
+          "A binary tree is the smallest structure that captures hierarchy: each node has at most two children, so left and right mean something and the node fits in a value and two pointers. Most efficient hierarchical structures are binary trees or close relatives."
+        ]
+      },
+      {
+        "title": "⚙️ Four traversals, one rule",
+        "paras": [
+          "The three depth-first orders are named for when the root is visited relative to its subtrees, and the fourth walks level by level."
+        ],
+        "bullets": [
+          "Pre-order visits root, then left, then right: the root comes first, which suits copying and serialising.",
+          "In-order visits left, root, right: on a search tree this emits sorted order, which is how a search tree is validated.",
+          "Post-order visits left, right, root: children before parents, which suits freeing memory and evaluating expression trees.",
+          "Level order uses a queue, which is how height and level-based questions are answered.",
+          "The depth-first three are three lines of recursion each; level order needs an explicit queue.",
+          "Height is log n when balanced and n when degenerate, and that single fact decides the cost of every search built on the tree."
+        ]
+      },
+      {
+        "title": "🧮 One tree, four outputs",
+        "paras": [
+          "Root A with children B and C, B with D and E, and C with only a right child F.",
+          "Pre-order: A, B, D, E, C, F. The root leads, and each subtree repeats the pattern.",
+          "In-order: D, B, E, A, C, F. The root splits the sequence into a left part and a right part, which is the property used to rebuild a tree from two traversals.",
+          "Post-order: D, E, B, F, C, A. The root trails, so it is the last node emitted.",
+          "Level order: A, B, C, D, E, F.",
+          "Two useful consequences: pre-order plus in-order determines a tree uniquely, and post-order plus in-order does too, but pre-order plus post-order does not, because a single child cannot be classified as left or right."
+        ]
+      }
+    ]
+  },
+  "530": {
+    "sections": [
+      {
+        "title": "🔍 How ordering makes a tree fast",
+        "paras": [
+          "In an unordered array, finding a value means looking at everything. In a tree with a search property, each comparison discards an entire subtree, which is binary search expressed as a structure rather than as an array.",
+          "The property is a global one, not a local one: every node in the left subtree is smaller than the root, and every node in the right subtree is larger. Checking only parent against child accepts trees that are not search trees at all."
+        ]
+      },
+      {
+        "title": "⚙️ Operations and the failure mode",
+        "paras": [
+          "Search, insert and delete all follow one path from the root, so each costs the height of the tree rather than the number of nodes."
+        ],
+        "bullets": [
+          "Search walks down comparing, which is logarithmic when balanced and linear when degenerate.",
+          "Insert walks to an empty slot and attaches, changing nothing above it.",
+          "Delete has three cases: a leaf is removed, a node with one child is replaced by that child, and a node with two children is replaced by its successor, taken from the right subtree.",
+          "In-order traversal emits ascending order, which is the reliable way to test the property.",
+          "Inserting already sorted data degenerates the tree into a list, which is why self-balancing variants exist.",
+          "Balanced trees keep height logarithmic by rotating, at the cost of extra bookkeeping; hash tables are faster for pure lookup but cannot answer range or order questions."
+        ]
+      },
+      {
+        "title": "🧮 Building one, then deleting the hard case",
+        "paras": [
+          "Insert 50, 30, 70, 20, 40, 60, 80 in that order. Fifty is the root, 30 goes left, 70 right, 20 left of 30, 40 right of 30, 60 left of 70, 80 right of 70. The height is two and the tree is perfectly balanced, and in-order gives 20, 30, 40, 50, 60, 70, 80.",
+          "Finding 40 takes three comparisons: left to 30, right to 40. Finding 65 also takes three and ends at an empty slot, so absence costs the same as a successful search.",
+          "Delete 30, which has two children. The successor is the smallest value in its right subtree, which is 40 since 40 has no left child. Put 40 in place of 30 and remove the original 40 node: the in-order sequence is still ascending, and the search property survives.",
+          "Now consider the same values inserted in ascending order. Every node has only a right child, the height becomes four, and searching for 80 costs five comparisons, exactly as in a linked list.",
+          "A warning that follows: the property is about all descendants, so a tree with root 10, left child 5 and right child 15 whose left subtree contains 12 is not a search tree, even though every parent-child pair looks fine. Validate with an in-order pass, not by inspection."
+        ]
+      }
+    ]
+  },
+  "531": {
+    "sections": [
+      {
+        "title": "🔍 Why taking the minimum needs its own structure",
+        "paras": [
+          "Dijkstra picks the nearest unvisited node, Huffman merges the two least frequent symbols, a scheduler takes the highest priority job. Each step asks for an extreme value, and each repeats n times.",
+          "A sorted array answers the query in constant time and charges linear time for insertion; an unsorted array does the opposite. A heap does both in logarithmic time by maintaining only a partial order, which is all the question requires."
+        ]
+      },
+      {
+        "title": "⚙️ Two properties, one array, two movements",
+        "paras": [
+          "A heap is a complete binary tree with a heap-order property: every parent is no larger than its children for a min-heap. Completeness is what allows an array representation with no pointers, since the children of index i sit at 2i plus 1 and 2i plus 2."
+        ],
+        "bullets": [
+          "Insert: append at the end, then sift up while the new value is smaller than its parent, which is logarithmic because only one path is touched.",
+          "Extract: take the root, move the last element to the root, then sift down against the smaller child, again logarithmic.",
+          "Building from an array by sifting down from the last internal node costs linear time, not n log n, because most nodes are near the bottom and move very little.",
+          "The minimum is always at index zero, so peeking is constant.",
+          "A heap cannot find an arbitrary value efficiently and cannot list values in order, which is why it is not a replacement for a balanced tree.",
+          "For a max-heap in a min-heap library, store the negatives; there is no flag to flip."
+        ]
+      },
+      {
+        "title": "🧮 Building a heap and popping twice",
+        "paras": [
+          "Data 3, 9, 2, 1, 4, 5. As a tree the root is 3 with children 9 and 2, then 9 has 1 and 4, and 2 has 5.",
+          "Start from the last internal node, index 2 holding 2: its child is 5, which is larger, so nothing moves. Index 1 holding 9: children 1 and 4, the smaller is 1, so swap, giving 3, 1, 2, 9, 4, 5. Index 0 holding 3: children 1 and 2, the smaller is 1, so swap, giving 1, 3, 2, 9, 4, 5. Then the 3 at index 1 has children 9 and 4, the smaller being 4, so swap again, giving 1, 4, 2, 9, 3, 5, which is a valid min-heap.",
+          "Pop: take 1, move the last element 5 to the root, then sift down against the smaller child 2, and again against 4, ending with 2 at the root.",
+          "Pop again: take 2, move the last element up, sift down, and 3 reaches the root. The two smallest values came out in order, which is how heap sort works.",
+          "The cost is worth comparing: building cost six sift operations at most, each over a tiny height, which is why the total is linear rather than n log n."
+        ]
+      }
+    ]
+  },
+  "533": {
+    "sections": [
+      {
+        "title": "🔍 How a lookup becomes arithmetic",
+        "paras": [
+          "An array reaches a slot by index in constant time because the address is computed. A hash table extends the trick to arbitrary keys by computing an index from the key, so that finding a value becomes computing a number and looking at that position.",
+          "The trade is that the computation cannot be perfect for all keys, since the number of possible keys exceeds the number of slots. Collisions are therefore guaranteed, and everything that follows is about handling them."
+        ]
+      },
+      {
+        "title": "⚙️ What makes a hash function usable",
+        "paras": [
+          "Three requirements: cheap to compute, deterministic, and spreading keys evenly. Uneven spreading is the failure that matters, because it turns a constant-time structure into a linear one while still appearing to work."
+        ],
+        "bullets": [
+          "Integers usually hash by multiplying by a large odd constant and taking high bits, which avoids patterns in low bits.",
+          "Strings hash with a rolling polynomial, and the language applies a random seed so that adversarial inputs cannot be constructed.",
+          "The load factor is entries divided by slots; above about two thirds most implementations grow and reinsert everything.",
+          "Growth is linear in the entries but happens rarely, so the average insertion is still constant.",
+          "Average cost is constant plus the load factor; worst case is linear when every key collides.",
+          "Iteration order is an implementation detail even when it looks like insertion order, so never rely on it."
+        ]
+      },
+      {
+        "title": "🧮 A hash function that fails on purpose",
+        "paras": [
+          "Ten keys 15, 22, 8, 29, 36, 43, 50, 11, 18, 25 into seven slots using the remainder: seven of them land in slot one and three in slot four, leaving five slots empty.",
+          "The pattern is the problem. Every key is congruent to one or four modulo seven, because they were generated in steps of seven, so the hash function is blind to the difference between them.",
+          "Change the number of slots to thirteen: the keys spread over eight distinct slots with only one collision, because thirteen is not a divisor of the step.",
+          "Two lessons follow. Choosing a prime number of slots reduces resonance with patterned data, and any function that only uses the low bits can be defeated by data whose pattern lives in the low bits.",
+          "The practical consequence: a good implementation mixes the key before selecting slots, which is why hand-written remainder hashing is a common source of mysterious slowness."
+        ]
+      }
+    ]
+  },
+  "534": {
+    "sections": [
+      {
+        "title": "🔍 Why collisions cannot be engineered away",
+        "paras": [
+          "If a billion keys could map to a billion distinct slots, hashing would be perfect. Slots are always far fewer than keys, so by counting alone two keys must share a slot, and the hash function may collide even when slots are plentiful.",
+          "So every hash table must decide what happens on a collision, and that decision shapes the performance far more than the hash function does."
+        ]
+      },
+      {
+        "title": "⚙️ Two strategies with opposite trade-offs",
+        "paras": [
+          "Chaining keeps a list per slot, so collisions cost pointers and cache misses. Open addressing keeps everything in one array and probes for the next free slot, so collisions cost extra probes but stay inside a small memory region."
+        ],
+        "bullets": [
+          "Chaining: simple, deletion is trivial, load factor may exceed one, and the cost of a lookup is the chain length.",
+          "Open addressing: no pointers and excellent cache behaviour, but the load factor must stay below about 0.7 or probing degrades sharply.",
+          "Linear probing creates runs of occupied slots that lengthen themselves, which is primary clustering.",
+          "Quadratic probing and double hashing spread the probes, at the cost of more computation per probe or a second hash function.",
+          "Deletion in open addressing must leave a tombstone rather than an empty slot, or later probes stop early and lose entries.",
+          "Worst case for both is linear; Java 8 converts long chains to a balanced tree, bounding the worst case at logarithmic."
+        ]
+      },
+      {
+        "title": "🧮 Six keys probed into seven slots",
+        "paras": [
+          "Insert 10, 17, 24, 31, 3, 5 with remainder hashing into seven slots. Ten goes to slot three. Seventeen wants three, which is taken, so it takes four. Twenty-four takes five. Thirty-one takes six. Three wants three, finds four, five and six occupied, wraps to zero. Five wants five, finds five and six occupied, wraps to zero which is taken, and lands in one.",
+          "The table ends as three, four, five and six occupied consecutively with zero and one also filled, and slot two empty. The run from three to six is the clustering effect: each new key that hashes into the run must traverse all of it.",
+          "Lookups suffer the same way. Finding 31 takes four probes, and finding 3 takes five, because it has to cross the whole run and wrap.",
+          "Now delete 17 and mark it as a tombstone rather than empty. A search for 31 still passes through the tombstone and finds its target. Had the slot been emptied, the search would have stopped at four and reported 31 as absent, which is the bug tombstones exist to prevent.",
+          "Tombstones accumulate and slow probing down, so implementations count them and rebuild the table when they become too numerous."
+        ]
+      }
+    ]
+  },
+  "536": {
+    "sections": [
+      {
+        "title": "🔍 When a tree is not enough",
+        "paras": [
+          "Trees forbid cycles and give each node a single parent. Metro lines loop, web pages link both ways, friends are mutual, and tasks depend on each other in both directions. None of that fits a tree.",
+          "A graph removes both restrictions, which is why it can represent almost any relationship and why its algorithms are more expensive: there is no hierarchy to exploit, only connectivity."
+        ]
+      },
+      {
+        "title": "⚙️ Storage decides the cost of everything",
+        "paras": [
+          "Two representations, and the choice affects every algorithm built on top of them."
+        ],
+        "bullets": [
+          "Adjacency matrix: constant-time edge test, quadratic space, and slow neighbour iteration.",
+          "Adjacency list: space proportional to edges, fast neighbour iteration, and linear edge test.",
+          "Real graphs are sparse, so the list is the default; a matrix is used for dense graphs or when the algebra of the matrix is the point.",
+          "Degree sum equals twice the edge count, so the number of odd-degree vertices is even.",
+          "Connected means a path between every pair; the number of components is the number of times a traversal must restart.",
+          "A bipartite graph is exactly one with no odd cycle, which a two-colour traversal tests directly."
+        ]
+      },
+      {
+        "title": "🧮 A five-vertex graph in both forms",
+        "paras": [
+          "Vertices one to five with edges 1-2, 1-3, 2-3, 3-4 and 4-5.",
+          "Adjacency list: one connects to two and three; two to one and three; three to one, two and four; four to three and five; five to four.",
+          "Degrees are 2, 2, 3, 2 and 1, summing to ten, which is twice five edges, and the odd-degree vertices are three and five, an even count.",
+          "The matrix in order has rows (0,1,1,0,0), (1,0,1,0,0), (1,1,0,1,0), (0,0,1,0,1) and (0,0,0,1,0): symmetric, with row sums equal to the degrees.",
+          "Space comparison matters at scale. With a million vertices and a hundred edges each, the matrix needs a trillion cells while the list needs a hundred million entries, a difference of four orders of magnitude, which is why social graphs are never stored as matrices.",
+          "The graph is connected and contains the triangle 1-2-3, so it is not bipartite: colour one red, which forces two and three blue, but they are adjacent, so the attempt fails."
+        ]
+      }
+    ]
+  },
+  "537": {
+    "sections": [
+      {
+        "title": "🔍 The mistake that turns a traversal into an infinite loop",
+        "paras": [
+          "A tree has no cycles, so walking it can never revisit a node. A graph does: one edge in each direction is enough to send a naive walk back and forth for ever.",
+          "So every graph traversal carries a visited set, and marks a node when it is discovered rather than when it is processed. Marking late lets the same node enter the queue several times, which inflates both memory and time."
+        ]
+      },
+      {
+        "title": "⚙️ Two orders, two purposes",
+        "paras": [
+          "Breadth-first uses a queue and expands in rings. Depth-first uses a stack, or recursion, and follows one path to its end before backing up."
+        ],
+        "bullets": [
+          "Both cost vertices plus edges on a list representation, and vertices squared on a matrix.",
+          "Breadth-first gives shortest edge counts, because the first arrival cannot be beaten by a longer route.",
+          "Depth-first is cheaper for reachability, since it can stop as soon as the target appears.",
+          "Depth-first time stamps detect cycles in directed graphs by spotting a back edge to an active ancestor.",
+          "Breadth-first cannot do that, because it loses the notion of an active path.",
+          "Neither is unique: neighbour order changes the output, while the set of reachable vertices does not."
+        ]
+      },
+      {
+        "title": "🧮 The same graph in two orders",
+        "paras": [
+          "Six vertices with edges 1-2, 1-3, 2-4, 3-4, 4-5 and 5-6, starting at one.",
+          "Breadth-first: one is visited and its neighbours two and three queue at distance one. Two then offers four at distance two, three offers nothing new, four offers five at distance three, and five offers six at distance four. The order is 1, 2, 3, 4, 5, 6.",
+          "Depth-first, taking the smallest neighbour first: one to two, two to four, four to three, which is already visited, so back to four, then five, then six. The order is 1, 2, 4, 3, 5, 6.",
+          "The pair that shows why the choice matters: depth-first reached three in three steps although its true distance is one. Breadth-first answers distance questions, depth-first answers existence questions."
+        ]
+      }
+    ]
+  },
+  "538": {
+    "sections": [
+      {
+        "title": "🔍 Why counting steps stops working when edges have weights",
+        "paras": [
+          "Breadth-first treats every edge as costing one, so it finds the route with the fewest hops. Put distances, times or prices on the edges and the fewest hops may be the most expensive route: two short motorway links can beat one long country road.",
+          "Dijkstra replaces the queue with a priority queue ordered by the best known distance so far, so it always confirms the closest unsettled vertex next."
+        ]
+      },
+      {
+        "title": "⚙️ Relaxation and the reason the greedy step is safe",
+        "paras": [
+          "Relaxation is the only real operation: if going through u gives a shorter distance to v than the current best, replace the best. Repeat, always taking the unsettled vertex with the smallest known distance."
+        ],
+        "bullets": [
+          "Correctness rests on non-negative weights: when the smallest unsettled distance is chosen, no detour through other unsettled vertices can beat it, since every detour only adds.",
+          "Non-negative weights are therefore a precondition, not a detail; with a negative edge the greedy choice can be wrong and the confirmed distance becomes too large.",
+          "With negative edges, Bellman-Ford is used instead, at the cost of a slower algorithm, and it also detects negative cycles.",
+          "Complexity is edges plus vertices times log vertices with a binary heap, and quadratic with a plain array, which suits dense graphs.",
+          "Early exit is safe once the target is popped, which is useful for point-to-point queries.",
+          "The A star variant adds an estimate of the remaining distance to the key, which explores far fewer vertices while keeping the answer optimal when the estimate never overstates."
+        ]
+      },
+      {
+        "title": "🧮 Five nodes, one table",
+        "paras": [
+          "Directed edges: 1 to 2 with weight 4, 1 to 3 with 1, 3 to 2 with 2, 2 to 4 with 5, 3 to 4 with 8, 4 to 5 with 3.",
+          "Distances start at zero for one and infinity elsewhere. Confirm one, relax to 2 as 4 and to 3 as 1.",
+          "Confirm three at 1, which improves 2 to 3 and gives 4 a distance of 9.",
+          "Confirm two at 3, which improves 4 to 8. Confirm four at 8, giving 5 a distance of 11. Confirm five.",
+          "The final distances are 0, 3, 1, 8, 11, and the shortest route to two is through three, length 3, not the direct edge of length 4. Relaxation found that, breadth-first could not have.",
+          "Now make the edge from 3 to 2 weight minus five: the route through three would be minus four, but three was already confirmed at distance one and never revisited. The confirmed answer of 3 stays, and it is wrong, which is precisely why negative weights require a different algorithm."
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,453 @@
+{
+  "824": {
+    "sections": [
+      {
+        "title": "🔍 Why language resists the approach that worked for images",
+        "paras": [
+          "An image is a grid of continuous numbers, and a small change in brightness leaves the meaning unchanged. Language is a sequence of discrete symbols, and changing one symbol can reverse the meaning. There is no notion of a nearby word the way there is a nearby pixel.",
+          "That is why the first problem in NLP is representation: text has to become numbers in a way that preserves the relationships that matter, and no encoding does that perfectly."
+        ]
+      },
+      {
+        "title": "⚙️ Ambiguity, context, and the pipeline",
+        "paras": [
+          "Language is ambiguous at every level. A word has several senses, a sentence has several parses, and a speaker means something beyond the literal content. Context is what disambiguates, and context can extend beyond the sentence.",
+          "The standard pipeline reflects the layers of the problem: split text into tokens, normalise it, represent it as numbers, run a model, and decode the output. Modern models collapse several steps into one learned component, but the conceptual layers remain."
+        ],
+        "bullets": [
+          "Discrete symbols mean the model must learn similarity from usage rather than from distance.",
+          "Ambiguity requires context, which is why bag-of-words methods plateau quickly.",
+          "Compositionality means the meaning of a sentence is built from its parts, in a structure.",
+          "Language changes constantly, so a model trained on one period drifts on another.",
+          "Multilingual work multiplies the ambiguity, since word boundaries and grammar differ by language.",
+          "Evaluation is hard because many answers are acceptable, which is why metrics are proxies at best.",
+          "Almost every technique in this course is a way of coping with one of the first three problems."
+        ]
+      },
+      {
+        "title": "🧮 The scale problem in numbers",
+        "paras": [
+          "An English speaker uses perhaps 20,000 word families actively and recognises 40,000. A corpus built from web text has millions of distinct surface forms once inflections, names, and typos are counted.",
+          "A vocabulary of 1 million words with one-hot encoding needs a 1-million-dimensional vector per word, and a 100-word document becomes a 100-million-cell matrix that is 99.99 percent zeros. That sparsity is the reason embeddings exist.",
+          "N-gram counts make the squeeze visible. A 1-billion-word corpus contains 1 billion tokens, about 1 million distinct words, about 100 million distinct bigrams observed out of a possible 1 trillion, and about 1 billion trigrams observed out of a possible 10 to the 18. So 99.999 percent of possible trigrams never appear, which is why count-based models need smoothing to say anything about new text.",
+          "Sequence length arithmetic: a 300-word article is about 400 tokens with a subword tokenizer. A document collection of 1 million articles is 400 million tokens, which at 2 bytes per token in a compact representation is 800 MB before any model parameters. That number explains why text pipelines are engineered around streaming rather than loading everything.",
+          "Anatomy of a common task: classifying 100,000 support tickets into 12 categories. With a bag-of-words plus linear model, training is seconds and accuracy is typically 80 to 85 percent. With a pretrained transformer, accuracy reaches 90 to 93 percent and inference costs 20 milliseconds per ticket instead of 0.1, which is the trade that decides the deployment."
+        ]
+      }
+    ]
+  },
+  "825": {
+    "sections": [
+      {
+        "title": "🔍 Why the application decides the method",
+        "paras": [
+          "Translation, spam filtering, and question answering are all text problems and need completely different designs, metrics, and data. A method chosen before the application almost always turns out to be aimed at the wrong target.",
+          "The discipline that prevents this is to name the input, the output, and the cost of each kind of error before choosing anything else."
+        ]
+      },
+      {
+        "title": "⚙️ The four families of task",
+        "paras": [
+          "Classification assigns a label to a whole document: sentiment, topic, spam, intent. Information extraction pulls structured facts out: entities, relations, dates. Transformation rewrites the text: translation, summarisation, correction. Generation produces new text from a prompt or a context.",
+          "Each family has a characteristic output structure, and that structure determines the architecture and the evaluation."
+        ],
+        "bullets": [
+          "Classification needs one label per document and is evaluated with precision, recall, and F1.",
+          "Extraction produces spans or triples and is evaluated with exact-match or span F1.",
+          "Translation and summarisation are sequence-to-sequence and are evaluated with BLEU or ROUGE.",
+          "Dialogue and assistants need multi-turn state, which is a memory problem as much as a language problem.",
+          "Retrieval and search rank documents, which is evaluated with ranking metrics rather than accuracy.",
+          "Speech and optical character recognition are text tasks with an upstream conversion step.",
+          "The error costs differ wildly: a missed spam is cheap, a missed safety flag is not, and that asymmetry should choose the metric."
+        ]
+      },
+      {
+        "title": "🧮 Effort and payoff per family",
+        "paras": [
+          "Classification with 10,000 labelled examples and a linear model on TF-IDF features: an hour of work, 85 percent accuracy, sub-millisecond inference. The same task with a pretrained transformer: a day of work including fine-tuning and evaluation, 92 percent, 20 milliseconds per item. At 1 million items per day, the extra 20 milliseconds is 5.5 hours of compute, which is real money and usually still worth 7 points of accuracy.",
+          "Extraction is harder for a reason worth quantifying. A document with 30 entities, each requiring a start and end position, has 900 possible span boundaries. Exact-match evaluation requires all 30 to be right, so at 95 percent per-entity accuracy the document is fully correct only 21 percent of the time. That is why extraction metrics report span-level F1 rather than document accuracy.",
+          "Translation quality in numbers: a rule-based system in the 1990s reached BLEU around 25 on a standard benchmark, statistical systems reached 35, and neural systems reached 45. Human parity is estimated around 60 to 70 depending on the pair, so the visible remaining gap is about the size of everything achieved since 1990, which is why translation still needs review in high-stakes settings.",
+          "Summarisation compression arithmetic: a 2,000-word document summarised to 200 words is a 10-to-1 reduction. ROUGE measures n-gram overlap with reference summaries, and a score of 40 means 40 percent of reference unigrams appear in the output, which is a coarse measure of one property, not of usefulness.",
+          "The economics of the choice: for a support-ticket router, 8,000 tickets per day at 85 percent accuracy with a linear model costs almost nothing and misroutes 1,200. At 93 percent with a transformer, it misroutes 560 and costs perhaps 30 per day in inference. If a misroute costs 5 in agent time, the savings are 3,200 against 30, which is the kind of arithmetic that decides architecture more often than benchmark tables do."
+        ]
+      }
+    ]
+  },
+  "826": {
+    "sections": [
+      {
+        "title": "🔍 Why text has a data model too",
+        "paras": [
+          "Before any model, text has structure: documents belong to corpora, characters belong to encodings, and strings belong to tokens. Getting the structure wrong produces bugs that look like model failures.",
+          "The most common of these is an encoding mismatch, which turns readable text into replacement characters and silently destroys the data."
+        ]
+      },
+      {
+        "title": "⚙️ Documents, tokens, vocabulary, and encodings",
+        "paras": [
+          "A document is a unit of text, a corpus is a collection, and a vocabulary is the set of tokens a model knows. The mapping from raw text to tokens is the tokenizer, and its output size is the sequence length.",
+          "An encoding maps characters to bytes. UTF-8 uses one byte for ASCII and two to four for other characters, which means a byte count is not a character count and a character count is not a token count."
+        ],
+        "bullets": [
+          "Text is bytes; decoding with the wrong encoding produces mojibake that cannot be reversed reliably.",
+          "A vocabulary is usually capped, and out-of-vocabulary tokens must map to an unknown token or be split.",
+          "Token count depends on the tokenizer, so comparing sequence lengths across models is meaningless.",
+          "Document boundaries matter: concatenating documents leaks context across them.",
+          "Metadata such as language, source, and timestamp is often more useful than the text itself for filtering.",
+          "Duplicate documents inflate training sets and leak between splits, so deduplication is part of data preparation.",
+          "Storing text compressed reduces cost by 2 to 3 times, and it is decompressed on read rather than held in memory."
+        ]
+      },
+      {
+        "title": "🧮 Counting bytes, characters, and tokens",
+        "paras": [
+          "The string cafe with an accented final e is 4 characters. In UTF-8 it is 5 bytes, because that character takes 2. In UTF-16 it is 8 bytes. A naive byte-length check says 5 characters and a naive character iteration may produce 5 if implemented wrongly, which is how truncation bugs appear in user interfaces.",
+          "ASCII text: 1,000 characters are 1,000 bytes and roughly 200 words. A subword tokenizer produces about 260 tokens, because common words are single tokens and there are a few splits. Another tokenizer might produce 330 for the same text, which is why context windows quoted in tokens translate to different word counts per model.",
+          "Vocabulary arithmetic: a corpus with 50 million tokens and 400,000 distinct surface forms. Keeping all 400,000 in the vocabulary gives a large embedding table but no unknown tokens. Keeping the top 30,000 covers about 98 percent of token occurrences, mapping the rest to an unknown token. That 2 percent is mostly names and rare technical terms, which are often the most informative words, which is exactly why subword tokenization replaced this choice.",
+          "Compression arithmetic: 1 million documents averaging 2 KB is 2 GB uncompressed and about 600 MB gzipped. A model that streams and decompresses on the fly trades CPU for a 3-fold reduction in storage and I/O, which is usually the right trade because text decompression is faster than disk reads on most systems.",
+          "Encoding failure detection in numbers: with 10,000 documents, if 50 fail to decode as UTF-8, that is 0.5 percent, and silently dropping them biases any model trained on the result. Logging the failures and inspecting a sample is the difference between a data pipeline and a data leak."
+        ]
+      }
+    ]
+  },
+  "828": {
+    "sections": [
+      {
+        "title": "🔍 Why splitting text is a modelling decision",
+        "paras": [
+          "A model cannot read characters as a sequence of arbitrary length, so text must be divided into units. The choice of unit determines the vocabulary size, the sequence length, and what the model can generalise to.",
+          "Split on spaces and every typo, plural, and compound becomes an unknown word. Split on characters and sequences become five times longer. Subword tokenization is the compromise that made both problems manageable."
+        ]
+      },
+      {
+        "title": "⚙️ Word, character, and subword units",
+        "paras": [
+          "Word tokenization splits on whitespace and punctuation. It produces short sequences and interpretable units, and it fails on anything not in the vocabulary, which includes most names and any new word.",
+          "Character tokenization produces a tiny vocabulary and never fails on unknown input, at the cost of sequences that are several times longer and a model that must relearn that letters combine into words.",
+          "Subword tokenization learns frequent character sequences and splits rare words into a few known pieces, so an unseen word becomes a sequence of known subwords."
+        ],
+        "bullets": [
+          "Byte pair encoding starts with characters and repeatedly merges the most frequent adjacent pair.",
+          "WordPiece and unigram models are alternatives that choose merges by likelihood rather than raw frequency.",
+          "A vocabulary of 32,000 subword units covers most languages with a reasonable sequence length.",
+          "The same tokenizer must be used at training and inference; changing it invalidates the model.",
+          "Subword splitting means a misspelled word still tokenizes, which improves robustness.",
+          "Numbers and rare identifiers split into many pieces, which is why arithmetic and code are hard for token-based models.",
+          "Whitespace handling differs between tokenizers, and the difference changes the sequence but not the content."
+        ]
+      },
+      {
+        "title": "🧮 How the choice changes the numbers",
+        "paras": [
+          "The word unrecognizable has 14 characters and is one token with a word tokenizer if it is in the vocabulary, three subword pieces such as un, recogn, izable with a subword tokenizer, and 14 tokens with a character tokenizer.",
+          "Sequence length for a 500-word document: about 500 word tokens, about 650 subword tokens, about 3,000 character tokens. A model with a 512-token limit therefore handles a full page with subwords, most of a page with words, and a fifth of a page with characters.",
+          "Vocabulary coverage arithmetic: with a 30,000-word vocabulary, 2 percent of tokens in typical text are unknown, which is 10 unknown tokens in a 500-word document and usually includes the names. With a 32,000-subword vocabulary, unknown tokens drop to about 0.01 percent because anything can be split.",
+          "Byte pair encoding by hand on a tiny corpus: words low, lower, lowest, newest with counts 5, 2, 6, 3. The most frequent adjacent pair across the corpus is the pair l followed by o, appearing 5 plus 2 plus 6, 13 times, so it merges into a single unit. Repeating this merges common sequences, and the vocabulary becomes characters plus the merges, which is why a subword vocabulary is compact and derived rather than listed by hand.",
+          "Compute arithmetic: attention cost is quadratic in sequence length. A 650-token sequence costs 650 squared, 422,500 attention pairs. The same content as 3,000 character tokens costs 9 million pairs, 21 times more. That factor is the practical reason subword tokenization won: it keeps sequences short enough for attention to be affordable."
+        ]
+      }
+    ]
+  },
+  "829": {
+    "sections": [
+      {
+        "title": "🔍 Why cleaning is irreversible",
+        "paras": [
+          "Normalisation makes different surface forms identical, which helps models treat the and The as one token. But every step discards information permanently, and a model cannot recover what was deleted.",
+          "The useful discipline is to ask, for each step, whether the thing being discarded could ever matter for this task. Case matters for sentiment of ALL CAPS, punctuation matters for negation, and stop words matter for authorship."
+        ]
+      },
+      {
+        "title": "⚙️ Case, punctuation, stemming, lemmatisation, stop words",
+        "paras": [
+          "Normalisation covers lowercasing, removing or standardising punctuation, expanding contractions, and converting Unicode forms so that visually identical strings compare equal.",
+          "Stemming chops word endings with rules, producing a crude common root that may not be a real word. Lemmatisation uses a dictionary and part of speech to produce the actual base form. Both conflate inflections, and lemmatisation is slower and more accurate."
+        ],
+        "bullets": [
+          "Lowercasing loses case information, which distinguishes Apple the company from apple the fruit.",
+          "Stemming running and runs to run is useful; stemming university to univers is harmless for matching but wrong as a word.",
+          "Lemmatisation needs a part-of-speech tag to choose between better and good, so it is a pipeline step, not a string operation.",
+          "Stop-word removal shrinks the feature space and speeds up classical models, and it removes negation if not careful.",
+          "Modern pretrained models are trained on raw text and usually need no normalisation beyond Unicode form.",
+          "Unicode normalisation matters: the same accented character can be one code point or two, and they compare unequal without normalisation.",
+          "Every step must be identical in training and inference, or the model sees a different distribution in production."
+        ]
+      },
+      {
+        "title": "🧮 What each step costs and saves",
+        "paras": [
+          "A 500-word document with 250 distinct words after lowercasing and 180 after removing an English stop-word list of 180 common words. Removing stop words shrinks the vocabulary by about 28 percent, which matters when the vocabulary is a sparse 30,000-dimensional vector.",
+          "The cost is visible in a negation example: not good becomes good after stop-word removal, which reverses the sentiment. On an IMDB-style review dataset, removing negation words can cost 3 to 5 points of accuracy, which is why the standard advice for sentiment is to keep negation and its adjacent words.",
+          "Stemming versus lemmatisation on a vocabulary of 30,000: stemming reduces it to perhaps 22,000, lemmatisation to 24,000. Both improve recall on keyword search by 5 to 10 points because buy, buying, and bought become one term. Lemmatisation is about 10 times slower, which for 1 million documents at 1 millisecond each is 17 minutes, still acceptable.",
+          "Unicode normalisation example: the character e with an acute accent can be stored as one code point U+00E9 or as U+0065 followed by U+0301, a combining mark. They render identically and compare unequal. Without normalisation, a search for cafe with the composed form misses documents with the decomposed form, and the failure looks like a search bug rather than a data problem.",
+          "Case folding in numbers: lowercasing merges The and the, reducing the distinct form count by roughly 30 percent in English text. That helps a bag-of-words model and destroys the signal that ALL CAPS carries, which on some social media datasets is worth 1 to 2 points of sentiment accuracy. Both effects are real, which is why the decision depends on the task rather than on a rule."
+        ]
+      }
+    ]
+  },
+  "830": {
+    "sections": [
+      {
+        "title": "🔍 Why single words lose the order",
+        "paras": [
+          "A bag of words cannot distinguish not good from good not. Word order carries meaning, and an n-gram is the smallest unit that preserves any of it.",
+          "The idea is simple: treat every sequence of n consecutive tokens as a feature. It costs a larger feature space, and it captures local patterns such as negations, idioms, and fixed phrases."
+        ]
+      },
+      {
+        "title": "⚙️ Bigrams, trigrams, and the sparsity wall",
+        "paras": [
+          "A bigram is a pair of adjacent tokens, a trigram is a triple. A document becomes a count over n-grams instead of a count over words, and the same classifiers apply unchanged.",
+          "The problem is that the number of possible n-grams grows exponentially with n, while the number observed in any corpus grows much more slowly."
+        ],
+        "bullets": [
+          "Bigrams capture negation and common pairs; trigrams capture short fixed phrases.",
+          "Adding bigrams to a bag-of-words model typically improves sentiment and topic accuracy by 2 to 5 points.",
+          "The feature count explodes: 30,000 words give about 900 million possible bigrams.",
+          "Most n-grams occur once or twice, so they are noise rather than signal and should be pruned by minimum frequency.",
+          "For language modelling, higher n means more context and more zero probabilities.",
+          "Character n-grams handle typos and morphology, and they are robust for language identification.",
+          "Modern neural models learn order implicitly, which is why n-grams are now mainly a classical baseline."
+        ]
+      },
+      {
+        "title": "🧮 Counting n-grams and hitting the wall",
+        "paras": [
+          "The sentence the cat sat on the mat has 6 tokens, so 5 bigrams: the cat, cat sat, sat on, on the, the mat. Trigrams number 4. Four-grams number 3.",
+          "In a 1,000-word document, there are 999 bigrams and 997 trigrams, so the feature count per document grows only linearly with length. The problem is the vocabulary of features, not the count per document.",
+          "Sparsity arithmetic: with a 30,000-word vocabulary there are 900 million possible bigrams. A 1-billion-word corpus contains 1 billion bigram occurrences, so at most 1 billion distinct bigrams could appear, but in practice only about 100 million do because distribution is heavy-tailed. That is 11 percent coverage of the possible space, and most of those appear once.",
+          "For trigrams the situation is worse: 27 trillion possible, and a 1-billion-word corpus can observe at most 1 billion, so coverage is under 0.004 percent. A new sentence almost certainly contains a trigram never seen in training, which is why a raw count-based trigram model assigns probability zero to most new sentences.",
+          "The fix is smoothing. Add-one smoothing gives every unseen trigram a count of 1 instead of 0. With a 30,000-word vocabulary, the number of possible trigrams is 2.7 times 10 to the 13, so the total added mass is 2.7 times 10 to the 13, which dwarfs the 1 billion observed counts and destroys the model. That arithmetic is why smarter smoothing such as Kneser-Ney exists, and why neural models replaced count models entirely.",
+          "Pruning in practice: keeping only bigrams appearing 5 or more times from a 1-billion-word corpus typically leaves 5 to 10 million features instead of 100 million, which makes the model trainable and removes most of the noise."
+        ]
+      }
+    ]
+  },
+  "832": {
+    "sections": [
+      {
+        "title": "🔍 Why ignore order on purpose",
+        "paras": [
+          "For topic classification, the presence of vaccine and efficacy matters and their order does not. Ignoring order makes the representation small, fast, and surprisingly effective.",
+          "Bag of words is the baseline every text model must beat, and it is often within a few points of a much more expensive model on topic tasks."
+        ]
+      },
+      {
+        "title": "⚙️ Counting into a vector",
+        "paras": [
+          "The vocabulary defines the dimensions. Each document becomes a vector whose entries are the counts of each vocabulary term, with everything else zero.",
+          "The vectors are high-dimensional and sparse: a 30,000-dimensional vector with perhaps 200 non-zero entries for a short document."
+        ],
+        "bullets": [
+          "Binary bag of words records presence instead of count, which helps when repetition is not meaningful.",
+          "The representation loses word order, so dog bites man and man bites dog are identical.",
+          "It also loses grammar, negation scope, and long-distance dependencies.",
+          "Cosine similarity between count vectors is the standard way to compare documents.",
+          "Sparse matrices are essential: a dense 100,000 by 30,000 matrix would be 12 GB of floats.",
+          "The vocabulary must be built from training data only, or the test set leaks.",
+          "Stop-word removal and stemming are usually applied before building the bag."
+        ]
+      },
+      {
+        "title": "🧮 Vectors, sparsity, and similarity by hand",
+        "paras": [
+          "Vocabulary of four terms: cat, dog, mat, sat. Document one is the cat sat on the mat, giving counts 1, 0, 1, 1. Document two is the dog sat on the mat, giving 0, 1, 1, 1.",
+          "Dot product is 0 plus 0 plus 1 plus 1, 2. Each vector has length root 3, 1.732, so cosine similarity is 2 divided by 3, 0.667. The two documents are similar because they share two terms, which matches intuition.",
+          "Sparsity arithmetic: 10,000 documents with an average of 150 distinct terms and a 30,000-term vocabulary gives 1.5 million non-zero entries out of 300 million cells, 0.5 percent dense. Stored sparsely at 12 bytes per entry that is 18 MB; stored densely as 4-byte floats it is 1.2 GB. The sparse form is 66 times smaller and, more importantly, matrix multiplication over it skips the zeros.",
+          "The order-blindness cost, measured: on a sentiment dataset, a bag-of-words model reaches about 83 percent and adding bigrams reaches 87. On a topic dataset, the same comparison is 88 against 89. So order matters for sentiment, where negation and modifiers flip polarity, and barely matters for topic, where the words themselves carry the topic. That is the practical rule for whether to add n-grams.",
+          "Vocabulary growth with corpus size: a 10,000-document corpus has perhaps 20,000 distinct terms, 100,000 documents have 100,000 terms, and 1 million documents have 500,000 terms. Most new terms appear once, which is why capping the vocabulary at the top 30,000 by frequency loses little information and saves a great deal of space."
+        ]
+      }
+    ]
+  },
+  "833": {
+    "sections": [
+      {
+        "title": "🔍 Why raw counts favour the wrong words",
+        "paras": [
+          "In a bag of words, the word the appears more often than any content word in almost every document, so it contributes most to similarity while carrying no meaning. The words that distinguish documents are the ones that are frequent here and rare elsewhere.",
+          "TF-IDF encodes exactly that: term frequency inside the document, inverse document frequency across the corpus."
+        ]
+      },
+      {
+        "title": "⚙️ The two factors and the formula",
+        "paras": [
+          "Term frequency is how often a term appears in this document. Inverse document frequency is the logarithm of the total number of documents divided by the number of documents containing the term. The product is the weight, and it is high only when a term is common in this document and rare overall.",
+          "The logarithm keeps the IDF factor from dominating, and it means that going from 1 document containing a term to 2 barely changes the weight, while going from 100 to 200 does."
+        ],
+        "bullets": [
+          "A term in every document has an IDF of zero, so it contributes nothing, which handles stop words automatically.",
+          "A term in 1 of 1,000 documents has an IDF of about 6.9 with base e, a strong signal.",
+          "Sublinear term frequency, using 1 plus log of the count, prevents a term repeated 50 times from dominating.",
+          "The result is still sparse and still order-blind, and it is usually L2-normalised so dot products become cosine similarities.",
+          "IDF must be computed on training data and stored, because the test corpus's statistics are not available in production.",
+          "TF-IDF with a linear classifier is still a strong baseline for topic and spam tasks.",
+          "The idea that rare terms carry more information is the ancestor of attention weighting."
+        ]
+      },
+      {
+        "title": "🧮 Computing weights by hand",
+        "paras": [
+          "Corpus of 1,000 documents. The term vaccine appears in 10 documents, so its IDF with base e is log of 1,000 divided by 10, log 100, which is 4.605. The term the appears in 1,000, so its IDF is log 1, which is 0.",
+          "A document of 200 words contains vaccine 4 times. Raw term frequency is 4, so the weight is 4 times 4.605, 18.42. With sublinear frequency, 1 plus log 4 is 2.386, and the weight is 2.386 times 4.605, 10.99.",
+          "Now a term that appears 20 times but in 800 documents: IDF is log 1.25, 0.223, so the weight is 20 times 0.223, 4.46. Despite appearing five times more often, it weighs four times less than vaccine, which is exactly the correction TF-IDF is designed to make.",
+          "Normalisation arithmetic: a document vector with weights 18.42, 4.46, and 3.0 has length root of 339.3 plus 19.9 plus 9, root 368.2, 19.19. Normalising divides each weight by 19.19, giving 0.96, 0.23, 0.16. Now cosine similarity between documents is a dot product of unit vectors, and long documents no longer dominate short ones.",
+          "The storage cost of IDF: a vocabulary of 500,000 terms needs 500,000 floats, 2 MB, which is trivial. The sparse document vectors are the cost, and they are unchanged from bag of words at about 0.5 percent density.",
+          "Why the baseline is hard to beat: on the classic 20-newsgroups dataset, TF-IDF with a linear classifier reaches about 88 percent accuracy, and a fine-tuned transformer reaches 92. Four points for maybe a thousand times the compute, which is why TF-IDF remains the first thing to try and often the thing that ships."
+        ]
+      }
+    ]
+  },
+  "834": {
+    "sections": [
+      {
+        "title": "🔍 Why a dense vector instead of a sparse one",
+        "paras": [
+          "A one-hot vector says every pair of distinct words is equally different, so cat and dog are as unrelated as cat and democracy. That is wrong, and it forces the model to learn similarity from scratch for every task.",
+          "An embedding gives each word a short dense vector, typically 100 to 300 numbers, positioned so that words used in similar contexts are close together. Similarity becomes a geometric property of the input rather than something the model must discover."
+        ]
+      },
+      {
+        "title": "⚙️ Learning from context and the arithmetic that follows",
+        "paras": [
+          "The distributional idea is that a word's meaning is characterised by the company it keeps. A model trained to predict a word from its neighbours, or its neighbours from the word, is forced to give similar vectors to words that appear in similar places.",
+          "Word2vec and GloVe are the classic methods. Both produce a table of vectors, one per vocabulary item, and the table is the only thing kept after training."
+        ],
+        "bullets": [
+          "Embedding dimension is a trade: 50 is small and lossy, 300 is standard, 768 or more appears inside large models.",
+          "The table size is vocabulary times dimension, so 50,000 times 300 is 15 million parameters.",
+          "Similarity is cosine or dot product, and both work because the vectors are roughly comparable in length.",
+          "Analogies appear as vector arithmetic: the vector for king minus man plus woman lands near queen.",
+          "Embeddings are context-free, so one vector per word must cover all senses, which is a real limitation.",
+          "Contextual embeddings from transformers give a different vector per occurrence, which resolves the limitation.",
+          "Training embeddings on your own domain is often better than using general-purpose ones, because vocabulary shifts."
+        ]
+      },
+      {
+        "title": "🧮 Vector arithmetic and its limits",
+        "paras": [
+          "Two-dimensional toy vectors: cat is 0.8, 0.2, dog is 0.75, 0.25, car is 0.1, 0.9. The cosine similarity of cat and dog is about 0.999, effectively identical in direction, while cat and car is about 0.44. The geometry now matches intuition without any task-specific training.",
+          "Real vectors behave the same way at higher dimension. With 300 dimensions, the cosine similarity between cat and dog is typically 0.6 to 0.7, between cat and car 0.15 to 0.25, and between unrelated words near 0.05. Those ranges are what a similarity search threshold is calibrated against.",
+          "Analogy arithmetic: king minus man plus woman gives a vector, and the nearest vocabulary item to it is queen for a well-trained table. This works for perhaps 60 to 70 percent of analogy questions, which is impressive and also a warning: a third of them fail.",
+          "Storage arithmetic: a 50,000 by 300 float table is 60 MB in 32-bit precision and 30 MB in 16-bit. That is why a small model can hold an embedding table in memory even when its other layers are larger.",
+          "The sense ambiguity cost, in numbers: the word bank appears in finance and river contexts roughly equally. Its single vector sits between the two clusters, so it is close to neither and its similarity to money is diluted by half. Contextual models fix this by producing two different vectors for the two occurrences, which is the main practical reason to prefer them.",
+          "Why dimension helps up to a point: with 50 dimensions a table captures broad topical similarity, with 300 it captures finer relations, and beyond about 1,000 the gains flatten while the storage grows linearly. That flattening is why 300 remained the standard for years and why modern models use 768 to 4,096 only because their overall scale makes the table a small fraction of the parameters."
+        ]
+      }
+    ]
+  },
+  "836": {
+    "sections": [
+      {
+        "title": "🔍 Why sentiment is harder than it looks",
+        "paras": [
+          "Classifying a review as positive or negative sounds like a keyword problem: count good words and bad words. That works on 80 percent of straightforward reviews and fails on the cases that matter.",
+          "Negation reverses polarity, contrast makes the last clause dominant, sarcasm inverts everything, and domain words carry implicit judgement that a general lexicon does not know."
+        ]
+      },
+      {
+        "title": "⚙️ The classical pipeline and where it breaks",
+        "paras": [
+          "The standard approach converts text to TF-IDF or bag-of-words features, trains a linear classifier such as logistic regression or a support vector machine on labelled reviews, and predicts for new text. It is fast, interpretable, and hard to beat on short, explicit reviews.",
+          "Adding bigrams helps because they capture negation: not good becomes a distinct feature from good."
+        ],
+        "bullets": [
+          "Negation handling requires keeping the negator adjacent to the negated word, which is why n-grams matter here.",
+          "Contrast markers such as but shift weight to the following clause, and a model without structure splits the weight evenly.",
+          "Sarcasm is the hardest case, because all the polarity words are positive and the meaning is the opposite.",
+          "Domain shift is severe: a word that is positive in one domain is neutral in another, so a model trained on movie reviews degrades on product reviews.",
+          "Aspect-based sentiment asks about a specific feature, which is a different and harder task.",
+          "Class imbalance is common because most reviews are positive, so accuracy hides a model that never predicts negative.",
+          "Modern systems use pretrained transformers, which handle negation and context far better, at 100 times the inference cost."
+        ]
+      },
+      {
+        "title": "🧮 Accuracy, and where the errors live",
+        "paras": [
+          "A TF-IDF plus logistic regression model on 50,000 movie reviews reaches about 88 percent accuracy, with precision 0.87 and recall 0.89 for the positive class. A fine-tuned transformer reaches 94 to 96 percent on the same split.",
+          "The confusion matrix tells the story. A classical model misclassifies about 6,000 of 50,000. Of those, a large share are reviews with contrast or negation: roughly 40 percent of errors contain a negation or a but, which is 2.4 times their base rate in the data.",
+          "Sarcasm arithmetic: sarcastic reviews are perhaps 5 percent of a review corpus. A model with 50 percent accuracy on them contributes 2.5 percent of overall error. Removing them entirely would raise measured accuracy by 2.5 points, which is why datasets that quietly drop hard examples produce misleadingly strong results.",
+          "Baseline arithmetic: if 70 percent of reviews are positive, predicting positive always gives 70 percent accuracy. A model reporting 88 percent is 18 points above that baseline, and the number that matters for a business is not accuracy but how many negative reviews are missed, since those are the ones needing a response.",
+          "Aspect-based cost: labelling aspects requires span annotation, which is 5 to 10 times more expensive per document than labelling overall sentiment. A sentence-level model trained on overall labels cannot learn aspect sentiment without that annotation, which is why aspect-based systems need their own datasets.",
+          "Threshold economics: with a 0.5 threshold and 88 percent accuracy, the model flags 30 percent of reviews as negative while only 25 percent truly are. Lowering the threshold to 0.4 catches more true negatives and raises false alarms, which is the right move when missing a complaint costs more than an unnecessary follow-up."
+        ]
+      }
+    ]
+  },
+  "837": {
+    "sections": [
+      {
+        "title": "🔍 Why classification is the workhorse",
+        "paras": [
+          "Spam or not, topic or not, which language, what intent. Most deployed NLP systems are classifiers, because most business questions are a choice among a known set of answers.",
+          "The workflow is stable: label data, build features, train, evaluate, deploy, monitor. The difficulty is almost always in the labels and the split, not the model."
+        ]
+      },
+      {
+        "title": "⚙️ Features, model, and the split that decides the score",
+        "paras": [
+          "Features are TF-IDF, embeddings, or a pretrained encoder's output. The model is linear, tree-based, or a fine-tuned transformer. The choice trades accuracy against latency and data requirements.",
+          "The split is where most reported scores go wrong. Documents from the same source, near-duplicates, and multiple examples per author all leak information across a random split."
+        ],
+        "bullets": [
+          "Split by group, such as author or source document, when multiple rows come from one origin.",
+          "Deduplicate near-identical text before splitting, or the test set contains paraphrases of the training set.",
+          "Stratify by class so each fold has the same balance, which matters for rare categories.",
+          "For temporal data, split by time, because future text differs from past text.",
+          "Report per-class precision and recall, not just accuracy, whenever classes are imbalanced.",
+          "A confusion matrix reveals systematic confusions, such as one topic being absorbed by another.",
+          "Error analysis on 100 misclassified examples usually suggests the next feature or label fix."
+        ]
+      },
+      {
+        "title": "🧮 Splits, metrics, and realistic gains",
+        "paras": [
+          "A dataset of 20,000 tickets across 8 categories. With a random split, accuracy is 91 percent. With a split by customer, so that no customer appears in both sets, accuracy drops to 84 percent. The 7-point gap is leakage from repeated phrasing within one customer's tickets, and the second number is the honest one.",
+          "Class imbalance arithmetic: 8 categories where the largest is 40 percent and the smallest 2 percent. A model that predicts the majority class always gets 40 percent. Macro-averaged F1 weights all classes equally, so the small class dragging to 0.4 pulls the score down and reveals the problem that accuracy hides.",
+          "Per-class comparison: a linear TF-IDF model reaches F1 of 0.92 on the large categories and 0.55 on the smallest. A transformer reaches 0.94 and 0.78. The average gain is 3 points but the gain on the class that matters is 23, which is why per-class numbers must be reported.",
+          "Data requirement arithmetic: a linear model on TF-IDF needs about 100 examples per class to be usable and 1,000 to be good. A transformer fine-tune needs about 100 to 300 per class and improves further with more. That means a small-vocabulary problem with 50 examples per class is better served by the linear model plus augmentation.",
+          "Latency arithmetic: a TF-IDF plus linear model scores 50,000 documents per second on one core. A transformer fine-tune does 50 per second on a GPU. For a batch job over a year of 20 million documents, that is 7 minutes against 111 hours, which decides the architecture regardless of the 3-point accuracy difference.",
+          "Threshold and cost: with a 4 percent false positive rate on 1 million tickets, 40,000 are misrouted. At 2 in agent time each, that is 80,000 per run. Raising precision by 1 point saves 10,000, which is the number that justifies or rejects a more expensive model."
+        ]
+      }
+    ]
+  },
+  "838": {
+    "sections": [
+      {
+        "title": "🔍 Why discover topics instead of labelling them",
+        "paras": [
+          "Labelling 100,000 documents into topics requires a taxonomy that someone must invent, and the taxonomy is usually wrong in ways nobody notices until it is expensive to change.",
+          "Topic modelling instead discovers the mixture of themes that explains the corpus, without labels. The output is a set of word distributions plus a per-document mixture."
+        ]
+      },
+      {
+        "title": "⚙️ Latent Dirichlet allocation and other approaches",
+        "paras": [
+          "LDA assumes each document is a mixture of a small number of topics and each topic is a distribution over words. Given the documents and a chosen number of topics, it infers the word distributions and the mixture proportions that best explain the observed words.",
+          "Non-negative matrix factorisation achieves something similar with linear algebra: factorise the document-term matrix into a document-topic matrix and a topic-term matrix."
+        ],
+        "bullets": [
+          "The number of topics must be chosen, and there is no objective best value.",
+          "A topic is a probability distribution over the whole vocabulary, so it has no name until a human gives it one.",
+          "Each document gets a mixture, not a single label, which is often the more honest representation.",
+          "LDA is sensitive to preprocessing: stop words, rare words, and document length all change the result.",
+          "Embedding-based topic models cluster document vectors, which handles short text better than LDA.",
+          "Coherence scores correlate with human judgement of topic quality and are used to choose the topic count.",
+          "The output is a hypothesis, not a label, and needs human validation before use."
+        ]
+      },
+      {
+        "title": "🧮 Running LDA on numbers",
+        "paras": [
+          "A corpus of 10,000 documents with a 20,000-term vocabulary and 10 topics. The document-term matrix has 200 million cells, of which perhaps 1 percent are non-zero, so 2 million entries. LDA iterates over the non-zero entries, so each pass is a few million operations, and 1,000 passes take seconds to minutes.",
+          "Output shape: 10 topics times 20,000 words is a 200,000-number table of word probabilities, plus 10,000 documents times 10 topics, 100,000 mixture weights. Everything else has been discarded.",
+          "Choosing the topic count: with 5 topics the coherence score is 0.32, at 10 it is 0.41, at 20 it is 0.39, at 40 it is 0.33. The peak at 10 is the signal, and going beyond it splits coherent topics into fragments. Without such a measure, the choice is arbitrary, and the results are not comparable between runs.",
+          "The naming cost: each of the 10 topics needs a human to read its top 15 words and assign a name. That is 150 words to read, perhaps 20 minutes of expert time. Compare with manually labelling 10,000 documents at 10 seconds each, 28 hours. The 85-fold saving is the entire justification for topic modelling as an exploration tool.",
+          "Distributional sanity check: a well-formed corpus with 10 topics typically gives top-10 word lists that a domain expert finds recognisable about 8 times out of 10, and 2 topics that are blends of several themes. That is the realistic hit rate, and it is why the output is treated as a first draft.",
+          "Short text is where LDA fails: a tweet of 12 words contributes almost no co-occurrence evidence, so topics become dominated by whichever words happen to co-occur. Reported failure rates on short-text corpora are high enough that embedding-based clustering is the standard alternative."
+        ]
+      }
+    ]
+  }
+}

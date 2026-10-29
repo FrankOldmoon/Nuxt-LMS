@@ -1,0 +1,434 @@
+{
+  "634": {
+    "sections": [
+      {
+        "title": "🔍 Why there has to be a layer in between",
+        "paras": [
+          "Suppose there were no operating system. To save a file you would have to know the drive model, its register addresses, its command protocol, which sector the data belongs in, and how completion is signalled. Change the drive and the program is rewritten.",
+          "An operating system does two jobs that look opposed and are in fact the same job. It hides the hardware behind concepts people can use, such as files, processes and memory, and it referees the hardware between programs that all want it at once. Hiding is only meaningful if someone is in charge of allocation, and allocation only matters because the hardware is scarce."
+        ]
+      },
+      {
+        "title": "⚙️ Kernel, shell, and four duties",
+        "paras": [
+          "The kernel is the resident part that runs with full privilege and touches the hardware directly. The shell is an ordinary program that asks the kernel to do things on its behalf, which is why a shell crash is harmless and a kernel crash is not."
+        ],
+        "bullets": [
+          "Process management: create, schedule, stop and coordinate; this is where the concurrency problems of the next chapters live.",
+          "Memory management: isolate programs, provide the illusion of a private address space, and decide what is resident.",
+          "File and storage management: turn block devices into files and directories, cache them, and order the requests.",
+          "Device and security management: drive peripherals, handle interrupts, and check permissions on every access.",
+          "Every duty has the same hidden difficulty: several parties act at once, so any shared state can be corrupted by an unlucky interleaving.",
+          "The abstractions are load-bearing. A file is a byte stream wherever it lives, and a process is a running program regardless of how many cores exist."
+        ]
+      },
+      {
+        "title": "🧮 Following one write all the way down",
+        "paras": [
+          "A program calls write with a few bytes. The language runtime buffers them and only submits when the buffer fills or the stream is flushed, because each submission costs a transition into the kernel.",
+          "The kernel entry is a trap: the processor switches privilege, saves registers, and jumps to a handler selected by a number the program placed in a register. From that point the program has no control until the kernel returns.",
+          "The kernel resolves the file descriptor to an open file description and then to an inode, computes which blocks the bytes belong to, may allocate new blocks, and copies the data into the page cache. The call can now return successfully although nothing has reached the disk.",
+          "A background flusher writes the dirty pages later, or immediately if the program asked for durability. Only then is the data safe against power loss.",
+          "Returning restores the user registers and lowers privilege. The observable behaviour is one function call; underneath there were permission checks, address validation, block mapping and caching, which is the whole point of having a kernel.",
+          "The cost matters too: a transition is around a microsecond, so a loop writing one byte at a time spends a thousand times longer in overhead than in useful work, which is why buffering is not an optimisation but a necessity."
+        ]
+      }
+    ]
+  },
+  "635": {
+    "sections": [
+      {
+        "title": "🔍 Why there are so many kinds of operating system",
+        "paras": [
+          "The first computers had no operating system at all: a program was loaded by hand, ran, and printed. The machine was fast and the human was slow, so almost all the time was wasted waiting for the operator.",
+          "Batch systems attacked that waste by running jobs back to back with no human in the loop. That created a new problem, because a long job blocked everything behind it, and interactive users saw nothing for hours. Time-sharing answered that by slicing the processor into small turns. Real-time systems appeared when some workloads cared about the worst case rather than the average.",
+          "So the variety is not progress but specialisation. Each kind optimises a different quantity, and the quantities conflict."
+        ]
+      },
+      {
+        "title": "⚙️ Five families and the trade they make",
+        "paras": [
+          "Three measures drive every choice: throughput, how much work per hour; response, how long a user waits; and determinism, whether the worst case is bounded."
+        ],
+        "bullets": [
+          "Batch: maximise throughput, accept no interaction. Modern equivalent is a cluster job scheduler.",
+          "Time-sharing: minimise response time by switching often, which costs throughput in switching overhead.",
+          "Hard real-time: guarantee a bound, which means deliberately running below capacity so that the bound can be kept.",
+          "Soft real-time: prefer timeliness, tolerate an occasional miss; audio and video playback live here.",
+          "Embedded: minimise footprint, often with no memory protection at all.",
+          "Mobile: minimise energy, which changes every other decision, from sleeping aggressively to restricting background work."
+        ]
+      },
+      {
+        "title": "🧮 One task in three systems",
+        "paras": [
+          "The task reads a sensor every ten milliseconds, computes for two, and writes a control signal.",
+          "On a time-sharing system the scheduler does not know the task is urgent. A background update can delay it by tens of milliseconds, the signal arrives late, and a robot arm oscillates. The average performance is fine and the worst case is unacceptable.",
+          "On a hard real-time system the same task is given a fixed priority and its worst-case execution time is analysed in advance, so the two milliseconds are guaranteed within the ten. The scheduler frequently runs at sixty to seventy percent utilisation on purpose, wasting capacity in exchange for predictability.",
+          "On a batch system the task cannot even be expressed, since there is no notion of a periodic trigger, only a queue of jobs.",
+          "The utilisation figures say it plainly: batch can exceed ninety percent, time-sharing sits near eighty because of switching, and hard real-time holds back a third of the machine. Doing less work is the price of promising a deadline.",
+          "A realistic footnote: Android and iOS are all three at once, using priority classes for responsiveness, high-priority threads for touch and audio, and voltage and frequency scaling for energy."
+        ]
+      }
+    ]
+  },
+  "636": {
+    "sections": [
+      {
+        "title": "🔍 Why a program must not touch the hardware",
+        "paras": [
+          "If any program could write to disk blocks or alter page tables, one bug or one malicious program could destroy the system, read another user's memory, or halt the machine. Multi-user computing would be impossible.",
+          "So the processor provides at least two privilege levels. In user mode, privileged instructions are refused and cause a fault. Only the kernel runs with the authority to change page tables, disable interrupts or address devices.",
+          "The consequence is that a program needing a file must ask, and the asking happens through a controlled doorway where the kernel can check everything. That doorway is the system call, and control passes completely to the kernel at the moment of crossing, which is why user code cannot bypass the checks."
+        ]
+      },
+      {
+        "title": "⚙️ The mechanics, and the structures built on top",
+        "paras": [
+          "A system call is a number in a register followed by a trap instruction. The processor switches privilege, indexes a table of handlers, validates the arguments, performs the operation, places a result in a register and returns."
+        ],
+        "bullets": [
+          "Arguments cannot be trusted as pointers, so the kernel copies them in with a routine that validates the range, which is where many historical vulnerabilities lived.",
+          "Library and system call are different layers: printing goes through a buffered library call that eventually issues one write, and allocating memory goes through a library that occasionally asks the kernel for a large block.",
+          "Monolithic kernels keep drivers and file systems inside one privileged address space, which is fast and fragile: one faulty driver can panic the machine.",
+          "Microkernels keep only scheduling, memory and inter-process messaging inside, with services in user space, which is safer and slower because every service call becomes a message.",
+          "Hybrid designs compromise, and modular kernels allow loading code at runtime with full privilege, which is convenient and dangerous in equal measure.",
+          "Each transition costs on the order of a microsecond including lost cache locality, which is why high-performance code batches work instead of calling in a loop."
+        ]
+      },
+      {
+        "title": "🧮 Watching a program talk to the kernel",
+        "paras": [
+          "Tracing a one-line program that prints a greeting shows hundreds of calls before the greeting appears. Opening a shared library, reading its header, mapping its segments, then finally a write to descriptor one with three bytes.",
+          "The open call takes a path, flags and a mode and returns three, because zero, one and two are already taken by standard input, output and error. The flags say read-only and close-on-exec.",
+          "The write returns three, meaning three bytes accepted. A short return is legal and must be handled, since a signal or a full buffer can accept less than requested, and code that assumes otherwise truncates output under load.",
+          "The cost calculation is the useful part: a million single-byte writes at one microsecond each is a second of pure overhead, while one write of a megabyte is one transition. That is a factor of a thousand, which is why buffering appears at every level of the stack."
+        ]
+      }
+    ]
+  },
+  "638": {
+    "sections": [
+      {
+        "title": "🔍 A program is a file; a process is a life",
+        "paras": [
+          "A program on disk is a static sequence of bytes. A process is that program loaded into memory with a program counter, a stack, a heap, open files and a private address space, which is to say it is the thing that can actually be scheduled.",
+          "The distinction explains why three browser windows are three processes from one program, and why a process is the unit of isolation: one process cannot read another's memory, and one crashing does not take the others with it."
+        ]
+      },
+      {
+        "title": "⚙️ The control block and the state machine",
+        "paras": [
+          "The kernel keeps a process control block per process, holding the identifier, the state, the register snapshot, the memory map, open files, signal handlers and accounting. Everything the kernel knows about a process is in that record."
+        ],
+        "bullets": [
+          "States: new, ready, running, blocked, terminated.",
+          "Running to ready happens on preemption when the time slice expires.",
+          "Running to blocked happens when the process waits for input or a lock; blocked never goes straight to running, it must rejoin the ready queue.",
+          "A context switch saves registers, loads the next process, swaps the page table and flushes or tags translation caches, which is pure overhead of a few microseconds.",
+          "A zombie is a finished process whose parent has not collected the exit status; an orphan is a process whose parent died first and which is adopted.",
+          "Copy on write makes creation cheap: parent and child share pages marked read-only, and a page is copied only when one of them writes."
+        ]
+      },
+      {
+        "title": "🧮 One fork, two lifetimes",
+        "paras": [
+          "The fork call returns twice: the child's identifier in the parent and zero in the child, with a negative value on failure. Code distinguishes the two branches by that return value, which is why the idiom looks like an if statement.",
+          "A variable set to one hundred before the fork appears twice afterwards, and changing it in the child leaves the parent's copy at one hundred. The reason is not that memory was duplicated, since pages are shared; the write triggers a copy of that one page.",
+          "Shared state does survive: open file descriptors are shared, and so is the file offset, which is why a parent and child writing to the same descriptor interleave their output in surprising ways.",
+          "A familiar trap: a buffered print before the fork is duplicated into the child, so the line appears twice. The buffer was copied along with the page, and flushing before forking fixes it.",
+          "In practice, creation plus loading a new program is expensive enough that specialised calls exist to skip the copying, and long-running services avoid the pair altogether by reusing processes."
+        ]
+      }
+    ]
+  },
+  "639": {
+    "sections": [
+      {
+        "title": "🔍 Why processes are too heavy for concurrency inside one program",
+        "paras": [
+          "A browser must render, download and respond to input at the same time. Doing that with processes means every handoff goes through inter-process communication and every switch changes address space.",
+          "A thread is an execution unit inside a process. Threads share the address space, the heap and the open files, and each has its own stack, registers and program counter. Communication becomes ordinary memory access, and switching stops paying for a page-table change.",
+          "The clean summary: a process is the unit of resource ownership and a thread is the unit of scheduling."
+        ]
+      },
+      {
+        "title": "⚙️ What is shared, and what that costs",
+        "paras": [
+          "The shared and private lists determine both the speed and the bugs."
+        ],
+        "bullets": [
+          "Shared: code, globals, heap, open descriptors, working directory, signal dispositions.",
+          "Private: stack, registers and program counter, thread identifier, scheduling priority.",
+          "Shared memory makes communication free and makes every writable global a potential race.",
+          "A thread that crashes the address space takes the whole process with it, which is why browsers moved to one process per site.",
+          "User-level threads switch without a kernel trap but cannot run on two cores, and one blocking call stalls them all.",
+          "Kernel-level threads are scheduled individually and run in parallel, at the cost of a trap per switch.",
+          "The global interpreter lock in CPython allows one thread at a time in bytecode, so CPU-bound work needs processes while input-bound work still benefits."
+        ]
+      },
+      {
+        "title": "🧮 What threading actually buys",
+        "paras": [
+          "Four cores processing an image in four strips should approach four times the speed. In practice it lands near three to three and a half, because creation, synchronisation and shared memory bandwidth all take a share.",
+          "Now a counter incremented a million times by four threads under one lock. The result is slower than one thread, often twice as slow, because every increment queues for the same lock and each handoff drags a cache line between cores.",
+          "The fix is not a better lock but less sharing: each thread accumulates privately and the results are combined once at the end, which restores near-linear scaling and is the same idea behind map-reduce.",
+          "Amdahl's law sets the ceiling: with ninety-five percent of the work parallel, four cores give at most three and a half times, and with fifty percent parallel the ceiling is one and six tenths.",
+          "A practical note: more threads than cores does not help CPU-bound work and adds switching cost, so the useful range is around the core count with a little slack for waiting."
+        ]
+      }
+    ]
+  },
+  "640": {
+    "sections": [
+      {
+        "title": "🔍 Why scheduling has no single right answer",
+        "paras": [
+          "A ready queue holds ten processes and the processor can run one. The choice of who runs next has no universally correct answer, because the goals conflict: high throughput wants long uninterrupted runs, low response wants frequent switching, and fairness wants everyone to progress.",
+          "So the scheduler is a policy, and the policy is chosen by what the system is for. A server is judged on throughput, a desktop on response, a controller on the worst case."
+        ]
+      },
+      {
+        "title": "⚙️ Five policies and the word preemption",
+        "paras": [
+          "Non-preemptive means a process keeps the processor until it blocks or finishes. Preemptive means it can be taken away, by a timer or by a more important arrival. Interactive systems are all preemptive."
+        ],
+        "bullets": [
+          "First come first served: simplest, and suffers convoying, where one long job delays every short one behind it.",
+          "Shortest job first: optimal average waiting time, requires knowing run times in advance, and starves long jobs.",
+          "Shortest remaining time: the preemptive version, better still on average and more expensive in switches.",
+          "Round robin: a time slice each, which bounds response time; slices too large degenerate into first come first served and too small drown in overhead.",
+          "Priority with aging: priorities decide, and raising a waiting process's priority prevents starvation.",
+          "Multilevel feedback: new work enters at the top, and anything using its whole slice drops a level, which favours short interactive jobs without starving long ones.",
+          "The Linux default keeps a virtual runtime per process and always runs the smallest, approximating an ideal fair-share processor."
+        ]
+      },
+      {
+        "title": "🧮 Three processes, three answers",
+        "paras": [
+          "Processes: first arrives at zero needing twenty-four, second at one needing three, third at two needing three.",
+          "First come first served: first runs to twenty-four, then second to twenty-seven, then third to thirty. Waits are zero, twenty-three and twenty-five, averaging sixteen. Turnaround averages twenty-six.",
+          "Shortest remaining time: at one, the second arrives with three remaining against twenty-three for the first, so it preempts. The second finishes at four, the third runs from four to seven, and the first resumes to thirty. Waits become six, zero and two, averaging under three.",
+          "The ratio is nearly six to one in average waiting time, and it is entirely caused by letting the long job start first.",
+          "Round robin with a slice of four: the first runs to four, the second to seven, the third to ten, then the first resumes. Waits are zero, three and five, so the average is no better than the shortest-remaining case, but the first response times are three and five instead of twenty-three and twenty-five.",
+          "That is the trade stated numerically: shortest remaining optimises average waiting, round robin optimises responsiveness, and first come first served optimises implementation simplicity."
+        ]
+      }
+    ]
+  },
+  "642": {
+    "sections": [
+      {
+        "title": "🔍 What a single line of code really does",
+        "paras": [
+          "The statement that adds one to a counter looks atomic and is three machine steps: load the value, add one, store it back. A timer interrupt between any two of those steps is legal, and that is enough to lose an update.",
+          "Two threads both load five, both compute six, both store six. One increment vanished, and nothing in either thread's code is wrong. This is a race condition, and its defining feature is that the fault lives in the interleaving rather than in the statements."
+        ]
+      },
+      {
+        "title": "⚙️ Critical sections and three requirements",
+        "paras": [
+          "The region that touches shared mutable state is the critical section. The goal is that at most one thread is inside it at a time; a correct mechanism must guarantee three things."
+        ],
+        "bullets": [
+          "Mutual exclusion: at most one thread inside the critical section at any moment.",
+          "Progress: if the section is free and someone wants in, someone gets in, so the system cannot deadlock at the door.",
+          "Bounded waiting: a thread that asks cannot be overtaken indefinitely.",
+          "Busy waiting burns the processor while spinning, which is acceptable for very short sections on multiple cores and wasteful otherwise.",
+          "Hardware atomic instructions such as test-and-set and compare-and-swap are the primitive everything else is built from.",
+          "Races are not limited to threads: shared memory between processes, signal handlers and even interrupt handlers can produce the same defect."
+        ]
+      },
+      {
+        "title": "🧮 The interleaving that loses an update",
+        "paras": [
+          "Counter starts at zero, and two threads each add one. The correct result is two.",
+          "Harmful order: first reads zero, second reads zero, first computes one, second computes one, first stores one, second stores one. The final value is one.",
+          "Harmless order: first completes all three steps to give one, then second reads one and stores two.",
+          "Both orders are legal, since neither breaks any single-threaded rule, and they disagree. That is why concurrent correctness cannot be established by inspecting statements one at a time.",
+          "A subtler version: checking that a reference is not null and then calling a method on it. Another thread may null it in between, so the check passes and the call fails. The fix is either to make both steps one critical section or to stop sharing mutable state at all.",
+          "A practical note: these faults almost never reproduce under a debugger, because printing changes the timing. Tooling that detects data races at runtime is the only reliable way to find them before users do."
+        ]
+      }
+    ]
+  },
+  "643": {
+    "sections": [
+      {
+        "title": "🔍 What a lock buys and what it costs",
+        "paras": [
+          "A lock serialises access: take it before entering, release it after leaving, and wait if it is held. The race disappears because the interleavings have been reduced to one legal order.",
+          "The costs are equally real. Code inside the lock runs alone, so protection reduces parallelism; taking and releasing costs atomic instructions and sometimes a sleep and wake; and two locks taken in different orders can deadlock."
+        ]
+      },
+      {
+        "title": "⚙️ From atomic instructions to mutexes",
+        "paras": [
+          "A lock cannot be built from check-then-set, because the gap between the two steps is itself a race. Hardware provides an instruction that reads and writes in one indivisible step, and locks are built on that."
+        ],
+        "bullets": [
+          "A spinlock loops on the atomic instruction, which is cheap when the wait is very short and wasteful when it is not.",
+          "A mutex puts the waiter to sleep and wakes it on release, which suits longer sections.",
+          "Hybrid locks spin briefly before sleeping, which captures most of the benefit of both.",
+          "A read-write lock allows concurrent readers and an exclusive writer, which suits read-mostly data but risks starving writers.",
+          "Optimistic concurrency checks a version on write instead of locking on read, retrying on conflict, which wins when conflicts are rare.",
+          "Lock granularity is the real design decision: one big lock is simple and slow, per-item locks are fast and easy to deadlock."
+        ]
+      },
+      {
+        "title": "🧮 Two counters, two very different numbers",
+        "paras": [
+          "Ten threads each increment a shared counter a hundred thousand times. Without a lock the final value falls short of a million and differs on each run, which is the missing updates made visible.",
+          "With one mutex the answer is exactly a million and the run is slower than a single thread, because a million lock acquisitions plus ten threads contending for one word is serialisation with extra steps.",
+          "With a private counter per thread and a single combination at the end, the answer is correct and the run approaches the linear scaling, since the threads share nothing while working.",
+          "The lesson is that the optimisation is not to make the lock faster but to need it less, which is the same principle behind sharded counters and thread-local storage.",
+          "For the deadlock, take thread one locking X then Y and thread two locking Y then X. One holds X and waits for Y, the other holds Y and waits for X, and neither proceeds. Imposing a global order on locks, or acquiring all of them at once with rollback, removes the cycle. The symptom is distinctive: no output, and the processor idle, because both threads are asleep rather than looping."
+        ]
+      }
+    ]
+  },
+  "644": {
+    "sections": [
+      {
+        "title": "🔍 Counting instead of excluding",
+        "paras": [
+          "A lock answers whether someone is inside. A semaphore answers how many may be inside, which is a different question and a more general one: a pool of ten connections, a buffer with five free slots, a printer that allows two jobs.",
+          "The value is the number of permits left. Waiting decrements and blocks if the result would be negative; signalling increments and wakes a waiter. With a starting value of one it behaves exactly like a lock, which is why the two are sometimes confused."
+        ]
+      },
+      {
+        "title": "⚙️ Deadlock and the four conditions",
+        "paras": [
+          "Deadlock is a set of processes each holding something and each waiting for something another holds. It requires four conditions simultaneously, and removing any one of them makes it impossible."
+        ],
+        "bullets": [
+          "Mutual exclusion: a resource is held by one party at a time.",
+          "Hold and wait: a process keeps what it has while asking for more.",
+          "No preemption: nothing can be taken away.",
+          "Circular wait: the waiting forms a cycle.",
+          "The conditions are necessary but not sufficient, so satisfying all four does not guarantee deadlock, while breaking one guarantees safety.",
+          "Prevention attacks a condition by design; avoidance checks each request against a safe state; detection finds cycles and aborts a victim.",
+          "Deadlock differs from starvation, where progress happens but one party is repeatedly passed over, and from livelock, where everyone acts and nobody advances."
+        ]
+      },
+      {
+        "title": "🧮 Producer and consumer, with the order trap",
+        "paras": [
+          "A buffer of capacity n between one producer and one consumer needs three semaphores: empty starting at n, full starting at zero, and mutex starting at one.",
+          "The producer waits on empty, takes the mutex, inserts, releases the mutex, then signals full. The consumer waits on full, takes the mutex, removes, releases, then signals empty.",
+          "The classic bug is swapping the first two waits in the producer. If it takes the mutex before waiting for empty, then when the buffer is full it sleeps while holding the mutex, the consumer cannot enter to remove anything, full never decreases, and the system stops. Two resources acquired in the wrong order is enough.",
+          "Dining philosophers puts five processes in a ring with five forks and a rule that each needs both neighbours. If everyone takes the left fork first, all five hold one and wait for the other: a perfect cycle.",
+          "Three standard fixes, each removing a different condition. Number the forks and always take the lower number first, which breaks the cycle. Allow only four at the table, which breaks hold and wait. Or let a philosopher who cannot get the second fork put the first one down, which attacks no-preemption and risks livelock without a random backoff.",
+          "The first fix is the one that costs nothing at runtime, which is why imposing a global lock order is the usual convention in real code."
+        ]
+      }
+    ]
+  },
+  "646": {
+    "sections": [
+      {
+        "title": "🔍 Why the gap forces a hierarchy",
+        "paras": [
+          "A register responds in about a third of a nanosecond, memory in a hundred nanoseconds, an SSD in a hundred microseconds, a mechanical disk in ten milliseconds. Between the register and the disk there are seven orders of magnitude.",
+          "If the only memory were registers, nothing would fit. If the only memory were a disk, the processor would spend essentially all its time waiting. The only workable arrangement is a ladder where each level is smaller and faster than the one below, so that most requests are answered by a small fast level."
+        ]
+      },
+      {
+        "title": "⚙️ The ladder, and why it works at all",
+        "paras": [
+          "Registers, then level one, two and three caches of increasing size and latency, then main memory, then flash, then disk. Capacity grows by roughly a factor of ten at each step and latency grows by two to five."
+        ],
+        "bullets": [
+          "Time locality: recently used data is likely to be used again, which is why a small cache keeps hitting.",
+          "Space locality: nearby addresses are likely to be used together, which is why whole blocks of sixty-four bytes are fetched at once.",
+          "Write-back keeps changes in the cache and marks the line dirty, which is fast and defers the disk write.",
+          "Write-through writes both levels, which is simpler and slower.",
+          "A hit costs the level latency; a miss costs that latency plus the next level, and the block is installed on the way back.",
+          "The consequence is that measured speed depends on access pattern, not only on complexity, which is the single most useful fact in performance work."
+        ]
+      },
+      {
+        "title": "🧮 The same additions, two orders of loops",
+        "paras": [
+          "Sum a thousand by thousand array stored row by row. Row-major order touches consecutive addresses, so one cache line supplies sixteen integers and the miss count is about sixty thousand.",
+          "Column-major order touches addresses four thousand bytes apart, so almost every access misses, giving about a million misses, sixteen times as many.",
+          "The arithmetic is identical and the second version can easily be five times slower. No complexity analysis detects this, which is why profiling matters more than counting operations.",
+          "The translation cache adds a second effect: an array of four megabytes spans a thousand pages, and column-major order crosses pages constantly, so the address translation misses as well.",
+          "Quantifying the average: with a one nanosecond hit, a hundred nanosecond miss and ninety-five percent hit rate, the average is about six nanoseconds. Drop the hit rate to eighty percent and it becomes twenty-one, a factor of three and a half from fifteen percentage points.",
+          "The practical rule that follows: make access sequential before making the algorithm clever, because the memory system will punish a clever algorithm that jumps around."
+        ]
+      }
+    ]
+  },
+  "647": {
+    "sections": [
+      {
+        "title": "🔍 Why programs must not see physical addresses",
+        "paras": [
+          "Hand out real addresses and three problems appear immediately. A buggy program can overwrite another's memory. Every program must be relocated whenever it loads somewhere different. And the total demand can never exceed physical memory.",
+          "Virtual memory solves all three with one decision: give each process its own address space, and let hardware translate those addresses to physical frames at the moment of access. Isolation, relocation and oversubscription then follow from the same mechanism."
+        ]
+      },
+      {
+        "title": "⚙️ Pages, tables, faults",
+        "paras": [
+          "Paging cuts the address space into fixed pages and memory into frames of the same size, so no hole is ever unusable. A page table records which frame each page occupies, and the low bits of the address are the offset inside the page, which never changes."
+        ],
+        "bullets": [
+          "A thirty-two bit address with four kilobyte pages splits into twenty bits of page number and twelve bits of offset.",
+          "A page table entry carries the frame number plus validity, dirty, accessed and permission bits.",
+          "A page fault means the page is not resident; the kernel finds a frame, evicts something if needed, reads the page in, updates the table and restarts the instruction.",
+          "Demand paging loads pages only when touched, which is why large programs start quickly.",
+          "Multi-level tables save memory, because only the used parts of the tree are allocated.",
+          "Replacement policies range from least-recently-used approximations to clock, and thrashing is what happens when memory is too small for the working set."
+        ]
+      },
+      {
+        "title": "🧮 Splitting an address, and pricing a fault",
+        "paras": [
+          "Take the address 0x3A7C with four kilobyte pages. The low twelve bits are 0xA7C, which is 2684, so the offset is 2684. The page number is 3.",
+          "If page three sits in frame 0x1F, the physical address is 0x1F000 plus 2684, which is 0x1FA7C.",
+          "If the validity bit is zero instead, the same access becomes a fault: the kernel picks a free frame, reads the page from storage, updates the entry and re-executes the instruction.",
+          "Price the fault with a hundred microseconds against a hundred nanoseconds. A one percent fault rate gives an average of 99 nanoseconds plus 1000, about 1.1 microseconds, which is eleven times slower than an all-hit run. The fault rate, not the fault count, is what matters.",
+          "The multi-level table arithmetic is worth doing once: a single-level table for a thirty-two bit space needs about four megabytes resident, while a two-level scheme for a process using four megabytes of address space needs about eight kilobytes, a factor of five hundred.",
+          "One correction to a common assumption: asking for a gigabyte can succeed without a gigabyte of memory, because nothing is committed until pages are touched."
+        ]
+      }
+    ]
+  },
+  "648": {
+    "sections": [
+      {
+        "title": "🔍 Why translation does not halve the speed",
+        "paras": [
+          "Every memory access needs a translation, and a program may access memory several times per instruction. If translation meant reading a page table in memory, every access would cost two, and a two-level table would cost three.",
+          "The saving is a small fast cache of recent translations, with the same locality argument as any other cache: a program touches very few distinct pages in a short interval, so a hundred entries cover almost everything."
+        ]
+      },
+      {
+        "title": "⚙️ The path of one access, and how to keep it short",
+        "paras": [
+          "The processor takes the page number from the virtual address, checks the translation cache, and on a hit concatenates the frame number with the offset. On a miss the table is walked, and either hardware or a trap completes it."
+        ],
+        "bullets": [
+          "Effective access time is the hit rate times the fast path plus the miss rate times the slow path.",
+          "Large pages cover more address space per entry, which is why databases and virtual machines use two megabyte pages.",
+          "A process switch must invalidate translations unless entries are tagged by process, which is why switching costs more than register swapping.",
+          "The page table itself is cached in intermediate structures, so walks are cheaper than the naive count suggests.",
+          "Copy on write relies on permissions: sharing read-only and trapping on the first write is how forks become nearly free.",
+          "An inverted table sizes itself to physical memory rather than to virtual space, at the cost of looking up by hash."
+        ]
+      },
+      {
+        "title": "🧮 Pricing a translation",
+        "paras": [
+          "With a one nanosecond cache lookup and a hundred nanosecond memory, a hit path is about a hundred and one nanoseconds and a miss path about two hundred and one.",
+          "At ninety-nine percent hits the average is a hundred and two nanoseconds, which is why the translation looks free. At ninety percent it is a hundred and eleven, a ten percent penalty. At fifty percent it is a hundred and fifty-one, a fifty percent penalty.",
+          "The large-page comparison explains a real speed-up: four megabytes with four kilobyte pages needs a thousand entries and will thrash a sixty-four entry cache, while with two megabyte pages it needs two entries and never misses.",
+          "The multi-level penalty is visible too: a miss that walks four levels costs four memory reads plus the final access, five accesses against two for a single level, a factor of two and a half that is only tolerable because misses are rare.",
+          "The habit worth taking away: when a program's speed drops sharply as its data grows past a threshold, the cause is often translation or cache capacity rather than algorithmic complexity."
+        ]
+      }
+    ]
+  }
+}

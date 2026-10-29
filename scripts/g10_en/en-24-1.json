@@ -1,0 +1,412 @@
+{
+  "602": {
+    "sections": [
+      {
+        "title": "🔍 Why ordinary language is not good enough",
+        "paras": [
+          "Consider the sentence: if you do not come, I will not go, unless he comes. It contains three conditions and no two people read it the same way. Reasoning in a language with that much ambiguity means that when a conclusion is wrong, nobody can say which step broke.",
+          "Propositional logic removes the ambiguity by fixing the meaning of every connective in advance. A statement is true or false, a compound statement takes its truth value from its parts, and the rules for combining them are written down. After that, an argument can be checked rather than argued about."
+        ]
+      },
+      {
+        "title": "⚙️ Propositions, five connectives, one awkward one",
+        "paras": [
+          "A proposition is a declarative sentence with a truth value. Two plus two is four qualifies; x is greater than three does not, because x is unbound; please close the door does not, because a command has no truth value.",
+          "Five connectives cover the rest: not, and, or, implies, and if and only if. Four behave as expected. The fifth causes most of the difficulty."
+        ],
+        "bullets": [
+          "A conditional is false in exactly one case: the premise true and the conclusion false.",
+          "When the premise is false, the conditional is counted as true. This is called vacuous truth, and it is a convention that makes the arithmetic consistent rather than a claim about the world.",
+          "A conditional is equivalent to not-A or B, which is why it is easy to rewrite and easy to get wrong.",
+          "The converse reverses the two statements and is not equivalent; the contrapositive reverses and negates, and is.",
+          "And binds tighter than or, and not binds tightest, so parentheses are worth using whenever the reader might hesitate."
+        ]
+      },
+      {
+        "title": "🧮 Four statements, judged by the rules",
+        "paras": [
+          "Three is odd and seven is prime: both parts true, so the conjunction is true.",
+          "If five is greater than eight, then one equals two: the premise is false, so the conditional is true. This feels wrong and is correct by definition, which is exactly why the definition is worth pinning down early.",
+          "x plus two equals five if and only if x equals three: both sides share a truth value for every x, so the biconditional is always true. That is what capturing a necessary and sufficient condition looks like.",
+          "Translate it is not raining, so I am not going. With p for rain and q for going, the sentence is not-p implies not-q. That is the contrapositive of q implies p, not the same as p implies q. Swapping an implication for its converse is the single most common error in everyday argument."
+        ]
+      }
+    ]
+  },
+  "603": {
+    "sections": [
+      {
+        "title": "🔍 Why drawing a table settles an argument",
+        "paras": [
+          "Two people can defend two different claims about whether two conditions are equivalent, and neither will concede. A truth table ends the discussion in a minute: list every combination of truth values, evaluate both expressions, and compare the columns.",
+          "The price is exponential growth. Two variables need four rows, ten need over a thousand, thirty need a billion. That is why satisfiability solvers exist, and why hand computation stops at three or four variables."
+        ]
+      },
+      {
+        "title": "⚙️ Building the table, and the identities worth keeping",
+        "paras": [
+          "Three steps: enumerate the inputs in binary counting order so nothing is missed, add a column for every subexpression from the inside out, then compare the final columns. Equal columns mean equivalent expressions.",
+          "The useful identities are few and they are used constantly, so they are worth memorising rather than rebuilding each time."
+        ],
+        "bullets": [
+          "De Morgan: negating a conjunction gives a disjunction of negations, and the other way round. Negation passes through the brackets and swaps the operator.",
+          "Implication as disjunction: A implies B is not-A or B. This is the workhorse of simplification.",
+          "Contrapositive: A implies B is equivalent to not-B implies not-A.",
+          "Distribution holds in both directions here, unlike ordinary arithmetic, which is why boolean algebra simplifies so well.",
+          "Absorption: A or (A and B) is just A, and A and (A or B) is just A.",
+          "Rule of thumb for simplification: remove implications, push negations inward, then combine."
+        ]
+      },
+      {
+        "title": "🧮 Two laws on four rows",
+        "paras": [
+          "De Morgan, checked. With both inputs true, A and B is true so its negation is false; not-A or not-B is false or false, also false. With A true and B false, the conjunction is false so the negation is true; the disjunction is false or true, also true. The remaining two rows behave the same way, so the two columns match.",
+          "Implication as disjunction, checked. True and true gives true against false or true, which is true. True and false gives false against false or false, which is false. False and true gives true against true or true, which is true. False and false gives true against true or false, which is true.",
+          "A sanity check on the arithmetic comparison: distribution fails for numbers but holds for logic. Two plus three times four is fourteen, while two plus three times two plus four is thirty. Logic has no such failure, because each variable is independent rather than a quantity."
+        ]
+      }
+    ]
+  },
+  "604": {
+    "sections": [
+      {
+        "title": "🔍 Why propositional logic runs out of road",
+        "paras": [
+          "Every man is mortal cannot be built by joining John is mortal, Paul is mortal and so on, because the list is endless. And x is greater than three is not a proposition at all, since it has no truth value until x is fixed.",
+          "Predicate logic fixes both problems by opening up the sentence. It separates the subject from the property, which gives a predicate, and it adds two quantifiers that say whether the property holds for all objects or for at least one."
+        ]
+      },
+      {
+        "title": "⚙️ Quantifiers, and the rule for negating them",
+        "paras": [
+          "For all, written with an upside-down A, and there exists, written with a backwards E. Both need a domain, and the same sentence can be true in one domain and false in another, which is the most frequent source of error in exercises."
+        ],
+        "bullets": [
+          "Negating a universal gives an existential: not everyone is equal to someone is not. Negating an existential gives a universal.",
+          "To disprove a for-all statement one counterexample is enough; to disprove an exists statement you must rule out every case.",
+          "Nested quantifiers cannot be swapped when the kinds differ: for all x there exists y, with y allowed to depend on x, is much weaker than there exists y for all x.",
+          "When the quantifiers are of the same kind, swapping them changes nothing.",
+          "Unique existence is a shorthand: there is an x with the property, and anything with the property equals x."
+        ]
+      },
+      {
+        "title": "🧮 Four sentences over the reals",
+        "paras": [
+          "For all x, x squared is at least zero: true, and in fact one of the defining properties of the real numbers.",
+          "There exists x with x squared equal to two: true over the reals, false over the rationals. Same sentence, different domain, opposite answer.",
+          "For all x there exists y with y greater than x: true, because y can be chosen as x plus one, and the choice is allowed to depend on x.",
+          "There exists y such that for all x, y is greater than x: false. It asks for a single number larger than every real, and no such number exists. The two sentences differ only in the order of the quantifiers and their truth values are opposite.",
+          "Negation practice: every student takes at least one course is for all s there exists c enrolled. Its negation is there exists s such that for all c, not enrolled, which reads as one student taking nothing. That is very different from every student takes nothing, which is the negation of someone takes something."
+        ]
+      }
+    ]
+  },
+  "606": {
+    "sections": [
+      {
+        "title": "🔍 Why grouping things needs a formal object",
+        "paras": [
+          "A class, a playlist, a set of allowed values. Every one of these is the same idea: a collection where the only question is whether something belongs. Order is irrelevant and repetition is invisible, which is precisely what makes the idea usable for reasoning.",
+          "That indifference is also why sets appear everywhere in computing. Removing duplicates, testing membership, combining filters and checking permissions are all set operations, and database queries are set algebra with names."
+        ]
+      },
+      {
+        "title": "⚙️ Two notations, four operations, one confusion",
+        "paras": [
+          "A set can be listed, or described by a condition. Listing suits small finite sets; the condition form handles the infinite ones and states the intent.",
+          "The confusion to clear up immediately is between belonging and being contained."
+        ],
+        "bullets": [
+          "Belonging is element to set; containment is set to set. Two belongs to the set of digits, but the set containing two is contained in the digits.",
+          "Union takes everything in either, intersection keeps only what is in both, difference keeps what is in the first and not the second.",
+          "Difference is not symmetric, and swapping the operands gives a different set.",
+          "The complement depends on the universal set, so it is meaningless until that is fixed.",
+          "The empty set is contained in every set, including itself, but it is not an element of a typical set.",
+          "The size of a finite set counts distinct elements, so writing one twice does not increase it."
+        ]
+      },
+      {
+        "title": "🧮 Two sets, four results",
+        "paras": [
+          "With the universal set from one to eight, A equal to one to five and B equal to four to seven.",
+          "The union is one to seven, seven elements. The intersection is four and five, two elements. A minus B is one, two and three. B minus A is six and seven. The complements are six, seven and eight for A, and one, two, three and eight for B.",
+          "Check with inclusion and exclusion: five plus four minus two gives seven, matching the union. The subtraction is not a technicality, it corrects the double counting of the two shared elements.",
+          "A useful identity hides here: A minus B equals A intersect the complement of B, which turns difference into intersection and often makes proofs shorter."
+        ]
+      }
+    ]
+  },
+  "607": {
+    "sections": [
+      {
+        "title": "🔍 Why equality needs two directions",
+        "paras": [
+          "Two sets are equal when they have the same members, and there is no formula that computes equality directly. The only route is to prove two inclusions: everything in the first is in the second, and everything in the second is in the first.",
+          "That split is not a stylistic preference. Each direction is a separate implication, and a proof that establishes only one has shown containment, not equality. Many incorrect proofs in this area are exactly half a proof."
+        ]
+      },
+      {
+        "title": "⚙️ The element method, and the identities it proves",
+        "paras": [
+          "To show A is contained in B, take an arbitrary element of A and argue that it must be in B. Because the element is arbitrary, the conclusion holds for all of them. That is the whole technique."
+        ],
+        "bullets": [
+          "Showing non-containment needs one counterexample, not an argument.",
+          "The power set of a set with n elements has 2 to the n members, because each element independently is in or out.",
+          "Distribution holds both ways for intersection over union and for union over intersection.",
+          "De Morgan holds for sets in exactly the same form as for propositions, since membership is a proposition.",
+          "Absorption, and the identity that A minus B equals A intersect the complement of B.",
+          "Containment can be restated three ways: A in B, or the union equals B, or the intersection equals A."
+        ]
+      },
+      {
+        "title": "🧮 Proving one distributive law",
+        "paras": [
+          "Claim: A intersect (B union C) equals (A intersect B) union (A intersect C).",
+          "First direction. Let x be in the left side. Then x is in A, and x is in B or in C. If x is in B, then x is in A intersect B. If x is in C, then x is in A intersect C. Either way x is in the right side, so the left is contained in the right.",
+          "Second direction. Let x be in the right side. Then x is in A intersect B, or in A intersect C. In the first case x is in A and in B, so it is in B union C and therefore in the left side. The second case is identical with C in place of B. So the right is contained in the left.",
+          "Both inclusions hold, so the sets are equal. Notice that nothing was assumed about A, B or C beyond being sets, which is why the identity is universal.",
+          "A counterexample habit worth keeping: test A minus (B minus C) against (A minus B) minus C with A equal to one and two, B equal to two, C equal to one. The left is one, the right is empty, so difference does not associate. Operators that cancel things rarely do."
+        ]
+      }
+    ]
+  },
+  "608": {
+    "sections": [
+      {
+        "title": "🔍 Why order had to be invented",
+        "paras": [
+          "A set does not remember order, which is a feature until you need to say that x is horizontal and y is vertical. Coordinates, database rows, function arguments and dictionary keys all depend on position, so an object that preserves position is required.",
+          "An ordered pair is that object, and its defining property is that two pairs are equal only when both components match. Everything built on pairs inherits this asymmetry."
+        ]
+      },
+      {
+        "title": "⚙️ Products, powers, and the arithmetic of counting",
+        "paras": [
+          "The Cartesian product collects every combination of one element from each set, and the power set collects every subset of one set. Both have sizes that follow simple rules, and both rules are used constantly."
+        ],
+        "bullets": [
+          "The product of sets with sizes m and n has m times n elements, which is the multiplication principle in set language.",
+          "Order matters in a product, so the product of A and B differs from the product of B and A unless the sets are equal or one is empty.",
+          "The product with the empty set is empty, since nothing can be paired.",
+          "The power set of a set with n elements has 2 to the n members; the empty set has one subset, itself.",
+          "The plane is the product of the reals with itself, which is why a point is a pair.",
+          "Triples and longer tuples work the same way, and their sizes multiply."
+        ]
+      },
+      {
+        "title": "🧮 Listing a product and a power set",
+        "paras": [
+          "With A equal to one, two, three and B equal to x and y, the product has six elements: (1,x), (1,y), (2,x), (2,y), (3,x), (3,y). Grouping by the first component confirms nothing was missed.",
+          "The reverse product also has six, but different ones, and the two sets share no element because the first components come from different sets.",
+          "For A equal to a, b, c the power set has eight members, listed by size: the empty set, three singletons, three pairs and the whole set. The counts 1, 3, 3, 1 are a row of Pascal's triangle, which is not a coincidence: the number of subsets of size k is the binomial coefficient.",
+          "A small trap at the boundary: the power set of the empty set is not empty. It contains one element, the empty set, which is consistent with two to the zero being one."
+        ]
+      }
+    ]
+  },
+  "610": {
+    "sections": [
+      {
+        "title": "🔍 Why relationships become sets of pairs",
+        "paras": [
+          "Alice likes Bob, three is less than five, and A is the parent of B. Each of these joins two objects, and inventing a separate theory for each is hopeless. Set theory gives one definition that covers them all: a relation is a subset of a product, so a pair either belongs to it or does not.",
+          "Once that is in place, the language of sets applies immediately. Composing relations is composing sets of pairs, the inverse relation is the same set read backwards, and a database join is a composition."
+        ]
+      },
+      {
+        "title": "⚙️ Five properties, five structures",
+        "paras": [
+          "When a relation sits on a single set, five properties decide what kind of structure it creates. Each one has a one-line test and a familiar example."
+        ],
+        "bullets": [
+          "Reflexive: every element relates to itself, so the diagonal of the matrix is all ones.",
+          "Irreflexive: no element relates to itself. This is not the negation of reflexive, which would allow some diagonal entries.",
+          "Symmetric: the relation reads the same in both directions, so its matrix is symmetric.",
+          "Antisymmetric: the only two-way pairs are equal pairs. Less than is antisymmetric; so is contained in.",
+          "Transitive: a chain of two implies the direct pair. This is the only property that needs three elements to test.",
+          "Reflexive plus symmetric plus transitive gives an equivalence relation; reflexive plus antisymmetric plus transitive gives a partial order."
+        ]
+      },
+      {
+        "title": "🧮 Three checks on a small set",
+        "paras": [
+          "On the set one, two, three, take the relation of being less than: the pairs are (1,2), (1,3) and (2,3).",
+          "Reflexive fails, because (1,1) is absent. Irreflexive holds, since no diagonal pair appears. Symmetric fails, because (1,2) is present without (2,1). Antisymmetric holds, because there are no two-way pairs at all and the condition is satisfied vacuously. Transitive holds, because the only chain (1,2) then (2,3) requires (1,3), which is there.",
+          "So less than is irreflexive, antisymmetric and transitive, which is the definition of a strict partial order. Replace it with less than or equal and reflexivity appears, giving an ordinary partial order.",
+          "Now consider the relation containing (1,2), (2,1) and (2,3). Symmetry fails on (2,3), and transitivity fails because (1,2) with (2,1) requires (1,1). Relations that are almost symmetric are the easiest to misjudge, so check the pairs rather than the impression."
+        ]
+      }
+    ]
+  },
+  "611": {
+    "sections": [
+      {
+        "title": "🔍 Why a function is a special relation",
+        "paras": [
+          "A rule that assigns one output to each input sounds simple until you ask what a rule is. Two different formulas producing the same assignment should count as the same function, and the definition has to say so.",
+          "The set-theoretic answer is that a function is a relation with two extra conditions: every input appears at least once, and no input appears with two different outputs. With that, two functions are equal exactly when their sets of pairs are equal, and the question of which formula was used disappears."
+        ]
+      },
+      {
+        "title": "⚙️ Injective, surjective, bijective, and why only one of them matters",
+        "paras": [
+          "Three adjectives describe how a function behaves, and each rules out one kind of failure."
+        ],
+        "bullets": [
+          "Injective: different inputs never collide. Equivalently, every output is hit at most once.",
+          "Surjective: every element of the codomain is hit. Equivalently, the range equals the codomain.",
+          "Bijective: both, which is exactly the condition for an inverse function to exist.",
+          "The domain and codomain are part of the function, so a formula can be injective on one domain and not on another.",
+          "Composition of bijections is a bijection, and the inverse of a composition reverses the order.",
+          "For finite sets of the same size, injective, surjective and bijective are equivalent; for infinite sets they come apart."
+        ]
+      },
+      {
+        "title": "🧮 Three functions, three verdicts",
+        "paras": [
+          "From the reals to the reals, f of x equal to 2x plus 1. Two outputs equal forces the inputs equal, so it is injective. Any target y is reached by (y minus 1)/2, so it is surjective. Hence bijective, and the inverse is that same expression.",
+          "From the reals to the reals, g of x equal to x squared. Both 2 and minus 2 give 4, so not injective. No negative number is reached, so not surjective. Neither, therefore no inverse on this domain.",
+          "Restrict the codomain to the non-negative reals and g becomes surjective but still collides. Restrict the domain as well to the non-negative reals and it becomes bijective, which is why taking a square root requires the convention of the principal root.",
+          "The lesson is that properties belong to the triple of formula, domain and codomain. Changing either set changes the answer, and most lost marks in this topic come from forgetting it."
+        ]
+      }
+    ]
+  },
+  "612": {
+    "sections": [
+      {
+        "title": "🔍 Why equality is too strict a comparison",
+        "paras": [
+          "One half and two quarters are different symbols for the same number. Two people born on the same day are different people with the same age. A rule that treats them as identical in the relevant respect is what an equivalence relation provides.",
+          "The point is not to compare two elements but to sort a whole set into classes, where inside a class everything is interchangeable and between classes nothing is. That structure is called a partition, and it is what makes quotient constructions possible later."
+        ]
+      },
+      {
+        "title": "⚙️ Three properties, and why exactly three",
+        "paras": [
+          "Reflexive, symmetric and transitive. Each one is needed for the word class to make sense: an element belongs with itself, membership does not depend on which member you name, and membership carries along a chain.",
+          "Drop any one and the classes stop being well defined, which is a cleaner reason to require all three than any appeal to definition."
+        ],
+        "bullets": [
+          "The equivalence class of an element is everything related to it.",
+          "Two classes are either identical or disjoint; partial overlap is impossible, since a shared element would force the two classes to merge.",
+          "The classes together cover the set, so they form a partition.",
+          "Partitions and equivalence relations are the same data seen from two sides: given one, the other is determined.",
+          "Congruence modulo n is the most important example, splitting the integers into n classes by remainder.",
+          "Less than or equal fails symmetry, so it is a partial order and not an equivalence; friendship fails transitivity in the ordinary sense."
+        ]
+      },
+      {
+        "title": "🧮 Three classes modulo three",
+        "paras": [
+          "Define a equivalent to b when their difference is divisible by three. Reflexive, since zero is divisible. Symmetric, since negating a multiple keeps it a multiple. Transitive, since the sum of two multiples is a multiple. So it is an equivalence relation.",
+          "The classes are the integers congruent to zero, to one and to two. They are disjoint, since a number cannot have two remainders, and together they cover the integers.",
+          "The practical content is that only the remainder matters: minus four and two are interchangeable in any calculation involving addition, subtraction and multiplication, because both leave remainder two. Check: minus four times five is minus twenty, remainder one; two times five is ten, remainder one. Same answer, which is why modular arithmetic can reduce early and often.",
+          "A reminder that not every relation that looks like one qualifies. Less than is transitive and irreflexive but not symmetric, and less than or equal adds reflexivity and keeps antisymmetry, so both are orders rather than equivalences."
+        ]
+      }
+    ]
+  },
+  "614": {
+    "sections": [
+      {
+        "title": "🔍 Why begin with the most direct method",
+        "paras": [
+          "Almost every theorem has the shape: if P then Q. The most natural approach is to assume P and reason forward until Q appears, and a surprising number of results fall to nothing more than that plus a careful reading of the definitions.",
+          "It is worth starting here because direct proof trains the skill everything else depends on: turning a word into an algebraic expression. Even means there is an integer k with n equal to 2k. Once that substitution is available, the algebra is usually routine."
+        ]
+      },
+      {
+        "title": "⚙️ Four steps, and the sentence people forget",
+        "paras": [
+          "State the assumption, expand the definitions into algebra, manipulate, then translate back. The fourth step is not decoration: finishing at 2 times something without saying that the something is an integer leaves the proof incomplete."
+        ],
+        "bullets": [
+          "Even means 2k, odd means 2k plus 1, and divisibility means b equals a times k. Never write a division sign when working in the integers.",
+          "A rational is p over q with q non-zero, usually taken in lowest terms because the contradiction proofs need it.",
+          "Every new symbol must be introduced with a statement of where it comes from.",
+          "When one expression will not do, split into cases, and check that the cases cover everything and overlap nowhere.",
+          "Beware of manipulating towards the conclusion; work from the assumption forward, or the proof becomes circular."
+        ]
+      },
+      {
+        "title": "🧮 Two proofs in full",
+        "paras": [
+          "Claim: the sum of two odd integers is even. Let m equal 2j plus 1 and n equal 2k plus 1 for integers j and k. Then m plus n equals 2j plus 2k plus 2, which is 2 times (j plus k plus 1). Since j plus k plus 1 is an integer, the sum is even.",
+          "Claim: if n is odd then n squared is odd. Let n equal 2k plus 1. Then n squared is 4k squared plus 4k plus 1, which is 2 times (2k squared plus 2k) plus 1, of the required form.",
+          "A case split, for contrast: the product of three consecutive integers is divisible by six. Among the three, one is divisible by three, and at least one is even, so the product is divisible by two and by three, hence by six. Splitting on the remainder of n modulo three and on parity would work too and takes longer."
+        ]
+      }
+    ]
+  },
+  "615": {
+    "sections": [
+      {
+        "title": "🔍 When to stop pushing and go around",
+        "paras": [
+          "If n squared is even then n is even cannot be proved by starting from n squared equal to 2k, because extracting n from that requires a square root that may not be an integer. The direct route is blocked, and the useful response is to change direction rather than push harder.",
+          "Proving the contrapositive instead is legal because a conditional and its contrapositive have the same truth value. Proving by contradiction goes further: assume the conclusion false and derive something impossible. Both are detours, and both are shorter here."
+        ]
+      },
+      {
+        "title": "⚙️ Two detours, and how they differ",
+        "paras": [
+          "Contrapositive: replace if P then Q by if not Q then not P, then do a direct proof of the new statement. The negation must be written correctly, which for integers means odd, not merely not even.",
+          "Contradiction: assume P and not Q together, reason until something breaks, then conclude that the assumption was impossible. The break can be a clash with P, with an axiom, or with itself."
+        ],
+        "bullets": [
+          "Contrapositive is usually cleaner, because it ends with a positive statement rather than an explosion.",
+          "Contradiction is the only option for existence and impossibility claims, where there is no Q to negate usefully.",
+          "The classic pair: the square root of two is irrational, and there are infinitely many primes. Both are contradiction proofs and both would be unrecognisable as direct ones.",
+          "In a contradiction proof, you must actually use the negated conclusion; if it never appears, the argument is invalid.",
+          "Do not negate only part of a compound conclusion. Not both P and Q is very different from neither P nor Q."
+        ]
+      },
+      {
+        "title": "🧮 Two classic arguments",
+        "paras": [
+          "Claim: if n squared is even then n is even. Prove the contrapositive: if n is odd then n squared is odd, which was done in the previous section. The detour turned an impossible extraction into a substitution.",
+          "Claim: the square root of two is not rational. Suppose it is p over q in lowest terms. Squaring gives 2 q squared equal to p squared, so p squared is even and therefore p is even, say 2r. Substituting gives 2 q squared equal to 4 r squared, so q squared is even and q is even. But p and q were supposed to be in lowest terms and both are even, which is impossible.",
+          "Both steps matter: the assumption of lowest terms is what the contradiction attacks, and the lemma about squares is what makes the parity argument work. Drop either and the proof collapses.",
+          "A combinatorial example of the same style: among six people there are three mutual acquaintances or three mutual strangers. Pick one person; of the other five, at least three share the same relation to them, and checking the three pairs between those three finishes it. The proof never constructs the group, it only shows one cannot be avoided."
+        ]
+      }
+    ]
+  },
+  "616": {
+    "sections": [
+      {
+        "title": "🔍 Why one argument covers infinitely many cases",
+        "paras": [
+          "The claim that the sum of the first n odd numbers is n squared is a statement about infinitely many n. Checking n equal to one, two and three proves nothing about a million, and no finite amount of checking ever will.",
+          "Induction replaces the infinite check with two finite obligations: the statement holds at the start, and whenever it holds at some point it must hold at the next. Dominoes, and the analogy is exact: knock over the first, ensure each one topples the next, and the whole line falls."
+        ]
+      },
+      {
+        "title": "⚙️ Two obligations, and three ways to break them",
+        "paras": [
+          "The structure is fixed: base case, then assume the statement for k and derive it for k plus one, then conclude for all n from the starting point. Each obligation is separately falsifiable, which is why the method is trustworthy."
+        ],
+        "bullets": [
+          "Leaving out the base case proves only that if one holds the rest do, which is consistent with none of them holding.",
+          "Assuming the conclusion for k plus one instead of for k is circular, and it is the most common written error.",
+          "Strong induction assumes every case from the start up to k, and is needed when a step depends on more than the immediate predecessor.",
+          "Some proofs step by two, which requires two base cases to cover both parities.",
+          "Structural induction applies the same idea to trees and expressions, proving a property for a leaf and for a node built from smaller parts.",
+          "The claim must be stated for each n, not for a fixed one, or there is nothing to induct on."
+        ]
+      },
+      {
+        "title": "🧮 Two inductions, one of them strong",
+        "paras": [
+          "Claim: one plus three plus up to 2n minus 1 equals n squared. Base: n equal to one gives one on both sides. Step: assume the sum up to 2k minus 1 is k squared. Adding the next odd number gives k squared plus 2k plus 1, which is (k plus 1) squared.",
+          "The move to notice is the split: the sum of k plus one terms is the sum of k terms plus one more. Almost every summation induction is that rearrangement.",
+          "Claim, by strong induction: every integer from two upwards is a product of primes. Base: two is prime. Step: assume the claim for all values from two to k, and consider k plus 1. If it is prime, done. If not, it factors as a times b with both smaller than k plus 1, and by the strong hypothesis each factor is a product of primes, so the product is too.",
+          "Strong induction is required here because a and b may both be far below k, so a hypothesis about k alone would not reach them.",
+          "A warning worth remembering: n squared plus n plus 41 is prime for n from zero to thirty-nine, which is a great deal of checking and still fails at forty, where it equals 41 squared."
+        ]
+      }
+    ]
+  }
+}

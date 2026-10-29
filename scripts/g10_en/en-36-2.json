@@ -1,0 +1,459 @@
+{
+  "968": {
+    "sections": [
+      {
+        "title": "🔍 Why planning needs a representation",
+        "paras": [
+          "The real world is continuous, and searching over continuous space directly is intractable. Planning therefore works on a representation: a grid, a graph, or a tree of samples.",
+          "The representation decides which algorithm applies and what optimality means. A grid gives exact optimal paths and quantises the world; sampling gives feasible paths and no guarantee of the shortest."
+        ]
+      },
+      {
+        "title": "⚙️ Grids, graphs, and sampling",
+        "paras": [
+          "A grid marks cells as free or occupied. Dijkstra and A star search it, and A star uses a heuristic such as straight-line distance to avoid exploring the whole grid. A graph is the general form, with nodes as places and edges as passages.",
+          "For high-dimensional spaces such as a seven-axis arm, sampling methods build a tree of collision-free configurations and grow it toward the goal, because no grid is feasible in seven dimensions."
+        ],
+        "bullets": [
+          "A star is complete and optimal on a graph if the heuristic never overestimates.",
+          "Grids at fine resolution explode in memory: 1,000 by 1,000 cells is a million states.",
+          "RRT grows a tree by sampling random states and extending toward them, which finds a feasible path quickly.",
+          "RRT star optimises by rewiring the tree, converging toward the shortest path over time.",
+          "Configuration space treats the robot's orientation as extra dimensions, which is why planning for an arm is harder than for a disc.",
+          "Dynamic obstacles require replanning or local avoidance layered on the global plan.",
+          "Path smoothing matters because grid paths are staircases that a robot cannot follow at speed."
+        ]
+      },
+      {
+        "title": "🧮 Search cost and grid arithmetic",
+        "paras": [
+          "A warehouse floor of 50 by 50 metres at 0.1-metre resolution is 500 by 500 cells, 250,000 states, each with up to 8 neighbours, so 2 million edges. Dijkstra explores most of them, which is millions of operations and takes tens of milliseconds.",
+          "A star with a good heuristic explores far fewer: on an open grid it expands roughly proportional to the straight-line distance rather than the area, so perhaps 2,000 cells instead of 250,000. That factor of 100 is why A star is the default.",
+          "Memory arithmetic: 250,000 states with a cost and a parent each, 8 bytes per state, is 2 MB. At 0.02-metre resolution the grid is 2,500 by 2,500, 6.25 million states, 50 MB, which is the point at which resolution starts to matter.",
+          "RRT in numbers: a seven-axis arm planner may need 1,000 to 10,000 samples to find a path through a cluttered scene, each requiring a collision check. A collision check on a full arm against a point cloud takes 0.1 to 1 millisecond, so planning takes 1 to 10 seconds, which is why arm planning is done offline or with shortcuts.",
+          "Path length comparison: a grid path with 8-connected moves is up to 8 percent longer than the true shortest path because of the staircase, which smoothing reduces. Without smoothing, the along-path acceleration is infinite at each corner, which is physically infeasible.",
+          "Replanning rate: a robot moving at 1 metre per second through a dynamic warehouse needs replanning every 0.5 to 1 second to stay safe. At 30 milliseconds per plan that is 3 percent of one core, which is affordable, and it is why global planning at 1 Hz plus local avoidance at 10 Hz is the standard architecture."
+        ]
+      }
+    ]
+  },
+  "969": {
+    "sections": [
+      {
+        "title": "🔍 Why plan globally but react locally",
+        "paras": [
+          "A global plan assumes the world matches the map. In practice a person steps out, a box is left in the aisle, and the plan is invalid within seconds.",
+          "Local avoidance handles what the plan did not anticipate, using sensor data at a faster rate. The combination is standard because neither alone is sufficient."
+        ]
+      },
+      {
+        "title": "⚙️ Reactive methods and their failure mode",
+        "paras": [
+          "Reactive avoidance steers away from nearby obstacles. The simplest form is a potential field: the goal attracts, obstacles repel, and the robot follows the gradient.",
+          "The known weakness is the local minimum: in a U-shaped obstacle the repulsive forces balance and the robot stops, or oscillates, even though a path exists."
+        ],
+        "bullets": [
+          "Potential fields are fast and produce smooth motion, with no guarantee of reaching the goal.",
+          "Vector field histogram methods use sensor density to pick a free direction.",
+          "Dynamic window approaches search over feasible velocities rather than directions, which respects the robot's dynamics.",
+          "Time to collision is a better criterion than distance, because a fast robot needs more room.",
+          "Reactive methods fail on traps and on narrow corridors where all directions look blocked.",
+          "A safety layer with hard limits on speed near obstacles is separate from the avoidance algorithm.",
+          "Hybrid approaches run a global plan and let local avoidance deviate, then return to the plan."
+        ]
+      },
+      {
+        "title": "🧮 Fields and stopping distances",
+        "paras": [
+          "A potential field with an attractive gain of 1 and a repulsive gain of 100 at a 2-metre distance gives a repulsive force of 25, which dwarfs the attractive force of 1. The robot barely moves toward the goal, which is why gains are tuned to balance at a reasonable distance.",
+          "Stopping distance arithmetic: a robot at 1.5 metres per second with 150 milliseconds of reaction latency travels 0.225 metres before acting, plus braking distance. At a deceleration of 1 metre per second squared, braking distance is 1.125 metres, so total stopping distance is 1.35 metres. Any avoidance margin below that is unsafe.",
+          "That arithmetic is why speed limits scale with the square of distance: halving the speed quarters the braking distance, which is the single most effective safety measure available.",
+          "The U-trap in numbers: a U-shaped obstacle 3 metres wide with a 2-metre opening at the far end. A potential field pushes the robot to the centre of the U and holds it there, because every direction increases repulsion. The robot oscillates with an amplitude of perhaps 0.2 metres and never escapes.",
+          "Dynamic window arithmetic: with a maximum speed of 1 metre per second and a maximum acceleration of 1 metre per second squared over a 100-millisecond control period, the reachable velocities form a window from 0.9 to 1.0 for the current speed plus or minus 0.1. Searching that window at 10 resolutions in each of two dimensions is 100 candidates per cycle, which is trivial and explains why the method runs at 10 to 20 Hz.",
+          "Sensor cone effect: an ultrasonic sensor with a 30-degree cone at 2 metres covers a 1-metre-wide patch, so a 10-centimetre pole within the cone may or may not be detected depending on angle. That is why multiple sensors or a range camera are used rather than one."
+        ]
+      }
+    ]
+  },
+  "970": {
+    "sections": [
+      {
+        "title": "🔍 Why the chicken-and-egg problem is the whole subject",
+        "paras": [
+          "To localise, a robot needs a map to compare its observations against. To build a map, it needs to know where it was when each observation was made.",
+          "SLAM solves the two together by estimating the map and the trajectory jointly, which is why it is a harder problem than either part alone."
+        ]
+      },
+      {
+        "title": "⚙️ Landmarks, filters, and graph optimisation",
+        "paras": [
+          "Early SLAM used an extended Kalman filter with landmarks as state, which works for small maps. Modern systems use graph optimisation: poses and landmarks are nodes, observations are edges, and the estimate minimises the total inconsistency.",
+          "Loop closure is the key event: recognising a previously visited place and adding an edge that corrects accumulated drift."
+        ],
+        "bullets": [
+          "The map is a set of landmarks or a grid of occupancy probabilities, not an image.",
+          "Loop closure is what bounds long-term drift, and false loop closures corrupt the map badly.",
+          "Graph optimisation scales better than filtering because the structure is sparse.",
+          "Visual SLAM uses camera features; LiDAR SLAM uses scan matching.",
+          "Occupancy grids handle dynamic clutter better than landmark maps.",
+          "Pose graph edges come from odometry and from place recognition, with different uncertainties.",
+          "Real-time operation requires incremental solvers, because global optimisation is too slow per frame."
+        ]
+      },
+      {
+        "title": "🧮 Drift, loop closure, and optimisation size",
+        "paras": [
+          "Without loop closure, odometry with 1 percent error over a 200-metre loop returns to the start 2 metres off, which means the map is folded over itself. Loop closure distributes that 2 metres of error across all 2,000 poses, so each moves 1 millimetre, and the map becomes consistent.",
+          "Graph size arithmetic: a 200-metre loop at 1 pose per 0.1 metre is 2,000 poses. Each pose has 6 degrees of freedom, so 12,000 variables. With observations between consecutive poses, the problem is a sparse 12,000 by 12,000 system, which an incremental solver handles in milliseconds.",
+          "A large building of 10,000 square metres at the same density is 100,000 poses, 600,000 variables. That is still sparse but optimisation takes seconds, which is why it runs offline or in a background thread.",
+          "Loop closure false positive rates: place recognition at 99 percent precision still produces 1 false positive in 100 matches. In a loop with 500 candidate matches, that is 5 false closures, and a single false closure can distort the whole map. That is why geometric verification after appearance matching is mandatory.",
+          "Landmark count: a LiDAR scan at 10 Hz with 300,000 points per scan, accumulated over 200 metres, is millions of points. That is why map representations downsample, keeping perhaps 1 point per cubic decimetre, which for a 200 by 200 metre area at 1 metre height is 800,000 points.",
+          "Computational split: scan matching at 10 Hz must complete in under 100 milliseconds, which is feasible for a local match. Global optimisation of 100,000 poses takes longer and runs asynchronously, so the system always has a slightly stale global map and a fresh local one."
+        ]
+      }
+    ]
+  },
+  "972": {
+    "sections": [
+      {
+        "title": "🔍 Why open loop fails",
+        "paras": [
+          "An open-loop command assumes the world behaves as modelled: the wheels turn as commanded, the floor is flat, the load is what you expected. Every one of those assumptions fails in practice.",
+          "Feedback measures the result and corrects the difference. That is the entire idea, and it is why the same controller works across different payloads and surfaces."
+        ]
+      },
+      {
+        "title": "⚙️ The elements of a closed loop",
+        "paras": [
+          "A feedback loop has a setpoint, a measurement, an error computed from the difference, a controller that maps error to command, and a plant that responds. The measurement closes the loop.",
+          "The controller can be as simple as a proportional gain or as complex as a model-based law, and the stabilising principle is the same: act on the measured error."
+        ],
+        "bullets": [
+          "The sensor must measure what you actually want to control, not a proxy.",
+          "Loop delay reduces stability margin, which is why latency is a control problem.",
+          "A proportional term alone leaves a steady-state error under a constant disturbance.",
+          "Integral action removes steady-state error and risks windup.",
+          "Derivative action damps oscillation and amplifies sensor noise.",
+          "Saturation and rate limits must be handled explicitly, or the controller's assumptions break.",
+          "Feedforward compensation handles known disturbances without waiting for error to appear."
+        ]
+      },
+      {
+        "title": "🧮 Proportional control by arithmetic",
+        "paras": [
+          "A robot on a line with a lateral error of 0.1 metres and a proportional gain of 2 commands a correction of 0.2 metres per second sideways. At that speed the error halves in 0.35 seconds, which is a reasonable response.",
+          "With a gain of 20 the command is 2 metres per second, which overshoots and then corrects back, producing oscillation. Gain too high is the classic cause of oscillation, and it is easy to see in the numbers.",
+          "Steady-state error with proportional control: on a slope where gravity pulls the robot down at 0.05 metres per second, a proportional controller settles where its output exactly cancels the disturbance. With a gain of 2 that requires an error of 0.025 metres, so the robot drives 2.5 centimetres off the line permanently. That error is what the integral term removes.",
+          "Loop rate arithmetic: a 100-millisecond loop delay on a system with a 0.5-second time constant gives a delay-to-time-constant ratio of 0.2, which is tolerable. At a 0.2-second time constant the ratio is 0.5, and a proportional gain high enough to respond quickly will oscillate, which is why fast systems need fast sensors.",
+          "Settling time estimate: for a first-order response with a time constant of 0.5 seconds, reaching within 2 percent of the target takes about 4 time constants, 2 seconds. Doubling the gain halves the effective time constant and thus the settling time, until delay or saturation intervenes.",
+          "Sensor noise amplification: differentiating a position signal with 1 millimetre of noise at 100 Hz gives a velocity estimate with 0.1 metre per second of noise, which is often larger than the true speed. That is why derivative terms are filtered and why velocity is usually measured directly."
+        ]
+      }
+    ]
+  },
+  "973": {
+    "sections": [
+      {
+        "title": "🔍 Why three terms and not one",
+        "paras": [
+          "Proportional action responds to the present error, and alone it cannot remove a persistent offset. Integral action accumulates past error and removes the offset, at the risk of overshoot. Derivative action predicts where the error is heading and damps the approach, at the risk of amplifying noise.",
+          "Each term fixes a specific deficiency of the others, which is why the combination is so widely used despite being tuned by experience."
+        ]
+      },
+      {
+        "title": "⚙️ The terms and how they are tuned",
+        "paras": [
+          "The output is the sum of a proportional term, an integral term, and a derivative term, each with a gain. Tuning sets those three gains so the response is fast, settles without excessive oscillation, and rejects disturbances.",
+          "Manual tuning usually starts with proportional only, increases until oscillation, then backs off, then adds integral to remove the offset, then derivative to damp."
+        ],
+        "bullets": [
+          "Too much proportional gain causes oscillation; too little causes sluggishness.",
+          "Integral gain removes steady-state error and causes overshoot if too aggressive.",
+          "Integral windup during saturation must be prevented by clamping the accumulator.",
+          "Derivative gain reduces overshoot and amplifies measurement noise.",
+          "Sampling time must be short relative to the system's dynamics, or the discrete controller misbehaves.",
+          "Most real systems end up with PI control, because derivative action on noisy sensors is often counterproductive.",
+          "Feedforward plus PID is the practical structure for trajectory tracking."
+        ]
+      },
+      {
+        "title": "🧮 One control cycle by hand",
+        "paras": [
+          "Suppose the setpoint is 10, the measurement is 8, so the error is 2. With Kp equal to 1.5, Kp times error is 3. The integral of error over the previous cycles sums to 0.4, and with Ki equal to 0.5 the integral term is 0.2. The previous error was 2.4 and the current is 2, so the change is minus 0.4, and with Kd equal to 0.1 the derivative term is minus 0.04.",
+          "The output is 3 plus 0.2 minus 0.04, 3.16. The negative derivative term means the error is shrinking, so the controller eases off, which is exactly the damping intent.",
+          "Next cycle, if the measurement reaches 9.5, the error is 0.5, the proportional term is 0.75, the integral accumulates to 0.65, and the derivative is strongly negative because the error fell fast. The output drops sharply, which prevents overshoot.",
+          "Windup example: a robot pushing against a wall for 10 seconds with an error of 1 accumulates an integral of 10. When the obstacle is removed, the controller commands a huge output until the integral unwinds, causing a lurch. Clamping the accumulator to 1 removes the problem entirely.",
+          "Tuning by the step response: with Kp alone at 1, the system settles in 2 seconds with 20 percent overshoot. Adding Kd equal to 0.2 reduces overshoot to 5 percent and settling to 1.5 seconds. Adding Ki equal to 0.5 removes the 0.1-unit offset and raises overshoot back to 8 percent, which is the usual trade.",
+          "Sample rate: a system with a 0.2-second time constant sampled at 100 Hz has 20 samples per time constant, which is comfortable. At 10 Hz it has 2, which is marginal, and the discretisation error alone causes oscillation. That is why the rule of thumb is at least 10 samples per time constant."
+        ]
+      }
+    ]
+  },
+  "974": {
+    "sections": [
+      {
+        "title": "🔍 Why hand-programming runs out",
+        "paras": [
+          "Grasping an arbitrary object requires a rule for every shape and pose, and no one can write it. Walking on rough terrain requires reactions to disturbances that cannot all be enumerated.",
+          "Learning replaces the rule with a policy fitted to data, either from demonstrations or from trial and error. That is the only approach that has handled these tasks at all."
+        ]
+      },
+      {
+        "title": "⚙️ Imitation and reinforcement",
+        "paras": [
+          "Imitation learning trains a policy to reproduce demonstrations, which is sample-efficient and limited by the demonstrator's coverage. When the policy drifts into a state the demonstrator never visited, it has no guidance, which is the distribution shift problem.",
+          "Reinforcement learning optimises a reward through interaction, which handles states nobody demonstrated at the cost of enormous sample counts and a reward design problem."
+        ],
+        "bullets": [
+          "Imitation is fast to train and needs high-quality demonstrations.",
+          "Compounding error means small mistakes move the policy off the demonstrated distribution.",
+          "Reinforcement learning needs millions of episodes in simulation, which is cheap, or years in reality.",
+          "Sim-to-real transfer requires randomising physics parameters to cover the reality gap.",
+          "Reward design is the hard part: a poorly specified reward produces the wrong behaviour.",
+          "Learning from human feedback is imitation at the level of preferences rather than actions.",
+          "Safety during learning requires either simulation or a bounded operating envelope."
+        ]
+      },
+      {
+        "title": "🧮 Sample counts and the reality gap",
+        "paras": [
+          "A policy for a simple reaching task may need 100 demonstrations and a few minutes of training. A walking policy for a quadruped needs tens of millions of simulation steps, which at 10,000 steps per second in simulation is about an hour.",
+          "On real hardware at 50 steps per second, tens of millions of steps would take weeks. That factor of 200 is why reinforcement learning is done in simulation and why transfer matters.",
+          "Compounding error arithmetic: if an imitation policy is 98 percent accurate per step and a task needs 100 steps, the probability of completing without a mistake is 0.98 to the 100, 13 percent. That single calculation explains why naive imitation fails on long tasks and why methods that correct drift are necessary.",
+          "Sim-to-real in numbers: a policy trained with no randomisation achieves 30 percent success on hardware and 95 percent in simulation. Randomising mass by 30 percent, friction by 40 percent, and adding sensor noise raises hardware success to 80 percent, which is the standard result.",
+          "Reward hacking example: a reward for moving forward is satisfied by learning to hop on one leg, because nothing penalised it. Adding penalties for energy and for orientation fixes the behaviour, which is why reward design takes more iterations than the learning algorithm.",
+          "Data efficiency comparison: 200 demonstrations at 5 seconds each is 1,000 seconds of human time, which is cheap. A reinforcement learning run of 20 million simulated steps may take an hour of compute but needs a simulator that matches reality well enough, and building that simulator is the real cost."
+        ]
+      }
+    ]
+  },
+  "976": {
+    "sections": [
+      {
+        "title": "🔍 Why wheels are still the default",
+        "paras": [
+          "Wheels are efficient, simple, and reliable on flat ground. A wheeled robot uses a fraction of the energy a legged robot needs for the same journey, and it has far fewer parts to fail.",
+          "Most mobile robots in the world are wheeled, and the exceptions are exceptions for a reason: stairs, rubble, and rough terrain."
+        ]
+      },
+      {
+        "title": "⚙️ Drive configurations and the non-holonomic constraint",
+        "paras": [
+          "A differential drive has two independently driven wheels. Turning requires the wheels to have different speeds, and the robot can rotate in place. A car-like drive has a steered front axle and cannot rotate in place. Mecanum and omni wheels have rollers that allow sideways motion, at the cost of efficiency and complexity.",
+          "The differential drive cannot move sideways, which is the non-holonomic constraint. Every path it can follow must be smooth in the sense of having a continuous heading."
+        ],
+        "bullets": [
+          "Differential drive is simple, cheap, and can turn in place, which suits indoor robots.",
+          "Ackermann steering is efficient at speed and cannot turn in place, which suits outdoor vehicles.",
+          "Mecanum wheels allow omnidirectional motion at the cost of vibration and lower efficiency.",
+          "Skid steering on tracks turns by slipping, which wastes energy and damages floors.",
+          "Odometry comes from wheel encoders, and errors come from slip and wheel wear.",
+          "Wheel radius differences of 1 percent cause a heading drift of 1 percent of path length.",
+          "A planner for a differential drive must respect the turning constraint or the path is infeasible."
+        ]
+      },
+      {
+        "title": "🧮 Kinematics of differential drive",
+        "paras": [
+          "A differential drive with wheels 0.3 metres apart. If the left wheel moves at 0.5 metres per second and the right at 0.7, the forward speed of the robot is their average, 0.6 metres per second. The angular velocity is the difference divided by the wheel separation, 0.2 divided by 0.3, 0.667 radians per second.",
+          "The turning radius is speed divided by angular velocity, 0.6 divided by 0.667, 0.9 metres. That is the radius of the circle the robot follows.",
+          "Both wheels at the same speed gives zero angular velocity, a straight line. Equal and opposite speeds give zero forward speed and pure rotation in place, which is the one manoeuvre a car-like robot cannot do.",
+          "Odometry arithmetic: a wheel of 0.1 metre diameter has a circumference of 0.314 metres and an encoder with 1,000 counts per revolution gives 0.314 millimetres per count. After 100 metres the robot has turned 318 revolutions, 318,000 counts, and the accumulated error from a 1 percent wheel radius error is 1 metre.",
+          "Wheel slip on carpet can be 5 percent, which over 20 metres is 1 metre of error. That is why odometry is fused with something absolute for anything beyond a few metres.",
+          "Energy arithmetic: a 20-kilogram robot on flat ground at 1 metre per second needs to overcome rolling resistance of perhaps 0.02 times weight, 3.9 newtons, so 3.9 watts of mechanical power. Adding motor and drivetrain efficiency of 60 percent gives 6.5 watts, which on a 37 watt-hour battery is 5.7 hours. A legged robot with the same mass uses 5 to 10 times more, which is the entire case for wheels.",
+          "Turning in place cost: with wheels 0.3 metres apart, rotating in place requires each wheel to travel a quarter of the circle, 0.47 metres per revolution. At 0.5 metres per second that is nearly a second per revolution, which is slow and is why robots prefer arcs to pivots when speed matters."
+        ]
+      }
+    ]
+  },
+  "977": {
+    "sections": [
+      {
+        "title": "🔍 Why a quadrotor is unstable by design",
+        "paras": [
+          "A quadrotor has four rotors and no aerodynamic stability of its own. Cut the power and it falls; cut the controller and it tumbles within a fraction of a second.",
+          "That instability is the price of agility. A helicopter's mechanical rotor head provides passive stability and is complex; a quadrotor replaces it with software, which is why it is cheap and why it cannot fly without a working controller."
+        ]
+      },
+      {
+        "title": "⚙️ Thrust, attitude, and underactuation",
+        "paras": [
+          "Each rotor produces thrust proportional to the square of its speed. Total thrust must equal weight to hover. Differential thrust between rotors creates a torque that rotates the body.",
+          "The vehicle is underactuated: it has four inputs, thrust plus three torques, and six degrees of freedom. It must tilt to accelerate horizontally, which means position and attitude are coupled."
+        ],
+        "bullets": [
+          "Diagonal rotors spin in the same direction, which balances yaw torque.",
+          "Increasing the two rear rotors pitches the nose down, which produces forward acceleration.",
+          "Attitude control runs at 200 to 1,000 Hz, and position control runs slower.",
+          "An IMU is the primary sensor, fused with a barometer, GPS, and often optical flow.",
+          "Battery energy limits flight time far more than any other constraint.",
+          "Propeller size trades thrust against efficiency, and large slow propellers are more efficient.",
+          "Rotor failure is usually unrecoverable on a quadrotor, which is why hexacopters exist for payloads."
+        ]
+      },
+      {
+        "title": "🧮 Thrust and endurance arithmetic",
+        "paras": [
+          "A 1.5-kilogram quadrotor needs 14.7 newtons of thrust to hover. With four rotors that is 3.7 newtons each. A typical motor and propeller combination at that thrust draws about 60 watts total.",
+          "A 4,000 milliampere-hour battery at 14.8 volts is 59 watt-hours. At 60 watts of hover power the flight time is about 59 minutes in theory, but usable capacity is 80 percent and efficiency falls, so the real figure is around 25 to 30 minutes.",
+          "Adding payload arithmetic: increasing mass by 20 percent increases the required thrust by 20 percent but the power by more, because thrust scales with the square of rotor speed and power with the cube. A 1.2 exponent on power versus mass is typical, so 20 percent more mass costs about 26 percent more power and reduces endurance by a fifth.",
+          "Tilt to accelerate: to accelerate at 1 metre per second squared, the thrust vector must tilt so that its horizontal component is 1 times mass. With gravity at 9.8, the tilt angle is the arctangent of 1 over 9.8, 5.8 degrees. A 45-degree tilt gives a horizontal acceleration of 9.8 metres per second squared, which is the practical limit.",
+          "Attitude control rate: a quadrotor with a 0.2-metre arm and a moment of inertia around 0.01 kilogram square metres responds to differential thrust with angular acceleration of perhaps 20 radians per second squared. To correct a 0.1-radian error in 50 milliseconds requires an angular acceleration of 80, which is beyond the motors, so the controller saturates. That saturation is why aggressive manoeuvres lose attitude.",
+          "GPS-denied navigation: optical flow at 30 frames per second gives velocity estimates accurate to a few percent, which is enough to hold position to 0.2 metres over a minute. Without it, inertial drift reaches metres within seconds, which is why indoor drones carry flow sensors or use motion capture."
+        ]
+      }
+    ]
+  },
+  "978": {
+    "sections": [
+      {
+        "title": "🔍 Why build a robot shaped like a person",
+        "paras": [
+          "The world is built for human bodies: stairs, door handles, shelves, tools. A humanoid can use that infrastructure without modification, which is a strong argument in environments nobody will rebuild.",
+          "The counter-argument is that wheels are cheaper and more efficient, so humanoids only make sense where legs and arms are genuinely required."
+        ]
+      },
+      {
+        "title": "⚙️ Static and dynamic balance",
+        "paras": [
+          "A robot is statically stable if it stays upright with no control, which requires its centre of mass to project inside its support polygon. Walking dynamically means the centre of mass leaves that polygon and the robot falls forward deliberately, catching itself with the next step.",
+          "The zero moment point is the point where the ground reaction force would need to act to keep the robot from rotating. Keeping it inside the support polygon is the classical walking criterion."
+        ],
+        "bullets": [
+          "Two legs give a small support polygon, one foot at a time during walking, which is why balance is hard.",
+          "Static walking keeps the centre of mass over the support foot and is slow and safe.",
+          "Dynamic walking is faster and requires accurate models and fast control.",
+          "Ankle, hip, and step strategies are the three ways to recover from a disturbance.",
+          "Whole-body control coordinates arms and legs, because moving an arm shifts the centre of mass.",
+          "Energy use is several times that of a wheeled robot of the same mass.",
+          "Falling is the dominant failure mode, which is why protective measures and soft hardware matter."
+        ]
+      },
+      {
+        "title": "🧮 Balance and energy by arithmetic",
+        "paras": [
+          "A humanoid 1.7 metres tall with its centre of mass at 1 metre. An inverted pendulum of that length has a natural frequency of the square root of g over L, the square root of 9.8, 3.13 radians per second, so a time constant of 0.32 seconds. The controller must act several times within that window, which is why balance loops run at 200 Hz or faster.",
+          "Support polygon arithmetic: a foot 0.25 metres long and 0.1 metres wide gives a polygon area of 0.025 square metres during single support. The centre of mass must stay inside it for static balance, which is a tolerance of a few centimetres.",
+          "Ankle strategy limit: the maximum ankle torque determines the largest disturbance recoverable without stepping. For a 70-kilogram robot with 100 newton-metres of ankle torque, the recoverable horizontal force at 1 metre height is 100 newtons, which corresponds to an acceleration of 1.4 metres per second squared. Beyond that, the robot must step.",
+          "Energy arithmetic: walking at 1.4 metres per second, a 70-kilogram human uses about 300 watts, while a bicycle at the same speed uses 50. A humanoid robot is less efficient than a human, so 500 to 1,000 watts is typical, which on a 1 kilowatt-hour battery gives 1 to 2 hours of walking.",
+          "Degree-of-freedom arithmetic: a 29-degree-of-freedom humanoid with 200 Hz control needs 5,800 joint commands per second, each computed from a whole-body controller. That is a few million floating-point operations per second, which is trivial for a modern processor and impossible for a microcontroller, which is why humanoids carry computers.",
+          "Fall consequences in numbers: a 1.7-metre robot falling has an impact energy of mass times gravity times height, 70 times 9.8 times 1.7, 1,166 joules. That is enough to damage hardware and people, which is why humanoids are tested in harnesses and why speed limits are conservative."
+        ]
+      }
+    ]
+  },
+  "980": {
+    "sections": [
+      {
+        "title": "🔍 Why Python is used and where it stops",
+        "paras": [
+          "Python has the libraries, the readability, and the ecosystem. A control script that sets a servo or reads a sensor is five lines, and the same code runs on a microcontroller or a full computer.",
+          "What Python cannot do is guarantee microsecond timing. The interpreter and the garbage collector introduce jitter, which is why the real-time layer of any serious robot is written in C++ and Python talks to it."
+        ]
+      },
+      {
+        "title": "⚙️ Libraries and the ROS pattern",
+        "paras": [
+          "Microcontroller libraries expose pins and buses directly. Robotics frameworks provide message passing between processes, sensor drivers, and visualisation. Numerical libraries provide the matrix operations that kinematics and control require.",
+          "ROS organises a robot as nodes that exchange typed messages, with tools for recording, replaying, and visualising. That structure is why a robot can be assembled from other people's nodes."
+        ],
+        "bullets": [
+          "Python drives microcontrollers over serial, and that link adds latency of a millisecond or more.",
+          "Numerical libraries make kinematics and filtering a few lines of code.",
+          "ROS nodes communicate over topics, services, and actions with different semantics.",
+          "Recording all messages and replaying them is the standard debugging method.",
+          "Simulation integrates with the same message interface, so code runs unchanged in simulation and on hardware.",
+          "Python's global interpreter lock limits multi-threaded CPU work, which is why heavy processing uses separate processes.",
+          "Latency-critical loops belong in firmware, with Python sending setpoints at a lower rate."
+        ]
+      },
+      {
+        "title": "🧮 Latency and throughput by arithmetic",
+        "paras": [
+          "A Python loop reading a sensor and writing a servo over serial at 115,200 baud: each message of 20 bytes takes 1.7 milliseconds to transmit, so a round trip is at least 3.4 milliseconds. At 50 Hz that is 17 percent of the period, which is acceptable; at 200 Hz the link cannot keep up.",
+          "Interpreter overhead: a trivial Python loop iteration takes 50 to 100 nanoseconds, but a call into a library with argument checking takes microseconds. A control loop with 10 library calls per iteration takes 10 to 50 microseconds, which is fine at 200 Hz but not at 10 kHz.",
+          "Garbage collection: a collection pause is typically 1 to 20 milliseconds depending on heap size. On a 5-millisecond control loop that is a missed deadline, which is why the real-time loop must not allocate memory.",
+          "Message throughput: a ROS pipeline carrying 30 frames per second of 640 by 480 colour images is 27 MB per second, which is fine locally but requires compression over a network. This is why off-board processing uses image compression.",
+          "Matrix arithmetic: a 6 by 6 matrix inverse is about 200 floating-point operations, and doing it 1,000 times per second is 200,000 operations, negligible. Doing it in a Python loop with 6 by 6 nested loops instead of a library call is 100 times slower, which is why vectorised libraries matter.",
+          "Startup cost: importing a numerical library takes 0.2 to 0.5 seconds and loading a model takes more. A robot that restarts after a fault pays that every time, which is why long-running processes are preferred over per-command scripts."
+        ]
+      }
+    ]
+  },
+  "981": {
+    "sections": [
+      {
+        "title": "🔍 Why simulate before touching hardware",
+        "paras": [
+          "Hardware is slow to iterate, expensive to break, and unavailable in quantity. A simulator lets a thousand experiments run overnight and lets a buggy controller fail without damaging anything.",
+          "The cost is the reality gap: a simulator is a model, and every model is wrong in ways that matter. That gap is the central engineering issue, not a detail."
+        ]
+      },
+      {
+        "title": "⚙️ Physics, sensors, and rendering",
+        "paras": [
+          "A robotics simulator integrates rigid-body dynamics, collision detection, sensor models, and often rendering. Fidelity varies: a physics engine may be accurate on contacts and poor on friction, or fast and approximate.",
+          "Sensor simulation matters as much as physics, because a vision model trained on rendered images learns the renderer's artefacts rather than reality."
+        ],
+        "bullets": [
+          "Rigid-body dynamics with contact is the hard part, and friction models are approximations.",
+          "Sensor noise, latency, and dropout must be simulated, or the controller learns an unrealistic world.",
+          "Rendering realism affects vision models, which is why ray tracing and domain randomisation are used.",
+          "Simulation runs faster than real time for simple scenes and slower for high-fidelity ones.",
+          "Determinism lets a failure be reproduced exactly, which is invaluable for debugging.",
+          "The same code should run in simulation and on hardware, which is why frameworks abstract the hardware interface.",
+          "Validating a policy in simulation without hardware testing is a well-known path to failure."
+        ]
+      },
+      {
+        "title": "🧮 Speed and fidelity by arithmetic",
+        "paras": [
+          "A simple robot with 20 degrees of freedom in a scene with 50 objects steps at 1,000 Hz in real time on one core for basic physics. With high-fidelity contact and rendering, it drops to 10 to 50 Hz, which is slower than real time.",
+          "Training arithmetic for reinforcement learning: 20 million steps at 10,000 steps per second takes 2,000 seconds, 33 minutes. At 100 steps per second, a high-fidelity setting, it takes 55 hours. That factor of 100 is why training uses simple physics and deployment uses the real robot.",
+          "Domain randomisation cost: training with 1,000 randomised environments rather than one multiplies the data needed by 1,000, which is affordable in simulation and impossible on hardware.",
+          "Reality gap measured: a controller tuned in simulation reached 92 percent task success in simulation and 55 percent on hardware. Randomising mass by 20 percent, friction by 30 percent, and adding actuator delay brought hardware to 85 percent, at the cost of 3 times the training steps.",
+          "Rendering cost: a photorealistic frame at 640 by 480 with ray tracing takes 10 to 100 milliseconds, so 10 to 100 frames per second. Generating 100,000 annotated images for a vision model takes 1,000 to 10,000 seconds, which is why synthetic data generation is a compute job.",
+          "Verification arithmetic: a simulation run of 10,000 randomised episodes finds failures that a single scenario does not. If a controller fails in 1 of 1,000 episodes, a 10-episode test misses it with 99 percent probability, which is why large-scale randomised testing is the standard validation method."
+        ]
+      }
+    ]
+  },
+  "982": {
+    "sections": [
+      {
+        "title": "🔍 Why robotics raises different questions",
+        "paras": [
+          "A robot acts physically, in shared space, often near people. Its mistakes are not confined to a screen, and its data collection happens in places people consider private.",
+          "That is why the ethical questions are about safety, displacement, accountability, and surveillance rather than about model bias alone."
+        ]
+      },
+      {
+        "title": "⚙️ The failure families",
+        "paras": [
+          "Safety is the primary one: a robot that fails can injure. Accountability is the second: when an autonomous system causes harm, who is responsible. Labour displacement is economic. Surveillance is social. Dual use is the military and policing question.",
+          "Each has a mitigation, and most of them are procedural and regulatory rather than algorithmic."
+        ],
+        "bullets": [
+          "Hardware emergency stops and force limits exist because software cannot be trusted alone.",
+          "Standards and certification determine what may operate near people, and they are slow by design.",
+          "Logging every decision is required for accountability after an incident.",
+          "Clear human responsibility must exist for any consequential autonomous decision.",
+          "Data collection in homes and workplaces needs consent and retention limits.",
+          "Dual use cannot be prevented technically, so export controls and policy do the work.",
+          "Public trust depends on visible behaviour, not on documentation of accuracy."
+        ]
+      },
+      {
+        "title": "🧮 Risk by arithmetic",
+        "paras": [
+          "A robot arm moving at 1 metre per second with 50 kilograms of effective mass has kinetic energy of half times 50 times 1 squared, 25 joules. Human injury thresholds for blunt impact are around 10 to 20 joules for the head, which is why collaborative robots are limited to much lower speeds and forces.",
+          "The ISO collaborative standard limits quasi-static force to 140 newtons and pressure to a lower value depending on body region. A 20-kilogram robot moving at 0.25 metres per second has 0.6 joules of kinetic energy, well within safe limits, which is why cobot speeds are capped there.",
+          "Incident rate arithmetic: a warehouse with 500 robots and 200 human workers, where robots cause 1 injury per 100,000 operating hours. At 20 hours per day and 500 robots, that is 10,000 robot-hours daily, so one injury every 10 days. That number is why traffic management and exclusion zones are designed rather than assumed.",
+          "Reliability arithmetic: a safety function at 99.9 percent reliability across 1 million operating hours fails 1,000 times. Adding a hardwired second channel at the same reliability gives 0.001 times 0.001, one failure per 10 to the 9 hours, which is the level required for high-integrity systems.",
+          "Labour arithmetic: a robot replacing one shift of 8 hours at 25 per hour saves 200 per day, about 73,000 per year. Whether that is a benefit or a harm depends on what happens to the worker, which is a policy question the technology does not answer.",
+          "Surveillance scale: a mobile robot with four cameras recording continuously for 8 hours captures 32 camera-hours per day. A fleet of 50 in a building captures 1,600 camera-hours daily, which is a surveillance capability independent of whether it was intended, and it needs explicit governance."
+        ]
+      }
+    ]
+  }
+}

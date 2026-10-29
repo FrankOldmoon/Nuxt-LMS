@@ -1,0 +1,463 @@
+{
+  "872": {
+    "sections": [
+      {
+        "title": "🔍 Why a dense layer cannot handle an image",
+        "paras": [
+          "A 224 by 224 colour image has 150,528 values. A single fully connected layer of 1,000 units on that input needs 150 million weights, and it treats a pixel in the corner and a pixel in the centre as unrelated quantities.",
+          "A convolutional layer assumes two things that are true of images: nearby pixels are related, and the same pattern is meaningful wherever it appears. Those two assumptions cut the parameter count by orders of magnitude and, more importantly, make the model generalise."
+        ]
+      },
+      {
+        "title": "⚙️ Convolution, pooling, and the learned hierarchy",
+        "paras": [
+          "A convolutional layer applies a set of small learnable filters across the image and produces a feature map per filter. Pooling then reduces spatial size. Stacking the two builds a hierarchy in which early layers respond to edges, middle layers to textures and parts, and late layers to objects.",
+          "The classifier at the end sees a compact vector rather than pixels, which is why it can be small."
+        ],
+        "bullets": [
+          "Weight sharing means one filter scans the whole image, so a pattern is detected regardless of position.",
+          "Local connectivity means each output depends on a small neighbourhood, which matches the structure of images.",
+          "Pooling provides tolerance to small translations, which the classifier no longer has to learn.",
+          "The number of parameters per layer depends on filter size and channel count, not on image size.",
+          "Batch normalisation and ReLU are what make deep stacks trainable.",
+          "Replacing the final dense layers with global average pooling removes tens of millions of parameters.",
+          "The learned hierarchy is why a feature learned on one image task transfers to another."
+        ]
+      },
+      {
+        "title": "🧮 Parameter counts by arithmetic",
+        "paras": [
+          "A dense layer from 150,528 inputs to 128 units is 19.3 million weights. A convolutional layer with 32 filters of 3 by 3 over 3 channels is 32 times 3 times 9, 864 weights plus 32 biases. That is 22,000 times fewer parameters for a layer that respects image structure.",
+          "A small network: convolution 32 filters 3 by 3 on 32 by 32 by 3 input gives 32 by 30 by 30, then 2 by 2 max pool gives 32 by 15 by 15, 7,200 values. A second convolution with 64 filters 3 by 3 gives 64 by 13 by 13, 10,816 values, pool to 64 by 6 by 6, 2,304. Flatten to 2,304, then a dense layer to 128 is 294,912 weights, and that dense layer is now the largest part of the model.",
+          "The stated example in the chapter's own summary: 128 features into 10 classes through a dense layer is 128 plus 1 times 10, 1,290 parameters. The bias term is the plus one, which is a useful detail to remember when counting.",
+          "Compute arithmetic: the first convolution does 32 filters times 900 positions times 27 multiply-adds, 777,600 operations. The second does 64 times 169 times 288, 3.1 million. The dense layer does 294,912. So the convolutions dominate compute while the dense layer dominates parameters, which is the standard shape of a small CNN.",
+          "Why global average pooling matters in numbers: a 64 by 6 by 6 map flattened is 2,304 values, and 2,304 times 128 is 294,912 weights. Global average pooling reduces it to 64 values, so 64 times 128 is 8,192 weights, a 36-fold reduction. That is the entire trick behind several compact architectures.",
+          "Inference cost comparison for 10,000 images: the small network at about 4 million multiply-adds per image is 40 billion operations, a second on a GPU and 40 seconds on a CPU. A mobilised version at 600,000 operations is 6 billion, which is why mobile models are designed around this arithmetic."
+        ]
+      }
+    ]
+  },
+  "873": {
+    "sections": [
+      {
+        "title": "🔍 Why nobody trains from scratch any more",
+        "paras": [
+          "Training an image model from scratch needs hundreds of thousands of labelled images, days of compute, and careful tuning. The resulting early layers detect edges and colour blobs, which is what every image model has detected since the 1980s.",
+          "A pretrained model already has those layers, so adapting it to a new task takes minutes and a few hundred examples. That is why transfer learning is the default for almost every practical vision project."
+        ]
+      },
+      {
+        "title": "⚙️ Backbones, heads, and how much to unfreeze",
+        "paras": [
+          "A pretrained model has a backbone, which is the feature extractor, and a head, which maps features to classes. Transfer learning replaces the head and trains it on the new task.",
+          "The decision that follows is how much of the backbone to unfreeze. A small domain gap allows freezing everything. A large gap, such as greyscale medical scans against colour photographs, requires unfreezing more, and sometimes changing the first layer."
+        ],
+        "bullets": [
+          "Replacing the final layer is mandatory, since the number of classes differs.",
+          "Freezing the backbone makes training fast and needs very little data.",
+          "Fine-tuning the last block usually adds a few points when data allows it.",
+          "A grayscale input against a three-channel backbone requires either repeating channels or replacing the first convolution.",
+          "Input normalisation must match the statistics the backbone was trained with.",
+          "ResNet, VGG, EfficientNet, and ViT differ in architecture, and all follow the same transfer recipe.",
+          "Test-time augmentation often adds another point at inference cost."
+        ]
+      },
+      {
+        "title": "🧮 The arithmetic of reusing a backbone",
+        "paras": [
+          "Training from scratch on 5,000 images: a ResNet-style model with 11 million parameters needs 50 epochs, 157 batches per epoch at batch 32, and perhaps 60 milliseconds per batch, so 8 minutes per epoch and 6.5 hours total. Accuracy reaches 78 to 82 percent.",
+          "Frozen backbone plus a new head: the head has about 5,000 parameters for 10 classes. One epoch is 157 batches at 15 milliseconds, 2.4 seconds. Twenty epochs take 48 seconds. Accuracy reaches 90 to 93 percent.",
+          "That is roughly 500 times less compute for 10 points more accuracy. The pretraining cost was paid once by someone else, which is the entire economics.",
+          "Partial fine-tuning: unfreezing the last of four blocks makes about 8 million of the 11 million parameters trainable, so each step is 6 to 8 times slower. Fifty epochs take 40 to 60 minutes, and accuracy often reaches 94 percent. The gain is real but small, which is why the frozen baseline is always the first experiment.",
+          "Parameter and memory arithmetic: an 11-million-parameter model in float32 is 44 MB, and its saved checkpoint with optimiser state is about three times that, 130 MB. Training at batch 32 with 224 by 224 inputs needs about 2 GB of activation memory, which fits on a modest GPU. That is why a single mid-range GPU is enough for fine-tuning.",
+          "The domain gap measured: transferring a model trained on natural photographs to chest X-rays with a frozen backbone gives 82 percent, fine-tuning the last block gives 89, and full fine-tuning gives 91. Each step costs more data and more compute, and the numbers show where the gains are.",
+          "The overfitting warning in numbers: full fine-tuning of an 11-million-parameter model on 1,000 images gives 11,000 parameters per image, and validation accuracy typically falls below the frozen baseline. Unfreezing more than the data supports is a reliable way to make things worse."
+        ]
+      }
+    ]
+  },
+  "874": {
+    "sections": [
+      {
+        "title": "🔍 Why detection is harder than classification",
+        "paras": [
+          "Classification assumes one object fills the frame. Detection must answer two questions at once and an unknown number of times: what objects are present, and where exactly is each one.",
+          "The number of possible boxes in an image is enormous, so detection is a search problem as much as a recognition one."
+        ]
+      },
+      {
+        "title": "⚙️ Two-stage, one-stage, and the metric",
+        "paras": [
+          "Two-stage detectors generate candidate regions, then classify and refine each one. They are accurate and slower. One-stage detectors predict boxes and classes directly on a dense grid, which is faster and is what real-time systems use.",
+          "Detections are judged by intersection over union against the ground truth, and by mean average precision across classes and thresholds."
+        ],
+        "bullets": [
+          "An anchor or a grid cell defines the candidate boxes a model is allowed to predict.",
+          "Non-maximum suppression removes overlapping predictions for the same object.",
+          "YOLO frames detection as one regression over a grid, which is why it is fast.",
+          "IoU thresholds decide what counts as a correct detection, and the number must be stated.",
+          "Mean average precision averages precision-recall areas across classes, so rare classes matter equally.",
+          "Small objects are the hardest case, because they occupy few pixels and few features.",
+          "Class imbalance in the background is extreme, which is why focal loss and hard negative mining exist."
+        ]
+      },
+      {
+        "title": "🧮 Boxes, overlap, and the metric by hand",
+        "paras": [
+          "A grid of 19 by 19 cells on a 608 by 608 input, with 3 boxes per cell, gives 1,083 candidate boxes. Each has a class score and 4 coordinate offsets, so the output tensor is 19 by 19 by 3 times 5 plus classes.",
+          "Intersection over union: a predicted box of 100 by 100 at 0,0 and a true box of 100 by 100 at 20,0. The intersection is 80 by 100, 8,000. The union is 10,000 plus 10,000 minus 8,000, 12,000. So IoU is 0.667. It counts as correct at a 0.5 threshold and wrong at 0.7.",
+          "Non-maximum suppression: if three boxes overlap the same object with scores 0.9, 0.8, and 0.7 and pairwise IoU above 0.5, NMS keeps the 0.9 box and removes the others. Without it, the model reports three detections for one object, which inflates recall and destroys precision.",
+          "Mean average precision arithmetic: for one class with 100 ground-truth objects, the model produces 120 predictions of which 85 are correct. Precision is 0.708 and recall 0.85 at that operating point. The average precision integrates precision over the recall range, giving perhaps 0.76. Averaging over 80 classes gives the mean, which is why one weak class barely moves the number and one strong class barely helps it.",
+          "The threshold effect in numbers: a model reporting mAP 0.45 at IoU 0.5 typically reports 0.28 at IoU 0.5 to 0.95. Quoting 0.45 without the threshold overstates the localisation quality by 60 percent, which is why the two numbers are always reported together.",
+          "Latency arithmetic: a real-time detector at 30 frames per second needs 33 milliseconds per frame including pre-processing. At 640 by 640 input on a mid-range GPU, inference is 12 milliseconds and pre-processing 4, leaving margin. Doubling the input to 1280 by 1280 quadruples the compute to 48 milliseconds, which breaks the budget, which is why resolution is the first thing reduced on constrained hardware.",
+          "Small-object failure in numbers: a pedestrian 20 pixels tall in a 640 by 640 input becomes 5 pixels after three downsampling stages, which is too small for the final feature map to represent. That is why detectors for small objects use higher input resolution or feature pyramids that keep a high-resolution level."
+        ]
+      }
+    ]
+  },
+  "876": {
+    "sections": [
+      {
+        "title": "🔍 Why a box is not enough",
+        "paras": [
+          "A bounding box around a person in a crowded scene also contains parts of three other people and a wall. For measuring tumour volume, counting cells, or driving on a road, the exact extent of each region is the answer.",
+          "Segmentation labels every pixel, which makes those questions answerable and makes the annotation problem much harder."
+        ]
+      },
+      {
+        "title": "⚙️ Semantic, instance, and the architectures",
+        "paras": [
+          "Semantic segmentation assigns a class to each pixel without distinguishing individuals, so all cars share one label. Instance segmentation separates individual objects, so each car gets its own mask. Panoptic segmentation combines both.",
+          "Encoder-decoder architectures downsample to capture context and then upsample to recover resolution. Skip connections carry fine detail from the encoder to the decoder, which is what makes boundaries precise."
+        ],
+        "bullets": [
+          "U-Net's symmetric encoder-decoder with skip connections is the standard shape for medical and general segmentation.",
+          "Mask R-CNN extends a detector with a mask branch, producing instance masks.",
+          "Dilated convolutions enlarge the receptive field without losing resolution.",
+          "Transposed convolution and interpolation are both used for upsampling, with different artefacts.",
+          "Loss functions combine cross-entropy with a Dice term, because small objects are swamped by pixel counts.",
+          "Class imbalance is extreme: a lesion may be 1 percent of the pixels, so pixel accuracy is meaningless.",
+          "The output resolution limits achievable boundary precision."
+        ]
+      },
+      {
+        "title": "🧮 Intersection over union per class",
+        "paras": [
+          "Three classes with intersection over union of 0.874, 0.690, and 0.364. Mean IoU is their average, 0.643.",
+          "Note how the weak class dominates the judgement of usefulness. Two classes are strong and one is poor, and the mean hides that the model is nearly useless for the third class. Reporting per-class IoU is not optional.",
+          "Pixel accuracy in numbers: a medical image where a lesion occupies 2 percent of the pixels. A model that predicts background everywhere achieves 98 percent pixel accuracy and finds nothing. Its mean IoU over two classes is 0.49, which is why IoU is the standard metric for segmentation and pixel accuracy is not.",
+          "Class imbalance arithmetic: with 1,000,000 pixels and 20,000 lesion pixels, plain cross-entropy is dominated by the 980,000 background pixels, and the gradient pushes toward predicting background. Weighting the lesion class by 49 makes the two contribute equally, which is the minimum needed for the model to learn the lesion at all.",
+          "Resolution and memory: a 1,024 by 1,024 image with 8 classes produces 8.4 million outputs per image. Storing the decoder's intermediate feature maps at half resolution needs 512 by 512 by 64 floats, 67 MB per image, so batch 4 needs 268 MB. That is why segmentation batch sizes are small and why crops are common.",
+          "Dice coefficient example: a predicted mask of 18,000 pixels against a true mask of 20,000 with 15,000 overlap. Dice is 2 times 15,000 divided by 38,000, 0.789. IoU is 15,000 divided by 23,000, 0.652. Both are useful and they are not interchangeable, which is why papers state which they use."
+        ]
+      }
+    ]
+  },
+  "877": {
+    "sections": [
+      {
+        "title": "🔍 Why generation is a different problem",
+        "paras": [
+          "Classification and segmentation map an input to an output. Generation must produce samples from a distribution, which means representing the whole space of plausible images rather than a boundary through it.",
+          "There is also no single correct answer, which changes both the training objective and the evaluation."
+        ]
+      },
+      {
+        "title": "⚙️ Adversarial and diffusion approaches",
+        "paras": [
+          "A GAN trains a generator to produce images that a discriminator cannot distinguish from real ones. It produces sharp results and is notoriously unstable.",
+          "A diffusion model learns to reverse a gradual noising process, and it generates by starting from noise and denoising step by step. It trains stably and dominates current text-to-image systems."
+        ],
+        "bullets": [
+          "Style transfer and super-resolution are conditional generation, where an input constrains the output.",
+          "Inpainting generates only the masked region, conditioned on the rest of the image.",
+          "Text-to-image conditions generation on an embedding of the prompt, usually through cross-attention.",
+          "Fréchet inception distance compares feature statistics of generated and real sets, and lower is better.",
+          "Mode collapse produces limited variety, which per-image quality metrics do not detect.",
+          "Diffusion sampling is slow because it needs many denoising steps, which distillation addresses.",
+          "Provenance marking and consent are part of the deployment question, not an afterthought."
+        ]
+      },
+      {
+        "title": "🧮 Sampling cost and quality metrics",
+        "paras": [
+          "A diffusion model generating a 512 by 512 image in 50 steps, each a forward pass taking 40 milliseconds, needs 2 seconds per image. A GAN generating the same size in one pass takes 30 milliseconds, 66 times faster.",
+          "Batching changes the diffusion arithmetic: 16 images per batch at 50 steps takes maybe 12 seconds, so 0.75 seconds per image, a 2.7-fold improvement, but the sequential step count cannot be parallelised away.",
+          "Distillation arithmetic: reducing 50 steps to 4 cuts sampling from 2 seconds to 160 milliseconds, at a cost of 1 to 3 points on the quality metric. For an interactive product, that trade is usually correct; for a publication figure, it is not.",
+          "Fréchet inception distance in context: a strong model reaches 2 to 5 on a standard benchmark, an early model 30 to 50, and a blurry baseline in the hundreds. The metric is sensitive to sample count, so comparing a 5,000-sample evaluation against a 50,000-sample one is invalid.",
+          "Mode collapse in numbers: if the generator produces 3 of the 10 classes perfectly under a conditional setting, the per-image score is excellent on those and the overall coverage is 30 percent. A classifier run over generated samples, called the classification accuracy score, reveals the gap where the distance metric does not.",
+          "Training cost: a large text-to-image diffusion model trained on hundreds of millions of image-text pairs needs thousands of accelerator-days, which is tens of millions of dollars. That is why fine-tuning a pretrained model with a few thousand of your own images is the only practical route for almost everyone.",
+          "Memory at inference: a 1-billion-parameter model in 16-bit precision is 2 GB of weights, plus activations for the current step. Generating at 1,024 by 1,024 requires latent-space processing for efficiency, which is why latent diffusion works at 128 by 128 in a compressed space and decodes at the end."
+        ]
+      }
+    ]
+  },
+  "878": {
+    "sections": [
+      {
+        "title": "🔍 Why video is not just many images",
+        "paras": [
+          "Classifying each frame independently works surprisingly well and ignores the most informative signal: motion. A person standing still and a person walking look identical in one frame and completely different over two seconds.",
+          "Video also brings a cost problem, because 30 frames per second is 30 times the images and consecutive frames are nearly identical."
+        ]
+      },
+      {
+        "title": "⚙️ Spatial plus temporal, and the task ladder",
+        "paras": [
+          "Video models combine a spatial component, which processes each frame, with a temporal component, which relates frames. The decomposition is why progress on image models transfers directly to video.",
+          "Tasks include action recognition, temporal action detection, tracking, and video captioning."
+        ],
+        "bullets": [
+          "Frame sampling decides how much temporal detail a model sees, and 8 to 32 frames is typical for a clip.",
+          "3D convolutions process space and time together, at a higher cost than 2D per frame.",
+          "Two-stream models separate appearance and motion, with optical flow supplying the motion stream.",
+          "Video transformers tokenise spatio-temporal patches, which scale the attention cost with frames times pixels.",
+          "Object tracking links detections across frames, usually with motion prediction plus appearance matching.",
+          "Temporal context matters for distinguishing actions that look similar in one frame.",
+          "Latency budgets differ completely between offline analysis and live streaming."
+        ]
+      },
+      {
+        "title": "🧮 Data rates and sampling arithmetic",
+        "paras": [
+          "1080p at 30 frames per second is 62 million pixels per second. Raw 8-bit RGB is 187 MB per second, so an hour is 673 GB, which is why video is always compressed. Decoded frames must be produced on the fly, which is a real compute cost.",
+          "Sampling 32 frames from a 10-second clip at 30 frames per second, which is 300 frames, means taking every ninth frame. That reduces the model's input by 9.4 times and loses motion detail between samples, which is the standard trade.",
+          "Model cost: a 2D CNN over 32 frames at 5 milliseconds per frame is 160 milliseconds per clip. A 3D CNN over the same clip at 60 milliseconds per frame-equivalent is 1.9 seconds, 12 times slower, for typically 3 to 8 points more accuracy on motion-sensitive classes.",
+          "Action recognition accuracy comparison on a standard benchmark: single-frame classification reaches 60 to 70 percent, multi-frame 2D reaches 80 to 85, and 3D or two-stream models reach 88 to 92. The gap between 70 and 90 is entirely temporal information, which is the honest measure of what motion is worth.",
+          "Tracking arithmetic: at 30 frames per second with 20 objects, matching detections between consecutive frames is 20 by 20, 400 comparisons per frame, 12,000 per second. Trivial. But re-identification after an occlusion requires comparing appearance embeddings, and 20 objects against a gallery of 100 recent tracks is 2,000 comparisons of 128-dimensional vectors, still small. The cost is in the detector, not the tracker.",
+          "Storage and bandwidth for deployment: a camera at 4 Mbit per second produces 1.8 GB per hour, 43 GB per day. Analysing on the edge and uploading only events reduces this by 1,000 times, which is why edge video analytics exists at all.",
+          "The frame-rate and accuracy trade in numbers: sampling at 5 frames per second instead of 30 cuts compute by 6 times and costs 5 to 10 points of accuracy on fast actions such as a tennis serve, while costing almost nothing on slow actions such as sitting down. Matching the sampling rate to the action speed is free accuracy."
+        ]
+      }
+    ]
+  },
+  "880": {
+    "sections": [
+      {
+        "title": "🔍 Why driving is the hardest vision application",
+        "paras": [
+          "A driving system must perceive, predict, plan, and control, in real time, with a failure being fatal. Every component must be correct, not on average but almost always.",
+          "That requirement turns the numbers upside down. A model that is 99 percent accurate per frame still fails thousands of times per hour at 30 frames per second, which is why the design is about the tail rather than the mean."
+        ]
+      },
+      {
+        "title": "⚙️ Sensors and the pipeline",
+        "paras": [
+          "Cameras give dense colour and texture but no direct depth. LiDAR gives precise range but sparse points. Radar gives range and velocity that works in rain and fog. Sensor fusion combines them, because each fails where another succeeds.",
+          "The pipeline is perception, prediction, planning, and control. Perception produces objects with position and velocity, prediction estimates where they will be, planning chooses a trajectory, and control turns it into steering and throttle."
+        ],
+        "bullets": [
+          "Camera-only systems are cheap and need strong learned depth, which is still less reliable than LiDAR ranging.",
+          "LiDAR is expensive and degrades in heavy rain and snow, which is why fusion matters.",
+          "Time synchronisation between sensors is a hard engineering problem, not a detail.",
+          "Perception must output uncertainty, because planning needs to know what is unreliable.",
+          "The long tail of rare situations is the central difficulty, and it cannot be sampled from ordinary driving.",
+          "Simulation is used for the rare cases, which introduces its own reality gap.",
+          "Regulation and liability determine what may be deployed far more than accuracy does."
+        ]
+      },
+      {
+        "title": "🧮 Failure rates at driving scale",
+        "paras": [
+          "At 30 frames per second, one hour is 108,000 frames. A perception model at 99 percent per-frame accuracy makes 1,080 errors per hour. At 99.9 percent it makes 108, and at 99.99 percent about 11. Human drivers have roughly one serious incident per 100,000 hours, so the per-frame error rate must be far below what benchmarks usually emphasise.",
+          "The arithmetic of scale: a fleet of 100 cars driving 8 hours a day for a year covers 292,000 car-hours. At 108,000 frames per hour that is 31 billion frames. Rare events, defined as one in 10 million frames, appear 3,100 times in that data, which is why fleet data collection is the main cost of a self-driving programme.",
+          "Sensor cost arithmetic: 8 cameras at 10 each, one LiDAR at 500 to 10,000, radar at 50 to 200. A basic camera-plus-radar system might be 500 in volume; a full LiDAR system is thousands. That cost difference is why consumer systems are camera-first and robotaxis are LiDAR-first.",
+          "Latency budget: 100 milliseconds end to end at 10 metres per second means the car travels 1 metre before acting. At 30 metres per second, 100 milliseconds is 3 metres, which is the difference between stopping in time and not. That is why the perception latency budget is measured in tens of milliseconds, and why models are pruned and quantised aggressively.",
+          "Annotation arithmetic: labelling objects in 31 billion frames is impossible, so programmes use auto-labelling from LiDAR and active learning to pick the few thousand frames per day that are most informative. That selection, not raw collection, is where the marginal value is.",
+          "The uncertainty problem in numbers: a detector reporting 0.9 confidence on an object at 80 metres, where it is 12 pixels tall, is often wrong. If the planner treats it as certain, it brakes unnecessarily; if it ignores it, it may miss a pedestrian. Calibrated confidence matters as much as detection accuracy, and it is frequently poor in production models."
+        ]
+      }
+    ]
+  },
+  "881": {
+    "sections": [
+      {
+        "title": "🔍 Why medical imaging is a different discipline",
+        "paras": [
+          "The images are grayscale, three-dimensional, and produced by machines whose physics determines what is visible. The labels come from experts who disagree with each other. And the cost of each error is asymmetric by orders of magnitude.",
+          "That combination means the technical approach is standard but the design decisions are entirely different."
+        ]
+      },
+      {
+        "title": "⚙️ Tasks and the shape of the data",
+        "paras": [
+          "Classification decides whether a study is normal. Detection locates lesions. Segmentation measures volumes. Registration aligns images taken at different times.",
+          "A CT scan is a volume of 512 by 512 by 300 voxels, which is 78 million values, so the model is genuinely three-dimensional and memory is the binding constraint."
+        ],
+        "bullets": [
+          "Volumes are processed as slices or as 3D patches, which is a memory decision as much as a modelling one.",
+          "Window levelling changes which tissue contrast is visible, and the choice affects both model and radiologist.",
+          "Annotation requires a specialist, which is why datasets are small and expensive.",
+          "Inter-observer agreement is often only moderate, which sets a ceiling on achievable accuracy.",
+          "Sensitivity is prioritised over specificity because a missed lesion is far worse than a false alarm.",
+          "Explainability is a regulatory requirement in many jurisdictions, not a nice-to-have.",
+          "Data privacy rules restrict sharing, which is why federated learning appears in this domain."
+        ]
+      },
+      {
+        "title": "🧮 Thresholds, volumes, and reader agreement",
+        "paras": [
+          "A screening programme with 1 percent prevalence and 10,000 patients. A model with 95 percent sensitivity and 90 percent specificity finds 95 of 100 cancers and raises 990 false alarms. Precision is 95 divided by 1,085, 0.088, so nine out of ten alarms are false. That is the arithmetic every screening programme has to accept or improve.",
+          "Tightening the threshold to 99 percent specificity reduces false alarms to 99, so precision becomes 95 divided by 194, 0.49. Sensitivity might drop to 90, missing 10 cancers. The exchange rate between missed cancers and false alarms is a policy decision, and it must be made explicitly.",
+          "Volume arithmetic: a lesion of 10 mm diameter has a volume of 524 cubic millimetres; at 15 mm it is 1,767, more than three times larger. Doubling the diameter multiplies the volume by 8, which is why diameter-based estimates mislead and volumetric measurement matters for growth tracking.",
+          "Reader agreement: two radiologists marking the same lesion typically agree on its boundary with a Dice coefficient of 0.75 to 0.90 and on its presence with kappa 0.6 to 0.8. A model at 0.85 Dice is therefore at the level of a second reader, which is the meaningful benchmark, not perfection.",
+          "Dataset size reality: a public lung nodule dataset may have 1,000 studies, against 1.2 million photographs in a general image benchmark. That is why transfer learning, patch-based training, and heavy augmentation are standard, and why models trained on one scanner often fail on another.",
+          "Compute and memory arithmetic: a 512 by 512 by 300 CT volume at 32-bit precision is 314 MB. Training with 3D patches of 64 by 64 by 64 needs about 1 MB per patch but hundreds of patches per batch, so 2 to 8 GB of GPU memory, which is why 3D medical models are usually trained at reduced resolution and evaluated at full resolution.",
+          "The deployment caution in numbers: a model validated at 0.92 area under the curve in one hospital can drop to 0.80 in another because of scanner differences and population differences. That 12-point gap is larger than most reported improvements in the literature, which is why external validation is the standard requirement."
+        ]
+      }
+    ]
+  },
+  "882": {
+    "sections": [
+      {
+        "title": "🔍 Why AR is the most latency-sensitive vision",
+        "paras": [
+          "In AR, a virtual object is drawn in a position determined by the camera pose. If the pose is slightly late, the object lags behind the real world and the illusion breaks immediately.",
+          "That requirement, called motion-to-photon latency, is measured in milliseconds and is the constraint everything else is designed around."
+        ]
+      },
+      {
+        "title": "⚙️ Tracking, mapping, and registration",
+        "paras": [
+          "AR tracking estimates the camera's position and orientation from visual features, inertial sensors, or both. Visual-inertial odometry fuses camera features with gyroscope and accelerometer data, because the camera is accurate slowly and the inertial sensor is accurate quickly.",
+          "Persistent AR needs a map: feature points that allow the device to recognise a place it has seen before, which is simultaneous localisation and mapping."
+        ],
+        "bullets": [
+          "Motion-to-photon latency under about 20 milliseconds is generally imperceptible; above 50 it is obvious.",
+          "Inertial data provides high-frequency motion estimates between camera frames.",
+          "Plane detection and depth estimation place virtual objects on real surfaces.",
+          "Occlusion between virtual and real objects requires depth, which phones estimate only approximately.",
+          "Lighting estimation makes virtual objects match the scene, which is a rendering problem with vision input.",
+          "Tracking drift accumulates, which is why relocalisation against a map is necessary.",
+          "Hand and eye tracking add another model with its own latency budget."
+        ]
+      },
+      {
+        "title": "🧮 Latency and drift arithmetic",
+        "paras": [
+          "A camera at 60 frames per second gives a new image every 16.7 milliseconds. Capture takes 8, processing 6, rendering 8, and display 10, so the pipeline is 32 milliseconds, which produces visible lag. Halving each stage to reach 16 milliseconds is the engineering target of every AR system.",
+          "Motion error from latency: turning the head at 100 degrees per second, a 30-millisecond lag displaces the virtual object by 3 degrees. At arm's length, 0.5 metres, that is 26 millimetres of visible offset, which is easily noticed. That single calculation explains why AR is harder than it looks.",
+          "Drift arithmetic: visual-inertial odometry drifts at roughly 1 percent of distance travelled. Walking 100 metres gives 1 metre of position error without relocalisation, which is enough to misplace a virtual object. Recognising a previously mapped feature reduces the error to centimetres.",
+          "Frame rate and power: 60 frames per second at 1-megapixel processing costs on the order of 1 watt for the vision pipeline, which on a 15-watt-hour battery is 15 hours of continuous AR, before display and rendering. That is why AR headsets run 2 to 4 hours, and why reducing processing per frame extends battery proportionally.",
+          "The occlusion problem in numbers: without depth, a virtual object always draws on top of everything. With approximate depth from a stereo pair or a depth sensor, occlusion is correct where the depth estimate is good, typically within 1 to 2 centimetres up to 2 metres, and unreliable beyond 5 metres. The physical realism of an AR scene is bounded by that range.",
+          "Marker-based versus markerless: a printed marker gives a pose in under a millisecond with sub-millimetre accuracy at close range, while markerless tracking needs 5 to 10 milliseconds and is less precise. Markers are used in industrial AR precisely because the accuracy matters more than the convenience."
+        ]
+      }
+    ]
+  },
+  "884": {
+    "sections": [
+      {
+        "title": "🔍 Why one library persists for three decades",
+        "paras": [
+          "OpenCV predates deep learning and remains the standard for image I/O, geometry, classical filters, and camera handling. Deep models handle recognition, and OpenCV handles everything around them.",
+          "In a real pipeline it is the glue: read the frame, correct the colour, resize, run the model, draw the result."
+        ]
+      },
+      {
+        "title": "⚙️ The operations that matter most",
+        "paras": [
+          "The essential surface is small: read and write images, convert colour spaces, resize and transform, threshold, filter, find contours, and capture video frame by frame.",
+          "The arrays are NumPy arrays, which is why OpenCV interoperates with the whole scientific Python stack."
+        ],
+        "bullets": [
+          "Images are read as BGR by default, not RGB, which is the source of the classic blue-face bug.",
+          "Pixel coordinates are x then y, while array indexing is row then column, which reverses them.",
+          "Video capture is a loop that reads frames until the stream ends or the camera fails.",
+          "Most functions return a new array rather than modifying in place, which matters for memory.",
+          "Drawing functions modify in place, which is a different convention and a common surprise.",
+          "Camera calibration uses a chessboard to estimate the intrinsic matrix and lens distortion.",
+          "The library's speed comes from compiled loops and SIMD, not from Python-level optimisation."
+        ]
+      },
+      {
+        "title": "🧮 Colour, memory, and frame rates",
+        "paras": [
+          "A BGR image passed to a model expecting RGB swaps the first and third channels. The image still looks plausible, and top-1 accuracy typically falls by 5 to 15 points. One conversion call fixes it, and forgetting it is the most common bug in applied vision.",
+          "Coordinate confusion in numbers: a point at column 400, row 300 in the array is x equal to 400, y equal to 300. Writing a rectangle as 300, 400 to 400, 300 draws a box in the wrong place, which is easy to spot; writing it as 400, 300 to 300, 400 produces an error. Both mistakes happen daily.",
+          "Memory arithmetic: a 1920 by 1080 BGR frame is 6.2 MB. A 30-frame buffer is 187 MB. A video processing loop that keeps references to frames accumulates memory until it crashes, which is why frames are copied only when needed.",
+          "Frame-rate arithmetic: reading 1080p frames takes about 2 milliseconds, a resize to 640 by 640 takes 3, a filter takes 5, and a small model takes 12, so a frame takes 22 milliseconds and the loop runs at 45 frames per second. Any one step growing past 33 milliseconds drops the loop below 30, which is why profiling each step matters.",
+          "Camera intrinsics example: a 1920 by 1080 camera with a 60-degree horizontal field of view has a focal length in pixels of about 960 divided by the tangent of 30 degrees, 1,663. That number converts a pixel offset into an angle, which is the basis of every measurement from a single camera.",
+          "Why compiled code matters: a per-pixel loop in Python over 2 million pixels takes seconds, because each pixel costs hundreds of nanoseconds of interpreter overhead. The same operation in an OpenCV call takes milliseconds. That factor of 1,000 is why the library exists, and why vectorised array operations are the rule rather than the exception."
+        ]
+      }
+    ]
+  },
+  "885": {
+    "sections": [
+      {
+        "title": "🔍 Why torchvision exists",
+        "paras": [
+          "PyTorch gives tensors and gradients. Visual models need datasets, augmentation transforms, pretrained weights, and detection utilities, and reimplementing those for every project wastes the majority of the effort.",
+          "torchvision provides exactly that layer, which is why the standard vision recipe is a few lines of library calls around a small amount of custom code."
+        ]
+      },
+      {
+        "title": "⚙️ Datasets, transforms, and models",
+        "paras": [
+          "A dataset object returns one example, and a data loader batches them with shuffling and multiple worker processes. Transforms are composable operations applied to images and, when needed, to labels and boxes together.",
+          "The model zoo provides pretrained weights, and replacing the final layer is the standard transfer-learning edit."
+        ],
+        "bullets": [
+          "Training transforms include random crop, flip, and colour jitter; validation transforms are deterministic resize and centre crop.",
+          "Transforms that change geometry must be applied to bounding boxes and masks as well, which is why paired transforms exist.",
+          "Normalisation with the pretrained mean and standard deviation is required for pretrained weights to work.",
+          "The data loader's worker count is the first throughput parameter to tune.",
+          "Pinning memory and using multiple workers keeps the GPU from waiting on the CPU.",
+          "Mixed precision training halves memory and roughly doubles throughput on supported hardware.",
+          "Saving the model state dictionary rather than the whole object keeps checkpoints portable."
+        ]
+      },
+      {
+        "title": "🧮 Throughput and memory by arithmetic",
+        "paras": [
+          "A training step on 64 images of 224 by 224 through a mid-sized model takes 20 milliseconds of forward and 40 of backward, so 60 milliseconds per step. That is 16.7 steps per second, 1,067 images per second, and an epoch of 50,000 images takes 47 seconds.",
+          "If decoding and augmenting those 64 images takes 30 milliseconds on one worker, it fits inside the 60-millisecond step and the GPU never waits. With heavier augmentation at 100 milliseconds, the GPU idles 40 percent of the time and the epoch takes 78 seconds. Four workers restore the original time, which is why the worker count is a throughput parameter rather than a style choice.",
+          "Memory arithmetic: activations for 64 images at the first layer's 64 channels of 112 by 112 are 64 times 64 times 112 times 112, 51 million floats, 205 MB. A 50-layer model keeps every activation for the backward pass, so several GB, which is why batch size is bounded by memory rather than compute. Halving to batch 32 halves the memory and roughly doubles the step count.",
+          "Mixed precision arithmetic: 16-bit activations halve the memory and tensor cores double the matrix throughput, so the combined effect is often 2 to 3 times the images per second. The cost is numerical range, handled by loss scaling, and typically under 0.3 points of accuracy.",
+          "Pretrained weights and input statistics: feeding images normalised to 0 to 1 instead of the ImageNet mean and standard deviation costs 3 to 10 points of accuracy on a frozen backbone, because the first layer's filters were fitted to the standardised input. Nothing errors, and the model simply performs worse.",
+          "Checkpoint arithmetic: an 11-million-parameter model in float32 is 44 MB. With the optimiser's momentum and variance buffers it is about 130 MB, and saving three such checkpoints per run is 400 MB. That is why checkpoint retention policy is a real decision on a training cluster."
+        ]
+      }
+    ]
+  },
+  "886": {
+    "sections": [
+      {
+        "title": "🔍 Why vision failures are often invisible",
+        "paras": [
+          "A model that misclassifies a photo is annoying. A model that fails to detect a pedestrian, or that misreads a face because of skin tone, or that generates a realistic image of someone who does not exist, causes harm that no accuracy metric captures.",
+          "Vision is deployed on images of people, which makes privacy, bias, and consent part of the technical problem rather than a policy layer on top."
+        ]
+      },
+      {
+        "title": "⚙️ The failure families",
+        "paras": [
+          "Distribution shift is the technical one: different lighting, camera, weather, or population, and accuracy falls without warning. Bias is the social one: performance that differs systematically across groups. Privacy is the data one: faces and locations are personal information. Misuse is the application one: surveillance, deepfakes, and unauthorised recognition.",
+          "Each family has a standard mitigation, and none of them is automatic."
+        ],
+        "bullets": [
+          "Report accuracy per subgroup, per lighting condition, and per device, not only overall.",
+          "Test on data from the deployment environment, not only on a curated benchmark.",
+          "Calibrate confidence, because a planner or a clinician needs to know when the model is unsure.",
+          "Strip metadata and blur faces where identification is not the task.",
+          "Document the training data's provenance, including consent and licence.",
+          "Provide a human review path for consequential decisions.",
+          "Detect and label generated content, because provenance is now a vision problem in itself."
+        ]
+      },
+      {
+        "title": "🧮 Measuring the risks",
+        "paras": [
+          "Overall accuracy 94 percent; group A 96, group B 81; group B is 10 percent of the data. One in ten users gets a model that is 15 points worse, and the aggregate looks excellent. Subgroup analysis costs an afternoon and is the difference between a known limitation and a lawsuit.",
+          "Distribution shift in numbers: a detector at 0.90 mean average precision on daylight images falls to 0.55 at night and 0.62 in rain. If a fleet drives 30 percent of its miles at night, the effective performance is 0.90 times 0.7 plus 0.55 times 0.3, 0.795, and every night-time mile is far worse than the headline.",
+          "Privacy arithmetic: a 1-megapixel photograph of a street contains perhaps 20 identifiable faces. A dataset of 100,000 such images contains 2 million faces, which is a biometric database whether or not anyone intended it. That is why face blurring and consent capture are baseline requirements rather than optional extras.",
+          "Generated-content detection in numbers: classifiers distinguishing real from generated images reach 90 to 98 percent on a fixed generator and drop substantially on a new one, because they learn the previous generator's artefacts rather than a general property. That is why provenance watermarking is more reliable than detection.",
+          "Annotation bias in numbers: a dataset of 10,000 images collected from one city over-represents that city's architecture, signage, and demographics. A model trained on it and deployed nationally loses 5 to 15 points, and no amount of architecture change recovers it. Data collection is the intervention.",
+          "The cost of a wrong deployment: a face-based access system at 0.1 percent false accept rate, across 10,000 entries per day, admits 10 unauthorised people daily. Tightening to 0.01 percent reduces that to 1 and typically raises the false reject rate to several percent, which locks out hundreds of legitimate users. That exchange rate is a security decision, not a model decision, and it needs to be made explicitly."
+        ]
+      }
+    ]
+  }
+}

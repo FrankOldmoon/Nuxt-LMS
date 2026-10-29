@@ -1,0 +1,442 @@
+{
+  "728": {
+    "sections": [
+      {
+        "title": "🔍 Why one computer is not enough",
+        "paras": [
+          "A single machine can compute, but it cannot share a printer with the office, cannot read a file on another desk, and cannot answer a request from a phone on the other side of the world. As soon as two computers need to exchange anything, a set of problems appears that no amount of local software can solve: how to encode the data, how to address the destination, how to detect corruption, and what to do when the path is busy.",
+          "A network is the answer to those problems, and it is mostly a set of agreements. The cables are simple; the difficulty is that every device must agree on the same conventions or nothing works."
+        ]
+      },
+      {
+        "title": "⚙️ What a network buys, and the client-server shape",
+        "paras": [
+          "Sharing is the obvious benefit: files, printers, storage, and an internet connection. The less obvious ones are reliability, because a second machine can take over, and scale, because work can be spread across machines.",
+          "Most traffic follows a client-server shape. The client initiates a request, the server listens on a known address and answers. The relationship is asymmetric in role but symmetric in protocol: both sides must speak the same one."
+        ],
+        "bullets": [
+          "A node is any device with a network interface; a link is the medium between nodes.",
+          "A protocol is an agreed format plus an agreed sequence of messages, and without one the bytes are meaningless.",
+          "Addressing is necessary because a shared medium carries traffic for many destinations.",
+          "The internet is a network of networks: it does not require any single company to own the path, only that each network agrees on how to hand traffic over.",
+          "Circuit switching reserves a path for the whole conversation; packet switching shares the path and sends data in independent chunks.",
+          "Packet switching won because most traffic is bursty, and reserving capacity for silence wastes it.",
+          "Peer-to-peer removes the central server, which changes who bears the cost but not the underlying protocols."
+        ]
+      },
+      {
+        "title": "🧮 Latency, bandwidth, and why they are different",
+        "paras": [
+          "Send a 1 MB file over a link with 100 Mbit per second of bandwidth and 20 milliseconds of round-trip latency. The transmission time is 8 Mb divided by 100 Mb per second, 0.08 seconds. The latency adds 0.02 seconds, so about 0.1 seconds total. Bandwidth dominates here.",
+          "Send a 100-byte request that needs a response before the next step. Transmission time is 8,000 bits divided by 100 Mbit per second, 0.08 milliseconds, which is nothing. Latency is 20 milliseconds, which is everything. A chatty protocol that needs 20 round trips takes 0.4 seconds regardless of how fast the link is.",
+          "This is why a satellite link with 500 Mbit per second feels slow: its round trip is around 600 milliseconds, so a page requiring 10 sequential round trips needs 6 seconds no matter how much bandwidth is available. Bandwidth is how much can be in flight; latency is how long the first byte takes. They are independent, and confusing them leads to buying the wrong upgrade.",
+          "Now scale to the internet. A path through 15 routers, each adding 1 millisecond of queueing, adds 15 milliseconds on top of the propagation time. The speed of light in fiber is about 200,000 km per second, so 10,000 km of fiber is 50 milliseconds one way and 100 milliseconds round trip. That number cannot be improved by any equipment, which is why long-distance interactive applications are latency-bound forever."
+        ]
+      }
+    ]
+  },
+  "729": {
+    "sections": [
+      {
+        "title": "🔍 Why the wiring pattern decides the behaviour",
+        "paras": [
+          "The same set of computers behaves very differently depending on how they are connected. Connect them all to one cable and every transmission is heard by everyone, so two simultaneous senders collide. Connect each to a central device and each conversation is private. Connect every pair directly and nothing collides but the cabling is enormous.",
+          "The topology is that decision, and it determines cost, fault tolerance, and performance before a single packet is sent."
+        ]
+      },
+      {
+        "title": "⚙️ The topologies and the network types",
+        "paras": [
+          "A bus shares one medium; a break in the cable disables the whole segment. A star connects every device to a central hub or switch; one cable failure affects one device, but the centre is a single point of failure. A ring passes data from neighbour to neighbour. A mesh connects many pairs, giving redundancy at high cost. A tree is a hierarchy of stars, which is what most buildings actually use.",
+          "Independently of topology, networks are classified by reach: a PAN within a few metres, a LAN within a building, a MAN across a city, a WAN across countries."
+        ],
+        "bullets": [
+          "Star with a switch is the modern default because the centre is cheap and the failure is contained.",
+          "A full mesh of n nodes needs n times n minus 1 divided by 2 links, which grows quadratically.",
+          "Partial mesh, where only the important nodes are multiply connected, is the usual compromise.",
+          "Bus topologies share one collision domain, so throughput falls sharply as devices are added.",
+          "A ring is deterministic: each node gets a turn, which suits industrial control more than offices.",
+          "LAN versus WAN is a difference of ownership and distance, not of protocol; the same IP runs over both.",
+          "Logical topology can differ from physical: a star-wired network with a switch is logically point-to-point per port."
+        ]
+      },
+      {
+        "title": "🧮 Counting links, cable, and collisions",
+        "paras": [
+          "A full mesh of 10 nodes needs 10 x 9 / 2 = 45 links. At 20 metres each that is 900 metres of cable. A star needs 10 links and 200 metres if the centre is 20 metres away, so 20 times less cable and 45 times fewer ports.",
+          "A partial mesh of 10 nodes with each node connected to 3 others needs 15 links, still 3 times the cable of a star but with enough redundancy that any single link failure does not isolate a node.",
+          "Collisions on a bus: with 20 devices on one 10 Mbit per second segment, each sending a 1,500-byte frame occasionally, the medium busy time per frame is 1,200 microseconds. If two transmit within the same slot, both back off for a random interval. With 20 devices each wanting 1 percent of the time, utilisation is 20 percent and collisions are rare. Push to 80 percent utilisation and collision probability rises sharply, so effective throughput falls. This is the classic result that shared Ethernet saturates around 40 percent utilisation, and it is why star topology with a switch replaced it.",
+          "Star cable lengths: a building with 100 devices on 4 floors needs 100 horizontal runs of about 30 metres, so 3,000 metres of cable, plus a switch per floor. That is a real cost, but it is one-time, and the switch gives each device its own full-duplex 1 Gbit per second instead of a share of a shared 10 Mbit."
+        ]
+      }
+    ]
+  },
+  "730": {
+    "sections": [
+      {
+        "title": "🔍 Why seven layers instead of one big program",
+        "paras": [
+          "Sending a byte across the world involves radio modulation, framing, addressing, routing, retransmission, and application semantics. Written as one program, none of these parts can be replaced and every bug lives in the same tangle.",
+          "Layering splits the problem so that each layer solves one concern and offers a clean interface to the one above. The benefit is substitution: replace the physical medium without touching HTTP, or replace HTTP without touching IP."
+        ]
+      },
+      {
+        "title": "⚙️ The OSI model, the TCP/IP model, and encapsulation",
+        "paras": [
+          "OSI describes seven layers: physical, data link, network, transport, session, presentation, application. The internet uses a four-layer model: link, internet, transport, application. The mapping is close but not exact, because OSI's session and presentation concerns ended up inside applications.",
+          "Encapsulation is the mechanism that makes layering work. As data moves down, each layer prepends its own header, so the receiver can hand the payload upward to the right place."
+        ],
+        "bullets": [
+          "Physical: bits on a medium, voltages and light pulses, cable pinouts and radio bands.",
+          "Data link: frames between directly connected devices, with MAC addresses and a checksum.",
+          "Network: packets across networks, with IP addresses and routing decisions.",
+          "Transport: end-to-end delivery, with ports, ordering, and reliability where needed.",
+          "Application: the protocol the program speaks, such as HTTP, DNS, or SMTP.",
+          "Each layer's header is payload to the layer below, which is why a packet capture shows nested structures.",
+          "A layer boundary is a contract, so a change inside a layer does not require changes above it."
+        ]
+      },
+      {
+        "title": "🧮 How much of a frame is overhead",
+        "paras": [
+          "Send 100 bytes of application data over Ethernet with TCP and IPv4. The application payload is 100 bytes. TCP adds 20 bytes of header. IPv4 adds 20 bytes. Ethernet adds 14 bytes of header plus 4 of trailer. Total on the wire: 100 + 20 + 20 + 18 = 158 bytes.",
+          "So the overhead is 58 bytes, which means only 63 percent of the transmitted bytes are your data. That ratio is why protocols try to send large payloads: with 1,000 bytes of payload the same 58 bytes of overhead is only 5.5 percent.",
+          "This is also why the maximum transmission unit matters. Ethernet allows 1,500 bytes of payload per frame, so the largest IP packet is 1,500 bytes, of which TCP and IP consume 40, leaving 1,460 bytes of application data. Sending 1 MB therefore needs 1,048,576 divided by 1,460, about 718 frames. Each frame carries 58 bytes of overhead, so 41 KB of the 1 MB transmission is protocol overhead.",
+          "At the other extreme, a Voice over IP packet with 20 milliseconds of audio carries about 160 bytes of payload and adds 40 bytes of IP and UDP header, plus 14 of Ethernet. That is 25 percent overhead, which is why voice traffic uses header compression and why many small packets cost more per byte than a few large ones."
+        ]
+      }
+    ]
+  },
+  "732": {
+    "sections": [
+      {
+        "title": "🔍 Why the medium sets the limits",
+        "paras": [
+          "No protocol can be faster than the medium allows, and no encryption fixes a cable that picks up interference. Copper carries electrons, fiber carries light, and air carries radio, and each has a different relationship between distance, speed, and noise.",
+          "Understanding the three media explains a large number of practical facts: why fiber runs between buildings, why copper is limited to 100 metres, and why a wireless link degrades when a microwave oven is on."
+        ]
+      },
+      {
+        "title": "⚙️ Signals, guided media, unguided media",
+        "paras": [
+          "A signal is a variation in a physical quantity over time: voltage on copper, light intensity in fiber, electromagnetic field in air. Data is encoded in that variation, and the rate at which it can change is limited by the medium's bandwidth.",
+          "Guided media confine the signal to a physical path. Twisted pair copper is cheap and ubiquitous. Coaxial cable has more shielding and more bandwidth. Fiber uses total internal reflection to keep light inside a glass strand, with single-mode fiber carrying a laser over tens of kilometres and multimode carrying LED light over hundreds of metres.",
+          "Unguided media broadcast through space: Wi-Fi, cellular, satellite, microwave links."
+        ],
+        "bullets": [
+          "Copper twisted pair is limited to about 100 metres per run for Ethernet, because the signal attenuates and picks up noise.",
+          "Fiber has enormous bandwidth and is immune to electromagnetic interference, since it carries light rather than current.",
+          "Radio is shared, so every device in range competes for the same spectrum.",
+          "Higher frequencies carry more data but attenuate faster and penetrate walls less well, which is why 5 GHz Wi-Fi is faster and shorter-ranged than 2.4 GHz.",
+          "Satellites offer wide coverage with high latency, roughly 600 milliseconds round trip for geostationary orbit.",
+          "The choice is usually distance, then cost, then interference tolerance, in that order."
+        ]
+      },
+      {
+        "title": "🧮 Propagation delay and attenuation by hand",
+        "paras": [
+          "The speed of light in fiber is about 200,000 km per second, two thirds of the vacuum value. A 10 km fiber run therefore has a one-way delay of 10 divided by 200,000 seconds, which is 50 microseconds. That is negligible compared with router queueing.",
+          "Attenuation in copper: a typical twisted pair loses about 20 dB per 100 metres at 100 MHz. Since 20 dB is a factor of 100 in power, the signal is 1 percent of its original strength at the 100 metre limit, which is exactly why Ethernet specifies 100 metres and why longer runs need a repeater or fiber.",
+          "Geostationary satellite: the orbit is about 35,786 km up. A one-way trip to the satellite and down is at least 71,572 km, which at 300,000 km per second is 239 milliseconds. A round trip is about 478 milliseconds, plus processing, so 500 to 600 milliseconds in practice. A link with 500 Mbit per second of bandwidth still feels slow for interactive use, which is the clearest demonstration that latency and bandwidth are independent.",
+          "Bandwidth arithmetic: single-mode fiber can carry many wavelengths at once. With 80 channels each at 100 Gbit per second, one strand carries 8 Tbit per second, which is 8,000 times a 1 Gbit per second copper link, and it does so over tens of kilometres rather than 100 metres. That ratio is why every inter-city link is fiber."
+        ]
+      }
+    ]
+  },
+  "733": {
+    "sections": [
+      {
+        "title": "🔍 Why a local address on top of an IP address",
+        "paras": [
+          "An IP address says where a host is in the global topology, and it changes when the host moves. But the hardware on a particular cable needs something stable and local to decide which port to send a frame out of, and it needs it before any routing decision is relevant.",
+          "The MAC address fills that role. It is unique to the interface, it does not change when the device moves, and it is only meaningful on the local link. The split between what identifies a host globally and what identifies it locally is the core of link-layer design."
+        ]
+      },
+      {
+        "title": "⚙️ Frames, MAC addresses, and what a switch learns",
+        "paras": [
+          "Ethernet is the dominant wired LAN technology. It defines the frame format: destination MAC, source MAC, a type field, the payload, and a checksum trailer. A frame is the unit of transmission on a link, and it never crosses a router.",
+          "A MAC address is 48 bits, written as six hexadecimal pairs. The first three bytes identify the manufacturer and the last three are assigned per device."
+        ],
+        "bullets": [
+          "A frame carries MAC addresses, not IP addresses, as its addressing fields; IP addresses are inside the payload.",
+          "The payload is typically an IP packet, which is why a packet capture shows Ethernet around IP around TCP.",
+          "A broadcast address of all ones reaches every device on the link, which is how ARP asks who owns an IP.",
+          "A switch learns by reading source MAC addresses: every frame teaches it one mapping of MAC to port.",
+          "Unknown destinations are flooded out of all ports, which is why the first packet to a new host is seen by many.",
+          "The checksum is a CRC-32, which detects corruption but does not correct it; a bad frame is dropped.",
+          "MAC addresses are only unique by convention; a virtual machine or a malicious host can claim any address."
+        ]
+      },
+      {
+        "title": "🧮 Frame sizes and switch tables",
+        "paras": [
+          "A minimum Ethernet frame is 64 bytes, including 18 bytes of header and trailer, so the minimum payload is 46 bytes. That minimum exists so that collision detection works: a frame must last long enough for the sender to still be transmitting when a collision is detected on the far end of a maximum-length segment.",
+          "At 1 Gbit per second, a 64-byte frame takes 64 x 8 divided by 1 billion, 512 nanoseconds. A 1,500-byte frame takes 12 microseconds. So a switch forwarding at wire speed must handle about 1.95 million small frames or 81,000 large frames per second per port, which is why switch throughput is quoted in packets per second as well as bits per second.",
+          "A switch table with 48 ports and 1,000 devices has 1,000 entries, each about 8 bytes, so 8 KB of memory. The lookup must complete within the frame time, 512 nanoseconds for the smallest frame, which is why switches use content-addressable memory rather than a linear search.",
+          "Learning arithmetic: on a busy network, each of 500 devices sending one frame per second teaches the switch nothing new after the first few seconds, so the learning rate is trivial. The expensive case is a network with many short-lived addresses, such as virtual machines being created constantly, where the table churns and flooding becomes frequent.",
+          "The ARP cost worth knowing: a host that needs to send to a new IP broadcasts an ARP request, which reaches every device on the link. With 500 devices and each new connection requiring one ARP, a busy server can generate thousands of broadcast frames per minute, all of which interrupt every device's CPU. That is why large flat networks are split into VLANs."
+        ]
+      }
+    ]
+  },
+  "734": {
+    "sections": [
+      {
+        "title": "🔍 Why the same cables behave differently",
+        "paras": [
+          "A hub is a repeater: a signal arrives on one port and is copied to all others. Every device therefore shares one collision domain, and two simultaneous transmissions destroy each other. A switch reads the frame and sends it only to the port where the destination lives.",
+          "The wiring is identical. The difference is entirely in whether the central device understands the frames, which is the clearest example in networking of intelligence in the network replacing brute force."
+        ]
+      },
+      {
+        "title": "⚙️ Learning, forwarding, and collision domains",
+        "paras": [
+          "A switch keeps a table of MAC address to port. It learns from source addresses: when a frame arrives on port 3 with source MAC A, the switch records that A is on port 3. When a frame arrives for destination B and B is in the table, the switch sends it out only that port. If B is unknown, it floods.",
+          "A collision domain is the set of devices that can collide with each other. A hub makes the whole hub one domain. A switch makes each port its own domain, and full duplex removes collisions entirely because the send and receive paths are separate."
+        ],
+        "bullets": [
+          "A hub is half duplex by design, since all ports share one electrical segment.",
+          "A switch gives each port a dedicated full-duplex link, so a device can send and receive at the same time.",
+          "CSMA/CD, the collision detection protocol, becomes unnecessary on a switched network, which is why modern Ethernet does not use it.",
+          "A switch buffers frames when the destination port is busy, which introduces queueing delay and the possibility of drops.",
+          "A broadcast frame is still flooded to every port, so broadcast traffic is the remaining shared resource.",
+          "VLANs partition one switch into several broadcast domains, which is how large networks avoid broadcast storms.",
+          "A loop between switches without spanning tree duplicates frames forever, which is why the protocol exists."
+        ]
+      },
+      {
+        "title": "🧮 Aggregation, contention, and the loop problem",
+        "paras": [
+          "Take 24 devices on 100 Mbit per second links. With a hub, all 24 share 100 Mbit, so each gets 4.2 Mbit on average and collisions reduce that further; effective throughput might be 60 Mbit total. With a switch, each device has its own 100 Mbit, and the uplink becomes the limit: if the uplink is 1 Gbit, the 24 devices share 1 Gbit, so 41 Mbit each when all are busy, and the uplink is the only contention point.",
+          "Aggregation scales that: four 1 Gbit links bonded gives 4 Gbit of uplink, so 24 devices get 166 Mbit each. This is why server rooms use link aggregation rather than one faster cable.",
+          "Collision cost on a hub: a collision destroys both frames, so they must be retransmitted after a random backoff. At 30 percent utilisation, the collision rate on a 20-device segment is a few percent, so effective throughput is maybe 25 percent of nominal. At 70 percent it can fall to half. Switches removed this entire failure mode, which is why the hub disappeared rather than being optimised.",
+          "The loop arithmetic: two switches connected by two links form a loop. A broadcast frame is flooded on both links, each switch receives a copy and floods it again, and the frame count doubles each round. In under a second the links are saturated and the network is down. Spanning tree solves it by blocking one of the redundant links, so you keep the cable for failover and lose the capacity, unless you use a protocol that allows multiple active paths."
+        ]
+      }
+    ]
+  },
+  "736": {
+    "sections": [
+      {
+        "title": "🔍 Why a network needs its own addressing scheme",
+        "paras": [
+          "A MAC address identifies a piece of hardware, but it says nothing about where that hardware is. Routing needs aggregation: a router must be able to say everything starting with these bits is that way, which is only possible if addresses are assigned by location rather than by manufacturer.",
+          "An IP address is that location-based identifier. It is assigned by network, not burned in, and it is structured so that a prefix represents a whole network."
+        ]
+      },
+      {
+        "title": "⚙️ The address, the mask, and the prefix",
+        "paras": [
+          "IPv4 uses 32 bits, written as four decimal octets. The address splits into a network part, which routing uses, and a host part, which identifies the device within that network.",
+          "The subnet mask says where the split is. A mask of 255.255.255.0 has 24 leading ones, so the first 24 bits are the network and the last 8 are the host. The shorthand is the prefix length, written /24."
+        ],
+        "bullets": [
+          "Every network has a network address, all host bits zero, and a broadcast address, all host bits one.",
+          "Usable hosts in a /n subnet is 2 to the power of the host bits minus 2, because those two addresses are reserved.",
+          "/24 gives 254 usable hosts; /26 gives 62; /30 gives 2, which is the standard for a point-to-point link.",
+          "Devices in the same subnet send directly using ARP; devices in different subnets must go through a router.",
+          "Private ranges are 10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16, and they are not routable on the internet.",
+          "NAT lets many private hosts share one public address, which is how IPv4 survived as long as it did.",
+          "The default gateway is the router an interface uses for everything outside its own subnet."
+        ]
+      },
+      {
+        "title": "🧮 Subnetting by hand",
+        "paras": [
+          "Take 192.168.1.10/24. The mask is 255.255.255.0, the network address is 192.168.1.0, the broadcast is 192.168.1.255, and the usable range is 192.168.1.1 to 192.168.1.254, so 254 hosts.",
+          "Split it into four subnets by borrowing 2 bits, giving /26. Each subnet has 6 host bits, so 64 addresses and 62 usable hosts. The subnets are 192.168.1.0, 192.168.1.64, 192.168.1.128, and 192.168.1.192, each with broadcast at the top of its range. The host 192.168.1.10 is in the first subnet, and 192.168.1.100 is in the second, which means they now need a router to talk even though they are inches apart on the same switch.",
+          "That last sentence is the practical consequence of subnetting, and it is worth reading twice: a /26 boundary splits one physical switch into two logical networks.",
+          "Address arithmetic for a class C block: 256 addresses minus 2 is 254 usable, but with a /26 you get 4 x 62 = 248 usable instead of 254. Borrowing bits always costs two addresses per subnet, so the total usable count falls as the number of subnets rises. With /30 links you pay 2 of every 4 addresses, which is 50 percent overhead; that is why point-to-point links are the first thing people move to IPv6.",
+          "A size check: 500 devices on one floor. A /23 gives 510 usable addresses, which is 2 x 256, and requires the third octet to be even. A /24 gives only 254, which is short. So the plan is a /23, giving ranges 10.20.2.0 to 10.20.3.255, and it leaves room for 10 spare addresses rather than requiring a redesign in six months."
+        ]
+      }
+    ]
+  },
+  "737": {
+    "sections": [
+      {
+        "title": "🔍 Why 4.3 billion addresses ran out",
+        "paras": [
+          "IPv4 has 2 to the 32 addresses, about 4.3 billion. In 1981 that was unimaginable for a network of mainframes. The designers also allocated large blocks generously, so a single university could hold 16 million addresses while using a few thousand.",
+          "The exhaustion was predicted in the early 1990s and arrived in 2011 at the top-level registry. The interim fix was NAT, which lets thousands of private hosts hide behind one public address. NAT works and it broke the original end-to-end model, which is the real reason IPv6 matters."
+        ]
+      },
+      {
+        "title": "⚙️ 128 bits and what changes besides size",
+        "paras": [
+          "IPv6 uses 128 bits, written as eight groups of four hex digits. That is 340 undecillion addresses, enough to give every atom on the surface of the earth a few hundred.",
+          "The more interesting changes are structural. Addresses are 128 bits so a single subnet is normally a /64, which leaves the low 64 bits free for the interface identifier. There is no broadcast; multicast and anycast replace it. The header is simpler and fixed at 40 bytes, with extension headers instead of options, which speeds up router processing."
+        ],
+        "bullets": [
+          "A /64 subnet holds 18 quintillion addresses, so address scarcity inside a subnet disappears.",
+          "SLAAC lets a host build its own address from the network prefix and its interface identifier, so no DHCP server is required.",
+          "Neighbour discovery replaces ARP, using multicast instead of broadcast.",
+          "There is no header checksum, since link layers already check and routers should not recompute it.",
+          "Dual stack runs both protocols, which is the practical transition mechanism and the reason most devices speak both today.",
+          "Tunnelling and translation carry IPv6 over IPv4 or vice versa, and both are workarounds with real limitations.",
+          "Because NAT is unnecessary, end-to-end connectivity returns, which changes the design of peer-to-peer and voice applications."
+        ]
+      },
+      {
+        "title": "🧮 Address math and the cost of getting there",
+        "paras": [
+          "IPv4: 2 to the 32 is 4,294,967,296 addresses, which is 4.3 billion for a world with more than 30 billion connected devices. Even with perfect allocation it is short by an order of magnitude.",
+          "IPv6: 2 to the 128 is about 3.4 times 10 to the 38. Allocating a /48 to every one of a million organisations uses about 2 to the 20 of the space, which is a rounding error. That abundance is why the design can afford /64 subnets: it is deliberately wasteful to make addressing simple.",
+          "A /64 has 2 to the 64 addresses, about 1.8 times 10 to the 19. Even if every address were scanned at a billion per second, enumerating one subnet would take 584 years, which is one reason scanning-based attacks became much less effective after the transition.",
+          "Prefix arithmetic: an ISP with a /32 allocation can issue 65,536 /48s to customers, and each /48 can contain 65,536 /64s. That is why the standard residential allocation is a /56 or /48 rather than a single address; there is no reason to ration.",
+          "Transition cost in real terms: a 1,000-host network needs dual-stack on every router and firewall, which doubles the routing table entries and the firewall rules. If a firewall has 200 IPv4 rules, a separate 200 IPv6 ruleset must be written and audited, and mistakes in the new ruleset are a common source of exposure. This operational cost, not the protocol, is why adoption took 25 years.",
+          "Header size: IPv4 is 20 bytes plus options, IPv6 is 40 with no options. On a 1,460-byte payload that is 1.4 percent more overhead, negligible. The gain is that routers no longer parse variable-length options, which was a real per-packet cost at line rate."
+        ]
+      }
+    ]
+  },
+  "738": {
+    "sections": [
+      {
+        "title": "🔍 Why a switch is not enough",
+        "paras": [
+          "A switch forwards within one network by MAC address, and MAC addresses have no structure, so a switch can never aggregate. Ten thousand networks would need ten thousand table entries in every device.",
+          "A router forwards between networks by IP prefix, and prefixes aggregate. One route can say everything starting with 10.20 goes that way, which covers 65,536 addresses. That summarisation is what makes a global network possible at all."
+        ]
+      },
+      {
+        "title": "⚙️ Routing tables, static and dynamic, and the two algorithm families",
+        "paras": [
+          "A router holds a table of destination prefix, next hop, and metric. It matches the packet's destination against the longest matching prefix, which is why the most specific route wins over a general one.",
+          "Routes come from three sources: directly connected networks, static configuration, and dynamic protocols. Static routes are predictable and do not adapt. Dynamic protocols exchange information and recompute paths when the topology changes.",
+          "The two classic families are distance vector, where each router tells its neighbours its distance to every network, and link state, where each router floods the topology and computes shortest paths itself."
+        ],
+        "bullets": [
+          "Longest prefix match means a /24 route beats a /16 route for an address in both.",
+          "The default route 0.0.0.0/0 matches everything and is the last resort.",
+          "RIP is distance vector with a hop count limit of 15, which makes it unusable beyond small networks.",
+          "OSPF is link state and uses cost based on bandwidth, converging in seconds.",
+          "BGP is the protocol between autonomous systems; it chooses paths by policy, not by shortest distance.",
+          "A routing loop causes packets to circle until the time-to-live reaches zero, which is why TTL exists.",
+          "Metric is not the same as time: it is a cost the protocol defines, and different protocols count differently."
+        ]
+      },
+      {
+        "title": "🧮 Hop counts, convergence, and prefix aggregation",
+        "paras": [
+          "A packet crossing 12 routers adds at least 12 processing delays. At 0.2 milliseconds per router that is 2.4 milliseconds, which is small. The real cost is that each hop may queue, so under load the delay is dominated by the busiest router, not the number of hops.",
+          "Distance vector convergence: consider three routers in a line, A to B to C, where C's network goes away. B had a route via C with metric 1 and now has none. A still advertises metric 2 to B, so B believes it can reach the network through A with metric 3, and A updates to 4, and the count climbs to 15 before RIP gives up. That is the count-to-infinity problem, and it can take 15 update rounds, tens of seconds, during which packets loop.",
+          "Link state avoids it because each router has the full topology and recomputes from scratch after the change. Convergence is the flooding time plus the shortest path computation, typically under a second for a few hundred routers.",
+          "Prefix aggregation arithmetic: an ISP with 256 /24 networks that all share the same first 16 bits advertises one /16 to the internet instead of 256 routes. The global routing table carries about a million prefixes today; without aggregation it would carry tens of millions, and each router would need to store and search them.",
+          "Longest match cost: routers implement this in hardware using a trie or a ternary content-addressable memory, so a lookup is a few nanoseconds regardless of table size. A software linear search over a million prefixes would take milliseconds, which is why IP routing is done in specialised silicon."
+        ]
+      }
+    ]
+  },
+  "740": {
+    "sections": [
+      {
+        "title": "🔍 Why two transport protocols and not one",
+        "paras": [
+          "Some applications cannot tolerate loss but can tolerate delay: a file transfer, an email, a web page. Others cannot tolerate delay but can tolerate loss: a live call where a late packet is worse than a missing one. A single protocol must either be reliable, and therefore delay data waiting for retransmissions, or be fast, and therefore lose data.",
+          "TCP and UDP are those two choices, and the transport layer is exactly where the choice belongs, because only the application knows which it needs."
+        ]
+      },
+      {
+        "title": "⚙️ Connection, ordering, and the checks each provides",
+        "paras": [
+          "TCP establishes a connection with a three-way handshake, numbers every byte, acknowledges what arrives, retransmits what does not, and adapts its sending rate to the network. It also handles flow control so a fast sender does not overwhelm a slow receiver.",
+          "UDP sends a datagram and forgets it. There is no handshake, no ordering, no retransmission, and no rate adaptation. What it does provide is a port number and a checksum, plus the ability to multicast."
+        ],
+        "bullets": [
+          "TCP header is 20 bytes minimum, UDP is 8, which matters for small packets.",
+          "TCP guarantees an ordered byte stream; a program reads bytes, not messages, so message boundaries are the application's problem.",
+          "UDP preserves message boundaries: one send is one datagram, if it arrives.",
+          "TCP has congestion control, so it backs off when the network is congested; UDP keeps sending, which can starve TCP flows on the same link.",
+          "Head-of-line blocking means one lost TCP segment delays everything after it until it is retransmitted.",
+          "QUIC moves reliability into user space over UDP, which removes head-of-line blocking across independent streams.",
+          "DNS uses UDP for ordinary queries because a single small request and response is faster without a handshake."
+        ]
+      },
+      {
+        "title": "🧮 Handshake cost and throughput arithmetic",
+        "paras": [
+          "TCP setup is one round trip: SYN, SYN-ACK, ACK. With a 20 millisecond round trip that is 20 milliseconds before a single byte of data moves. Add TLS and it is two more round trips, so 60 milliseconds. That is why connection reuse and TLS session resumption exist.",
+          "With a 100 millisecond round trip, as between continents, the handshake costs 100 milliseconds and TLS 1.3 with resumption still costs one round trip. A page opening 30 connections therefore spends seconds purely on setup, which is why HTTP keeps connections alive.",
+          "Congestion window arithmetic: initial window is about 10 packets, roughly 14.6 KB with 1,460-byte segments. Each round trip the window roughly doubles. After 1 round trip, 29 KB; 2, 58 KB; 3, 117 KB; 4, 234 KB. To reach 1 MB takes about 7 round trips, so 700 milliseconds at 100 millisecond RTT even on a gigabit link. This is why large downloads start slowly and why CDNs place servers close.",
+          "Steady-state throughput is window divided by round-trip time. A 64 KB window over 100 milliseconds gives 655 KB per second, 5.2 Mbit per second, regardless of the link speed. To use a 1 Gbit link at 100 millisecond RTT you need a window of about 12.5 MB, which is why window scaling options were added to TCP.",
+          "UDP cost comparison: no handshake means the first packet can be data. For a voice call sending 50 packets per second of 160 bytes, TCP would add a handshake at the start and head-of-line blocking during the call; a single retransmission delay of 200 milliseconds is an audible gap. Losing one packet out of 50 per second, 2 percent loss, is a small artifact in a codec that conceals it. The arithmetic clearly favours UDP."
+        ]
+      }
+    ]
+  },
+  "741": {
+    "sections": [
+      {
+        "title": "🔍 Why an IP address finds the machine but not the program",
+        "paras": [
+          "One machine runs a browser, a mail client, a database client, and a game. All four exchange packets with the same IP address. Something must tell the operating system which program a segment belongs to.",
+          "A port is that number. The IP address gets the packet to the host; the port gets it to the process. Together they form a socket, and a connection is identified by a pair of sockets."
+        ]
+      },
+      {
+        "title": "⚙️ Port ranges, well-known numbers, and the four-tuple",
+        "paras": [
+          "A port is 16 bits, so 0 to 65,535. The range is divided by convention: 0 to 1023 are well known and on Unix require privilege to bind, 1024 to 49151 are registered for specific applications, and 49152 to 65535 are ephemeral ports chosen by the client for outbound connections.",
+          "A socket is an IP address plus a port. A connection is the four-tuple of source address, source port, destination address, and destination port, which is what makes many simultaneous connections to one server possible."
+        ],
+        "bullets": [
+          "80 is HTTP, 443 is HTTPS, 22 is SSH, 53 is DNS, 25 is SMTP, 3306 is MySQL, 5432 is PostgreSQL.",
+          "A server listens on a fixed port; a client uses an ephemeral port, so 10,000 clients produce 10,000 distinct connections.",
+          "Binding to 0.0.0.0 listens on all interfaces; binding to 127.0.0.1 listens only on loopback, which is safer.",
+          "The TIME_WAIT state holds a closed connection for a timeout so late packets are not mistaken for a new connection.",
+          "Port exhaustion happens when ephemeral ports are used up faster than TIME_WAIT releases them, typically above 20,000 new connections per second to one destination.",
+          "A firewall rule is written per port, which is why the port range is also a security boundary.",
+          "NAT rewrites ports, so a private client's source port becomes a public one and the mapping is kept in a table."
+        ]
+      },
+      {
+        "title": "🧮 Connection limits and port exhaustion",
+        "paras": [
+          "A server listening on port 443 can accept far more connections than there are ports, because the four-tuple is what distinguishes them: the client ports differ. With 10,000 concurrent clients from different IP addresses, the server holds 10,000 entries, one per four-tuple.",
+          "A client is the limited side. With about 28,000 usable ephemeral ports and a TIME_WAIT of 60 seconds, a client can open at most 28,000 divided by 60, roughly 466 new connections per second to a single destination before ports run out. Increase to 2,000 connections per second and connections start failing with an address-in-use error, which is the classic symptom seen by load generators and proxy servers.",
+          "The fix is not more ports but fewer connections: keep-alive and connection pooling reduce 2,000 per second to perhaps 200, well within limits. This is why HTTP keep-alive is not an optimisation but a requirement at scale.",
+          "Server-side limits are different: a server needs memory per connection, perhaps 8 KB of buffers, so 100,000 concurrent connections is 800 MB, plus a file descriptor each. That is why the operating system limit on open files is the usual first bottleneck, and why raising it is the first tuning step for a busy web server."
+        ]
+      }
+    ]
+  },
+  "742": {
+    "sections": [
+      {
+        "title": "🔍 Why an unreliable network can carry reliable data",
+        "paras": [
+          "IP makes no promise. Packets are lost when a queue overflows, duplicated when a router retransmits, reordered when two paths have different delays, and corrupted when a link is noisy. That is the network you have.",
+          "Reliability is therefore built on top, from three ideas: acknowledge what arrived, number everything so gaps are detectable, and resend what was not acknowledged. It sounds simple, and the difficulty is entirely in doing it without flooding the network."
+        ]
+      },
+      {
+        "title": "⚙️ ACKs, sequence numbers, and the two kinds of flow control",
+        "paras": [
+          "Every byte in a TCP stream has a sequence number. The receiver acknowledges the next byte it expects, so a single ACK confirms everything before it. A gap in the sequence numbers tells the receiver that something is missing, which triggers either a retransmission after a timeout or a fast retransmit after three duplicate ACKs.",
+          "Flow control protects the receiver: the advertised window says how much more data it can buffer. Congestion control protects the network: the sender maintains a congestion window and grows it cautiously, halving it when loss is detected."
+        ],
+        "bullets": [
+          "The retransmission timeout is estimated from measured round-trip times, with a safety margin, so it adapts to the path.",
+          "Fast retransmit avoids waiting for the timeout when three duplicate ACKs indicate a loss.",
+          "Selective acknowledgement lets the receiver report several gaps at once, so one loss does not force resending everything after it.",
+          "Slow start begins with a small window and doubles per round trip; congestion avoidance then grows linearly.",
+          "Loss is treated as a congestion signal, which is why TCP backs off; this makes TCP fair but also makes it sensitive to random loss on wireless links.",
+          "The receiver window and the congestion window both cap the sender, and the smaller of the two applies.",
+          "Checksums catch corruption but are weak, which is why a corrupted-but-accepted segment is rare but not impossible."
+        ]
+      },
+      {
+        "title": "🧮 Retransmission cost and window sizing",
+        "paras": [
+          "A 10 MB file over a 20 millisecond round-trip path. Without loss, it is limited by bandwidth and the window. With a 64 KB window, throughput is 65536 bytes divided by 0.02 seconds, 3.2 MB per second. The 10 MB file takes 3.1 seconds.",
+          "Now lose one segment per 1,000. Each loss is detected after three duplicate ACKs, one extra round trip, so 20 milliseconds of stall per loss. Over 10 MB at 1,460 bytes per segment, that is 6,850 segments, so about 7 losses and 140 milliseconds of extra delay, 4 percent. Tolerable.",
+          "Now lose 5 percent. That is 342 losses, each stalling 20 milliseconds, so 6.8 seconds of stall on top of 3.1 seconds of transfer. Worse, congestion control halves the window on each loss, so the average window drops, and the effective throughput falls to perhaps a third. Total time becomes tens of seconds instead of three. This is the standard result that TCP collapses above a few percent loss.",
+          "Window sizing for a fast link: to fill 1 Gbit per second at 100 millisecond RTT, the window must be 1 billion bits per second times 0.1 second, 100 million bits, 12.5 MB. A receiver advertising 64 KB would cap the connection at 5 Mbit. Window scaling, which multiplies the advertised value by a factor up to 2 to the 14, is what makes long fat networks usable.",
+          "Duplicate ACK arithmetic for fast retransmit: three duplicates arrive because three later segments got through while the lost one did not. If the loss is at the end of a burst, there may be no later segments, so no duplicate ACKs, and the sender waits for the timeout, which is typically several hundred milliseconds. That is why a loss at the end of a transfer is much more expensive than one in the middle."
+        ]
+      }
+    ]
+  }
+}

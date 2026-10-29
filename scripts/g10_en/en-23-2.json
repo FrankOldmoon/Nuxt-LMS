@@ -1,0 +1,369 @@
+{
+  "587": {
+    "sections": [
+      {
+        "title": "🔍 Why you need a coordinate system at all",
+        "paras": [
+          "The same point is 300 metres east and 400 north, or 500 metres north-east. Both are correct and only the first is useful, because it splits the position into two independent directions that can be handled separately.",
+          "A basis is that idea pushed to its limit: just enough directions to reach every point, and no redundancy among them. Fewer and some points become unreachable; more and the coordinates stop being unique."
+        ]
+      },
+      {
+        "title": "⚙️ Two conditions, and what they buy",
+        "paras": [
+          "A set of vectors is a basis of a space when it spans the space and is linearly independent. Spanning makes every vector representable; independence makes the representation unique. Both halves are needed, and dropping either breaks something specific."
+        ],
+        "bullets": [
+          "Span without independence: reachable but ambiguous, so coordinates are meaningless.",
+          "Independence without span: unique but incomplete, so some vectors have no coordinates.",
+          "The dimension is the number of vectors in any basis, and that number happens to be the same for every basis of the same space.",
+          "The standard basis of three dimensions is (1,0,0), (0,1,0) and (0,0,1), which is why coordinates look like the vector itself.",
+          "The dimension of a subspace never exceeds that of the space containing it, and equality means the subspace is the whole space."
+        ]
+      },
+      {
+        "title": "🧮 A basis for a plane, and one for a line",
+        "paras": [
+          "The plane x plus y plus z equals zero in three dimensions is described by one equation, leaving two free variables, so its dimension is two. Setting y and z free gives the basis (minus 1, 1, 0) and (minus 1, 0, 1), and neither is a multiple of the other.",
+          "The basis is not unique. (1, minus 1, 0) and (0, 1, minus 1) span the same plane and are also independent, so they are equally valid. What cannot change is the count: any basis of this plane has exactly two vectors.",
+          "In the plane, the set (1, 1) and (1, minus 1) is a basis of two dimensions, though it is not the standard one. The vector (3, 1) is then 2 times the first plus 1 times the second, so its coordinates in that basis are (2, 1). The point has not moved; only the grid has changed."
+        ]
+      }
+    ]
+  },
+  "589": {
+    "sections": [
+      {
+        "title": "🔍 Why a linear map is a matrix in disguise",
+        "paras": [
+          "A matrix looks like a table and a transformation looks like an action, yet they are the same object. The bridge is a fact about linearity: a linear map is completely determined by what it does to a basis, because every vector is a combination of the basis and the map respects combinations.",
+          "So record where the basis vectors land, put those images in columns, and you have the matrix. Applying the matrix reproduces the map exactly, for every input, with no further information."
+        ]
+      },
+      {
+        "title": "⚙️ How to build the matrix, and how to compose",
+        "paras": [
+          "Three steps never fail: feed each basis vector through the map, write the results as columns in order, then check one arbitrary vector against both routes."
+        ],
+        "bullets": [
+          "Column j of the matrix is the image of the j-th basis vector.",
+          "Composition becomes multiplication, with the right-hand factor applied first: doing S then T is the matrix of T times the matrix of S.",
+          "The matrix of an inverse map is the inverse matrix, which is why only invertible maps have inverses.",
+          "A rotation by theta has cosine and minus sine in the first row and sine and cosine in the second, and its determinant is one for every angle, matching the fact that rotation preserves area.",
+          "Scaling multiplies both coordinates, so its matrix is diagonal; shearing keeps one axis and tilts the other."
+        ]
+      },
+      {
+        "title": "🧮 A quarter turn, by hand",
+        "paras": [
+          "Take the map that rotates the plane ninety degrees anticlockwise. The first basis vector (1, 0) goes to (0, 1), and the second (0, 1) goes to (minus 1, 0). Put them in columns and the matrix is (0, minus 1) over (1, 0).",
+          "Apply it to (2, 1): the first component is 0 times 2 plus minus 1 times 1, which is minus 1, and the second is 1 times 2 plus 0 times 1, which is 2. The image is (minus 1, 2), in the second quadrant and still at distance root five, exactly as a rotation should behave.",
+          "Now compose it with itself. The product of the matrix with its own copy is (minus 1, 0) over (0, minus 1), which sends every vector to its negative: a half turn. Matrix multiplication has performed the composition without any geometry being mentioned."
+        ]
+      }
+    ]
+  },
+  "590": {
+    "sections": [
+      {
+        "title": "🔍 Why keep the map and change the grid",
+        "paras": [
+          "The same linear map can look dense or simple depending on which basis you describe it in. A matrix full of non-zero entries may become diagonal in a basis aligned with its own structure, and a diagonal matrix is trivial to apply, invert and raise to powers.",
+          "So the question is never 'what is the matrix' but 'the matrix with respect to which basis'. Changing the basis is how you shop for the simplest description."
+        ]
+      },
+      {
+        "title": "⚙️ One matrix, two jobs",
+        "paras": [
+          "Put the new basis vectors in the columns of a matrix P. That single object translates between the two descriptions, and the direction of the translation matters."
+        ],
+        "bullets": [
+          "New coordinates to old: multiply by P on the left, since each new coordinate multiplies its basis vector.",
+          "Old coordinates to new: multiply by the inverse of P.",
+          "The same map in the new basis is P inverse times A times P, read right to left as translate, transform, translate back.",
+          "Matrices related this way are called similar, and they share determinant, trace, eigenvalues and rank because they describe one map.",
+          "If the new basis consists of eigenvectors, the result is diagonal, which is the subject of the next section."
+        ]
+      },
+      {
+        "title": "🧮 Translating one vector and one matrix",
+        "paras": [
+          "The basis is (1, 1) and (1, minus 1), and the vector is (3, 1). Solve c1 times the first plus c2 times the second for the vector: c1 plus c2 equals 3 and c1 minus c2 equals 1, so c1 is 2 and c2 is 1. The same point is (3, 1) in the standard basis and (2, 1) in the new one.",
+          "Now take the matrix with rows (3, 1) and (1, 3) and change basis to that same pair. P is (1, 1) over (1, minus 1) and its inverse is half of (1, 1) over (1, minus 1). Multiplying A by P and then by the inverse gives the diagonal matrix with 4 and 2 on the diagonal.",
+          "That is not luck: (1, 1) and (1, minus 1) are eigenvectors of A, with eigenvalues 4 and 2. In that basis the map is nothing but 'stretch this direction fourfold and that one twofold', which is the simplest sentence anyone could say about it.",
+          "The check is free: the trace of both matrices is 6 and the determinant of both is 8, since similarity preserves both."
+        ]
+      }
+    ]
+  },
+  "592": {
+    "sections": [
+      {
+        "title": "🔍 Why diagonal is worth chasing",
+        "paras": [
+          "Multiplying a matrix by itself a hundred times is expensive. Multiplying a diagonal matrix by itself a hundred times is a hundred small powers on the diagonal, which you can do in your head.",
+          "Diagonalising is the search for a basis in which the map does nothing but stretch. In that basis, iteration, inversion and stability analysis all become one-dimensional problems that happen to be independent of each other."
+        ]
+      },
+      {
+        "title": "⚙️ The factorisation and its condition",
+        "paras": [
+          "A equals P D P inverse, where the columns of P are eigenvectors and D holds the matching eigenvalues in the same order. Then powers collapse: A to the k is P D to the k P inverse."
+        ],
+        "bullets": [
+          "The pairing of column and diagonal entry must be consistent, or the factorisation silently fails.",
+          "n distinct eigenvalues guarantee n independent eigenvectors, so distinct eigenvalues guarantee diagonalisability.",
+          "Repeated eigenvalues require checking the geometric multiplicity: the eigenvectors for that value must fill as many dimensions as its algebraic multiplicity.",
+          "A defective matrix, such as a shear, has too few eigenvectors and cannot be diagonalised at all.",
+          "A real matrix with complex eigenvalues, such as a rotation, has no real eigenbasis; over the complex numbers it does.",
+          "Symmetric matrices are always diagonalisable, and with an orthogonal basis, which is why covariance matrices behave so well."
+        ]
+      },
+      {
+        "title": "🧮 From a matrix to a closed formula",
+        "paras": [
+          "Take rows (2, 1) and (0, 3). Being triangular, its eigenvalues are on the diagonal: 2 and 3. For 2, the equation forces the second component to zero, so an eigenvector is (1, 0). For 3, the equation gives the first component equal to the second, so an eigenvector is (1, 1).",
+          "So P is (1, 1) over (0, 1), D is diagonal with 2 and 3, and P inverse is (1, minus 1) over (0, 1). Applying P D P inverse to (7, 3) gives 2 to the seventh times (1, 0) plus 3 to the seventh times (1, 1).",
+          "Two important readings. First, the seventh power costs three small exponentials rather than six matrix multiplications. Second, the larger eigenvalue dominates: after enough steps the map is essentially 'triple the size and drift in the direction (1, 1)', which is the long-run behaviour stated in one line."
+        ]
+      }
+    ]
+  },
+  "593": {
+    "sections": [
+      {
+        "title": "🔍 Why eigenvalues appear in so many fields",
+        "paras": [
+          "Search engines ask which page matters most, population models ask the long-run growth rate, control systems ask whether a disturbance dies out, and data analysis asks which direction carries the most variance. These look unrelated and are the same question: in this direction, by what factor does the process multiply each step?",
+          "That factor is an eigenvalue and that direction is an eigenvector, so a single piece of algebra answers all four. Once a problem is written as a matrix, the eigenvalues sort the behaviour into growth, decay, oscillation and conservation."
+        ]
+      },
+      {
+        "title": "⚙️ Four applications, one mechanism",
+        "paras": [
+          "In each case the largest eigenvalue dominates, and the size of the others decides how fast everything else fades."
+        ],
+        "bullets": [
+          "Markov chains and PageRank: the steady state is the eigenvector for eigenvalue one, and the second eigenvalue controls how quickly the chain settles.",
+          "Stability: a discrete system converges when every eigenvalue has magnitude below one, and diverges when any exceeds it.",
+          "PCA: eigenvectors of the covariance matrix give the directions of greatest variance, and eigenvalues give how much variance each direction carries.",
+          "Vibration: natural frequencies come from a generalised eigenvalue problem in the stiffness and mass matrices, and resonance is what happens when a driving frequency matches one.",
+          "Systems of differential equations: solutions are combinations of exponentials built from the eigenvalues, so the signs alone decide whether the system settles or explodes."
+        ]
+      },
+      {
+        "title": "🧮 A two-state process that always settles",
+        "paras": [
+          "Each year, eighty percent of group A stays and twenty percent moves to B, while thirty percent of B moves to A and seventy percent stays. The matrix has columns (0.8, 0.2) and (0.3, 0.7), and each column sums to one, so total population is conserved.",
+          "Trace is 1.5 and determinant is 0.5, so the characteristic equation is lambda squared minus 1.5 lambda plus 0.5, with roots 1 and 0.5.",
+          "The eigenvalue one gives the steady state: solving the eigenvector equation gives the ratio three to two, so the long-run split is sixty-forty whatever the starting point. The eigenvalue 0.5 says the deviation from that split halves each year, so after ten years less than a tenth of one percent of the initial imbalance is left.",
+          "That is the whole method in miniature: the largest eigenvalue locates the destination, the second largest sets the speed of arrival, and the rest only affect the transient."
+        ]
+      }
+    ]
+  },
+  "595": {
+    "sections": [
+      {
+        "title": "🔍 Why most systems have no exact answer",
+        "paras": [
+          "Fitting a line to a hundred measurements gives a hundred equations and two unknowns. Unless the data lie exactly on a line, which never happens, there is no coefficient pair satisfying all of them, and pretending otherwise wastes the data.",
+          "The question worth asking is not 'what is the solution' but 'which pair comes closest', measured in squared error. Squared error is chosen because it is differentiable, because it punishes large misses heavily, and because its minimum has a clean geometric meaning."
+        ]
+      },
+      {
+        "title": "⚙️ The normal equations, and what they mean",
+        "paras": [
+          "Minimising the sum of squared residuals leads to the normal equations: A transpose times A times x equals A transpose times b. Solving that small square system gives the least squares answer.",
+          "Geometrically, the predictions A x can only live in the column space of A, so the task is to find the point of that space nearest to b. The nearest point is the orthogonal projection, and orthogonality is exactly what A transpose times the residual equal to zero says. The equation is a statement about right angles, not a trick."
+        ],
+        "bullets": [
+          "A transpose A is square and symmetric, and it is invertible when the columns of A are independent.",
+          "The residual is orthogonal to every column, which gives a one-line check on any fitted model.",
+          "Squaring amplifies outliers, so a single wild point can tilt the line; robust methods down-weight it instead.",
+          "Colinearity makes A transpose A nearly singular and the coefficients unstable, which is what ridge regularisation fixes.",
+          "R squared reports the share of variance explained, and is not a test of whether the model is correct."
+        ]
+      },
+      {
+        "title": "🧮 Three points, one line",
+        "paras": [
+          "Fit y equals a plus b x to (0, 1), (1, 3) and (2, 4). Three equations, two unknowns, no exact solution.",
+          "A has columns of ones and of x, so A transpose A is (3, 3) over (3, 5), and A transpose b is (8, 11). The normal equations give 3a plus 3b equals 8 and 3a plus 5b equals 11, so b is 1.5 and a is seven sixths, about 1.167.",
+          "Predictions are 1.167, 2.667 and 4.167, and residuals are minus 0.167, plus 0.333 and minus 0.167. The residuals sum to zero and their dot product with the column of ones is zero, which is the orthogonality condition confirmed by hand.",
+          "The fitted line passes through the mean of the data, (1, 2.667). That is not a coincidence either: the first normal equation says exactly that."
+        ]
+      }
+    ]
+  },
+  "596": {
+    "sections": [
+      {
+        "title": "🔍 Why data analysis is matrix algebra",
+        "paras": [
+          "A table of a thousand rows and twenty columns is a matrix, whether or not anyone calls it one. Once you see it that way, the standard operations stop being separate techniques: standardising is a per-column shift and scale, covariance is a product of the matrix with itself, regression is a linear solve, and a neural network layer is a multiply.",
+          "The gain is not only speed, although vectorised code is often a hundred times faster than a loop. It is that the matrix view answers structural questions, such as how many independent directions the data actually occupy."
+        ]
+      },
+      {
+        "title": "⚙️ Four operations that cover most of the work",
+        "paras": [
+          "These four recur so often that they are worth naming as a set."
+        ],
+        "bullets": [
+          "Centre the columns first, subtracting each mean, so that the origin sits at the average observation.",
+          "Form the covariance matrix as X transpose X over n minus one; its diagonal holds variances and its off-diagonal holds covariances.",
+          "Take the eigendecomposition of that symmetric matrix: eigenvectors give directions, eigenvalues give variance along them.",
+          "Keep the leading eigenvectors as a projection, which is PCA, and use the ratio of kept eigenvalues to total eigenvalues as the variance explained.",
+          "For recommendation, approximate a sparse ratings matrix by a low-rank product, filling the gaps with the reconstruction.",
+          "For regression, stack the features and solve the normal equations, with a ridge term added when the columns are nearly dependent."
+        ]
+      },
+      {
+        "title": "🧮 Two features that are really one",
+        "paras": [
+          "Three observations: (1, 2), (2, 4) and (3, 6). Every point sits on the line y equals 2x, so two recorded features carry only one degree of freedom.",
+          "Centre: the mean is (2, 4), so the centred rows are (minus 1, minus 2), (0, 0) and (1, 2). The covariance matrix is (1, 2) over (2, 4) after dividing by two.",
+          "The trace is 5 and the determinant is 4 minus 4, which is zero. So the eigenvalues solve lambda squared minus 5 lambda, giving 5 and 0.",
+          "A zero eigenvalue is the algebraic statement that the data are flat: one direction in feature space is empty. The eigenvector for 5 is (1, 2), the line the data actually lie on, and the variance explained is 5 out of 5, that is one hundred percent.",
+          "Reducing to one dimension therefore loses nothing. That is what dimensionality reduction really is: not throwing information away, but discovering that it was never there."
+        ]
+      }
+    ]
+  },
+  "597": {
+    "sections": [
+      {
+        "title": "🔍 Why a graphics card is a matrix machine",
+        "paras": [
+          "A frame contains millions of vertices, and every vertex undergoes the same sequence of moves: from model space to world space, to camera space, to the screen. Sixty frames a second means hundreds of millions of these transformations per second.",
+          "The only way to do that is to express each move as a matrix and hand the whole batch to hardware that multiplies matrices in parallel. A GPU is not a fast general processor; it is a device built around one operation, which is why matrices are the language of the field."
+        ]
+      },
+      {
+        "title": "⚙️ Homogeneous coordinates, and why the fourth number exists",
+        "paras": [
+          "Translation is not linear: it moves the origin, and a linear map must fix the origin. So a three by three matrix can never translate a point.",
+          "The fix is to add a dimension. Write a point as (x, y, z, 1) and use a four by four matrix whose last column holds the translation. Multiplying gives the moved point, and translation has become a matrix product like everything else."
+        ],
+        "bullets": [
+          "With the extra coordinate, rotation, scaling, shear and translation are all four by four matrices, so any sequence of them is one matrix.",
+          "Order matters and cannot be swapped: scaling then translating is not the same as translating then scaling.",
+          "Chain the matrices once on the CPU and every vertex costs a single multiply, which is why engines precompute a model-view-projection matrix.",
+          "Perspective projection stores depth in the fourth coordinate, and the later division by it is what makes distant objects small.",
+          "Normals are directions, so they carry a fourth coordinate of zero, and they transform by the inverse transpose rather than by the model matrix, otherwise non-uniform scaling tilts them wrongly."
+        ]
+      },
+      {
+        "title": "🧮 Translate, then scale, twice over",
+        "paras": [
+          "Point (1, 2). Translate by (3, 4) using the three by three matrix with (3, 4) in the last column: the result is (4, 6). Then scale by two about the origin: (8, 12).",
+          "Multiply the two matrices in that order, scale times translate, and the single matrix has (2, 0, 6) over (0, 2, 8) over (0, 0, 1). Applying it to (1, 2) gives (8, 12) directly.",
+          "Now reverse the order, translate times scale. The product has (2, 0, 3) over (0, 2, 4), and applying it to the same point gives (5, 8). Different result, same two matrices: composition order is part of the meaning.",
+          "The practical consequence is that engines must agree on a convention, and that a model appearing far off screen is usually a matrix multiplied in the wrong order rather than bad geometry."
+        ]
+      }
+    ]
+  },
+  "598": {
+    "sections": [
+      {
+        "title": "🔍 Why one number can describe a whole matrix",
+        "paras": [
+          "Given a matrix you usually want two pieces of information immediately: can it be undone, and how much does it stretch space. A single number answers both, and its name is the determinant.",
+          "Feed the unit square to a two by two matrix and it becomes a parallelogram. The signed area of that parallelogram is the determinant. Area zero means the square was flattened, information is lost, and the matrix is not invertible. A negative sign means the shape was flipped, which is why determinants can be negative even though areas cannot."
+        ]
+      },
+      {
+        "title": "⚙️ Three ways to compute it, and one that generalises",
+        "paras": [
+          "The formal definition sums over all permutations with alternating signs. It is the reason the determinant is multilinear and alternating, and it is useless for computation."
+        ],
+        "bullets": [
+          "Two by two: the product of the diagonal minus the product of the anti-diagonal, which is worth memorising because everything else uses it.",
+          "Three by three: expand along any row, alternating signs, each term a two by two determinant.",
+          "Larger: eliminate to triangular form and multiply the diagonal, which is the only practical route.",
+          "Zero determinant means dependent rows, a flattened space, and no inverse.",
+          "Applications: triangle area is half the absolute determinant of the coordinate matrix, and the same construction gives tetrahedron volume over six."
+        ]
+      },
+      {
+        "title": "🧮 An area, a reflection, and a collapse",
+        "paras": [
+          "Rows (3, 1) and (2, 4): the determinant is 12 minus 2, which is 10. The unit square becomes a parallelogram of area ten, and the positive sign says orientation was preserved.",
+          "Rows (0, 1) and (1, 0): the determinant is minus one. A reflection, area preserved, orientation reversed.",
+          "Rows (1, 2) and (2, 4): the determinant is 4 minus 4, which is zero. The second row is twice the first, the parallelogram is a segment, and the matrix is singular.",
+          "The area formula in practice: a triangle with vertices (0, 0), (4, 0) and (0, 3) gives determinant 12 from the three by three with a column of ones, so the area is 6, which agrees with the familiar half of base times height."
+        ]
+      }
+    ]
+  },
+  "599": {
+    "sections": [
+      {
+        "title": "🔍 Why such a strong assumption is useful",
+        "paras": [
+          "Almost nothing in the world is linear. Populations grow exponentially, springs stiffen, and neurons saturate. Yet linear maps are studied first, for three reasons that hold up in practice.",
+          "Superposition lets a complicated input be split into simple pieces, handled separately, and added back. Local approximation makes any smooth map linear near a point, which is what derivatives and Jacobians are. And linear problems are the ones with complete, exact algorithms, so engineers linearise what they can and piece together the rest."
+        ]
+      },
+      {
+        "title": "⚙️ The definition, and the tests that follow",
+        "paras": [
+          "A map is linear when it respects addition and scaling. Two equations, and a surprising number of consequences."
+        ],
+        "bullets": [
+          "The origin must map to the origin, so any map that shifts things is not linear. This is the fastest single check.",
+          "Combinations pass through: the image of a combination is the combination of the images.",
+          "A linear map is determined by its values on a basis, which is why a matrix can represent it.",
+          "The kernel is the set of inputs sent to zero, and the image is the set of reachable outputs.",
+          "Dimensions balance: the dimension of the kernel plus the dimension of the image equals the dimension of the domain.",
+          "Rotation, scaling, shearing, projection and differentiation are linear; adding a constant, squaring and taking absolute values are not."
+        ]
+      },
+      {
+        "title": "🧮 One map, checked three ways",
+        "paras": [
+          "Let T of (x, y) be (2x, x plus y). First test: the origin maps to the origin. Second: the sum of two inputs maps to the sum of the two outputs, which is immediate because both components are linear in x and y. Third: scaling an input scales the output by the same factor. So T is linear.",
+          "Build its matrix from the basis. The first basis vector goes to (2, 1) and the second to (0, 1), so the matrix is (2, 0) over (1, 1). Applying it to (1, 3) gives (2, 4), matching direct substitution.",
+          "Find the kernel: solve 2x equals zero and x plus y equals zero, giving x equals zero and then y equals zero. The kernel holds only the zero vector, so the map is injective and its matrix is invertible, with determinant two.",
+          "Compare S of (x, y) equal to (2x plus 1, x plus y). The origin maps to (1, 0), so despite looking similar S is not linear. It is an affine map, a linear one followed by a translation, and it needs homogeneous coordinates to be written as a matrix."
+        ]
+      }
+    ]
+  },
+  "600": {
+    "sections": [
+      {
+        "title": "🔍 Why a few directions refuse to turn",
+        "paras": [
+          "A matrix grabs every vector in space and twists it. Almost every direction comes out pointing somewhere else, yet a few come out on the same line as before, stretched or shrunk or reversed. Those directions are the eigenvectors, and the stretch factors are the eigenvalues.",
+          "Standing on an eigenvector collapses a two-dimensional problem into a one-dimensional scaling, and that is why the whole of applied linear algebra keeps returning to them. The word itself is German for 'own', which is the right idea: these are the directions the map owns."
+        ]
+      },
+      {
+        "title": "⚙️ Where they come from, and the checks worth doing",
+        "paras": [
+          "Rewrite A v equals lambda v as (A minus lambda I) v equals zero. A non-zero v requires that matrix to be singular, so the determinant must vanish. That determinant is a polynomial in lambda of degree n, and its roots are the eigenvalues."
+        ],
+        "bullets": [
+          "An n by n matrix has n eigenvalues over the complex numbers, counted with multiplicity.",
+          "The eigenvalues sum to the trace and multiply to the determinant, which gives two free checks on any hand computation.",
+          "An eigenvalue of zero means the matrix is singular and that eigenvector lies in the kernel.",
+          "Eigenvectors are directions, not unique vectors: any non-zero multiple qualifies.",
+          "Distinct eigenvalues always give independent eigenvectors, which is what makes diagonalisation reliable in the common case.",
+          "Complex eigenvalues come in conjugate pairs and mean rotation rather than stretching."
+        ]
+      },
+      {
+        "title": "🧮 Two matrices, two behaviours",
+        "paras": [
+          "Rows (3, 1) and (0, 2). Triangular, so the eigenvalues are 3 and 2, and the trace and determinant agree. For 3, the equation forces the second component to zero and an eigenvector is (1, 0). For 2, the first component plus the second equals zero, giving (1, minus 1).",
+          "Check one of them: multiplying the matrix by (1, minus 1) gives (2, minus 2), exactly twice the vector. The direction survived and the length doubled.",
+          "Now rows (0, minus 1) and (1, 0), a quarter turn. The characteristic equation is lambda squared plus one, with roots i and minus i. There is no real eigenvalue, and the geometry explains it: a quarter turn sends every vector to a perpendicular one, so nothing can come back on its own line.",
+          "The two cases are the two things a linear map can do, stretch and rotate, and the eigenvalues say which one you are looking at before any vector is drawn."
+        ]
+      }
+    ]
+  }
+}

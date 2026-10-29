@@ -1,0 +1,415 @@
+{
+  "713": {
+    "sections": [
+      {
+        "title": "🔍 Why draw before you type",
+        "paras": [
+          "A schema is expensive to change once data exists. Renaming a column means migrating rows, fixing queries, and coordinating every application that reads it. Getting the shape right on paper first costs an hour; getting it wrong costs a quarter.",
+          "An ER diagram is that paper. It shows entities, the attributes that describe them, and how they connect, at a level of detail where a missing relationship is obvious to a reader in a way that a dozen CREATE TABLE statements is not."
+        ]
+      },
+      {
+        "title": "⚙️ Entities, attributes, relationships, cardinality",
+        "paras": [
+          "An entity is a thing worth storing separately: a student, a course, an order. An attribute is a property of one entity. A relationship is an association between two entities, and its cardinality says how many of each may take part.",
+          "The rules for turning a diagram into tables are mechanical, which is what makes the diagram useful as an intermediate artefact."
+        ],
+        "bullets": [
+          "Each entity becomes a table; each attribute becomes a column with a type.",
+          "Each entity needs a key, drawn as an underlined attribute or added as a surrogate id.",
+          "A one-to-many relationship becomes a foreign key on the many side.",
+          "A one-to-one relationship becomes a foreign key with a UNIQUE constraint, on the dependent side.",
+          "A many-to-many relationship becomes a junction table holding two foreign keys.",
+          "An attribute of a relationship, such as the enrolment date, belongs on the junction table, not on either entity.",
+          "A weak entity, one that cannot exist without its parent, takes a composite key including the parent's key."
+        ]
+      },
+      {
+        "title": "🧮 From one diagram to six tables",
+        "paras": [
+          "Model a school: students, courses, teachers. A student enrols in many courses and a course has many students, so that relationship needs a junction table. A teacher teaches many courses, so courses carry a teacher foreign key. Students belong to a class, so students carry a class foreign key.",
+          "The count: students, classes, teachers, courses, enrolments. Five tables and four relationships, of which one required a junction table.",
+          "Now size it. With 1,200 students, 60 courses, 40 teachers, and 8,000 enrolments, the junction table is the largest by row count but the narrowest: two integers per row, 8,000 rows, about 96 KB with overhead. The students table is 1,200 rows of maybe 120 bytes, 144 KB. The whole schema fits in a couple of megabytes.",
+          "The diagram caught one error at zero cost: the first sketch put teacher_name on courses. That works until a teacher changes name, at which point 60 rows must be updated consistently. Because the diagram showed teacher as an entity with a name attribute, the fix was a foreign key before any table existed.",
+          "A missing cardinality is the other frequent mistake. Drawing student to course as one-to-many produces a course_id column on students, which makes it impossible for a student to take two courses. That design survives the demo and fails in the first term, and the fix requires a data migration. The diagram makes the mistake visible in a minute."
+        ]
+      }
+    ]
+  },
+  "714": {
+    "sections": [
+      {
+        "title": "🔍 Why redundancy is a correctness problem, not a storage one",
+        "paras": [
+          "The instinct is that repeating a value wastes disk, and disk is cheap, so why bother. The real cost is that two copies can disagree, and once they do, nothing in the system knows which one is right. Every query that reads the wrong copy returns a plausible but false answer.",
+          "Normalisation is the process of removing that possibility by ensuring each fact is stored exactly once."
+        ]
+      },
+      {
+        "title": "⚙️ The three anomalies and the split that fixes them",
+        "paras": [
+          "Whenever a table mixes facts about different things, three specific failures become possible.",
+          "An update anomaly: changing a fact requires changing many rows, and a partial update leaves inconsistency. An insert anomaly: you cannot record a fact because another fact it depends on does not exist yet, such as being unable to add a course before any student enrols. A delete anomaly: deleting the last row about one thing destroys the only record of another."
+        ],
+        "bullets": [
+          "The fix is always the same shape: move the repeated facts into their own table and reference them by key.",
+          "After the split, an update touches one row, so a partial update is impossible.",
+          "After the split, a course can exist with no enrolments, which removes the insert anomaly.",
+          "After the split, deleting an enrolment no longer deletes the course, which removes the delete anomaly.",
+          "The cost is that reading the combined view now needs a join.",
+          "Normalise for correctness first, then denormalise only where a measured read pattern justifies it.",
+          "Denormalisation is not the absence of design, it is a documented decision about which anomaly you are willing to risk."
+        ]
+      },
+      {
+        "title": "🧮 A concrete table and its three anomalies",
+        "paras": [
+          "Consider enrolments(student_id, student_name, course_code, course_title, teacher_name, mark). A student taking 5 courses has their name repeated 5 times. With 1,200 students and 8,000 enrolments, student names occupy 8,000 rows instead of 1,200.",
+          "Update anomaly: a student changes name. That is 5 rows for this student, and if the update fails halfway the table holds two names for one person. In the normalised design it is one row out of 1,200, and it either succeeds or does not.",
+          "Insert anomaly: a new course is approved but has no students yet. The course cannot be recorded, because every row needs a student_id. The database is now blocking a legitimate business event.",
+          "Delete anomaly: the only student enrolled in an elective drops it. Deleting that row deletes the last record that the course and its teacher ever existed, so the course disappears from the catalogue.",
+          "Space, honestly: the wide table is about 8,000 rows of 150 bytes, 1.2 MB. The normalised version is 1,200 students at 100 bytes, 60 courses at 80, 8,000 enrolments at 24, about 330 KB. So the wide table is four times larger, but the correctness argument is the one that matters.",
+          "Read cost after normalisation: showing a student's enrolments with course titles needs a join between enrolments and courses. With indexes that is 5 index lookups per student, microseconds. The wide table answered it with one row read, so normalisation traded about 0.1 milliseconds per read for the elimination of three classes of data corruption. That trade is almost always correct, which is why the default answer is normalise."
+        ]
+      }
+    ]
+  },
+  "715": {
+    "sections": [
+      {
+        "title": "🔍 Why a checklist rather than a principle",
+        "paras": [
+          "Saying store each fact once is a principle, and principles are easy to agree with and hard to apply. The normal forms turn it into a sequence of tests that can be run on a specific table, each with an obvious yes or no answer.",
+          "They are applied in order because each one assumes the previous. Skipping to the third form on a table with repeating groups produces a wrong answer, which is why the order is not negotiable."
+        ]
+      },
+      {
+        "title": "⚙️ The forms and the dependency each one forbids",
+        "paras": [
+          "First normal form forbids non-atomic values: no lists in a cell, no repeating groups of columns. The cell holds one value, which is why a comma-separated list of tags in one column is a 1NF violation.",
+          "Second normal form forbids a partial dependency: with a composite key, every non-key column must depend on the whole key, not part of it. Third normal form forbids a transitive dependency: a non-key column may not determine another non-key column.",
+          "Beyond 3NF, Boyce-Codd normal form tightens the rule for tables with overlapping candidate keys, and fourth normal form removes independent multi-valued facts that were squeezed into one table."
+        ],
+        "bullets": [
+          "1NF: every cell holds a single atomic value of the declared type.",
+          "2NF: no non-key column depends on only part of a composite key.",
+          "3NF: no non-key column depends on another non-key column.",
+          "BCNF: every determinant is a candidate key, which catches a few cases 3NF misses.",
+          "4NF: no table stores two independent many-valued facts about the same entity.",
+          "Most production schemas stop at 3NF, and that is normally enough.",
+          "Denormalising deliberately, with a comment explaining which anomaly is accepted, is professional; doing it by accident is not."
+        ]
+      },
+      {
+        "title": "🧮 Taking one table through the forms",
+        "paras": [
+          "Start with students(student_id, name, courses) where courses holds a list like MATH101,PHYS102. That violates 1NF: the cell holds several values, so it cannot be indexed, cannot be joined, and cannot be constrained.",
+          "Fix 1NF by one row per course: enrolments(student_id, name, course_code, course_title). Now consider the key (student_id, course_code). The column name depends only on student_id, so it is a partial dependency: 2NF violation. Move it to a students table.",
+          "Now enrolments(student_id, course_code, course_title). The key is (student_id, course_code), and course_title depends only on course_code, which is not the whole key, so this is still a 2NF violation. Move it to courses(course_code, course_title).",
+          "Now courses(course_code, course_title, teacher_name, teacher_office). The key is course_code, teacher_name depends on it, and teacher_office depends on teacher_name, which is a non-key column determining another non-key column: a 3NF violation. Extract teachers(teacher_name, teacher_office).",
+          "Final schema: students, courses, teachers, enrolments. Four tables, no repeating groups, no partial dependencies, no transitive dependencies.",
+          "Count the redundancy removed. In the original single table with 8,000 enrolments, a student name appeared an average of 6.7 times and a course title about 133 times. In the final schema each appears once, so the data that can disagree has gone from about 16,000 duplicated values to zero.",
+          "The judgement call: 3NF costs a three-way join to answer who teaches the course this student takes. On a reporting server that join runs thousands of times per hour and the join is measured at 2 milliseconds, which is acceptable. On an analytics table scanned by a dashboard every 10 seconds, a deliberately denormalised copy is the standard answer, and it is written down as a decision rather than discovered as an accident."
+        ]
+      }
+    ]
+  },
+  "717": {
+    "sections": [
+      {
+        "title": "🔍 Why all-or-nothing is the whole point",
+        "paras": [
+          "Transfer 100 between two accounts and the two updates are separate writes. Between them, the total money in the system is wrong. If the process dies in between, it stays wrong forever, and no amount of application code can fix it after the fact.",
+          "A transaction is the mechanism that makes the pair look like one indivisible change. Without it, every multi-step operation in a database is a potential corruption."
+        ]
+      },
+      {
+        "title": "⚙️ The four letters and what enforces each",
+        "paras": [
+          "Atomicity guarantees that all statements in the transaction take effect or none do. Consistency means the database moves from one valid state to another, with all constraints satisfied at commit. Isolation means concurrent transactions do not see each other's uncommitted work. Durability means a committed transaction survives a crash.",
+          "Each letter is a different mechanism: atomicity and durability come from the write-ahead log, consistency from constraints, and isolation from locking or multi-versioning."
+        ],
+        "bullets": [
+          "BEGIN starts a transaction, COMMIT makes it permanent, ROLLBACK discards it.",
+          "The write-ahead log records the new value before the page is changed, so a crash can be undone or redone.",
+          "A rollback after a crash is called undo; replaying committed work after a crash is called redo.",
+          "Durability usually requires an fsync at commit, which is why commits have a measurable cost.",
+          "Group commit batches several transactions into one fsync, which is the standard optimisation for high write rates.",
+          "Autocommit mode wraps every statement in its own transaction, which is convenient and easy to get wrong.",
+          "A transaction should be short; a long one holds locks and forces the log to grow."
+        ]
+      },
+      {
+        "title": "🧮 What atomicity and durability cost",
+        "paras": [
+          "A transfer touches two rows and writes three log records: the intent, the debit, the credit. With fsync at commit at 0.1 milliseconds on an SSD, the commit costs 0.1 milliseconds and the whole transaction about 0.2 milliseconds. That caps a single-threaded writer at about 5,000 transactions per second.",
+          "Group commit changes the arithmetic dramatically. If 100 transactions commit in the same 0.1 millisecond window, one fsync covers all of them, so the cost per transaction falls to 0.001 milliseconds and throughput rises to roughly 100,000 per second. This is why database write throughput depends so much on concurrency.",
+          "Isolation costs. If a transaction holds locks for 5 milliseconds and 50 run concurrently, and 10 percent of them touch the same hot row, about 5 transactions queue on that row at any moment, each waiting an average of 2.5 milliseconds. Effective throughput on that row is 200 transactions per second regardless of how many clients connect.",
+          "A concrete failure: a batch job that opens one transaction, updates 1 million rows, and commits at the end. The log grows to hold all 1 million changes, rollback after a failure takes minutes, and every other writer blocks on the locked rows. Chunking into 1,000 transactions of 1,000 rows each keeps the log small, allows interleaving, and only loses the current chunk on failure, which the job can retry."
+        ]
+      }
+    ]
+  },
+  "718": {
+    "sections": [
+      {
+        "title": "🔍 Why uncoordinated writes corrupt data",
+        "paras": [
+          "Each transaction is individually correct, and the interleaving still produces a wrong result. Two clerks read the same stock count of 10, each sells one unit, each writes 9, and the system now believes 9 exist when 8 were sold. Nothing failed; the arithmetic was right twice.",
+          "This is the lost update, and it is why concurrency control is not an optimisation. It is the difference between a database and a file."
+        ]
+      },
+      {
+        "title": "⚙️ The anomalies and the mechanisms that prevent them",
+        "paras": [
+          "There are four classic anomalies. The lost update, as above. The dirty read, where one transaction reads another's uncommitted value that is later rolled back. The non-repeatable read, where the same row returns different values twice within one transaction. The phantom read, where a re-run of the same query returns new rows.",
+          "Two families of mechanism address them. Locking prevents conflicting access by blocking, so the second transaction waits. Multi-version concurrency control lets readers see an older committed version, so readers never block writers and writers never block readers, at the cost of storing several versions."
+        ],
+        "bullets": [
+          "Pessimistic control locks first and assumes conflict; optimistic control validates at commit and assumes it is rare.",
+          "A shared lock allows concurrent readers; an exclusive lock allows one writer and no readers.",
+          "Two-phase locking acquires all locks before releasing any, which guarantees serialisability and risks deadlock.",
+          "Optimistic control aborts and retries when a version check fails, which is cheap when conflicts are rare.",
+          "Atomic update statements such as increment-by-one avoid the lost update without an explicit lock, because the read and write happen in one operation.",
+          "SELECT FOR UPDATE takes a row lock at read time, which is how read-modify-write is protected when the logic lives in the application."
+        ]
+      },
+      {
+        "title": "🧮 Simulating the lost update and its fixes",
+        "paras": [
+          "Stock is 10. Transaction A reads 10 at time 1 and computes 9. Transaction B reads 10 at time 2, before A writes, and computes 9. A writes 9 at time 3, B writes 9 at time 4. Two sales, stock recorded as 9, one unit lost. Repeat this 1,000 times in a flash sale with 20 clerks and the counted stock and the recorded stock diverge by hundreds.",
+          "With SELECT FOR UPDATE, B blocks at its read until A commits, then reads 9 and writes 8. Nothing is lost, but B waits: if A holds the lock for 5 milliseconds and 20 clerks contend for the same row, the twentieth waits 95 milliseconds. Throughput on that row is capped at 200 per second.",
+          "With an atomic update, UPDATE stock SET qty = qty - 1 WHERE id = 42 AND qty > 0 does the read and write in one statement, so the row is locked for microseconds rather than for the application's think time. The same 20 clerks finish in a fraction of the time, and the condition qty > 0 additionally prevents overselling, which the read-modify-write version could not do without another lock.",
+          "With optimistic control, each transaction records the version it read. If 20 transactions read version 7, the first commits and bumps to 8, and the other 19 fail their version check and retry. That is 19 wasted round trips, which is fine if conflicts happen once in a thousand operations and terrible in a flash sale where all 20 hit the same row. This is why the choice between pessimistic and optimistic depends on the contention rate, not on principle.",
+          "Retry budgets matter in numbers: if a conflict probability is 10 percent per attempt and a retry costs 1 millisecond, expected cost per successful write is about 1.1 milliseconds. At 90 percent conflict probability it is 10 milliseconds, and at 99 percent it is 100 milliseconds, which is why optimistic control collapses under contention rather than degrading gently."
+        ]
+      }
+    ]
+  },
+  "719": {
+    "sections": [
+      {
+        "title": "🔍 Why isolation is a dial, not a switch",
+        "paras": [
+          "Full isolation means transactions behave as if they ran one after another. That is the easiest thing to reason about and the most expensive to provide, because it requires blocking or aborting anything that might conflict.",
+          "Real systems offer a menu. Each level permits specific anomalies and costs less, so the choice is a decision about which errors the application can tolerate, made explicitly rather than by luck."
+        ]
+      },
+      {
+        "title": "⚙️ The four levels and the deadlock",
+        "paras": [
+          "Read uncommitted permits dirty reads: a transaction sees another's uncommitted changes. Read committed forbids dirty reads but permits non-repeatable reads, and it is the default in PostgreSQL and Oracle. Repeatable read guarantees the same row reads the same within a transaction but may still see new rows. Serializable forbids all of them.",
+          "Locks make the levels concrete: shared locks for reading, exclusive for writing, and a granularity choice between row, page, and table.",
+          "A deadlock happens when two transactions each hold what the other wants. Neither can proceed, and the database must break the cycle by aborting one."
+        ],
+        "bullets": [
+          "Read uncommitted is rarely useful and is not supported as a distinct mode by some engines.",
+          "Read committed is the practical default: no dirty reads, at the cost of a query seeing different data twice.",
+          "Repeatable read is enough for most business logic, since it stabilises a row for the length of a transaction.",
+          "Serializable is needed when a decision depends on the absence of rows, such as a booking that must not double-book.",
+          "Deadlock detection is usually a wait-for graph search, and the victim is chosen by cost or by age.",
+          "Consistent lock ordering across the application prevents most deadlocks, which is cheaper than detecting them.",
+          "Lock timeouts turn a deadlock into an error the application can retry, which is often the pragmatic answer."
+        ]
+      },
+      {
+        "title": "🧮 Isolation levels measured",
+        "paras": [
+          "Take a report that reads 10,000 rows in read committed while 500 updates per second hit the same table. The report may read some rows before an update and some after, so the totals are internally inconsistent. The probability is not small: over the second or two the report runs, hundreds of rows change, so a financial total can be off by a visible amount.",
+          "Under repeatable read the same report sees one snapshot and is consistent, at the cost of holding old versions. With 500 updates per second and a 2-second report, 1,000 old versions must be retained, which is tens of kilobytes per row touched, so megabytes. That is the price of consistency and it is normally acceptable.",
+          "Deadlock arithmetic: if two transactions each lock 5 rows in random order, the chance they conflict on any one pair is small, but across 100 concurrent transactions the probability of at least one deadlock per minute becomes significant. Enforcing a global ordering by primary key reduces it to essentially zero, because a cycle requires two transactions to acquire locks in opposite orders.",
+          "Throughput comparison: read committed on a read-heavy table with 90 percent reads can serve thousands of transactions per second because readers do not block. Serializable with the same mix may serialise the 10 percent of writes against conflicting reads, cutting throughput by half or more. Choosing read committed without thinking is why so many systems have rare, unreproducible accounting bugs; choosing serializable everywhere is why some systems are needlessly slow.",
+          "The pragmatic rule with numbers: measure the anomaly rate. If a non-repeatable read can change a total by at most 0.01 percent, and the report is advisory, read committed is right. If it can cause a double booking or a negative balance, no anomaly is acceptable and serializable, or an explicit lock plus a constraint, is required."
+        ]
+      }
+    ]
+  },
+  "721": {
+    "sections": [
+      {
+        "title": "🔍 Why the page is the unit of everything",
+        "paras": [
+          "Disks and SSDs cannot read one byte efficiently. They move a block, typically 4 KB at the device level and 8 KB inside the database. Every cost model in a database is therefore expressed in pages: a scan reads many pages, an index lookup reads a few.",
+          "Understanding that single fact explains why indexes help, why row size matters, and why a query returning 10 rows can be slow while one returning 10,000 is fast."
+        ]
+      },
+      {
+        "title": "⚙️ Pages, records, buffer pool, and row versus column layout",
+        "paras": [
+          "A page holds a header, a slot directory, and a set of records. Records are usually not stored in key order, so the page needs pointers to find them, and an update that grows a record may have to move it or leave a forwarding pointer.",
+          "The buffer pool is the database's cache of pages in memory, with a replacement policy that approximates least-recently-used and often a touch-count defence against scans evicting hot data.",
+          "Row-oriented storage keeps all columns of a row together, which suits transactional access to one row. Column-oriented storage keeps all values of one column together, which suits scanning one column across millions of rows."
+        ],
+        "bullets": [
+          "An 8 KB page with 200-byte rows holds about 40 rows, so a 1-million-row table is 25,000 pages, roughly 200 MB.",
+          "A full scan of 25,000 pages at 0.1 milliseconds each is 2.5 seconds of raw I/O, reduced by readahead but still far above a few index reads.",
+          "The buffer pool hit ratio is the single most important performance number for a transactional workload.",
+          "Free space maps track which pages have room, so an insert does not have to search.",
+          "Compression is per page or per column block, which is why the same data can cost very differently in two engines.",
+          "Write-ahead logging means a page does not have to be flushed at commit, only the log record, which is why random writes are batched.",
+          "A column store can read one column of 1 million rows by touching only that column's pages, often 20 times less I/O for an aggregate."
+        ]
+      },
+      {
+        "title": "🧮 Pages, buffer pool, and the row versus column decision",
+        "paras": [
+          "A table with 1 million rows of 200 bytes is 200 MB, or 25,000 pages. With a 1 GB buffer pool, the whole table fits in memory and every scan after the first is served from RAM at microseconds per page.",
+          "Grow the table to 10 million rows and it becomes 2 GB, larger than the pool. A full scan now evicts nearly everything, so each scan is 250,000 page reads. At 0.1 milliseconds that is 25 seconds, and worse, the scan throws away the cache contents that other queries needed, which is why sequential scans on large tables hurt everyone.",
+          "Row size matters directly. Halving the row from 200 to 100 bytes halves the page count, so a scan of the same row count becomes twice as fast. Moving three rarely used text columns into a side table is a real 30 to 40 percent win on the main table, and this is exactly what vertical partitioning is for.",
+          "Column store arithmetic for analytics: a table of 10 million rows with 50 columns, 4 bytes each, is 2 GB row-oriented. A query computing SUM over one column must read all 2 GB, because every row contains 49 unwanted columns. Column-oriented, that column is 40 MB, plus compression often taking it to 8 MB. So 8 MB against 2 GB is a 250 times reduction in I/O for the same answer, which is why analytical engines use column storage.",
+          "The reverse test: fetch one full row by id. Row store: one page read. Column store: 50 separate column segments, 50 reads, and the columns are scattered. That is why column stores are poor at transactional point access and why the two layouts coexist."
+        ]
+      }
+    ]
+  },
+  "722": {
+    "sections": [
+      {
+        "title": "🔍 Why the planner is the interesting part",
+        "paras": [
+          "Writing SQL is the easy half. Deciding how to execute it is where performance lives, and it depends on statistics, indexes, and the size of the data rather than on the text of the query.",
+          "The planner's job is to enumerate reasonable plans, estimate each one's cost, and pick the cheapest. When a query is slow, the question is almost never why is SQL slow but why did the planner choose that plan."
+        ]
+      },
+      {
+        "title": "⚙️ B-trees, planner choices, and what statistics buy",
+        "paras": [
+          "A B-tree keeps keys sorted in a shallow tree whose nodes hold hundreds of keys. Search, insert, and delete are all logarithmic in the row count, and a range query is a descent plus a leaf-chain walk, which is why one index serves both equals and between.",
+          "The planner compares access paths: a sequential scan reads every page but sequentially, an index scan reads few pages but randomly, and joining can be a nested loop, a hash join, or a merge join."
+        ],
+        "bullets": [
+          "Statistics include row counts, distinct value counts, and histograms of value distribution; without them cost estimates are guesses.",
+          "Stale statistics after a bulk load are the most common cause of a sudden bad plan.",
+          "A nested loop is best when the outer side is small and the inner has an index.",
+          "A hash join is best for two large tables with no useful index, at the cost of memory for the hash table.",
+          "A merge join is best when both inputs are already sorted, which an index can provide.",
+          "EXPLAIN shows the plan; EXPLAIN ANALYZE runs it and reports actual rows against estimated, which is how estimation errors are found.",
+          "An index on (a, b) serves a, or a and b, but not b alone, because the tree is ordered by a first."
+        ]
+      },
+      {
+        "title": "🧮 Choosing between a scan and an index, with numbers",
+        "paras": [
+          "A table of 1 million rows in 25,000 pages. Query A selects by unique id: 3 index pages plus 1 row page, 4 reads. A scan would be 25,000 reads. The ratio is 6,000 to 1, so the planner chooses the index and is obviously right.",
+          "Query B selects 20 percent of the rows, 200,000 of them. The index gives 3 pages plus up to 200,000 row fetches; if those fetches hit different pages at random, that is up to 200,000 reads. The scan reads 25,000 pages in order, which is 8 times less I/O and much friendlier to readahead. This is why the planner may ignore an index on a low-selectivity column, and why it is correct to do so.",
+          "Query C selects 1 percent, 10,000 rows. Index: 3 plus up to 10,000 random reads, so about 10,000, against 25,000 for the scan. The index wins but only by 2.5 times, and if the table is cached in the buffer pool the scan may win because sequential access is faster per page. The crossover is exactly where these two estimates meet, which on this table is around 2 to 5 percent selectivity.",
+          "Join cost comparison for 1,000 customers and 1 million orders. Nested loop without an index: 1,000 x 1,000,000 = 1 billion comparisons, minutes. Nested loop with an index on orders.customer_id: 1,000 seeks of about 4 pages each, 4,000 reads, well under a second. Hash join: one pass over 1 million order rows to build, then 1,000 probes, so 1 million operations, roughly a second. The index turns a minute into a fraction of a second and the planner will find it.",
+          "Reading EXPLAIN ANALYZE honestly: when estimated rows is 100 and actual is 500,000, the plan was built on a false premise. The fix is usually ANALYZE on the table, or a rewritten predicate the estimator can understand, not a hint to force an index."
+        ]
+      }
+    ]
+  },
+  "724": {
+    "sections": [
+      {
+        "title": "🔍 Why a backup that has never been restored is a guess",
+        "paras": [
+          "Disks fail, someone runs a delete without a where clause, ransomware encrypts the volume, and a bad migration corrupts rows. All four are routine, and all four are recoverable only if a copy exists somewhere the failure did not reach.",
+          "The uncomfortable part is that the backup's value is unknown until it is tested. A nightly dump that has silently failed for a month looks exactly like a working one, which is why the only meaningful measure is a successful restore."
+        ]
+      },
+      {
+        "title": "⚙️ The three dimensions and the recovery procedure",
+        "paras": [
+          "A backup is described by three numbers: the recovery point objective, which is how much data you can afford to lose, and the recovery time objective, which is how long the restore may take. The third is scope: a full copy, an incremental since the last full, or a differential since the last full.",
+          "Recovery is restore plus replay. Restore the last full backup, apply incrementals or the archived logs, and roll forward to the moment of failure. Point-in-time recovery replays the log to a chosen timestamp, which is how you undo an accidental delete without losing the hours that followed it."
+        ],
+        "bullets": [
+          "A full backup is self-contained and slow; an incremental is small and needs the chain.",
+          "A differential grows with time since the last full but needs only two files to restore.",
+          "Logical backups export statements and are portable; physical backups copy files and are faster.",
+          "A backup stored on the same disk as the database is not a backup.",
+          "The recovery point objective decides the log shipping interval: a 5-minute objective needs a log archive every 5 minutes.",
+          "The recovery time objective decides the format: a 30-minute objective rules out restoring a 2 TB logical dump.",
+          "Test restores on a schedule, into a scratch environment, and record the measured time."
+        ]
+      },
+      {
+        "title": "🧮 Recovery objectives as arithmetic",
+        "paras": [
+          "Suppose the database is 500 GB, the network copy runs at 200 MB per second, and the disk can stream 500 MB per second. A full backup takes at least 500 GB divided by 200 MB per second, about 42 minutes, and the restore into the same kind of storage takes about 17 minutes at disk speed, longer in practice because of index rebuilds.",
+          "Add 24 hours of log at 20 GB and replay at 100 MB per second: 200 seconds of replay. So a full restore plus replay is roughly 20 minutes, which meets a 1-hour recovery time objective and fails a 15-minute one.",
+          "To meet 15 minutes you need a standby that is continuously applying changes, so a failover is a promotion rather than a restore. That is a different architecture, and it is the correct conclusion from the arithmetic rather than from a preference.",
+          "Recovery point objective: nightly full backups alone mean up to 24 hours of loss, which is unacceptable for orders. Log archiving every 5 minutes reduces the exposure to 5 minutes, at the cost of 5,760 archive operations per day and the storage to hold them.",
+          "Storage arithmetic for retention: 500 GB full nightly for 30 days is 15 TB before compression. Incrementals at 20 GB per day compress well and a chain of 30 costs about 500 GB plus 600 GB, so about 1.1 TB. Choosing the retention policy is mostly this calculation plus whatever the regulations say.",
+          "The failure mode worth planning for: the backup completes, the restore takes 3 hours instead of 20 minutes because the restore target was slower than the source, and the downtime exceeds the objective. Measuring restore time on realistic hardware, before an incident, is the only way to know."
+        ]
+      }
+    ]
+  },
+  "725": {
+    "sections": [
+      {
+        "title": "🔍 Why injection is a design flaw rather than a parsing bug",
+        "paras": [
+          "A query is code. User input is data. Injection happens when the two are concatenated, so a string built as SELECT * FROM users WHERE name = plus the input plus a quote becomes a program whose meaning the attacker chooses.",
+          "The defence is not to filter dangerous characters, which is a losing game against encoding tricks, but to keep the boundary intact: the query text is fixed and the values travel separately."
+        ]
+      },
+      {
+        "title": "⚙️ Authentication, authorisation, and parameterisation",
+        "paras": [
+          "Authentication asks who you are; authorisation asks what you may do. Both belong in the database, because the database is the last line before the bytes.",
+          "Parameterised queries send the statement with placeholders and the values separately, so the server parses the statement first and never reinterprets a value as syntax. The database also caches the plan, which makes them faster as well as safer."
+        ],
+        "bullets": [
+          "GRANT gives privileges on objects, REVOKE takes them away, and roles group them.",
+          "The application should connect as a user with the least privilege it needs, never as the schema owner.",
+          "Views can restrict both columns and rows, so a reporting user never sees the salary column.",
+          "Row-level security enforces per-tenant isolation inside the database rather than in every query.",
+          "Encrypt connections with TLS, because credentials and results otherwise travel in clear text.",
+          "Hash passwords with a slow, salted algorithm; never store them recoverable.",
+          "Audit logs record who read what, which is required for regulated data and invaluable after an incident.",
+          "Never build a query by concatenating input, even when the input looks like a number; validate and bind."
+        ]
+      },
+      {
+        "title": "🧮 What privilege and parameterisation actually buy",
+        "paras": [
+          "Privilege: an application that only needs SELECT, INSERT, and UPDATE on 5 tables is granted exactly that. When a bug lets an attacker run arbitrary SQL, they cannot drop a table, read the audit log, or copy the users table, because those privileges do not exist. The blast radius of the same bug is reduced from the whole server to five tables.",
+          "Parameterisation: a login form that concatenates input and receives the string ' or 1=1 -- turns the WHERE clause into a tautology and returns every user. With a bound parameter the same string is compared literally against the stored names and matches nothing. The fix is one line in most drivers and it is the difference between a vulnerability and a non-event.",
+          "Performance, unexpectedly: statement caching means a parameterised query parsed once and executed 10,000 times saves 10,000 parse-and-plan cycles. At 0.1 milliseconds each that is 1 second of pure overhead removed, which is why the safe form is also the fast form.",
+          "Least privilege in numbers: with 30 tables and 4 roles, granting broadly produces 120 potential exposures; granting narrowly produces perhaps 15 legitimate ones. The audit surface shrinks in proportion to the number of grants, which is why privilege design is worth an afternoon.",
+          "The one thing privilege cannot fix: an application that legitimately reads all rows will leak all rows if it is compromised. Row-level security is the answer, because the filter is enforced by the engine and no application bug can bypass it."
+        ]
+      }
+    ]
+  },
+  "726": {
+    "sections": [
+      {
+        "title": "🔍 Why the database stopped being one machine",
+        "paras": [
+          "For decades a database was a program on a server that one machine ran. Three pressures broke that: data volumes that no single disk array can hold, read traffic that no single CPU can serve, and availability requirements that no single machine can meet.",
+          "The responses are all forms of distribution, and each one buys capacity by giving up some simplicity. Knowing which simplicity was traded explains most of the operational surprises."
+        ]
+      },
+      {
+        "title": "⚙️ Replication, sharding, and the newer shapes",
+        "paras": [
+          "Replication copies the whole dataset to several machines. A primary takes writes and streams changes to replicas that serve reads, which scales reads and provides failover. Sharding splits the dataset by key across machines, which scales writes and storage but makes cross-shard queries expensive.",
+          "Around these, newer classes have appeared: NewSQL systems that shard while keeping ACID transactions, and cloud-managed services that hide the mechanics."
+        ],
+        "bullets": [
+          "Replication lag is the interval between a write on the primary and its visibility on a replica, and it is the source of read-your-own-write bugs.",
+          "Synchronous replication guarantees no loss on failover and costs latency; asynchronous is fast and can lose the last writes.",
+          "A shard key choice is permanent in practice, because changing it requires moving data between machines.",
+          "Cross-shard joins and distributed transactions are the two things sharding makes expensive.",
+          "Serverless and managed databases move capacity planning to the provider and add per-query pricing.",
+          "Time-series and vector databases are specialised shapes: append-heavy with time ordering, or nearest-neighbour search over embeddings.",
+          "Data lakes and lakehouse formats put cheap object storage under a table abstraction, trading latency for cost."
+        ]
+      },
+      {
+        "title": "🧮 Whether to shard, in numbers",
+        "paras": [
+          "A single server with 32 cores, 256 GB of RAM, and NVMe storage handles roughly 20,000 simple transactions per second and a few terabytes of data. If the workload is 15,000 per second and 2 TB, sharding adds complexity for no benefit and should be refused.",
+          "If the workload is 200,000 per second and 20 TB, one machine cannot do it and sharding is required. With 8 shards, each carries 25,000 per second and 2.5 TB, which is comfortable. The cost is that a query hitting all 8 shards now waits for the slowest, so the tail latency of the system becomes the maximum across shards rather than the average.",
+          "Replication arithmetic: with 1 primary and 3 replicas, read capacity quadruples to about 80,000 reads per second, but the primary still caps writes at 20,000. If the workload is 90 percent reads, replication alone solves it. If it is 50 percent writes, replication does nothing for the bottleneck and sharding is the only path.",
+          "Lag consequences: asynchronous replication with a 200 millisecond lag means a user who writes and immediately reloads may not see their own change. The workarounds are to read from the primary for a short window after a write, or to pin a session to the primary, both of which reduce the read scaling you just bought.",
+          "Cost of a cross-shard join: with 10 million users spread over 8 shards and an orders table sharded by user, joining users to orders stays local and is cheap. Joining orders to products, if products lives on one shard, requires 8 shards to each fetch product rows, so 8 times the work plus a merge. That single query can consume more resources than the rest of the workload, which is why product catalogues are usually replicated to every shard instead of sharded."
+        ]
+      }
+    ]
+  }
+}

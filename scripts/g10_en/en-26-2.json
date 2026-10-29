@@ -1,0 +1,407 @@
+{
+  "650": {
+    "sections": [
+      {
+        "title": "🔍 Why storage needed a name and a permission",
+        "paras": [
+          "A disk is a numbered sequence of sectors. Write against that directly and four questions have no answer: where does this file start and end, what is it called, who may read it, and where do I put the next one.",
+          "A file answers all four by giving a byte stream a name, a place in a tree and a set of permissions, hiding which sectors it occupies. A directory answers the last one by being a file whose contents are a list of names mapped to file records."
+        ]
+      },
+      {
+        "title": "⚙️ Paths, links, and the metadata nobody looks at",
+        "paras": [
+          "The distinction between a hard link and a symbolic link explains several behaviours that otherwise look arbitrary."
+        ],
+        "bullets": [
+          "A hard link is a second name for the same record, so deleting one name leaves the data reachable through the other and only the last deletion frees the blocks.",
+          "A symbolic link is a small file whose content is a path; delete the target and the link dangles.",
+          "Hard links cannot cross file systems and cannot point at directories, precisely to prevent cycles.",
+          "The name belongs to the directory, not to the record, which is why renaming is instant and does not copy data.",
+          "Metadata covers everything except content: size, owner, permissions, three timestamps, link count, block pointers.",
+          "Three tables describe an open file: the per-process descriptor table, the system-wide open file table holding the offset, and the record table; sharing the middle one is why a fork shares the offset."
+        ]
+      },
+      {
+        "title": "🧮 Resolving a path, and counting links",
+        "paras": [
+          "For a path with four components, the kernel starts at the root record, searches that directory for the first component, obtains the next record, and repeats. Each step is a directory search, which is why deep paths cost several reads before the file is even touched.",
+          "Create a file: the link count is one. Add a hard link: two names, one record, one copy of the data. Remove the first name: the count falls to one and the data remains. Remove the second: the count reaches zero and the blocks are freed.",
+          "A symbolic link behaves differently: it is a new record with its own inode whose content is the target path. Delete the target and the link still exists, and opening it fails.",
+          "A discrepancy worth knowing: the reported free space can be almost full while the sum of file sizes is small, because a process still holds an open descriptor to a deleted file. The directory entry is gone, so file listings miss it, but the count has not reached zero and the blocks are still held.",
+          "The other classic surprise: writing to a string in a loop, which appears to append but in fact copies, is the file analogue of a design decision that looks free and is not."
+        ]
+      }
+    ]
+  },
+  "651": {
+    "sections": [
+      {
+        "title": "🔍 Four questions every file system must answer",
+        "paras": [
+          "Where is the metadata, how are data blocks allocated, which blocks are free, and how is a name mapped to a record. Every file system answers those four, and the differences between them are the different answers.",
+          "The constraints are the same for all of them: storage is block-addressed, seeking is expensive, and power can fail at any instant, so the on-disk structures must be recoverable."
+        ]
+      },
+      {
+        "title": "⚙️ Records, allocation, free space, consistency",
+        "paras": [
+          "The record, called an inode, is a fixed-size structure holding the metadata and the block pointers. Allocation schemes differ in how those pointers are arranged."
+        ],
+        "bullets": [
+          "Contiguous allocation is fastest to read and suffers external fragmentation and difficult growth.",
+          "Linked allocation removes fragmentation and makes random access linear.",
+          "Indexed allocation, used by mainstream file systems, keeps direct pointers for small files and single, double and triple indirect blocks for large ones.",
+          "Free space is tracked by a bitmap, one bit per block, which also makes finding runs of free blocks easy.",
+          "Journaling writes the intent first and then the data, so a crash can be replayed to a consistent state at the cost of writing twice.",
+          "Copy on write never overwrites in place, which gives free snapshots and produces fragmentation.",
+          "Directories are searched by tree or hash in modern systems, because a linear scan of a large directory is unusable."
+        ]
+      },
+      {
+        "title": "🧮 How big a file can one inode describe",
+        "paras": [
+          "With four kilobyte blocks and four byte pointers, a block holds a thousand and twenty-four pointers. Twelve direct pointers cover forty-eight kilobytes. One indirect covers four megabytes. Double indirect covers four gigabytes. Triple indirect covers four terabytes.",
+          "The maximum file is therefore a little over four terabytes, and the numbers say why the scheme is layered: small files stay cheap, and large ones pay only for the levels they need.",
+          "The cost of reaching data differs by depth. An offset within the first forty-eight kilobytes needs the record and one data block, two reads. An offset ten gigabytes in needs the record, then three levels of indirect block, then the data, five reads.",
+          "A practical ceiling that surprises people: inodes are allocated at format time, so a disk can report plenty of free space and still refuse a new file because the inode table is exhausted. Many small files, not gigabytes, are what exhaust it.",
+          "The counterpart problem is a directory with two million entries, where listing is slow because the entries are enumerated even though lookup by name is fast."
+        ]
+      }
+    ]
+  },
+  "652": {
+    "sections": [
+      {
+        "title": "🔍 Why the bottleneck is finding, not reading",
+        "paras": [
+          "A mechanical disk must move the head to the right track, which takes several milliseconds, and then wait for the platter to rotate, a few more. Transferring four kilobytes takes tens of microseconds.",
+          "So almost the whole cost of a random read is positioning. That is why reordering a queue of requests can improve throughput substantially, even though no individual request becomes faster and some become slower."
+        ]
+      },
+      {
+        "title": "⚙️ Four policies and the trade each makes",
+        "paras": [
+          "Each policy differs only in the order it serves the queue."
+        ],
+        "bullets": [
+          "First come first served is fair and can traverse the disk repeatedly.",
+          "Shortest seek first minimises each step and starves distant requests, since a closer one keeps arriving.",
+          "SCAN sweeps in one direction serving everything on the way, then reverses, which is fair but delays requests just behind the head.",
+          "Circular SCAN serves in one direction only and jumps back without serving, which equalises waiting time at the cost of total distance.",
+          "LOOK stops at the furthest request rather than the physical end, avoiding a wasted trip.",
+          "Solid-state disks have no head, so ordering matters little; there the scheduler merges adjacent requests and respects priorities instead.",
+          "Modern kernels use one queue per core, which removes a lock bottleneck rather than optimising seeks."
+        ]
+      },
+      {
+        "title": "🧮 Four totals for one queue",
+        "paras": [
+          "Head at track fifty-three, requests 98, 183, 37, 122, 14, 124, 65, 67, on a disk spanning zero to one hundred and ninety-nine.",
+          "First come first served travels 45, 85, 146, 85, 108, 110, 59 and 2, a total of 640 tracks.",
+          "Shortest seek first visits 65, 67, 37, 14, 98, 122, 124, 183, travelling 12, 2, 30, 23, 84, 24, 2 and 59, a total of 236, a reduction of sixty-three percent. The cost is that a request at the far end can wait indefinitely.",
+          "SCAN going upward visits 65, 67, 98, 122, 124, 183, reaches the end at 199, then reverses to 37 and 14, totalling 331.",
+          "Circular SCAN does the same outbound trip, jumps back to zero without serving and then takes 14 and 37, totalling 382. More travel, but every track waits about the same.",
+          "LOOK removes the sixteen-track run to the end, giving 315, which is why real implementations do that rather than sweeping to the physical limit.",
+          "Read the table as the recurring trade: shortest seek wins on distance and loses on fairness, circular scan wins on fairness and loses on distance."
+        ]
+      }
+    ]
+  },
+  "654": {
+    "sections": [
+      {
+        "title": "🔍 Why the processor must not wait",
+        "paras": [
+          "A processor executes billions of instructions a second, and a disk takes milliseconds to respond, so a program that waits for input wastes almost all of the machine.",
+          "Three techniques exist, each freeing the processor a little more. Polling has it check repeatedly, interrupts let the device announce completion, and direct memory access lets the device move data itself and interrupt only once at the end."
+        ]
+      },
+      {
+        "title": "⚙️ The mechanics, and the layer that hides them",
+        "paras": [
+          "A device controller translates commands into electrical signals and buffers data. The processor talks to it through registers mapped into the address space, and a driver turns those registers into the uniform read and write interface the rest of the system sees."
+        ],
+        "bullets": [
+          "Polling is simplest and lowest latency, and burns the processor for the whole wait.",
+          "Interrupts cost a context save and restore each time, which is why very frequent interrupts are worse than polling.",
+          "Direct memory access moves a whole buffer with one command and one interrupt, which is the standard for disks and network cards.",
+          "Interrupt coalescing trades a little latency for far fewer interrupts under load.",
+          "Copy avoidance matters as much as interrupt count: delivering data from the page cache straight to the network removes two memory copies.",
+          "Multiplexing one thread over many descriptors, as with epoll, is how a server handles ten thousand connections without ten thousand threads."
+        ]
+      },
+      {
+        "title": "🧮 One megabyte, three ways",
+        "paras": [
+          "Assume the device transfers four bytes per access and the processor runs at a gigahertz, about one instruction per nanosecond.",
+          "Polling: two hundred and sixty-two thousand transfers at fifteen instructions each, about four million instructions, or four milliseconds of processor time entirely occupied. If the device itself is slow, the processor spins far longer.",
+          "Interrupt per transfer: two hundred and sixty-two thousand interrupts at about a microsecond each, which is two hundred and sixty milliseconds. Worse than polling, and this is the counter-intuitive result that motivates buffering.",
+          "Interrupt with a four kilobyte buffer: two hundred and fifty-six interrupts, a quarter of a millisecond, and the processor is free in between.",
+          "Direct memory access: one command of tens of instructions plus one interrupt, so about one microsecond of processor time and the transfer runs in parallel with computation.",
+          "The pattern is general: batching turns a per-item cost into a per-batch cost, which is why every interface from file systems to network stacks accumulates before submitting."
+        ]
+      }
+    ]
+  },
+  "655": {
+    "sections": [
+      {
+        "title": "🔍 Why one disk is neither fast nor reliable enough",
+        "paras": [
+          "Every disk fails eventually. A quoted mean time between failures of hundreds of thousands of hours is a statistical average, and in a room with thousands of disks something is failing every day.",
+          "Every disk is also too slow for modern workloads: a few hundred random operations per second for a mechanical drive, tens of thousands for a solid-state one, against services that need millions.",
+          "Redundant arrays address both by combining disks: striping for throughput, mirroring or parity for tolerance. The combinations are the levels."
+        ]
+      },
+      {
+        "title": "⚙️ Five levels and the write penalty",
+        "paras": [
+          "Striping spreads data across disks so reads and writes proceed in parallel. Mirroring keeps identical copies. Parity stores an exclusive-or of the others, which allows one lost member to be reconstructed by computation rather than duplication."
+        ],
+        "bullets": [
+          "Level zero: striping only, full capacity, full speed, no tolerance.",
+          "Level one: mirroring, half capacity, fast reads, unchanged writes, tolerates one failure.",
+          "Level five: striping with one distributed parity, capacity of n minus one disks, tolerates one failure.",
+          "Level six: two parity blocks, capacity of n minus two, tolerates two failures.",
+          "Level ten: mirrored pairs then striped, half capacity, good on both reads and writes, tolerates one per pair.",
+          "The write penalty of level five: a small random write reads the old data and old parity, computes, then writes both, so one logical write costs four physical operations.",
+          "Large-capacity drives make reconstruction risky, since rebuilding a level five array reads every surviving disk for many hours while unprotected."
+        ]
+      },
+      {
+        "title": "🧮 Four disks, five arrangements",
+        "paras": [
+          "With four one-terabyte disks: level zero gives four terabytes and no tolerance; level one gives two terabytes and survives one failure; level five gives three terabytes and survives one; level six gives two and survives two; level ten gives two and survives one per mirrored pair.",
+          "Sequential read scales nearly linearly in most of them, because every disk contributes.",
+          "Random small writes separate them sharply. Level zero is four times a single disk, level one is unchanged because both copies must be written, level five is about a quarter because of the four-operation penalty, level six worse, and level ten about twice.",
+          "That is why databases choose level ten: sixteen times the random write performance of level five for half the capacity is a trade almost always worth making.",
+          "The reconstruction arithmetic explains the anxiety about large drives. Rebuilding a four-disk level five of four-terabyte members reads twelve terabytes, about twenty-two hours at a hundred and fifty megabytes per second, and during that time a second failure destroys everything. At the uncorrectable error rates quoted for consumer drives, a bad sector somewhere in twelve terabytes is likely rather than exotic, which is the argument for level six.",
+          "One distinction worth keeping: redundancy is availability, not backup. It survives a failed disk, not a mistaken deletion, a ransomware encryption or a fire."
+        ]
+      }
+    ]
+  },
+  "657": {
+    "sections": [
+      {
+        "title": "🔍 Three questions a permission model must answer",
+        "paras": [
+          "Who owns this, who may do what with it, and who may change the rules. The design principle underneath is least privilege: every subject gets the smallest set of rights that lets it work, which limits both accidents and attacks.",
+          "Two families implement this. Access control lists record on each object who may do what; capabilities record on each subject what it may touch. The traditional permission bits are a very compressed access control list."
+        ]
+      },
+      {
+        "title": "⚙️ The bits, and the one that surprises everyone",
+        "paras": [
+          "Each file carries three triples of read, write and execute, for the owner, the group and everyone else. Numerically read is four, write is two, execute is one."
+        ],
+        "bullets": [
+          "On a file, execute means run it; on a directory it means enter it, and without it you cannot reach a file inside even when you know its name.",
+          "On a directory, read means list the names and write means create or delete entries.",
+          "Deleting a file depends on write permission on its directory, not on the file's own permissions, which is the most counter-intuitive rule in the model.",
+          "The sticky bit on a shared directory restricts deletion to the file's owner, which is what protects temporary directories.",
+          "Set user id on an executable runs it with the owner's rights, which is how a normal user changes their own password.",
+          "The default mask subtracts permissions from new files, so a mask of twenty-two gives files six-four-four and directories seven-five-five.",
+          "Root bypasses checks, which is why services should never run as root."
+        ]
+      },
+      {
+        "title": "🧮 Three permission judgements",
+        "paras": [
+          "A file with read and write for the owner and read for the group, owned by one user in a group that a second user belongs to. The second user falls into the group class, so may read and may not write. A third user outside the group falls into the other class with no bits, so may do nothing.",
+          "A directory with full rights for the owner, read and enter for the group, and nothing for others. A user outside the group cannot enter, so cannot reach a file inside it whatever that file's permissions say. A group member can enter and list, and cannot create.",
+          "A shared temporary directory with full rights for everyone plus the sticky bit: anyone may create a file, and only the file's owner may remove it. Without the sticky bit any user could delete another's files, which is a real vulnerability that the bit exists to close.",
+          "The deletion case deserves one more step. To remove a file in another user's home directory, the kernel checks write and enter permission on that directory, not on the file. The file may be world-writable and the deletion still refused, which is the rule that trips people up in practice."
+        ]
+      }
+    ]
+  },
+  "658": {
+    "sections": [
+      {
+        "title": "🔍 Three words that are not synonyms",
+        "paras": [
+          "Authentication asks who you are, authorisation asks what you may do, encryption asks who can read the traffic. Systems fail by getting one of the three right and neglecting the others.",
+          "Authentication rests on three kinds of evidence: something you know, something you hold, something you are. Two factors combine different kinds, which is why a password plus a phone is stronger while two passwords are not."
+        ]
+      },
+      {
+        "title": "⚙️ Storing passwords, and the two kinds of encryption",
+        "paras": [
+          "A server never stores a password, only something derived from it. The derivation must be one-way, salted per user, and deliberately slow."
+        ],
+        "bullets": [
+          "A salt defeats precomputed tables, because the same password produces different stored values for different users.",
+          "Slowness is the defence against offline guessing: a fast hash allows billions of attempts per second on a graphics card.",
+          "Symmetric encryption uses one key and is fast, which suits bulk data but leaves the problem of delivering the key.",
+          "Asymmetric encryption uses a public and a private key, so the public one can be published, at a cost of roughly a thousand times the computation.",
+          "Transport security combines them: asymmetric operations negotiate a temporary symmetric key, which then carries the data.",
+          "Digital signatures apply the private key to a hash, which gives integrity and non-repudiation, and is what a certificate is.",
+          "Ephemeral key exchange gives forward secrecy: a stolen long-term key does not decrypt yesterday's traffic."
+        ]
+      },
+      {
+        "title": "🧮 How long a guess takes",
+        "paras": [
+          "Eight lowercase letters is twenty-six to the eighth, about two hundred billion combinations. A graphics card computes around ten billion fast hashes per second, so a full sweep takes about twenty seconds and an average success about ten. Storing that kind of hash is equivalent to storing plaintext.",
+          "With a deliberately slow hash at a quarter of a second per attempt, four attempts per second, the same search needs about fifteen hundred years. Nine orders of magnitude from changing one function.",
+          "Add a per-user salt and precomputation becomes useless: an attacker must attack each account separately, which multiplies the cost by the number of accounts.",
+          "The transport comparison is equally blunt. A thousand asymmetric operations per second against a gigabyte per second for symmetric encryption means carrying a megabyte under asymmetric encryption would take a second instead of a millisecond.",
+          "A policy footnote: modern guidance favours length, a check against known breached passwords, and rate limiting over complexity rules, because forced symbol substitution produces predictable patterns like a capital first letter and a digit at the end."
+        ]
+      }
+    ]
+  },
+  "659": {
+    "sections": [
+      {
+        "title": "🔍 Why the interesting bugs live at boundaries",
+        "paras": [
+          "A system is a set of boundaries: user code and kernel, one process and another, local and remote. Almost every vulnerability is a boundary that was crossed without a check, whether that means a length, a permission or an assumption about input.",
+          "Buffer overflow is the canonical case. A language that does not check array bounds will happily write past the end of a ten-byte buffer, and whatever lies next in memory is overwritten."
+        ]
+      },
+      {
+        "title": "⚙️ Three families of attack, four layers of defence",
+        "paras": [
+          "Attacks cluster into memory corruption, privilege escalation and malware, and the defences are stacked because each one only raises the cost."
+        ],
+        "bullets": [
+          "Stack canaries place a random value before the return address, so an overflow that reaches the address also destroys the canary and is detected.",
+          "Data execution prevention marks the stack and heap non-executable, so injected code cannot run, which pushes attackers towards reusing existing code fragments.",
+          "Address randomisation moves the stack, heap and libraries on each run, so addresses cannot be hard-coded.",
+          "Read-only relocation tables stop function pointers being rewritten before they are used.",
+          "Least privilege and sandboxing limit what a compromise achieves, which is why a web server runs as its own user.",
+          "Input validation and bounded string handling fix the cause rather than the symptom.",
+          "Ransomware is answered by offline backups, because encryption cannot reach a copy that was never mounted.",
+          "Supply chain attacks target a dependency rather than the application, so version pinning and dependency auditing are part of the perimeter."
+        ]
+      },
+      {
+        "title": "🧮 What an overflow actually overwrites",
+        "paras": [
+          "A typical stack frame, from low to high address: local buffer, saved registers, canary, saved frame pointer, return address, then the caller's frame.",
+          "With a sixty-four byte buffer, eighty bytes of input fills the buffer exactly and then writes sixteen bytes over the saved registers. Eighty-eight bytes reaches the frame pointer, and ninety-six reaches the return address. The offset is not guesswork once the layout is known.",
+          "Without a canary, bytes eighty-one to eighty-eight can hold any address, and the function returns into it. With a canary the same input corrupts the canary, the check fails and the process aborts before returning.",
+          "Randomisation then removes the remaining advantage: even with the return address overwritten, the attacker does not know what to write. A second vulnerability that leaks an address is needed first.",
+          "That is why modern exploits chain several defects, and why the defensive layers are described as raising cost rather than as preventing attack.",
+          "Use after free is the quieter sibling: memory is released and then used again, so the program reads or writes whatever now occupies that block. It is common in browsers precisely because object lifetimes there are complicated, and it is found by tooling rather than by reading code."
+        ]
+      }
+    ]
+  },
+  "661": {
+    "sections": [
+      {
+        "title": "🔍 Why put several machines inside one",
+        "paras": [
+          "A server running one application uses perhaps a fifth of its processor and a quarter of its memory, and the rest is wasted. Put several applications on the same operating system and they interfere: a memory leak takes everything down, dependency versions conflict, and permissions blur.",
+          "A virtual machine resolves the conflict by inserting a layer that presents fake hardware to several complete operating systems. Each guest has its own kernel, so isolation is strong, and they share one physical machine, so utilisation is high."
+        ]
+      },
+      {
+        "title": "⚙️ Two shapes of hypervisor, and the assistance that made it practical",
+        "paras": [
+          "A type one hypervisor runs directly on the hardware and hosts guests, which is what data centres use. A type two runs as an application on a host operating system, which is convenient for development and slower."
+        ],
+        "bullets": [
+          "Full virtualisation hides the fact of virtualisation from the guest, so no operating system changes are needed, at the cost of trapping and emulating sensitive instructions.",
+          "Paravirtualisation tells the guest it is virtualised, so it calls the hypervisor instead of issuing privileged instructions, which is faster and requires a modified kernel.",
+          "Hardware assistance removes the emulation: the processor gains a second privilege level and nested page tables, so guest memory translation runs in silicon.",
+          "Device handling ranges from fully emulated, through paravirtual drivers, to direct assignment of a physical device, trading compatibility against speed.",
+          "Live migration copies memory while the guest runs and pauses it only briefly at the end, which is how cloud maintenance happens without downtime.",
+          "The cost of isolation is real: every memory access goes through two translations, and every device access through the hypervisor."
+        ]
+      },
+      {
+        "title": "🧮 Virtual machines and containers, six numbers",
+        "paras": [
+          "Ten services on one host, compared directly.",
+          "Startup: a virtual machine boots a kernel, so seconds to tens of seconds; a container starts a process, so tens to hundreds of milliseconds.",
+          "Image size: a machine image includes an operating system, so gigabytes; a container image includes the application and its libraries, so tens to hundreds of megabytes.",
+          "Idle memory: each virtual machine runs a kernel and system services, so hundreds of megabytes; a container is a process, so a few.",
+          "Isolation: escaping a virtual machine means attacking the hypervisor, a small surface; escaping a container means a kernel vulnerability or a configuration mistake, a much larger surface.",
+          "Density: tens of virtual machines per host against hundreds or thousands of containers.",
+          "Portability: a machine image carries its kernel and runs anywhere the hypervisor does; a container depends on the host kernel version and architecture.",
+          "The conclusion that shapes modern infrastructure: virtual machines win on isolation, containers win on density, so production commonly puts containers inside virtual machines and lets each layer do the job it is good at."
+        ]
+      }
+    ]
+  },
+  "662": {
+    "sections": [
+      {
+        "title": "🔍 A container is not a small virtual machine",
+        "paras": [
+          "The mental model matters because it predicts the failure modes. A container has no kernel, no virtual hardware and no boot sequence. It is an ordinary process on the host that has been given a private view of the system and a budget for resources.",
+          "Two kernel features do the work. Namespaces limit what a process can see, and control groups limit what it can consume. Neither provides a security boundary as strong as a hypervisor, which is the trade for being able to start in milliseconds."
+        ]
+      },
+      {
+        "title": "⚙️ Namespaces, limits, layers",
+        "paras": [
+          "Eight kinds of namespace cover process identifiers, networking, mounts, hostname, inter-process communication, user identifiers, resource views and clocks. Combining them produces something that behaves like a separate machine from the inside."
+        ],
+        "bullets": [
+          "Control groups cap processor time, memory, input and output bandwidth and process count, and exceeding the memory cap kills the container rather than the host.",
+          "Images are stacked read-only layers with one writable layer on top, so ten images sharing a base store that base once.",
+          "A container seeing the host's processor count is expected: the process table is namespaced and the processor topology is not.",
+          "Root inside a container is root on the host unless user namespaces remap it, which is the single most common container security mistake.",
+          "Containers cannot load kernel modules or run their own init system, because they have no kernel of their own.",
+          "Data must live in a volume, since the writable layer disappears with the container.",
+          "Termination sends a signal and then kills: a service that ignores the signal loses in-flight requests."
+        ]
+      },
+      {
+        "title": "🧮 What one run command actually does",
+        "paras": [
+          "Running an image with a memory limit and a port mapping: first the image is fetched if absent, verified by digest, and unpacked into the layer store.",
+          "Then the file system view is assembled by overlaying the read-only layers and adding a writable layer, so the container sees a complete root directory.",
+          "Then namespaces are created: a private process tree whose first process becomes identifier one, a private network stack with a virtual interface bridged to the host, a private mount table with the overlay as root, a private hostname.",
+          "Then limits are written: a memory maximum and a processor quota, after which everything in that group is constrained.",
+          "Finally the process is started and the port mapping installed as a translation rule on the host, so traffic to the published port reaches the container's port.",
+          "Almost none of that is expensive. There is no kernel boot and no hardware emulation, only mounts and configuration, which is why the whole sequence takes a hundred milliseconds rather than half a minute.",
+          "The contrast with a virtual machine is not one of degree. A machine boots firmware, initialises a kernel, probes hardware, starts an init system and then services; every stage has a fixed cost that no amount of tuning removes."
+        ]
+      }
+    ]
+  },
+  "663": {
+    "sections": [
+      {
+        "title": "🔍 How the operating system's job is being re-cut",
+        "paras": [
+          "For decades the operating system managed one machine: its kernel, its tools, its users. Now an application runs in a container, its data lives in object storage, its compute arrives on demand, and its configuration is declared rather than installed. Much of what an operating system used to do has moved up into an orchestrator or down into hardware.",
+          "The driver is scale. At ten thousand machines nobody logs in to install anything; the desired state is declared and the system converges towards it. The operating system becomes the smallest environment that can run a process, and everything above that is somebody else's problem."
+        ]
+      },
+      {
+        "title": "⚙️ Five directions that are already shipping",
+        "paras": [
+          "None of these is a prediction; each is in production at scale."
+        ],
+        "bullets": [
+          "Cloud native and immutable infrastructure: machines are replaced rather than repaired, so configuration becomes code and images become versioned artefacts.",
+          "Serverless: the user supplies a function and the platform schedules it, which makes cold start the dominant engineering problem.",
+          "Unikernels: application and the necessary kernel code compiled into one address space, giving millisecond starts and a tiny attack surface at the cost of debuggability.",
+          "WebAssembly outside the browser: a portable sandbox with microsecond instantiation, two orders of magnitude faster to start than a container.",
+          "Edge computing: small, remotely manageable, power-frugal systems that must keep working offline and update safely with rollback.",
+          "Heterogeneous scheduling: accelerators as first-class resources, where topology and memory capacity decide placement as much as processor count.",
+          "Security shifted left: minimal images, signed artefacts and runtime behaviour monitoring instead of an antivirus scanner on top."
+        ]
+      },
+      {
+        "title": "🧮 The cold start ladder",
+        "paras": [
+          "Running the same piece of code in different environments gives a ladder of startup delays that decides architecture more than any benchmark does.",
+          "A conventional virtual machine boots an operating system in ten to sixty seconds. A micro virtual machine with a stripped kernel and minimal device model starts in about a hundred and twenty-five milliseconds, which is what makes serverless isolation affordable.",
+          "A container takes fifty to five hundred milliseconds depending on image size. A pre-warmed pool answers in one to ten milliseconds at the cost of idle capacity. A WebAssembly module instantiates in one to ten milliseconds once compiled and cached.",
+          "Restoring a memory snapshot starts in one to five milliseconds, and an in-process function call is measured in microseconds but is no longer a platform.",
+          "The gaps explain the engineering: a hundred and twenty-five milliseconds and ten seconds are the difference between usable and useless to a user, which is why platforms invest in warm pools, snapshot restore and stripped-down virtual machines rather than in faster language runtimes.",
+          "The same ladder explains why teams run containers rather than pure functions: when traffic is steady, a resident container has no cold start at all, and when traffic is sparse, per-request billing wins. The choice is about traffic shape, not about which technology is newer."
+        ]
+      }
+    ]
+  }
+}
