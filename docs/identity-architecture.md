@@ -981,9 +981,25 @@ ctx.server.addServerLayer('lms-sso-auto', async (c, next) => { ... })
 
 | cookie | 含义 | 处理 |
 |---|---|---|
-| `sid` | Hydro 会话（已登录或游客） | 放行，不打扰 |
-| `sso_try` | 我们自己设的 120 秒短标记 | 放行，防重定向死循环 |
-| 都没有 | 没来过本站 | 设 `sso_try`，302 到 LMS |
+| `hydro_uid` | **确认已登录**（值就是 uid，由同步层种） | 放行 |
+| `sso_off` | 主动登出后的 10 分钟静默期 | 放行（否则一点登出就被登回来） |
+| `sso_try` | 120 秒短标记，刚从 SSO 回来 | 放行，防重定向死循环 |
+| 都没有 | 没登录过 | 设 `sso_try`，302 到 LMS |
+
+**这里踩过一个坑：不能用 `sid` 判断。**
+koa-session 会给**每个访客**都发 `sid`（游客也有）。最初按「有 sid 就放行」写，
+结果「访问过一次 155 但没登录」的浏览器永远不再跳 SSO ——
+表现就是 **「151 明明登录着，155 还是未登录」**（2026-10-30 实测复现）。
+所以改成用 `hydro_uid`：只有**真正登录成功过**才会被种上。
+
+`hydro_uid` 由另一个 handlerLayer（`lms-sso-sync`）维护：
+- `c.session.uid` 有值 → 种/更新 `hydro_uid`（1 年）
+- `c.session.uid` 为 0 但标记还在（session 过期）→ 清标记，下次访问重新走 SSO
+- 访问 `/logout` → 清标记 + 种 `sso_off`（10 分钟）
+
+**注意 `append` 要放在 `await next()` 之后**：
+session 中间件在 `next()` 内部跑，它会用 `set` 覆盖 `Set-Cookie`，
+在 `next()` 之前 append 的话 cookie 会被冲掉（实测：逻辑全对但 cookie 就是种不上）。
 
 跳过路径（`lms-oauth.autologin.skip`，默认 `/oauth/,/static/,/api/,/favicon,/_,/gen/`），
 另外只拦 `GET` + `Accept: text/html` —— 资源和 fetch 一律放行，避免把 JS 请求 302 成 HTML。

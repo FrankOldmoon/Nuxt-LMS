@@ -141,18 +141,26 @@ export async function apply(ctx: Context) {
         // serverLayer 阶段拿不到 Hydro 的 session（实测 c.session === undefined，
         // 连 c.HydroContext 都没有 —— 那些要等更内层的 userLayer 才建好）。
         // 所以只能看 cookie：
-        //   sid      Hydro 的会话 cookie，只要有它就说明这个人跟本站打过交道（已登录或游客）
-        //   sso_try  我们自己的短标记，120 秒内有效，用来防重定向死循环
+        //   hydro_uid  由下面的 sync 层在「确认已登录」时种的标记，值是 uid
+        //   sso_off    主动登出后的静默期，避免刚点登出就被自动登回去
+        //   sso_try    120 秒短标记，防重定向死循环
+        //
+        // 注意：**不能用 sid 判断**。koa-session 给每个访客都发 sid（游客也有），
+        // 早先按 sid 放行，结果「访问过一次 155 但没登录」的浏览器永远不再跳 SSO ——
+        // 表现就是「151 明明登录着，155 还是未登录」。
         const cookieHeader = String(c.request?.headers?.cookie || '')
         const readCookie = (name: string) => {
             const m = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`))
             return m ? m[1] : null
         }
 
-        // 已经有本站会话 → 不打扰（已登录的人当然放行；游客也放行，别把人锁在登录页外）
-        if (readCookie('sid')) return next()
+        // 刚主动登出 → 静默期内别打扰（否则 LMS 会把人立刻登回来，根本退不出去）
+        if (readCookie('sso_off')) return next()
 
-        // 刚从 SSO 回来但没拿到会话（用户取消、或者 LMS 那边报错）→ 放行这一次，别死循环
+        // 确认登录过 → 放行
+        if (readCookie('hydro_uid')) return next()
+
+        // 刚从 SSO 回来但还没拿到会话（用户取消、或 LMS 报错）→ 放行这一次，别死循环
         if (readCookie('sso_try')) return next()
 
         if (!truthy(await SystemModel.get('lms-oauth.autologin'))) return next()
@@ -166,5 +174,44 @@ export async function apply(ctx: Context) {
         c.status = 302
         c.set('Location', `/oauth/lms/login?redirect=${encodeURIComponent(c.path + (c.search || ''))}`)
         c.set('Cache-Control', 'no-store')
+    })
+
+    // ------------------------------------------------ 登录标记同步（handlerLayer）
+    //
+    // serverLayer 拿不到 session，但这里可以（在 userLayer 之后）。
+    // 职责：把「这个浏览器当前是否真的登录着」写成 hydro_uid cookie，
+    // 供上面那个 serverLayer 判断。
+    ctx.server.addHandlerLayer('lms-sso-sync', async (c: any, next: () => Promise<void>) => {
+        const cookieHeader = String(c.request?.headers?.cookie || '')
+        const readCookie = (name: string) => {
+            const m = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`))
+            return m ? m[1] : null
+        }
+
+        // 主动登出：清标记 + 静默 10 分钟
+        // （放在 next() 之后设置 —— session 中间件在 next() 内部跑，
+        //   它会用 set 覆盖 Set-Cookie，我们在它之后 append 才留得住）
+        const isLogout = c.path === '/logout'
+        await next()
+
+        if (isLogout) {
+            c.append('Set-Cookie', 'hydro_uid=; Path=/; Max-Age=0')
+            c.append('Set-Cookie', 'sso_off=1; Path=/; Max-Age=600; SameSite=Lax')
+            return
+        }
+
+        const isPage = c.method === 'GET' && String(c.request?.headers?.accept || '').includes('text/html')
+        if (!isPage) return
+
+        const uid = c.session?.uid
+        if (uid) {
+            // 已登录 → 确保标记存在（uid 变了也更新）
+            if (readCookie('hydro_uid') !== String(uid)) {
+                c.append('Set-Cookie', `hydro_uid=${uid}; Path=/; Max-Age=31536000; SameSite=Lax`)
+            }
+        } else if (readCookie('hydro_uid')) {
+            // 标记还在但 session 已无 uid（过期/被清）→ 清标记，下次访问重新走 SSO
+            c.append('Set-Cookie', 'hydro_uid=; Path=/; Max-Age=0')
+        }
     })
 }
