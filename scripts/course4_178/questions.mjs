@@ -7,7 +7,8 @@
  */
 const BASE = process.env.LMS || 'http://10.28.1.151'
 const USER = process.env.LMS_USER || 'admin'
-const PASS = process.env.LMS_PASS || 'REDACTED'
+if (!process.env.LMS_PASS) throw new Error('请设置 LMS_PASS 环境变量（LMS 管理员密码）')
+const PASS = process.env.LMS_PASS
 const COURSE = 4
 const CHAPTER = 178
 const DRY = process.argv.includes('--dry')
