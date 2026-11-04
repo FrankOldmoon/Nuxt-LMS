@@ -14,8 +14,9 @@
         </div>
         <div v-if="msg._reasoningExpanded" class="mt-1 text-xs text-gray-500 dark:text-gray-400 leading-relaxed" v-html="renderContent(msg.reasoning)" />
       </div>
-      <!-- 消息内容：流式期间用轻量纯文本渲染（避免每 delta 全量 markdown 解析重建富文本卡死），结束后富文本化 -->
-      <ueditorRender :json="msg.content" :markdown="!msg._streaming" />
+      <!-- 消息内容：用户消息按纯文本渲染（保留换行），assistant 才走富文本 -->
+      <p v-if="msg.role === 'user'" class="whitespace-pre-wrap break-words">{{ textOf(msg) }}</p>
+      <ueditorRender v-else :json="msg.content" :markdown="!msg._streaming" />
       <!-- 朗读按钮（仅 assistant 文本消息） -->
       <div v-if="canSpeak(msg)" class="flex justify-end mt-1">
         <button type="button" class="text-xs flex items-center gap-1 transition-colors"
@@ -34,4 +35,9 @@ defineProps<{ msg: ChatMessage; idx: number }>()
 
 const { t } = useI18n()
 const { renderContent, toggleReasoning, canSpeak, toggleSpeakMessage, speakingIdx } = useChatboxContext()
+
+/** 用户消息一律是字符串；兜底防止非字符串内容渲染成 [object Object] */
+function textOf(msg: ChatMessage) {
+  return typeof msg.content === 'string' ? msg.content : String(msg.content ?? '')
+}
 </script>
