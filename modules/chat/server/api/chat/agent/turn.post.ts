@@ -1,0 +1,174 @@
+/**
+ * Agent 单轮对话
+ * POST /api/chat/agent/turn
+ * body: { messages, model?, thinking? }
+ *
+ * 与 /api/aichat/chat 的区别：带 tools 调用模型，并在流末尾额外下发 tool_calls。
+ * 循环由前端编排（单轮无状态），这样 run_python 这类「只能在浏览器执行」的工具
+ * 才能在同一轮里被分发，不用在服务端挂起会话。
+ *
+ * 下发的 SSE 事件（自定义协议，不是 OpenAI 格式）：
+ *   {"type":"delta","text":"..."}
+ *   {"type":"reasoning","text":"..."}
+ *   {"type":"tool_calls","calls":[{id,name,args}]}
+ *   {"type":"error","message":"..."}
+ *   [DONE]
+ */
+import { TOOL_DEFS } from '../../../utils/tools'
+
+const AGENT_SYSTEM = `你是一个带「会话工作区」的 AI 助手。工作区是用户能在右侧看到的虚拟磁盘。
+
+规则：
+1. 读写文件一律用工具（list_files / read_file / write_file / delete_file），不要臆造文件内容。
+2. 需要产出文件（报告、代码、CSV、网页）时用 write_file 真正落盘，用户才能看到和下载；不要只在回复里贴一段代码就说"已保存"。
+3. 需要计算或验证时用 run_python：工作区文件已挂载在当前目录，可直接 open('data.csv')。
+4. 一次可以连续调用多个工具，拿到结果再继续；不要编造工具返回。
+5. 回答用中文，简洁；文件路径用相对路径（如 report.md、data/x.csv）。`
+
+const CHAT_WINDOW_MS = 60_000
+const CHAT_RATE_LIMIT_MAX = 80
+const userHits = new Map<number, number[]>()
+
+interface ToolCallAcc {
+  id: string
+  name: string
+  args: string
+}
+
+export default eventHandler(async (event) => {
+  const user = await requireAuth(event)
+
+  const now = Date.now()
+  const hits = (userHits.get(user.id) || []).filter((t) => t > now - CHAT_WINDOW_MS)
+  hits.push(now)
+  userHits.set(user.id, hits)
+  if (hits.length > CHAT_RATE_LIMIT_MAX) {
+    return cResp(null, '请求过于频繁，请稍后再试', false)
+  }
+
+  const body = await readBody(event)
+  const { messages, model, thinking } = body || {}
+
+  const aiConfig = getLmsConfigSync().ai || {}
+  const apiKey = aiConfig.llmApiKey
+  const apiUrl = aiConfig.llmApiUrl
+  if (!apiKey) return cResp(null, '服务器未配置 AI API Key（请在系统设置中配置）', false)
+  if (!apiUrl) return cResp(null, '服务器未配置 AI API URL（请在系统设置中配置）', false)
+  if (!Array.isArray(messages) || !messages.length) return cResp(null, 'messages 不能为空', false)
+
+  const safeModel = typeof model === 'string' && model.trim() && model.length <= 100 ? model.trim() : undefined
+  const defaultModel = safeModel || aiConfig.model || 'glm-4.5-air'
+
+  const MAX_MESSAGES = 60
+  const MAX_MESSAGE_LEN = 60000
+  const safeMessages = messages.slice(-MAX_MESSAGES).map((m: any) => {
+    if (m && typeof m === 'object') {
+      const c = typeof m.content === 'string' ? m.content.slice(0, MAX_MESSAGE_LEN) : m.content
+      return { ...m, content: c }
+    }
+    return m
+  })
+
+  const trimmed = apiUrl.replace(/\/$/, '')
+  const url = /\/chat\/completions$/.test(trimmed) ? trimmed : trimmed + '/chat/completions'
+
+  const requestBody: Record<string, any> = {
+    model: defaultModel,
+    messages: [{ role: 'system', content: AGENT_SYSTEM }, ...safeMessages],
+    tools: TOOL_DEFS,
+    tool_choice: 'auto',
+    stream: true,
+    stream_options: { include_usage: true },
+  }
+  if (thinking) requestBody.thinking = { type: 'enabled' }
+
+  const upstream = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify(requestBody),
+  })
+
+  if (!upstream.ok) {
+    const errText = await upstream.text().catch(() => '')
+    return cResp({ status: upstream.status, error: String(errText).slice(0, 300) }, `AI 接口请求失败: ${upstream.status}`, false)
+  }
+
+  setResponseHeader(event, 'Content-Type', 'text/event-stream')
+  setResponseHeader(event, 'Cache-Control', 'no-cache, no-transform')
+  setResponseHeader(event, 'Connection', 'keep-alive')
+  setResponseHeader(event, 'X-Accel-Buffering', 'no')
+
+  const reader = upstream.body!.getReader()
+  const decoder = new TextDecoder()
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      const enc = new TextEncoder()
+      const send = (obj: any) => controller.enqueue(enc.encode(`data: ${JSON.stringify(obj)}\n\n`))
+
+      // tool_calls 在流式里按 index 分片下发，需要按 index 累积 arguments
+      const calls: ToolCallAcc[] = []
+      let buffer = ''
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || ''
+
+          for (const line of lines) {
+            const t = line.trim()
+            if (!t.startsWith('data:')) continue
+            const data = t.slice(5).trim()
+            if (data === '[DONE]') continue
+
+            let json: any
+            try { json = JSON.parse(data) } catch { continue }
+
+            const delta = json.choices?.[0]?.delta
+            if (!delta) continue
+
+            if (delta.reasoning_content) send({ type: 'reasoning', text: String(delta.reasoning_content) })
+            if (delta.content) send({ type: 'delta', text: String(delta.content) })
+
+            if (Array.isArray(delta.tool_calls)) {
+              for (const tc of delta.tool_calls) {
+                const idx = Number(tc.index ?? calls.length)
+                if (!calls[idx]) calls[idx] = { id: '', name: '', args: '' }
+                const slot = calls[idx]!
+                if (tc.id) slot.id = String(tc.id)
+                if (tc.function?.name) slot.name += String(tc.function.name)
+                if (tc.function?.arguments) slot.args += String(tc.function.arguments)
+              }
+            }
+          }
+        }
+
+        if (calls.length) {
+          send({
+            type: 'tool_calls',
+            calls: calls
+              .filter((c) => c && c.name)
+              .map((c) => {
+                let args: any = {}
+                try { args = c.args ? JSON.parse(c.args) : {} } catch { args = { __raw: c.args } }
+                return { id: c.id || `call_${Math.random().toString(36).slice(2, 10)}`, name: c.name, args }
+              }),
+          })
+        }
+
+        controller.enqueue(enc.encode('data: [DONE]\n\n'))
+        controller.close()
+      } catch (err: any) {
+        try { send({ type: 'error', message: String(err?.message || err) }) } catch { /* noop */ }
+        controller.close()
+      } finally {
+        try { reader.releaseLock() } catch { /* noop */ }
+      }
+    },
+  })
+
+  return sendStream(event, stream)
+})

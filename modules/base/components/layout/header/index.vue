@@ -40,6 +40,9 @@
         </div>
       </UTooltip>
 
+      <!-- 头像左侧扩展插槽（业务模块注入入口，如 /chat） -->
+      <slot name="header-actions" />
+
       <UButton v-if="!isLoggedIn" :label="$t('auth.login')" color="neutral" variant="ghost" icon="i-lucide-log-in"
         @click="() => { showLoginModal = true }" />
 

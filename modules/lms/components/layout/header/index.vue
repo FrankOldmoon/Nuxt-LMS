@@ -21,9 +21,27 @@
       </UModal>
     </template>
 
+    <!-- 头像左侧：AI 对话工作台入口（/chat），chat 模块启用时才显示 -->
+    <template #header-actions>
+      <UTooltip v-if="isLoggedIn && chatEnabled" :text="$t('chat.entry')" :content="{ side: 'bottom' }">
+        <UButton to="/chat" icon="i-lucide-bot" color="neutral" variant="ghost" :aria-label="$t('chat.entry')" />
+      </UTooltip>
+    </template>
+
     <!-- 移动端垂直导航 -->
     <template #nav-mobile>
       <LayoutHeaderNav orientation="vertical" class="w-full" />
+      <!-- 桌面端的机器人入口在收起区域之外，移动端补一个 -->
+      <UButton
+        v-if="isLoggedIn && chatEnabled"
+        to="/chat"
+        icon="i-lucide-bot"
+        :label="$t('chat.entry')"
+        color="neutral"
+        variant="ghost"
+        block
+        class="mt-2"
+      />
     </template>
   </BaseHeader>
 </template>
@@ -32,4 +50,8 @@
 import BaseHeader from '../../../../base/components/layout/header/index.vue'
 
 const showSearchModal = ref(false)
+
+const { isLoggedIn } = useAuth()
+// chat 模块（NUXT_MODULE_CHAT != false）注册时 public 配置才有 moduleChat
+const chatEnabled = computed(() => !!useRuntimeConfig().public.moduleChat)
 </script>

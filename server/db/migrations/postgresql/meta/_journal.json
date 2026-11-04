@@ -50,6 +50,20 @@
       "when": 1792466710153,
       "tag": "0006_tense_red_ghost",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793763426865,
+      "tag": "0008_chat_workspace",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793765000000,
+      "tag": "0009_chat_workspace_files",
+      "breakpoints": true
     }
   ]
 }
