@@ -113,7 +113,12 @@
         />
       </div>
       <div class="flex-1 min-h-0">
-        <ChatRunPanel v-if="panelTab === 'run'" :content="panelContent" />
+        <ChatRunPanel
+          v-if="panelTab === 'run'"
+          ref="runPanelRef"
+          :content="panelContent"
+          :conversation-id="activeId || undefined"
+        />
         <ChatFileTree v-else ref="fileTreeRef" :conversation-id="activeId" />
       </div>
     </div>
@@ -528,6 +533,8 @@ function onChatEvent(event: string, ...args: any[]) {
       const id = await ensureConversation()
       await appendMessages(id, payload)
     })
+    // 回复结束：agent 这一轮可能用 write_file 写了文件，刷新右侧面板
+    void runPanelRef.value?.reloadFiles?.()
     return
   }
 
@@ -539,6 +546,7 @@ function onChatEvent(event: string, ...args: any[]) {
 // ===================== 右侧运行面板 =====================
 const panelOpen = ref(true)
 const panelContent = ref('')
+const runPanelRef = ref<any>(null)
 
 /** 取最近一条含代码块的 assistant 回复（流式期间不重算，避免每 delta 跑正则） */
 function refreshPanel() {
@@ -547,10 +555,13 @@ function refreshPanel() {
     const m = msgs[i]
     if (m.role === 'assistant' && typeof m.content === 'string' && m.content.includes('```')) {
       panelContent.value = m.content
+      void runPanelRef.value?.reloadFiles?.()
       return
     }
   }
   panelContent.value = ''
+  // 没有代码块也要刷：agent 可能只写了文件、正文里一个围栏都没有
+  void runPanelRef.value?.reloadFiles?.()
 }
 
 // 流式期间也更新右侧面板：按 600ms 节流，避免每个 delta 都跑正则
