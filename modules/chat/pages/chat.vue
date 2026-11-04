@@ -61,6 +61,20 @@
             {{ toolStatus }}
           </div>
 
+          <!-- 对话中引用的章节：只有引用，正文点开才加载 -->
+          <div v-if="chapterRefs.length" class="px-3 py-1.5 flex flex-wrap gap-1.5 shrink-0 border-t border-default">
+            <button
+              v-for="r in chapterRefs"
+              :key="r.id"
+              type="button"
+              class="flex items-center gap-1.5 rounded-md border border-default px-2 py-1 text-xs text-toned transition-colors hover:bg-elevated"
+              @click="openChapter(r)"
+            >
+              <UIcon name="i-lucide-book-open-text" class="size-3.5 text-primary shrink-0" />
+              <span class="truncate max-w-[220px]">{{ r.name }}</span>
+            </button>
+          </div>
+
           <AiChatboxInputBar
             :placeholder="inputPlaceholder"
             :enable-voice-input="true"
@@ -107,6 +121,40 @@
 
   <!-- 登录弹窗 -->
   <LazyAuthLoginModal v-if="loginOpen" v-model:open="loginOpen" />
+
+  <!-- 章节内容预览：正文不进模型上下文，在这里用渲染器展开 -->
+  <UModal v-model:open="chapterOpen" :ui="{ content: 'max-w-4xl' }">
+    <template #content>
+      <div class="flex flex-col max-h-[85vh]">
+        <div class="h-11 shrink-0 flex items-center gap-2 px-4 border-b border-default">
+          <UIcon name="i-lucide-book-open-text" class="size-4 text-primary shrink-0" />
+          <span class="text-sm font-medium truncate">{{ chapterData?.chapter?.title || '...' }}</span>
+          <span v-if="chapterData?.course?.title" class="text-xs text-dimmed truncate shrink-0">
+            · {{ chapterData.course.title }}
+          </span>
+          <UButton
+            class="ml-auto"
+            icon="i-lucide-x"
+            color="neutral"
+            variant="ghost"
+            size="sm"
+            @click="chapterOpen = false"
+          />
+        </div>
+        <div class="flex-1 min-h-0 overflow-auto px-5 py-4">
+          <div v-if="chapterLoading" class="flex items-center gap-2 py-8 justify-center text-sm text-muted">
+            <UIcon name="i-lucide-loader-2" class="size-4 animate-spin" />
+            {{ $t('chat.loading') }}
+          </div>
+          <UeditorRender
+            v-else-if="chapterData?.chapter?.content"
+            :json="chapterData.chapter.content"
+            :course-id="chapterData?.course?.id"
+          />
+        </div>
+      </div>
+    </template>
+  </UModal>
 
   <!-- 删除确认 -->
   <UModal v-model:open="deleteOpen" :title="$t('chat.deleteConfirm')">
@@ -213,9 +261,12 @@ async function selectConversation(c: Conversation) {
       role: r.role,
       content: r.content || '',
       reasoning: r.reasoning || undefined,
+      // 保留工具轨迹：里面可能有章节引用（ref），用于重建「引用的章节」入口
+      toolCalls: r.toolCalls || undefined,
       _reasoningExpanded: false,
       _streaming: false,
     })) as any[]
+    agent.trace.value = []
     refreshPanel()
   } catch (e: any) {
     toast.add({ title: t('chat.loadFailed'), description: e?.message, color: 'error' })
@@ -329,6 +380,65 @@ const agent = useAgentChat({
 function switchToFiles() {
   // ChatFileTree 挂载时 watch(conversationId, immediate) 会自动拉一次列表
   panelTab.value = 'files'
+}
+
+// ===================== 章节引用 =====================
+// show_chapter 工具只回一个引用（id + 名称 + 大纲），正文不进模型上下文；
+// 这里把引用收集成入口，用户点开时再拉 /api/chapters/show 用 UeditorRender 渲染。
+const chapterOpen = ref(false)
+const chapterLoading = ref(false)
+const chapterData = ref<any>(null)
+
+function parseChapterRef(raw: unknown) {
+  if (typeof raw !== 'string' || !raw.startsWith('{')) return null
+  try {
+    const o = JSON.parse(raw)
+    return o?.ref === 'chapter' && o.id ? o : null
+  } catch {
+    return null
+  }
+}
+
+const chapterRefs = computed(() => {
+  const map = new Map<number, any>()
+  // 历史会话：从落库的工具轨迹里还原
+  for (const m of chat.messages.value as any[]) {
+    if (!m?.toolCalls) continue
+    try {
+      const arr = JSON.parse(m.toolCalls)
+      if (Array.isArray(arr)) {
+        for (const t of arr) {
+          const ref = parseChapterRef(t?.result)
+          if (ref) map.set(ref.id, ref)
+        }
+      }
+    } catch { /* 忽略坏数据 */ }
+  }
+  // 当前这轮（刚落库前先实时显示）
+  for (const t of agent.trace.value) {
+    const ref = parseChapterRef(t?.result)
+    if (ref) map.set(ref.id, ref)
+  }
+  return [...map.values()]
+})
+
+async function openChapter(ref: any) {
+  chapterOpen.value = true
+  chapterLoading.value = true
+  chapterData.value = null
+  try {
+    const resp: any = await cRequest(`/api/chapters/show?id=${ref.id}`)
+    chapterData.value = resp
+  } catch (e: any) {
+    chapterOpen.value = false
+    toast.add({
+      title: t('chat.chapterDenied'),
+      description: e?.data?.message || e?.message,
+      color: 'error',
+    })
+  } finally {
+    chapterLoading.value = false
+  }
 }
 
 // ===================== 聊天（复用 useChatbox）=====================

@@ -23,7 +23,10 @@ const AGENT_SYSTEM = `你是一个带「会话工作区」的 AI 助手。工作
 2. 需要产出文件（报告、代码、CSV、网页）时用 write_file 真正落盘，用户才能看到和下载；不要只在回复里贴一段代码就说"已保存"。
 3. 需要计算或验证时用 run_python：工作区文件已挂载在当前目录，可直接 open('data.csv')。
 4. 一次可以连续调用多个工具，拿到结果再继续；不要编造工具返回。
-5. 回答用中文，简洁；文件路径用相对路径（如 report.md、data/x.csv）。`
+5. 回答用中文，简洁；文件路径用相对路径（如 report.md、data/x.csv）。
+6. 用户想看某节课的内容时，用 show_chapter 把章节展示出来（正文由界面渲染，你只会收到大纲）；
+   不要用文字复述整章内容，也不要凭大纲编造细节 —— 需要具体内容时用 search_chapter 搜关键词。
+7. 查学习数据一律用 lms_query，不要猜测分数或进度。`
 
 const CHAT_WINDOW_MS = 60_000
 const CHAT_RATE_LIMIT_MAX = 80

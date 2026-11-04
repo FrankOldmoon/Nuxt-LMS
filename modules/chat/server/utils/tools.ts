@@ -106,6 +106,35 @@ export const TOOL_DEFS = [
   {
     type: 'function',
     function: {
+      name: 'show_chapter',
+      description: '在界面中展示指定章节（正文由前端渲染给用户看，你只会拿到大纲）。用户说「给我看第几章」「这章讲了什么」「打开这一节」时用它。拿到返回后请只讲要点，不要把正文复述一遍。',
+      parameters: {
+        type: 'object',
+        properties: {
+          chapter_id: { type: 'integer', description: '章节 ID（用 lms_query 的 course_chapters 查到）' },
+        },
+        required: ['chapter_id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'search_chapter',
+      description: '在章节正文中搜索关键词，返回命中的段落。适合回答「这章有没有讲 X」「哪里提到 Y」这类需要正文细节的问题。',
+      parameters: {
+        type: 'object',
+        properties: {
+          chapter_id: { type: 'integer', description: '章节 ID' },
+          keyword: { type: 'string', description: '要搜索的关键词或短语' },
+        },
+        required: ['chapter_id', 'keyword'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'run_python',
       description: '在浏览器沙箱里执行 Python 代码并返回 stdout/stderr。工作区文件已挂载到 ./（当前目录），可直接 open() 读取；运行后新建或修改的文本文件会自动同步回工作区。可用 numpy / pandas / matplotlib（首次 import 会自动加载）。适合计算、数据处理、验证算法。',
       parameters: {
@@ -168,6 +197,87 @@ async function httpTool(args: any) {
   } finally {
     clearTimeout(timer)
   }
+}
+
+// ===================== 章节内容（引用模式）=====================
+/**
+ * 章节正文不进上下文 —— 只回一个引用 + 大纲，正文由前端用 UeditorRender 渲染。
+ * 这样模型知道这章讲什么（大纲几十 token），用户能直接在聊天里读全文。
+ */
+function extractOutline(content: any, limit = 24): string[] {
+  const out: string[] = []
+  const walk = (n: any) => {
+    if (!n || typeof n !== 'object' || out.length >= limit) return
+    if (Array.isArray(n)) {
+      for (const x of n) walk(x)
+      return
+    }
+    if (n.type === 'heading') {
+      const text = (Array.isArray(n.content) ? n.content : [])
+        .filter((c: any) => c?.type === 'text' && typeof c.text === 'string')
+        .map((c: any) => c.text)
+        .join('')
+        .trim()
+      if (text) out.push(text.slice(0, 80))
+      return
+    }
+    if (Array.isArray(n.content)) n.content.forEach(walk)
+  }
+  walk(content)
+  return out
+}
+
+/** 把 tiptap doc 压成纯文本（用于关键词搜索），max 限制防止超大章节撑爆内存 */
+function flattenContent(content: any, max = 60000): string {
+  const parts: string[] = []
+  let total = 0
+  const walk = (n: any) => {
+    if (!n || typeof n !== 'object' || total > max) return
+    if (Array.isArray(n)) {
+      for (const x of n) walk(x)
+      return
+    }
+    if (n.type === 'text' && typeof n.text === 'string') {
+      parts.push(n.text)
+      total += n.text.length
+      return
+    }
+    if (n.type === 'codeBlock') {
+      const code = (Array.isArray(n.content) ? n.content : []).map((c: any) => c?.text || '').join('')
+      parts.push(`\n${code}\n`)
+      total += code.length
+      return
+    }
+    if (n.type === 'heading' || n.type === 'paragraph' || n.type === 'listItem' || n.type === 'blockquote') {
+      parts.push('\n')
+    }
+    if (Array.isArray(n.content)) n.content.forEach(walk)
+  }
+  walk(content)
+  return parts.join('').replace(/\n{2,}/g, '\n').trim()
+}
+
+/**
+ * 取章节（只校验存在性）。
+ *
+ * 可见性不在这里判断 —— 正文由前端请求 /api/chapters/show 渲染，
+ * 那里有完整的 gating（isOpen + 班级开放 + 教师/管理员），重复实现一份
+ * 必然会和它走偏（比如「班级开放但章节本身未开放」这种情况）。
+ * 工具只回大纲，不含正文。
+ */
+async function loadChapterForUser(_userId: number, chapterId: number) {
+  const [ch] = await db
+    .select({
+      id: schema.chapters.id,
+      name: schema.chapters.name,
+      courseId: schema.chapters.courseId,
+      content: schema.chapters.content,
+      isOpen: schema.chapters.isOpen,
+    })
+    .from(schema.chapters)
+    .where(eq(schema.chapters.id, chapterId))
+    .limit(1)
+  return ch || null
 }
 
 // ===================== LMS 查询 =====================
@@ -289,6 +399,38 @@ export async function executeServerTool(name: string, args: any, ctx: ToolContex
 
       case 'lms_query':
         return await lmsQuery(ctx.userId, args)
+
+      case 'show_chapter': {
+        const id = Number(args?.chapter_id) || 0
+        const ch = await loadChapterForUser(ctx.userId, id)
+        if (!ch) return '错误：章节不存在，或你没有该课程的访问权限'
+        const raw = JSON.stringify(ch.content || {})
+        return JSON.stringify({
+          ref: 'chapter',
+          id: ch.id,
+          name: ch.name,
+          courseId: ch.courseId,
+          chars: raw.length,
+          outline: extractOutline(ch.content),
+          note: '正文已由界面展示给用户，请只概述要点，不要复述全文。',
+        })
+      }
+
+      case 'search_chapter': {
+        const id = Number(args?.chapter_id) || 0
+        const keyword = String(args?.keyword || '').trim()
+        if (!keyword) return '错误：keyword 不能为空'
+        const ch = await loadChapterForUser(ctx.userId, id)
+        if (!ch) return '错误：章节不存在，或你没有该课程的访问权限'
+        const text = flattenContent(ch.content)
+        const hits = text
+          .split('\n')
+          .filter((line) => line.trim() && line.includes(keyword))
+          .slice(0, 5)
+        if (!hits.length) return `在《${ch.name}》中没有找到「${keyword}」`
+        return `《${ch.name}》中与「${keyword}」相关的段落：\n\n`
+          + hits.map((h, i) => `${i + 1}. ${h.trim().slice(0, 400)}`).join('\n\n')
+      }
 
       default:
         return `错误：未知工具 ${name}`

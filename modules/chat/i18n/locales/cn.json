@@ -45,6 +45,8 @@
     "revert": "还原为 AI 原文",
     "fullscreen": "全屏预览",
     "exitFullscreen": "退出全屏",
-    "runAll": "全部运行（按顺序拼接同语言代码块）"
+    "runAll": "全部运行（按顺序拼接同语言代码块）",
+    "chapterDenied": "无法打开该章节",
+    "loading": "加载中…"
   }
 }

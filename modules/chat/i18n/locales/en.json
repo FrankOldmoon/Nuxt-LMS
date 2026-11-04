@@ -45,6 +45,8 @@
     "revert": "Revert to original",
     "fullscreen": "Fullscreen",
     "exitFullscreen": "Exit fullscreen",
-    "runAll": "Run all (concatenate same-language blocks)"
+    "runAll": "Run all (concatenate same-language blocks)",
+    "chapterDenied": "This chapter cannot be opened",
+    "loading": "Loading…"
   }
 }
