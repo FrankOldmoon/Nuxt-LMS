@@ -61,17 +61,28 @@
             {{ toolStatus }}
           </div>
 
-          <!-- 对话中引用的章节：只有引用，正文点开才加载 -->
-          <div v-if="chapterRefs.length" class="px-3 py-1.5 flex flex-wrap gap-1.5 shrink-0 border-t border-default">
+          <!-- 对话里引用的学习材料：只有引用，正文/题干点开才加载 -->
+          <div v-if="allRefs.length" class="px-3 py-1.5 flex flex-wrap gap-1.5 shrink-0 border-t border-default">
             <button
               v-for="r in chapterRefs"
-              :key="r.id"
+              :key="`c${r.id}`"
               type="button"
               class="flex items-center gap-1.5 rounded-md border border-default px-2 py-1 text-xs text-toned transition-colors hover:bg-elevated"
               @click="openChapter(r)"
             >
               <UIcon name="i-lucide-book-open-text" class="size-3.5 text-primary shrink-0" />
-              <span class="truncate max-w-[220px]">{{ r.name }}</span>
+              <span class="truncate max-w-[200px]">{{ r.name }}</span>
+            </button>
+            <button
+              v-for="r in questionRefs"
+              :key="`q${r.courseId}_${r.cid}`"
+              type="button"
+              class="flex items-center gap-1.5 rounded-md border border-default px-2 py-1 text-xs text-toned transition-colors hover:bg-elevated"
+              @click="openQuestion(r)"
+            >
+              <UIcon name="i-lucide-circle-help" class="size-3.5 text-warning shrink-0" />
+              <span class="text-dimmed shrink-0">#{{ r.cid }}</span>
+              <span class="truncate max-w-[180px]">{{ r.name }}</span>
             </button>
           </div>
 
@@ -155,6 +166,36 @@
             v-else-if="chapterData?.chapter?.content"
             :json="chapterData.chapter.content"
             :course-id="chapterData?.course?.id"
+          />
+        </div>
+      </div>
+    </template>
+  </UModal>
+
+  <!-- 单题预览：题干和选项同样不进模型上下文 -->
+  <UModal v-model:open="questionOpen" :ui="{ content: 'max-w-3xl' }">
+    <template #content>
+      <div class="flex flex-col max-h-[85vh]">
+        <div class="h-11 shrink-0 flex items-center gap-2 px-4 border-b border-default">
+          <UIcon name="i-lucide-circle-help" class="size-4 text-warning shrink-0" />
+          <span class="text-sm font-medium truncate">{{ questionRef?.name || '题目' }}</span>
+          <span v-if="questionRef?.courseName" class="text-xs text-dimmed truncate shrink-0">
+            · {{ questionRef.courseName }}
+          </span>
+          <UButton
+            class="ml-auto"
+            icon="i-lucide-x"
+            color="neutral"
+            variant="ghost"
+            size="sm"
+            @click="questionOpen = false"
+          />
+        </div>
+        <div class="flex-1 min-h-0 overflow-auto p-4 bg-elevated/30">
+          <UeditorRender
+            v-if="questionDoc"
+            :json="questionDoc"
+            :course-id="questionRef?.courseId"
           />
         </div>
       </div>
@@ -387,45 +428,51 @@ function switchToFiles() {
   panelTab.value = 'files'
 }
 
-// ===================== 章节引用 =====================
-// show_chapter 工具只回一个引用（id + 名称 + 大纲），正文不进模型上下文；
-// 这里把引用收集成入口，用户点开时再拉 /api/chapters/show 用 UeditorRender 渲染。
+// ===================== 学习材料引用（章节 / 题目）=====================
+// 工具只回引用，正文与题干由前端渲染；这里把引用收集成入口，点开才去取内容。
 const chapterOpen = ref(false)
 const chapterLoading = ref(false)
 const chapterData = ref<any>(null)
 
-function parseChapterRef(raw: unknown) {
-  if (typeof raw !== 'string' || !raw.startsWith('{')) return null
+const questionOpen = ref(false)
+const questionRef = ref<any>(null)
+
+/** 工具结果可能是单个引用，也可能是 { refs: [...] } 批量结果 */
+function extractRefs(raw: unknown): any[] {
+  if (typeof raw !== 'string' || !raw.startsWith('{')) return []
   try {
     const o = JSON.parse(raw)
-    return o?.ref === 'chapter' && o.id ? o : null
-  } catch {
-    return null
-  }
+    if (Array.isArray(o?.refs)) {
+      return o.refs.filter((r: any) => r && r.ref && (r.id || r.cid))
+    }
+    if (o?.ref && (o.id || o.cid)) return [o]
+  } catch { /* 不是 JSON，忽略 */ }
+  return []
 }
 
-const chapterRefs = computed(() => {
-  const map = new Map<number, any>()
+const allRefs = computed(() => {
+  const map = new Map<string, any>()
+  const push = (list: any[]) => {
+    for (const r of list) {
+      const key = r.ref === 'chapter' ? `c:${r.id}` : `q:${r.courseId}:${r.cid}`
+      map.set(key, r)
+    }
+  }
   // 历史会话：从落库的工具轨迹里还原
   for (const m of chat.messages.value as any[]) {
     if (!m?.toolCalls) continue
     try {
       const arr = JSON.parse(m.toolCalls)
-      if (Array.isArray(arr)) {
-        for (const t of arr) {
-          const ref = parseChapterRef(t?.result)
-          if (ref) map.set(ref.id, ref)
-        }
-      }
+      if (Array.isArray(arr)) for (const t of arr) push(extractRefs(t?.result))
     } catch { /* 忽略坏数据 */ }
   }
   // 当前这轮（刚落库前先实时显示）
-  for (const t of agent.trace.value) {
-    const ref = parseChapterRef(t?.result)
-    if (ref) map.set(ref.id, ref)
-  }
+  for (const t of agent.trace.value) push(extractRefs(t?.result))
   return [...map.values()]
 })
+
+const chapterRefs = computed(() => allRefs.value.filter((r) => r.ref === 'chapter'))
+const questionRefs = computed(() => allRefs.value.filter((r) => r.ref === 'question'))
 
 async function openChapter(ref: any) {
   chapterOpen.value = true
@@ -445,6 +492,23 @@ async function openChapter(ref: any) {
     chapterLoading.value = false
   }
 }
+
+function openQuestion(ref: any) {
+  questionRef.value = ref
+  questionOpen.value = true
+}
+
+/** 单题 tiptap doc：交给 ueditor 渲染器，复用章节里的题目组件（含作答与判分） */
+const questionDoc = computed(() => {
+  const r = questionRef.value
+  if (!r) return null
+  return {
+    type: 'doc',
+    content: [
+      { type: 'vue', attrs: { type: 'question', content: String(r.cid) } },
+    ],
+  }
+})
 
 // ===================== 聊天（复用 useChatbox）=====================
 const chatProps = reactive<any>({

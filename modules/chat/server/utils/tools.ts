@@ -148,6 +148,25 @@ export const TOOL_DEFS = [
   {
     type: 'function',
     function: {
+      name: 'search_questions',
+      description: '按关键词在「我参与的课程」的题库里找练习题，返回题目引用（题干和选项由界面渲染给用户）。用户说「有没有练 X 的题」「找几道 Y 的题做做」时用它。',
+      parameters: {
+        type: 'object',
+        properties: {
+          keyword: { type: 'string', description: '知识点关键词' },
+          course_id: { type: 'integer', description: '限定在某门课程里搜（可选）' },
+          type: {
+            type: 'string',
+            description: '题型过滤（可选）：single/multiple/judge/fill/sort/match/classify',
+          },
+        },
+        required: ['keyword'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'chapter_materials',
       description: '查某个章节配套的练习题、作业与测验清单（只有名称和分值，不含答案）。告诉用户「学完这章可以练什么」时用它。',
       parameters: {
@@ -433,6 +452,89 @@ async function searchLearning(userId: number, args: any): Promise<string> {
   })
 }
 
+/** 题干纯文本（content 可能是字符串、也可能是 tiptap doc；options 里也有文本） */
+function questionText(q: any): string {
+  const parts: string[] = [String(q.name || '')]
+  if (typeof q.content === 'string') parts.push(q.content)
+  else if (q.content) parts.push(flattenContent(q.content, 4000))
+  if (q.options) {
+    try { parts.push(JSON.stringify(q.options)) } catch { /* 忽略 */ }
+  }
+  if (q.tags) {
+    try { parts.push(JSON.stringify(q.tags)) } catch { /* 忽略 */ }
+  }
+  return parts.join(' ')
+}
+
+/** 按关键词搜题目（只返回引用，题干与选项由前端渲染 —— 答案不会进上下文） */
+async function searchQuestions(userId: number, args: any): Promise<string> {
+  const keyword = String(args?.keyword || '').trim()
+  if (!keyword) return '错误：keyword 不能为空'
+  const courseId = Number(args?.course_id) || 0
+  const typeFilter = String(args?.type || '').trim()
+
+  const mine = await db
+    .select({ courseId: schema.userCourses.courseId })
+    .from(schema.userCourses)
+    .where(eq(schema.userCourses.userId, userId))
+  const courseIds = mine.map((r) => r.courseId).filter((id) => !courseId || id === courseId)
+  if (!courseIds.length) return '你还没有参与任何课程，暂时搜不到题目。'
+
+  const rows = await db
+    .select({
+      courseId: schema.questions.courseId,
+      cid: schema.questions.cid,
+      name: schema.questions.name,
+      type: schema.questions.type,
+      point: schema.questions.point,
+      difficulty: schema.questions.difficulty,
+      tags: schema.questions.tags,
+      content: schema.questions.content,
+      options: schema.questions.options,
+    })
+    .from(schema.questions)
+    .where(inArray(schema.questions.courseId, courseIds))
+
+  const kw = keyword.toLowerCase()
+  const hits: { q: any; score: number }[] = []
+  for (const q of rows) {
+    if (typeFilter && q.type !== typeFilter) continue
+    const nameHit = String(q.name || '').toLowerCase().includes(kw)
+    const tagHit = JSON.stringify(q.tags ?? []).toLowerCase().includes(kw)
+    const text = questionText(q).toLowerCase()
+    const bodyHit = text.includes(kw)
+    if (!nameHit && !tagHit && !bodyHit) continue
+    hits.push({ q, score: (nameHit ? 3 : 0) + (tagHit ? 2 : 0) + (bodyHit ? 1 : 0) })
+  }
+
+  if (!hits.length) return `题库里没有找到和「${keyword}」相关的题目。`
+
+  hits.sort((a, b) => b.score - a.score)
+  const top = hits.slice(0, 8)
+
+  const courseRows = await db
+    .select({ id: schema.courses.id, name: schema.courses.name })
+    .from(schema.courses)
+    .where(inArray(schema.courses.id, [...new Set(top.map((h) => h.q.courseId))]))
+  const courseName = new Map(courseRows.map((c) => [c.id, c.name]))
+
+  return JSON.stringify({
+    keyword,
+    total: hits.length,
+    refs: top.map((h) => ({
+      ref: 'question',
+      courseId: h.q.courseId,
+      courseName: courseName.get(h.q.courseId) || '',
+      cid: h.q.cid,
+      name: h.q.name,
+      type: h.q.type,
+      point: h.q.point,
+      difficulty: h.q.difficulty,
+    })),
+    note: '题干与选项已由界面渲染给用户，你没有题目内容。请引导用户自己作答，不要猜测题意或给答案。',
+  })
+}
+
 /** 章节配套的练习题 / 作业 / 测验清单（只给名称与分值，绝不给答案） */
 async function chapterMaterials(_userId: number, args: any): Promise<string> {
   const id = Number(args?.chapter_id) || 0
@@ -561,6 +663,9 @@ export async function executeServerTool(name: string, args: any, ctx: ToolContex
 
       case 'search_learning':
         return await searchLearning(ctx.userId, args)
+
+      case 'search_questions':
+        return await searchQuestions(ctx.userId, args)
 
       case 'chapter_materials':
         return await chapterMaterials(ctx.userId, args)
