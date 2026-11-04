@@ -10,7 +10,7 @@
  *   useChatbox({ customSend: agent.customSend, ... })
  */
 import { getPyodide } from '../../base/components/ide/runners/pyodide'
-import { buildXlsx, buildDocx, bytesToBase64 } from './useOfficeGen'
+import { buildXlsx, buildDocx, buildPptx, bytesToBase64 } from './useOfficeGen'
 
 export interface AgentToolCall {
   id: string
@@ -208,7 +208,9 @@ export function useAgentChat(opts: AgentOptions) {
   async function runOfficeGen(call: AgentToolCall, conversationId: number): Promise<string> {
     const args: any = call.args || {}
     const isXlsx = call.name === 'make_xlsx'
-    const path = String(args.path || (isXlsx ? 'table.xlsx' : 'document.docx'))
+    const isPptx = call.name === 'make_pptx'
+    const defaultName = isXlsx ? 'table.xlsx' : (isPptx ? 'slides.pptx' : 'document.docx')
+    const path = String(args.path || defaultName)
 
     let bytes: Uint8Array
     let detail = ''
@@ -219,6 +221,11 @@ export function useAgentChat(opts: AgentOptions) {
       bytes = await buildXlsx(sheets)
       const rows = sheets.reduce((n: number, s: any) => n + (Array.isArray(s?.rows) ? s.rows.length : 0), 0)
       detail = `${sheets.length} 个工作表，${rows} 行数据`
+    } else if (isPptx) {
+      const slides = Array.isArray(args.slides) ? args.slides : []
+      if (!slides.length) return '错误：slides 不能为空'
+      bytes = await buildPptx(String(args.title || ''), String(args.subtitle || ''), slides)
+      detail = `${slides.length} 页内容`
     } else {
       const blocks = Array.isArray(args.blocks) ? args.blocks : []
       if (!blocks.length) return '错误：blocks 不能为空'
@@ -242,7 +249,7 @@ export function useAgentChat(opts: AgentOptions) {
     try {
       if (call.name === 'run_python') {
         result = await runPython(String(call.args?.code || ''), conversationId)
-      } else if (call.name === 'make_xlsx' || call.name === 'make_docx') {
+      } else if (call.name === 'make_xlsx' || call.name === 'make_docx' || call.name === 'make_pptx') {
         result = await runOfficeGen(call, conversationId)
       } else {
         const r = await cRequest<{ result: string }>('/api/chat/workspace/tool', {

@@ -248,6 +248,42 @@ export const TOOL_DEFS = [
   {
     type: 'function',
     function: {
+      name: 'make_pptx',
+      description: '生成 PowerPoint 演示文稿（.pptx）到工作区。用户要「做个 PPT / 课件 / 汇报材料」时用它。每页一个标题 + 要点列表，可选表格与演讲者备注。',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', description: '文件名，须带 .pptx，如 课件.pptx' },
+          title: { type: 'string', description: '封面主标题' },
+          subtitle: { type: 'string', description: '封面副标题（可选）' },
+          slides: {
+            type: 'array',
+            description: '内容页，按顺序',
+            items: {
+              type: 'object',
+              properties: {
+                title: { type: 'string', description: '本页标题' },
+                bullets: { type: 'array', items: { type: 'string' }, description: '要点，每条一句话，尽量不超过 6 条' },
+                notes: { type: 'string', description: '演讲者备注（可选）' },
+                table: {
+                  type: 'object',
+                  description: '本页表格（可选）',
+                  properties: {
+                    headers: { type: 'array', items: { type: 'string' } },
+                    rows: { type: 'array', items: { type: 'array', items: {} } },
+                  },
+                },
+              },
+            },
+          },
+        },
+        required: ['path', 'slides'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'show_chapter',
       description: '在界面中展示指定章节（正文由前端渲染给用户看，你只会拿到大纲）。用户说「给我看第几章」「这章讲了什么」「打开这一节」时用它。拿到返回后请只讲要点，不要把正文复述一遍。',
       parameters: {

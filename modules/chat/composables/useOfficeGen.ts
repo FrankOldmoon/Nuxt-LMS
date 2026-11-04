@@ -153,3 +153,93 @@ export async function buildDocx(title: string, blocks: DocxBlock[]): Promise<Uin
   const blob: Blob = await Packer.toBlob(doc)
   return new Uint8Array(await blob.arrayBuffer())
 }
+
+// ===================== PowerPoint =====================
+export interface PptxSlide {
+  title?: string
+  bullets?: string[]
+  /** 演讲者备注 */
+  notes?: string
+  table?: { headers?: string[]; rows: (string | number)[][] }
+}
+
+const FONT_FACE = 'Microsoft YaHei'
+const INK = '1E293B'
+const MUTED = '64748B'
+const ACCENT = '2563EB'
+
+export async function buildPptx(
+  title: string,
+  subtitle: string,
+  slides: PptxSlide[],
+): Promise<Uint8Array> {
+  const mod: any = await import('pptxgenjs')
+  const PptxGenJS = mod.default || mod
+  const pptx = new PptxGenJS()
+  pptx.layout = 'LAYOUT_16x9'
+
+  // 封面：标题 + 副标题 + 一条强调色短线
+  if (title) {
+    const s = pptx.addSlide()
+    s.background = { color: 'F8FAFC' }
+    s.addText(title, {
+      x: 0.8, y: 2.1, w: 8.4, h: 1.4,
+      fontSize: 34, bold: true, color: INK, align: 'left', fontFace: FONT_FACE,
+    })
+    s.addShape(pptx.ShapeType.rect, { x: 0.85, y: 1.92, w: 0.9, h: 0.07, fill: { color: ACCENT } })
+    if (subtitle) {
+      s.addText(subtitle, {
+        x: 0.8, y: 3.5, w: 8.4, h: 0.8,
+        fontSize: 16, color: MUTED, fontFace: FONT_FACE,
+      })
+    }
+  }
+
+  for (const sl of slides || []) {
+    const s = pptx.addSlide()
+    s.background = { color: 'FFFFFF' }
+
+    s.addText(sl.title || '', {
+      x: 0.7, y: 0.35, w: 8.6, h: 0.7,
+      fontSize: 24, bold: true, color: INK, fontFace: FONT_FACE,
+    })
+    s.addShape(pptx.ShapeType.rect, { x: 0.72, y: 1.06, w: 1.2, h: 0.05, fill: { color: ACCENT } })
+
+    if (sl.bullets?.length) {
+      s.addText(
+        sl.bullets.map((t) => ({ text: String(t), options: { bullet: true, breakLine: true } })),
+        {
+          x: 0.95, y: 1.45, w: 8.1, h: 4.2,
+          fontSize: 18, color: '334155', fontFace: FONT_FACE,
+          lineSpacingMultiple: 1.4, valign: 'top',
+        },
+      )
+    }
+
+    if (sl.table?.rows?.length) {
+      const rows: any[] = []
+      if (sl.table.headers?.length) {
+        rows.push(sl.table.headers.map((h) => ({
+          text: String(h),
+          options: { bold: true, fill: { color: 'EAF2FF' } },
+        })))
+      }
+      for (const r of sl.table.rows) {
+        rows.push((Array.isArray(r) ? r : [r]).map((c) => ({ text: String(c ?? '') })))
+      }
+      s.addTable(rows, {
+        x: 0.95, y: sl.bullets?.length ? 4.0 : 1.6, w: 8.1,
+        border: { type: 'solid', color: 'D0D7E2', pt: 1 },
+        fontSize: 14, fontFace: FONT_FACE, valign: 'middle',
+      })
+    }
+
+    if (sl.notes) s.addNotes(String(sl.notes))
+  }
+
+  // 一页都没有时就给张空白页，避免生成非法文件
+  if (!pptx._slides?.length) pptx.addSlide()
+
+  const blob: Blob = await pptx.write({ outputType: 'blob' })
+  return new Uint8Array(await blob.arrayBuffer())
+}
