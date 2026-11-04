@@ -10,6 +10,13 @@
         </div>
         <USwitch v-model="config.ai.enabled" />
       </div>
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="text-xs">{{ $t('lmsConfig.aiChatEnabled') }}</span>
+          <p class="text-[10px] text-muted">{{ $t('lmsConfig.aiChatEnabledHint') }}</p>
+        </div>
+        <USwitch v-model="config.ai.chatEnabled" />
+      </div>
     </div>
     <div class="grid grid-cols-2 gap-2">
       <UFormField :label="$t('lmsConfig.aiMode')" size="xs">

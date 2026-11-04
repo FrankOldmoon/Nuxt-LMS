@@ -637,6 +637,8 @@
     "aiHint": "全局默认 AI 助手配置，课程级配置可覆盖以下设置。",
     "aiEnabled": "启用 AI 助手",
     "aiEnabledHint": "关闭后所有章节隐藏 AI 聊天框",
+    "aiChatEnabled": "显示 AI 对话工作台",
+    "aiChatEnabledHint": "关闭后隐藏顶栏机器人图标，/chat 页面及其接口均不可访问",
     "aiMode": "模式",
     "aiModeLocal": "本地（浏览器 WebLLM）",
     "aiModeApi": "服务器 API",

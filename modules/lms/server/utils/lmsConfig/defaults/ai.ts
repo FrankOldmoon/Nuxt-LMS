@@ -5,6 +5,8 @@
  */
 export const aiDefaults = {
   enabled: true,
+  /** /chat 对话工作台：关闭后 header 机器人入口隐藏，/chat 页面与 /api/chat/** 一律 404 */
+  chatEnabled: true,
   mode: 'api',
   model: '',
   thinking: false,

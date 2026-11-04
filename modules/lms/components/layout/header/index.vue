@@ -52,6 +52,12 @@ import BaseHeader from '../../../../base/components/layout/header/index.vue'
 const showSearchModal = ref(false)
 
 const { isLoggedIn } = useAuth()
-// chat 模块（NUXT_MODULE_CHAT != false）注册时 public 配置才有 moduleChat
-const chatEnabled = computed(() => !!useRuntimeConfig().public.moduleChat)
+const { aiConfig } = useAiConfig()
+
+// 两级开关：模块是否注册（NUXT_MODULE_CHAT）× 系统设置 ai.chatEnabled
+// 后者缺省视为开启（老配置里没有这个字段）
+const chatEnabled = computed(() => {
+  if (!useRuntimeConfig().public.moduleChat) return false
+  return (aiConfig.value as any)?.chatEnabled !== false
+})
 </script>

@@ -7,7 +7,7 @@ import { mergeCourseLmsConfig } from '../lmsConfig/cache/course-merge'
  * （与 /api/config/lms-public 的公开 ai 字段保持一致）
  */
 const AI_PUBLIC_KEYS = [
-  'enabled', 'mode', 'model', 'thinking', 'apiUrl',
+  'enabled', 'chatEnabled', 'mode', 'model', 'thinking', 'apiUrl',
   'ollamaUrl', 'ollamaModel', 'title', 'preset', 'opening', 'ttsGender',
 ] as const
 

@@ -19,6 +19,7 @@ const PUBLIC_KEYS = [
   'oj',
   'codeflow',
   'ai.enabled',
+  'ai.chatEnabled',
   'ai.mode',
   'ai.model',
   'ai.thinking',

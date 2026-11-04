@@ -637,6 +637,8 @@
     "aiHint": "Global default AI assistant config. Course-level config can override these.",
     "aiEnabled": "Enable AI assistant",
     "aiEnabledHint": "When disabled, the AI chatbox is hidden across all chapters",
+    "aiChatEnabled": "Show AI chat workspace",
+    "aiChatEnabledHint": "Hides the robot icon in the header and makes /chat unavailable",
     "aiMode": "Mode",
     "aiModeLocal": "Local (Browser WebLLM)",
     "aiModeApi": "Server API",
