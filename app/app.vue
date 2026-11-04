@@ -56,5 +56,8 @@ function handleUnlocked() {
     <NuxtLayout v-else>
       <NuxtPage />
     </NuxtLayout>
+
+    <!-- 面向外部 AI 代理的使用声明：视觉隐藏，人看不到，agent 解析页面时能读到 -->
+    <AiPolicy />
   </UApp>
 </template>
