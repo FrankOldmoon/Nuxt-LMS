@@ -41,6 +41,9 @@
     "refresh": "刷新",
     "tabRun": "运行",
     "tabFiles": "文件",
-    "toolRunning": "正在执行 {name}…"
+    "toolRunning": "正在执行 {name}…",
+    "revert": "还原为 AI 原文",
+    "fullscreen": "全屏预览",
+    "exitFullscreen": "退出全屏"
   }
 }

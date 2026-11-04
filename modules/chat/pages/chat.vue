@@ -1,15 +1,20 @@
 <template>
   <div class="h-full flex overflow-hidden">
-    <!-- 左：会话记录 -->
-    <ChatConversationList
-      :conversations="conversations"
-      :current-id="activeId"
-      @create="createConversation"
-      @select="selectConversation"
-      @rename="renameConversation"
-      @delete="askDelete"
-      @pin="togglePin"
-    />
+    <!-- 左：会话记录（宽度可拖） -->
+    <div :style="{ width: leftWidth + 'px' }" class="shrink-0 min-w-0 h-full">
+      <ChatConversationList
+        :conversations="conversations"
+        :current-id="activeId"
+        @create="createConversation"
+        @select="selectConversation"
+        @rename="renameConversation"
+        @delete="askDelete"
+        @pin="togglePin"
+      />
+    </div>
+
+    <!-- 左↔中 拖拽条 -->
+    <div class="chat-resizer" @mousedown="startResize('left', $event)" />
 
     <!-- 中：聊天 -->
     <div class="flex-1 min-w-0 flex flex-col bg-default">
@@ -66,8 +71,15 @@
       </div>
     </div>
 
-    <!-- 右：运行 / 文件 -->
-    <div v-if="panelOpen" class="w-[440px] shrink-0 hidden xl:flex flex-col border-l border-default">
+    <!-- 中↔右 拖拽条（与右栏一起在窄屏隐藏） -->
+    <div v-if="panelOpen" class="chat-resizer hidden xl:block" @mousedown="startResize('right', $event)" />
+
+    <!-- 右：运行 / 文件（宽度可拖） -->
+    <div
+      v-if="panelOpen"
+      :style="{ width: rightWidth + 'px' }"
+      class="shrink-0 min-w-0 hidden xl:flex flex-col border-l border-default"
+    >
       <div class="h-9 shrink-0 flex items-center gap-1 px-1.5 border-b border-default">
         <UButton
           size="xs"
@@ -448,11 +460,78 @@ watch(
   },
 )
 
+// ===================== 三栏宽度（可拖，记忆到 localStorage）=====================
+const LEFT_MIN = 200
+const LEFT_MAX = 420
+const RIGHT_MIN = 320
+const RIGHT_MAX = 760
+const WIDTHS_KEY = 'chat:panel-widths'
+
+const leftWidth = ref(264)
+const rightWidth = ref(440)
+
+function clamp(v: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, v))
+}
+
+function saveWidths() {
+  try {
+    localStorage.setItem(WIDTHS_KEY, JSON.stringify({ left: leftWidth.value, right: rightWidth.value }))
+  } catch { /* 隐私模式等场景忽略 */ }
+}
+
+function startResize(side: 'left' | 'right', e: MouseEvent) {
+  e.preventDefault()
+  const startX = e.clientX
+  const startW = side === 'left' ? leftWidth.value : rightWidth.value
+
+  document.body.style.cursor = 'col-resize'
+  document.body.style.userSelect = 'none'
+
+  // 拖动期间盖一层透明遮罩：否则鼠标划过 HTML 预览的 iframe 时
+  // mousemove 会被 iframe 吃掉，拖动直接卡住
+  const mask = document.createElement('div')
+  mask.style.cssText = 'position:fixed;inset:0;z-index:9999;cursor:col-resize'
+  document.body.appendChild(mask)
+
+  const onMove = (ev: MouseEvent) => {
+    const dx = ev.clientX - startX
+    if (side === 'left') {
+      leftWidth.value = clamp(startW + dx, LEFT_MIN, LEFT_MAX)
+    } else {
+      // 右栏在右侧，向左拖 = 变宽
+      rightWidth.value = clamp(startW - dx, RIGHT_MIN, RIGHT_MAX)
+    }
+  }
+  const onUp = () => {
+    window.removeEventListener('mousemove', onMove)
+    window.removeEventListener('mouseup', onUp)
+    document.body.style.cursor = ''
+    document.body.style.userSelect = ''
+    mask.remove()
+    saveWidths()
+  }
+  window.addEventListener('mousemove', onMove)
+  window.addEventListener('mouseup', onUp)
+}
+
 // ===================== 登录 / 初始化 =====================
 const loginOpen = ref(false)
 function openLogin() {
   loginOpen.value = true
 }
+
+onMounted(() => {
+  // 恢复上次拖动后的栏宽
+  try {
+    const raw = localStorage.getItem(WIDTHS_KEY)
+    if (raw) {
+      const saved = JSON.parse(raw)
+      if (typeof saved?.left === 'number') leftWidth.value = clamp(saved.left, LEFT_MIN, LEFT_MAX)
+      if (typeof saved?.right === 'number') rightWidth.value = clamp(saved.right, RIGHT_MIN, RIGHT_MAX)
+    }
+  } catch { /* ignore */ }
+})
 
 onMounted(async () => {
   if (!isLoggedIn.value) return
@@ -468,5 +547,27 @@ onMounted(async () => {
    工作台里的回复常带大段代码，75% 会让代码频繁横向滚动（章节内的 aichat 保持原样）。 */
 .chat-main :deep([class*="max-w-[75%]"]) {
   max-width: 92%;
+}
+
+/* 三栏拖拽条：默认透明（靠相邻栏的 border 显形），hover 时高亮 */
+.chat-resizer {
+  position: relative;
+  width: 5px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  background: transparent;
+}
+.chat-resizer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 2px;
+  width: 1px;
+  background: transparent;
+  transition: background-color 0.15s;
+}
+.chat-resizer:hover::after {
+  background: var(--ui-primary);
 }
 </style>

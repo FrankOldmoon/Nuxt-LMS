@@ -1,5 +1,5 @@
 <template>
-  <aside class="h-full w-[264px] shrink-0 flex flex-col bg-elevated/40 border-r border-default">
+  <aside class="h-full w-full flex flex-col bg-elevated/40 border-r border-default">
     <!-- 新建 -->
     <div class="p-2.5 shrink-0">
       <UButton

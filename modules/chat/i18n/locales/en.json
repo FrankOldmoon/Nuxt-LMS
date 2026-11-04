@@ -41,6 +41,9 @@
     "refresh": "Refresh",
     "tabRun": "Run",
     "tabFiles": "Files",
-    "toolRunning": "Running {name}…"
+    "toolRunning": "Running {name}…",
+    "revert": "Revert to original",
+    "fullscreen": "Fullscreen",
+    "exitFullscreen": "Exit fullscreen"
   }
 }

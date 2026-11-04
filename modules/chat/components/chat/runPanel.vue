@@ -41,9 +41,26 @@
     </div>
 
     <template v-else>
-      <!-- 代码 -->
-      <div class="flex-1 min-h-0 overflow-auto border-b border-default">
-        <pre class="p-3 text-xs leading-relaxed font-mono whitespace-pre"><code>{{ current?.code }}</code></pre>
+      <!-- 代码（可编辑：改完直接点运行） -->
+      <div class="flex-1 min-h-0 border-b border-default relative">
+        <textarea
+          v-model="editedCode"
+          class="w-full h-full p-3 text-xs leading-relaxed font-mono bg-transparent outline-none resize-none text-highlighted"
+          spellcheck="false"
+          autocapitalize="off"
+          autocomplete="off"
+          @input="dirty = true"
+        />
+        <UTooltip v-if="dirty" :text="$t('chat.revert')">
+          <UButton
+            size="xs"
+            color="warning"
+            variant="soft"
+            icon="i-lucide-rotate-ccw"
+            class="absolute top-2 right-3"
+            @click="revertCode"
+          />
+        </UTooltip>
       </div>
 
       <!-- 输出 -->
@@ -52,6 +69,10 @@
           <UIcon name="i-lucide-scroll-text" class="size-3.5" />
           <span>{{ isHtml ? 'Preview' : $t('chat.output') }}</span>
           <span v-if="!isHtml && runnerLabel" class="text-dimmed">· {{ runnerLabel }}</span>
+          <UTooltip v-if="isHtml" :text="$t('chat.fullscreen')" class="ml-auto">
+            <UButton size="xs" color="neutral" variant="ghost" icon="i-lucide-maximize-2"
+              :aria-label="$t('chat.fullscreen')" :disabled="!editedCode" @click="openFullscreen" />
+          </UTooltip>
         </div>
 
         <!-- HTML 实时预览 -->
@@ -87,6 +108,31 @@
       </div>
     </template>
   </aside>
+
+  <!-- 全屏预览：自定义覆盖层（UModal fullscreen 的 wrapper 自带 padding，铺不满） -->
+  <Teleport to="body">
+    <div v-if="previewFullscreen" class="fixed inset-0 z-[70] flex flex-col bg-default">
+      <div class="h-10 shrink-0 flex items-center gap-2 px-3 border-b border-default">
+        <UIcon name="i-lucide-monitor" class="size-4 text-muted" />
+        <span class="text-xs text-muted">Preview</span>
+        <span class="text-xs text-dimmed truncate">{{ current?.label }}</span>
+        <UButton
+          class="ml-auto"
+          icon="i-lucide-x"
+          color="neutral"
+          variant="ghost"
+          size="xs"
+          :aria-label="$t('chat.exitFullscreen')"
+          @click="previewFullscreen = false"
+        />
+      </div>
+      <iframe
+        :srcdoc="previewDoc"
+        class="flex-1 w-full border-0 bg-white"
+        sandbox="allow-scripts allow-forms allow-modals allow-popups"
+      />
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -182,6 +228,35 @@ watch(() => blocks.value.length, (n) => {
 })
 const current = computed(() => blocks.value[selected.value])
 
+// ============ 可编辑代码 ============
+// 未手动编辑时跟随 AI 原文（流式生成、切换代码块都会同步）；
+// 一旦用户改过（dirty），就不再用流式内容覆盖，避免打字被打断
+const editedCode = ref('')
+const dirty = ref(false)
+
+watch(() => current.value?.code, (code) => {
+  if (!dirty.value) editedCode.value = code || ''
+}, { immediate: true })
+
+watch(selected, () => {
+  dirty.value = false
+  editedCode.value = current.value?.code || ''
+})
+
+function revertCode() {
+  dirty.value = false
+  editedCode.value = current.value?.code || ''
+}
+
+// ============ 全屏预览 ============
+const previewFullscreen = ref(false)
+
+function openFullscreen() {
+  if (!isHtml.value || !editedCode.value) return
+  renderPreview()
+  previewFullscreen.value = true
+}
+
 const blockItems = computed(() =>
   blocks.value.map((b, i) => ({
     label: `${i + 1}. ${b.label} · ${b.code.split('\n').length}L`,
@@ -208,7 +283,7 @@ function probeScript(): string {
 const previewDoc = ref('')
 
 function buildPreviewDoc(): string {
-  const html = current.value?.code || ''
+  const html = editedCode.value || ''
   const others = blocks.value.filter((b) => b !== current.value)
   const css = others.filter((b) => b.lang === 'css').map((b) => b.code).join('\n')
   const js = others.filter((b) => b.lang === 'javascript').map((b) => b.code).join('\n;\n')
@@ -260,6 +335,13 @@ function onPreviewMessage(e: MessageEvent) {
 
 onMounted(() => window.addEventListener('message', onPreviewMessage))
 onBeforeUnmount(() => window.removeEventListener('message', onPreviewMessage))
+
+// 全屏预览：ESC 退出
+function onEsc(e: KeyboardEvent) {
+  if (e.key === 'Escape' && previewFullscreen.value) previewFullscreen.value = false
+}
+onMounted(() => window.addEventListener('keydown', onEsc))
+onBeforeUnmount(() => window.removeEventListener('keydown', onEsc))
 
 // ============ 语言运行器（懒加载：Java/C++ 解释器体积大，按需拉 chunk）============
 type RunnerFactory = () => Promise<Runner>
@@ -326,7 +408,7 @@ async function run() {
     ready.value = true
     runnerLabel.value = ''
     await runner.run({
-      code: block.code,
+      code: editedCode.value,
       input: '',
       onOutput: (text) => { output.value += text },
       onResults: (tables) => { sqlTables.value = tables },
@@ -349,9 +431,9 @@ function clearOutput() {
 }
 
 async function copyCode() {
-  if (!current.value) return
+  if (!editedCode.value) return
   try {
-    await navigator.clipboard.writeText(current.value.code)
+    await navigator.clipboard.writeText(editedCode.value)
     toast.add({ title: t('chat.copied'), color: 'success' })
   } catch { /* 忽略：非 https 或未授权 */ }
 }
