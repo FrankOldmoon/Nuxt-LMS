@@ -2,7 +2,7 @@
  * 下载工作区文件
  * GET /api/chat/workspace/download?conversation_id=1&path=report.md
  */
-import { readWorkspaceFile, requireConversation, normalizePath, mimeOf } from '../../../utils/workspace'
+import { readWorkspaceFile, requireConversation, normalizePath, mimeOf, isBinaryContent, B64_PREFIX } from '../../../utils/workspace'
 
 export default eventHandler(async (event) => {
   const q = getQuery(event)
@@ -25,5 +25,14 @@ export default eventHandler(async (event) => {
     'Content-Disposition',
     `${inline ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(filename)}`,
   )
+
+  // 二进制文件（xlsx/docx/图片）存的是 base64:xxx，这里解码还原成字节流，
+  // 否则浏览器拿到的是 base64 字符串，Excel 会报文件损坏
+  if (isBinaryContent(row.content)) {
+    const buf = Buffer.from(String(row.content).slice(B64_PREFIX.length), 'base64')
+    setResponseHeader(event, 'Content-Length', buf.byteLength)
+    return buf
+  }
+
   return row.content || ''
 })

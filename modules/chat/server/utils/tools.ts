@@ -13,9 +13,11 @@ import {
   listWorkspaceFiles,
   readWorkspaceFile,
   writeWorkspaceFile,
+  writeWorkspaceBinary,
   deleteWorkspaceFile,
   MAX_FILE_SIZE,
 } from './workspace'
+import { makeXlsx, makeDocx } from './office'
 import { lmsQuery } from './lmsQuery'
 
 export const CLIENT_TOOLS = ['run_python'] as const
@@ -175,6 +177,73 @@ export const TOOL_DEFS = [
           chapter_id: { type: 'integer', description: '章节 ID' },
         },
         required: ['chapter_id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'make_xlsx',
+      description: '生成 Excel 表格文件（.xlsx）到工作区，可直接下载、右侧可预览。用户要「导出表格」「做个成绩单/名单/统计表」时用它，比 csv 更好（带表头样式、边框、列宽）。',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', description: '文件名，须带 .xlsx，如 成绩单.xlsx' },
+          sheets: {
+            type: 'array',
+            description: '一个或多个工作表',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string', description: '工作表名，如 初一1班' },
+                headers: { type: 'array', items: { type: 'string' }, description: '表头行（可选）' },
+                rows: {
+                  type: 'array',
+                  description: '数据行，每行是一个数组，元素顺序与表头一致',
+                  items: { type: 'array', items: {} },
+                },
+                widths: { type: 'array', items: { type: 'number' }, description: '每列宽度（字符数，可选）' },
+              },
+              required: ['rows'],
+            },
+          },
+        },
+        required: ['path', 'sheets'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'make_docx',
+      description: '生成 Word 文档（.docx）到工作区。用户要「写份通知/教案/报告并导出 Word」时用它。内容按块给出：heading / paragraph / bullet / table。',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', description: '文件名，须带 .docx，如 通知.docx' },
+          title: { type: 'string', description: '文档标题（可选）' },
+          blocks: {
+            type: 'array',
+            description: '正文块，按顺序',
+            items: {
+              type: 'object',
+              properties: {
+                type: { type: 'string', enum: ['heading', 'paragraph', 'bullet', 'table'] },
+                text: { type: 'string', description: 'heading / paragraph 的文本' },
+                level: { type: 'number', description: 'heading 级别 1-4' },
+                items: { type: 'array', items: { type: 'string' }, description: 'bullet 的条目' },
+                headers: { type: 'array', items: { type: 'string' }, description: 'table 的表头' },
+                rows: {
+                  type: 'array',
+                  description: 'table 的数据行',
+                  items: { type: 'array', items: {} },
+                },
+              },
+              required: ['type'],
+            },
+          },
+        },
+        required: ['path', 'blocks'],
       },
     },
   },
@@ -660,6 +729,25 @@ export async function executeServerTool(name: string, args: any, ctx: ToolContex
 
       case 'lms_query':
         return await lmsQuery(ctx.userId, args)
+
+      case 'make_xlsx': {
+        const path = String(args?.path || 'table.xlsx')
+        const sheets = Array.isArray(args?.sheets) ? args.sheets : []
+        if (!sheets.length) return '错误：sheets 不能为空'
+        const buf = await makeXlsx(sheets)
+        await writeWorkspaceBinary(ctx.conversationId, ctx.userId, path, buf)
+        const rowCount = sheets.reduce((n: number, s: any) => n + (Array.isArray(s?.rows) ? s.rows.length : 0), 0)
+        return `已生成 ${path}（${sheets.length} 个工作表，${rowCount} 行数据，${Math.round(buf.byteLength / 1024)}KB）。用户可在右侧预览或直接下载。`
+      }
+
+      case 'make_docx': {
+        const path = String(args?.path || 'document.docx')
+        const blocks = Array.isArray(args?.blocks) ? args.blocks : []
+        if (!blocks.length) return '错误：blocks 不能为空'
+        const buf = await makeDocx(String(args?.title || ''), blocks)
+        await writeWorkspaceBinary(ctx.conversationId, ctx.userId, path, buf)
+        return `已生成 ${path}（${blocks.length} 个内容块，${Math.round(buf.byteLength / 1024)}KB）。用户可在右侧预览或直接下载。`
+      }
 
       case 'search_learning':
         return await searchLearning(ctx.userId, args)

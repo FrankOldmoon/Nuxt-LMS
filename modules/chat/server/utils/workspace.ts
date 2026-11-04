@@ -44,6 +44,19 @@ const MIME_BY_EXT: Record<string, string> = {
   ply: 'model/ply',
   dae: 'model/vnd.collada+xml',
   off: 'model/off',
+  // Office 文件由服务端 exceljs / docx 生成，二进制存 base64
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  xls: 'application/vnd.ms-excel',
+  doc: 'application/msword',
+  ppt: 'application/vnd.ms-powerpoint',
+  pdf: 'application/pdf',
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  gif: 'image/gif',
+  webp: 'image/webp',
 }
 
 export function mimeOf(path: string): string {
@@ -115,6 +128,73 @@ export async function readWorkspaceFile(conversationId: number, rawPath: string)
     ))
     .limit(1)
   return row || null
+}
+
+/**
+ * 二进制文件在 content 列里的前缀标记。
+ *
+ * 工作区只有一个 text 列，xlsx/docx 这类 ZIP 二进制没法直接存。
+ * 约定以 base64: 开头表示「内容是 base64 编码的二进制」，
+ * 下载时解码还原 —— 不用加列、不用迁移。
+ */
+export const B64_PREFIX = 'base64:'
+
+export function isBinaryContent(content: unknown): boolean {
+  return typeof content === 'string' && content.startsWith(B64_PREFIX)
+}
+
+/**
+ * 写入二进制文件（xlsx / docx / 图片等）。
+ * 内容存成 base64:xxx，size 记解码后的真实字节数（配额按真实大小算）。
+ */
+export async function writeWorkspaceBinary(
+  conversationId: number,
+  userId: number,
+  rawPath: string,
+  buffer: Uint8Array,
+) {
+  const path = normalizePath(rawPath)
+  if (!isAllowedExt(path)) {
+    throw new Error(`不支持的文件类型：${path.split('.').pop() || '(无扩展名)'}`)
+  }
+  const size = buffer.byteLength
+  if (size > MAX_FILE_SIZE) {
+    throw new Error(`文件超过 ${Math.round(MAX_FILE_SIZE / 1024)}KB 上限（当前 ${Math.round(size / 1024)}KB）`)
+  }
+
+  const text = B64_PREFIX + Buffer.from(buffer).toString('base64')
+  const existing = await readWorkspaceFile(conversationId, path)
+  const mime = mimeOf(path)
+
+  if (existing) {
+    const [row] = await db
+      .update(schema.chatFiles)
+      .set({ content: text, size, mime, updatedAt: new Date() })
+      .where(eq(schema.chatFiles.id, existing.id))
+      .returning()
+    return { file: row, created: false }
+  }
+
+  const [agg] = await db
+    .select({
+      count: sql<number>`count(*)::int`,
+      total: sql<number>`coalesce(sum(${schema.chatFiles.size}), 0)::int`,
+    })
+    .from(schema.chatFiles)
+    .where(eq(schema.chatFiles.conversationId, conversationId))
+
+  if ((agg?.count ?? 0) >= MAX_FILES) {
+    throw new Error(`工作区文件数已达上限（${MAX_FILES} 个），请先删除不用的文件`)
+  }
+  if ((agg?.total ?? 0) + size > MAX_TOTAL_SIZE) {
+    throw new Error(`工作区总大小已达上限（${Math.round(MAX_TOTAL_SIZE / 1024 / 1024)}MB）`)
+  }
+
+  const [row] = await db
+    .insert(schema.chatFiles)
+    .values({ conversationId, userId, path, content: text, size, mime })
+    .returning()
+  return { file: row, created: true }
 }
 
 /**
