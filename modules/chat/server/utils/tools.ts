@@ -13,11 +13,9 @@ import {
   listWorkspaceFiles,
   readWorkspaceFile,
   writeWorkspaceFile,
-  writeWorkspaceBinary,
   deleteWorkspaceFile,
   MAX_FILE_SIZE,
 } from './workspace'
-import { makeXlsx, makeDocx } from './office'
 import { lmsQuery } from './lmsQuery'
 
 export const CLIENT_TOOLS = ['run_python'] as const
@@ -729,25 +727,6 @@ export async function executeServerTool(name: string, args: any, ctx: ToolContex
 
       case 'lms_query':
         return await lmsQuery(ctx.userId, args)
-
-      case 'make_xlsx': {
-        const path = String(args?.path || 'table.xlsx')
-        const sheets = Array.isArray(args?.sheets) ? args.sheets : []
-        if (!sheets.length) return '错误：sheets 不能为空'
-        const buf = await makeXlsx(sheets)
-        await writeWorkspaceBinary(ctx.conversationId, ctx.userId, path, buf)
-        const rowCount = sheets.reduce((n: number, s: any) => n + (Array.isArray(s?.rows) ? s.rows.length : 0), 0)
-        return `已生成 ${path}（${sheets.length} 个工作表，${rowCount} 行数据，${Math.round(buf.byteLength / 1024)}KB）。用户可在右侧预览或直接下载。`
-      }
-
-      case 'make_docx': {
-        const path = String(args?.path || 'document.docx')
-        const blocks = Array.isArray(args?.blocks) ? args.blocks : []
-        if (!blocks.length) return '错误：blocks 不能为空'
-        const buf = await makeDocx(String(args?.title || ''), blocks)
-        await writeWorkspaceBinary(ctx.conversationId, ctx.userId, path, buf)
-        return `已生成 ${path}（${blocks.length} 个内容块，${Math.round(buf.byteLength / 1024)}KB）。用户可在右侧预览或直接下载。`
-      }
 
       case 'search_learning':
         return await searchLearning(ctx.userId, args)

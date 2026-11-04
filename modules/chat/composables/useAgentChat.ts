@@ -10,6 +10,7 @@
  *   useChatbox({ customSend: agent.customSend, ... })
  */
 import { getPyodide } from '../../base/components/ide/runners/pyodide'
+import { buildXlsx, buildDocx, bytesToBase64 } from './useOfficeGen'
 
 export interface AgentToolCall {
   id: string
@@ -201,6 +202,39 @@ export function useAgentChat(opts: AgentOptions) {
     return out
   }
 
+  // ===================== 客户端工具：Office 文件生成 =====================
+  // 生成放在浏览器里跑，服务端只负责接收 base64 落库 ——
+  // 否则教师批量导出时会把服务器 CPU 占满。
+  async function runOfficeGen(call: AgentToolCall, conversationId: number): Promise<string> {
+    const args: any = call.args || {}
+    const isXlsx = call.name === 'make_xlsx'
+    const path = String(args.path || (isXlsx ? 'table.xlsx' : 'document.docx'))
+
+    let bytes: Uint8Array
+    let detail = ''
+
+    if (isXlsx) {
+      const sheets = Array.isArray(args.sheets) ? args.sheets : []
+      if (!sheets.length) return '错误：sheets 不能为空'
+      bytes = await buildXlsx(sheets)
+      const rows = sheets.reduce((n: number, s: any) => n + (Array.isArray(s?.rows) ? s.rows.length : 0), 0)
+      detail = `${sheets.length} 个工作表，${rows} 行数据`
+    } else {
+      const blocks = Array.isArray(args.blocks) ? args.blocks : []
+      if (!blocks.length) return '错误：blocks 不能为空'
+      bytes = await buildDocx(String(args.title || ''), blocks)
+      detail = `${blocks.length} 个内容块`
+    }
+
+    await cRequest('/api/chat/workspace/upload', {
+      method: 'POST',
+      body: { conversation_id: conversationId, path, data: bytesToBase64(bytes) },
+    })
+    opts.onFilesChanged?.()
+
+    return `已生成 ${path}（${detail}，${Math.round(bytes.byteLength / 1024)}KB）。用户可在右侧预览或直接下载。`
+  }
+
   // ===================== 工具分发 =====================
   async function execTool(call: AgentToolCall, conversationId: number): Promise<string> {
     opts.onToolCall?.(call, 'start')
@@ -208,6 +242,8 @@ export function useAgentChat(opts: AgentOptions) {
     try {
       if (call.name === 'run_python') {
         result = await runPython(String(call.args?.code || ''), conversationId)
+      } else if (call.name === 'make_xlsx' || call.name === 'make_docx') {
+        result = await runOfficeGen(call, conversationId)
       } else {
         const r = await cRequest<{ result: string }>('/api/chat/workspace/tool', {
           method: 'POST',
