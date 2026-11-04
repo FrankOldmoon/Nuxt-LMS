@@ -1,8 +1,15 @@
 <template>
   <div class="flex gap-2" :class="msg.role === 'user' ? 'flex-row-reverse' : ''">
-    <div class="shrink-0 size-7 rounded-full flex items-center justify-center"
-      :class="msg.role === 'user' ? 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400' : 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400'">
-      <UIcon :name="msg.role === 'user' ? 'i-lucide-user' : 'i-lucide-bot'" class="size-4" />
+    <!-- 自己的消息用本人头像（带头像框）；AI 消息保留机器人图标 -->
+    <AvatarWithFrame
+      v-if="msg.role === 'user'"
+      :src="user?.avatarImg || undefined"
+      :alt="userName"
+      :text="userInitial"
+      size="28px"
+    />
+    <div v-else class="shrink-0 size-7 rounded-full flex items-center justify-center bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400">
+      <UIcon name="i-lucide-bot" class="size-4" />
     </div>
     <div class="max-w-[75%] px-3 py-2 rounded-lg text-sm leading-relaxed"
       :class="msg.role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200'">
@@ -35,6 +42,11 @@ defineProps<{ msg: ChatMessage; idx: number }>()
 
 const { t } = useI18n()
 const { renderContent, toggleReasoning, canSpeak, toggleSpeakMessage, speakingIdx } = useChatboxContext()
+
+// 用户消息头像：优先真实头像，无图时退回首字母
+const { user } = useAuth()
+const userName = computed(() => user.value?.name || user.value?.username || '')
+const userInitial = computed(() => userName.value.trim().slice(0, 1).toUpperCase() || '?')
 
 /** 用户消息一律是字符串；兜底防止非字符串内容渲染成 [object Object] */
 function textOf(msg: ChatMessage) {
