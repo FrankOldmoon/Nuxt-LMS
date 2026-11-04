@@ -276,6 +276,17 @@ export function useChatbox(
       apiMessages.push({ role: msg.role, content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content) })
     }
 
+    // 代做题目检测：命中则在对话前插入「教学模式」指令。
+    // 放在这一层而不是各接口里，是为了同时覆盖 ollama / local 这类前端直连
+    // （它们不经过服务端代理，服务端拦不到）。服务端仍会二次校验作为兜底。
+    const guardIntent = detectHomeworkIntent(text)
+    if (guardIntent) {
+      apiMessages.splice(props.preset ? 1 : 0, 0, {
+        role: 'system',
+        content: buildHomeworkGuardMessage(guardIntent),
+      })
+    }
+
     loading.value = true
     scrollToBottom()
 

@@ -15,7 +15,8 @@
  *   [DONE]
  */
 import { TOOL_DEFS } from '../../../utils/tools'
-import { detectHomeworkIntent, buildHomeworkGuardMessage } from '../../../utils/guards'
+// 题目代做检测（放 base/utils，前后端与服务端接口共用同一套规则）
+import { detectHomeworkIntent, buildHomeworkGuardMessage } from '../../../../../base/utils/aiGuard'
 
 const AGENT_SYSTEM = `你是一个带「会话工作区」的 AI 助手。工作区是用户能在右侧看到的虚拟磁盘。
 
@@ -81,12 +82,16 @@ export default eventHandler(async (event) => {
   const url = /\/chat\/completions$/.test(trimmed) ? trimmed : trimmed + '/chat/completions'
 
   // 代做题目检测：命中则插入一条教学模式指令（不硬拒，保留讲思路的能力）
+  // 前端 useChatbox 已按同一规则注入过（覆盖 ollama 直连），这里做幂等兜底
+  const alreadyGuarded = safeMessages.some(
+    (m: any) => m?.role === 'system' && String(m.content || '').includes('【教学模式'),
+  )
   const userMsgs = safeMessages.filter((m: any) => m?.role === 'user')
   const lastUser = userMsgs[userMsgs.length - 1]
   const prevUser = userMsgs[userMsgs.length - 2]
-  let intent = lastUser ? detectHomeworkIntent(String(lastUser.content || '')) : null
+  let intent = alreadyGuarded ? null : (lastUser ? detectHomeworkIntent(String(lastUser.content || '')) : null)
   // 短追问（"那到底哪个""嗯？"）本身没特征，沿用上一条是题目的判断
-  if (!intent && lastUser && prevUser && String(lastUser.content || '').trim().length < 30) {
+  if (!intent && !alreadyGuarded && lastUser && prevUser && String(lastUser.content || '').trim().length < 30) {
     intent = detectHomeworkIntent(String(prevUser.content || ''))
   }
 

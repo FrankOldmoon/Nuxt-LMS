@@ -8,6 +8,9 @@
  * 前端不再传递敏感信息；model 可由前端覆盖，默认取 lms_config.ai.model 或 glm-4.5-air
  * 返回 SSE 流式响应（逐块透传，不缓冲），并在流结束前附加 model 与 usage 元数据
  */
+// 题目代做检测（与 /chat agent 共用同一套规则）
+import { detectHomeworkIntent, buildHomeworkGuardMessage } from '../../../../base/utils/aiGuard'
+
 // 用户级速率限制：LLM 调用成本高，防止单用户刷 API 额度（滑动窗口，内存存储）
 const CHAT_WINDOW_MS = 60_000
 const CHAT_RATE_LIMIT_MAX = 20
@@ -64,9 +67,33 @@ export default eventHandler(async (event) => {
     const defaultModel = safeModel || aiConfig.model || "glm-4.5-air";
 
     // 构建请求体
+    // 代做题目检测：与 /chat 的 agent 同一套规则（base/utils/aiGuard）。
+    // 命中时不硬拒，而是插入教学模式指令 —— 讲考点、逐项分析，但不给最终答案。
+    // 前端 useChatbox 已注入过时跳过，避免重复两条一样的指令。
+    const alreadyGuarded = safeMessages.some(
+        (m: any) => m?.role === 'system' && String(m.content || '').includes('【教学模式'),
+    )
+    const userMsgs = safeMessages.filter((m: any) => m?.role === 'user')
+    const lastUser = userMsgs[userMsgs.length - 1]
+    const prevUser = userMsgs[userMsgs.length - 2]
+    let intent = alreadyGuarded ? null : (lastUser ? detectHomeworkIntent(String(lastUser.content || '')) : null)
+    // 短追问（"那到底哪个"）本身没特征，沿用上一条是题目的判断
+    if (!intent && !alreadyGuarded && lastUser && prevUser && String(lastUser.content || '').trim().length < 30) {
+        intent = detectHomeworkIntent(String(prevUser.content || ''))
+    }
+
+    let finalMessages: any[] = safeMessages
+    if (intent) {
+        const guard = { role: 'system', content: buildHomeworkGuardMessage(intent) }
+        // 前端可能已带 system（preset），要插在它后面，别打乱角色顺序
+        finalMessages = safeMessages[0]?.role === 'system'
+            ? [safeMessages[0], guard, ...safeMessages.slice(1)]
+            : [guard, ...safeMessages]
+    }
+
     const requestBody: Record<string, any> = {
         model: defaultModel,
-        messages: safeMessages,
+        messages: finalMessages,
         stream: true,
         // 让上游在最后一个 chunk 中附带 usage（prompt_tokens / completion_tokens / total_tokens）
         stream_options: { include_usage: true },

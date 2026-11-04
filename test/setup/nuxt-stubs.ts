@@ -1280,6 +1280,10 @@ const _stubsToExpose: Record<string, any> = {
   ref,
   computed,
   reactive,
+  // 题目代做检测（modules/base/utils/aiGuard 由 addImportsDir 自动导入；
+  // 测试环境没有自动导入，默认返回 null = 不命中，不干扰既有用例）
+  detectHomeworkIntent: () => null,
+  buildHomeworkGuardMessage: () => '',
   // Nuxt 会自动 import 的 Vue reactivity API：组件在测试环境挂载时同样需要
   shallowRef,
   shallowReactive,
