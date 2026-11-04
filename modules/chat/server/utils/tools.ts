@@ -313,9 +313,29 @@ export interface ToolContext {
   userId: number
 }
 
+/**
+ * 禁止注册的写操作类工具（护栏）。
+ *
+ * 学习数据必须由本人通过页面流程产生并记名，任何「提交 / 答题 / 标记完成 / 改分」
+ * 的能力都不能做成 agent 工具 —— 否则模型一句话就能批量刷进度、代交作业，
+ * 而且这些操作在服务端无法区分「学生本人点的」还是「agent 代做的」。
+ *
+ * 现在所有工具都是只读（LMS 数据）+ 只写会话自己的 chat_files，
+ * 这条判断是给以后加工具时的显式拦截，避免有人顺手加个 submit_homework。
+ */
+const FORBIDDEN_PREFIXES = ['submit', 'grade', 'score', 'answer', 'complete', 'finish', 'enroll', 'mark']
+
+function assertNotWriteTool(name: string) {
+  const lower = name.toLowerCase()
+  if (FORBIDDEN_PREFIXES.some((p) => lower.startsWith(p))) {
+    throw new Error(`工具 ${name} 被禁止：学习数据只能由用户本人通过页面提交`)
+  }
+}
+
 /** 执行服务端工具；返回给模型的字符串结果（失败也返回文本，让模型自己纠正） */
 export async function executeServerTool(name: string, args: any, ctx: ToolContext): Promise<string> {
   try {
+    assertNotWriteTool(name)
     switch (name) {
       case 'list_files': {
         const files = await listWorkspaceFiles(ctx.conversationId)
