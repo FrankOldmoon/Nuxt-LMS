@@ -68,7 +68,12 @@
               class="w-full h-[70vh] border-0 bg-white"
               sandbox="allow-scripts allow-forms allow-modals allow-popups"
             />
-            <pre v-else class="p-4 text-xs leading-relaxed font-mono whitespace-pre-wrap">{{ preview?.content }}</pre>
+            <!-- 其余类型交给项目通用的文件预览器：图片 / pdf / 视频 / 3D / office / zip / 文本 -->
+            <UeditorFilePreview
+              v-else-if="preview"
+              :url="inlineUrl(preview.path)"
+              :name="preview.path"
+            />
           </div>
         </div>
       </template>
@@ -77,6 +82,9 @@
 </template>
 
 <script setup lang="ts">
+// 通用文件预览器（图片/pdf/视频/3D/office/zip/文本）没有自动注册，需显式引入
+import UeditorFilePreview from '../../../lms/components/ueditor/render/nodes/file-preview.vue'
+
 interface WorkspaceFile {
   path: string
   size: number
@@ -147,6 +155,11 @@ async function remove(f: WorkspaceFile) {
 
 function downloadUrl(path: string) {
   return `/api/chat/workspace/download?conversation_id=${props.conversationId}&path=${encodeURIComponent(path)}`
+}
+
+/** 预览用的内联 URL：不带就会触发强制下载，img/iframe/3D loader 都拿不到内容 */
+function inlineUrl(path: string) {
+  return `${downloadUrl(path)}&inline=1`
 }
 
 function iconOf(path: string) {

@@ -17,6 +17,13 @@ export default eventHandler(async (event) => {
 
   const filename = path.split('/').pop() || 'file.txt'
   setResponseHeader(event, 'Content-Type', mimeOf(path))
-  setResponseHeader(event, 'Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`)
+  // inline=1 供预览器直接加载（img/iframe/STL loaders）——
+  // attachment 会让浏览器强制下载，那些标签就拿不到内容
+  const inline = String(q.inline || '') === '1'
+  setResponseHeader(
+    event,
+    'Content-Disposition',
+    `${inline ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(filename)}`,
+  )
   return row.content || ''
 })

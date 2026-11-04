@@ -54,8 +54,13 @@
     </div>
 
     <template v-else>
+      <!-- 不可执行的文件（3D 模型 / 图片 / PDF / office…）：整块交给项目通用预览器 -->
+      <div v-if="current?.previewUrl" class="flex-1 min-h-0 overflow-auto bg-elevated/20">
+        <UeditorFilePreview :url="current.previewUrl" :name="current.label" />
+      </div>
+
       <!-- 代码（可编辑：改完直接点运行） -->
-      <div class="flex-1 min-h-0 border-b border-default relative">
+      <div v-else class="flex-1 min-h-0 border-b border-default relative">
         <textarea
           v-model="editedCode"
           class="w-full h-full p-3 text-xs leading-relaxed font-mono bg-transparent outline-none resize-none text-highlighted"
@@ -77,7 +82,7 @@
       </div>
 
       <!-- 输出 -->
-      <div class="flex flex-col shrink-0" :class="isHtml ? 'h-[46%]' : 'h-[42%]'">
+      <div v-if="!current?.previewUrl" class="flex flex-col shrink-0" :class="isHtml ? 'h-[46%]' : 'h-[42%]'">
         <div class="h-8 shrink-0 flex items-center gap-2 px-3 border-b border-default text-xs text-muted">
           <UIcon name="i-lucide-scroll-text" class="size-3.5" />
           <span>{{ isHtml ? 'Preview' : $t('chat.output') }}</span>
@@ -150,6 +155,8 @@
 
 <script setup lang="ts">
 import type { Runner, SqlResultTable } from '../../../base/components/ide/runners/types'
+// 通用文件预览器（图片/pdf/视频/3D/office/zip/文本）没有自动注册，需显式引入
+import UeditorFilePreview from '../../../lms/components/ueditor/render/nodes/file-preview.vue'
 
 const props = defineProps<{
   /** 要解析代码块的文本（通常是最新一条 assistant 回复） */
@@ -170,6 +177,10 @@ interface CodeBlock {
   kind?: 'message' | 'file'
   /** kind=file 时的相对路径 */
   path?: string
+  /** 可执行（走代码区 + Run）；否则走通用预览器 */
+  runnable?: boolean
+  /** 不可执行文件的预览 URL */
+  previewUrl?: string
 }
 
 const FENCE_RE = /```([^\n`]*)\n([\s\S]*?)```/g
@@ -256,10 +267,15 @@ const RUNNABLE_EXT: Record<string, string> = {
   css: 'css',
 }
 
-interface FileMeta { path: string; label: string; lang: string }
+interface FileMeta { path: string; label: string; lang: string; runnable: boolean }
+
+/** 预览用的内联 URL（download 默认是 attachment，预览器拿不到内容） */
+function inlineUrl(path: string) {
+  return `/api/chat/workspace/download?conversation_id=${props.conversationId}&path=${encodeURIComponent(path)}&inline=1`
+}
 
 const fileMeta = ref<FileMeta[]>([])
-// 文件正文懒加载：列表接口不带 content，选中时再拉，避免一次把整个工作区读进内存
+// 只有可执行文件的正文需要拉下来编辑；图片 / 3D / PDF 走 URL 预览，不进内存
 const fileContents = reactive<Record<string, string>>({})
 
 async function reloadFiles() {
@@ -275,8 +291,13 @@ async function reloadFiles() {
       const path = String(r.path || '')
       const ext = (path.split('.').pop() || '').toLowerCase()
       const lang = RUNNABLE_EXT[ext]
-      if (!lang) continue // 二进制 / 文档类不进代码面板
-      list.push({ path, lang, label: path.split('/').pop() || path })
+      // 不再按扩展名过滤：stl/pdf/png/docx 也要能看到
+      list.push({
+        path,
+        lang: lang || ext || 'file',
+        label: path.split('/').pop() || path,
+        runnable: !!lang,
+      })
     }
     fileMeta.value = list
     // 选中项落在文件上时立刻补正文：只有一项的情况下 watch(selected) 不会触发，
@@ -290,6 +311,8 @@ async function reloadFiles() {
 
 async function ensureFileContent(block: CodeBlock | undefined) {
   if (!block?.path || !props.conversationId) return
+  // 预览型文件（3D/图片/PDF）走 URL，不需要把正文拉进内存
+  if (block.kind === 'file' && !block.runnable) return
   if (fileContents[block.path] !== undefined) return
   try {
     const row: any = await cRequest(
@@ -309,8 +332,11 @@ const blocks = computed<CodeBlock[]>(() => {
     path: f.path,
     lang: f.lang,
     label: f.label,
-    code: fileContents[f.path] ?? '',
-    partial: fileContents[f.path] === undefined,
+    code: f.runnable ? (fileContents[f.path] ?? '') : '',
+    // 不可执行的文件不走 textarea，正文永远「已就绪」，避免无谓的懒加载
+    partial: f.runnable ? fileContents[f.path] === undefined : false,
+    runnable: f.runnable,
+    previewUrl: f.runnable ? undefined : inlineUrl(f.path),
   }))
   const msgs = parsedBlocks.value
   if (!files.length) return msgs

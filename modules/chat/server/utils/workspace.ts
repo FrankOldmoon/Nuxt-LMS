@@ -37,6 +37,13 @@ const MIME_BY_EXT: Record<string, string> = {
   c: 'text/x-csrc',
   sh: 'text/x-sh',
   log: 'text/plain',
+  // 3D 模型里只有「文本格式」的能进工作区（内容是 text 列，二进制会损坏）。
+  // ASCII STL / OBJ / PLY / DAE / OFF 都是纯文本，可直接写、可直接预览。
+  stl: 'model/stl',
+  obj: 'model/obj',
+  ply: 'model/ply',
+  dae: 'model/vnd.collada+xml',
+  off: 'model/off',
 }
 
 export function mimeOf(path: string): string {
