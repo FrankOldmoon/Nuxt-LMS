@@ -6,13 +6,22 @@
       <UIcon name="i-lucide-terminal" class="size-4 text-muted shrink-0" />
       <span class="text-sm font-medium shrink-0">{{ $t('chat.codeBlocks') }}</span>
 
-      <USelect
-        v-if="blocks.length > 1"
-        v-model="selected"
-        :items="blockItems"
-        size="xs"
-        class="w-40 ml-1"
-      />
+      <!-- 多块：平铺标签条，点哪个切哪个（可横向滚动，不占下拉的展开操作） -->
+      <div v-if="blocks.length > 1" class="flex-1 min-w-0 flex items-center gap-1 overflow-x-auto chat-tabs">
+        <button
+          v-for="(b, i) in blocks"
+          :key="i"
+          type="button"
+          class="shrink-0 px-2 py-0.5 rounded-md text-[11px] leading-5 transition-colors"
+          :class="i === selected
+            ? 'bg-primary/15 text-primary font-medium'
+            : 'text-muted hover:bg-elevated'"
+          :title="`${b.label} · ${b.code.split('\n').length} 行`"
+          @click="selected = i"
+        >
+          {{ i + 1 }}<span class="ml-1 opacity-70">{{ shortLabel(b.lang) }}</span>
+        </button>
+      </div>
       <UBadge v-else-if="current" color="neutral" variant="soft" size="sm" class="ml-1">
         {{ current.label }}
       </UBadge>
@@ -26,6 +35,10 @@
         <UTooltip :text="$t('chat.copy')">
           <UButton size="xs" color="neutral" variant="ghost" icon="i-lucide-copy"
             :disabled="!current" @click="copyCode" />
+        </UTooltip>
+        <UTooltip v-if="canRunAll" :text="$t('chat.runAll')">
+          <UButton size="xs" color="primary" variant="soft" icon="i-lucide-layers"
+            :aria-label="$t('chat.runAll')" :loading="running" @click="runAll" />
         </UTooltip>
         <UButton size="xs" color="primary" icon="i-lucide-play" :loading="running" :disabled="!canRun" @click="run">
           {{ $t('chat.run') }}
@@ -257,12 +270,38 @@ function openFullscreen() {
   previewFullscreen.value = true
 }
 
-const blockItems = computed(() =>
-  blocks.value.map((b, i) => ({
-    label: `${i + 1}. ${b.label} · ${b.code.split('\n').length}L`,
-    value: i,
-  })),
+/** 标签条上的短语言名（"Python" 占太宽，多块时放不下几个） */
+const SHORT_LANG: Record<string, string> = {
+  python: 'Py',
+  javascript: 'JS',
+  html: 'HTML',
+  css: 'CSS',
+  cpp: 'C++',
+  java: 'Java',
+  sql: 'SQL',
+  pseudocode: '伪码',
+}
+function shortLabel(lang: string) {
+  return SHORT_LANG[lang] || (lang ? lang.toUpperCase().slice(0, 4) : 'code')
+}
+
+/**
+ * 「全部运行」：仅支持同语言的 Python / JavaScript。
+ * 拼接执行适合「先定义函数、再调用」这种被拆成多块的回答；
+ * 但如果是 main.py + utils.py 的多文件程序，拼接后 import 仍然不通，
+ * 那种情况应该让 AI 直接写进工作区（Files 标签）再跑。
+ */
+const RUN_ALL_LANGS = ['python', 'javascript']
+const runAllCandidates = computed(() =>
+  blocks.value
+    .map((b, i) => ({ block: b, index: i }))
+    .filter(({ block }) => RUN_ALL_LANGS.includes(block.lang)),
 )
+const canRunAll = computed(() => {
+  const list = runAllCandidates.value
+  if (list.length < 2) return false
+  return new Set(list.map(({ block }) => block.lang)).size === 1
+})
 
 // ============ HTML 预览（含 css/js 块合并）============
 const isHtml = computed(() => current.value?.lang === 'html')
@@ -422,6 +461,47 @@ async function run() {
   }
 }
 
+/** 按顺序拼接所有同语言代码块后执行一次 */
+async function runAll() {
+  if (running.value) return
+  const list = runAllCandidates.value
+  if (list.length < 2) return
+
+  const lang = list[0]!.block.lang
+  // 当前块若被手动改过，用改后的内容；其余用原文
+  const code = list
+    .map(({ block, index }) => (index === selected.value ? editedCode.value : block.code))
+    .join('\n\n')
+
+  running.value = true
+  output.value = ''
+  sqlTables.value = []
+  sqlError.value = ''
+  try {
+    const runner = await getRunner(lang)
+    if (!runner) {
+      output.value = t('chat.unsupported')
+      return
+    }
+    runnerLabel.value = runner.loadingLabel || ''
+    await runner.init()
+    ready.value = true
+    runnerLabel.value = ''
+    await runner.run({
+      code,
+      input: '',
+      onOutput: (text) => { output.value += text },
+      onResults: (tables) => { sqlTables.value = tables },
+      onError: (msg) => { sqlError.value = msg },
+    })
+  } catch (e: any) {
+    output.value += `\n${e?.message || e}\n`
+  } finally {
+    running.value = false
+    runnerLabel.value = ''
+  }
+}
+
 function clearOutput() {
   output.value = ''
   sqlTables.value = []
@@ -440,3 +520,13 @@ async function copyCode() {
 
 defineExpose({ run })
 </script>
+
+<style scoped>
+/* 代码块标签条：块多时横向滚动，但不要出现滚动条 */
+.chat-tabs {
+  scrollbar-width: none;
+}
+.chat-tabs::-webkit-scrollbar {
+  display: none;
+}
+</style>

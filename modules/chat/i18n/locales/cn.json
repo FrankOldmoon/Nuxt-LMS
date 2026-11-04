@@ -44,6 +44,7 @@
     "toolRunning": "正在执行 {name}…",
     "revert": "还原为 AI 原文",
     "fullscreen": "全屏预览",
-    "exitFullscreen": "退出全屏"
+    "exitFullscreen": "退出全屏",
+    "runAll": "全部运行（按顺序拼接同语言代码块）"
   }
 }
