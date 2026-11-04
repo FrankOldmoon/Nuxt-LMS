@@ -8,7 +8,7 @@
  * 工具名一旦定下不要改，历史消息里的 tool_calls 会引用它。
  */
 import { db, schema } from '@nuxthub/db'
-import { eq } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 import {
   listWorkspaceFiles,
   readWorkspaceFile,
@@ -127,6 +127,35 @@ export const TOOL_DEFS = [
           only_unscored: { type: 'boolean', description: 'my_homeworks 专用：只列还没评分的作业' },
         },
         required: ['kind'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'search_learning',
+      description: '按关键词在「我参与的课程」里找相关章节。用户说「我想学 X」「有没有讲 Y 的」「哪一章讲 Z」时用它。返回章节引用和命中片段，正文由界面渲染给用户。',
+      parameters: {
+        type: 'object',
+        properties: {
+          keyword: { type: 'string', description: '知识点或主题关键词，如「循环」「列表」「函数」' },
+          course_id: { type: 'integer', description: '限定在某门课程里搜（可选）' },
+        },
+        required: ['keyword'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'chapter_materials',
+      description: '查某个章节配套的练习题、作业与测验清单（只有名称和分值，不含答案）。告诉用户「学完这章可以练什么」时用它。',
+      parameters: {
+        type: 'object',
+        properties: {
+          chapter_id: { type: 'integer', description: '章节 ID' },
+        },
+        required: ['chapter_id'],
       },
     },
   },
@@ -300,11 +329,172 @@ async function loadChapterForUser(_userId: number, chapterId: number) {
       courseId: schema.chapters.courseId,
       content: schema.chapters.content,
       isOpen: schema.chapters.isOpen,
+      questionIds: schema.chapters.questionIds,
+      homeworkIds: schema.chapters.homeworkIds,
+      quizIds: schema.chapters.quizIds,
     })
     .from(schema.chapters)
     .where(eq(schema.chapters.id, chapterId))
     .limit(1)
   return ch || null
+}
+
+// ===================== 按知识点找章节 =====================
+// 章节正文压文本比较费时（最大 57 万字符），缓存起来；章节不常改，
+// 容量上限只是防止长期运行时无界增长。
+const chapterTextCache = new Map<number, string>()
+
+function cachedChapterText(ch: any): string {
+  const hit = chapterTextCache.get(ch.id)
+  if (hit !== undefined) return hit
+  const text = flattenContent(ch.content, 30000)
+  if (chapterTextCache.size > 200) chapterTextCache.clear()
+  chapterTextCache.set(ch.id, text)
+  return text
+}
+
+/** 取关键词前后一小段，作为「命中在这里」的证据给模型看 */
+function snippetOf(text: string, keyword: string, width = 60): string {
+  const i = text.toLowerCase().indexOf(keyword.toLowerCase())
+  if (i < 0) return ''
+  const start = Math.max(0, i - width)
+  const end = Math.min(text.length, i + keyword.length + width)
+  return (start > 0 ? '…' : '')
+    + text.slice(start, end).replace(/\s+/g, ' ')
+    + (end < text.length ? '…' : '')
+}
+
+/** 课内/全部课程里按关键词找章节（只返回引用与片段，正文交给前端渲染） */
+async function searchLearning(userId: number, args: any): Promise<string> {
+  const keyword = String(args?.keyword || '').trim()
+  if (!keyword) return '错误：keyword 不能为空'
+  const courseId = Number(args?.course_id) || 0
+
+  // 只搜用户参与过的课程，避免把没选的课暴露出去
+  const mine = await db
+    .select({ courseId: schema.userCourses.courseId })
+    .from(schema.userCourses)
+    .where(eq(schema.userCourses.userId, userId))
+  const courseIds = mine.map((r) => r.courseId).filter((id) => !courseId || id === courseId)
+  if (!courseIds.length) return '你还没有参与任何课程，暂时搜不到内容。'
+
+  const rows = await db
+    .select({
+      id: schema.chapters.id,
+      name: schema.chapters.name,
+      courseId: schema.chapters.courseId,
+      content: schema.chapters.content,
+      tags: schema.chapters.tags,
+      questionIds: schema.chapters.questionIds,
+    })
+    .from(schema.chapters)
+    .where(inArray(schema.chapters.courseId, courseIds))
+
+  const kw = keyword.toLowerCase()
+  const hits: { ch: any; score: number; snippet: string }[] = []
+  for (const ch of rows) {
+    const nameHit = String(ch.name || '').toLowerCase().includes(kw)
+    const tagHit = JSON.stringify(ch.tags ?? []).toLowerCase().includes(kw)
+    const text = cachedChapterText(ch)
+    const bodyHit = text.toLowerCase().includes(kw)
+    if (!nameHit && !tagHit && !bodyHit) continue
+    hits.push({
+      ch,
+      // 章节名命中比正文命中更可信
+      score: (nameHit ? 3 : 0) + (tagHit ? 2 : 0) + (bodyHit ? 1 : 0),
+      snippet: bodyHit ? snippetOf(text, keyword) : '',
+    })
+  }
+
+  if (!hits.length) return `在你参与的课程里没有找到和「${keyword}」相关的章节。`
+
+  hits.sort((a, b) => b.score - a.score)
+  const top = hits.slice(0, 5)
+
+  const courseRows = await db
+    .select({ id: schema.courses.id, name: schema.courses.name })
+    .from(schema.courses)
+    .where(inArray(schema.courses.id, [...new Set(top.map((h) => h.ch.courseId))]))
+  const courseName = new Map(courseRows.map((c) => [c.id, c.name]))
+
+  return JSON.stringify({
+    keyword,
+    total: hits.length,
+    refs: top.map((h) => ({
+      ref: 'chapter',
+      id: h.ch.id,
+      name: h.ch.name,
+      courseId: h.ch.courseId,
+      courseName: courseName.get(h.ch.courseId) || '',
+      questionCount: Array.isArray(h.ch.questionIds) ? h.ch.questionIds.length : 0,
+      snippet: h.snippet,
+    })),
+    note: '章节正文已由界面展示给用户。回答时说清哪章最相关、为什么，不要复述全文；需要细节再用 search_chapter 查。',
+  })
+}
+
+/** 章节配套的练习题 / 作业 / 测验清单（只给名称与分值，绝不给答案） */
+async function chapterMaterials(_userId: number, args: any): Promise<string> {
+  const id = Number(args?.chapter_id) || 0
+  const ch = await loadChapterForUser(_userId, id)
+  if (!ch) return '错误：章节不存在'
+
+  const qIds: number[] = Array.isArray(ch.questionIds) ? ch.questionIds.map(Number) : []
+  const hIds: number[] = Array.isArray(ch.homeworkIds) ? ch.homeworkIds.map(Number) : []
+  const zIds: number[] = Array.isArray(ch.quizIds) ? ch.quizIds.map(Number) : []
+
+  const [qs, hws, qzs] = await Promise.all([
+    qIds.length
+      ? db.select({
+        cid: schema.questions.cid,
+        name: schema.questions.name,
+        type: schema.questions.type,
+        point: schema.questions.point,
+      }).from(schema.questions).where(and(
+        eq(schema.questions.courseId, ch.courseId),
+        inArray(schema.questions.cid, qIds),
+      ))
+      : Promise.resolve([]),
+    hIds.length
+      ? db.select({
+        cid: schema.homeworks.cid,
+        name: schema.homeworks.name,
+        point: schema.homeworks.point,
+      }).from(schema.homeworks).where(and(
+        eq(schema.homeworks.courseId, ch.courseId),
+        inArray(schema.homeworks.cid, hIds),
+      ))
+      : Promise.resolve([]),
+    zIds.length
+      ? db.select({
+        cid: schema.quizzes.cid,
+        name: schema.quizzes.name,
+        point: schema.quizzes.point,
+      }).from(schema.quizzes).where(and(
+        eq(schema.quizzes.courseId, ch.courseId),
+        inArray(schema.quizzes.cid, zIds),
+      ))
+      : Promise.resolve([]),
+  ])
+
+  const TYPE_CN: Record<string, string> = {
+    single: '单选', multiple: '多选', judge: '判断', fill: '填空',
+    sort: '排序', match: '匹配', classify: '分类',
+  }
+
+  const lines = [`《${ch.name}》配套学习材料：`]
+  lines.push(qs.length
+    ? `练习题 ${qs.length} 道：\n` + qs.map((q: any) =>
+      `  第${q.cid}题 ${q.name}（${TYPE_CN[q.type] || q.type || '题'}，${q.point ?? '-'} 分）`).join('\n')
+    : '练习题：无')
+  lines.push(hws.length
+    ? `作业 ${hws.length} 份：\n` + hws.map((h: any) => `  第${h.cid}份 ${h.name}（${h.point ?? '-'} 分）`).join('\n')
+    : '作业：无')
+  lines.push(qzs.length
+    ? `测验 ${qzs.length} 次：\n` + qzs.map((z: any) => `  第${z.cid}次 ${z.name}（${z.point ?? '-'} 分）`).join('\n')
+    : '测验：无')
+
+  return lines.join('\n\n')
 }
 
 // ===================== 执行入口 =====================
@@ -368,6 +558,12 @@ export async function executeServerTool(name: string, args: any, ctx: ToolContex
 
       case 'lms_query':
         return await lmsQuery(ctx.userId, args)
+
+      case 'search_learning':
+        return await searchLearning(ctx.userId, args)
+
+      case 'chapter_materials':
+        return await chapterMaterials(ctx.userId, args)
 
       case 'show_chapter': {
         const id = Number(args?.chapter_id) || 0
