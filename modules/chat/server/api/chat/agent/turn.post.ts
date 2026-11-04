@@ -15,6 +15,7 @@
  *   [DONE]
  */
 import { TOOL_DEFS } from '../../../utils/tools'
+import { detectHomeworkIntent, buildHomeworkGuardMessage } from '../../../utils/guards'
 
 const AGENT_SYSTEM = `你是一个带「会话工作区」的 AI 助手。工作区是用户能在右侧看到的虚拟磁盘。
 
@@ -79,9 +80,23 @@ export default eventHandler(async (event) => {
   const trimmed = apiUrl.replace(/\/$/, '')
   const url = /\/chat\/completions$/.test(trimmed) ? trimmed : trimmed + '/chat/completions'
 
+  // 代做题目检测：命中则插入一条教学模式指令（不硬拒，保留讲思路的能力）
+  const userMsgs = safeMessages.filter((m: any) => m?.role === 'user')
+  const lastUser = userMsgs[userMsgs.length - 1]
+  const prevUser = userMsgs[userMsgs.length - 2]
+  let intent = lastUser ? detectHomeworkIntent(String(lastUser.content || '')) : null
+  // 短追问（"那到底哪个""嗯？"）本身没特征，沿用上一条是题目的判断
+  if (!intent && lastUser && prevUser && String(lastUser.content || '').trim().length < 30) {
+    intent = detectHomeworkIntent(String(prevUser.content || ''))
+  }
+
+  const outMessages: any[] = [{ role: 'system', content: AGENT_SYSTEM }]
+  if (intent) outMessages.push({ role: 'system', content: buildHomeworkGuardMessage(intent) })
+  outMessages.push(...safeMessages)
+
   const requestBody: Record<string, any> = {
     model: defaultModel,
-    messages: [{ role: 'system', content: AGENT_SYSTEM }, ...safeMessages],
+    messages: outMessages,
     tools: TOOL_DEFS,
     tool_choice: 'auto',
     stream: true,
