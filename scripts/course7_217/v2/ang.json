@@ -1,0 +1,6 @@
+{
+  "leg_r": 30, "knee_r": 54, "ankle_r": 91,
+  "leg_l": 150, "knee_l": 142, "ankle_l": 95,
+  "shoulder_r": 32, "arm_r": 144, "hand_r": 40,
+  "shoulder_l": 150, "arm_l": 37, "hand_l": 130
+}

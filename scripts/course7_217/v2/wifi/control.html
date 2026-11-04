@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f1115">
+<title>Biped Robot - Control</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#171a21; --line:#262c38;
+    --txt:#e8ecf3; --dim:#8b95a7; --on:#7ee0a3; --warm:#f2b544;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%}
+  body{
+    background:radial-gradient(1200px 600px at 50% -10%,#1b2130 0%,var(--bg) 60%);
+    color:var(--txt);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:16px;line-height:1.35;font-weight:500;
+    overflow-x:hidden;
+    user-select:none;
+  }
+  .app{
+    width:100%;max-width:420px;margin:0 auto;
+    padding:20px 16px calc(24px + env(safe-area-inset-bottom));
+    display:flex;flex-direction:column;gap:16px;
+  }
+
+  header{display:flex;align-items:center;gap:12px}
+  .mark{
+    width:40px;height:40px;border-radius:12px;flex:0 0 auto;
+    background:linear-gradient(160deg,#2a3241,#161a22);
+    border:1px solid var(--line);position:relative;
+  }
+  .mark:before,.mark:after{
+    content:"";position:absolute;left:50%;transform:translateX(-50%);
+    background:var(--on);border-radius:2px;
+  }
+  .mark:before{top:9px;width:3px;height:9px;box-shadow:-7px 7px 0 0 #7ee0a3,7px 7px 0 0 #7ee0a3}
+  .mark:after{bottom:9px;width:12px;height:2px;background:var(--dim)}
+  h1{font-size:18px;margin:0;letter-spacing:.2px}
+  .sub{margin:2px 0 0;color:var(--dim);font-size:12.5px}
+
+  .status{
+    display:flex;align-items:center;gap:9px;
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:11px 14px;font-size:13.5px;color:var(--dim);
+    min-height:44px;
+  }
+  .dot{
+    width:8px;height:8px;border-radius:50%;background:var(--dim);
+    box-shadow:0 0 0 3px rgba(139,149,167,.12);flex:0 0 auto;
+    transition:background .15s,box-shadow .15s;
+  }
+  .status.on .dot{background:var(--on);box-shadow:0 0 0 3px rgba(126,224,163,.18)}
+  .status.on{color:var(--txt)}
+  .status b{font-weight:600;color:var(--txt)}
+
+  .pad{display:grid;gap:10px;grid-template-columns:repeat(3,1fr);
+       grid-template-areas:". up ." "left stop right" ". down ."}
+  .up{grid-area:up}.left{grid-area:left}.stop{grid-area:stop}
+  .right{grid-area:right}.down{grid-area:down}
+
+  .btn{
+    -webkit-appearance:none;appearance:none;
+    border:1px solid var(--line);border-radius:16px;
+    background:linear-gradient(180deg,#232937,#1a1f29);
+    color:var(--txt);cursor:pointer;
+    font-family:inherit;font-size:15px;font-weight:600;line-height:1.1;
+    padding:18px 6px;min-height:66px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+    transition:transform .08s ease,background .12s ease,border-color .12s ease;
+  }
+  .btn small{font-weight:500;font-size:11px;color:var(--dim);letter-spacing:.3px}
+  .btn:active,.btn.hit{transform:scale(.955);background:#2b3240;border-color:#3a4457}
+  .btn.primary{
+    background:linear-gradient(180deg,#20493a,#163126);
+    border-color:#2f6a52;
+  }
+  .btn.primary small{color:#9fd8b8}
+  .btn.warm{background:linear-gradient(180deg,#3a2e19,#241c10);border-color:#6b5327}
+  .btn.warm small{color:#e0bd7d}
+  .btn.ghost{background:#141821}
+  .btn:disabled{opacity:.45}
+
+  .grid2{display:grid;gap:10px;grid-template-columns:repeat(3,1fr)}
+  .wide{grid-column:1/-1}
+
+  .rule{height:1px;background:var(--line);margin:2px 0}
+  .hint{color:var(--dim);font-size:12px;text-align:center;line-height:1.5}
+  .hint b{color:#b9c3d4;font-weight:600}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="mark"></div>
+    <div>
+      <h1>Biped Robot</h1>
+      <p class="sub">WiFi remote - eight commands</p>
+    </div>
+  </header>
+
+  <div class="status" id="status"><span class="dot"></span><span id="msg">Ready</span></div>
+
+  <div class="pad">
+    <button class="btn primary up"    data-p="/go"><span>Forward</span><small>/go</small></button>
+    <button class="btn left"          data-p="/left"><span>Left</span><small>/left</small></button>
+    <button class="btn ghost stop"    data-p="/reset"><span>Stand</span><small>/reset</small></button>
+    <button class="btn right"         data-p="/right"><span>Right</span><small>/right</small></button>
+    <button class="btn down"          data-p="/back"><span>Back</span><small>/back</small></button>
+  </div>
+
+  <div class="rule"></div>
+
+  <div class="grid2">
+    <button class="btn warm" data-p="/kick"><span>Kick</span><small>/kick</small></button>
+    <button class="btn warm" data-p="/punch"><span>Punch</span><small>/punch</small></button>
+    <button class="btn warm" data-p="/pushup"><span>Push-up</span><small>/pushup</small></button>
+    <button class="btn ghost wide" data-p="/reset"><span>Back to standing pose</span><small>/reset</small></button>
+  </div>
+
+  <p class="hint">Local WiFi only - no internet. If the page stops answering,<br>
+  press <b>Stand</b>, then reload.</p>
+
+</div>
+
+<script>
+  var box = document.getElementById('status');
+  var msg = document.getElementById('msg');
+  var timer = null;
+
+  function say(text, ok) {
+    msg.innerHTML = text;
+    box.classList.toggle('on', !!ok);
+    clearTimeout(timer);
+    timer = setTimeout(function () {
+      msg.innerHTML = 'Ready';
+      box.classList.remove('on');
+    }, 2500);
+  }
+
+  function send(btn) {
+    var path = btn.getAttribute('data-p');
+    var label = btn.querySelector('span').innerHTML;
+    btn.classList.add('hit');
+    setTimeout(function () { btn.classList.remove('hit'); }, 140);
+    if (navigator.vibrate) navigator.vibrate(12);
+    say('Sent: <b>' + label + '</b>', true);
+
+    fetch(path, { cache: 'no-store' }).catch(function () {
+      say('No answer - is the robot still on this WiFi?', false);
+    });
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('.btn'), function (b) {
+    b.addEventListener('click', function () { send(b); });
+  });
+</script>
+</body>
+</html>
