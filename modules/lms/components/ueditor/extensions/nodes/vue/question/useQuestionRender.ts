@@ -212,6 +212,20 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
                 chapterTask?.reportNodeDone('question', questionId.value, (question.value?.correct_rate || 0) >= 1)
             }
             emit('submitted', { isCorrect: isCorrect.value, questionId: questionId.value })
+            // 通知聊天页：这次作答要进入对话上下文，AI 下一轮才知道学生刚答错还是答对。
+            // 题目渲染在 UeditorRender 深处，emit 传不到页面，用 window 事件桥接。
+            if (import.meta.client) {
+                window.dispatchEvent(new CustomEvent('lms:question-submitted', {
+                    detail: {
+                        courseId: effectiveCourseId.value,
+                        cid: questionId.value,
+                        name: question.value?.name || '',
+                        type: question.value?.type || '',
+                        isCorrect: isCorrect.value,
+                        rate: question.value?.correct_rate ?? 0,
+                    },
+                }))
+            }
             if (onEvaluationAnswered) {
                 onEvaluationAnswered({ isCorrect: isCorrect.value, question: question.value })
             }

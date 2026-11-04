@@ -533,6 +533,11 @@ async function searchLearning(userId: number, args: any): Promise<string> {
   hits.sort((a, b) => b.score - a.score)
   const top = hits.slice(0, 5)
 
+  // 给一个「章节顺序」：同一门课内按 id 排（章节通常是按教学顺序建的），
+  // 跨课程按课程分组。模型据此排「先学哪个、学完练什么」。
+  const ordered = [...top].sort((a, b) =>
+    a.ch.courseId - b.ch.courseId || a.ch.id - b.ch.id)
+
   const courseRows = await db
     .select({ id: schema.courses.id, name: schema.courses.name })
     .from(schema.courses)
@@ -551,7 +556,15 @@ async function searchLearning(userId: number, args: any): Promise<string> {
       questionCount: Array.isArray(h.ch.questionIds) ? h.ch.questionIds.length : 0,
       snippet: h.snippet,
     })),
-    note: '章节正文已由界面展示给用户。回答时说清哪章最相关、为什么，不要复述全文；需要细节再用 search_chapter 查。',
+    suggestedOrder: ordered.map((h, i) => ({
+      step: i + 1,
+      id: h.ch.id,
+      name: h.ch.name,
+      questionCount: Array.isArray(h.ch.questionIds) ? h.ch.questionIds.length : 0,
+    })),
+    note: '章节正文已由界面展示给用户。回答时说清哪章最相关、为什么，不要复述全文；'
+      + '用户想系统学一遍时，按 suggestedOrder 给分步计划（先学哪章 → 练几题 → 再学哪章），'
+      + '需要某章的练习清单再用 chapter_materials。',
   })
 }
 

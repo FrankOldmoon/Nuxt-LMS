@@ -68,10 +68,13 @@
               :key="`c${r.id}`"
               type="button"
               class="flex items-center gap-1.5 rounded-md border border-default px-2 py-1 text-xs text-toned transition-colors hover:bg-elevated"
+              :title="r.snippet || r.name"
               @click="openChapter(r)"
             >
               <UIcon name="i-lucide-book-open-text" class="size-3.5 text-primary shrink-0" />
-              <span class="truncate max-w-[200px]">{{ r.name }}</span>
+              <span class="truncate max-w-[150px]">{{ r.name }}</span>
+              <!-- 命中片段直接露出，省掉「点开才知道是什么」的来回 -->
+              <span v-if="r.snippet" class="text-dimmed truncate max-w-[240px] hidden sm:inline">{{ r.snippet }}</span>
             </button>
             <button
               v-for="r in questionRefs"
@@ -706,7 +709,24 @@ function openLogin() {
   loginOpen.value = true
 }
 
+// ===================== 题目作答回流 =====================
+// 学生在弹层里做题，判分结果要能进对话上下文 —— 否则 AI 只会说「你去做做看」，
+// 然后就没下文了。事件由 useQuestionRender 在提交成功后派发。
+async function onQuestionSubmitted(e: Event) {
+  const d: any = (e as CustomEvent)?.detail
+  if (!d?.cid) return
+  const pct = Math.round((Number(d.rate) || 0) * 100)
+  const text = d.isCorrect
+    ? `[学习事件] 学生刚做对了第 ${d.cid} 题「${d.name}」。若与当前话题相关可简短肯定，不要重复讲解。`
+    : `[学习事件] 学生刚做错第 ${d.cid} 题「${d.name}」（得分率 ${pct}%）。可以问要不要一起看看思路，但不要直接给出答案。`
+  enqueue(async () => {
+    const id = await ensureConversation()
+    await appendMessages(id, [{ role: 'system' as any, content: text }])
+  })
+}
+
 onMounted(() => {
+  window.addEventListener('lms:question-submitted', onQuestionSubmitted)
   // 恢复上次拖动后的栏宽
   try {
     const raw = localStorage.getItem(WIDTHS_KEY)
@@ -716,6 +736,10 @@ onMounted(() => {
       if (typeof saved?.right === 'number') rightWidth.value = clamp(saved.right, RIGHT_MIN, RIGHT_MAX)
     }
   } catch { /* ignore */ }
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('lms:question-submitted', onQuestionSubmitted)
 })
 
 onMounted(async () => {

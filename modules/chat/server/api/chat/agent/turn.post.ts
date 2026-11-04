@@ -17,6 +17,7 @@
 import { TOOL_DEFS } from '../../../utils/tools'
 // 题目代做检测（放 base/utils，前后端与服务端接口共用同一套规则）
 import { detectHomeworkIntent, buildHomeworkGuardMessage } from '../../../../../base/utils/aiGuard'
+import { lmsQuery } from '../../../utils/lmsQuery'
 
 const AGENT_SYSTEM = `你是一个带「会话工作区」的 AI 助手。工作区是用户能在右侧看到的虚拟磁盘。
 
@@ -102,8 +103,31 @@ export default eventHandler(async (event) => {
   if (!intent && !alreadyGuarded && lastUser && prevUser && String(lastUser.content || '').trim().length < 30) {
     intent = detectHomeworkIntent(String(prevUser.content || ''))
   }
+  // 会话级兜底：只看最后一条容易被"换个问法"绕过（不说「选哪个」，改问「所以是 0 到 4 吗」）。
+  // 最近 6 条里命中两次以上，说明在反复磨同一道题，继续保持教学模式。
+  if (!intent && !alreadyGuarded && userMsgs.length >= 2) {
+    const recentHits = userMsgs
+      .slice(-6)
+      .filter((m: any) => detectHomeworkIntent(String(m.content || '')))
+    if (recentHits.length >= 2) intent = { reason: '持续追问同一知识点' }
+  }
 
   const outMessages: any[] = [{ role: 'system', content: AGENT_SYSTEM }]
+
+  // 学情摘要：让模型知道学生在哪门课、学到哪、错在哪 —— 否则它只是个失忆的家教。
+  // 每轮都注入（一次 overview 查询约几十毫秒），保证进度变化能及时反映。
+  try {
+    const brief = await lmsQuery(user.id, { kind: 'overview' })
+    if (brief && !String(brief).startsWith('错误')) {
+      outMessages.push({
+        role: 'system',
+        content: `【学情摘要】${String(brief).slice(0, 600)}\n`
+          + '回答时贴合这个学生的实际进度：他已经在学的别再从头讲，他错得多的地方可以多给例子。'
+          + '不要主动复述整份摘要，学生问起再说。',
+      })
+    }
+  } catch { /* 摘要失败不影响对话 */ }
+
   if (intent) outMessages.push({ role: 'system', content: buildHomeworkGuardMessage(intent) })
   outMessages.push(...safeMessages)
 

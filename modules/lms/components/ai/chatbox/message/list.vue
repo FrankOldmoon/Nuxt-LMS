@@ -1,6 +1,6 @@
 <template>
   <div ref="msgListRef" class="flex-1 overflow-y-auto p-3 space-y-3" @scroll="onScroll">
-    <AiChatboxMessageItem v-for="(msg, idx) in messages" :key="idx" :msg="msg" :idx="idx" />
+    <AiChatboxMessageItem v-for="item in visible" :key="item.idx" :msg="item.msg" :idx="item.idx" />
 
     <!-- 加载中 -->
     <div v-if="loading" class="flex gap-2">
@@ -18,4 +18,12 @@
 <script setup lang="ts">
 const { t } = useI18n()
 const { msgListRef, messages, loading, onScroll } = useChatboxContext()
+
+// system 消息是内部事件（题目作答结果、学情摘要），只喂给模型，不给用户看。
+// 保留原索引，因为上层的 toggleReasoning 等操作按下标改数组。
+const visible = computed(() =>
+  (messages.value || [])
+    .map((msg: any, idx: number) => ({ msg, idx }))
+    .filter(({ msg }: any) => msg?.role !== 'system'),
+)
 </script>
