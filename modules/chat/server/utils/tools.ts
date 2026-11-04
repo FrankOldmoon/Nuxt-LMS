@@ -8,7 +8,7 @@
  * 工具名一旦定下不要改，历史消息里的 tool_calls 会引用它。
  */
 import { db, schema } from '@nuxthub/db'
-import { and, eq, isNull, asc, inArray } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import {
   listWorkspaceFiles,
   readWorkspaceFile,
@@ -16,6 +16,7 @@ import {
   deleteWorkspaceFile,
   MAX_FILE_SIZE,
 } from './workspace'
+import { lmsQuery } from './lmsQuery'
 
 export const CLIENT_TOOLS = ['run_python'] as const
 
@@ -88,16 +89,42 @@ export const TOOL_DEFS = [
     type: 'function',
     function: {
       name: 'lms_query',
-      description: '查询当前用户的课程与学习数据（只读，只能看到自己的数据）。',
+      description: '查询当前用户的学习数据与学习资料（只读，只能看到自己的数据）。用户问「我学得怎么样」「我有哪些作业没交」「哪几题老做错」「这门课有什么材料」时用它。',
       parameters: {
         type: 'object',
         properties: {
           kind: {
             type: 'string',
-            enum: ['my_courses', 'course_chapters', 'my_progress'],
-            description: 'my_courses=我参与的课程；course_chapters=某课程章节列表（需 course_id）；my_progress=我的章节完成情况（可选 course_id）',
+            enum: [
+              'overview',
+              'my_courses',
+              'course_chapters',
+              'course_resources',
+              'my_progress',
+              'my_homeworks',
+              'my_quizzes',
+              'my_questions',
+              'my_comments',
+              'my_races',
+              'my_files',
+            ],
+            description: [
+              'overview=全部维度的总览（课程/章节/作业/测验/题目/竞赛/评论/网盘）',
+              'my_courses=我参与的课程',
+              'course_chapters=某课程的章节列表（需 course_id）',
+              'course_resources=某课程有哪些作业/测验/题目/竞赛（需 course_id）',
+              'my_progress=我的章节通过情况与分数（可选 course_id）',
+              'my_homeworks=我的作业提交与得分（可选 course_id / only_unscored）',
+              'my_quizzes=我的测验成绩（可选 course_id）',
+              'my_questions=我的题目正确率与错题（可选 course_id / only_wrong）',
+              'my_comments=我发表的讨论',
+              'my_races=我的竞赛成绩',
+              'my_files=我网盘里的资料',
+            ].join('；'),
           },
-          course_id: { type: 'integer', description: '课程 ID，course_chapters 必填' },
+          course_id: { type: 'integer', description: '课程 ID，用于按课程过滤' },
+          only_wrong: { type: 'boolean', description: 'my_questions 专用：只列做错过的题' },
+          only_unscored: { type: 'boolean', description: 'my_homeworks 专用：只列还没评分的作业' },
         },
         required: ['kind'],
       },
@@ -278,84 +305,6 @@ async function loadChapterForUser(_userId: number, chapterId: number) {
     .where(eq(schema.chapters.id, chapterId))
     .limit(1)
   return ch || null
-}
-
-// ===================== LMS 查询 =====================
-async function lmsQuery(userId: number, args: any) {
-  const kind = String(args?.kind || '')
-
-  if (kind === 'my_courses') {
-    const rows = await db
-      .select({
-        id: schema.courses.id,
-        name: schema.courses.name,
-        code: schema.courses.code,
-        isTeacher: schema.userCourses.isTeacher,
-        score: schema.userCourses.score,
-      })
-      .from(schema.userCourses)
-      .innerJoin(schema.courses, eq(schema.userCourses.courseId, schema.courses.id))
-      .where(eq(schema.userCourses.userId, userId))
-    if (!rows.length) return '当前用户没有参与任何课程。'
-    return rows.map((r) => `#${r.id} ${r.name}${r.code ? `（${r.code}）` : ''}${r.isTeacher ? ' [教师]' : ''}${r.score != null ? ` 分数 ${r.score}` : ''}`).join('\n')
-  }
-
-  if (kind === 'course_chapters') {
-    const courseId = Number(args?.course_id) || 0
-    if (!courseId) return '错误：course_chapters 需要 course_id'
-
-    const [member] = await db
-      .select({ isTeacher: schema.userCourses.isTeacher })
-      .from(schema.userCourses)
-      .where(and(eq(schema.userCourses.userId, userId), eq(schema.userCourses.courseId, courseId)))
-      .limit(1)
-    if (!member) return '错误：你没有参与该课程，无权查看'
-
-    const rows = await db
-      .select({ id: schema.chapters.id, name: schema.chapters.name, isOpen: schema.chapters.isOpen })
-      .from(schema.chapters)
-      .where(eq(schema.chapters.courseId, courseId))
-      .orderBy(asc(schema.chapters.id))
-    if (!rows.length) return '该课程还没有章节。'
-    return rows.map((r) => `#${r.id} ${r.name}${r.isOpen ? '' : ' [未开放]'}`).join('\n')
-  }
-
-  if (kind === 'my_progress') {
-    const courseId = Number(args?.course_id) || 0
-
-    let chapterIds: number[] | null = null
-    if (courseId) {
-      const chapters = await db
-        .select({ id: schema.chapters.id })
-        .from(schema.chapters)
-        .where(eq(schema.chapters.courseId, courseId))
-      chapterIds = chapters.map((c) => c.id)
-      if (!chapterIds.length) return '该课程没有章节。'
-    }
-
-    const conds: any[] = [eq(schema.userChapters.userId, userId)]
-    if (chapterIds) conds.push(inArray(schema.userChapters.chapterId, chapterIds))
-
-    const rows = await db
-      .select({
-        chapterId: schema.userChapters.chapterId,
-        score: schema.userChapters.score,
-        isPass: schema.userChapters.isPass,
-        readTime: schema.userChapters.readTime,
-        chapterName: schema.chapters.name,
-      })
-      .from(schema.userChapters)
-      .leftJoin(schema.chapters, eq(schema.userChapters.chapterId, schema.chapters.id))
-      .where(and(...conds))
-      .orderBy(asc(schema.userChapters.chapterId))
-
-    if (!rows.length) return '暂无学习记录。'
-    return rows
-      .map((r) => `#${r.chapterId} ${r.chapterName || '(未知章节)'}｜${r.isPass ? '已通过' : '未通过'}｜分数 ${r.score ?? '-'}｜阅读 ${r.readTime ?? 0}s`)
-      .join('\n')
-  }
-
-  return `错误：未知的 kind=${kind}`
 }
 
 // ===================== 执行入口 =====================
