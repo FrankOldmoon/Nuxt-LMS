@@ -9,12 +9,13 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "pm": "pm2 restart ecosystem.config.cjs",
-    "server": "node .output/server/index.mjs",
+    "server": "nuxt-hub db migrate && node .output/server/index.mjs",
     "test": "vitest run",
     "test:unit": "vitest run --project unit",
     "test:integration": "vitest run --project integration",
     "test:watch": "vitest",
-    "vendor": "node scripts/copy-vendor-assets.mjs"
+    "vendor": "node scripts/copy-vendor-assets.mjs",
+    "db:migrate": "nuxt-hub db migrate"
   },
   "dependencies": {
     "@colyseus/schema": "^2.0.0",
