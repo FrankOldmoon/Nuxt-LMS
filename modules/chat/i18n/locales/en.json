@@ -47,6 +47,12 @@
     "exitFullscreen": "Exit fullscreen",
     "runAll": "Run all (concatenate same-language blocks)",
     "chapterDenied": "This chapter cannot be opened",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "shareToTeacher": "Share with teacher",
+    "unshare": "Stop sharing",
+    "shareOn": "Share link created and copied",
+    "shareOff": "Sharing stopped, old link is invalid",
+    "shareFailed": "Failed to share",
+    "shareReadonly": "Read-only share"
   }
 }

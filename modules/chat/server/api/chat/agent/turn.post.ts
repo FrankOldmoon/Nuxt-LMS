@@ -19,8 +19,34 @@ import { TOOL_DEFS } from '../../../utils/tools'
 import { detectHomeworkIntent, buildHomeworkGuardMessage } from '../../../../../base/utils/aiGuard'
 import { lmsQuery } from '../../../utils/lmsQuery'
 
-const AGENT_SYSTEM = `你是一个带「会话工作区」的 AI 助手。工作区是用户能在右侧看到的虚拟磁盘。
+/**
+ * 历史压缩：长会话只带最近 12 条原文，更早的提问压成一行要点。
+ * 学生可能一学期都在同一个会话里问，全量历史会让 token 翻几倍，
+ * 而且早期无关内容会干扰当前回答。
+ */
+const RECENT_KEEP = 12
+const EARLY_ASKS = 6
 
+function compressHistory(msgs: any[]): any[] {
+  if (!Array.isArray(msgs) || msgs.length <= RECENT_KEEP) return msgs
+  const recent = msgs.slice(-RECENT_KEEP)
+  const early = msgs.slice(0, -RECENT_KEEP)
+  const asks = early
+    .filter((m: any) => m?.role === 'user')
+    .slice(-EARLY_ASKS)
+    .map((m: any) => `- ${String(m.content ?? '').replace(/\s+/g, ' ').slice(0, 80)}`)
+  if (!asks.length) return recent
+  return [
+    {
+      role: 'system',
+      content: `【早期对话摘要】学生之前问过（细节已省略）：\n${asks.join('\n')}\n`
+        + '若需要具体内容，用工具重新查，不要凭印象补充。',
+    },
+    ...recent,
+  ]
+}
+
+const AGENT_SYSTEM = `你是一个带「会话工作区」的 AI 助手。工作区是用户能在右侧看到的虚拟磁盘。
 规则：
 1. 读写文件一律用工具（list_files / read_file / write_file / delete_file），不要臆造文件内容。
 2. 需要产出文件（报告、代码、CSV、网页）时用 write_file 真正落盘，用户才能看到和下载；不要只在回复里贴一段代码就说"已保存"。
@@ -129,7 +155,7 @@ export default eventHandler(async (event) => {
   } catch { /* 摘要失败不影响对话 */ }
 
   if (intent) outMessages.push({ role: 'system', content: buildHomeworkGuardMessage(intent) })
-  outMessages.push(...safeMessages)
+  outMessages.push(...compressHistory(safeMessages))
 
   const requestBody: Record<string, any> = {
     model: defaultModel,

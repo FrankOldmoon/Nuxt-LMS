@@ -64,6 +64,13 @@
       "when": 1793765000000,
       "tag": "0009_chat_workspace_files",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793858309859,
+      "tag": "0010_chat_share",
+      "breakpoints": true
     }
   ]
 }

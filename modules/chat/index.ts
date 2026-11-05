@@ -44,6 +44,12 @@ export default defineNuxtModule({
         path: '/chat',
         file: resolve('./pages/chat.vue'),
       })
+      // 分享出去的只读对话页（学生生成链接给老师看）
+      pages.push({
+        name: 'chat-share',
+        path: '/share/:token',
+        file: resolve('./pages/share/[token].vue'),
+      })
     })
 
     addServerScanDir(resolve('./server'))

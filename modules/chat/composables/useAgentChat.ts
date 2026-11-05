@@ -33,6 +33,8 @@ interface AgentOptions {
   onToolCall?: (call: AgentToolCall, status: 'start' | 'done', result?: string) => void
   /** 工作区文件发生变化（写完/删完），供文件树刷新 */
   onFilesChanged?: () => void
+  /** 流式中途失败：把已生成的部分交出去落库，别让学生只看到自己的问题 */
+  onInterrupted?: (partial: { content: string; reasoning: string; error: string }) => void
 }
 
 const MAX_ROUNDS = 8
@@ -307,6 +309,16 @@ export function useAgentChat(opts: AgentOptions) {
           history.push({ role: 'tool', tool_call_id: call.id, content: result })
         }
       }
+    } catch (e: any) {
+      // 出错也要留下已生成的部分 —— 否则学生刷新后只看到自己问的问题，回答凭空消失
+      if (fullContent.trim()) {
+        opts.onInterrupted?.({
+          content: fullContent,
+          reasoning: fullReasoning,
+          error: String(e?.message || e),
+        })
+      }
+      throw e
     } finally {
       running.value = false
     }

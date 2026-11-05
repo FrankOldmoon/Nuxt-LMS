@@ -47,6 +47,12 @@
     "exitFullscreen": "退出全屏",
     "runAll": "全部运行（按顺序拼接同语言代码块）",
     "chapterDenied": "无法打开该章节",
-    "loading": "加载中…"
+    "loading": "加载中…",
+    "shareToTeacher": "分享给老师",
+    "unshare": "取消分享",
+    "shareOn": "分享链接已生成并复制",
+    "shareOff": "已取消分享，之前的链接失效",
+    "shareFailed": "分享失败",
+    "shareReadonly": "只读分享"
   }
 }

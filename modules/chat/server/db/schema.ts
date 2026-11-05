@@ -32,6 +32,9 @@ export const chatConversations = pgTable(
     pinned: boolean('pinned').notNull().default(false),
     messageCount: integer('message_count').notNull().default(0),
     lastMessageAt: timestamp('last_message_at', { withTimezone: true }).defaultNow(),
+    /** 分享给老师的只读令牌（null = 未分享）。持链接即可查看，不含后续新消息以外的权限 */
+    shareToken: varchar('share_token', { length: 64 }),
+    sharedAt: timestamp('shared_at', { withTimezone: true }),
     ...withTimestamps,
   },
   (t) => ({

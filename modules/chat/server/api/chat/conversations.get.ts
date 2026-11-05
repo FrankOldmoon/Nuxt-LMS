@@ -19,6 +19,7 @@ export default eventHandler(async (event) => {
       messageCount: schema.chatConversations.messageCount,
       lastMessageAt: schema.chatConversations.lastMessageAt,
       createdAt: schema.chatConversations.createdAt,
+      shareToken: schema.chatConversations.shareToken,
     })
     .from(schema.chatConversations)
     .where(and(

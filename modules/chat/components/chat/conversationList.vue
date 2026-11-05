@@ -93,6 +93,8 @@ interface Conversation {
   pinned?: boolean
   messageCount?: number
   lastMessageAt?: string | Date
+  /** 有值表示已分享（生成只读链接） */
+  shareToken?: string | null
 }
 
 const props = defineProps<{
@@ -106,6 +108,7 @@ const emit = defineEmits<{
   rename: [c: Conversation, title: string]
   delete: [c: Conversation]
   pin: [c: Conversation, pinned: boolean]
+  share: [c: Conversation, enable: boolean]
 }>()
 
 const keyword = ref('')
@@ -143,6 +146,11 @@ function menuItems(c: Conversation) {
       label: c.pinned ? t('chat.unpin') : t('chat.pin'),
       icon: c.pinned ? 'i-lucide-pin-off' : 'i-lucide-pin',
       onSelect: () => emit('pin', c, !c.pinned),
+    }, {
+      // 学生主动分享，老师凭链接只读查看
+      label: c.shareToken ? t('chat.unshare') : t('chat.shareToTeacher'),
+      icon: c.shareToken ? 'i-lucide-link-2-off' : 'i-lucide-share-2',
+      onSelect: () => emit('share', c, !c.shareToken),
     }],
     [{
       label: t('chat.delete'),

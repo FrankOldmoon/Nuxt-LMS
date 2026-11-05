@@ -10,6 +10,7 @@
         @rename="renameConversation"
         @delete="askDelete"
         @pin="togglePin"
+        @share="shareConversation"
       />
     </div>
 
@@ -424,11 +425,47 @@ const agent = useAgentChat({
     // 文件树在「文件」页签时才需要刷新
     if (panelTab.value === 'files') fileTreeRef.value?.load?.()
   },
+  onInterrupted: (partial) => {
+    // 流式中途失败：把已生成的部分存下来，并标注中断
+    enqueue(async () => {
+      const id = await ensureConversation()
+      await appendMessages(id, [{
+        role: 'assistant',
+        content: `${partial.content}\n\n（回复中断：${partial.error}。以上为已生成的部分）`,
+        reasoning: partial.reasoning || undefined,
+        model: modelName.value,
+      }])
+    })
+  },
 })
 
 function switchToFiles() {
   // ChatFileTree 挂载时 watch(conversationId, immediate) 会自动拉一次列表
   panelTab.value = 'files'
+}
+
+// ===================== 分享给老师 =====================
+async function shareConversation(c: any, enable: boolean) {
+  try {
+    const r: any = await cRequest('/api/chat/share', {
+      method: 'POST',
+      body: { conversation_id: c.id, enable },
+    })
+    await loadConversations()
+    if (r?.url) {
+      const full = `${location.origin}${r.url}`
+      await navigator.clipboard?.writeText(full).catch(() => {})
+      toast.add({
+        title: t('chat.shareOn'),
+        description: full,
+        color: 'success',
+      })
+    } else {
+      toast.add({ title: t('chat.shareOff'), color: 'neutral' })
+    }
+  } catch (e: any) {
+    toast.add({ title: t('chat.shareFailed'), description: e?.data?.message || e?.message, color: 'error' })
+  }
 }
 
 // ===================== 学习材料引用（章节 / 题目）=====================
@@ -725,8 +762,23 @@ async function onQuestionSubmitted(e: Event) {
   })
 }
 
+// 页面关闭/刷新的兜底：流式中途走人，用 sendBeacon 把已生成部分存下来
+function flushPartialOnUnload() {
+  if (!agent.running.value) return
+  const list = chat.messages.value as any[]
+  const last = list[list.length - 1]
+  if (last?.role !== 'assistant' || !String(last.content || '').trim()) return
+  const body = JSON.stringify({
+    conversation_id: activeId.value,
+    messages: [{ role: 'assistant', content: `${last.content}\n\n（页面关闭，回复中断）` }],
+  })
+  // sendBeacon 在 unload 阶段也能发出，且自动带同源 cookie
+  navigator.sendBeacon?.('/api/chat/messages', new Blob([body], { type: 'application/json' }))
+}
+
 onMounted(() => {
   window.addEventListener('lms:question-submitted', onQuestionSubmitted)
+  window.addEventListener('beforeunload', flushPartialOnUnload)
   // 恢复上次拖动后的栏宽
   try {
     const raw = localStorage.getItem(WIDTHS_KEY)
@@ -740,6 +792,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('lms:question-submitted', onQuestionSubmitted)
+  window.removeEventListener('beforeunload', flushPartialOnUnload)
 })
 
 onMounted(async () => {
