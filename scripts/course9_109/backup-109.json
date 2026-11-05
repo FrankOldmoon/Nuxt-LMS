@@ -1,0 +1,1679 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "heading",
+      "attrs": {
+        "id": "13uxvion9i",
+        "level": 2,
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75,
+        "data-toc-id": "13uxvion9i"
+      },
+      "content": [
+        {
+          "text": "🎯 Learning Objectives",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "After completing this tutorial, you will be able to:",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "attrs": {
+        "icon": "💡",
+        "backgroundColor": "#eff6ff"
+      },
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "💡 Tip: run every example yourself — the fastest way to learn Python is by doing! 🐍",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "bulletList",
+      "attrs": {
+        "margin": null,
+        "listType": "disc"
+      },
+      "content": [
+        {
+          "type": "listItem",
+          "attrs": {
+            "indent": null,
+            "indentUnit": null
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": {
+                "indent": null,
+                "margin": null,
+                "wordWrap": "normal",
+                "textAlign": null,
+                "indentUnit": null,
+                "lineHeight": 1.75
+              },
+              "content": [
+                {
+                  "text": "✅ Understand the purpose of the ",
+                  "type": "text"
+                },
+                {
+                  "text": "break",
+                  "type": "text",
+                  "marks": [
+                    {
+                      "type": "code"
+                    }
+                  ]
+                },
+                {
+                  "text": " statement.",
+                  "type": "text"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "listItem",
+          "attrs": {
+            "indent": null,
+            "indentUnit": null
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": {
+                "indent": null,
+                "margin": null,
+                "wordWrap": "normal",
+                "textAlign": null,
+                "indentUnit": null,
+                "lineHeight": 1.75
+              },
+              "content": [
+                {
+                  "text": "⭐ Stop a loop immediately.",
+                  "type": "text"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "listItem",
+          "attrs": {
+            "indent": null,
+            "indentUnit": null
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": {
+                "indent": null,
+                "margin": null,
+                "wordWrap": "normal",
+                "textAlign": null,
+                "indentUnit": null,
+                "lineHeight": 1.75
+              },
+              "content": [
+                {
+                  "text": "🧩 Use ",
+                  "type": "text"
+                },
+                {
+                  "text": "break",
+                  "type": "text",
+                  "marks": [
+                    {
+                      "type": "code"
+                    }
+                  ]
+                },
+                {
+                  "text": " in ",
+                  "type": "text"
+                },
+                {
+                  "text": "for",
+                  "type": "text",
+                  "marks": [
+                    {
+                      "type": "code"
+                    }
+                  ]
+                },
+                {
+                  "text": " and ",
+                  "type": "text"
+                },
+                {
+                  "text": "while",
+                  "type": "text",
+                  "marks": [
+                    {
+                      "type": "code"
+                    }
+                  ]
+                },
+                {
+                  "text": " loops.",
+                  "type": "text"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "listItem",
+          "attrs": {
+            "indent": null,
+            "indentUnit": null
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": {
+                "indent": null,
+                "margin": null,
+                "wordWrap": "normal",
+                "textAlign": null,
+                "indentUnit": null,
+                "lineHeight": 1.75
+              },
+              "content": [
+                {
+                  "text": "💡 Apply ",
+                  "type": "text"
+                },
+                {
+                  "text": "break",
+                  "type": "text",
+                  "marks": [
+                    {
+                      "type": "code"
+                    }
+                  ]
+                },
+                {
+                  "text": " in practical programming situations.",
+                  "type": "text"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "id": "yj9h3pntm8",
+        "level": 2,
+        "data-toc-id": "yj9h3pntm8"
+      },
+      "content": [
+        {
+          "text": "🗺️ Flowchart: break Statement",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "text": "🗺️ break is the emergency exit 🚪: the moment it runs, Python leaves the loop right away — no more checking.",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "vue",
+      "attrs": {
+        "type": "pintora",
+        "height": 300,
+        "content": "activityDiagram\nstart\nwhile (numbers left ?) is (yes)\n  :number = next number;\n  if (number == 12 ?) then (yes)\n    :print Found!;\n    :break and leave the loop now;\n  else (no)\n    :print number;\n  endif\nendwhile\n:continue with the program;\nstop"
+      }
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "id": "tbpijzag55",
+        "level": 2,
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75,
+        "data-toc-id": "tbpijzag55"
+      },
+      "content": [
+        {
+          "text": "❓ What Is the ",
+          "type": "text"
+        },
+        {
+          "text": "break",
+          "type": "text",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "text": " Statement?",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "The ",
+          "type": "text"
+        },
+        {
+          "text": "break",
+          "type": "text",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "text": " statement is used to ",
+          "type": "text"
+        },
+        {
+          "text": "immediately stop a loop",
+          "type": "text",
+          "marks": [
+            {
+              "type": "bold"
+            }
+          ]
+        },
+        {
+          "text": ".",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "When Python encounters ",
+          "type": "text"
+        },
+        {
+          "text": "break",
+          "type": "text",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "text": ":",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "bulletList",
+      "attrs": {
+        "margin": null,
+        "listType": "disc"
+      },
+      "content": [
+        {
+          "type": "listItem",
+          "attrs": {
+            "indent": null,
+            "indentUnit": null
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": {
+                "indent": null,
+                "margin": null,
+                "wordWrap": "normal",
+                "textAlign": null,
+                "indentUnit": null,
+                "lineHeight": 1.75
+              },
+              "content": [
+                {
+                  "text": "✅ The current loop ends immediately.",
+                  "type": "text"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "listItem",
+          "attrs": {
+            "indent": null,
+            "indentUnit": null
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": {
+                "indent": null,
+                "margin": null,
+                "wordWrap": "normal",
+                "textAlign": null,
+                "indentUnit": null,
+                "lineHeight": 1.75
+              },
+              "content": [
+                {
+                  "text": "⭐ The program continues with the code after the loop.",
+                  "type": "text"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "vue",
+      "attrs": {
+        "type": "question",
+        "content": "142"
+      }
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "id": "ub7w37lj54",
+        "level": 2,
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75,
+        "data-toc-id": "ub7w37lj54"
+      },
+      "content": [
+        {
+          "text": "🧱 Basic Syntax",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "codeBlock",
+      "attrs": {
+        "theme": "light",
+        "margin": null,
+        "language": "python",
+        "textWrap": true
+      },
+      "content": [
+        {
+          "text": "break",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "break",
+          "type": "text",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "text": " is usually placed inside an ",
+          "type": "text"
+        },
+        {
+          "text": "if",
+          "type": "text",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "text": " statement.",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "Example:",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "codeBlock",
+      "attrs": {
+        "theme": "light",
+        "margin": null,
+        "language": "python",
+        "textWrap": true
+      },
+      "content": [
+        {
+          "text": "for i in range(10):\n    if i == 5:\n        break\n\n    print(i)",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "Output:",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "codeBlock",
+      "attrs": {
+        "theme": "light",
+        "margin": null,
+        "language": "text",
+        "textWrap": true
+      },
+      "content": [
+        {
+          "text": "0\n1\n2\n3\n4",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "When ",
+          "type": "text"
+        },
+        {
+          "text": "i",
+          "type": "text",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "text": " becomes ",
+          "type": "text"
+        },
+        {
+          "text": "5",
+          "type": "text",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "text": ", the loop stops.",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "vue",
+      "attrs": {
+        "type": "question",
+        "content": "143"
+      }
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "id": "v1s3hhui6h",
+        "level": 2,
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75,
+        "data-toc-id": "v1s3hhui6h"
+      },
+      "content": [
+        {
+          "text": "🧪 Using ",
+          "type": "text"
+        },
+        {
+          "text": "break",
+          "type": "text",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "text": " in a ",
+          "type": "text"
+        },
+        {
+          "text": "for",
+          "type": "text",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "text": " Loop",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "Example:",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "codeBlock",
+      "attrs": {
+        "theme": "light",
+        "margin": null,
+        "language": "python",
+        "textWrap": true
+      },
+      "content": [
+        {
+          "text": "numbers = [3, 7, 9, 12, 15]\n\nfor number in numbers:\n    if number == 12:\n        break\n\n    print(number)",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "Output:",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "codeBlock",
+      "attrs": {
+        "theme": "light",
+        "margin": null,
+        "language": "text",
+        "textWrap": true
+      },
+      "content": [
+        {
+          "text": "3\n7\n9",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "The loop stops when it finds ",
+          "type": "text"
+        },
+        {
+          "text": "12",
+          "type": "text",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "text": ".",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "vue",
+      "attrs": {
+        "type": "question",
+        "content": "144"
+      }
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "id": "xzidiqsu3l",
+        "level": 2,
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75,
+        "data-toc-id": "xzidiqsu3l"
+      },
+      "content": [
+        {
+          "text": "🧪 Using ",
+          "type": "text"
+        },
+        {
+          "text": "break",
+          "type": "text",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "text": " in a ",
+          "type": "text"
+        },
+        {
+          "text": "while",
+          "type": "text",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "text": " Loop",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "Example:",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "codeBlock",
+      "attrs": {
+        "theme": "light",
+        "margin": null,
+        "language": "python",
+        "textWrap": true
+      },
+      "content": [
+        {
+          "text": "count = 1\n\nwhile count <= 10:\n    print(count)\n\n    if count == 5:\n        break\n\n    count += 1",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "Output:",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "codeBlock",
+      "attrs": {
+        "theme": "light",
+        "margin": null,
+        "language": "text",
+        "textWrap": true
+      },
+      "content": [
+        {
+          "text": "1\n2\n3\n4\n5",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "vue",
+      "attrs": {
+        "type": "question",
+        "content": "145"
+      }
+    },
+    {
+      "type": "horizontalRule",
+      "attrs": {
+        "color": null,
+        "margin": null,
+        "data-type": null
+      }
+    },
+    {
+      "type": "callout",
+      "attrs": {
+        "icon": "💡",
+        "type": "warning",
+        "margin": null,
+        "backgroundColor": "rgb(255, 245, 210)"
+      },
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "indent": null,
+            "margin": null,
+            "wordWrap": "normal",
+            "textAlign": null,
+            "indentUnit": null,
+            "lineHeight": 1.75
+          },
+          "content": [
+            {
+              "text": "The following content is optional.",
+              "type": "text",
+              "marks": [
+                {
+                  "type": "bold"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "horizontalRule",
+      "attrs": {
+        "color": null,
+        "margin": null,
+        "data-type": null
+      }
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "id": "8fpzenfu3s",
+        "level": 2,
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75,
+        "data-toc-id": "8fpzenfu3s"
+      },
+      "content": [
+        {
+          "text": "📝 Example: Searching for an Item",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "codeBlock",
+      "attrs": {
+        "theme": "light",
+        "margin": null,
+        "language": "python",
+        "textWrap": true
+      },
+      "content": [
+        {
+          "text": "names = [\"Alice\", \"Bob\", \"Tom\", \"Emma\"]\n\nfor name in names:\n    if name == \"Tom\":\n        print(\"Found!\")\n        break",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "Output:",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "codeBlock",
+      "attrs": {
+        "theme": "light",
+        "margin": null,
+        "language": "text",
+        "textWrap": true
+      },
+      "content": [
+        {
+          "text": "Found!",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "Once the item is found, there is no need to continue searching.",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "vue",
+      "attrs": {
+        "type": "question",
+        "content": "146"
+      }
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "id": "y61e32fmg4",
+        "level": 2,
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75,
+        "data-toc-id": "y61e32fmg4"
+      },
+      "content": [
+        {
+          "text": "🔁 break",
+          "type": "text",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "text": " in Nested Loops",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "In nested loops, ",
+          "type": "text"
+        },
+        {
+          "text": "break",
+          "type": "text",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "text": " only exits the ",
+          "type": "text"
+        },
+        {
+          "text": "current loop",
+          "type": "text",
+          "marks": [
+            {
+              "type": "bold"
+            }
+          ]
+        },
+        {
+          "text": ".",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "Example:",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "codeBlock",
+      "attrs": {
+        "theme": "light",
+        "margin": null,
+        "language": "python",
+        "textWrap": true
+      },
+      "content": [
+        {
+          "text": "for i in range(3):\n    for j in range(5):\n        if j == 2:\n            break\n\n        print(i, j)",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "Output:",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "codeBlock",
+      "attrs": {
+        "theme": "light",
+        "margin": null,
+        "language": "text",
+        "textWrap": true
+      },
+      "content": [
+        {
+          "text": "0 0\n0 1\n1 0\n1 1\n2 0\n2 1",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "The inner loop stops, but the outer loop continues.",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "vue",
+      "attrs": {
+        "type": "question",
+        "content": "147"
+      }
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "id": "vyad1kgrfs",
+        "level": 2,
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75,
+        "data-toc-id": "vyad1kgrfs"
+      },
+      "content": [
+        {
+          "text": "⚠️ Common Mistakes",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "id": "fhez7vifqh",
+        "level": 3,
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75,
+        "data-toc-id": "fhez7vifqh"
+      },
+      "content": [
+        {
+          "text": "🧪 Using ",
+          "type": "text"
+        },
+        {
+          "text": "break",
+          "type": "text",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "text": " Outside a Loop",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "Incorrect:",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "codeBlock",
+      "attrs": {
+        "theme": "light",
+        "margin": null,
+        "language": "python",
+        "textWrap": true
+      },
+      "content": [
+        {
+          "text": "if score > 90:\n    break",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "break",
+          "type": "text",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "text": " can only be used inside loops.",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "vue",
+      "attrs": {
+        "type": "question",
+        "content": "149"
+      }
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "id": "hpf2cye7gg",
+        "level": 3,
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75,
+        "data-toc-id": "hpf2cye7gg"
+      },
+      "content": [
+        {
+          "text": "✨ Forgetting the Condition",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "Incorrect:",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "codeBlock",
+      "attrs": {
+        "theme": "light",
+        "margin": null,
+        "language": "python",
+        "textWrap": true
+      },
+      "content": [
+        {
+          "text": "while True:\n    print(\"Hello\")\n    break",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "Although this works, usually ",
+          "type": "text"
+        },
+        {
+          "text": "break",
+          "type": "text",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "text": " should be used with a clear condition.",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "Better:",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "codeBlock",
+      "attrs": {
+        "theme": "light",
+        "margin": null,
+        "language": "python",
+        "textWrap": true
+      },
+      "content": [
+        {
+          "text": "while True:\n    command = input(\"Enter command: \")\n\n    if command == \"quit\":\n        break",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "vue",
+      "attrs": {
+        "type": "question",
+        "content": "427"
+      }
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "id": "kf2nsfp2o2",
+        "level": 2,
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75,
+        "data-toc-id": "kf2nsfp2o2"
+      },
+      "content": [
+        {
+          "text": "📌 Summary",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "You have learned how to:",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "type": "bulletList",
+      "attrs": {
+        "margin": null,
+        "listType": "disc"
+      },
+      "content": [
+        {
+          "type": "listItem",
+          "attrs": {
+            "indent": null,
+            "indentUnit": null
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": {
+                "indent": null,
+                "margin": null,
+                "wordWrap": "normal",
+                "textAlign": null,
+                "indentUnit": null,
+                "lineHeight": 1.75
+              },
+              "content": [
+                {
+                  "text": "✅ Use the ",
+                  "type": "text"
+                },
+                {
+                  "text": "break",
+                  "type": "text",
+                  "marks": [
+                    {
+                      "type": "code"
+                    }
+                  ]
+                },
+                {
+                  "text": " statement.",
+                  "type": "text"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "listItem",
+          "attrs": {
+            "indent": null,
+            "indentUnit": null
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": {
+                "indent": null,
+                "margin": null,
+                "wordWrap": "normal",
+                "textAlign": null,
+                "indentUnit": null,
+                "lineHeight": 1.75
+              },
+              "content": [
+                {
+                  "text": "⭐ Stop loops immediately.",
+                  "type": "text"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "listItem",
+          "attrs": {
+            "indent": null,
+            "indentUnit": null
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": {
+                "indent": null,
+                "margin": null,
+                "wordWrap": "normal",
+                "textAlign": null,
+                "indentUnit": null,
+                "lineHeight": 1.75
+              },
+              "content": [
+                {
+                  "text": "🧩 Use ",
+                  "type": "text"
+                },
+                {
+                  "text": "break",
+                  "type": "text",
+                  "marks": [
+                    {
+                      "type": "code"
+                    }
+                  ]
+                },
+                {
+                  "text": " with ",
+                  "type": "text"
+                },
+                {
+                  "text": "for",
+                  "type": "text",
+                  "marks": [
+                    {
+                      "type": "code"
+                    }
+                  ]
+                },
+                {
+                  "text": " and ",
+                  "type": "text"
+                },
+                {
+                  "text": "while",
+                  "type": "text",
+                  "marks": [
+                    {
+                      "type": "code"
+                    }
+                  ]
+                },
+                {
+                  "text": ".",
+                  "type": "text"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "listItem",
+          "attrs": {
+            "indent": null,
+            "indentUnit": null
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": {
+                "indent": null,
+                "margin": null,
+                "wordWrap": "normal",
+                "textAlign": null,
+                "indentUnit": null,
+                "lineHeight": 1.75
+              },
+              "content": [
+                {
+                  "text": "💡 Understand ",
+                  "type": "text"
+                },
+                {
+                  "text": "break",
+                  "type": "text",
+                  "marks": [
+                    {
+                      "type": "code"
+                    }
+                  ]
+                },
+                {
+                  "text": " behavior in nested loops.",
+                  "type": "text"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "indent": null,
+        "margin": null,
+        "wordWrap": "normal",
+        "textAlign": null,
+        "indentUnit": null,
+        "lineHeight": 1.75
+      },
+      "content": [
+        {
+          "text": "The ",
+          "type": "text"
+        },
+        {
+          "text": "break",
+          "type": "text",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "text": " statement is useful when you need to stop a loop before it finishes naturally.",
+          "type": "text"
+        }
+      ]
+    }
+  ]
+}
