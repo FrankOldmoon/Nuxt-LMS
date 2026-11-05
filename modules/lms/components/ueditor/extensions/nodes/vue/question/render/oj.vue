@@ -1,8 +1,10 @@
 <template>
   <div class="space-y-3">
     <!-- OJ 题目内容（show.ts 已用 fetchOj 返回值替换 content） -->
-    <div v-if="contentIsPid" class="text-sm text-amber-500">
-      {{ $t('question.ojLoadFailed') }}
+    <div v-if="contentIsPid" class="flex items-center gap-3 text-sm text-amber-500">
+      <span>{{ $t('question.ojLoadFailed') }}</span>
+      <UButton size="xs" variant="soft" color="warning" :loading="retrying"
+        icon="i-lucide-refresh-cw" :label="$t('question.ojRetry')" @click="retryLoad" />
     </div>
     <div v-else>
       <ueditorRender :json="question.content"/>
@@ -31,7 +33,7 @@ const props = defineProps({
 
 const {
   ojLink, problemHtml, problemText, contentIsPid,
-  checking, checkStatus,
+  checking, checkStatus, retrying, retryLoad,
   submit, reset, hasAnswer, fillCorrectAnswer,
 } = useOj(props)
 

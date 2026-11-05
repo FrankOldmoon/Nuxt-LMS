@@ -496,7 +496,9 @@
     "ojPassed": "OJ problem passed",
     "ojNotPassed": "Not passed yet",
     "ojNotPassedHint": "Click 'Solve on OJ' to solve it on the OJ platform, then check the status again.",
-    "ojLoadFailed": "Failed to load OJ problem content. Click the link above to view it on the OJ.",
+    "ojLoadFailed": "Failed to load the OJ problem statement (the OJ platform is not responding).",
+    "ojRetry": "Retry",
+    "ojRetryFailedHint": "The OJ platform is still unreachable. Try again later, or use the link below to open the problem on the OJ.",
     "ojDeterminedByOj": "Determined by OJ submission status"
   },
   "homework": {

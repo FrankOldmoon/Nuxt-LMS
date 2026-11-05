@@ -35,7 +35,8 @@ const _mockSchema = {
 }
 vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
 
-import { resetAllStubs, setMockAuthState, setMockLmsConfig, setMockFetchHandler } from '../../../../test/setup/nuxt-stubs'
+import { resetAllStubs, setMockAuthState, setMockLmsConfig, setMockFetchHandler, clearMockFetchHandler } from '../../../../test/setup/nuxt-stubs'
+import { clearOjCache } from '../../server/utils/questions/oj'
 
 beforeEach(() => {
     // 本文件的教师场景均假定为该课程的任课教师（requireCourseTeacher 守卫通过）
@@ -150,6 +151,52 @@ describe('API: questions/show', () => {
     expect(result.success).toBe(true)
     expect(result.data.answer).toEqual(['A', 'B'])
     expect(result.data.explanation).toEqual({ type: 'doc' })
+  })
+})
+
+// ====================== show.ts - OJ 题型 ======================
+
+describe('API: questions/show - OJ 题型', () => {
+  const STATEMENT = '# Description\n\nGiven three variables a, b and c.'
+
+  beforeEach(() => {
+    clearOjCache()
+    clearMockFetchHandler()
+    setMockLmsConfig({ oj: { url: 'http://oj.test' } })
+    setMockAuthState(null)
+  })
+
+  it('content 是 pid 占位时用拉到的正文替换', async () => {
+    setMockFetchHandler(async () => ({ pdoc: { content: JSON.stringify({ en: STATEMENT }) } }))
+    _mockDb.query.questions.findFirst = vi.fn().mockResolvedValue({
+      courseId: 1, cid: 5, name: 'P1016', type: 'oj', content: 'P1016', options: { pid: 'P1016' },
+    })
+    const handler = (await import('../../server/api/questions/show')).default
+    const result = await handler(makeEvent({ query: { course_id: '1', cid: '5' } }))
+    expect(result.success).toBe(true)
+    expect(result.data.content).toBe(STATEMENT)
+    expect(result.data.options.pid).toBe('P1016')
+  })
+
+  it('OJ 拉取失败时保留 pid（前端显示加载失败 + 重试）', async () => {
+    setMockFetchHandler(async () => { throw new Error('502') })
+    _mockDb.query.questions.findFirst = vi.fn().mockResolvedValue({
+      courseId: 1, cid: 6, name: 'P1017', type: 'oj', content: 'P1017', options: { pid: 'P1017' },
+    })
+    const handler = (await import('../../server/api/questions/show')).default
+    const result = await handler(makeEvent({ query: { course_id: '1', cid: '6' } }))
+    expect(result.success).toBe(true)
+    expect(result.data.content).toBe('P1017')
+  })
+
+  it('content 已是正文时不改动（OJ 挂了也能显示上次的内容）', async () => {
+    setMockFetchHandler(async () => { throw new Error('timeout') })
+    _mockDb.query.questions.findFirst = vi.fn().mockResolvedValue({
+      courseId: 1, cid: 7, name: 'P1018', type: 'oj', content: STATEMENT, options: { pid: 'P1018' },
+    })
+    const handler = (await import('../../server/api/questions/show')).default
+    const result = await handler(makeEvent({ query: { course_id: '1', cid: '7' } }))
+    expect(result.data.content).toBe(STATEMENT)
   })
 })
 

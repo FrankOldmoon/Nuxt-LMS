@@ -1,5 +1,6 @@
 import { db, schema } from "@nuxthub/db"
-import { eq, and } from "drizzle-orm"
+import { eq, and, sql } from "drizzle-orm"
+import { resolveOjPid, isOjPlaceholder, fetchOj } from "../../utils/questions/oj"
 
 /**
  * 题目详情
@@ -12,6 +13,35 @@ import { eq, and } from "drizzle-orm"
  *  - composite 题型：子题 answer 内嵌在 content 数组中，同样按角色剥离
  *  - OJ 题型：content 存 pid，用 fetchOj 拉取题目内容替换供前端展示
  */
+
+/**
+ * 把拉到的题目正文回填到 questions.content。
+ *
+ * 只在「content 仍是 pid 占位」时才写（SQL 侧带同样的条件做乐观锁），
+ * 因此不会覆盖老师手工编辑过的正文；写入后该题后续渲染不再依赖 OJ 在线。
+ * 失败只记日志，不影响本次响应。
+ */
+function backfillOjStatement(courseId: number, cid: number, pid: string, text: string) {
+  const col = (schema.questions as any).content
+  // 测试桩的 schema 没有 content 列，跳过（生产环境始终存在）
+  if (!col) return
+  try {
+    const query: any = db.update(schema.questions)
+      .set({ content: text } as any)
+      .where(and(
+        eq(schema.questions.courseId, courseId),
+        eq(schema.questions.cid, cid),
+        // jsonb 里存的是标量字符串，取标量比文本（别用 = $1::jsonb：驱动会把字符串再 JSON 编码一次）
+        sql`${col} #>> '{}' = ${pid}::text`,
+      ))
+    // 不 await：回填失败不该影响本次响应（Promise.resolve 兼容 drizzle 的 thenable 与测试桩）
+    Promise.resolve(query)
+      .then(() => console.log(`[oj] 已回填题目正文 course=${courseId} cid=${cid} pid=${pid}`))
+      .catch((e: any) => console.warn(`[oj] 回填题目正文失败 cid=${cid} pid=${pid} → ${e?.message || e}`))
+  } catch (e: any) {
+    console.warn(`[oj] 回填题目正文异常 cid=${cid} pid=${pid} → ${e?.message || e}`)
+  }
+}
 
 export default eventHandler(async (event) => {
   const { course_id, cid } = getQuery(event)
@@ -39,10 +69,19 @@ export default eventHandler(async (event) => {
       if (!opts || typeof opts !== 'object' || Array.isArray(opts) || !opts.pid) {
         data.options = { pid }
       }
-      try {
-        const ojContent = await fetchOj(pid)
-        if (ojContent != null) data.content = ojContent
-      } catch { /* OJ 拉取失败时保留原始 content（pid） */ }
+      if (isOjPlaceholder(data, pid)) {
+        // 库里还是 pid 占位：必须等一次拉取（有缓存则瞬间返回，无缓存最多等超时）
+        try {
+          const ojContent = await fetchOj(pid)
+          if (ojContent != null) {
+            data.content = ojContent
+            backfillOjStatement(Number(course_id), Number(cid), pid, ojContent)
+          }
+        } catch { /* OJ 拉取失败时保留原始 content（pid） */ }
+      } else {
+        // 库里已有正文：直接用它渲染，OJ 刷新丢到后台，别让页面等上游
+        void fetchOj(pid).catch(() => null)
+      }
     }
   }
 

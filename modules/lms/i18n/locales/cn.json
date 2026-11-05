@@ -496,7 +496,9 @@
     "ojPassed": "OJ 题目已通过",
     "ojNotPassed": "尚未通过",
     "ojNotPassedHint": "请点击「去 OJ 解答」前往 OJ 平台完成解题，通过后再点击「查询状态」。",
-    "ojLoadFailed": "OJ 题目内容加载失败，点击上方链接到 OJ 查看。",
+    "ojLoadFailed": "OJ 题目内容加载失败（OJ 平台无响应）。",
+    "ojRetry": "重试",
+    "ojRetryFailedHint": "OJ 平台仍然连不上，等一会儿再试，或点下面的链接直接到 OJ 查看题目。",
     "ojDeterminedByOj": "由 OJ 提交状态判定"
   },
   "homework": {

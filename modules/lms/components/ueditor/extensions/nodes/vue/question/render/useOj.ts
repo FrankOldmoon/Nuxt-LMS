@@ -45,6 +45,30 @@ export function useOj(props: any) {
   // OJ 题无前端作答，hasAnswer=false 使 footer 的提交/重置按钮禁用（实际由 footer 隐藏）
   const hasAnswer = computed(() => false)
   const checking = ref(false)
+  // 正文加载失败后的手动重试（OJ 抖动时不用刷新整页）
+  const retrying = ref(false)
+
+  async function retryLoad() {
+    const cid = courseId.value
+    if (!cid || !props.questionId || retrying.value) return
+    retrying.value = true
+    try {
+      const data: any = await cRequest(`/api/questions/show?course_id=${cid}&cid=${props.questionId}`)
+      const c = data?.content
+      if (typeof c === 'string' && c.trim() && c.trim() !== pid.value) {
+        props.question.content = c
+      } else {
+        toast.add({
+          title: t('question.ojLoadFailed'),
+          description: t('question.ojRetryFailedHint'),
+          color: 'error',
+          icon: 'i-lucide-cloud-off',
+        })
+      }
+    } catch { /* 静默：保持失败态，用户可再点 */ } finally {
+      retrying.value = false
+    }
+  }
 
   // 手动复查：调用 /api/questions/record（hover 同款接口），后端会调 getOjStatus 更新记录
   async function checkStatus() {
@@ -96,7 +120,7 @@ export function useOj(props: any) {
 
   return {
     pid, ojUrl, ojLink, problemHtml, problemText, contentIsPid,
-    submitted, isCorrect, checking, checkStatus,
+    submitted, isCorrect, checking, checkStatus, retrying, retryLoad,
     hasAnswer, submit, reset, fillCorrectAnswer,
   }
 }

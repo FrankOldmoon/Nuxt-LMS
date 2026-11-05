@@ -37,6 +37,35 @@ curl -s -H 'Accept: application/json' "$OJ/p/P1004" \
 - Read the **samples** to derive the exact output format (e.g. two decimals → `f"{x:.2f}"`,
   integer quotient → `a // b`, remainder → `a % b`).
 
+### 1.1 排查「OJ 题目内容加载失败」/ 抖动兜底（2026-11-05 加）
+
+**排查第一步永远是读生效地址**，不要猜：
+
+```bash
+curl -s <lms>/api/config/lms-public | jq -r '.data.oj.url'
+```
+它必须等于 OJ 平台现在的地址（当前是 `http://10.28.1.155`）。2026-11-05 那次整片失败的真因是
+**数据库里 `lms:oj.url` 还留着已下线的旧地址 `10.22.99.130`**（直连 502 / 8~20s 超时）；
+改成 `http://10.28.1.155` 后同一道题 40ms 返回。改配置要走 `/api/lms-config/update` 或
+「直接改 configs 行 + 重新写 `sys:configVersion`」，只改行不进内存缓存。
+
+`fetchOj` 另外做了四件事（别绕过它自己写 `$fetch`）：
+
+| 机制 | 行为 |
+| --- | --- |
+| 超时 | 单次 5s（`LMS_OJ_TIMEOUT_MS` 可覆盖），`retry: 0`，不再双重等待 |
+| 内存缓存 | 按 pid 缓存正文 10 分钟；有过期缓存时先返回旧内容、后台刷新（SWR） |
+| 请求合并 | 同一 pid 并发只打一次 OJ（一个班同时打开同一题） |
+| 回填 | `show.ts` 拉到正文且 `content` 仍是 pid 时，把它写进 `questions.content`（SQL 侧带 `content #>> '{}' = pid` 乐观锁，绝不覆盖人工编辑） |
+
+因此前端只有「真的没缓存 + OJ 挂了」才会显示 *OJ 题目内容加载失败*，旁边有「重试」按钮
+（`useOj.retryLoad` 重新拉 `/api/questions/show`，正文回来就替换掉 pid 占位）。
+
+- jsonb 坑：给 `content` 塞字符串时，drizzle 传 `'"P1016"'` 是对的；**用原生 postgres.js 必须写
+  `to_jsonb($1::text)`**，写 `${JSON.stringify(v)}::jsonb` 会二次编码成 `"\"P1016\""`。
+- 巡检/批量回填：`node scripts/oj_backfill_statements.mjs --dry`（先看），去掉 `--dry` 才写库；
+  支持 `--course=` / `--limit=` / `--concurrency=`。OJ 恢复后跑一遍，把只存 pid 的题目一次补齐。
+
 ## 2. Create the OJ question (first)
 
 `POST /api/questions/add` (teacher/admin):
