@@ -31,6 +31,8 @@ export function useCommentRender(props: CommentRenderProps) {
     const chapterTask = useChapterTask()
 
     const commentId = computed(() => Number(props.node?.attrs?.content) || 0)
+    // 尚未设置内容：节点上还没有 cid（新建后从未保存），也没有外部直接传入的 comment（后台预览）
+    const isUnset = computed(() => !commentId.value && !props.comment)
     const isTeacher = computed(() => hasRole('teacher') || hasRole('admin'))
 
     const editOpen = ref(false)
@@ -263,7 +265,7 @@ export function useCommentRender(props: CommentRenderProps) {
 
     const ctx = {
         effectiveCourseId, moduleLms, RecordsModal,
-        comment, commentId, isTeacher, user,
+        comment, commentId, isUnset, isTeacher, user,
         editOpen, recordsOpen, pending, listPending,
         page, pageSize, totalPages, children, pagedChildren, hasPosted,
         fetchComments,

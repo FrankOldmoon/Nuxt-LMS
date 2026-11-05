@@ -1,14 +1,26 @@
 <template>
     <!-- 已发表过评论（提交即绿；重新进入时若已有自己的发表记录同样为绿）→ 绿色外框，与作业一致 -->
     <div class="comment-render w-full space-y-4 p-4 rounded-xl bg-white dark:bg-gray-900 relative shadow-sm transition-shadow duration-200 hover:shadow-md"
-        :class="hasPosted
-            ? 'border-2 border-green-400 dark:border-green-500'
-            : 'border border-amber-400 dark:border-amber-500'"
+        :class="isUnset
+            ? unsetBorderClass
+            : (hasPosted
+                ? 'border-2 border-green-400 dark:border-green-500'
+                : 'border border-amber-400 dark:border-amber-500')"
         :data-comment-id="commentId">
-        <!-- 评论不存在 / 尚未保存（新建节点 cid 为 0，不误报「未找到」） -->
-        <div v-if="!comment" class="text-center py-6 text-gray-400">
-            <span v-if="!commentId">{{ $t('comment.unsaved') }}</span>
-            <span v-else-if="!pending">{{ $t('comment.notFound') }} (cid: {{ commentId }})</span>
+        <!-- 尚未设置内容：节点没有 cid → 不渲染空评论，只提示去设置 -->
+        <div v-if="isUnset" class="flex items-start gap-2 text-sm text-red-500">
+            <UIcon name="i-lucide-circle-alert" class="size-4 shrink-0 mt-0.5" />
+            <div>
+                <p class="font-medium">{{ $t('comment.unsaved') }}</p>
+                <p class="text-xs mt-1 text-red-400 dark:text-red-400/80">
+                    {{ isTeacher ? $t('comment.unsavedHint') : $t('common.contentPending') }}
+                </p>
+            </div>
+        </div>
+
+        <!-- 评论不存在 -->
+        <div v-else-if="!comment" class="text-center py-6 text-gray-400">
+            <span v-if="!pending">{{ $t('comment.notFound') }} (cid: {{ commentId }})</span>
         </div>
 
         <template v-else>
@@ -83,7 +95,7 @@
         <Edit v-model="editOpen" :comment-id="commentId" :comment="comment" @saved="onSaved" />
 
         <!-- 记录弹窗（仅教师） -->
-        <LmsRecordsModalComment v-if="isTeacher" v-model="recordsOpen"
+        <LmsRecordsModalComment v-if="isTeacher && !isUnset" v-model="recordsOpen"
             :course-id="courseId" :cid="commentId" />
     </div>
 </template>
@@ -103,10 +115,13 @@ const props = defineProps({
 })
 
 const {
-    effectiveCourseId, moduleLms, RecordsModal, comment, commentId, isTeacher, user,
+    effectiveCourseId, moduleLms, RecordsModal, comment, commentId, isUnset, isTeacher, user,
     editOpen, recordsOpen, listPending, pagedChildren, hasPosted, pending, fetchComments,
     onReply, toggleLike, onDelete, onApprove, onSaved,
 } = useCommentRender(props)
+
+// 未设置内容时的外框（虚线红色，明显区别于正常评论）
+const unsetBorderClass = 'border-2 border-dashed border-red-300 bg-red-50/50 dark:border-red-800 dark:bg-red-950/20'
 
 // 审核通过实时刷新：服务端审核通过后向该评论所在班级广播 commentRefresh，
 // 当广播与当前主题(courseId + topicCid)匹配时刷新评论列表

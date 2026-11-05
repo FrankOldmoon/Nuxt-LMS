@@ -69,6 +69,10 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
         if (inlineQuestion.value) return 0
         return Number(props.node?.attrs?.content) || 0
     })
+    // 尚未设置内容：节点上没有 cid，也不是内联题（内联题 content 是题目对象）、
+    // 也没有外部直接传入的 question（试卷/答卷预览场景）
+    // → 不渲染空题目，由 render.vue 显示"请先设置内容"提示
+    const isUnset = computed(() => !inlineQuestion.value && !questionId.value && !props.question)
 
     const typeLabel = computed(() => ({
         single: t('question.typeSingle'), judge: t('question.typeJudge'), multiple: t('question.typeMultiple'),
@@ -379,7 +383,7 @@ export function useQuestionRender(props: QuestionRenderProps, emit: QuestionRend
 
     const ctx = {
         t, effectiveCourseId, moduleLms, RecordsModal,
-        question, pending, questionId, isTeacher, typeLabel,
+        question, pending, questionId, isUnset, isTeacher, typeLabel,
         submitted, isCorrect, showAnswer, fromRecord, showFireworks,
         containerBorderClass, hasAnswer, answerLocked, scoreDisplay, formattedAnswers,
         submitLocked,

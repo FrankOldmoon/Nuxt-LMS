@@ -56,7 +56,7 @@ describe('homework/render.vue', () => {
     await flushPromises()
   })
 
-  it('renders homework with default data when homeworkId is 0', async () => {
+  it('未设置内容（homeworkId 为 0）不渲染空作业，显示提示去设置', async () => {
     const { default: HomeworkRender } = await import(
       '../../../../../components/ueditor/extensions/nodes/vue/homework/render.vue'
     )
@@ -65,18 +65,22 @@ describe('homework/render.vue', () => {
       global: _globalConfig,
     })
     await flushPromises()
-    expect(wrapper.text()).toContain('homework.label')
+    expect(wrapper.text()).toContain('homework.unsaved')
+    expect(wrapper.text()).not.toContain('homework.label')
+    // 不渲染提交区（空壳）
+    expect(wrapper.find('.homework-render').classes().join(' ')).toContain('border-dashed')
   })
 
-  it('shows homework name and point', async () => {
+  it('空字符串 content 同样视为未设置内容', async () => {
     const { default: HomeworkRender } = await import(
       '../../../../../components/ueditor/extensions/nodes/vue/homework/render.vue'
     )
     const wrapper = mount(HomeworkRender, {
-      props: { node: { attrs: { content: '0' } }, courseId: 1 },
+      props: { node: { attrs: { content: '' } }, courseId: 1 },
       global: _globalConfig,
     })
     await flushPromises()
-    expect(wrapper.text()).toContain('homework.label')
+    expect(wrapper.text()).toContain('homework.unsaved')
+    expect(wrapper.text()).not.toContain('homework.label')
   })
 })

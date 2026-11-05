@@ -33,6 +33,9 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
     const chapterTask = useChapterTask()
 
     const homeworkId = computed(() => Number(props.node?.attrs?.content) || 0)
+    // 尚未设置内容：节点上还没有 cid（新建后从未保存）
+    // → 不渲染空作业（默认作业占位对象），由 render.vue 显示"请先设置内容"提示
+    const isUnset = computed(() => !homeworkId.value)
     const isTeacher = computed(() => hasRole('teacher') || hasRole('admin'))
 
     // 默认作业（homeworkId 为空时填充，便于新建）
@@ -263,7 +266,7 @@ export function useHomeworkRender(props: HomeworkRenderProps, emit: HomeworkRend
 
     const ctx = {
         t, effectiveCourseId, moduleLms, RecordsModal,
-        homework, pending, homeworkId, isTeacher, isLoggedIn,
+        homework, pending, homeworkId, isUnset, isTeacher, isLoggedIn,
         editOpen, recordsOpen, refresh,
         deadlinePassed, formatDeadline,
         submittedContent, submittedFiles, submitted, submittedAt, submittedAtText, submittedFileList,

@@ -1,11 +1,24 @@
 <template>
     <div
         class="homework-render w-full space-y-4 p-4 rounded-xl bg-white dark:bg-gray-900 relative shadow-sm transition-shadow duration-200 hover:shadow-md"
-        :class="submitted
-            ? 'border-2 border-green-400 dark:border-green-500'
-            : 'border border-amber-400 dark:border-amber-500'"
+        :class="isUnset
+            ? unsetBorderClass
+            : (submitted
+                ? 'border-2 border-green-400 dark:border-green-500'
+                : 'border border-amber-400 dark:border-amber-500')"
         :data-homework-id="homeworkId"
         @mouseenter.once="fetchOnce">
+        <!-- 尚未设置内容：节点没有 cid → 不渲染空作业（默认占位对象），只提示去设置 -->
+        <div v-if="isUnset" class="flex items-start gap-2 text-sm text-red-500">
+            <UIcon name="i-lucide-circle-alert" class="size-4 shrink-0 mt-0.5" />
+            <div>
+                <p class="font-medium">{{ t('homework.unsaved') }}</p>
+                <p class="text-xs mt-1 text-red-400 dark:text-red-400/80">
+                    {{ isTeacher ? t('homework.unsavedHint') : t('common.contentPending') }}
+                </p>
+            </div>
+        </div>
+        <template v-else>
         <!-- 加载中 -->
         <div v-if="pending" class="flex items-center justify-center py-6 text-gray-400">
             <span>{{ t('homework.loading') }}</span>
@@ -70,10 +83,11 @@
         <div v-if="homework && homework.explanation && (isTeacher || selfScore !== null)" class="mt-4">
             <ExplanationBlock :explanation="homework.explanation" />
         </div>
+        </template>
 
         <!-- 记录弹窗（仅教师） -->
-        <LmsRecordsModalHomework v-if="isTeacher" v-model="recordsOpen"
-            :course-id="courseId" :cid="homeworkId" :homework-name="homework.name" :max-score="homework.point || 0" />
+        <LmsRecordsModalHomework v-if="isTeacher && !isUnset" v-model="recordsOpen"
+            :course-id="courseId" :cid="homeworkId" :homework-name="homework?.name" :max-score="homework?.point || 0" />
 
         <!-- 编辑弹窗 -->
         <Edit v-model="editOpen" :homework-id="homeworkId" :homework="homework" @saved="onSaved" />
@@ -95,12 +109,15 @@ const emit = defineEmits(['saved'])
 
 const {
     t, moduleLms, RecordsModal,
-    homework, pending, homeworkId, isTeacher, isLoggedIn,
+    homework, pending, homeworkId, isUnset, isTeacher, isLoggedIn,
     editOpen, recordsOpen, refresh,
     deadlinePassed, formatDeadline,
     selfScore, submitted,
     fetchRecord, fetchFeatured, onSaved,
 } = useHomeworkRender(props, emit)
+
+// 未设置内容时的外框（虚线红色，明显区别于正常作业）
+const unsetBorderClass = 'border-2 border-dashed border-red-300 bg-red-50/50 dark:border-red-800 dark:bg-red-950/20'
 
 function fetchOnce() {
     fetchRecord()

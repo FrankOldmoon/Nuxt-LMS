@@ -67,9 +67,16 @@ export function useCommentEdit(props: CommentEditProps, emit: CommentEditEmit) {
 
     async function save() {
         if (!form.value) return
+        // 名称为空不提交：否则会写入无标题记录，章节里也看不出这是什么评论主题
+        if (!String(form.value.name || '').trim()) {
+            saveOk.value = false
+            saveMsg.value = t('comment.nameRequired')
+            return
+        }
         saving.value = true
         saveMsg.value = ''
         try {
+            let savedCid = 0
             if (props.commentId) {
                 await cRequest('/api/comments/update', {
                     method: 'POST',
@@ -83,12 +90,14 @@ export function useCommentEdit(props: CommentEditProps, emit: CommentEditEmit) {
                     method: 'POST',
                     body: { course_id: effectiveCourseId.value, chapter_id: Number(chapterId?.value) || 0, ...form.value },
                 })
+                savedCid = Number(result?.cid) || 0
                 emit('saved', { ...form.value, cid: result.cid })
                 // 新增评论：toast 成功
                 toast.add({ title: t('comment.saveSuccess'), color: 'success' })
             }
             saveOk.value = true
-            saveMsg.value = t('comment.saveSuccess')
+            // 新建时把拿到的 ID 显示出来，方便确认节点已绑定
+            saveMsg.value = savedCid ? t('common.savedWithId', { id: savedCid }) : t('comment.saveSuccess')
             originalData = JSON.parse(JSON.stringify(form.value))
             // Modal 模式：关闭弹窗
             if (isModal.value) {

@@ -5,8 +5,20 @@
       <Edit :question-id="questionId" :question="question" @saved="onSaved" />
     </div>
 
+    <!-- 尚未设置内容（没有 cid）：不渲染空题目，提示先填写并保存 -->
+    <div v-if="!questionId"
+      class="flex items-start gap-2 p-4 rounded-lg border-2 border-dashed border-red-300 bg-red-50/50 text-sm text-red-500 dark:border-red-800 dark:bg-red-950/20">
+      <UIcon name="i-lucide-circle-alert" class="size-4 shrink-0 mt-0.5" />
+      <div class="flex-1">
+        <p class="font-medium">{{ t('question.unsaved') }}</p>
+        <p class="text-xs mt-1 opacity-80">{{ t('question.unsavedHint') }}</p>
+      </div>
+      <UButton size="2xs" color="primary" variant="soft" icon="i-lucide-settings-2" :label="t('common.edit')"
+        @click="showConfig = true" />
+    </div>
+
     <!-- 渲染组件 -->
-    <Render ref="renderRef" :node="node" :in-quiz="inQuiz" @submitted="onSubmitted" />
+    <Render v-else ref="renderRef" :node="node" :in-quiz="inQuiz" @submitted="onSubmitted" />
   </div>
 </template>
 

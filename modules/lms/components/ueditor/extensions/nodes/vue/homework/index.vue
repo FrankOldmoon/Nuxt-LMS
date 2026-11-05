@@ -5,7 +5,19 @@
             <Edit :homework-id="homeworkId" :homework="homework" :course-id="courseId" @saved="onSaved" />
         </div>
 
-        <Render ref="renderRef" :node="node" :course-id="courseId" @saved="onSaved" />
+        <!-- 尚未设置内容（没有 cid）：不渲染空作业，提示先填写并保存 -->
+        <div v-if="!homeworkId"
+            class="flex items-start gap-2 p-4 rounded-lg border-2 border-dashed border-red-300 bg-red-50/50 text-sm text-red-500 dark:border-red-800 dark:bg-red-950/20">
+            <UIcon name="i-lucide-circle-alert" class="size-4 shrink-0 mt-0.5" />
+            <div class="flex-1">
+                <p class="font-medium">{{ t('homework.unsaved') }}</p>
+                <p class="text-xs mt-1 opacity-80">{{ t('homework.unsavedHint') }}</p>
+            </div>
+            <UButton size="2xs" color="primary" variant="soft" icon="i-lucide-settings-2" :label="t('common.edit')"
+                @click="showConfig = true" />
+        </div>
+
+        <Render v-else ref="renderRef" :node="node" :course-id="courseId" @saved="onSaved" />
     </div>
 </template>
 
@@ -17,6 +29,9 @@ import Edit from './edit.vue'
 const { t } = useI18n()
 
 const props = defineProps(nodeViewProps)
+
+// 课程上下文（编辑器里没有 prop 传入，统一取 useLmsContext）
+const { courseId } = useLmsContext()
 
 // inject node-view 提供的状态
 const showConfig = inject('nodeViewShowConfig', ref(false))

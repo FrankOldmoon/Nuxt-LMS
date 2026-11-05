@@ -88,12 +88,19 @@ export function useHomeworkEdit(props: HomeworkEditProps, emit: HomeworkEditEmit
 
     async function saveHomework() {
         if (!form.value) return
+        // 名称为空不提交：否则会写入无标题记录，章节里也看不出这是什么作业
+        if (!String(form.value.name || '').trim()) {
+            saveOk.value = false
+            saveMsg.value = t('homework.nameRequired')
+            return
+        }
         saving.value = true
         saveMsg.value = ''
         try {
             const payload = { ...form.value }
             // 空字符串 → null（清除截止时间）
             if (!payload.deadline) payload.deadline = null
+            let savedCid = 0
             if (props.homeworkId) {
                 // 已有作业：更新
                 await cRequest('/api/homeworks/update', {
@@ -107,10 +114,12 @@ export function useHomeworkEdit(props: HomeworkEditProps, emit: HomeworkEditEmit
                     method: 'POST',
                     body: { course_id: effectiveCourseId.value, ...payload },
                 })
+                savedCid = Number(result?.cid) || 0
                 emit('saved', { ...payload, cid: result.cid })
             }
             saveOk.value = true
-            saveMsg.value = t('homework.saveSuccess')
+            // 新建时把拿到的 ID 显示出来，方便确认节点已绑定
+            saveMsg.value = savedCid ? t('common.savedWithId', { id: savedCid }) : t('homework.saveSuccess')
             originalData = JSON.parse(JSON.stringify(form.value))
             // Modal 模式：关闭弹窗
             if (isModal.value) {

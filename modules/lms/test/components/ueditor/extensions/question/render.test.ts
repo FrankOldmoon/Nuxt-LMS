@@ -22,6 +22,7 @@ beforeEach(() => {
 
 const _globalStubs = {
   UButton: { template: '<button @click="$emit(\'click\')">{{ label }}<slot /></button>', props: ['variant', 'size', 'color', 'icon', 'disabled', 'label'] },
+  UIcon: { template: '<span />', props: ['name'] },
   Fireworks: { template: '<div class="fireworks" />', props: [], emits: ['done'] },
   QuestionRenderFooter: { template: '<div class="footer" />' },
   QuestionEdit: { template: '<div class="question-edit" />', props: ['modelValue', 'questionId', 'question', 'courseId'], emits: ['update:modelValue', 'saved'] },
@@ -95,5 +96,19 @@ describe('question/render.vue', () => {
     const data = (wrapper.vm as any).getQuestionData()
     expect(data).toBeTruthy()
     expect(data.name).toBe('Exposed Test')
+  })
+
+  it('未设置内容（cid 为 0 且无 question）不渲染空题目，显示「请先设置内容」', async () => {
+    const { default: Render } = await import(
+      '../../../../../components/ueditor/extensions/nodes/vue/question/render.vue'
+    )
+    const wrapper = mount(Render, {
+      props: { node: { attrs: { content: '' } } },
+      global: { stubs: _globalStubs, mocks: _mocks },
+    })
+    expect(wrapper.text()).toContain('question.unsaved')
+    // 不误报「未找到」，也不渲染提交按钮（空壳）
+    expect(wrapper.text()).not.toContain('question.notFound')
+    expect(wrapper.find('.footer').exists()).toBe(false)
   })
 })
