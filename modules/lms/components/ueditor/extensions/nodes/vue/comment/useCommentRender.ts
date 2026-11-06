@@ -132,24 +132,43 @@ export function useCommentRender(props: CommentRenderProps) {
         )
     }
 
-    async function fetchComments() {
+    /**
+     * 拉取评论列表。
+     * @param opts.silent 静默刷新：不置 listPending（模板里的 loading 占位会整块替换列表/表单，
+     *                    是界面跳动的来源），并复用已有的子评论对象引用，避免卡片组件重建。
+     */
+    async function fetchComments(opts: { silent?: boolean } = {}) {
         if (!commentId.value || !effectiveCourseId.value) return
-        listPending.value = true
+        const silent = !!opts.silent
+        if (!silent) listPending.value = true
         try {
             const data = await cRequest(`/api/comments/list?course_id=${effectiveCourseId.value}&cid=${commentId.value}`)
             if (data) {
                 rootComment.value = data.root || null
-                children.value = data.children || []
+                const next = Array.isArray(data.children) ? data.children : []
+                if (silent) {
+                    // 按 cid 复用旧对象：保持组件实例与 DOM 不变，只有变化的字段触发局部更新
+                    const prev = new Map(children.value.map((c: any) => [Number(c.cid), c]))
+                    children.value = next.map((c: any) => {
+                        const old = prev.get(Number(c.cid))
+                        return old ? Object.assign(old, c) : c
+                    })
+                } else {
+                    children.value = next
+                }
                 // 已有过审回复才上报完成（老师审核通过后经 WS commentRefresh 广播触发到这里补上）
-                if (hasApprovedReply(data.children)) {
+                if (hasApprovedReply(children.value)) {
                     chapterTask?.reportNodeDone('comment', commentId.value, true)
                 }
             }
         } catch {
-            rootComment.value = null
-            children.value = []
+            // 静默刷新失败不销毁已有数据，避免界面闪空
+            if (!silent) {
+                rootComment.value = null
+                children.value = []
+            }
         } finally {
-            listPending.value = false
+            if (!silent) listPending.value = false
         }
     }
 
@@ -246,21 +265,72 @@ export function useCommentRender(props: CommentRenderProps) {
     }
 
     // 审核通过（老师/管理员）：把待审核评论置为 published，随后对普通用户可见
+    // 注意：只做「就地改状态」，绝不重拉列表/整块刷新 —— 否则评论卡片与回复表单会被
+    // 重建，列表高度变化导致界面跳动（尤其是正在输入回复时内容丢失）。
     async function onApprove(item: any) {
-        if (!item?.cid) return
+        // 顶部按钮传入的是 /api/comments/show 的 transform 结果（只含 name/content/tags/point/status），
+        // 没有 cid，用当前节点的 commentId 兜底；子评论卡片传入的 item 自带 cid。
+        const cid = Number(item?.cid) || commentId.value
+        if (!cid) return
         try {
             await cRequest('/api/comments/approve', {
                 method: 'POST',
                 body: {
                     course_id: effectiveCourseId.value,
-                    cid: item.cid,
+                    cid,
                 },
             })
-            item.status = 'published'
+            noteSelfApproved(cid)
+            markApprovedLocal(cid)
             toast.add({ title: t('comment.approveSuccess'), color: 'success' })
         } catch (err: any) {
             toast.add({ title: t('comment.approveFailed'), description: err?.message, color: 'error' })
         }
+    }
+
+    /**
+     * 审核通过后的就地更新：把某个 cid 的 status 改成 published，
+     * 根评论 / 主题评论内容 / 子评论列表三处都找一遍，命中即更新，不触发任何重新请求。
+     * @returns 是否命中（false 表示这个 cid 不在当前视图里，需要另行刷新才能看到）
+     */
+    function markApprovedLocal(cid: number) {
+        const cidNum = Number(cid) || 0
+        if (!cidNum) return false
+        let hit = false
+        if (comment.value && cidNum === commentId.value) {
+            Object.assign(comment.value, { status: 'published' })
+            hit = true
+        }
+        if (Number(rootComment.value?.cid) === cidNum) {
+            Object.assign(rootComment.value, { status: 'published' })
+            hit = true
+        }
+        const child = children.value.find((c: any) => Number(c.cid) === cidNum)
+        if (child) {
+            Object.assign(child, { status: 'published' })
+            hit = true
+        }
+        if (hit && hasApprovedReply(children.value)) {
+            chapterTask?.reportNodeDone('comment', commentId.value, true)
+        }
+        return hit
+    }
+
+    // 自己刚审核通过的 cid：本地已经就地更新过，WS 广播回来时直接忽略，
+    // 避免「自己点审核 → 自己收到广播 → 再刷新一次」的无谓重排。
+    const selfApprovedCids = new Set<number>()
+    function noteSelfApproved(cid: number) {
+        const cidNum = Number(cid) || 0
+        if (!cidNum) return
+        selfApprovedCids.add(cidNum)
+        // 广播是 fire-and-forget，可能晚到；20s 后兜底清理，防止集合无限增长
+        setTimeout(() => selfApprovedCids.delete(cidNum), 20000)
+    }
+    function consumeSelfApproved(cid: number) {
+        const cidNum = Number(cid) || 0
+        if (!cidNum || !selfApprovedCids.has(cidNum)) return false
+        selfApprovedCids.delete(cidNum)
+        return true
     }
 
     const ctx = {
@@ -270,6 +340,7 @@ export function useCommentRender(props: CommentRenderProps) {
         page, pageSize, totalPages, children, pagedChildren, hasPosted,
         fetchComments,
         onReply, toggleLike, onDelete, onApprove, onSaved,
+        markApprovedLocal, noteSelfApproved, consumeSelfApproved,
     }
     provide(CommentRenderKey, ctx)
     return ctx

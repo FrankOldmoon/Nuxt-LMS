@@ -71,8 +71,9 @@
 
             <!-- 评论区：显示自己 + 所有子评论 -->
             <div class="pt-3 border-t border-gray-100 dark:border-gray-800 space-y-3 rounded-lg bg-gray-50/60 dark:bg-gray-800/30 p-3">
-                <!-- 加载中 -->
-                <div v-if="listPending" class="flex items-center justify-center py-4 text-gray-400">
+                <!-- 加载中：仅首次加载（还没有任何子评论）时用占位，
+                     手动刷新时保留原列表原地更新，避免整块卸载重建造成跳动 -->
+                <div v-if="listPending && !pagedChildren.length" class="flex items-center justify-center py-4 text-gray-400">
                     <UIcon name="i-lucide-loader-2" class="animate-spin size-4 mr-2" />
                     <span class="text-xs">{{ $t('comment.loading') }}</span>
                 </div>
@@ -118,19 +119,28 @@ const {
     effectiveCourseId, moduleLms, RecordsModal, comment, commentId, isUnset, isTeacher, user,
     editOpen, recordsOpen, listPending, pagedChildren, hasPosted, pending, fetchComments,
     onReply, toggleLike, onDelete, onApprove, onSaved,
+    markApprovedLocal, consumeSelfApproved,
 } = useCommentRender(props)
 
 // 未设置内容时的外框（虚线红色，明显区别于正常评论）
 const unsetBorderClass = 'border-2 border-dashed border-red-300 bg-red-50/50 dark:border-red-800 dark:bg-red-950/20'
 
 // 审核通过实时刷新：服务端审核通过后向该评论所在班级广播 commentRefresh，
-// 当广播与当前主题(courseId + topicCid)匹配时刷新评论列表
+// 当广播与当前主题(courseId + topicCid)匹配时更新评论列表。
+// 关键：审核只影响一条评论的 status，绝不能整块重拉列表 —— 重拉会让 loading 占位替换掉
+// 列表 + 回复表单（正在输入的回复会丢），高度突变造成界面跳动。
 onMounted(() => {
     if (import.meta.server || typeof registerWsHandler !== 'function') return
     const unregister = registerWsHandler('commentRefresh', (data) => {
         if (Number(data.courseId) !== effectiveCourseId.value) return
         if (Number(data.topicCid) !== commentId.value) return
-        fetchComments()
+        const cid = Number(data.cid) || 0
+        // 1) 自己刚点过审核：本地已就地更新，忽略自己触发的广播
+        if (consumeSelfApproved(cid)) return
+        // 2) 别人审核的：能定位到具体条目就只改这一条的 status，不动其他节点
+        if (cid && markApprovedLocal(cid)) return
+        // 3) 定位不到（旧版服务端没带 cid / 该条不在当前页）：静默刷新，不显示 loading
+        fetchComments({ silent: true })
     })
     onUnmounted(unregister)
 })

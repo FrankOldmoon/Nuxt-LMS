@@ -5,7 +5,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { ref } from 'vue'
-import { resetAllStubs, setMockI18n, setMockLmsContext, setMockAuthUser, setMockFetchHandler, clearMockFetchHandler } from '../../../../../../../test/setup/nuxt-stubs'
+import { resetAllStubs, setMockI18n, setMockLmsContext, setMockAuthUser, setMockFetchHandler, clearMockFetchHandler, dispatchWsHandler } from '../../../../../../../test/setup/nuxt-stubs'
 
 // Stub composables not in nuxt-stubs
 ;(globalThis as any).useChapterTask = () => null
@@ -263,5 +263,83 @@ describe('comment/render.vue', () => {
     const calls = spyReportNodeDone()
     await mountWith({ children: [{ cid: 3, userId: 20, userName: 'Bob', content: 'his', status: 'published' }] })
     expect(calls).toEqual([])
+  })
+
+  // ── 审核通过：就地更新单条状态，不重拉列表（否则列表/表单重建导致界面跳动） ──
+
+  /** 以老师身份挂载，记录所有请求 URL；children 默认一条待审核回复 */
+  async function mountAsTeacher(children: any[]) {
+    setMockAuthUser({ id: 99, name: 'Teacher' }, [{ code: 'teacher' }])
+    const urls: string[] = []
+    setMockFetchHandler(async (url: string) => {
+      urls.push(String(url))
+      if (String(url).startsWith('/api/comments/list')) {
+        return {
+          success: true,
+          msg: '',
+          data: { root: { cid: 1, userId: 99, ...topicComment }, children },
+        }
+      }
+      return { success: true, msg: '', data: { approved: true } }
+    })
+    const { default: CommentRender } = await import(
+      '../../../../../components/ueditor/extensions/nodes/vue/comment/render.vue'
+    )
+    const wrapper = mount(CommentRender, {
+      props: { node: { attrs: { content: '1' } }, comment: topicComment, courseId: 1 },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    const listCalls = () => urls.filter(u => u.startsWith('/api/comments/list')).length
+    return { wrapper, urls, listCalls }
+  }
+
+  it('点审核通过后只改本地状态，不重新请求评论列表', async () => {
+    const { wrapper, urls, listCalls } = await mountAsTeacher([
+      { cid: 2, userId: 10, userName: 'Alice', content: 'mine', status: 'audit' },
+    ])
+    expect(wrapper.text()).toContain('comment.auditPending')
+    const before = listCalls()
+
+    const approveBtn = wrapper.findAll('button').find(b => b.text().includes('comment.approve'))!
+    await approveBtn.trigger('click')
+    await flushPromises()
+
+    expect(urls.some(u => u.startsWith('/api/comments/approve'))).toBe(true)
+    // 关键：列表没被重拉（重拉会让 loading 占位替换掉列表 + 回复表单）
+    expect(listCalls()).toBe(before)
+    expect(wrapper.text()).not.toContain('comment.auditPending')
+  })
+
+  it('自己审核触发的 WS 广播不再刷新（本地已就地更新）', async () => {
+    const { wrapper, listCalls } = await mountAsTeacher([
+      { cid: 2, userId: 10, userName: 'Alice', content: 'mine', status: 'audit' },
+    ])
+    const before = listCalls()
+
+    await wrapper.findAll('button').find(b => b.text().includes('comment.approve'))!.trigger('click')
+    await flushPromises()
+
+    // 服务端 fire-and-forget 广播回本端
+    dispatchWsHandler('commentRefresh', { courseId: 1, topicCid: 1, cid: 2 })
+    await flushPromises()
+
+    expect(listCalls()).toBe(before)
+  })
+
+  it('别人审核的广播只更新目标那一条，不重拉列表', async () => {
+    const { wrapper, listCalls } = await mountAsTeacher([
+      { cid: 2, userId: 10, userName: 'Alice', content: 'a', status: 'audit' },
+      { cid: 3, userId: 20, userName: 'Bob', content: 'b', status: 'audit' },
+    ])
+    const before = listCalls()
+    const auditCount = () => (wrapper.html().match(/comment\.auditPending/g) || []).length
+    expect(auditCount()).toBe(2)
+
+    dispatchWsHandler('commentRefresh', { courseId: 1, topicCid: 1, cid: 3 })
+    await flushPromises()
+
+    expect(listCalls()).toBe(before)
+    expect(auditCount()).toBe(1)
   })
 })

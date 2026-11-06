@@ -72,7 +72,8 @@ export default eventHandler(async (event) => {
     } catch { /* 通知失败忽略 */ }
   }
 
-  // 实时通知：广播到评论作者所在班级房间，前端收到 commentRefresh 后刷新对应主题的评论列表
+  // 实时通知：广播到评论作者所在班级房间，前端收到 commentRefresh 后只就地更新该条评论的
+  // status（带 cid 是为了让前端能定位到具体条目，避免整块重拉列表导致界面跳动）。
   // fire-and-forget：不阻塞审核响应
   void (async () => {
     try {
@@ -83,6 +84,8 @@ export default eventHandler(async (event) => {
         type: 'commentRefresh',
         courseId,
         topicCid,
+        cid: commentCid,
+        status: 'published',
       }))
     } catch (e) {
       console.error('[approve broadcast] failed:', e)
