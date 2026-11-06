@@ -16,10 +16,10 @@ import postgres from '/Users/oldmoon/Documents/ubuntu/nuxt_lms_2026/node_modules
 
 const DIR = '/Users/oldmoon/Documents/ubuntu/nuxt_lms_2026/scripts/course7_217/v2'
 const EXPECT = {
-  'standing pose only': ['stand', ['ang.json', 'main.py']],
-  'Program 2: WiFi remote': ['wifi', ['ang.json', 'control.html', 'main.py']],
-  'Program 3: dance show': ['dance', ['ang.json', 'main.py']],
-  'Program 4: talk to it': ['ai', ['ang.json', 'main.py', 'ssd1306.py']],
+  'standing pose tuner over WiFi': ['stand', ['main.py']],
+  'Program 2: WiFi remote': ['wifi', ['control.html', 'main.py']],
+  'Program 3: dance show': ['dance', ['main.py']],
+  'Program 4: talk to it': ['ai', ['main.py', 'ssd1306.py']],
 }
 
 const sql = postgres(process.env.PG, { idle_timeout: 10, max: 1 })
@@ -68,19 +68,24 @@ for (const [marker, [folder, labels]] of Object.entries(EXPECT)) {
 console.log('\n=== 3. ang.json handling is the same in all four programs ===')
 const FROM = 'ANG_FILE = "ang.json"'
 const TO = 'print("ANG =", ANG)'
-const shared = []
+const bodies = {}
 for (const [marker, [folder]] of Object.entries(EXPECT)) {
   const block = vf.find((n) => n.attrs.content.includes(marker))
   const f = JSON.parse(block.attrs.content).items[0].children.find((x) => x.label === 'main.py')
   const body = f.content.replace(/^```[a-z]*\n/, '').replace(/\n```$/, '')
   const a = body.indexOf(FROM)
   const b = body.indexOf(TO)
-  shared.push({ folder, block: body.slice(a, b + TO.length), body })
+  bodies[folder] = { folder, block: body.slice(a, b + TO.length), body }
 }
-const allSame = shared.every((s) => s.block === shared[0].block)
-check('shared block identical', allSame, `${shared[0].block.length} chars x ${shared.length}`)
-check('every program can create ang.json', shared.every((s) => s.body.includes('def save_ang(') && s.body.includes('creating it with the default angles')))
-check('no program reads ANG from a literal pose', shared.every((s) => s.body.includes('ANG = load_ang(ANG_FILE)')))
+// Activity 1 is the WiFi tuning tool: it carries WIFI_SSID/WIFI_PASS and its
+// save_ang returns True/False for the /save route, so it is allowed to differ.
+// Activities 2-4 are plain runners and must stay byte-identical.
+const runners = ['wifi', 'dance', 'ai'].map((k) => bodies[k])
+const allSame = runners.every((r) => r.block === runners[0].block)
+check('runner programs share one ang.json block', allSame, `${runners[0].block.length} chars x ${runners.length}`)
+console.log(`      tuner (Activity 1) has its own block: ${bodies.stand.block.length} chars - expected, it adds WiFi`)
+check('every program can create ang.json', Object.values(bodies).every((s) => s.body.includes('def save_ang(') && s.body.includes('creating it with the default angles')))
+check('no program reads ANG from a literal pose', Object.values(bodies).every((s) => s.body.includes('ANG = load_ang(ANG_FILE)')))
 
 /* -------------------------------------------------------- 4 stale wording */
 console.log('\n=== 4. wording that would contradict the new layout ===')
