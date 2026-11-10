@@ -37,7 +37,7 @@ export default defineEventHandler(async (event) => {
     .update(schema.users)
     .set({
       loginAt: new Date(),
-      loginIp: getRequestIP(event) || null,
+      loginIp: clientIp(event),
     })
     .where(eq(schema.users.id, user.id))
 

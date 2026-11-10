@@ -53,7 +53,8 @@ export function resolveUpstreamChatUrl(apiUrl: string): string {
 
 /** 每 IP 每分钟滑动窗口限流；超限返回 false */
 export function checkOpenAiRateLimit(event: any): boolean {
-  const ip = getRequestIP(event) || 'unknown'
+  // 反代后必须取真实 IP，否则所有 AI 请求共用一个桶（127.0.0.1）
+  const ip = clientIp(event) || 'unknown'
   const now = Date.now()
   const hits = (ipHits.get(ip) || []).filter((t) => t > now - RATE_WINDOW_MS)
   hits.push(now)

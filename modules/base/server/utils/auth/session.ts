@@ -11,7 +11,7 @@ export async function createAuthSession(event: any, user: any): Promise<string> 
   await db.insert(schema.tokens).values({ name: tokenStr, userId: user.id })
   await db
     .update(schema.users)
-    .set({ loginAt: new Date(), loginIp: getRequestIP(event) || null })
+    .set({ loginAt: new Date(), loginIp: clientIp(event) })
     .where(eq(schema.users.id, user.id))
   setCookie(event, 'auth_token', tokenStr, {
     httpOnly: true,

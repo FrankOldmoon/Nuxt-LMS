@@ -438,6 +438,24 @@ export function getRequestIP(_event: any, _opts?: any): string | null {
   return null
 }
 
+/**
+ * clientIp 桩 — 与 modules/base/server/utils/requestIp.ts 同口径：
+ * 优先 x-real-ip → x-forwarded-for 最后一段 → getRequestIP。
+ * 测试可用 setMockRequestIP 覆盖 globalThis.getRequestIP 生效。
+ */
+export function clientIp(event: any): string | null {
+  const _getHeader = (globalThis as any).getHeader ?? getHeader
+  const _getRequestIP = (globalThis as any).getRequestIP ?? getRequestIP
+  const real = _getHeader(event, 'x-real-ip')
+  if (real) return String(real).split(',')[0]!.trim() || null
+  const xff = _getHeader(event, 'x-forwarded-for')
+  if (xff) {
+    const parts = String(xff).split(',').map((s: string) => s.trim()).filter(Boolean)
+    if (parts.length) return parts[parts.length - 1]!
+  }
+  return _getRequestIP(event) || null
+}
+
 /** getRequestPath 桩 — 从 event.path 读取请求路径 */
 export function getRequestPath(event: any): string {
   return event?.path || ''
@@ -1386,6 +1404,7 @@ const _stubsToExpose: Record<string, any> = {
   setCookie,
   deleteCookie,
   getRequestIP,
+  clientIp,
   getRequestPath,
   getRequestProtocol,
   getMethod,

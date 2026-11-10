@@ -29,7 +29,9 @@ export default defineEventHandler(async (event) => {
   const allowedMethods = PROTECTED_ENDPOINTS[path]
   if (!allowedMethods || !allowedMethods.includes(getMethod(event))) return
 
-  const ip = getRequestIP(event) || 'unknown'
+  // 必须用真实客户端 IP：反代后 getRequestIP 恒为 127.0.0.1，
+  // 会让限流退化成全局限流（一个人就能把全校 429 掉）
+  const ip = clientIp(event) || 'unknown'
   const now = Date.now()
 
   // 清理过期时间戳，仅保留窗口内的
