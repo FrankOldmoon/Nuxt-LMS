@@ -6,7 +6,8 @@
  * 启动时给该方法包一层：识别 insert/update 语句，在原方法执行后把
  * 操作者、操作类型、目标表、SQL、参数、耗时、成败异步写入当天审计文件。
  *
- * - 只记录 INSERT / UPDATE（含 on conflict do update）；SELECT / DELETE 按需求不记录
+ * - 记录 INSERT / UPDATE（含 on conflict do update）与 DELETE（软删走 UPDATE set deleted_at）；
+ *   SELECT 不记录；UPDATE/DELETE 缺 where 会标记 noWhere 供异常判定使用
  * - 事务内语句走同一 PreparedQuery 类，天然被覆盖
  * - 操作者：server/middleware/db-audit-context.ts 在每个请求入口用
  *   AsyncLocalStorage.enterWith 把 h3 event 绑定到请求分发上下文（middleware
@@ -50,6 +51,7 @@ export default defineNitroPlugin(() => {
           appendDbAudit({
             time: new Date().toISOString(),
             op: hit.op,
+            noWhere: hit.noWhere,
             table: hit.table,
             ms: Math.round((performance.now() - start) * 100) / 100,
             ok: true,
@@ -69,6 +71,7 @@ export default defineNitroPlugin(() => {
           appendDbAudit({
             time: new Date().toISOString(),
             op: hit.op,
+            noWhere: hit.noWhere,
             table: hit.table,
             ms: Math.round((performance.now() - start) * 100) / 100,
             ok: false,

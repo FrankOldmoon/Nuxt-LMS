@@ -20,9 +20,11 @@ export interface DbAuditEntry {
   /** UTC ISO 时间戳 */
   time: string
   /** 操作类型 */
-  op: 'INSERT' | 'UPDATE'
+  op: 'INSERT' | 'UPDATE' | 'DELETE'
   /** 目标表名 */
   table: string
+  /** UPDATE/DELETE 缺少 where 条件（全表影响），高危 */
+  noWhere?: boolean
   /** 执行耗时（毫秒） */
   ms: number
   /** 是否执行成功 */
@@ -62,6 +64,8 @@ const PARAMS_MAX = 8000
 const RE_INSERT = /\binsert\s+into\s+"?([a-zA-Z_][\w$]*)"?\b/i
 // update 要求后跟 "表名" set，避免命中列名/文本中的 update 一词
 const RE_UPDATE = /\bupdate\s+"?([a-zA-Z_][\w$]*)"?\s+set\b/i
+// delete from "表名"：硬删除，软删走 UPDATE set deleted_at
+const RE_DELETE = /\bdelete\s+from\s+"?([a-zA-Z_][\w$]*)"?\b/i
 
 /** 剥离 SQL 中的字符串字面量（'...' 含 '' 转义、$...$ 美元引用），防止语句文本里的字面量被误判为写操作 */
 function stripLiterals(sql: string): string {
@@ -70,13 +74,17 @@ function stripLiterals(sql: string): string {
     .replace(/\$(\w*)\$[\s\S]*?\$\1\$/g, '$$')
 }
 
-/** 从 SQL 文本识别写操作类型与目标表；非 insert/update 返回 null */
-export function parseWriteOp(rawSql: string): { op: 'INSERT' | 'UPDATE'; table: string } | null {
+/** 从 SQL 文本识别写操作类型与目标表；非 insert/update/delete 返回 null */
+export function parseWriteOp(rawSql: string): { op: 'INSERT' | 'UPDATE' | 'DELETE'; table: string; noWhere: boolean } | null {
   if (!rawSql) return null
   const sql = stripLiterals(rawSql)
-  const m = RE_INSERT.exec(sql) || RE_UPDATE.exec(sql)
+  const m = RE_INSERT.exec(sql) || RE_UPDATE.exec(sql) || RE_DELETE.exec(sql)
   if (!m) return null
-  return { op: m[0].slice(0, 6).toLowerCase() === 'insert' ? 'INSERT' : 'UPDATE', table: m[1] }
+  const head = m[0].slice(0, 6).toLowerCase()
+  const op = head.startsWith('insert') ? 'INSERT' : head.startsWith('update') ? 'UPDATE' : 'DELETE'
+  // 没有 where 的 UPDATE / DELETE 会影响整表，单独标记（INSERT 不需要）
+  const noWhere = op !== 'INSERT' && !/\bwhere\b/i.test(sql)
+  return { op, table: m[1], noWhere }
 }
 
 let curDay = ''
