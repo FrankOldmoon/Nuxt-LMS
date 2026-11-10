@@ -26,9 +26,13 @@ export default eventHandler(async (event) => {
   if (!name) return cResp(null, '缺少 name', false)
 
   // 权限：管理员 / 系统教师 / 本课程教师（含编辑者）
-  const allowed = user.roles.includes('admin')
+  // 用 isCourseStaff（严格）而不是 isCourseTeacher：observer 的只读兜底不能放行写操作
+  // 即使账号同时挂了 teacher 角色，observer 也一律只读
+  const allowed = !user.roles.includes('observer') && (
+    user.roles.includes('admin')
     || user.roles.includes('teacher')
-    || (await isCourseTeacher(user.id, courseId))
+    || (await isCourseStaff(user.id, courseId))
+  )
   if (!allowed) {
     return cResp(null, '仅教师及以上可创建公告', false)
   }

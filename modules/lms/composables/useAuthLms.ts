@@ -47,11 +47,31 @@ export function useAuthLms() {
     return editorCourseIds.value.includes(courseId)
   }
 
+  /** 严格课程身份：本课程的教师或编辑者（不含 observer 兜底） */
+  function isCourseStaff(courseId: number): boolean {
+    return teacherCourseIds.value.includes(courseId) || editorCourseIds.value.includes(courseId)
+  }
+
+  /**
+   * 能否编辑/操作该课程（写权限）。
+   *
+   * 与服务端 isCourseStaff 口径一致：admin 放行、observer 一律只读、其余看本课程身份。
+   * 所有「编辑 / 批改 / 打分 / 分组 / 发公告」类入口都用它，不要用 isCourseTeacher ——
+   * isCourseTeacher 对 observer 返回 true（为了让它看教师视角），拿它控写入口会出现
+   * 「按钮能点、保存 403」。
+   */
+  function canEditCourse(courseId: number): boolean {
+    if (hasRole('admin')) return true
+    if (hasRole('observer')) return false
+    return isCourseStaff(courseId)
+  }
+
   /** 检查当前用户是否是某课程的教师或编辑者（编辑者隐含教师权限）。
-      observer 视为所有课程的非 editor 教师。 */
+      读/展示用：observer 视为所有课程的观察教师（只读，不含写权限）。
+      写入口请改用 canEditCourse()。 */
   function isCourseTeacher(courseId: number): boolean {
     if (hasRole('observer')) return true
-    return teacherCourseIds.value.includes(courseId) || editorCourseIds.value.includes(courseId)
+    return isCourseStaff(courseId)
   }
 
   return {
@@ -67,6 +87,8 @@ export function useAuthLms() {
     hasAnyRole,
     hasPermission,
     isCourseEditor,
+    isCourseStaff,
+    canEditCourse,
     isCourseTeacher,
     login,
     register,

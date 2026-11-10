@@ -21,7 +21,7 @@ export function useCourseAnnouncements(
 ) {
   const { t } = useI18n()
   const { hasRole } = useAuth()
-  const { isCourseTeacher } = useAuthLms()
+  const { canEditCourse } = useAuthLms()
   const toast = useToast()
 
   // 响应式状态
@@ -46,13 +46,14 @@ export function useCourseAnnouncements(
     return map
   })
 
-  // 权限判断：管理员 / 系统教师 / 本课程教师可发布公告
+  // 权限判断：管理员 / 系统教师 / 本课程教师可发布公告（observer 只读，一律不可）
   const canCreate = computed(() => {
     const cid = Number(props.courseId)
     if (!cid) return false
+    if (hasRole('observer')) return false
     return hasRole('admin')
       || hasRole('teacher')
-      || isCourseTeacher(cid)
+      || canEditCourse(cid)
   })
 
   // 工具函数

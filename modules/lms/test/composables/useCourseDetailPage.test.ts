@@ -27,6 +27,8 @@ beforeEach(async () => {
   ;(globalThis as any).useAuthLms = () => ({
     isCourseTeacher: (cid: number) => cid === 5,
     isCourseEditor: (cid: number) => cid === 5,
+    isCourseStaff: (cid: number) => cid === 5,
+    canEditCourse: (cid: number) => cid === 5,
   })
   // 桩 useSidebarNav（auto-import from lms）
   ;(globalThis as any).useSidebarNav = () => ({

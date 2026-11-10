@@ -88,6 +88,17 @@ export async function requirePermission(event: any, permCodes: string[]): Promis
   return user
 }
 
+/**
+ * 教师级**只读**守卫：admin / teacher / observer 任一即可。
+ *
+ * 为什么需要它：observer（只读观察者）要看教师的学情视图（提交记录、成绩、学号表等），
+ * 但它**不应该**挂 teacher 角色 —— 否则 requireRole(['teacher','admin']) 的写接口会连坐放行。
+ * 所以读接口用本守卫显式放 observer，写接口继续用 requireRole(['teacher','admin'])。
+ */
+export async function requireTeacherOrObserver(event: any): Promise<AuthUser> {
+  return requireRole(event, ['admin', 'teacher', 'observer'])
+}
+
 /** 要求管理员角色，否则抛 403 */
 export async function requireAdmin(event: any): Promise<AuthUser> {
   return requireRole(event, ['admin'])

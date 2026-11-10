@@ -47,8 +47,9 @@ export interface UeditorIndexProps {
 export function useUeditorIndex(props: any, json: any) {
     const isReadonly = ref(false)
 
-    // 仅 teacher 以上角色可编辑内容（显示 Cinserts）
-    const { hasRole, isCourseEditor, isCourseTeacher } = useAuth()
+    // 仅 teacher 以上角色可编辑内容（显示 Cinserts）；observer 只读，一律不可编辑
+    // 注意：这里必须用 useAuthLms —— base 的 useAuth 不提供 isCourseEditor/canEditCourse
+    const { hasRole, canEditCourse } = useAuthLms()
     const route = useRoute()
     // 优先使用 props.courseId（admin 复用场景），否则用 route.params.id
     const effectiveCourseId = computed(() => {
@@ -59,8 +60,10 @@ export function useUeditorIndex(props: any, json: any) {
     })
     const canInsert = computed(() => {
         if (!props.showInsert) return false
+        // observer 只读：即使账号误挂了 teacher 角色，也不给内容插入能力
+        if (hasRole('observer')) return false
         if (hasRole('admin') || hasRole('teacher')) return true
-        return effectiveCourseId.value ? isCourseEditor(effectiveCourseId.value) || isCourseTeacher(effectiveCourseId.value) : false
+        return effectiveCourseId.value ? canEditCourse(effectiveCourseId.value) : false
     })
 
     const editorRef = ref<any>(null)
@@ -143,9 +146,9 @@ export function useUeditorIndex(props: any, json: any) {
         async onFileUpload(file: any) {
             if (!file) throw new Error('File not found')
 
-            // 视频：仅教师/管理员可上传；优先上传 PeerTube 得到 embed URL
+            // 视频：仅教师/管理员可上传（observer 只读）；优先上传 PeerTube 得到 embed URL
             if (String(file.type || '').startsWith('video/')) {
-                if (!(hasRole('admin') || hasRole('teacher'))) {
+                if (hasRole('observer') || !(hasRole('admin') || hasRole('teacher'))) {
                     throw new Error('仅教师和管理员可上传视频')
                 }
                 // 将编辑器里刚创建的待上传 video 节点原位替换为 iframe 节点（embed 是网页地址，

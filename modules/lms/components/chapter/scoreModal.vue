@@ -76,8 +76,8 @@ const props = defineProps({
   classId: { type: Number, default: 0 },
 })
 const isOpen = defineModel<boolean>('open', { default: false })
-const { isCourseTeacher, hasRole } = useAuthLms()
-const canEdit = computed(() => hasRole('admin') || isCourseTeacher(props.courseId))
+const { canEditCourse, hasRole } = useAuthLms()
+const canEdit = computed(() => hasRole('admin') || canEditCourse(props.courseId))
 const {
   students, loading, taskModalOpen, taskModalItem,
   onItemClick, tableRows, extraColumns, loadData,

@@ -15,7 +15,7 @@ beforeEach(() => {
   resetAllStubs()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
   // stub useAuthLms（canEdit 用 isCourseTeacher/hasRole 判定）
-  ;(globalThis as any).useAuthLms = () => ({ isCourseTeacher: () => true, hasRole: () => true })
+  ;(globalThis as any).useAuthLms = () => ({ canEditCourse: () => true, isCourseTeacher: () => true, hasRole: () => true })
 })
 
 function mockChapterScore(overrides: any = {}) {

@@ -48,9 +48,15 @@ describe('composables/useAuthLms', () => {
     expect(auth.isCourseEditor(99)).toBe(false)
     expect(auth.isCourseTeacher(3)).toBe(true)
     expect(auth.isCourseTeacher(1)).toBe(true) // editor 包含 teacher 权限
+    // 写权限：strict 课程身份，teacher/editor 课程都算
+    expect(auth.isCourseStaff(3)).toBe(true)
+    expect(auth.isCourseStaff(1)).toBe(true)
+    expect(auth.isCourseStaff(99)).toBe(false)
+    expect(auth.canEditCourse(3)).toBe(true)
+    expect(auth.canEditCourse(99)).toBe(false)
   })
 
-  it('observer 视为所有课程的非 editor 教师', async () => {
+  it('observer 视为所有课程的观察教师（只读），但没有任何写权限', async () => {
     setMockAuthUser(
       { id: 2, username: 'obs', name: 'Obs' },
       [{ code: 'observer', name: 'Observer' }],
@@ -61,8 +67,25 @@ describe('composables/useAuthLms', () => {
     const auth = useAuthLms()
     await flushPromises()
     expect(auth.hasRole('observer')).toBe(true)
-    expect(auth.isCourseTeacher(999)).toBe(true) // 全局教师，不依赖课程身份
+    expect(auth.isCourseTeacher(999)).toBe(true) // 全局教师视角，不依赖课程身份
     expect(auth.isCourseEditor(999)).toBe(false) // 非 editor
+    // 写权限必须为 false：否则会出现「编辑按钮可点、保存 403」
+    expect(auth.isCourseStaff(999)).toBe(false)
+    expect(auth.canEditCourse(999)).toBe(false)
+  })
+
+  it('observer 即使被误配成本课程教师，canEditCourse 仍为 false（只读优先）', async () => {
+    setMockAuthUser(
+      { id: 3, username: 'obs2', name: 'Obs2' },
+      [{ code: 'observer', name: 'Observer' }],
+      [],
+      { editorCourseIds: [], teacherCourseIds: [5], classIds: [] }
+    )
+    const { useAuthLms } = await import('../../composables/useAuthLms')
+    const auth = useAuthLms()
+    await flushPromises()
+    expect(auth.isCourseStaff(5)).toBe(true) // 课程身份客观存在
+    expect(auth.canEditCourse(5)).toBe(false) // 但 observer 只读
   })
 
   it('login 调用 /api/auth/login 并 refresh', async () => {

@@ -15,11 +15,11 @@ export function useCourseGroups(props: GroupsModalProps, isOpen: Ref<boolean>) {
   const toast = useToast()
   const { students, fetchUsers } = useClassUsers()
   const { hasRole, user } = useAuth()
-  const { isCourseTeacher } = useAuthLms()
+  const { canEditCourse } = useAuthLms()
 
   const canEdit = computed(() => {
     if (hasRole('admin')) return true
-    return props.courseId ? isCourseTeacher(Number(props.courseId)) : false
+    return props.courseId ? canEditCourse(Number(props.courseId)) : false
   })
 
   const activeTab = ref<'members' | 'chat' | 'files'>('members')

@@ -16,9 +16,9 @@ export default eventHandler(async (event) => {
   if (!courseId) return cResp(null, '缺少 courseId', false)
   if (!groups || typeof groups !== 'object') return cResp(null, '缺少 groups', false)
 
-  // 只有教师或管理员可以修改分组
-  const isTeacher = await isCourseTeacher(user.id, Number(courseId))
-  if (!isTeacher && !user.roles.includes('admin')) {
+  // 只有教师或管理员可以修改分组；observer 只读（即使挂了 teacher 角色也不放行）
+  const isStaff = await isCourseStaff(user.id, Number(courseId))
+  if (user.roles.includes('observer') || (!isStaff && !user.roles.includes('admin'))) {
     return cResp(null, '无权限', false)
   }
 

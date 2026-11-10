@@ -4,7 +4,7 @@
  * 传 course_id：返回合并后的课程级配置（全局 + 课程覆盖）
  */
 export default eventHandler(async (event) => {
-  await requireRole(event, ['teacher', 'admin'])
+  await requireTeacherOrObserver(event)
 
   const { course_id } = getQuery(event)
 

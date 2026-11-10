@@ -5,7 +5,7 @@
  * 返回字段仅含 id / username / name / avatarImg（不返回邮箱等敏感信息）。
  */
 export default eventHandler(async (event) => {
-  await requireRole(event, ['admin', 'teacher'])
+  await requireTeacherOrObserver(event)
 
   const keyword = String(getQuery(event).keyword || '').trim()
   if (!keyword) {

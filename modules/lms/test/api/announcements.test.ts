@@ -130,6 +130,21 @@ describe('API: announcements/add.post', () => {
     const result = await handler(makeEvent({ body: { courseId: 1 } }))
     expect(result.success).toBe(false)
   })
+
+  it('observer 只读：不能创建公告', async () => {
+    setMockAuthState({ id: 9, username: 'observer', roles: ['observer'], permissions: [] })
+    const handler = (await import('../../server/api/announcements/add.post')).default
+    const result = await handler(makeEvent({ body: { courseId: 1, name: 'X', content: 'Body' } }))
+    expect(result.success).toBe(false)
+    expect(result.msg).toContain('仅教师及以上')
+  })
+
+  it('observer 误挂 teacher 角色也不能创建公告', async () => {
+    setMockAuthState({ id: 9, username: 'observer', roles: ['observer', 'teacher'], permissions: [] })
+    const handler = (await import('../../server/api/announcements/add.post')).default
+    const result = await handler(makeEvent({ body: { courseId: 1, name: 'X', content: 'Body' } }))
+    expect(result.success).toBe(false)
+  })
 })
 
 describe('API: announcements/delete.post', () => {
@@ -164,5 +179,15 @@ describe('API: announcements/delete.post', () => {
     const handler = (await import('../../server/api/announcements/delete.post')).default
     const result = await handler(makeEvent({ body: { id: 1 } }))
     expect(result.success).toBe(true)
+  })
+
+  it('observer 只读：不能删除公告（即使挂了 teacher 角色）', async () => {
+    setMockAuthState({ id: 9, username: 'observer', roles: ['observer', 'teacher'], permissions: [] })
+    const { db } = await import('@nuxthub/db')
+    vi.mocked(db.query.announcements.findFirst).mockResolvedValue({ id: 1, courseId: 1 } as any)
+    const handler = (await import('../../server/api/announcements/delete.post')).default
+    const result = await handler(makeEvent({ body: { id: 1 } }))
+    expect(result.success).toBe(false)
+    expect(result.msg).toContain('仅教师及以上')
   })
 })

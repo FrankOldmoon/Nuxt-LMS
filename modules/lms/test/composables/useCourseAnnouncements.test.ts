@@ -29,6 +29,8 @@ beforeEach(async () => {
   ;(globalThis as any).useAuthLms = () => ({
     isCourseTeacher: (cid: number) => cid === 5,
     isCourseEditor: (cid: number) => cid === 5,
+    isCourseStaff: (cid: number) => cid === 5,
+    canEditCourse: (cid: number) => cid === 5,
   })
   // renderContent 依赖 auto-import 的 extractText：用真实实现
   const { extractText } = await import('../../utils/tiptapText')
@@ -73,7 +75,7 @@ describe('composables/useCourseAnnouncements', () => {
     expect(r.canCreate.value).toBe(false)
   })
 
-  it('canCreate：非 admin/teacher 但 isCourseTeacher 时 true', async () => {
+  it('canCreate：非 admin/teacher 但是本课程可编辑教师时 true', async () => {
     setMockAuthUser({ id: 1, name: 'guest' })
     const isOpen = ref(false)
     const { useCourseAnnouncements } = await import('../../composables/useCourseAnnouncements')

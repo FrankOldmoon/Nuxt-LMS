@@ -27,6 +27,8 @@ beforeEach(() => {
   ;(globalThis as any).useAuthLms = () => ({
     isCourseTeacher: (cid: number) => cid === 5, // 仅 course 5 算 teacher
     isCourseEditor: (cid: number) => cid === 5,
+    isCourseStaff: (cid: number) => cid === 5,
+    canEditCourse: (cid: number) => cid === 5, // 严格写权限（observer 场景由 useAuthLms 自身测试覆盖）
   })
   ;(globalThis as any).__classesRef = classesRef
   ;(globalThis as any).__loadClassesMock = loadClassesMock

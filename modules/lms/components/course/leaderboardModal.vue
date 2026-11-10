@@ -77,8 +77,8 @@ const props = defineProps<{
     classId: string | number
 }>()
 
-const { isCourseTeacher, hasRole } = useAuthLms()
-const canEdit = computed(() => hasRole('admin') || isCourseTeacher(Number(props.courseId)))
+const { canEditCourse, hasRole } = useAuthLms()
+const canEdit = computed(() => hasRole('admin') || canEditCourse(Number(props.courseId)))
 const { loading, myStudent, myRank, myLv, tableRows, extraColumns } = useCourseLeaderboard(props, isOpen)
 
 // 各班生均分 / 全局排行：都是按钮弹出的独立弹窗（不在本弹窗内联展示）

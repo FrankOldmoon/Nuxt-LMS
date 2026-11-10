@@ -2,7 +2,7 @@ import { db, schema } from "@nuxthub/db"
 import { eq } from "drizzle-orm"
 
 export default eventHandler(async (event) => {
-  await requireRole(event, ['teacher', 'admin'])
+  await requireTeacherOrObserver(event)
 
   const { course_id, type } = getQuery(event)
   if (!course_id) {

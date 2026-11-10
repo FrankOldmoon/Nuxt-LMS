@@ -19,9 +19,13 @@ export default eventHandler(async (event) => {
   })
   if (!ann) return cResp(null, '公告不存在', false)
 
-  const allowed = user.roles.includes('admin')
+  // 权限：管理员 / 系统教师 / 本课程教师（含编辑者）
+  // 用 isCourseStaff（严格）：observer 只读，不能删公告（即使同时挂了 teacher 角色）
+  const allowed = !user.roles.includes('observer') && (
+    user.roles.includes('admin')
     || user.roles.includes('teacher')
-    || (await isCourseTeacher(user.id, ann.courseId))
+    || (await isCourseStaff(user.id, ann.courseId))
+  )
   if (!allowed) {
     return cResp(null, '仅教师及以上可删除公告', false)
   }

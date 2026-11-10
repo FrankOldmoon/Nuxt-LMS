@@ -17,6 +17,8 @@ beforeEach(() => {
   ;(globalThis as any).useAuthLms = () => ({
     isCourseTeacher: () => false,
     isCourseEditor: () => false,
+    isCourseStaff: () => false,
+    canEditCourse: () => false,
   })
   ;(globalThis as any).useLayoutState = () => ({
     showDanmaku: ref(false),

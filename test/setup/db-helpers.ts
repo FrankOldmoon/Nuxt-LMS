@@ -142,6 +142,7 @@ export function installLmsAutoImports(overrides: Record<string, any> = {}) {
     getCourseMembers: vi.fn().mockResolvedValue([]),
     mergeCourseLmsConfig: vi.fn().mockImplementation((def: any, ov: any) => ({ ...def, ...ov })),
     isCourseTeacher: vi.fn().mockResolvedValue(false),
+    isCourseStaff: vi.fn().mockResolvedValue(false),
     getConfigByPrefix: vi.fn().mockResolvedValue({}),
     requireChapterTeacher: vi.fn().mockImplementation(async (event: any, _chapterId?: number) => {
       const { requireRole } = await import('./nuxt-stubs')
@@ -164,7 +165,7 @@ export function uninstallLmsAutoImports() {
   const keys = [
     'getCourseLmsConfig', 'addChapterScore', 'addCourseScore', 'addCourseScoreMax',
     'checkAndAwardMedals', 'getClassUsers', 'getUserClassInfo', 'getCourseMembers', 'mergeCourseLmsConfig',
-    'isCourseTeacher', 'requireChapterTeacher', 'getConfigByPrefix',
+    'isCourseTeacher', 'isCourseStaff', 'requireChapterTeacher', 'getConfigByPrefix',
     'getContentVersion', 'listContentVersions', 'restoreContentVersion',
     'upsertUserChapter', 'upsertUserCourse',
   ]

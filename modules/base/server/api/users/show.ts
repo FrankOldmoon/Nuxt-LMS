@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm'
 
 export default eventHandler(async (event) => {
   // 仅教师/管理员可查看用户详情
-  const caller = await requireRole(event, ['teacher', 'admin'])
+  const caller = await requireTeacherOrObserver(event)
   const isAdmin = caller.roles.includes('admin')
 
   const table = 'users'

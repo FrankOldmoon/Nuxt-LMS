@@ -747,9 +747,29 @@ export async function requireCourseTeacher(_event: any, _courseId?: number) {
   throw err
 }
 
-/** isCourseTeacher 桩（LMS 扩展用） */
+/** isCourseTeacher 桩（LMS 扩展用，含 observer 只读兜底语义） */
 export async function isCourseTeacher(_userId: number, _courseId: number): Promise<boolean> {
   return false
+}
+
+/** isCourseStaff 桩（严格课程身份：is_teacher / is_editor，不含 observer 兜底） */
+export async function isCourseStaff(_userId: number, _courseId: number): Promise<boolean> {
+  return false
+}
+
+/** requireTeacherOrObserver 桩 — admin / teacher / observer 任一即可，否则 403 */
+export async function requireTeacherOrObserver(event: any) {
+  if (!_mockAuthState) {
+    const err: any = new Error('请先登录')
+    err.statusCode = 401
+    throw err
+  }
+  if (_mockAuthState.roles.some((r: string) => ['admin', 'teacher', 'observer'].includes(r))) {
+    return _mockAuthState
+  }
+  const err: any = new Error('无权限执行此操作')
+  err.statusCode = 403
+  throw err
 }
 
 /** isClassTeacher 桩（LMS 扩展用） */
@@ -1402,6 +1422,8 @@ const _stubsToExpose: Record<string, any> = {
   allPeers,
   requireCourseTeacher,
   isCourseTeacher,
+  isCourseStaff,
+  requireTeacherOrObserver,
   broadcastToClass,
   classRooms,
   joinClassRoom,

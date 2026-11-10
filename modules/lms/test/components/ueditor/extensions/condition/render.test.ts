@@ -27,6 +27,8 @@ let _mockClassIds = ref<number[]>([])
   hasPermission: () => false,
   isCourseEditor: () => false,
   isCourseTeacher: () => false,
+  isCourseStaff: () => false,
+  canEditCourse: () => false,
 })
 
 beforeEach(() => {

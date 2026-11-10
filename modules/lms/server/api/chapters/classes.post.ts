@@ -18,7 +18,7 @@ export default eventHandler(async (event) => {
     return cResp(null, '缺少 chapterId 或 classes 参数', false)
   }
 
-  // 权限校验
+  // 权限校验：observer 只读，即使挂了 teacher 角色也不放行
   const chapter = await db
     .select({ courseId: schema.chapters.courseId })
     .from(schema.chapters)
@@ -26,7 +26,10 @@ export default eventHandler(async (event) => {
     .limit(1)
   if (!chapter[0]) return cResp(null, '章节不存在', false)
 
-  const canEdit = user.roles.includes('admin') || await isCourseTeacher(user.id, chapter[0].courseId)
+  const isObserver = user.roles.includes('observer')
+  const canEdit = !isObserver && (
+    user.roles.includes('admin') || await isCourseStaff(user.id, chapter[0].courseId)
+  )
   if (!canEdit) return cResp(null, '无权限', false)
 
   // 逐个 upsert

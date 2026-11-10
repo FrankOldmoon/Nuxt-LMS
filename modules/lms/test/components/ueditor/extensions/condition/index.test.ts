@@ -21,6 +21,8 @@ import { resetAllStubs, setMockI18n, setMockLmsContext, setMockAuthUser, provide
   hasPermission: () => false,
   isCourseEditor: () => false,
   isCourseTeacher: () => false,
+  isCourseStaff: () => false,
+  canEditCourse: () => false,
 })
 
 beforeEach(() => {

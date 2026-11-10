@@ -10,12 +10,9 @@ import { requireAuth } from '../../../base/server/utils/auth'
 import { db, schema } from '@nuxthub/db'
 import { eq, and } from 'drizzle-orm'
 
-/**
- * 检查当前用户是否是某课程的教师/编辑者（教师或编辑者均可）。
- * observer 角色视为所有课程的非 editor 教师（仅 when 无课程身份时兜底）。
- */
-export async function isCourseTeacher(userId: number, courseId: number): Promise<boolean> {
-  if (!(schema as any).userCourses) return false
+/** 查询某用户在某课程上的身份标志（无记录时均为 false） */
+async function courseFlags(userId: number, courseId: number): Promise<{ isTeacher: boolean; isEditor: boolean }> {
+  if (!(schema as any).userCourses) return { isTeacher: false, isEditor: false }
   const rows = await db
     .select({ isTeacher: (schema as any).userCourses.isTeacher, isEditor: (schema as any).userCourses.isEditor })
     .from((schema as any).userCourses)
@@ -26,9 +23,28 @@ export async function isCourseTeacher(userId: number, courseId: number): Promise
       ),
     )
     .limit(1)
-  const isCourseStaff = rows.length > 0 && !!(rows[0].isTeacher || rows[0].isEditor)
-  if (isCourseStaff) return true
-  // 兜底：observer 为全局观察教师（非 editor），对所有课程视为教师
+  return {
+    isTeacher: rows.length > 0 && !!rows[0].isTeacher,
+    isEditor: rows.length > 0 && !!rows[0].isEditor,
+  }
+}
+
+/**
+ * 严格判定：用户在该课程上是否具备教师/编辑者身份（只看 user_courses 标志）。
+ * **写操作必须用这个** —— observer 的只读兜底不在此生效。
+ */
+export async function isCourseStaff(userId: number, courseId: number): Promise<boolean> {
+  const flags = await courseFlags(userId, courseId)
+  return flags.isTeacher || flags.isEditor
+}
+
+/**
+ * 读/展示用：严格课程身份 || observer 全局观察兜底。
+ * observer 视为所有课程的「非 editor 教师」，因此能用教师视角看全部章节与学情数据；
+ * 但**不能**据此放行任何写操作（写操作一律走 isCourseStaff / requireCourseTeacher）。
+ */
+export async function isCourseTeacher(userId: number, courseId: number): Promise<boolean> {
+  if (await isCourseStaff(userId, courseId)) return true
   return await isObserver(userId)
 }
 
@@ -44,21 +60,11 @@ async function isObserver(userId: number): Promise<boolean> {
 }
 
 /**
- * 检查当前用户是否是某课程的编辑者（仅编辑者，不含教师）
+ * 检查当前用户是否是某课程的编辑者（仅编辑者，不含教师、不含 observer 兜底）
  */
 export async function isCourseEditor(userId: number, courseId: number): Promise<boolean> {
-  if (!(schema as any).userCourses) return false
-  const rows = await db
-    .select({ isEditor: (schema as any).userCourses.isEditor })
-    .from((schema as any).userCourses)
-    .where(
-      and(
-        eq((schema as any).userCourses.userId, userId),
-        eq((schema as any).userCourses.courseId, courseId),
-      ),
-    )
-    .limit(1)
-  return rows.length > 0 && !!rows[0].isEditor
+  const flags = await courseFlags(userId, courseId)
+  return flags.isEditor
 }
 
 /**

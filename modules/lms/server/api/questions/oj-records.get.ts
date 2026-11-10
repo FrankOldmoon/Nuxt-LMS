@@ -10,7 +10,7 @@ import { resolveOjPid, fetchOjUserRecords, getOjUrl } from "../../utils/question
  * 仅 OJ 题型有记录可查，其它题型返回空列表。
  */
 export default eventHandler(async (event) => {
-  const user = await requireRole(event, ['teacher', 'admin'])
+  const user = await requireTeacherOrObserver(event)
 
   const { course_id, cid } = getQuery(event)
   if (!course_id || !cid) {

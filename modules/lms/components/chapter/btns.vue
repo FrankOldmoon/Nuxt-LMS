@@ -56,7 +56,7 @@
 <script setup lang="ts">
 const route = useRoute()
 const { hasRole, user } = useAuth()
-const { isCourseEditor, isCourseTeacher } = useAuthLms()
+const { isCourseEditor, canEditCourse } = useAuthLms()
 const { chapterBtnsConfig } = useLayoutState()
 const { chapterPage: chapterPageCfg } = useLmsPublicConfig()
 const { sendInvite: wsSendInvite } = useWebSocket()
@@ -72,10 +72,10 @@ const classIdNum = computed(() => user.value?.defaultClass?.id || user.value?.cl
 // 是否已登录
 const isLoggedIn = computed(() => !!user.value)
 
-// 教师或管理员才能操作得分/选择
+// 教师或管理员才能操作得分/选择（observer 只读，不可操作）
 const canEdit = computed(() => {
   if (hasRole('admin')) return true
-  return courseIdNum.value ? isCourseTeacher(courseIdNum.value) : false
+  return courseIdNum.value ? canEditCourse(courseIdNum.value) : false
 })
 
 const scoreOpen = ref(false)

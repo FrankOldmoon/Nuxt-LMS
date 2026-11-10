@@ -12,7 +12,7 @@ import type { ComputedRef, Ref } from 'vue'
 export function useCourseDetailPage(courseId: ComputedRef<string>, apiUrl: ComputedRef<string>) {
   const { courseNavVersion, notifyCourseNavUpdate } = useLayoutState()
   const { hasRole } = useAuth()
-  const { isCourseEditor, isCourseTeacher } = useAuthLms()
+  const { isCourseEditor, canEditCourse } = useAuthLms()
   const { refresh: refreshNav } = useSidebarNav()
 
   const { data: resp, pending, refresh } = cRequest.use<import('#lms/types/lms').LmsCourseDetail | null>(
@@ -24,7 +24,7 @@ export function useCourseDetailPage(courseId: ComputedRef<string>, apiUrl: Compu
 
   const canEdit = computed(() => {
     if (!courseId.value) return false
-    return hasRole('admin') || isCourseTeacher(Number(courseId.value))
+    return hasRole('admin') || canEditCourse(Number(courseId.value))
   })
 
   const hasContent = computed(() => {

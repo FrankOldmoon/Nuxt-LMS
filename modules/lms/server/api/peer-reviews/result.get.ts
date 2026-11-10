@@ -13,7 +13,7 @@ import { getCourseStudents, calcPeerScores } from "../../utils/peerReview"
  * - details: 评价矩阵明细 [{ fromUserId, fromName, targetUserId, targetName, scores }]
  */
 export default eventHandler(async (event) => {
-  await requireRole(event, ['teacher', 'admin'])
+  await requireTeacherOrObserver(event)
 
   const { course_id, settle } = getQuery(event)
   const courseId = Number(course_id)
