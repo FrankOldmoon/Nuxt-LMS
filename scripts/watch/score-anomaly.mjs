@@ -22,6 +22,7 @@
  *      同一批异常（签名相同）24h 内只通知一次，避免刷屏（状态存 logs/score-state.json）。
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import postgres from 'postgres'
@@ -36,15 +37,63 @@ const has = (k) => args.includes(`--${k}`)
 const NOTIFY = has('notify')
 const JSON_OUT = has('json')
 const UPDATE_BASELINE = has('update-baseline')
+const WITH_LOG = !has('no-log')
 const ONLY_COURSE = Number(argOf('course') || 0)
+const TZ = process.env.LMS_TZ || 'Asia/Shanghai'
+/** 要分析的写入日志日期（服务器日志按本地日期分目录） */
+const DAY_OF_LOG = argOf('day') || new Intl.DateTimeFormat('sv-SE', { timeZone: TZ }).format(new Date())
 
 /** 有分但零进度的分数门槛 */
 const MIN_SCORE_NO_PROGRESS = 50
-/** 分数突增阈值 */
-const JUMP_ABS = Number(process.env.LMS_SCORE_JUMP || 300)
+/**
+ * 日净涨幅阈值：两次运行之间的累计涨分。
+ * 实测（11-10 全量日志）单日总加分 P50=41 / P95=300 / P99=549 / max=1211，
+ * 所以 300 会天天误报 5% 的学生，默认抬到 800。
+ */
+const JUMP_ABS = Number(process.env.LMS_SCORE_JUMP || 800)
 const JUMP_RATIO = 1.0 // 翻倍
+/**
+ * 单步加分阈值：一次提交最多加多少分。
+ * 实测单步 P50=5 / P99=20 / max=45（course 8 的大题），所以 >100 基本不可能是正常任务。
+ */
+const STEP_JUMP = Number(process.env.LMS_STEP_JUMP || 100)
+/** 单日加分次数 / 总额超此值列入「异常勤奋」供人工判断 */
+const DAY_WRITES = Number(process.env.LMS_DAY_WRITES || 200)
+const DAY_SCORE = Number(process.env.LMS_DAY_SCORE || 1000)
+/** 同一学生同一课程同一分钟被写分次数（一次提交会触发多次重算，常规约 5-18 次） */
+const MINUTE_WRITES = Number(process.env.LMS_MINUTE_WRITES || 25)
 /** 通知去重窗口 */
 const NOTIFY_DEDUPE_HOURS = 24
+
+/** SSH 拉当天写入日志 */
+const SSH_KEY = process.env.LMS_SSH_KEY || '/Users/oldmoon/Documents/github/151/10.28.1.151_id_ed25519'
+const SSH_HOST = process.env.LMS_SSH_HOST || 'root@10.28.1.151'
+const REMOTE_DIR = process.env.LMS_REMOTE_DIR || '/www/wwwroot/nuxt_lms_2026'
+
+function fetchDayWrites(day) {
+  const local = argOf('log-file')
+  let raw = ''
+  if (local) {
+    if (!existsSync(resolve(local))) return { error: `本地日志不存在：${local}` }
+    raw = readFileSync(resolve(local), 'utf8')
+  } else {
+    const r = spawnSync('ssh', [
+      '-i', SSH_KEY, '-o', 'IdentitiesOnly=yes', '-o', 'StrictHostKeyChecking=no', '-o', 'BatchMode=yes',
+      SSH_HOST, `cat ${REMOTE_DIR}/logs/${day}/db-writes.jsonl 2>/dev/null || echo __NOFILE__`,
+    ], { encoding: 'utf8', maxBuffer: 96 * 1024 * 1024 })
+    if (r.status !== 0) return { error: `SSH 失败（status=${r.status}）` }
+    raw = r.stdout
+    if (raw.trim() === '__NOFILE__') return { error: `远端无当天日志` }
+  }
+  const writes = []
+  let bad = 0
+  for (const line of raw.split('\n')) {
+    const s = line.trim()
+    if (!s) continue
+    try { writes.push(JSON.parse(s)) } catch { bad++ }
+  }
+  return { writes, bad }
+}
 
 const alerts = []
 function addAlert(level, code, msg, rows) {
@@ -64,6 +113,7 @@ const nextScores = {}
 const nextStateExtra = {}
 let notifyResult = null
 let baselineMode = 'created'
+let logStat = null
 
 try {
   // ---------- S1a 课程总分为负 ----------
@@ -113,6 +163,86 @@ try {
       ${ONLY_COURSE ? sql`and uc.course_id = ${ONLY_COURSE}` : sql``}
     limit 20`
   if (negExp.length) addAlert('warn', 'negative_exp_coin', `${negExp.length} 条 exp/coin 为负`, negExp)
+
+  // ---------- S5~S7 从当天写入日志重建分数轨迹，抓「瞬时刷分」 ----------
+  // 快照只能看两次运行之间的净涨，抓不到「一次提交暴涨」；这里按日志时序还原每次加分。
+  if (WITH_LOG) {
+    const { writes, bad, error } = fetchDayWrites(DAY_OF_LOG)
+    if (error) {
+      alerts.push({ level: 'info', code: 'log_unavailable', msg: `未读取当天写入日志，跳过瞬时刷分判定（${error}）`, count: 0 })
+    } else {
+      // user_courses 分数更新：params = [score, attitude, exp, coin, updated_at, user_id, course_id]
+      const traj = new Map()
+      for (const w of writes) {
+        if (w.table !== 'user_courses' || w.op !== 'UPDATE') continue
+        if (!/set\s+"score"\s*=/.test(w.sql || '')) continue
+        let p
+        try { p = JSON.parse(String(w.params)) } catch { continue }
+        if (!Array.isArray(p) || p.length < 7) continue
+        const uid = Number(p[5]); const cid = Number(p[6]); const score = Number(p[0])
+        if (!Number.isFinite(uid) || !Number.isFinite(cid) || !Number.isFinite(score)) continue
+        if (ONLY_COURSE && cid !== ONLY_COURSE) continue
+        const k = `${uid}:${cid}`
+        if (!traj.has(k)) traj.set(k, [])
+        traj.get(k).push({ t: String(w.time), score })
+      }
+
+      const bigSteps = []
+      const busy = []
+      const bursts = []
+      for (const [k, seq] of traj) {
+        const [uid, cid] = k.split(':').map(Number)
+        seq.sort((a, b) => a.t.localeCompare(b.t))
+        let prev = null
+        let total = 0
+        let count = 0
+        let maxStep = 0
+        const perMin = new Map()
+        for (const s of seq) {
+          if (prev !== null) {
+            const d = s.score - prev
+            if (d > 0) {
+              total += d
+              count++
+              if (d > maxStep) maxStep = d
+              if (d >= STEP_JUMP) {
+                bigSteps.push({ user_id: uid, course_id: cid, delta: Math.round(d * 100) / 100, at: s.t })
+              }
+            }
+          }
+          prev = s.score
+          const m = s.t.slice(0, 16)
+          perMin.set(m, (perMin.get(m) || 0) + 1)
+        }
+        if (count >= DAY_WRITES || total >= DAY_SCORE) {
+          busy.push({ user_id: uid, course_id: cid, writes: count, total: Math.round(total), max_step: Math.round(maxStep) })
+        }
+        for (const [m, n] of perMin) {
+          if (n >= MINUTE_WRITES) bursts.push({ user_id: uid, course_id: cid, minute: m, writes: n })
+        }
+      }
+
+      logStat = { writes: writes.length, bad, pairs: traj.size }
+      if (bigSteps.length) {
+        bigSteps.sort((a, b) => b.delta - a.delta)
+        addAlert('critical', 'step_jump',
+          `${bigSteps.length} 次单步加分 ≥${STEP_JUMP} 分（正常单步 P99 仅 20 分，历史最大 45），疑似直接改分或异常奖励`,
+          bigSteps)
+      }
+      if (busy.length) {
+        busy.sort((a, b) => b.total - a.total)
+        addAlert('warn', 'busy_scoring',
+          `${busy.length} 个「学生·课程」单日加分异常密集（≥${DAY_WRITES} 次或 ≥${DAY_SCORE} 分），需人工确认是否正常勤奋`,
+          busy)
+      }
+      if (bursts.length) {
+        bursts.sort((a, b) => b.writes - a.writes)
+        addAlert('warn', 'minute_burst',
+          `${bursts.length} 次「同一分钟 ≥${MINUTE_WRITES} 次写分」（一次提交通常触发 5-18 次重算，过密可能是脚本化提交）`,
+          bursts)
+      }
+    }
+  }
 
   // ---------- 取全量快照（供 S3 与下次对比） ----------
   const allScores = await sql`
@@ -202,6 +332,7 @@ const result = {
   at: new Date().toISOString(),
   ok: !alerts.some((a) => a.level === 'critical'),
   students: Object.keys(nextScores).length,
+  log: logStat,
   alerts,
   notify: notifyResult,
   baseline: baselineMode,
@@ -214,6 +345,9 @@ if (JSON_OUT) {
 
 console.log(`\n=== 学生分数异常监测 ${result.at} ===`)
 console.log(`扫描 ${result.students} 条选课分数记录${ONLY_COURSE ? `（仅课程 ${ONLY_COURSE}）` : ''} | 基线 ${result.baseline === 'compared' ? '已对比' : '首次建立'}`)
+if (logStat) {
+  console.log(`写入日志 ${logStat.writes} 条（${DAY_OF_LOG}），其中 ${logStat.pairs} 个「学生·课程」有加分轨迹${logStat.bad ? ` | 坏行 ${logStat.bad}` : ''}`)
+}
 if (alerts.length === 0) {
   console.log('\n✓ 未发现分数异常')
 } else {
@@ -222,9 +356,12 @@ if (alerts.length === 0) {
     console.log(`  ${a.level === 'critical' ? '✗' : '!'} [${a.level}] ${a.msg}`)
     for (const r of a.rows || []) {
       const who = r.username ? `${r.username}(${r.user_id})` : `uid=${r.user_id}`
-      const extra = r.delta !== undefined
-        ? ` ${r.from} → ${r.to}（+${r.delta}）`
-        : (r.score !== undefined ? ` score=${r.score}` : '')
+      let extra = ''
+      if (r.from !== undefined) extra = ` ${r.from} → ${r.to}（+${r.delta}）`
+      else if (r.delta !== undefined) extra = ` 单步 +${r.delta} @ ${r.at}`
+      else if (r.total !== undefined) extra = ` 单日 +${r.total}（${r.writes} 次，单步最大 ${r.max_step}）`
+      else if (r.minute !== undefined) extra = ` ${r.minute} 分钟 ${r.writes} 次`
+      else if (r.score !== undefined) extra = ` score=${r.score}`
       console.log(`      ${who} course=${r.course_id ?? '-'}${extra}`)
     }
     if (a.count > (a.rows?.length ?? 0)) console.log(`      …共 ${a.count} 条`)
