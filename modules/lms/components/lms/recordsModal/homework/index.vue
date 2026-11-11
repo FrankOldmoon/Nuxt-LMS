@@ -189,12 +189,19 @@
                                     :class="selectedFileIndex === i
                                         ? 'bg-primary-50 dark:bg-primary-950/40'
                                         : 'hover:bg-gray-100 dark:hover:bg-gray-800'">
-                                    <!-- 单文件下载按钮 -->
+                                    <!-- 单文件下载与教师移除按钮 -->
                                     <UTooltip :text="$t('common.download')">
                                         <UButton icon="i-heroicons-arrow-down-tray" size="xs" color="neutral"
                                             variant="ghost" class="shrink-0"
                                             :loading="downloadingFileUrl === file.url"
                                             @click.stop="downloadFile(file)" />
+                                    </UTooltip>
+                                    <UTooltip v-if="canDeleteAttachment" :text="$t('record.deleteAttachment')">
+                                        <UButton icon="i-heroicons-trash" size="xs" color="error"
+                                            variant="ghost" class="shrink-0"
+                                            :loading="deletingFileIndex === i"
+                                            :disabled="deletingFileIndex !== null"
+                                            @click.stop="confirmDeleteAttachment(file, i)" />
                                     </UTooltip>
                                     <button type="button"
                                         class="flex-1 min-w-0 flex items-center gap-2 px-2 py-1.5 rounded-md text-left text-sm"
@@ -258,7 +265,7 @@ const { siteTimeZone } = useSiteConfig()
 const {
     open, rows, pending, extraColumns, defaultSort, scoreMap, commentMap, excellentMap, fetchRecords,
     onScoreBlur, onQuickScore, onCommentBlur, toggleExcellent,
-    downloadingAll, downloadAllFiles, downloadingFileUrl, downloadFile,
+    downloadingAll, downloadAllFiles, downloadingFileUrl, downloadFile, deleteAttachment,
     scoringAll, scoreAllSubmitted,
     detailOpen, detailData, detailRecord, detailSubmittedAt, detailIndex, detailTotal,
     openHomeworkDetail, prevSubmission, nextSubmission, closeDetail, isRichDoc, hasSubmission, submittedAtOf,
@@ -277,6 +284,23 @@ const selectedFileIndex = ref(0)
 const fileItems = useFileNames(() => detailRecord.value?.files ?? [])
 const activeFile = computed(() => fileItems.value[selectedFileIndex.value] ?? null)
 const activeFilePreviewable = computed(() => !!activeFile.value && isPreviewableFile(activeFile.value.url))
+const deletingFileIndex = ref(null)
+const { hasRole } = useAuth()
+const { t } = useI18n()
+const canDeleteAttachment = computed(() => hasRole('teacher') || hasRole('admin'))
+
+async function confirmDeleteAttachment(file, index) {
+    if (!canDeleteAttachment.value || deletingFileIndex.value !== null) return
+    if (!window.confirm(t('record.confirmDeleteAttachment'))) return
+    deletingFileIndex.value = index
+    try {
+        await deleteAttachment(file, index)
+        if (index < selectedFileIndex.value) selectedFileIndex.value--
+        else selectedFileIndex.value = Math.min(selectedFileIndex.value, fileItems.value.length - 1)
+    } finally {
+        deletingFileIndex.value = null
+    }
+}
 
 // 按扩展名给附件列表配类型图标
 function fileIcon(url) {

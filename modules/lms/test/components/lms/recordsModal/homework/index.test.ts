@@ -6,8 +6,8 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
-import { ref } from 'vue'
-import { resetAllStubs, setMockI18n } from '../../../../../../../test/setup/nuxt-stubs'
+import { computed, ref } from 'vue'
+import { resetAllStubs, setMockAuthUser, setMockI18n } from '../../../../../../../test/setup/nuxt-stubs'
 
 // mock useHomeworkRecords（本地导入）
 // 可变的评阅详情状态：测试中通过 helpers 控制
@@ -18,6 +18,7 @@ const h = vi.hoisted(() => ({
   nextSubmission: vi.fn(),
   downloadAllFiles: vi.fn(),
   scoreAllSubmitted: vi.fn(),
+  deleteAttachment: vi.fn(),
 }))
 
 vi.mock('../../../../../components/lms/recordsModal/homework/useHomeworkRecords', () => ({
@@ -44,7 +45,7 @@ vi.mock('../../../../../components/lms/recordsModal/homework/useHomeworkRecords'
       toggleExcellent: vi.fn(),
       detailOpen: ref(h.state.detailOpen),
       detailData: ref(h.state.detailData),
-      detailRecord: ref(h.state.detailData?.record ?? null),
+      detailRecord: computed(() => h.state.detailData?.record ?? null),
       detailIndex: ref(h.state.detailIndex),
       detailTotal: computed(() => h.state.detailTotal),
       openHomeworkDetail: vi.fn(),
@@ -52,6 +53,9 @@ vi.mock('../../../../../components/lms/recordsModal/homework/useHomeworkRecords'
       nextSubmission: h.nextSubmission,
       downloadingAll: ref(false),
       downloadAllFiles: h.downloadAllFiles,
+      downloadingFileUrl: ref(null),
+      downloadFile: vi.fn(),
+      deleteAttachment: h.deleteAttachment,
       scoringAll: ref(false),
       scoreAllSubmitted: h.scoreAllSubmitted,
       isRichDoc: (content: any) => typeof content === 'object',
@@ -69,6 +73,7 @@ vi.mock('../../../../../components/ueditor/render/nodes/file-preview.vue', () =>
 
 beforeEach(() => {
   resetAllStubs()
+  setMockAuthUser({ id: 1 }, [{ code: 'teacher' }])
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
   h.state.detailOpen = false
   h.state.detailData = null
@@ -92,7 +97,7 @@ const _globalStubs = {
   },
   UButton: {
     template: '<button class="ubutton" :data-icon="icon" @click="$emit(\'click\', $event)">{{ label }}<slot /></button>',
-    props: ['icon', 'label', 'size', 'variant', 'color'],
+    props: ['icon', 'label', 'size', 'variant', 'color', 'loading', 'disabled'],
   },
   UInput: {
     template: '<input class="uinput" :value="modelValue" :type="type" :max="max" :placeholder="placeholder" @input="$emit(\'update:modelValue\', $event.target.value)" />',
@@ -240,6 +245,39 @@ describe('lms/recordsModal/homework/index.vue', () => {
     expect(wrapper.text()).toContain('2/3')       // 当前序号/总数
     expect(wrapper.text()).toContain('Stu7')        // 当前用户
     expect(wrapper.text()).toContain('a.pdf')       // 文件名 chip
+    const actions = wrapper.findAll('.space-y-1 button').filter((button) =>
+      ['i-heroicons-arrow-down-tray', 'i-heroicons-trash'].includes(button.attributes('data-icon') || ''),
+    )
+    expect(actions.map(button => button.attributes('data-icon'))).toEqual([
+      'i-heroicons-arrow-down-tray',
+      'i-heroicons-trash',
+    ])
+  })
+
+  it('详情弹窗：教师确认后请求移除附件', async () => {
+    openDetail()
+    h.deleteAttachment.mockClear().mockResolvedValue(undefined)
+    vi.stubGlobal('confirm', vi.fn(() => true))
+    const { default: HomeworkRecords } = await import('../../../../../components/lms/recordsModal/homework/index.vue')
+    const wrapper = mount(HomeworkRecords, {
+      props: { modelValue: true, courseId: 1, cid: 100, maxScore: 100 },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    await wrapper.find('button[data-icon="i-heroicons-trash"]').trigger('click')
+    expect(h.deleteAttachment).toHaveBeenCalledWith({ url: '/api/files/serve?pathname=7%2Fa.pdf', name: 'a.pdf' }, 0)
+  })
+
+  it('详情弹窗：非教师不显示附件删除按钮', async () => {
+    setMockAuthUser({ id: 2 }, [{ code: 'student' }])
+    openDetail()
+    const { default: HomeworkRecords } = await import('../../../../../components/lms/recordsModal/homework/index.vue')
+    const wrapper = mount(HomeworkRecords, {
+      props: { modelValue: true, courseId: 1, cid: 100, maxScore: 100 },
+      global: _globalConfig,
+    })
+    await flushPromises()
+    expect(wrapper.find('button[data-icon="i-heroicons-trash"]').exists()).toBe(false)
   })
 
   it('详情弹窗：无附件时不渲染预览组件，作答内容占满主区', async () => {

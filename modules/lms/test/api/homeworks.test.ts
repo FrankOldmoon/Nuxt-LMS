@@ -18,16 +18,18 @@ const _mockDb = {
   update: vi.fn().mockReturnThis(),
   set: vi.fn().mockReturnThis(),
   delete: vi.fn().mockReturnThis(),
+  query: { userHomeworks: { findFirst: vi.fn() }, homeworks: { findFirst: vi.fn() } },
 }
 const _mockSchema = {
   homeworks: {
-    id: 'id', chapterId: 'chapterId', title: 'title', content: 'content',
+    id: 'id', cid: 'cid', courseId: 'courseId', chapterId: 'chapterId', title: 'title', content: 'content',
     deadline: 'deadline', maxScore: 'maxScore', userId: 'userId', deletedAt: 'deletedAt',
   },
   homeworkRecords: { id: 'id', homeworkId: 'homeworkId', userId: 'userId', content: 'content', score: 'score', status: 'status' },
   homeworkFiles: { id: 'id', recordId: 'recordId', fileId: 'fileId' },
   files: { id: 'id', name: 'name', url: 'url' },
   users: { id: 'id', username: 'username', name: 'name' },
+  userHomeworks: { userId: 'userId', courseId: 'courseId', homeworkCid: 'homeworkCid', files: 'files' },
 }
 vi.mock('@nuxthub/db', () => ({ db: _mockDb, schema: _mockSchema }))
 
@@ -74,6 +76,47 @@ describe('API: homeworks/submit.post', () => {
     const handler = (await import('../../server/api/homeworks/submit.post')).default
     const result = await handler(makeEvent({ body: { homeworkId: 1, content: 'My Answer' } }))
     expect(result).toBeDefined()
+  })
+})
+
+describe('API: homeworks/delete-file.post', () => {
+  beforeEach(() => {
+    resetChain()
+    _mockDb.query.userHomeworks.findFirst.mockReset()
+    _mockDb.query.homeworks.findFirst.mockReset().mockResolvedValue({ cid: 3 })
+    _mockDb.returning = vi.fn().mockResolvedValue([{ files: [] }])
+    ;(globalThis as any).isCourseStaff = async () => true
+    setMockAuthState({ id: 9, username: 'teacher', name: 'Teacher', roles: ['teacher'], permissions: [] })
+  })
+
+  it('教师从对应提交中移除指定附件并保留其他附件', async () => {
+    const files = ['/a.pdf', { url: '/b.pdf', name: 'b.pdf' }]
+    _mockDb.query.userHomeworks.findFirst.mockResolvedValue({ files })
+    _mockDb.returning = vi.fn().mockResolvedValue([{ files: [files[1]] }])
+    const handler = (await import('../../server/api/homeworks/delete-file.post')).default
+    const result = await handler(makeEvent({ body: {
+      course_id: 2, homework_cid: 3, user_id: 4, file_index: 0, file_url: '/a.pdf',
+    } }))
+    expect(_mockDb.set).toHaveBeenCalledWith({ files: [files[1]] })
+    expect(result).toBeDefined()
+  })
+
+  it('附件 URL 与当前提交不匹配时不更新', async () => {
+    _mockDb.query.userHomeworks.findFirst.mockResolvedValue({ files: ['/current.pdf'] })
+    const handler = (await import('../../server/api/homeworks/delete-file.post')).default
+    await handler(makeEvent({ body: {
+      course_id: 2, homework_cid: 3, user_id: 4, file_index: 0, file_url: '/stale.pdf',
+    } }))
+    expect(_mockDb.update).not.toHaveBeenCalled()
+  })
+
+  it('非教师不能删除附件', async () => {
+    setMockAuthState({ id: 4, username: 'student', name: 'Student', roles: ['student'], permissions: [] })
+    const handler = (await import('../../server/api/homeworks/delete-file.post')).default
+    await expect(handler(makeEvent({ body: {
+      course_id: 2, homework_cid: 3, user_id: 4, file_index: 0, file_url: '/a.pdf',
+    } }))).rejects.toThrow()
+    expect(_mockDb.query.userHomeworks.findFirst).not.toHaveBeenCalled()
   })
 })
 

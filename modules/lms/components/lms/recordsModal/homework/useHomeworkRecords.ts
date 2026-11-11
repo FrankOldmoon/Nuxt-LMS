@@ -445,6 +445,27 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
         }
     }
 
+    async function deleteAttachment(file: { url?: string }, fileIndex: number) {
+        const row = detailData.value
+        if (!row || !file?.url) return
+        try {
+            const result = await cRequest('/api/homeworks/delete-file', {
+                method: 'POST',
+                body: {
+                    course_id: props.courseId,
+                    homework_cid: props.cid,
+                    user_id: row.id,
+                    file_index: fileIndex,
+                    file_url: file.url,
+                },
+            })
+            row.record.files = result.files
+            toast.add({ title: t('record.deleteAttachmentSuccess'), color: 'success' })
+        } catch {
+            toast.add({ title: t('record.deleteAttachmentFailed'), color: 'error' })
+        }
+    }
+
     // ==================== 详情弹窗单文件下载 ====================
     /** 正在下载的附件 url（同一时间只允许一个下载请求） */
     const downloadingFileUrl = ref('')
@@ -534,7 +555,7 @@ export function useHomeworkRecords(props: HomeworkRecordsProps, emit: HomeworkRe
     return {
         open, rows, pending, extraColumns, defaultSort, scoreMap, commentMap, excellentMap,
         fetchRecords, onScoreBlur, onQuickScore, onCommentBlur, toggleExcellent,
-        downloadingAll, downloadAllFiles, downloadingFileUrl, downloadFile,
+        downloadingAll, downloadAllFiles, downloadingFileUrl, downloadFile, deleteAttachment,
         scoringAll, scoreAllSubmitted,
         detailOpen, detailData, detailRecord, detailSubmittedAt, detailIndex, detailTotal,
         openHomeworkDetail, prevSubmission, nextSubmission, closeDetail,
