@@ -8,7 +8,7 @@
  */
 import { db, schema } from "@nuxthub/db"
 import { and, eq, inArray } from "drizzle-orm"
-const TEST_PASSWORD = 'REDACTED'
+const TEST_PASSWORD = process.env.NUXT_SEED_TEST_PASSWORD || ''
 const TEST_COUNT = 30
 const TEST_CLASS_NAME = 'test'
 const TEST_CLASS_CODE = 'test'
@@ -111,6 +111,11 @@ export default defineNitroPlugin(async () => {
       return
     }
 
+    if (!TEST_PASSWORD) {
+      console.warn('[lms-config-startup] NUXT_SEED_TEST_PASSWORD 未配置，跳过 test 账号初始化')
+      return
+    }
+
     // 1. 查询 student 角色（admin 启动插件会先创建）
     const studentRoleRows = await db
       .select({ id: schema.roles.id })
@@ -191,7 +196,7 @@ export default defineNitroPlugin(async () => {
         set: { value: true },
       })
 
-    console.log(`[lms-config-startup] 已初始化 ${insertedUsers.length}/${TEST_COUNT} 个 test 账号（密码: ${TEST_PASSWORD}，全部归属 class_id=1）`)
+    console.log(`[lms-config-startup] 已初始化 ${insertedUsers.length}/${TEST_COUNT} 个 test 账号（全部归属 class_id=1）`)
   } catch (e) {
     console.error('[lms-config-startup] test 账号初始化失败', e)
   }

@@ -28,7 +28,7 @@ const rawComment = async (c, cid) => (await sql`select * from comments where cou
 
 /* ---------------------------------------------------- source chapters */
 
-const login = await api('/api/auth/login', 'POST', { username: 'admin', password: 'REDACTED' })
+const login = await api('/api/auth/login', 'POST', { username: 'admin', password: process.env.LMS_PASS })
 TOKEN = login.token
 log('✔ logged in')
 

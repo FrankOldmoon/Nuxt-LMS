@@ -58,7 +58,7 @@ const TREE = [
   },
 ]
 
-const login = await api('/api/auth/login', 'POST', { username: 'admin', password: 'REDACTED' })
+const login = await api('/api/auth/login', 'POST', { username: 'admin', password: process.env.LMS_PASS })
 TOKEN = login.token
 console.log('✔ logged in')
 

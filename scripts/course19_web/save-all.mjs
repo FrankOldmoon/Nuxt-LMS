@@ -103,7 +103,7 @@ const HERE = new URL('.', import.meta.url).pathname
 const ids = JSON.parse(readFileSync(HERE + 'ids.json', 'utf8'))
 const allIds = [...ids.created.map(c => c.id), ...ids.reused.map(c => c.id)]
 
-const login = await api('/api/auth/login', 'POST', { username: 'admin', password: 'REDACTED' })
+const login = await api('/api/auth/login', 'POST', { username: 'admin', password: process.env.LMS_PASS })
 TOKEN = login.token
 console.log('✔ logged in')
 

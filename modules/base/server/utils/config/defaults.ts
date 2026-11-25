@@ -46,7 +46,8 @@ export const DEFAULT_SITE_CONFIG: Record<string, any> = {
   // 系统设置 → 存储 里可编辑；为空时回退读 .env 的 NUXT_PEERTUBE_* 变量
   'site:peertube.url': 'http://10.28.1.156',
   'site:peertube.username': 'root',
-  'site:peertube.password': 'REDACTED',
+  // 不设默认密码：由系统设置或 NUXT_PEERTUBE_PASSWORD 环境变量提供
+  'site:peertube.password': '',
   'site:peertube.privacy': '1',
   'site:peertube.channelId': '1',
   // 前端页面显示控制（拍平）

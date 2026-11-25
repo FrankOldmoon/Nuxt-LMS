@@ -190,7 +190,7 @@ alone, and nothing in the overlay overlaps on a 390 px wide phone.`
 
 /* --------------------------------------------- homework and comment widgets */
 const sql = postgres(
-  process.env.PG || 'postgresql://postgres:REDACTED@10.28.1.151:5432/nuxt_lms_2026',
+  process.env.PG,
   { idle_timeout: 10, max: 1 },
 )
 

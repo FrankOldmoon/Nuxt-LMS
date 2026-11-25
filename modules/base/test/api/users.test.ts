@@ -34,6 +34,8 @@ import { resetAllStubs, setMockAuthState } from '../../../../test/setup/nuxt-stu
 beforeEach(() => {
   resetAllStubs()
   vi.clearAllMocks()
+  // 导入默认密码从环境变量读取（不再硬编码在源码里）
+  vi.stubEnv('NUXT_IMPORT_DEFAULT_PASSWORD', 'initpass')
   // 重置 db 链
   _mockDb.insert = vi.fn().mockReturnThis()
   _mockDb.values = vi.fn().mockReturnThis()
@@ -193,14 +195,15 @@ describe('API: users/import.post', () => {
     expect(_mockDb.insert).toHaveBeenCalled()
   })
 
-  it('默认密码为 REDACTED', async () => {
+  it('未提供密码时使用 NUXT_IMPORT_DEFAULT_PASSWORD', async () => {
     setMockAuthState({ id: 1, username: 'admin', name: 'Admin', roles: ['admin'], permissions: [] })
     _mockDb.returning.mockResolvedValue([{ id: 1 }])
     const handler = (await import('../../server/api/users/import.post')).default
-    await handler(makeEvent({
+    const result = await handler(makeEvent({
       body: { users: [{ username: 'alice', email: 'alice@test.com' }] },
     }))
-    // hashPassword 应被调用（默认密码 REDACTED）
+    expect(result.success).toBe(true)
+    // hashPassword 应被调用（使用环境变量配置的默认密码）
     expect(globalThis.hashPassword).toBeDefined()
   })
 

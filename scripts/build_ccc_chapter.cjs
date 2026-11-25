@@ -167,7 +167,7 @@ function buildIndexTable() {
   const loginRes = await fetch(BASE + '/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: 'admin', password: 'REDACTED' }),
+    body: JSON.stringify({ username: 'admin', password: process.env.LMS_PASS }),
   }).then((r) => r.json())
   if (!loginRes.success) throw new Error('登录失败: ' + loginRes.msg)
   TOKEN = loginRes.data.token || loginRes.data.auth_token

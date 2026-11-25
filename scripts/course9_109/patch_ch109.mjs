@@ -237,7 +237,7 @@ async function login() {
   const res = await fetch(`${BASE}/api/auth/login`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ username: 'admin', password: 'REDACTED' }),
+    body: JSON.stringify({ username: 'admin', password: process.env.LMS_PASS }),
   })
   const setCookie = res.headers.getSetCookie?.() || []
   const cookie = setCookie.map((s) => s.split(';')[0]).join('; ')

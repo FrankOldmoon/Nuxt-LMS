@@ -2,6 +2,12 @@ import { chromium } from '/Users/oldmoon/Documents/ubuntu/nuxt_lms_2026/node_mod
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const base = 'http://127.0.0.1:3004'
+const TEST_USER = process.env.TEST_USER || 'test02'
+const TEST_PASS = process.env.TEST_PASSWORD || ''
+if (!TEST_PASS) {
+  console.error('缺少 TEST_PASSWORD 环境变量（test 账号密码）')
+  process.exit(1)
+}
 
 const browser = await chromium.launch({ executablePath: CHROME, headless: true })
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } })
@@ -28,8 +34,8 @@ try {
       await page.screenshot({ path: '/tmp/dify_check.png' })
       process.exit(1)
     }
-    await uname.fill('test02')
-    await pwd.fill('REDACTED')
+    await uname.fill(TEST_USER)
+    await pwd.fill(TEST_PASS)
     await page.locator('button[type="submit"]').first().click()
     await page.waitForTimeout(5000)
     console.log('→ 已提交登录')

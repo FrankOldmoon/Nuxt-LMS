@@ -54,7 +54,7 @@ The course is in five units, and each one builds on the last:
 Each chapter follows the same rhythm: a short explanation, a live example you can edit, and a small
 project to finish. Follow the order — later chapters reuse ideas from earlier ones.`
 
-const login = await api('/api/auth/login', 'POST', { username: 'admin', password: 'REDACTED' })
+const login = await api('/api/auth/login', 'POST', { username: 'admin', password: process.env.LMS_PASS })
 TOKEN = login.token
 await api('/api/courses/update', 'POST', { id: 19, content: intro })
 

@@ -258,7 +258,7 @@
     "notReady": "表格未初始化",
     "noData": "没有可导入的数据",
     "importFailed": "导入失败",
-    "passwordDefault": "默认 REDACTED"
+    "passwordDefault": "默认使用系统配置的密码"
   },
   "feedback": {
     "title": "反馈",

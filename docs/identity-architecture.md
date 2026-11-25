@@ -893,7 +893,7 @@ node scripts/surveyking-oauth/set-register.mjs --enable   # 打开（走 admin A
 **端到端验证**（真实浏览器跑完整链路）：
 
 ```bash
-node scripts/surveyking-oauth/e2e-login.mjs --lms-user test01 --lms-pass REDACTED
+node scripts/surveyking-oauth/e2e-login.mjs --lms-user test01 --lms-pass <test-password>
 ```
 
 实测（2026-10-27）：未登录 LMS → 点「LMS 账号登录」→ 跳 LMS 认证页（带 state/nonce/code_challenge）

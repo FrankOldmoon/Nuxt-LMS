@@ -258,7 +258,7 @@
     "notReady": "Sheet not initialized",
     "noData": "No data to import",
     "importFailed": "Import failed",
-    "passwordDefault": "default REDACTED"
+    "passwordDefault": "Default password is configured by the system"
   },
   "feedback": {
     "title": "Feedback",

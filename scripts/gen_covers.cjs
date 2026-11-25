@@ -11,7 +11,7 @@ const { chromium } = require('playwright')
 
 const BASE = process.env.COVER_BASE || 'https://aics.oldmoon.cn'
 const COVER_USER = process.env.COVER_USER || 'admin'
-const COVER_PASS = process.env.COVER_PASS || 'REDACTED'
+const COVER_PASS = process.env.COVER_PASS
 const INSTANCE = process.env.COVER_INSTANCE || 'aics'
 const OUT_DIR = path.join(__dirname, 'covers')
 const W = 1600, H = 900

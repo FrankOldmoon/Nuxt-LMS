@@ -8,9 +8,11 @@ import { watch, onMounted, onBeforeUnmount } from 'vue'
 const { user, isLoggedIn, refreshUser } = useAuth()
 
 // Dify Web 嵌入配置（与 Dify 后台「嵌入网站」提供的代码一致）
+// token / baseUrl 通过 NUXT_PUBLIC_DIFY_TOKEN / NUXT_PUBLIC_DIFY_BASE_URL 注入
+const runtimeConfig = useRuntimeConfig()
 const DIFY_CONFIG = {
-  token: 'REDACTED',
-  baseUrl: 'http://10.28.1.153',
+  token: runtimeConfig.public.difyToken as string,
+  baseUrl: runtimeConfig.public.difyBaseUrl as string,
   // 页面加载完成后动态注入脚本时必须开启，否则脚本会等待已触发过的 body.onload 而永不创建气泡
   dynamicScript: true,
   inputs: {},
@@ -37,6 +39,8 @@ function buildUserId() {
 
 function loadDify() {
   if (typeof window === 'undefined') return
+  // 未配置 token 或 baseUrl 时不注入
+  if (!DIFY_CONFIG.token || !DIFY_CONFIG.baseUrl) return
   // 同一页面重复挂载/重复进入时不重复注入
   if (document.getElementById(SCRIPT_ID)) return
   DIFY_CONFIG.systemVariables.user_id = buildUserId()

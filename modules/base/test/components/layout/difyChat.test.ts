@@ -7,14 +7,17 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { ref, nextTick } from 'vue'
-import { resetAllStubs, setMockI18n, setMockAuthUser } from '../../../../../test/setup/nuxt-stubs'
+import { resetAllStubs, setMockI18n, setMockAuthUser, setMockRuntimeConfig } from '../../../../../test/setup/nuxt-stubs'
 
 const SCRIPT_ID = 'dify-chatbot-script'
+const MOCK_DIFY_TOKEN = 'test-dify-token'
+const MOCK_DIFY_BASE_URL = 'http://10.28.1.153'
 
 beforeEach(() => {
   resetAllStubs()
   clearMockAuth()
   setMockI18n({ locale: { value: 'en' }, t: (k: string) => k, d: (v: any) => String(v) })
+  setMockRuntimeConfig({ public: { difyToken: MOCK_DIFY_TOKEN, difyBaseUrl: MOCK_DIFY_BASE_URL } })
   // 清理可能残留的脚本与全局配置
   document.getElementById(SCRIPT_ID)?.remove()
   document.getElementById('dify-chatbot-bubble-button')?.remove()
@@ -39,8 +42,8 @@ describe('layout/difyChat.vue', () => {
     const { default: DifyChat } = await import('../../../components/layout/difyChat.vue')
     mount(DifyChat, { global: _globalConfig })
     expect(document.getElementById(SCRIPT_ID)).toBeTruthy()
-    expect((window as any).difyChatbotConfig?.baseUrl).toBe('http://10.28.1.153')
-    expect((window as any).difyChatbotConfig?.token).toBe('REDACTED')
+    expect((window as any).difyChatbotConfig?.baseUrl).toBe(MOCK_DIFY_BASE_URL)
+    expect((window as any).difyChatbotConfig?.token).toBe(MOCK_DIFY_TOKEN)
     // user_id 带「每次页面加载唯一」的后缀，让 Dify 每次刷新都开新会话（不续旧会话历史）
     expect((window as any).difyChatbotConfig?.systemVariables?.user_id).toMatch(/^42_[a-z0-9]+$/)
   })

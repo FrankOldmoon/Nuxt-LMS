@@ -14,7 +14,7 @@
  */
 const BASE = process.env.LMS || 'http://10.28.1.151'
 const USER = process.env.LMS_USER || 'admin'
-const PASS = process.env.LMS_PASS || 'REDACTED'
+const PASS = process.env.LMS_PASS
 const COURSE = 8
 const DRY = process.argv.includes('--dry')
 

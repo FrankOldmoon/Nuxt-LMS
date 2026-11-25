@@ -101,7 +101,7 @@ const glossary = (terms) => table(['Term', 'Definition'], terms)
 /* ------------------------------------------------ read source chapters */
 
 const SRC = { 198: 164, 199: 165, 200: 166, 201: 167 }
-TOKEN = (await api('/api/auth/login', 'POST', { username: 'admin', password: 'REDACTED' })).token
+TOKEN = (await api('/api/auth/login', 'POST', { username: 'admin', password: process.env.LMS_PASS })).token
 log('✔ logged in')
 const srcChapters = {}
 for (const id of Object.values(SRC)) srcChapters[id] = (await api(`/api/chapters/show?id=${id}`)).chapter

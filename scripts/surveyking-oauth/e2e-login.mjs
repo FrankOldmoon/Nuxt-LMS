@@ -9,7 +9,8 @@
  *   否则回调会返回 not_bound（提示「该第三方账号尚未绑定…」）。
  *   用 set-register.mjs 检查/校正。
  *
- * 用法：node scripts/surveyking-oauth/e2e-login.mjs [--lms-user test01] [--lms-pass REDACTED]
+ * 用法：node scripts/surveyking-oauth/e2e-login.mjs [--lms-user test01] [--lms-pass <密码>]
+ *      未传 --lms-pass 时读取 LMS_PASS 环境变量。
  */
 import { chromium } from 'playwright-core'
 
@@ -19,7 +20,11 @@ const opt = (n, d) => {
   return i >= 0 ? argv[i + 1] : d
 }
 const LMS_USER = opt('--lms-user', 'test01')
-const LMS_PASS = opt('--lms-pass', 'REDACTED')
+const LMS_PASS = opt('--lms-pass', process.env.LMS_PASS || '')
+if (!LMS_PASS) {
+  console.error('缺少 LMS 密码：请传 --lms-pass 或设置 LMS_PASS 环境变量')
+  process.exit(1)
+}
 
 const b = await chromium.launch({ channel: 'chrome', headless: true })
 const ctx = await b.newContext({ viewport: { width: 1280, height: 900 } })

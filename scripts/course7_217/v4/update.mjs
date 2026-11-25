@@ -20,7 +20,7 @@ import postgres from '/Users/oldmoon/Documents/ubuntu/nuxt_lms_2026/node_modules
 
 const BASE = process.env.LMS || 'http://10.28.1.151'
 const USER = process.env.LMS_USER || 'admin'
-const PASS = process.env.LMS_PASS || 'REDACTED'
+const PASS = process.env.LMS_PASS
 const CHAPTER = 217
 const HW_CID = 12
 const DRY = process.argv.includes('--dry')
@@ -89,7 +89,7 @@ const cookie = (login.headers.getSetCookie?.() || []).map((c) => c.split(';')[0]
 if (!login.ok || !cookie) { console.error('login failed', login.status); process.exit(1) }
 
 const sql = postgres(
-  process.env.PG || 'postgresql://postgres:REDACTED@10.28.1.151:5432/nuxt_lms_2026',
+  process.env.PG,
   { idle_timeout: 10, max: 1 },
 )
 

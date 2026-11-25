@@ -32,7 +32,7 @@ const docOf = (paras) => ({
   })),
 })
 
-TOKEN = (await api('/api/auth/login', 'POST', { username: 'admin', password: 'REDACTED' })).token
+TOKEN = (await api('/api/auth/login', 'POST', { username: 'admin', password: process.env.LMS_PASS })).token
 log('✔ logged in')
 
 /* ---------------- 1. repair the merged homework (course 8 cid 5) --------- */

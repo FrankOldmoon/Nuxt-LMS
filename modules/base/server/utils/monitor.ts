@@ -188,7 +188,10 @@ export async function checkPort(port: number, timeoutMs = 3000) {
  * 密码从 Header `x-monitor-pwd` 或 query `pwd` 读取，不匹配则抛 403。
  */
 export function assertMonitorPassword(event: any, password: string) {
-  if (!password) return
+  // 未配置密码时拒绝访问，避免默认口令移除后监控接口变成公开接口
+  if (!password) {
+    throw createError({ statusCode: 403, statusMessage: '监控密码未配置（请设置 NUXT_MONITOR_VIEW_PASSWORD）' })
+  }
   const provided = getHeader(event, 'x-monitor-pwd') || String(getQuery(event).pwd || '')
   if (provided !== password) {
     throw createError({ statusCode: 403, statusMessage: '监控查看密码错误' })

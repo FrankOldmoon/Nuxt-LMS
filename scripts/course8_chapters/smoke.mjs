@@ -15,7 +15,7 @@ p.on('pageerror', e => errs.push(e.message.slice(0, 140)))
 await p.goto('http://10.28.1.151/', { waitUntil: 'domcontentloaded' })
 await p.evaluate(() => fetch('/api/auth/login', {
   method: 'POST', headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ username: 'admin', password: 'REDACTED' }),
+  body: JSON.stringify({ username: 'admin', password: process.env.LMS_PASS }),
 }))
 
 for (const id of [198, 199, 200, 201]) {

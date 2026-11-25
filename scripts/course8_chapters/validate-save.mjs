@@ -109,7 +109,7 @@ for (const b of built) {
   }
 }
 
-TOKEN = (await api('/api/auth/login', 'POST', { username: 'admin', password: 'REDACTED' })).token
+TOKEN = (await api('/api/auth/login', 'POST', { username: 'admin', password: process.env.LMS_PASS })).token
 log('✔ logged in\n')
 
 let total = 0

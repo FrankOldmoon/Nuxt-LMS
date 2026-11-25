@@ -5,24 +5,33 @@
  * 3. 检查并创建默认 admin 账号 + 基础角色/权限
  */
 import { db, schema } from "@nuxthub/db"
+import { randomBytes } from "node:crypto"
 import { eq } from "drizzle-orm"
 import { DEFAULT_SITE_CONFIG } from "../utils/config/defaults"
 import { reloadConfig } from "../utils/config/reload"
 import { hashPassword } from "../utils/auth"
 
-// 固定 admin 账号配置
+// 固定 admin 账号配置（初始化密码只从环境变量读取；未配置时随机生成并打印一次）
 const ADMIN_USERNAME = 'admin'
-const ADMIN_PASSWORD = 'REDACTED'
+const ADMIN_PASSWORD_ENV = process.env.NUXT_SEED_ADMIN_PASSWORD || ''
 
 // 固定 observer（只读观察者）账号配置
 const OBSERVER_USERNAME = 'observer'
-const OBSERVER_PASSWORD = 'REDACTED'
+const OBSERVER_PASSWORD_ENV = process.env.NUXT_SEED_OBSERVER_PASSWORD || ''
 const OBSERVER_CLASS = 'observer'
 
-// 固定测试账号配置：test01 ~ test30，班级 test
+// 测试账号配置：test01 ~ test30，班级 test（未配置密码时跳过创建）
 const TEST_ACCOUNT_COUNT = 30
 const TEST_CLASS = 'test'
-const TEST_PASSWORD = 'REDACTED'
+const TEST_PASSWORD = process.env.NUXT_SEED_TEST_PASSWORD || ''
+
+/** 解析初始化密码：优先环境变量，缺失时生成随机密码并打印一次，避免仓库内留存固定口令 */
+function resolveSeedPassword(envValue: string, key: string): string {
+  if (envValue) return envValue
+  const generated = randomBytes(12).toString('base64url')
+  console.warn(`[startup] ${key} 未配置，已生成随机初始密码：${generated}（请登录后立即修改）`)
+  return generated
+}
 
 export default defineNitroPlugin(async () => {
   // 1. 拍平播种：每个 site:* key 独立一行
@@ -55,6 +64,7 @@ export default defineNitroPlugin(async () => {
       .limit(1)
 
     if (existingAdmin.length === 0) {
+      const adminPassword = resolveSeedPassword(ADMIN_PASSWORD_ENV, 'NUXT_SEED_ADMIN_PASSWORD')
       // 查询 admin 角色
       const adminRole = await db
         .select({ id: schema.roles.id })
@@ -116,7 +126,7 @@ export default defineNitroPlugin(async () => {
         }
 
         // 创建 admin 用户
-        const hashedPwd = await hashPassword(ADMIN_PASSWORD)
+        const hashedPwd = await hashPassword(adminPassword)
         const [adminUser] = await db
           .insert(schema.users)
           .values({
@@ -139,10 +149,10 @@ export default defineNitroPlugin(async () => {
           roleId: newAdminRole.id,
         }).onConflictDoNothing()
 
-        console.log(`[startup] 已创建默认 admin 账号 (用户名: ${ADMIN_USERNAME}, 密码: ${ADMIN_PASSWORD})`)
+        console.log(`[startup] 已创建默认 admin 账号 (用户名: ${ADMIN_USERNAME}, 初始密码见 NUXT_SEED_ADMIN_PASSWORD 或启动日志)`)
       } else {
         // admin 角色已存在，直接创建用户
-        const hashedPwd = await hashPassword(ADMIN_PASSWORD)
+        const hashedPwd = await hashPassword(adminPassword)
         const [adminUser] = await db
           .insert(schema.users)
           .values({
@@ -165,7 +175,7 @@ export default defineNitroPlugin(async () => {
           roleId: adminRole[0].id,
         }).onConflictDoNothing()
 
-        console.log(`[startup] 已创建默认 admin 账号 (用户名: ${ADMIN_USERNAME}, 密码: ${ADMIN_PASSWORD})`)
+        console.log(`[startup] 已创建默认 admin 账号 (用户名: ${ADMIN_USERNAME}, 初始密码见 NUXT_SEED_ADMIN_PASSWORD 或启动日志)`)
       }
     } else {
       console.log('[startup] admin 账号已存在，跳过创建')
@@ -220,7 +230,8 @@ export default defineNitroPlugin(async () => {
       .limit(1)
     let observerUserId: number | undefined = observerUser[0]?.id
     if (!observerUserId) {
-      const hashedPwd = await hashPassword(OBSERVER_PASSWORD)
+      const observerPassword = resolveSeedPassword(OBSERVER_PASSWORD_ENV, 'NUXT_SEED_OBSERVER_PASSWORD')
+      const hashedPwd = await hashPassword(observerPassword)
       await db.insert(schema.users).values({
         username: OBSERVER_USERNAME,
         password: hashedPwd,
@@ -252,13 +263,18 @@ export default defineNitroPlugin(async () => {
       await db.insert(schema.userClasses).values({ userId: observerUserId, classId: observerClassId, isTeacher: false }).onConflictDoNothing()
     }
 
-    console.log(`[startup] observer 账号就绪 (用户名: ${OBSERVER_USERNAME}, 密码: ${OBSERVER_PASSWORD}, 班级: ${OBSERVER_CLASS})`)
+    console.log(`[startup] observer 账号就绪 (用户名: ${OBSERVER_USERNAME}, 班级: ${OBSERVER_CLASS})`)
   } catch (e) {
     console.error('[startup] observer 初始化失败', e)
   }
 
   // 5. 初始化 30 个测试账号（test01 ~ test30）：学生角色 + 班级 test（全程幂等）
   try {
+    if (!TEST_PASSWORD) {
+      console.warn('[startup] NUXT_SEED_TEST_PASSWORD 未配置，跳过 test01~test30 测试账号初始化')
+      return
+    }
+
     // 5.1 确保 test 班级存在
     const testClassRows = await db
       .select({ id: schema.classes.id })
@@ -336,7 +352,7 @@ export default defineNitroPlugin(async () => {
       created++
     }
 
-    console.log(`[startup] test 测试账号就绪 (test01 ~ test${String(TEST_ACCOUNT_COUNT).padStart(2, '0')}, 本次新建 ${created} 个, 密码: ${TEST_PASSWORD}, 班级: ${TEST_CLASS})`)
+    console.log(`[startup] test 测试账号就绪 (test01 ~ test${String(TEST_ACCOUNT_COUNT).padStart(2, '0')}, 本次新建 ${created} 个, 班级: ${TEST_CLASS})`)
   } catch (e) {
     console.error('[startup] test 测试账号初始化失败', e)
   }

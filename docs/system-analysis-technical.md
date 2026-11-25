@@ -172,14 +172,14 @@
 5. **限流为单实例内存态，且代理 IP 处理有误**
    - `getRequestIP(event)` 未启用 `xForwardedFor`，而部署端口为 80（前置反代场景）会导致所有用户塌缩为同一 IP，可能触发全局 429；`ipHits` Map 无淘汰。
 
-6. **硬编码密钥/口令**
-   - Startup HMAC 默认回退 `'lms-startup-secret'`；监控默认口令 `'REDACTED'` 入库于仓库，且支持 `?pwd=` 明文非恒定时间比较。
+6. **硬编码密钥/口令**（已修复：改为环境变量/随机初始化，仓库内不再保留明文）
+   - Startup HMAC 仅保留开发环境回退值，生产未配置 `NUXT_STARTUP_SECRET` 会拒绝启动；监控口令已从仓库移除，改用 `NUXT_MONITOR_VIEW_PASSWORD`。
 
 7. **上传/去重与 SSRF 细节瑕疵**
    - 个人文件去重未包含 `userId`，导致跨用户去重（B 复用 A 的记录）；远程图片存在 DNS rebinding TOCTOU、未限制重定向与响应体大小。
 
 8. **密码策略不一致**
-   - 注册读 `site:passwordMinLength`，改密/重置/管理员重置硬编码 6；批量导入默认密码 `'REDACTED'`；`strongPwd/pwdQuestions` 字段未使用。
+   - 注册读 `site:passwordMinLength`，改密/重置/管理员重置硬编码 6；批量导入默认密码已改为 `NUXT_IMPORT_DEFAULT_PASSWORD` 环境变量（未配置时必须显式提供）；`strongPwd/pwdQuestions` 字段未使用。
 
 9. **URL 参数自动登录（`?username=&password=`）**
    - 密码进入访问日志 / 浏览器历史 / Referer，属明显反模式。

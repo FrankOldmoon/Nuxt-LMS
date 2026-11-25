@@ -86,6 +86,10 @@ export default defineNuxtConfig({
       // 轻量依赖已由 scripts/copy-vendor-assets.mjs 落到 public/vendor（同源，不需要配置）。
       npmAssetsBase: 'https://cdn.jsdelivr.net/npm',
       esmAssetsBase: 'https://esm.sh',
+      // Dify 悬浮聊天机器人（右下角）。token 不写入仓库：
+      // 用 NUXT_PUBLIC_DIFY_TOKEN / NUXT_PUBLIC_DIFY_BASE_URL 配置，token 为空时不注入
+      difyToken: '',
+      difyBaseUrl: 'http://10.28.1.153',
     },
     // PeerTube 视频上传（ueditor 视频走 PeerTube，插入 embed iframe）。
     // 配置主来源：系统设置 → 存储（site:peertube.*，写入 configs 表）；
@@ -105,8 +109,8 @@ export default defineNuxtConfig({
     monitor: {
       ecosystemConfig: '',
       logDir: '',
-      // 监控查看密码（留空则无需密码）
-      viewPassword: 'REDACTED',
+      // 监控查看密码（未配置时监控接口拒绝访问）
+      viewPassword: '',
     },
   },
   vite: {

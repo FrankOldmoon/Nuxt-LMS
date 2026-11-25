@@ -200,8 +200,8 @@ In the chapter `content`, place the two `vue` nodes **adjacent**, OJ node first:
 - **写库前先在本地把参考解跑一遍样例**（`python3 -c "<solution>"`，输入 OJ 的 sample input，比对 sample output），
   排序题的 `options` 顺序错了不会报错，只会让整道题永远判错。除了样例，把边界也补上（无解、0、边界值）。
 - 登录：`POST /api/auth/login` body `{ username, password }`，拿 `data.token` 后所有请求带
-  `Cookie: auth_token=<token>`。`10.28.1.151`（及 lms.minxin.app 同库站点）的 admin 密码是 `REDACTED`；
-  `aics.oldmoon.cn` 的密码是 `REDACTED` —— 换个站点先试登录，别照抄。
+  `Cookie: auth_token=<token>`。管理员密码不记录在仓库中：运行时从 `LMS_PASS` 环境变量读取，
+  或向部署方索取；换站点时先确认凭据，不要照抄其它站点的密码。
 - 章节没开放（`is_open = false`）时匿名 `GET /api/chapters/show` 返回 403「该章节尚未开放」，
   **带上 admin 的 cookie 就能读到**，不必绕去连数据库。
 

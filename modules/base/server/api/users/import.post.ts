@@ -26,6 +26,8 @@ export default eventHandler(async (event) => {
   const errors: string[] = []
   const seenUsernames = new Set<string>()
   const seenEmails = new Set<string>()
+  // 未显式提供密码时使用的默认密码，由环境变量配置（不写入仓库）
+  const defaultPassword = process.env.NUXT_IMPORT_DEFAULT_PASSWORD || ''
 
   // 1. 解析 + 必填校验 + 批次内去重
   const parsed: { line: number; username: string; email: string; password: string; name: string; className: string }[] = []
@@ -34,12 +36,13 @@ export default eventHandler(async (event) => {
     const line = i + 1
     const username = String(u.username || '').trim()
     const email = String(u.email || '').trim()
-    const password = String(u.password || '').trim() || 'REDACTED'
+    const password = String(u.password || '').trim() || defaultPassword
     const name = String(u.name || '').trim()
     const className = String(u.class || '').trim()
 
     if (!username) { errors.push(`第${line}行: username 不能为空`); continue }
     if (!email) { errors.push(`第${line}行: email 不能为空`); continue }
+    if (!password) { errors.push(`第${line}行: password 不能为空（未配置 NUXT_IMPORT_DEFAULT_PASSWORD 时必须显式提供）`); continue }
     if (seenUsernames.has(username)) { errors.push(`第${line}行: username '${username}' 在本次导入中重复`); continue }
     if (seenEmails.has(email)) { errors.push(`第${line}行: email '${email}' 在本次导入中重复`); continue }
     seenUsernames.add(username)
