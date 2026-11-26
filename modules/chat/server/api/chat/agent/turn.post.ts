@@ -68,13 +68,12 @@ const AGENT_SYSTEM = `你是一个带「会话工作区」的 AI 助手。工作
     make_docx；PPT（课件/汇报）→ make_pptx。它们都在用户浏览器里生成，不占服务器资源 ——
     直接整理成行/块/页数据，不要先写 csv 再转，也不要自己手拼 OOXML。
     PPT 每页要点控制在 6 条以内、每条一句话，否则排版会溢出。
-13. 用户要把做好的网页/游戏「发布到 git」「上传到 git」「给个能打开的链接」时：
-    先把完整可运行的文件用 write_file 写进工作区（网站入口必须是 index.html，
-    样式和脚本可以内联，避免引用工作区外的资源），再调用 publish_to_git。
-    不要只在回复里贴代码就说已发布；工具返回链接后把链接原样告诉用户，
-    并说明 20-40 秒后才生效。仓库名用英文短横线格式（如 snake-game）。
-14. 发布是「把工作区现有文件传上去」，不会自动补全缺失文件：发布前先用 list_files
-    确认 index.html 存在，缺失就先写。`
+13. **只有用户明确说「发布到 git」「上传到 git」「部署」「给个能打开的链接」时才调用 publish_to_git。**
+    用户只是让你做网页、做游戏、生成文件时，只把文件写进工作区，绝对不要上传、不要调用 publish_to_git。
+14. 发布前：先把完整可运行的文件用 write_file 写进工作区（网站入口必须是 index.html，
+    样式和脚本内联，避免引用工作区外的资源），再用 list_files 确认 index.html 存在。
+    不要只在回复里贴代码就说已发布；工具返回链接后把链接原样告诉用户，并说明 20-40 秒后才生效。
+    仓库名用英文短横线格式（如 snake-game）。`
 
 const CHAT_WINDOW_MS = 60_000
 const CHAT_RATE_LIMIT_MAX = 80
@@ -164,10 +163,17 @@ export default eventHandler(async (event) => {
   if (intent) outMessages.push({ role: 'system', content: buildHomeworkGuardMessage(intent) })
   outMessages.push(...compressHistory(safeMessages))
 
+  // 发布工具只在用户明确要求时才下发 —— 模型看不到这个工具，就不会自作主张上传
+  const PUBLISH_INTENT_RE = /(发布|上传|传到|推到|部署|上线|托管|publish|deploy|upload|push|\bgit\b|gitea|github)/i
+  const wantsPublish = lastUser ? PUBLISH_INTENT_RE.test(String(lastUser.content || '')) : false
+  const tools = wantsPublish
+    ? TOOL_DEFS
+    : (TOOL_DEFS as readonly any[]).filter((t: any) => t.function?.name !== 'publish_to_git')
+
   const requestBody: Record<string, any> = {
     model: defaultModel,
     messages: outMessages,
-    tools: TOOL_DEFS,
+    tools,
     tool_choice: 'auto',
     stream: true,
     stream_options: { include_usage: true },

@@ -99,7 +99,7 @@
             :key="previewKey"
             :srcdoc="previewDoc"
             class="w-full h-full border-0"
-            sandbox="allow-scripts allow-forms allow-modals allow-popups"
+            sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"
           />
         </div>
 
