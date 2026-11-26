@@ -458,6 +458,22 @@ function probeScript(): string {
     + 'var S=function(type,args){try{parent.postMessage({__chatPreview:1,type:type,text:Array.prototype.map.call(args,function(a){try{return typeof a==="object"?JSON.stringify(a):String(a)}catch(e){return String(a)}}).join(" ") },"*")}catch(e){}};'
     + 'window.onerror=function(m){S("error",[m])};'
     + '["log","info","warn","error"].forEach(function(k){var o=console[k];console[k]=function(){S(k,arguments);try{o.apply(console,arguments)}catch(e){}}});'
+    // sandbox 内的下载会被浏览器静默拦截（allow-downloads 在无 allow-same-origin 时也不够），
+    // 把 a[download].click() 拦下来，内容转成 dataURL 交给父窗口触发，父页面不受沙箱限制。
+    + 'var __blobs={};var __oc=URL.createObjectURL;URL.createObjectURL=function(b){var u=__oc.call(URL,b);try{__blobs[u]=b}catch(e){}return u};'
+    + 'URL.revokeObjectURL=function(){};'
+    + 'var __ac=HTMLAnchorElement.prototype.click;'
+    + 'HTMLAnchorElement.prototype.click=function(){'
+    + 'var a=this;var name=a.getAttribute("download");'
+    + 'if(name===null)return __ac.apply(a,arguments);'
+    + 'var href=a.href||"";'
+    + 'var ok=function(url,mime){try{parent.postMessage({__chatPreview:1,type:"download",name:name||"download",url:url,mime:mime||""},"*")}catch(e){}};'
+    + 'var bad=function(m){try{parent.postMessage({__chatPreview:1,type:"downloadError",text:m},"*")}catch(e){}};'
+    + 'var b=__blobs[href];'
+    + 'if(b){var fr=new FileReader();fr.onload=function(){ok(fr.result,b.type)};fr.onerror=function(){bad("读取下载内容失败")};fr.readAsDataURL(b);return;}'
+    + 'if(href.indexOf("data:")===0){ok(href,"");return;}'
+    + 'try{__ac.apply(a,arguments)}catch(e){bad("下载被浏览器拦截")}'
+    + '};'
     + '})();' + close
 }
 
@@ -510,7 +526,27 @@ watch(
 function onPreviewMessage(e: MessageEvent) {
   const d: any = e.data
   if (!d || d.__chatPreview !== 1) return
-  previewLogs.value.push({ type: String(d.type || 'log'), text: String(d.text ?? '') })
+  // 预览 iframe 里的下载转交给父窗口触发（父页面不在 sandbox 内，下载不会被拦）
+  if (d.type === 'download' && d.url) {
+    const name = String(d.name || 'download')
+    try {
+      const a = document.createElement('a')
+      a.href = String(d.url)
+      a.download = name
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      previewLogs.value.push({ type: 'info', text: `已下载 ${name}` })
+    } catch (err: any) {
+      previewLogs.value.push({ type: 'error', text: `下载失败：${err?.message || err}` })
+    }
+    return
+  }
+  if (d.type === 'downloadError') {
+    previewLogs.value.push({ type: 'error', text: String(d.text || '下载失败') })
+    return
+  }
+  previewLogs.value.push({ type: d.type || 'log', text: String(d.text ?? '') })
   if (previewLogs.value.length > 200) previewLogs.value.splice(0, previewLogs.value.length - 200)
 }
 
