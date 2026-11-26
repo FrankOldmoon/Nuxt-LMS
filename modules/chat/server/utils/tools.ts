@@ -17,6 +17,7 @@ import {
   MAX_FILE_SIZE,
 } from './workspace'
 import { lmsQuery } from './lmsQuery'
+import { publishWorkspaceToGit } from './gitPublish'
 
 export const CLIENT_TOOLS = ['run_python'] as const
 
@@ -307,6 +308,27 @@ export const TOOL_DEFS = [
           keyword: { type: 'string', description: '要搜索的关键词或短语' },
         },
         required: ['chapter_id', 'keyword'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'publish_to_git',
+      description: '把当前会话工作区里的全部文件发布成网站到学校 Git 服务器（MINXIN Git），返回一个可以用手机打开的公网链接。用户说「发布到 git」「上传到 git」「给我一个能打开的链接」时用它。前提：完整文件已经用 write_file 写进工作区，网页必须有 index.html。发布后 20-40 秒生效。',
+      parameters: {
+        type: 'object',
+        properties: {
+          repo: {
+            type: 'string',
+            description: '仓库名（可选，只能用英文字母/数字/-/_，如 snake-game）。省略则用 my-site',
+          },
+          message: {
+            type: 'string',
+            description: '本次提交说明（可选，如 "add snake game"）',
+          },
+        },
+        required: [],
       },
     },
   },
@@ -785,6 +807,21 @@ export async function executeServerTool(name: string, args: any, ctx: ToolContex
 
       case 'chapter_materials':
         return await chapterMaterials(ctx.userId, args)
+
+      case 'publish_to_git': {
+        const r = await publishWorkspaceToGit(ctx.userId, ctx.conversationId, {
+          repo: String(args?.repo || ''),
+          message: String(args?.message || ''),
+        })
+        if (!r.ok) return `错误：${r.error}`
+        const lines = [
+          `已发布：${r.url}`,
+          `仓库：${r.repoUrl}`,
+          `本次提交 ${r.files ?? 0} 个文件${r.commit ? `（commit ${r.commit}）` : ''}，20-40 秒后可访问。`,
+        ]
+        if (r.skipped?.length) lines.push(`跳过：${r.skipped.slice(0, 5).join('；')}`)
+        return lines.join('\n')
+      }
 
       case 'show_chapter': {
         const id = Number(args?.chapter_id) || 0
