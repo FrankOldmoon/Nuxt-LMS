@@ -529,6 +529,11 @@ function onPreviewMessage(e: MessageEvent) {
   // 预览 iframe 里的下载转交给父窗口触发（父页面不在 sandbox 内，下载不会被拦）
   if (d.type === 'download' && d.url) {
     const name = String(d.name || 'download')
+    // dataURL 长度 ≈ 字节数 × 4/3，用来给用户一个直观的文件大小
+    const bytes = Math.round(String(d.url).length * 0.75)
+    const sizeText = bytes >= 1024 * 1024
+      ? `${(bytes / 1024 / 1024).toFixed(1)} MB`
+      : `${Math.max(1, Math.round(bytes / 1024))} KB`
     try {
       const a = document.createElement('a')
       a.href = String(d.url)
@@ -536,7 +541,14 @@ function onPreviewMessage(e: MessageEvent) {
       document.body.appendChild(a)
       a.click()
       a.remove()
-      previewLogs.value.push({ type: 'info', text: `已下载 ${name}` })
+      previewLogs.value.push({ type: 'info', text: `已下载 ${name}（${sizeText}）` })
+      // 几 KB 的 GLB 基本就是空场景：几何没进 group，或材质导出失败
+      if (/\.(glb|gltf)$/i.test(name) && bytes < 4096) {
+        previewLogs.value.push({
+          type: 'warn',
+          text: `模型只有 ${sizeText}，可能是空场景：确认对象已 add 到 group、导出前调用了 updateMatrixWorld(true)`,
+        })
+      }
     } catch (err: any) {
       previewLogs.value.push({ type: 'error', text: `下载失败：${err?.message || err}` })
     }

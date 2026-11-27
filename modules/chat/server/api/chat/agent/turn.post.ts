@@ -73,7 +73,27 @@ const AGENT_SYSTEM = `你是一个带「会话工作区」的 AI 助手。工作
 14. 发布前：先把完整可运行的文件用 write_file 写进工作区（网站入口必须是 index.html，
     样式和脚本内联，避免引用工作区外的资源），再用 list_files 确认 index.html 存在。
     不要只在回复里贴代码就说已发布；工具返回链接后把链接原样告诉用户，并说明 20-40 秒后才生效。
-    仓库名用英文短横线格式（如 snake-game）。`
+    仓库名用英文短横线格式（如 snake-game）。
+15. 做 three.js / WebGL 3D 页面时按下面写法，能避开「能预览、导出的 GLB 只有 1KB」：
+    - 用 <script type="importmap"> 映射 three 与 three/addons/，映射值必须是普通字符串
+      （不要用反引号/模板字符串），模块脚本里直接 import。
+    - 所有可见对象挂到同一个 Group，再 scene.add(group)，导出就用这个 group。
+    - 导出 GLB 的标准写法：
+        scene.updateMatrixWorld(true);
+        new GLTFExporter().parse(group, (buf) => {
+          if (!(buf instanceof ArrayBuffer)) return showError('导出结果为空');
+          const blob = new Blob([buf], { type: 'model/gltf-binary' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'model.glb';
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 8000);  // 不要立刻 revoke
+        }, (err) => showError((err && err.message) || String(err)), { binary: true });
+    - 材质用 MeshStandardMaterial / MeshBasicMaterial 等内置材质；不要用 ShaderMaterial 或
+      自定义 onBeforeCompile，导出会丢失几何或直接报错。
+    - 导出文件只有 1–2 KB 说明几何没被导出：检查对象是否真的 add 进 group、导出时 group 是否
+      仍在 scene 内、是否调用了 updateMatrixWorld(true)。
+    - 导出失败必须在页面里显示错误信息，不要只弹「已下载」。`
 
 const CHAT_WINDOW_MS = 60_000
 const CHAT_RATE_LIMIT_MAX = 80
