@@ -112,6 +112,17 @@ export interface PublishResult {
   error?: string
 }
 
+/** LMS 用户名 → 合法 Gitea login（"Frank Hu" 这种带空格/中文的要转写） */
+function gitLogin(raw: string, userId: number): string {
+  const s = String(raw || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, '-')
+    .replace(/^[^a-z0-9]+/, '')
+    .replace(/-+$/, '')
+    .slice(0, 60)
+  return s || `user${userId}`
+}
+
 export async function publishWorkspaceToGit(
   userId: number,
   conversationId: number,
@@ -121,15 +132,25 @@ export async function publishWorkspaceToGit(
     return { ok: false, error: '服务器未配置 NUXT_GITEA_ADMIN_TOKEN，无法发布到 Git' }
   }
 
-  // 1) 当前用户 → Gitea 登录名（LMS username 与 Gitea login 一致，由 SSO 绑定）
+  // 1) 当前用户 → Gitea 登录名。LMS 用户名可能带空格（如 "Frank Hu"）或中文，
+  //    Gitea login 只允许 [A-Za-z0-9._-]，需要转写；中文名转不出来时用 user<id> 兜底。
   const [u] = await db
     .select({ username: schema.users.username })
     .from(schema.users)
     .where(eq(schema.users.id, userId))
     .limit(1)
-  const owner = String(u?.username || '').trim()
-  if (!owner || !NAME_RE.test(owner)) {
-    return { ok: false, error: '当前账号没有可用的 Git 用户名，无法发布' }
+  const lmsName = String(u?.username || '').trim()
+  let owner = gitLogin(lmsName, userId)
+  if (!NAME_RE.test(owner)) {
+    return { ok: false, error: `当前账号（${lmsName || '未知'}）无法转换成合法的 Git 用户名` }
+  }
+
+  // 同名 Gitea 账号可能属于别人（例如 LMS admin 与 Gitea 的 frank）：
+  // login_name 对不上当前用户就加后缀另建，避免把作品发进别人的仓库。
+  const dup = await gitea(`/api/v1/users/${encodeURIComponent(owner)}`)
+  if (dup.status === 200 && String(dup.json?.login_name || '') !== String(userId)) {
+    const alt = `${owner.slice(0, 52)}-${userId}`
+    if (NAME_RE.test(alt)) owner = alt
   }
 
   // 2) 工作区文件（至少一个）
