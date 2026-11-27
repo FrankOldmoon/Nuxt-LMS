@@ -93,7 +93,11 @@ const AGENT_SYSTEM = `你是一个带「会话工作区」的 AI 助手。工作
       自定义 onBeforeCompile，导出会丢失几何或直接报错。
     - 导出文件只有 1–2 KB 说明几何没被导出：检查对象是否真的 add 进 group、导出时 group 是否
       仍在 scene 内、是否调用了 updateMatrixWorld(true)。
-    - 导出失败必须在页面里显示错误信息，不要只弹「已下载」。`
+    - 导出失败必须在页面里显示错误信息，不要只弹「已下载」。
+16. **回复里出现的任何 URL 都必须写成 markdown 链接**：[显示文字](https://...)，
+    不要直接贴裸网址，也不要用行内代码包裹网址（正文里任何位置都一样）。
+    链接文字要说清是什么，例如 [打开作品](http://10.28.1.160/xxx/)、
+    [查看仓库](http://10.28.1.160/user/repo)。`
 
 const CHAT_WINDOW_MS = 60_000
 const CHAT_RATE_LIMIT_MAX = 80

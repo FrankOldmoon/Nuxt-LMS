@@ -815,8 +815,8 @@ export async function executeServerTool(name: string, args: any, ctx: ToolContex
         })
         if (!r.ok) return `错误：${r.error}`
         const lines = [
-          `已发布：${r.url}`,
-          `仓库：${r.repoUrl}`,
+          `已发布：[打开作品](${r.url})`,
+          `仓库：[${r.repoUrl}](${r.repoUrl})`,
           `本次提交 ${r.files ?? 0} 个文件${r.commit ? `（commit ${r.commit}）` : ''}，20-40 秒后可访问。`,
         ]
         if (r.skipped?.length) lines.push(`跳过：${r.skipped.slice(0, 5).join('；')}`)

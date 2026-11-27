@@ -23,7 +23,7 @@
       </div>
       <!-- 消息内容：用户消息按纯文本渲染（保留换行），assistant 才走富文本 -->
       <p v-if="msg.role === 'user'" class="whitespace-pre-wrap break-words">{{ textOf(msg) }}</p>
-      <ueditorRender v-else :json="msg.content" :markdown="!msg._streaming" />
+      <ueditorRender v-else :json="contentForRender(msg)" :markdown="!msg._streaming" />
       <!-- 朗读按钮（仅 assistant 文本消息） -->
       <div v-if="canSpeak(msg)" class="flex justify-end mt-1">
         <button type="button" class="text-xs flex items-center gap-1 transition-colors"
@@ -51,5 +51,35 @@ const userInitial = computed(() => userName.value.trim().slice(0, 1).toUpperCase
 /** 用户消息一律是字符串；兜底防止非字符串内容渲染成 [object Object] */
 function textOf(msg: ChatMessage) {
   return typeof msg.content === 'string' ? msg.content : String(msg.content ?? '')
+}
+
+/**
+ * 裸 URL → markdown 链接
+ *
+ * 模型偶尔会把地址写成纯文本，渲染前兜底一次，保证回复里的 http(s) 地址都可点击。
+ * 代码块、行内代码、已有链接/图片先用占位符保护，避免被二次包裹。
+ */
+function linkifyUrls(text: string): string {
+  const stash: string[] = []
+  const keep = (s: string) => `\u0000${stash.push(s) - 1}\u0000`
+  const out = text
+    .replace(/```[\s\S]*?```/g, keep)
+    .replace(/`[^`\n]*`/g, keep)
+    .replace(/!?\[[^\]]*\]\([^)]*\)/g, keep)
+    // 只匹配 URL 合法字符：中文/全角标点会自然截断，避免把「，请访问」吞进链接
+    .replace(/https?:\/\/[A-Za-z0-9\-._~:/?#[\]@!$&'()*+,;=%]+/g, (m) => {
+      // 句末标点留在链接外，避免把「。」「，」也变成链接的一部分
+      const hit = m.match(/^(.*?)([.,;:!?。，；：！？)\]】]*)$/)
+      const url = hit ? hit[1] : m
+      const tail = hit ? hit[2] : ''
+      return `[${url}](${url})${tail}`
+    })
+  return out.replace(/\u0000(\d+)\u0000/g, (_, i) => stash[Number(i)] ?? '')
+}
+
+/** 只有非流式的 markdown 字符串需要兜底；tiptap JSON 原样交给渲染器 */
+function contentForRender(msg: ChatMessage) {
+  const c: any = msg.content
+  return typeof c === 'string' && !msg._streaming ? linkifyUrls(c) : c
 }
 </script>
