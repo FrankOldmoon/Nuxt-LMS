@@ -24,7 +24,7 @@
     <!-- 头像左侧：AI 对话工作台入口（/chat），chat 模块启用时才显示 -->
     <template #header-actions>
       <UTooltip v-if="isLoggedIn && chatEnabled" :text="$t('chat.entry')" :content="{ side: 'bottom' }">
-        <UButton to="/chat" icon="i-lucide-bot" color="neutral" variant="ghost" :aria-label="$t('chat.entry')" />
+        <UButton to="/chat" target="_blank" rel="noopener noreferrer" icon="i-lucide-bot" color="neutral" variant="ghost" :aria-label="$t('chat.entry')" />
       </UTooltip>
     </template>
 
