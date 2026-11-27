@@ -163,9 +163,12 @@ export default eventHandler(async (event) => {
   if (intent) outMessages.push({ role: 'system', content: buildHomeworkGuardMessage(intent) })
   outMessages.push(...compressHistory(safeMessages))
 
-  // 发布工具只在用户明确要求时才下发 —— 模型看不到这个工具，就不会自作主张上传
+  // 发布工具只在用户明确要求时才下发 —— 模型看不到这个工具，就不会自作主张上传。
+  // 判定范围取最近 6 条用户消息：用户说完「推送到 git」后往往会再追问「继续」「好了吗」，
+  // 只看最后一条会把工具收走，模型就会说「没有发布工具」。
   const PUBLISH_INTENT_RE = /(发布|上传|传到|推到|部署|上线|托管|publish|deploy|upload|push|\bgit\b|gitea|github)/i
-  const wantsPublish = lastUser ? PUBLISH_INTENT_RE.test(String(lastUser.content || '')) : false
+  const recentAsks = userMsgs.slice(-6).map((m: any) => String(m?.content || '')).join('\n')
+  const wantsPublish = PUBLISH_INTENT_RE.test(recentAsks)
   const tools = wantsPublish
     ? TOOL_DEFS
     : (TOOL_DEFS as readonly any[]).filter((t: any) => t.function?.name !== 'publish_to_git')
